@@ -1,0 +1,10 @@
+################################
+# Dune module information file #
+################################
+
+#Name of the module
+Module: dune-multiscale
+Version: 1
+Maintainer: phenn_01@uni-muenster.de
+#depending on 
+Depends: dune-grid dune-fem dune-common ag-common dune-istl dune-solvers dune-pdelab dune-localfunctions
