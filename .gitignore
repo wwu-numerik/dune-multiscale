@@ -1,0 +1,13 @@
+*~
+*.log
+src/old_versions/*
+*.deps*
+*.libs*
+src/data/*
+src/*.o
+src/elliptic_hmm
+src/dune_multiscale
+src/op
+*.svn*
+*.pc*
+*.o*
