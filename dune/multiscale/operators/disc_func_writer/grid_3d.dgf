@@ -1,0 +1,10 @@
+DGF
+Interval
+-1 -2               
+1 1           
+2 2               
+#
+BOUNDARYDOMAIN
+default 1                
+#
+#unitcube3d.dgf
