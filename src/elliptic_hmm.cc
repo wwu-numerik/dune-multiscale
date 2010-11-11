@@ -68,7 +68,14 @@
 //! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
 // Not possible for ad-hoc computations! (in this case, error estimation is far too expensive)
 #ifndef AD_HOC_COMPUTATION
+  //
   #define ERRORESTIMATION
+  // only possible if we use error estimation:
+  #ifdef ERRORESTIMATION
+   // Do you want to allow adaptive mesh refinement?
+   #define ADAPTIVE
+  #endif
+
 #endif
 
 //! Do we want to add a stochastic perturbation on the data?
@@ -298,11 +305,12 @@ typedef DiscreteFunctionSpaceType :: JacobianRangeType JacobianRangeType;
 typedef GridType :: Codim<0> :: Entity EntityType; 
 typedef GridType :: Codim<0> :: EntityPointer EntityPointerType; 
 typedef GridType :: Codim<0> :: Geometry EntityGeometryType; 
+typedef GridType :: Codim<1> :: Geometry FaceGeometryType; 
 
 typedef DiscreteFunctionSpaceType     :: BaseFunctionSetType      BaseFunctionSetType;
 
 typedef CachingQuadrature < GridPartType , 0 > EntityQuadratureType;
-
+typedef CachingQuadrature < GridPartType , 1 > FaceQuadratureType;
 
 typedef DiscreteFunctionSpaceType :: DomainFieldType TimeType;
 typedef DiscreteFunctionSpaceType :: RangeFieldType RangeFieldType;
@@ -624,7 +632,17 @@ void algorithm ( std :: string &UnitCubeName,
   // grid part for the global function space, required for the detailed fine-scale computation (very high resolution)
   GridPartType gridPartFine( *fine_macro_grid_pointer );
 
+  GridType &grid = gridPart.grid();
+  GridType &gridFine = gridPartFine.grid();
+
   //! --------------------------------------------------------------------------------------
+
+
+#ifdef ADAPTIVE
+//!loeschen bzw. fuer ADAPTIVE verwenden
+for (int k = 0; k < 2; ++k )
+{
+#endif
 
 
   //! ------------------------- discrete function spaces -----------------------------------
@@ -640,12 +658,7 @@ void algorithm ( std :: string &UnitCubeName,
   // and the corresponding auxiliary one:
   DiscreteFunctionSpaceType auxiliaryDiscreteFunctionSpace( auxiliaryGridPart );
 
-  GridType &grid = gridPart.grid();
-  GridType &gridFine = gridPartFine.grid();
-
   //! --------------------------------------------------------------------------------------
-
-
 
 
 
@@ -864,13 +877,6 @@ void algorithm ( std :: string &UnitCubeName,
 
 
 
-
-
-
-  // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
-  CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
-
-
   //! --------------------------- coefficient functions ------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
@@ -899,6 +905,9 @@ void algorithm ( std :: string &UnitCubeName,
 
   //! --------------------------------------------------------------------------------------
 
+
+  // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
+  CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
 
 
   //! define the right hand side assembler tool
@@ -1191,6 +1200,11 @@ void algorithm ( std :: string &UnitCubeName,
   DiscreteFunctionType hmm_solution( filename_ + " HMM (+Newton) Solution", discreteFunctionSpace );
   hmm_solution.clear();
 
+#ifdef ADAPTIVE
+  // one fot the discreteFunctionSpace
+  RestrictProlongOperatorType rp( hmm_solution );
+  AdaptationManagerType adaptationManager( grid, rp );
+#endif
 
   // starting value for the Newton method
   DiscreteFunctionType zero_func_coarse( filename_ + " constant zero function coarse ", discreteFunctionSpace );
@@ -1508,6 +1522,10 @@ void algorithm ( std :: string &UnitCubeName,
   RangeType estimated_source_error = 0.0;
   RangeType estimated_approximation_error = 0.0;
   RangeType estimated_residual_error = 0.0;
+
+  // estimated_residual_error = sqrt( estimated_residual_error_micro_jumps^2 + estimated_residual_error_macro_jumps^2 )
+  RangeType estimated_residual_error_micro_jumps = 0.0;
+  RangeType estimated_residual_error_macro_jumps = 0.0;
 #ifdef TFR
   RangeType estimated_tfr_error = 0.0;
 #endif
@@ -1576,6 +1594,8 @@ void algorithm ( std :: string &UnitCubeName,
 
        RangeType local_residual_indicator = error_estimator.indicator_res_T( entity, hmm_solution, corrector_u_H_on_entity );
 
+       estimated_residual_error_micro_jumps += local_residual_indicator;
+
        typedef GridPartType :: IntersectionIteratorType IntersectionIteratorType;
        IntersectionIteratorType endnit = gridPart.iend(entity);
        for(IntersectionIteratorType nit = gridPart.ibegin(entity); nit != endnit ; ++nit)
@@ -1620,7 +1640,11 @@ void algorithm ( std :: string &UnitCubeName,
               discrete_function_reader_discFunc.read( neighbor_element_number, corrector_u_H_on_neighbor_entity );
               #endif
 
-              local_residual_indicator += error_estimator.indicator_res_E( entity, entity_outside, hmm_solution, corrector_u_H_on_entity, corrector_u_H_on_neighbor_entity );
+              RangeType val = error_estimator.indicator_res_E( *nit, hmm_solution, corrector_u_H_on_entity, corrector_u_H_on_neighbor_entity );
+
+              local_residual_indicator += val;
+
+              estimated_residual_error_macro_jumps += val;
 
             }
 
@@ -1628,8 +1652,8 @@ void algorithm ( std :: string &UnitCubeName,
 
        estimated_residual_error += local_residual_indicator;
 
-
 #ifdef TFR
+       // use 'indicator_effective_tfr' or 'indicator_tfr_1'
        // contribution of the local tfr error:
 
        RangeType local_tfr_indicator = error_estimator.indicator_tfr_1( entity, hmm_solution, corrector_u_H_on_entity );
@@ -1653,6 +1677,9 @@ void algorithm ( std :: string &UnitCubeName,
   estimated_approximation_error = sqrt(estimated_approximation_error);
   estimated_residual_error = sqrt(estimated_residual_error);
 
+  estimated_residual_error_micro_jumps = sqrt( estimated_residual_error_micro_jumps );
+  estimated_residual_error_macro_jumps = sqrt( estimated_residual_error_macro_jumps );
+
   RangeType estimated_error = estimated_source_error + estimated_approximation_error + estimated_residual_error;
 
 #ifdef TFR
@@ -1660,8 +1687,14 @@ void algorithm ( std :: string &UnitCubeName,
   estimated_error += estimated_tfr_error;
 #endif
 
-#endif
+  #ifdef ADAPTIVE
+
+
+  #endif
+
 //! -------- End Error Estimation --------
+#endif
+
 
 
 
@@ -1783,7 +1816,9 @@ void algorithm ( std :: string &UnitCubeName,
   std :: cout << "In detail:" << std :: endl;
   std :: cout << "   Estimated source error = " << estimated_source_error << "." << std :: endl;
   std :: cout << "   Estimated approximation error = " << estimated_approximation_error << "." << std :: endl;
-  std :: cout << "   Estimated residual error = " << estimated_residual_error << "." << std :: endl;
+  std :: cout << "   Estimated residual error = " << estimated_residual_error << ", where:" << std :: endl;
+  std :: cout << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std :: endl;
+  std :: cout << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std :: endl;
   #ifdef TFR
    std :: cout << "   Estimated tfr error = " << estimated_tfr_error << "." << std :: endl;
   #endif
@@ -1793,7 +1828,9 @@ void algorithm ( std :: string &UnitCubeName,
       data_file << "In detail:" << std :: endl;
       data_file << "   Estimated source error = " << estimated_source_error << "." << std :: endl;
       data_file << "   Estimated approximation error = " << estimated_approximation_error << "." << std :: endl;
-      data_file << "   Estimated residual error = " << estimated_residual_error << "." << std :: endl;
+      data_file << "   Estimated residual error = " << estimated_residual_error << ", where:" << std :: endl;
+      data_file << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std :: endl;
+      data_file << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std :: endl;
       #ifdef TFR
        data_file << "   Estimated tfr error = " << estimated_tfr_error << "." << std :: endl;
       #endif
@@ -1801,8 +1838,6 @@ void algorithm ( std :: string &UnitCubeName,
 #endif
 
 //! -------------------------------------------------------
-
-
 
 
 //! --------------- writing data output ---------------------
@@ -1887,6 +1922,19 @@ void algorithm ( std :: string &UnitCubeName,
 
 //!-------------------------------------------------------------
 
+
+if ( k==0 )
+{
+  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
+  IteratorType endit_test = discreteFunctionSpace.end();
+  for( IteratorType it = discreteFunctionSpace.begin(); it != endit_test; ++it )
+    { grid.mark( 2 , *it ); }
+adaptationManager.adapt();
+//grid.globalRefine(2);
+}
+
+//! loeschen bzw. mit ADAPTIVE verwurschteln
+}//! ende der komischen for Schleife
 
 
 

@@ -106,12 +106,12 @@ namespace Dune
       RangeType entity_H = 0.0;
 
       const GridPartType &gridPart = discreteFunctionSpace_.gridPart();
- 
+
       // compute the size of the faces of the entities and selected the largest.
       IntersectionIteratorType endnit = gridPart.iend(entity);
       for(IntersectionIteratorType nit = gridPart.ibegin(entity); nit != endnit ; ++nit)
         {
-          FaceQuadratureType innerFaceQuadrature(gridPart, *nit, 0 , FaceQuadratureType::INSIDE); 
+          FaceQuadratureType innerFaceQuadrature(gridPart, *nit, 0 , FaceQuadratureType::INSIDE);
 
           DomainType scaledOuterNormal =
                nit->integrationOuterNormal(innerFaceQuadrature.localPoint(0));
@@ -223,10 +223,13 @@ namespace Dune
           const DomainType &y_S = geometry_S.global(one_point_quadrature.point(0));
 
           // to evaluate A^{\epsilon}_h:
-          DomainType globalPoint_center = y_S + x_T;
+          DomainType globalPoint_center;
           JacobianRangeType direction_of_diffusion;
           for( int k = 0; k < dimension; ++k )
-            direction_of_diffusion[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T[ 0 ][ k ];
+            {
+             globalPoint_center[ k ] = x_T[ k ] + (delta * y_S[ k ]);
+             direction_of_diffusion[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T[ 0 ][ k ];
+            }
 
           JacobianRangeType diffusive_flux_y_S;
           diffusion_.diffusiveFlux( globalPoint_center,
@@ -255,7 +258,9 @@ namespace Dune
               const double weight_micro_quadrature = high_order_quadrature.weight(  microQuadraturePoint ) * geometry_S.integrationElement( y_barycentric );
 
               // to evaluate A^{\epsilon}:
-              DomainType globalPoint = y + x_T;
+              DomainType globalPoint;
+              for( int k = 0; k < dimension; ++k )
+                globalPoint[ k ] = (delta * y[ k ]) + x_T[ k ];
 
               // diffusive flux in y (in direction \nabla u_H(x_T) + \nabla_y Q_h^T(u_H)(y_S) )
               JacobianRangeType diffusive_flux_y;
@@ -334,10 +339,13 @@ namespace Dune
           const DomainType &y_S = geometry_S.global(one_point_quadrature.point(0));
 
           // to evaluate A^{\epsilon}_h:
-          DomainType globalPoint_center = y_S + x_T;
+          DomainType globalPoint_center;
           JacobianRangeType direction_of_diffusion;
           for( int k = 0; k < dimension; ++k )
-            direction_of_diffusion[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T[ 0 ][ k ];
+            {
+             globalPoint_center[ k ] = x_T[ k ] + (delta * y_S[ k ]);
+             direction_of_diffusion[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T[ 0 ][ k ];
+            }
 
           JacobianRangeType diffusive_flux_y_S;
           diffusion_.diffusiveFlux( globalPoint_center,
@@ -357,7 +365,9 @@ namespace Dune
               const double weight_micro_quadrature = high_order_quadrature.weight(  microQuadraturePoint ) * geometry_S.integrationElement( y_barycentric );
 
               // to evaluate A^{\epsilon}:
-              DomainType globalPoint = y + x_T;
+              DomainType globalPoint;
+              for( int k = 0; k < dimension; ++k )
+                globalPoint[ k ] = (delta * y[ k ]) + x_T[ k ];
 
               // diffusive flux in y (in direction \nabla u_H(x_T) + \nabla_y Q_h^T(u_H)(y_S) )
               JacobianRangeType diffusive_flux_y;
@@ -380,860 +390,959 @@ namespace Dune
      } // end of method
 
 
+
     // (1/2)*H_E^3*\eta_E^{res}
     // (1/2) since we visit every entity twice (inner and outer)
-    RangeType indicator_res_E( const EntityType &inner_entity,
-                               const EntityType &outer_entity,
+    template< class IntersectionType >
+    RangeType indicator_res_E( const IntersectionType &intersection,
                                      DiscreteFunctionType &u_H,
                                const PeriodicDiscreteFunctionType &corrector_u_H_on_inner_entity,
                                const PeriodicDiscreteFunctionType &corrector_u_H_on_outer_entity )
      {
 
-       return 0.0;
+       RangeType local_indicator(0.0);
+
+       Problem::ModelProblemData model_info;
+       const double delta = model_info.getDelta();
+       const double epsilon_estimated = model_info.getEpsilonEstimated();
+
+
+       EntityPointerType inner_it =  intersection.inside();
+       EntityPointerType outer_it =  intersection.outside();
+
+       const EntityType& inner_entity = *inner_it;
+       const EntityType& outer_entity = *outer_it;
+
+       FaceQuadratureType faceQuadrature( discreteFunctionSpace_.gridPart(), intersection, 0 , FaceQuadratureType::INSIDE);
+
+       DomainType unitOuterNormal =
+                intersection.unitOuterNormal(faceQuadrature.localPoint(0));
+
+       const FaceGeometryType& faceGeometry = intersection.geometry();
+       // H_E (= |E|):
+       const RangeType edge_length = faceGeometry.volume();
+
+       // jump = innerValue - outerValue
+       RangeType innerValue = 0.0;
+       RangeType outerValue = 0.0;
+
+       EntityQuadratureType innerEntityQuadrature( inner_entity , 0 );
+       EntityQuadratureType outerEntityQuadrature( outer_entity , 0 ); // 0 = polynomial order
+       // the global quadrature (quadrature on the macro element T)
+
+       const EntityGeometryType& globalInnerEntityGeometry = inner_entity.geometry();
+       const EntityGeometryType& globalOuterEntityGeometry = outer_entity.geometry();
+
+       const DomainType &x_T_inner = globalInnerEntityGeometry.global(innerEntityQuadrature.point(0));
+       const DomainType &x_T_outer = globalOuterEntityGeometry.global(outerEntityQuadrature.point(0));
+
+       const RangeType innerEntityVolume = innerEntityQuadrature.weight(0) * 
+               globalInnerEntityGeometry.integrationElement(innerEntityQuadrature.point(0));
+       const RangeType outerEntityVolume = outerEntityQuadrature.weight(0) * 
+               globalOuterEntityGeometry.integrationElement(outerEntityQuadrature.point(0));
+
+       // \nabla u_H(x_T) (on the inner element T)
+       LocalFunctionType inner_u_H_local = u_H.localFunction(inner_entity);
+       JacobianRangeType gradient_inner_u_H(0.);
+       inner_u_H_local.jacobian(innerEntityQuadrature[ 0 ], gradient_inner_u_H);
+
+       // \nabla u_H(x_T) (on the outer element \bar{T})
+       LocalFunctionType outer_u_H_local = u_H.localFunction(outer_entity);
+       JacobianRangeType gradient_outer_u_H(0.);
+       outer_u_H_local.jacobian(outerEntityQuadrature[ 0 ], gradient_outer_u_H);
+
+       // iterator over the elements of the periodic micro grid:
+       PeriodicIteratorType p_endit = periodicDiscreteFunctionSpace_.end();
+       for( PeriodicIteratorType p_it = periodicDiscreteFunctionSpace_.begin(); p_it != p_endit; ++p_it )
+        {
+
+          const PeriodicEntityType &micro_entity = *p_it;
+
+
+          //one point quadrature formula (since A_h^{\eps}(y)=A^{\eps}(y_s) )
+          PeriodicEntityQuadratureType one_point_quadrature( micro_entity , 0 );
+
+          // Q_h(u_H)(x_T,y) on the micro entity:
+          PeriodicLocalFunctionType loc_Q_u_H_x_T_inner = corrector_u_H_on_inner_entity.localFunction(micro_entity);
+          JacobianRangeType gradient_Q_u_H_x_T_inner(0.);
+          loc_Q_u_H_x_T_inner.jacobian(one_point_quadrature[ 0 ], gradient_Q_u_H_x_T_inner);
+
+          // Q_h(u_H)(x_{bar{T}},y) on the micro entity:
+          PeriodicLocalFunctionType loc_Q_u_H_x_T_outer = corrector_u_H_on_outer_entity.localFunction(micro_entity);
+          JacobianRangeType gradient_Q_u_H_x_T_outer(0.);
+          loc_Q_u_H_x_T_outer.jacobian(one_point_quadrature[ 0 ], gradient_Q_u_H_x_T_outer);
+
+          // S denotes the micro grid element (i.e. 'micro_entity')
+          const PeriodicEntityGeometryType& geometry_S = micro_entity.geometry();
+
+          // local (barycentric) coordinates (with respect to entity)
+          const typename PeriodicEntityQuadratureType::CoordinateType &y_S_barycentric = one_point_quadrature.point(0);
+
+          // y_S denotes the barycenter of the micro grid element S:
+          const DomainType &y_S = geometry_S.global(y_S_barycentric);
+
+          // to evaluate A^{\epsilon}_h:
+          DomainType globalPoint_inner;
+          JacobianRangeType direction_of_diffusion_inner;
+          for( int k = 0; k < dimension; ++k )
+           {
+             globalPoint_inner[ k ] = x_T_inner[ k ] + (delta * y_S[ k ]);
+             direction_of_diffusion_inner[ 0 ][ k ] = gradient_inner_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T_inner[ 0 ][ k ];
+           }
+
+          // to evaluate A^{\epsilon}_h:
+          DomainType globalPoint_outer;
+          JacobianRangeType direction_of_diffusion_outer;
+          for( int k = 0; k < dimension; ++k )
+            {
+             globalPoint_outer[ k ] = x_T_outer[ k ] + (delta * y_S[ k ]);
+             direction_of_diffusion_outer[ 0 ][ k ] = gradient_outer_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T_outer[ 0 ][ k ];
+            }
+
+
+          JacobianRangeType diffusive_flux_y_S_inner;
+          diffusion_.diffusiveFlux( globalPoint_inner,
+                                    direction_of_diffusion_inner,
+                                    diffusive_flux_y_S_inner );
+
+          JacobianRangeType diffusive_flux_y_S_outer;
+          diffusion_.diffusiveFlux( globalPoint_outer,
+                                    direction_of_diffusion_outer,
+                                    diffusive_flux_y_S_outer );
+
+          double cutting_function = 1.0;
+          for( int k = 0; k < dimension; ++k )
+            {
+              // is the current quadrature point in the relevant cell?
+              // Y = [ -0.5 , 0.5 ]^dimension
+              if ( fabs(y_S[ k ]) > (0.5*(epsilon_estimated/delta)) )
+                { cutting_function *= 0.0; }
+            }
+
+          const double weight_micro_quadrature = one_point_quadrature.weight(0) * geometry_S.integrationElement( y_S_barycentric );
+
+          for( int k = 0; k < dimension; ++k )
+            {
+             innerValue += cutting_function * weight_micro_quadrature * diffusive_flux_y_S_inner[ 0 ][ k ] * unitOuterNormal[ k ];
+             outerValue += cutting_function * weight_micro_quadrature * diffusive_flux_y_S_outer[ 0 ][ k ] * unitOuterNormal[ k ];
+            }
+
+        }
+
+       local_indicator += pow( innerValue - outerValue, 2.0 );
+
+       // in 2D (and this is what we assume) it holds |E|*H_E^3 = H_E^4 = |E|^4
+       return ( pow(edge_length,4.0 ) * (1.0/2.0) * local_indicator );
 
      } // end of method
 
 
+    // NOTE: This method ONLY works for uniformly refined micro-grid and GRIDDIM=2!
+    // (even though it might be extended easily to other cases, here we use the cheapest strategy, which just works for the case described above!)
+    // here, uniform also means that we have the same number of elements in every direction!)
     // \bar{\eta}_T^{res}
     RangeType indicator_res_T( const EntityType &entity,
                                      DiscreteFunctionType &u_H,
                                const PeriodicDiscreteFunctionType &corrector_u_H_on_entity )
      {
 
-       return 0.0;
+
+       RangeType local_indicator(0.0);
+
+       Problem::ModelProblemData model_info;
+       const double delta = model_info.getDelta();
+       const double epsilon_estimated = model_info.getEpsilonEstimated();
+
+       EntityQuadratureType entityQuadrature( entity , 0 ); // 0 = polynomial order
+       // the global quadrature (quadrature on the macro element T)
+
+       const EntityGeometryType& globalEntityGeometry = entity.geometry();
+
+       const DomainType &x_T = globalEntityGeometry.global(entityQuadrature.point(0));
+
+       const RangeType entityVolume = entityQuadrature.weight(0) * 
+               globalEntityGeometry.integrationElement(entityQuadrature.point(0));
+
+       // \nabla u_H(x_T)
+       LocalFunctionType u_H_local = u_H.localFunction(entity);
+       JacobianRangeType gradient_u_H(0.);
+       u_H_local.jacobian(entityQuadrature[ 0 ], gradient_u_H);
+
+
+       if ( dimension != 2 )
+        {
+          std :: cout << "The error indicator 'indicator_res_T' is not implemented for dimension!=2 and only works for uniformly refined micro-grids!" << std :: endl;
+        }
+
+       // edge length of a boundary face
+       RangeType ref_edge_length = 1.0;
+
+       GridPartType auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
+
+       IteratorType micro_it = auxiliaryDiscreteFunctionSpace_.begin();
+
+       // we just need one element to determine all the properties (due to uniform refinement)!
+       IntersectionIteratorType endnit = auxGridPart.iend(*micro_it);
+       for(IntersectionIteratorType nit = auxGridPart.ibegin(*micro_it); nit != endnit ; ++nit)
+         {
+           FaceQuadratureType faceQuadrature( auxGridPart, *nit, 1 , FaceQuadratureType::INSIDE);
+           const FaceGeometryType& faceGeometry = nit->geometry();
+
+           if ( ref_edge_length > faceGeometry.volume() )
+            { ref_edge_length = faceGeometry.volume(); }
+
+         }
+
+       // number of boundary faces per cube-edge:
+       int num_boundary_faces_per_direction = int( (1 / ref_edge_length) + 0.2 );
+       // (+0.2 to avoid rounding errors)
+
+       // generalized jump up/down
+       RangeType jump_up_down[ num_boundary_faces_per_direction ];
+
+       // generalized jump left/right
+       RangeType jump_left_right[ num_boundary_faces_per_direction ];
+
+
+       for( int id = 0; id < num_boundary_faces_per_direction; ++id )
+         {
+          jump_up_down[ id ] = 0.0;
+          jump_left_right[ id ] = 0.0;
+         }
+
+
+       // procedure for computing the generalized jumps:
+       // 1. compute the center of the current face E: (x_E,y_E)
+       // 2. one and only one of these values fulfiles abs()=1/2
+       //    (i.e. we either have 'abs(x_E)=1/2' or 'abs(y_E)=1/2')
+       //    without loss of generality we assume 'abs(y_E)=1/2', then
+       //    we are in the setting of 'jump_up_down'
+       // 3. Any 'jump_up_down' recieves a unique ID by
+       //     jump up down over (x,-1/2) and (x,1/2) = jump_up_down[ (num_boundary_faces_per_direction/2) + (( x - (edge_length/2) ) / edge_length) ]
+       //     (num_boundary_faces_per_direction/2) + (( x - (edge_length/2) ) / edge_length) is the corresponding ID
+       // 4. the situation is identical for 'abs(x_E)=1/2'.
+
+
+       // iterator over the elements of the periodic micro grid:
+       IteratorType p_endit = auxiliaryDiscreteFunctionSpace_.end();
+       for( IteratorType p_it = auxiliaryDiscreteFunctionSpace_.begin(); p_it != p_endit; ++p_it )
+        {
+
+          // --------- the 'inner entity' (micro grid) ------------
+
+          const EntityType &micro_entity = *p_it;
+
+          // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
+          EntityQuadratureType one_point_quadrature( micro_entity , 0 );
+
+          // Q_h(u_H)(x_T,y) on the micro entity:
+          PeriodicLocalFunctionType loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+          JacobianRangeType gradient_Q_u_H_x_T(0.);
+          loc_Q_u_H_x_T.jacobian(one_point_quadrature[ 0 ], gradient_Q_u_H_x_T);
+
+          // S denotes the micro grid element (i.e. 'micro_entity')
+          const EntityGeometryType& geometry_S = micro_entity.geometry();
+          // y_S denotes the barycenter of the micro grid element S:
+          const DomainType &y_S = geometry_S.global(one_point_quadrature.point(0));
+
+          // to evaluate A^{\epsilon}_h (in center of current inner entity):
+          DomainType globalPoint;
+          JacobianRangeType direction_of_diffusion;
+          for( int k = 0; k < dimension; ++k )
+           {
+            direction_of_diffusion[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T[ 0 ][ k ];
+            globalPoint[ k ] = x_T[ k ] + (delta * y_S[ k ]);
+           }
+
+          JacobianRangeType diffusive_flux_y_S;
+          diffusion_.diffusiveFlux( globalPoint,
+                                    direction_of_diffusion,
+                                    diffusive_flux_y_S );
+
+          // ----------------------------------------------------
+
+          IntersectionIteratorType p_endnit = auxGridPart.iend(micro_entity);
+          for(IntersectionIteratorType p_nit = auxGridPart.ibegin(micro_entity); p_nit != p_endnit ; ++p_nit)
+            {
+
+               // Note: we are on the zero-centered unit cube! (That's why everything works!)
+
+               FaceQuadratureType faceQuadrature( auxGridPart, *p_nit, 0, FaceQuadratureType::INSIDE );
+               const FaceGeometryType& faceGeometry = p_nit->geometry();
+
+               const RangeType edge_length = faceGeometry.volume();
+
+               DomainType unitOuterNormal =
+                       p_nit->unitOuterNormal(faceQuadrature.localPoint(0));
+
+               //if there is a neighbor entity (the normal gradient jumps)
+               if ( p_nit->neighbor() )
+                {
+
+                  // --------- the 'outer entity' (micro grid) ------------
+                  //                ( neighbor entity )
+
+                  EntityPointerType outer_p_it = p_nit->outside();
+                  const EntityType &outer_micro_entity = *outer_p_it;
+
+                  // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
+                  EntityQuadratureType outer_one_point_quadrature( outer_micro_entity , 0 );
+
+                  // Q_h(u_H)(x_T,y) on the neighbor entity:
+                  PeriodicLocalFunctionType outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(outer_micro_entity);
+                  JacobianRangeType gradient_outer_Q_u_H_x_T(0.);
+                  outer_loc_Q_u_H_x_T.jacobian(outer_one_point_quadrature[ 0 ], gradient_outer_Q_u_H_x_T);
+
+                  // S denotes the micro grid element (i.e. 'micro_entity')
+                  const EntityGeometryType& outer_geometry_S = outer_micro_entity.geometry();
+                  // outer_y_S denotes the barycenter of the neighbor micro grid element of S:
+                  const DomainType &outer_y_S = outer_geometry_S.global(outer_one_point_quadrature.point(0));
+
+                  // to evaluate A^{\epsilon}_h (in center of current outer entity):
+                  DomainType outer_globalPoint;
+                  JacobianRangeType direction_of_diffusion_outside;
+                  for( int k = 0; k < dimension; ++k )
+                    {
+                     direction_of_diffusion_outside[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] + gradient_outer_Q_u_H_x_T[ 0 ][ k ];
+                     outer_globalPoint[ k ] = x_T[ k ] + (delta * outer_y_S[ k ]);
+                    }
+
+                  JacobianRangeType diffusive_flux_y_S_outside;
+                  diffusion_.diffusiveFlux( outer_globalPoint,
+                                            direction_of_diffusion_outside,
+                                            diffusive_flux_y_S_outside );
+
+                  // ----------------------------------------------------
+
+                  RangeType aux_value = 0.0;
+
+                  for( int k = 0; k < dimension; ++k )
+                    aux_value += ( diffusive_flux_y_S_outside[ 0 ][ k ] - diffusive_flux_y_S[ 0 ][ k ] ) * unitOuterNormal[ k ] ;
+
+                  local_indicator += pow( edge_length , 4.0 ) * pow( aux_value , 2.0 );
+
+
+                }
+               else //if there is no neighbor entity, the face is a boundary face and we use the generalized gradient jumps.
+                {
+
+                  // Remember:
+                  // procedure for computing the generalized jumps:
+                  // 1. compute the center of the current face E: (x_E,y_E)
+                  // 2. one and only one of these values fulfiles abs()=1/2
+                  //    (i.e. we either have 'abs(x_E)=1/2' or 'abs(y_E)=1/2')
+                  //    without loss of generality we assume 'abs(y_E)=1/2', then
+                  //    we are in the setting of 'jump_up_down'
+                  // 3. Any 'jump_up_down' recieves a unique ID by
+                  //     jump up down over (x,-1/2) and (x,1/2) = ... jump_up_down[ (( x - (edge_length/2) ) / edge_length) ]
+                  //     ... (( x - (edge_length/2) ) / edge_length) is the corresponding ID
+                  // 4. the situation is identical for 'abs(x_E)=1/2'.
+
+                  const DomainType &edge_center = geometry_S.global(faceQuadrature.point(0));
+
+                  if ( fabs(edge_center[0]) == 0.5 )
+                   {
+                    // + 0.2 to avoid rounding errors!
+                    int id = int( ( num_boundary_faces_per_direction / 2 ) + (( edge_center[1] - (edge_length / 2.0) ) / edge_length) + 0.2 );
+
+                    // unit outer normal creates the correct sign!
+                    for( int k = 0; k < dimension; ++k )
+                       jump_up_down[ id ] += pow( edge_length , 2.0 ) * ( diffusive_flux_y_S[ 0 ][ k ] * unitOuterNormal[ k ] );
+
+                    //std :: cout << "edge_center = " << edge_center << std :: endl;
+                    //std :: cout << "edge_length = " << edge_length << std :: endl;
+                    //std :: cout << "unitOuterNormal = " << unitOuterNormal << std :: endl;
+                    //std :: cout << "diffusive_flux_y_S = " << diffusive_flux_y_S[ 0 ] << std :: endl;
+                    //std :: cout << "jump_up_down id = " << id << std :: endl;
+                    //std :: cout << "jump_up_down[" << id << "] = " << jump_up_down[ id ] << std :: endl << std :: endl;
+
+                   }
+                  else
+                   {
+
+                    // + 0.2 to avoid rounding errors!
+                    int id = int( ( num_boundary_faces_per_direction / 2 ) + (( edge_center[0] - (edge_length / 2.0) ) / edge_length) + 0.2 );
+
+                    // unit outer normal creates the correct sign!
+                    for( int k = 0; k < dimension; ++k )
+                       jump_left_right[ id ] += pow( edge_length , 2.0 ) * ( diffusive_flux_y_S[ 0 ][ k ] * unitOuterNormal[ k ] );
+
+                    //std :: cout << "edge_center = " << edge_center << std :: endl;
+                    //std :: cout << "edge_length = " << edge_length << std :: endl;
+                    //std :: cout << "unitOuterNormal = " << unitOuterNormal << std :: endl;
+                    //std :: cout << "diffusive_flux_y_S = " << diffusive_flux_y_S[ 0 ] << std :: endl;
+                    //std :: cout << "jump_left_right id = " << id << std :: endl;
+                    //std :: cout << "jump_left_right[" << id << "] = " << jump_left_right[ id ] << std :: endl << std :: endl;
+
+                   }
+
+                }
+
+            }
+
+
+        }
+
+       for( int id = 0; id < num_boundary_faces_per_direction; ++id )
+         {
+          local_indicator += ( pow( jump_up_down[ id ] , 2.0 ) + pow( jump_left_right[ id ] , 2.0 ) );
+         }
+
+       local_indicator *= entityVolume;
+
+       return local_indicator;
 
      } // end of method
 
+
 //only for TFR:
 
+    // NOTE: This method ONLY works for uniformly refined micro-grid and GRIDDIM=2!
+    // (even though it might be extended easily to other cases, here we use the cheapest strategy, which just works for the case described above!)
+    // here, uniform also means that we have the same number of elements in every direction!)
     // \eta_T^{tfr}
     RangeType indicator_tfr_1( const EntityType &entity,
                                      DiscreteFunctionType &u_H,
                                const PeriodicDiscreteFunctionType &corrector_u_H_on_entity )
      {
 
-       return 0.0;
+       RangeType local_indicator(0.0);
+
+       Problem::ModelProblemData model_info;
+       const double delta = model_info.getDelta();
+       const double epsilon_estimated = model_info.getEpsilonEstimated();
+
+       EntityQuadratureType entityQuadrature( entity , 0 ); // 0 = polynomial order
+       // the global quadrature (quadrature on the macro element T)
+
+       const EntityGeometryType& globalEntityGeometry = entity.geometry();
+
+       const DomainType &x_T = globalEntityGeometry.global(entityQuadrature.point(0));
+
+       const RangeType entityVolume = entityQuadrature.weight(0) * 
+               globalEntityGeometry.integrationElement(entityQuadrature.point(0));
+
+       // \nabla u_H(x_T)
+       LocalFunctionType u_H_local = u_H.localFunction(entity);
+       JacobianRangeType gradient_u_H(0.);
+       u_H_local.jacobian(entityQuadrature[ 0 ], gradient_u_H);
+
+
+       if ( dimension != 2 )
+        {
+          std :: cout << "The error indicator 'indicator_tfr_1' is not implemented for dimension!=2 and only works for uniformly refined micro-grids!" << std :: endl;
+        }
+
+
+       // edge length of a boundary face
+       RangeType ref_edge_length = 1.0;
+
+       GridPartType auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
+
+       IteratorType micro_it = auxiliaryDiscreteFunctionSpace_.begin();
+
+       // we just need one element to determine all the properties (due to uniform refinement)!
+       IntersectionIteratorType endnit = auxGridPart.iend(*micro_it);
+       for(IntersectionIteratorType nit = auxGridPart.ibegin(*micro_it); nit != endnit ; ++nit)
+         {
+           FaceQuadratureType faceQuadrature( auxGridPart, *nit, 1 , FaceQuadratureType::INSIDE);
+           const FaceGeometryType& faceGeometry = nit->geometry();
+
+           if ( ref_edge_length > faceGeometry.volume() )
+            { ref_edge_length = faceGeometry.volume(); }
+
+         }
+
+       // number of boundary faces per (\epsilon/\delta-scaled) cube edge:
+       int num_boundary_faces_per_direction = int( ((epsilon_estimated/delta) / ref_edge_length) + 0.2 );
+       // (+0.2 to avoid rounding errors)
+
+       // generalized jump up/down
+       RangeType jump_up_down[ num_boundary_faces_per_direction ];
+
+       // generalized jump left/right
+       RangeType jump_left_right[ num_boundary_faces_per_direction ];
+
+       for( int id = 0; id < num_boundary_faces_per_direction; ++id )
+         {
+          jump_up_down[ id ] = 0.0;
+          jump_left_right[ id ] = 0.0;
+         }
+
+       // did you find a boundary edge of the \eps-\delta-cube? (you must find it!!)
+       bool eps_delta_boundary_edge_found = false;
+
+       // procedure for computing the generalized jumps:
+       // 1. compute the center of the current face E: (x_E,y_E)
+       // 2. one and only one of these values fulfiles abs()=1/2
+       //    (i.e. we either have 'abs(x_E)=1/2' or 'abs(y_E)=1/2')
+       //    without loss of generality we assume 'abs(y_E)=1/2', then
+       //    we are in the setting of 'jump_up_down'
+       // 3. Any 'jump_up_down' recieves a unique ID by
+       //     jump up down over (x,-1/2) and (x,1/2) = jump_up_down[ (num_boundary_faces_per_direction/2) + (( x - (edge_length/2) ) / edge_length) ]
+       //     (num_boundary_faces_per_direction/2) + (( x - (edge_length/2) ) / edge_length) is the corresponding ID
+       // 4. the situation is identical for 'abs(x_E)=1/2'.
+
+
+       // iterator over the elements of the periodic micro grid:
+       IteratorType p_endit = auxiliaryDiscreteFunctionSpace_.end();
+       for( IteratorType p_it = auxiliaryDiscreteFunctionSpace_.begin(); p_it != p_endit; ++p_it )
+        {
+
+          // --------- the 'inner entity' (micro grid) ------------
+
+          const EntityType &micro_entity = *p_it;
+
+          // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
+          EntityQuadratureType one_point_quadrature( micro_entity , 0 );
+
+          // Q_h(u_H)(x_T,y) on the micro entity:
+          PeriodicLocalFunctionType loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+          JacobianRangeType gradient_Q_u_H_x_T(0.);
+          loc_Q_u_H_x_T.jacobian(one_point_quadrature[ 0 ], gradient_Q_u_H_x_T);
+
+          // S denotes the micro grid element (i.e. 'micro_entity')
+          const EntityGeometryType& geometry_S = micro_entity.geometry();
+          // y_S denotes the barycenter of the micro grid element S:
+          const DomainType &y_S = geometry_S.global(one_point_quadrature.point(0));
+
+          // to evaluate A^{\epsilon}_h (in center of current inner entity):
+          DomainType globalPoint;
+          JacobianRangeType direction_of_diffusion;
+          for( int k = 0; k < dimension; ++k )
+            {
+             direction_of_diffusion[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T[ 0 ][ k ];
+             globalPoint[ k ] = ( delta * y_S[ k ] ) + x_T[ k ];
+            }
+
+          JacobianRangeType diffusive_flux_y_S;
+          diffusion_.diffusiveFlux( globalPoint,
+                                    direction_of_diffusion,
+                                    diffusive_flux_y_S );
+
+          if ( (fabs(y_S[1]) <= ((0.5*(epsilon_estimated/delta)))) &&
+               (fabs(y_S[0]) <= ((0.5*(epsilon_estimated/delta))))    )
+          {
+          // ----------------------------------------------------
+
+          IntersectionIteratorType p_endnit = auxGridPart.iend(micro_entity);
+          for(IntersectionIteratorType p_nit = auxGridPart.ibegin(micro_entity); p_nit != p_endnit ; ++p_nit)
+            {
+
+               // Note: we are on the zero-centered unit cube! (That's why everything works!)
+
+               FaceQuadratureType faceQuadrature( auxGridPart, *p_nit, 0, FaceQuadratureType::INSIDE );
+               const FaceGeometryType& faceGeometry = p_nit->geometry();
+
+               const RangeType edge_length = faceGeometry.volume();
+
+               DomainType unitOuterNormal =
+                       p_nit->unitOuterNormal(faceQuadrature.localPoint(0));
+
+               const DomainType &edge_center = geometry_S.global(faceQuadrature.point(0));
+
+               if ( (fabs(edge_center[0]) == ((0.5*(epsilon_estimated/delta)))) || 
+                    (fabs(edge_center[1]) == ((0.5*(epsilon_estimated/delta)))) )
+                {
+
+                  //we use the generalized gradient jumps.
+
+                  if ( (fabs(edge_center[0]) == ((0.5*(epsilon_estimated/delta)))) &&
+                       (fabs(edge_center[1]) < ((0.5*(epsilon_estimated/delta))))   )
+                   {
+                    // + 0.2 to avoid rounding errors!
+                    int id = int( ( num_boundary_faces_per_direction / 2 ) + (( edge_center[1] - (edge_length / 2.0) ) / edge_length) + 0.2 );
+
+                    // unit outer normal creates the correct sign!
+                    for( int k = 0; k < dimension; ++k )
+                       jump_up_down[ id ] += sqrt(edge_length) * ( diffusive_flux_y_S[ 0 ][ k ] * unitOuterNormal[ k ] );
+
+                    //std :: cout << "edge_center = " << edge_center << std :: endl;
+                    //std :: cout << "edge_length = " << edge_length << std :: endl;
+                    //std :: cout << "unitOuterNormal = " << unitOuterNormal << std :: endl;
+                    //std :: cout << "diffusive_flux_y_S = " << diffusive_flux_y_S[ 0 ] << std :: endl;
+                    //std :: cout << "jump_up_down id = " << id << std :: endl;
+                    //std :: cout << "jump_up_down[" << id << "] = " << jump_up_down[ id ] << std :: endl << std :: endl;
+
+                    eps_delta_boundary_edge_found = true;
+                    //std :: cout << "Found eps/delta boundary edge with center = " << edge_center << std :: endl;
+
+                   }
+
+                  if ( (fabs(edge_center[1]) == ((0.5*(epsilon_estimated/delta)))) &&
+                       (fabs(edge_center[0]) < ((0.5*(epsilon_estimated/delta))))   )
+                   {
+
+                    // + 0.2 to avoid rounding errors!
+                    int id = int( ( num_boundary_faces_per_direction / 2 ) + (( edge_center[0] - (edge_length / 2.0) ) / edge_length) + 0.2 );
+
+                    // unit outer normal creates the correct sign!
+                    for( int k = 0; k < dimension; ++k )
+                       jump_left_right[ id ] += sqrt(edge_length) * ( diffusive_flux_y_S[ 0 ][ k ] * unitOuterNormal[ k ] );
+
+                    //std :: cout << "edge_center = " << edge_center << std :: endl;
+                    //std :: cout << "edge_length = " << edge_length << std :: endl;
+                    //std :: cout << "unitOuterNormal = " << unitOuterNormal << std :: endl;
+                    //std :: cout << "diffusive_flux_y_S = " << diffusive_flux_y_S[ 0 ] << std :: endl;
+                    //std :: cout << "jump_left_right id = " << id << std :: endl;
+                    //std :: cout << "jump_left_right[" << id << "] = " << jump_left_right[ id ] << std :: endl << std :: endl;
+
+                    eps_delta_boundary_edge_found = true;
+                    //std :: cout << "Found eps/delta boundary edge with center = " << edge_center << std :: endl;
+
+                   }
+
+                }
+
+               if ( ( fabs(edge_center[0]) < (0.5*(epsilon_estimated/delta)) ) && 
+                    ( fabs(edge_center[1]) < (0.5*(epsilon_estimated/delta)) )  )
+                {
+                   // in this situation, p_nit always has an outside neighbor entity
+                   // (use the normal gradient jumps)
+
+
+                   // --------- the 'outer entity' (micro grid) ------------
+                   //                ( neighbor entity )
+
+                   EntityPointerType outer_p_it = p_nit->outside();
+                   const EntityType &outer_micro_entity = *outer_p_it;
+
+                   // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
+                   EntityQuadratureType outer_one_point_quadrature( outer_micro_entity , 0 );
+
+                   // Q_h(u_H)(x_T,y) on the neighbor entity:
+                   PeriodicLocalFunctionType outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(outer_micro_entity);
+                   JacobianRangeType gradient_outer_Q_u_H_x_T(0.);
+                   outer_loc_Q_u_H_x_T.jacobian(outer_one_point_quadrature[ 0 ], gradient_outer_Q_u_H_x_T);
+
+                   // S denotes the micro grid element (i.e. 'micro_entity')
+                   const EntityGeometryType& outer_geometry_S = outer_micro_entity.geometry();
+                   // outer_y_S denotes the barycenter of the neighbor micro grid element of S:
+                   const DomainType &outer_y_S = outer_geometry_S.global(outer_one_point_quadrature.point(0));
+
+                   // to evaluate A^{\epsilon}_h (in center of current outer entity):
+                   DomainType outer_globalPoint;
+                   JacobianRangeType direction_of_diffusion_outside;
+                   for( int k = 0; k < dimension; ++k )
+                     {
+                      outer_globalPoint[ k ] = x_T[ k ] + (delta * outer_y_S[ k ]);
+                      direction_of_diffusion_outside[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] +  gradient_outer_Q_u_H_x_T[ 0 ][ k ];
+                     }
+
+                   JacobianRangeType diffusive_flux_y_S_outside;
+                   diffusion_.diffusiveFlux( outer_globalPoint,
+                                             direction_of_diffusion_outside,
+                                             diffusive_flux_y_S_outside );
+
+                   // ----------------------------------------------------
+
+                   RangeType aux_value = 0.0;
+
+                   for( int k = 0; k < dimension; ++k )
+                     aux_value += ( diffusive_flux_y_S_outside[ 0 ][ k ] - diffusive_flux_y_S[ 0 ][ k ] ) * unitOuterNormal[ k ] ;
+
+                   local_indicator += edge_length * pow( aux_value , 2.0 );
+                }
+
+            } // end Intersection iterator
+        } // endif: "y_S \in \eps/\delta Y"
+
+        }
+
+       for( int id = 0; id < num_boundary_faces_per_direction; ++id )
+         {
+          local_indicator += ( pow( jump_up_down[ id ] , 2.0 ) + pow( jump_left_right[ id ] , 2.0 ) );
+         }
+
+       if ( eps_delta_boundary_edge_found == false )
+        {
+           std :: cout << "Error! Make sure that the restriction of the Y-triangulation on 'eps/delta Y' is a complete periodic triangulation of 'eps/delta Y' on its own. (for instance: delta = 2 epsilon should work)" << std :: endl; 
+           std :: abort();
+        }
+
+       local_indicator *= entityVolume;
+
+       return local_indicator;
 
      } // end of method
 
-#if 0
-//calculate:
-// \sum_(all faces of Y) 
-//   \int_E h³_entity ([( A_h(x_j,y) (\nabla_x u_H(x_j) + \nabla_y (K_h(u_H))]_E * n)²
-    RangeType errorXi
-             (const DomainType &globalPoint,
-              PeriodicDiscreteFunctionType &corrector_u_H,
-              JacobianRangeType &grad_u_H,
-              int polOrd = 0 /*(2 * spacePolOrd + 2)*/) const
-    {
 
-    //! WICHTIGE NOTIZ: das hier ist natürlich alles suboptimal, da wir statt dem grid auf dem periodic disrecte function space das grid auf dem normalen discrete function space verwenden. leider lässt sich das momentan noch nicht umgehen. Damit ergeben sich zwei Problem:
-    //!  1. H = h (da wir das MacroGrid hier als MicroGrid verwenden --> ist behoben
-    //!  2. wir verschenken die Rand Sprünge
 
-     bool homogeneous_structure = tensor_.homogeneous();
+#if 1
 
-     const GridPartType &gridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
+    // NOTE: This method ONLY works for uniformly refined micro-grid and GRIDDIM=2!
+    // (even though it might be extended easily to other cases, here we use the cheapest strategy, which just works for the case described above!)
+    // here, uniform also means that we have the same number of elements in every direction!)
+    // This indicator does not exist in theory. It is is additionally multiplied with h^3 to fit the other orders of convergence. In this setting it is more suitable for a comparison to capture the effect of boundary jumps in the case of a wrong boundary condition
+    RangeType indicator_effective_tfr( const EntityType &entity,
+                                       DiscreteFunctionType &u_H,
+                                       const PeriodicDiscreteFunctionType &corrector_u_H_on_entity )
+     {
 
-     RangeType result(0.0);
+       RangeType local_indicator(0.0);
 
-     IteratorType endit = auxiliaryDiscreteFunctionSpace_.end();
-     for(IteratorType it = auxiliaryDiscreteFunctionSpace_.begin(); it != endit ; ++it)
-      { //start entity iterator
+       Problem::ModelProblemData model_info;
+       const double delta = model_info.getDelta();
+       const double epsilon_estimated = model_info.getEpsilonEstimated();
 
-// das folgende nutzt merfach direkt, dass bei LagrangeSpace mit PolOrder 1, die Gradienten auf jeder Entity konstant sind und es deshalb egal ist, welcher Quadraturpunkt verwendet wird. Wir verwenden für EntityQuadraturen stets die Mittelpunkt Quadratur. Damit ist der einzige Quadraturpunkt stets der Mittelpunkt der Entity: entityQuadrature, 0 (0 = quadPoint).
-// Entsprechend gibt es auch keine Schleife der Art:
+       EntityQuadratureType entityQuadrature( entity , 0 ); // 0 = polynomial order
+       // the global quadrature (quadrature on the macro element T)
 
-//    const int quadratureNop = entityQuadrature.nop();
-//    for(int entityQuadPoint = 0; entityQuadPoint < quadratureNop; ++entityQuadPoint)
+       const EntityGeometryType& globalEntityGeometry = entity.geometry();
 
-       // entity
-       const EntityType& entity = *it;
-     
-       // create quadrature for given geometry type 
-       EntityQuadratureType entityQuadrature(entity,0); //PolOrd = 0  
-       // we also need a quadrature for all the neighbor entities,
-       // they are implemented in the next loop
+       const DomainType &x_T = globalEntityGeometry.global(entityQuadrature.point(0));
 
-       // get geoemetry of the entity
-       const EntityGeometryType& geometry = entity.geometry();
-       // we also need the geometry of all the neighbor entities,
-       // they are implemented in the next loop
- 
        const RangeType entityVolume = entityQuadrature.weight(0) * 
-              geometry.integrationElement(entityQuadrature.point(0));
+               globalEntityGeometry.integrationElement(entityQuadrature.point(0));
 
-       IntersectionIteratorType endnit = gridPart.iend(entity);
-       for(IntersectionIteratorType nit = gridPart.ibegin(entity); nit != endnit ; ++nit)
-          {
-           //the following distinction is redundant if we are able to use the intersection iterator and face quadratures for the periodic gridpart:
+       // \nabla u_H(x_T)
+       LocalFunctionType u_H_local = u_H.localFunction(entity);
+       JacobianRangeType gradient_u_H(0.);
+       u_H_local.jacobian(entityQuadrature[ 0 ], gradient_u_H);
 
-           // if the face is not part of the outer boundary
-           if ( nit.neighbor() ) //if there is a neighbor entity
-           {
 
-           //to save gradient of Corrector(Phi_H) on entity:
-           JacobianRangeType gradCor(0.0);
-           //to save gradient of Corrector(Phi_H) on neighbor entity:
-           JacobianRangeType gradCorNeigh(0.0);
-
-            //?const FaceGeometryType& faceGeometry = *nit->intersectionGlobal(); //geometry();
-
-           // get the neighbor entity:
-           const EntityPointerType neighborEntityPointer = nit.outside();
-           const EntityType& neighborEntity = *neighborEntityPointer;
-           // get quadrature of neighbor entity
-           EntityQuadratureType neighborEntityQuadrature(neighborEntity,0); //PolOrd = 0 
-           // only one qudraturePoint!
-           const EntityGeometryType& neighborGeometry = neighborEntity.geometry();
-
-           const PeriodicLocalFunctionType neighborLocalFunction = corrector_u_H.localFunction(neighborEntity);
-           const PeriodicLocalFunctionType localFunction = corrector_u_H.localFunction(entity);  
-
-           RangeType a_inside[ dimension ][ dimension ];
-           if (homogeneous_structure == true )
-            {
-             for( int k = 0; k < dimension; ++k )
-               for( int l = 0; l < dimension; ++l ) 
-               {
-                tensor_.evaluate( l, k,
-                               globalPoint,
-                               geometry.global( entityQuadrature.point( 0 ) ),
-                               a_inside[ l ][ k ] );
-               }
-             }
-           else
-            {
-             DomainType y_eps; // x_j + \eps_{est} * y
-             for( int k = 0; k < dimension; ++k )
-                y_eps[ k ] = globalPoint[ k ] + epsilon_est_ * geometry.global( entityQuadrature.point( 0 ) )[ k ];
-
-             for( int k = 0; k < dimension; ++k )
-               for( int l = 0; l < dimension; ++l ) 
-               {
-                tensor_.evaluate( l, k, y_eps, a_inside[ l ][ k ] );
-               }
-             }
-
-           //to save A_h(EntityPoint) \nabla Phi_H(globalPoint):
-           RangeType w1_inside[dimension];
-           for( int k = 0; k < dimension; ++k ) 
-               w1_inside[ k ] = 0; 
-
-           for( int k = 0; k < dimension; ++k )
-             for( int l = 0; l < dimension; ++l )
-                w1_inside[ k ] += a_inside[ k ][ l ] * grad_u_H[ 0 ][ l ];
-
-
-           RangeType a_outside[ dimension ][ dimension ];
-           if (homogeneous_structure == true )
-            {
-             for( int k = 0; k < dimension; ++k )
-               for( int l = 0; l < dimension; ++l ) 
-                {
-                 tensor_.evaluate( l, k,
-                                  globalPoint,
-                                  neighborGeometry.global( neighborEntityQuadrature.point( 0 ) ),
-                                  a_outside[ l ][ k ] );
-                }
-             }
-            else
-             {
-              DomainType y_eps; // x_j + \eps_{est} * y
-              for( int k = 0; k < dimension; ++k )
-                 y_eps[ k ] = globalPoint[ k ] + epsilon_est_ * neighborGeometry.global( neighborEntityQuadrature.point( 0 ) )[ k ];
-
-              for( int k = 0; k < dimension; ++k )
-                for( int l = 0; l < dimension; ++l ) 
-                 {
-                  tensor_.evaluate( l, k, y_eps, a_outside[ l ][ k ] );
-                 }
-              }
-
-            //to save A_h(neighborEntityPoint) \nabla Phi_H(globalPoint):
-            RangeType w1_outside[dimension];
-            for( int k = 0; k < dimension; ++k ) 
-                w1_outside[ k ] = 0; 
-
-            for( int k = 0; k < dimension; ++k )
-              for( int l = 0; l < dimension; ++l )
-                 w1_outside[ k ] += a_outside[ k ][ l ] * grad_u_H[ 0 ][ l ];
-
-           FaceQuadratureType innerFaceQuadrature(gridPart, nit, polOrd, FaceQuadratureType::INSIDE);
-           // we could also use an outerFaceQuadrature:
-           // FaceQuadratureType outerFaceQuadrature(gridPart, nit, polOrd, FaceQuadratureType::OUTSIDE);
-           // Note that the results would be the same
-
-           // innerFaceQuadrature and outerFaceQuadrature are equivalent, therefor we it is sufficient to stay restricted to the innerFaceQuadrature
-           const int quadratureNop = innerFaceQuadrature.nop();
-           for(int faceQuadPoint = 0; faceQuadPoint < quadratureNop; ++faceQuadPoint)
-             {
-
-              DomainType unitOuterNormal =
-                nit.unitOuterNormal(innerFaceQuadrature.localPoint(faceQuadPoint));
-
-              //outer normal Scaled with face size:
-              DomainType scaledOuterNormal =
-                nit.integrationOuterNormal(innerFaceQuadrature.localPoint(faceQuadPoint));
-
-              // get 'volume' of the face (this only works because we do not have curved faces):
-              RangeType faceVolume(0.0);
-              for ( int k = 0; k < dimension; ++k ) 
-                faceVolume += scaledOuterNormal[k] * scaledOuterNormal[k];
-              faceVolume = sqrt(faceVolume);
-
-              // instead of using h_entity = entityVolume, we set:
-              RangeType h_entity = entityVolume / faceVolume;
-              h_entity = faceVolume; //! loeschen?
-              // then the implementation is independent of the dimension
-
-              localFunction.jacobian( innerFaceQuadrature , faceQuadPoint , gradCor );
-              neighborLocalFunction.jacobian( innerFaceQuadrature , faceQuadPoint , gradCorNeigh );
-
-              //to save A_h(EntityPoint) \nabla Corrector(Phi_H)(EntityQuadPoint).
-              RangeType w2_inside[dimension];
-              for( int k = 0; k < dimension; ++k ) 
-                 w2_inside[ k ] = 0; 
- 
-              //we use the transformation formula, therefor we have:
-              for( int k = 0; k < dimension; ++k )
-                for( int l = 0; l < dimension; ++l )
-                  w2_inside[ k ] += (1.0 / epsilon_est_) * a_inside[ k ][ l ] * gradCor[ 0 ][ l ];
-
-
-              //to save A_h(neighborEntityPoint) \nabla Corrector(Phi_H)(neighborEntityQuadPoint).
-              RangeType w2_outside[dimension];
-              for( int k = 0; k < dimension; ++k ) 
-                 w2_outside[ k ] = 0; 
- 
-              //we use the transformation formula, therefor we have:
-              for( int k = 0; k < dimension; ++k )
-                for( int l = 0; l < dimension; ++l )
-                  w2_outside[ k ] += (1.0 / epsilon_est_) * a_outside[ k ][ l ] * gradCorNeigh[ 0 ][ l ];
-
-
-              //to save:
-              //  A_h(neighborEntityPoint) [ \nabla Phi_H(globalPoint) 
-              //                   + \nabla  Corrector(Phi_H)(neighborEntityQuadPoint) ].
-              RangeType w_inside[dimension];
-              for( int k = 0; k < dimension; ++k ) 
-                 w_inside[ k ] = w1_inside[ k ] + w2_inside[ k ]; 
-
-              //to save:
-              //  A_h(neighborEntityPoint) [ \nabla Phi_H(globalPoint) 
-              //                   + \nabla  Corrector(Phi_H)(neighborEntityQuadPoint) ].
-              RangeType w_outside[dimension];
-              for( int k = 0; k < dimension; ++k ) 
-                 w_outside[ k ] = w1_outside[ k ] + w2_outside[ k ]; 
-
-              //gradient jump:
-              RangeType w_jump[dimension];
-              for( int k = 0; k < dimension; ++k ) 
-                 w_jump[ k ] = w_outside[ k ] - w_inside[ k ]; 
-
-              //gradient jump * unitOuterNormal:
-              RangeType w_unscaled = 0;
-              for( int k = 0; k < dimension; ++k ) 
-                 w_unscaled += w_jump[ k ] * unitOuterNormal[ k ]; 
-
-              //gradient jump * scaledOuterNormal:
-              RangeType w_scaled = 0;
-              for( int k = 0; k < dimension; ++k ) 
-                 w_scaled += w_jump[ k ] * scaledOuterNormal[ k ]; 
-              // By scaling the second outer normal, we don't have to multiply the final result with the size of the face
-
-              RangeType value;
-              value = w_scaled * w_unscaled;
-              value *= h_entity * h_entity * h_entity 
-                       * innerFaceQuadrature.weight(faceQuadPoint);
-
-              result += value;
-
-             } // end loop face quadrature points
-
-             } // end of if-condition:  nit.neighbor()
-             else // (if nit is a boundary face:)
-             { 
-              //! hier verschenken wir nun etwas, solange wir den IntersectionIterator für nicht periodisches Gitter verwenden. Hier verlieren wir die 'Randsprünge', da wir 'zu früh' die L²-Norm bilden
-              
-              //to save gradient of Corrector(Phi_H) on entity:
-              JacobianRangeType gradCor(0.0);
-              //to save gradient of Corrector(Phi_H) on neighbor entity:
-              JacobianRangeType gradCorNeigh(0.0);
-
-              const PeriodicLocalFunctionType localFunction = corrector_u_H.localFunction(entity);  
-
-              RangeType a[ dimension ][ dimension ];
-              if (homogeneous_structure == true )
-               {
-                for( int k = 0; k < dimension; ++k )
-                  for( int l = 0; l < dimension; ++l ) 
-                    {
-                      tensor_.evaluate( l, k,
-                                        globalPoint,
-                                        geometry.global( entityQuadrature.point( 0 ) ),
-                                        a[ l ][ k ] );
-                    }
-               }
-             else
-                {
-
-                 DomainType y_eps; // x_j + \eps_{est} * y
-                 for( int k = 0; k < dimension; ++k )
-                    y_eps[ k ] = globalPoint[ k ] + epsilon_est_ * geometry.global( entityQuadrature.point( 0 ) )[ k ];
-
-                 for( int k = 0; k < dimension; ++k )
-                   for( int l = 0; l < dimension; ++l ) 
-                    {
-                      tensor_.evaluate( l, k, y_eps, a[ l ][ k ] );
-                    }
-               }
-
-             //to save A_h(EntityPoint) \nabla Phi_H(globalPoint):
-             RangeType w1[dimension];
-             for( int k = 0; k < dimension; ++k ) 
-               w1[ k ] = 0;
-
-             for( int k = 0; k < dimension; ++k )
-               for( int l = 0; l < dimension; ++l )
-                  w1[ k ] += a[ k ][ l ] * grad_u_H[ 0 ][ l ];
-
-
-            FaceQuadratureType faceQuadrature(gridPart, nit, polOrd, FaceQuadratureType::INSIDE);
-
-            const int quadratureNop = faceQuadrature.nop();
-            for(int faceQuadPoint = 0; faceQuadPoint < quadratureNop; ++faceQuadPoint)
-              {
-
-               DomainType unitOuterNormal =
-                 nit.unitOuterNormal(faceQuadrature.localPoint(faceQuadPoint));
-
-              //outer normal Scaled with face size:
-              DomainType scaledOuterNormal =
-                nit.integrationOuterNormal(faceQuadrature.localPoint(faceQuadPoint));
-
-              // get 'volume' of the face (this only works because we do not have curved faces):
-              RangeType faceVolume(0.0);
-              for ( int k = 0; k < dimension; ++k ) 
-                faceVolume += scaledOuterNormal[k] * scaledOuterNormal[k];
-              faceVolume = sqrt(faceVolume);
-
-              // instead of using h_entity = entityVolume, we set:
-              RangeType h_entity = entityVolume / faceVolume;
-              h_entity = faceVolume; //! loeschen?
-              // then it is independent of the dimension
-
-              localFunction.jacobian( faceQuadrature , faceQuadPoint , gradCor );
-
-              //to save A_h(EntityPoint) \nabla Corrector(Phi_H)(EntityQuadPoint).
-              RangeType w2[dimension];
-              for( int k = 0; k < dimension; ++k ) 
-                 w2[ k ] = 0; 
- 
-              //we use the transformation formula, therefor we have:
-              for( int k = 0; k < dimension; ++k )
-                for( int l = 0; l < dimension; ++l )
-                  w2[ k ] += (1.0 / epsilon_est_) * a[ k ][ l ] * gradCor[ 0 ][ l ];
-
-              //to save:
-              //  A_h(neighborEntityPoint) [ \nabla Phi_H(globalPoint) 
-              //                   + \nabla  Corrector(Phi_H)(neighborEntityQuadPoint) ].
-              RangeType w[dimension];
-              for( int k = 0; k < dimension; ++k ) 
-                 w[ k ] = w1[ k ] + w2[ k ]; 
-
-
-              // * unitOuterNormal:
-              RangeType w_unscaled = 0;
-              for( int k = 0; k < dimension; ++k ) 
-                 w_unscaled += w[ k ] * unitOuterNormal[ k ]; 
-
-              //gradient jump * scaledOuterNormal:
-              RangeType w_scaled = 0;
-              for( int k = 0; k < dimension; ++k ) 
-                 w_scaled += w[ k ] * scaledOuterNormal[ k ]; 
-              // By scaling the second outer normal, we don't have to multiply the final result with the size of the face
-
-              RangeType value;
-              value = w_scaled * w_unscaled;
-              value *= h_entity * h_entity * h_entity 
-                       * faceQuadrature.weight(faceQuadPoint);
-
-              result += value;
-
-             }
-
-            } // 'end of else'
-
-            } // end of intersection iterator loop
-
-      } // end of entity iterator loop
-
-      // each face was visited twice
-      result = result / 2.0; 
-
-      return result;
-
-    } // end of method 
-
-
-    // return local approximation error (already locally squared)
-    RangeType errorMu( const EntityType &entity,
-                       const PeriodicDiscreteFunctionType &corrector_u_H,
-                       const JacobianRangeType &gradient_u_H_in_xj )
-     {
-
-
-      bool homogeneous_structure = tensor_.homogeneous();
-
-      // by global quadrature we mean: a quadrature on the macro element T_j,
-      // by local quadrature we mean: a quadrature on the unit cube Y
-
-      EntityQuadratureType globalQuadrature(entity, 0 ); // 0 = polynomial order
-      //for further considerations with matrices of the type A(x,y) (whereas the dependency on the first variable x is a 'real' dependency!) it may be better to use polynomial order = 2 instead of polynomial order = 0!
-      // for matrices of type A(x,y) = A(y), it is of course unnecessary to use polynomial order = 2
-
-      const EntityGeometryType& globalGeometry = entity.geometry();
-
-      const DomainType &xj = globalGeometry.global(globalQuadrature.point(0));
-
-      RangeType errorMu(0.);
-
-      const int quadratureNop = globalQuadrature.nop();
-      for(int quadPointIn_T_j = 0; quadPointIn_T_j < quadratureNop; ++quadPointIn_T_j)
-      // start loop over the quadrature points of the macro mesh element T_j
-       {
-
-        // to save the approximation of
-        //     \int_Y ((A - A_h)(\nabla_x u_H + \nabla_y K_h(u_H)))^2
-        // in corresponding quadrature points:
-        RangeType valueOfLocalQuadrature(0.);
-
-        PeriodicIteratorType endit = periodicDiscreteFunctionSpace_.end();
-        for(PeriodicIteratorType it = periodicDiscreteFunctionSpace_.begin(); it != endit ; ++it)
-        // start loop over the elements of the unit cell mesh
-         {
-
-           // entity
-           const PeriodicEntityType& localEntity = *it;
-
-           // create quadrature for given geometry type 
-           PeriodicEntityQuadratureType localQuadrature(localEntity , 2 ); // 2 = polynomial order
-           // create a trivial quadrature
-           // This is important to compare A and A_h properly. A_h is defined by the values of A in the quadrature points of the trivial quadrature: A_h(x,y)_{|T_j /times S_k^*} := A(x_j, y_k). Now if we used the same quadrature for A, then the error would be zero! (A_h(x_j, y_k) - A(x_j, y_k) = 0) This is wrong since the error should have the same order as theory suggests. (generaly first order)
-           PeriodicEntityQuadratureType trivialQuadrature(localEntity , 0 ); // 0 = polynomial order
-
-           // get geoemetry of local entity
-           const PeriodicEntityGeometryType& localGeometry = localEntity.geometry();
-
-           PeriodicLocalFunctionType cor_u_H = corrector_u_H.localFunction(localEntity); 
-
-           // save A_h(x_j, y_k)
-           RangeType a_h[ dimension ][ dimension]; 
-           if (homogeneous_structure == true )
-            {
-             // evaluate function in global quadrature Point:
-             for( int k = 0; k < dimension ; ++k )
-               for( int l = 0; l < dimension ; ++l ) 
-                 tensor_.evaluate( k, l, xj,
-                                   localGeometry.global( trivialQuadrature.point( 0 ) ),
-                                   //0, since we use the trivial quadrature
-                                   a_h[ k ][ l ] );
-            }
-           else
-            {
-              DomainType y_eps; // x_j + \eps_{est} * y
-              for( int k = 0; k < dimension; ++k )
-                 y_eps[ k ] = xj[ k ] + epsilon_est_ * localGeometry.global( trivialQuadrature.point( 0 ) )[ k ];
-
-              // evaluate function in global quadrature Point:
-              for( int k = 0; k < dimension ; ++k )
-               for( int l = 0; l < dimension ; ++l ) 
-                 tensor_.evaluate( k, l, y_eps, a_h[ k ][ l ] );
-            }
-
-           // we need to average over the local distances, for details see end of localQuadPoint-loop
-           double average = 0;
-
-           // integrate 
-           const int localQuadratureNop = localQuadrature.nop();
-           for(int localQuadPoint = 0; localQuadPoint < localQuadratureNop; ++localQuadPoint)
-            {
-
-              // save A(x,y) in corresponding, non trivial, quadrature points
-              RangeType a[ dimension ][ dimension ];
-              if (homogeneous_structure == true )
-               {
-                for( int k = 0; k < dimension ; ++k )
-                  for( int l = 0; l < dimension ; ++l ) 
-                    tensor_.evaluate( k, l,
-                                      globalGeometry.global( globalQuadrature.point( quadPointIn_T_j ) ),
-                                      localGeometry.global( localQuadrature.point( localQuadPoint ) ),
-                                      a[ k ][ l ] );
-               }
-              else
-               {
-                 DomainType y_eps_new;
-                 for( int k = 0; k < dimension; ++k )
-                 y_eps_new[ k ] = globalGeometry.global( globalQuadrature.point( quadPointIn_T_j ) )[ k ] + epsilon_est_ * localGeometry.global( localQuadrature.point( localQuadPoint ) )[ k ];
-
-                 for( int k = 0; k < dimension ; ++k )
-                  for( int l = 0; l < dimension ; ++l ) 
-                    tensor_.evaluate( k, l, y_eps_new, a[ k ][ l ] );
-               }
-
-              PeriodicJacobianRangeType gradient_Cor_u_H;
-              cor_u_H.jacobian( localQuadrature , localQuadPoint , gradient_Cor_u_H );
-
-              const double locQuadWeight = localQuadrature.weight(localQuadPoint) *
-                  localGeometry.integrationElement(localQuadrature.point(localQuadPoint));
-
-              RangeType approxerror[ dimension ];
-              for( int k = 0; k < dimension; ++k )
-                 approxerror[ k ] = 0;
-
-
-              for( int k = 0; k < dimension; ++k )
-               for( int l = 0; l < dimension; ++l )
-                {
-                 approxerror[ k ] += ( a[ k ][ l ] - a_h[ k ][ l ] )
-                   * ( gradient_u_H_in_xj[ 0 ][ l ] + (1.0 / epsilon_est_) * gradient_Cor_u_H[ 0 ][ l ] ); 
-                }
-
-
-              RangeType val(0);
-              for( int k = 0; k < dimension; ++k )
-               val += approxerror[ k ] * approxerror[ k ];
-
-              average += val;
-
-             valueOfLocalQuadrature += locQuadWeight;
-
-            } // end of localQuadPoint-loop
-
-            // averaging prevents that the maximum of all distances (A - A_h) is multiplied with the maximum of the weights, which could enlarge the error and decrease the rate of convergence fundamentaly!
-            average = average / localQuadratureNop;
-            valueOfLocalQuadrature *= average;
-
-          } // end loop over the elements of the unit cell mesh
-
-          const double weight = globalQuadrature.weight(quadPointIn_T_j) *
-             globalGeometry.integrationElement(globalQuadrature.point(quadPointIn_T_j));
-
-          errorMu += weight * valueOfLocalQuadrature;
-
-        } // end loop over the quadrature points of the macro mesh element T_j
-
-     return errorMu;
-
-     } // end of method 
-
-
-    RangeType errorZeta( const EntityType &entity,
-                               DiscreteFunctionType &u_H,
-                         const PeriodicDiscreteFunctionType &correctorU_H_onEntity,
-                         const JacobianRangeType &gradientU_H_onEntity )
-     {
-      RangeType errorZeta(0.);
-
-      //const EntityType& entity = *entityPointer;
-
-      bool homogeneous_structure = tensor_.homogeneous();
-
-      double epsilon_est;
-      tensor_.getEpsilonEstimated(epsilon_est);
-
-      EntityQuadratureType entityQuadrature(entity,0); // 0 = polynomial order
-      // the global quadrature (quadrature on the macro element T_j)
-
-      const EntityGeometryType& globalEntityGeometry = entity.geometry();
-
-      const DomainType &xj = globalEntityGeometry.global(entityQuadrature.point(0));
-
-      const RangeType entityVolume = entityQuadrature.weight(0) * 
-              globalEntityGeometry.integrationElement(entityQuadrature.point(0));
-
-      double cof[10000];
-      for( int r = 0; r < 10000; ++r )
-         {cof[r] = 0;} 
-
-      int counting = 0;
-      // we save the value of the hmfem solution in its dofs.
-      const DofIteratorType end = u_H.dend();
-      for( DofIteratorType dit = u_H.dbegin(); dit != end; ++dit )
-        { cof[ counting ] = *dit;
-          counting += 1;
+       if ( dimension != 2 )
+        {
+          std :: cout << "The error indicator 'indicator_tfr_1' is not implemented for dimension!=2 and only works for uniformly refined micro-grids!" << std :: endl;
         }
 
-      bool reader_is_open = false;
 
-      DiscreteFunctionReader dfr( (cell_solution_location_).c_str() );
+       // edge length of a boundary face
+       RangeType ref_edge_length = 1.0;
 
-      reader_is_open = dfr.open();
+       GridPartType auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
 
+       IteratorType micro_it = auxiliaryDiscreteFunctionSpace_.begin();
 
-      const GridPartType &gridPart = discreteFunctionSpace_.gridPart();
-
-
-      PeriodicDiscreteFunctionType
-                correctorPhi_i_onNeighEntity( "correctorPhi_i_onNeighEntity",
-                                              periodicDiscreteFunctionSpace_ );
-
-      PeriodicDiscreteFunctionType
-             correctorU_H_onNeighEntity( "correctorU_H_onNeighEntity" ,
-                                         periodicDiscreteFunctionSpace_ );
-
-      enum { maxnumOfBaseFct = 100 };
-
-      JacobianRangeType gradientU_H_onNeighEntity(0.);
-
-      IntersectionIteratorType endnit = gridPart.iend(entity);
-      for(IntersectionIteratorType nit = gridPart.ibegin(entity); nit != endnit ; ++nit)
+       // we just need one element to determine all the properties (due to uniform refinement)!
+       IntersectionIteratorType endnit = auxGridPart.iend(*micro_it);
+       for(IntersectionIteratorType nit = auxGridPart.ibegin(*micro_it); nit != endnit ; ++nit)
          {
-          if ( nit.neighbor() ) //if there is a neighbor entity
+           FaceQuadratureType faceQuadrature( auxGridPart, *nit, 1 , FaceQuadratureType::INSIDE);
+           const FaceGeometryType& faceGeometry = nit->geometry();
+
+           if ( ref_edge_length > faceGeometry.volume() )
+            { ref_edge_length = faceGeometry.volume(); }
+
+         }
+
+       // number of boundary faces per (\epsilon/\delta-scaled) cube edge:
+       int num_boundary_faces_per_direction = int( ((epsilon_estimated/delta) / ref_edge_length) + 0.2 );
+       // (+0.2 to avoid rounding errors)
+
+       // generalized jump up/down
+       RangeType jump_up_down[ num_boundary_faces_per_direction ];
+
+       // generalized jump left/right
+       RangeType jump_left_right[ num_boundary_faces_per_direction ];
+
+       for( int id = 0; id < num_boundary_faces_per_direction; ++id )
+         {
+          jump_up_down[ id ] = 0.0;
+          jump_left_right[ id ] = 0.0;
+         }
+
+       // did you find a boundary edge of the \eps-\delta-cube? (you must find it!!)
+       bool eps_delta_boundary_edge_found = false;
+
+       // procedure for computing the generalized jumps:
+       // 1. compute the center of the current face E: (x_E,y_E)
+       // 2. one and only one of these values fulfiles abs()=1/2
+       //    (i.e. we either have 'abs(x_E)=1/2' or 'abs(y_E)=1/2')
+       //    without loss of generality we assume 'abs(y_E)=1/2', then
+       //    we are in the setting of 'jump_up_down'
+       // 3. Any 'jump_up_down' recieves a unique ID by
+       //     jump up down over (x,-1/2) and (x,1/2) = jump_up_down[ (num_boundary_faces_per_direction/2) + (( x - (edge_length/2) ) / edge_length) ]
+       //     (num_boundary_faces_per_direction/2) + (( x - (edge_length/2) ) / edge_length) is the corresponding ID
+       // 4. the situation is identical for 'abs(x_E)=1/2'.
+
+
+       // iterator over the elements of the periodic micro grid:
+       IteratorType p_endit = auxiliaryDiscreteFunctionSpace_.end();
+       for( IteratorType p_it = auxiliaryDiscreteFunctionSpace_.begin(); p_it != p_endit; ++p_it )
+        {
+
+          // --------- the 'inner entity' (micro grid) ------------
+
+          const EntityType &micro_entity = *p_it;
+
+          // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
+          EntityQuadratureType one_point_quadrature( micro_entity , 0 );
+
+          // Q_h(u_H)(x_T,y) on the micro entity:
+          PeriodicLocalFunctionType loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+          JacobianRangeType gradient_Q_u_H_x_T(0.);
+          loc_Q_u_H_x_T.jacobian(one_point_quadrature[ 0 ], gradient_Q_u_H_x_T);
+
+          // S denotes the micro grid element (i.e. 'micro_entity')
+          const EntityGeometryType& geometry_S = micro_entity.geometry();
+          // y_S denotes the barycenter of the micro grid element S:
+          const DomainType &y_S = geometry_S.global(one_point_quadrature.point(0));
+
+          // to evaluate A^{\epsilon}_h (in center of current inner entity):
+          DomainType globalPoint;
+          JacobianRangeType direction_of_diffusion;
+          for( int k = 0; k < dimension; ++k )
            {
-             correctorU_H_onNeighEntity.clear();
-             for( int k = 0; k < dimension; ++k )
-                gradientU_H_onNeighEntity[k] = 0;
-
-             const EntityPointerType neighborEntityPointer = nit.outside();
-             const EntityType& neighborEntity = *neighborEntityPointer;
-             // get quadrature of neighbor entity
-             EntityQuadratureType neighborEntityQuadrature(neighborEntity,0); //PolOrd = 0 
-             // only one qudraturePoint!
-             const EntityGeometryType& globalNeighEntityGeometry = neighborEntity.geometry();
- 
-             LocalFunctionType u_H_neigh_entity = u_H.localFunction(neighborEntity); 
-
-             const RangeType neighEntityVolume = neighborEntityQuadrature.weight(0) * 
-                 globalNeighEntityGeometry.integrationElement(neighborEntityQuadrature.point(0));
-
-             const BaseFunctionSetType neighEntityBaseSet
-                 = discreteFunctionSpace_.baseFunctionSet( neighborEntity );
-             const int numBaseFunctionsOnEntityNeigh = neighEntityBaseSet.numBaseFunctions();
-
-//! Start computing the (unit) outer normal belonging to the current face (of the global mesh!)
-             FaceQuadratureType faceQuadrature(gridPart, nit, 0, FaceQuadratureType::INSIDE);
-
-             // unit outer normal to the global entity face
-             DomainType unitOuterNormal =
-                nit.unitOuterNormal(faceQuadrature.localPoint( 0 ));
-
-              //outer normal Scaled with face size:
-             DomainType scaledOuterNormal =
-                nit.integrationOuterNormal(faceQuadrature.localPoint( 0 ));
-
-             RangeType face_size = 0.0;
-             for( int l = 0; l < dimension; ++l ) 
-              {
-               if (fabs(scaledOuterNormal[l]) >= face_size )
-                 { face_size = fabs(scaledOuterNormal[l]); }
-              }
-
-//! anpassen: localGeometry.integrationElement(localQuadrature.point( 0 ));
-
-//! End computing outer normal
-
-             u_H_neigh_entity.jacobian( neighborEntityQuadrature , 0 , gradientU_H_onNeighEntity );
-
-             for( int i = 0; i < numBaseFunctionsOnEntityNeigh; ++i )
-              {
-
-                int globalNumberOfBaseFunction = discreteFunctionSpace_.mapToGlobal( neighborEntity , i );
-
-                int number_of_cell_prob = get_cell_problem_id( neighborEntityPointer, i );
-
-                correctorPhi_i_onNeighEntity.clear();
-                if (reader_is_open)
-                  {dfr.read( number_of_cell_prob, correctorPhi_i_onNeighEntity );}
-
-                // K_h(PHI_i) = u_i * K_h(PHI_i)
-                adapter.multScalar( correctorPhi_i_onNeighEntity , cof[ globalNumberOfBaseFunction ] );
-                // K_h(u_H) = K_h(u_H) + K_h(PHI_i)
-                adapter.add( correctorU_H_onNeighEntity , correctorPhi_i_onNeighEntity );
-
-              } 
-
-             // Now gradientU_H_onNeighEntity and correctorU_H_onNeighEntity are determined, the corresponding base functions on neighborEntity are no more important now.
+            direction_of_diffusion[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] + gradient_Q_u_H_x_T[ 0 ][ k ];
+            globalPoint[ k ] = x_T[ k ] + (delta * y_S[ k ]);
+           }
 
 
-             RangeType averaged_jump = 0.0;
+          JacobianRangeType diffusive_flux_y_S;
+          diffusion_.diffusiveFlux( globalPoint,
+                                    direction_of_diffusion,
+                                    diffusive_flux_y_S );
 
-             // Start
-             PeriodicIteratorType endit = periodicDiscreteFunctionSpace_.end();
-             for(PeriodicIteratorType it = periodicDiscreteFunctionSpace_.begin(); it != endit ; ++it)
-               // start loop over the elements of the unit cell mesh
-               {
-                 const PeriodicEntityType& localEntity = *it;
-                 // by local entity we mean an entity element of the local mesh on the unit cell Y
+          if ( (fabs(y_S[1]) <= ((0.5*(epsilon_estimated/delta)))) &&
+               (fabs(y_S[0]) <= ((0.5*(epsilon_estimated/delta))))    )
+          {
+          // ----------------------------------------------------
 
-                 // create quadrature for given geometry type 
-                 PeriodicEntityQuadratureType localQuadrature(localEntity , 0 ); //polOrd = 0
+          IntersectionIteratorType p_endnit = auxGridPart.iend(micro_entity);
+          for(IntersectionIteratorType p_nit = auxGridPart.ibegin(micro_entity); p_nit != p_endnit ; ++p_nit)
+            {
 
-                 // get geoemetry of local entity
-                 const PeriodicEntityGeometryType& localGeometry = localEntity.geometry();
+               // Note: we are on the zero-centered unit cube! (That's why everything works!)
 
+               FaceQuadratureType faceQuadrature( auxGridPart, *p_nit, 0, FaceQuadratureType::INSIDE );
+               const FaceGeometryType& faceGeometry = p_nit->geometry();
 
-                 PeriodicLocalFunctionType cor_u_H_entity
-                      = correctorU_H_onEntity.localFunction(localEntity);
+               const RangeType edge_length = faceGeometry.volume();
 
-                 PeriodicJacobianRangeType grad_cor_u_H_entity;
-                 cor_u_H_entity.jacobian
-                     ( localQuadrature , 0 /*localQuadPoint*/ , grad_cor_u_H_entity );
+               DomainType unitOuterNormal =
+                       p_nit->unitOuterNormal(faceQuadrature.localPoint(0));
 
+               const DomainType &edge_center = geometry_S.global(faceQuadrature.point(0));
 
-                 PeriodicLocalFunctionType cor_u_H_neighEntity
-                      = correctorU_H_onNeighEntity.localFunction(localEntity);
+               if ( (fabs(edge_center[0]) == ((0.5*(epsilon_estimated/delta)))) || 
+                    (fabs(edge_center[1]) == ((0.5*(epsilon_estimated/delta)))) )
+                {
 
-                 PeriodicJacobianRangeType grad_cor_u_H_neighEntity;
-                 cor_u_H_neighEntity.jacobian
-                     ( localQuadrature , 0 /*localQuadPoint*/ , grad_cor_u_H_neighEntity );
+                  //we use the generalized gradient jumps.
 
- 
-//! Start computing A_h( x_entity, y_k ) and A_h( x_neighEntity, y_k )
+                  if ( (fabs(edge_center[0]) == ((0.5*(epsilon_estimated/delta)))) &&
+                       (fabs(edge_center[1]) < ((0.5*(epsilon_estimated/delta))))   )
+                   {
+                    // + 0.2 to avoid rounding errors!
+                    int id = int( ( num_boundary_faces_per_direction / 2 ) + (( edge_center[1] - (edge_length / 2.0) ) / edge_length) + 0.2 );
 
-// y_k is the current (local) quadrature point
-                 RangeType a_entity[ dimension ][ dimension ];
-                 if (homogeneous_structure == true )
-                  {
+                    // unit outer normal creates the correct sign!
                     for( int k = 0; k < dimension; ++k )
-                     for( int l = 0; l < dimension; ++l ) 
-                      {
-                       tensor_.evaluate( l, k, xj, //global quad point
-                                         localGeometry.global( localQuadrature.point( 0 ) ), //local quad point
-                                         a_entity[ l ][ k ] );
-                      }
-                  }
-                 else
-                  {
+                       jump_up_down[ id ] += pow( edge_length , 2.0 ) * ( diffusive_flux_y_S[ 0 ][ k ] * unitOuterNormal[ k ] );
 
-                    DomainType y_eps_entity; // x_j + \eps_{est} * y
+                    //std :: cout << "edge_center = " << edge_center << std :: endl;
+                    //std :: cout << "edge_length = " << edge_length << std :: endl;
+                    //std :: cout << "unitOuterNormal = " << unitOuterNormal << std :: endl;
+                    //std :: cout << "diffusive_flux_y_S = " << diffusive_flux_y_S[ 0 ] << std :: endl;
+                    //std :: cout << "jump_up_down id = " << id << std :: endl;
+                    //std :: cout << "jump_up_down[" << id << "] = " << jump_up_down[ id ] << std :: endl << std :: endl;
+
+                    eps_delta_boundary_edge_found = true;
+                    //std :: cout << "Found eps/delta boundary edge with center = " << edge_center << std :: endl;
+
+                   }
+
+                  if ( (fabs(edge_center[1]) == ((0.5*(epsilon_estimated/delta)))) &&
+                       (fabs(edge_center[0]) < ((0.5*(epsilon_estimated/delta))))   )
+                   {
+
+                    // + 0.2 to avoid rounding errors!
+                    int id = int( ( num_boundary_faces_per_direction / 2 ) + (( edge_center[0] - (edge_length / 2.0) ) / edge_length) + 0.2 );
+
+                    // unit outer normal creates the correct sign!
                     for( int k = 0; k < dimension; ++k )
-                      y_eps_entity[ k ] = xj[ k ] + epsilon_est_ * localGeometry.global( localQuadrature.point( 0 ) )[ k ];
+                       jump_left_right[ id ] += pow( edge_length , 2.0 ) * ( diffusive_flux_y_S[ 0 ][ k ] * unitOuterNormal[ k ] );
 
-                    for( int k = 0; k < dimension; ++k )
-                     for( int l = 0; l < dimension; ++l ) 
-                      {
-                       tensor_.evaluate( l, k, y_eps_entity,
-                                         a_entity[ l ][ k ] );
-                      }
-                  }
+                    //std :: cout << "edge_center = " << edge_center << std :: endl;
+                    //std :: cout << "edge_length = " << edge_length << std :: endl;
+                    //std :: cout << "unitOuterNormal = " << unitOuterNormal << std :: endl;
+                    //std :: cout << "diffusive_flux_y_S = " << diffusive_flux_y_S[ 0 ] << std :: endl;
+                    //std :: cout << "jump_left_right id = " << id << std :: endl;
+                    //std :: cout << "jump_left_right[" << id << "] = " << jump_left_right[ id ] << std :: endl << std :: endl;
 
-                 RangeType a_neighEntity[ dimension ][ dimension ];
-                 if (homogeneous_structure == true )
-                  {
-                    for( int k = 0; k < dimension; ++k )
-                     for( int l = 0; l < dimension; ++l ) 
-                      {
-                       tensor_.evaluate( l, k,
-                                         globalNeighEntityGeometry.global( neighborEntityQuadrature.point(0) ), //global quad point
-                                          localGeometry.global( localQuadrature.point( 0 ) ), //local quad point
-                                          a_neighEntity[ l ][ k ] );
-                      }
-                  }
-                 else
-                  {
-                    DomainType y_eps_neigh_entity; // x_j + \eps_{est} * y
-                    for( int k = 0; k < dimension; ++k )
-                      y_eps_neigh_entity[ k ] = globalNeighEntityGeometry.global( neighborEntityQuadrature.point(0) )[ k ] + epsilon_est_ * localGeometry.global( localQuadrature.point( 0 ) )[ k ];
+                    eps_delta_boundary_edge_found = true;
+                    //std :: cout << "Found eps/delta boundary edge with center = " << edge_center << std :: endl;
+
+                   }
+
+                }
+
+               if ( ( fabs(edge_center[0]) < (0.5*(epsilon_estimated/delta)) ) && 
+                    ( fabs(edge_center[1]) < (0.5*(epsilon_estimated/delta)) )  )
+                {
+                   // in this situation, p_nit always has an outside neighbor entity
+                   // (use the normal gradient jumps)
 
 
-                    for( int k = 0; k < dimension; ++k )
-                     for( int l = 0; l < dimension; ++l ) 
-                      {
-                       tensor_.evaluate( l, k, y_eps_neigh_entity,
-                                          a_neighEntity[ l ][ k ] );
-                      }
-                  }
+                   // --------- the 'outer entity' (micro grid) ------------
+                   //                ( neighbor entity )
 
-                 //to save  A_h( x_entity, y_k ) \nabla u_H( x_entity ):
-                 RangeType A_h_grad_u_H_entity[dimension];
-                 for( int k = 0; k < dimension; ++k ) 
-                  A_h_grad_u_H_entity[ k ] = 0; 
+                   EntityPointerType outer_p_it = p_nit->outside();
+                   const EntityType &outer_micro_entity = *outer_p_it;
 
-                 for( int k = 0; k < dimension; ++k )
-                  for( int l = 0; l < dimension; ++l )
-                   A_h_grad_u_H_entity[ k ] += a_entity[ k ][ l ] * gradientU_H_onEntity[ 0 ][ l ];
+                   // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
+                   EntityQuadratureType outer_one_point_quadrature( outer_micro_entity , 0 );
 
+                   // Q_h(u_H)(x_T,y) on the neighbor entity:
+                   PeriodicLocalFunctionType outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(outer_micro_entity);
+                   JacobianRangeType gradient_outer_Q_u_H_x_T(0.);
+                   outer_loc_Q_u_H_x_T.jacobian(outer_one_point_quadrature[ 0 ], gradient_outer_Q_u_H_x_T);
 
+                   // S denotes the micro grid element (i.e. 'micro_entity')
+                   const EntityGeometryType& outer_geometry_S = outer_micro_entity.geometry();
+                   // outer_y_S denotes the barycenter of the neighbor micro grid element of S:
+                   const DomainType &outer_y_S = outer_geometry_S.global(outer_one_point_quadrature.point(0));
 
-                 //to save  A_h( x_neighEntity, y_k ) \nabla u_H( x_neighEntity ):
-                 RangeType A_h_grad_u_H_neighEntity[dimension];
-                 for( int k = 0; k < dimension; ++k ) 
-                  A_h_grad_u_H_neighEntity[ k ] = 0; 
+                   // to evaluate A^{\epsilon}_h (in center of current outer entity):
+                   DomainType outer_globalPoint;
+                   JacobianRangeType direction_of_diffusion_outside;
+                   for( int k = 0; k < dimension; ++k )
+                     {
+                      outer_globalPoint[ k ] = x_T[ k ] + (delta * outer_y_S[ k ]);
+                      direction_of_diffusion_outside[ 0 ][ k ] = gradient_u_H[ 0 ][ k ] +  gradient_outer_Q_u_H_x_T[ 0 ][ k ];
+                     }
 
-                 for( int k = 0; k < dimension; ++k )
-                  for( int l = 0; l < dimension; ++l )
-                   A_h_grad_u_H_neighEntity[ k ] += a_neighEntity[ k ][ l ] * gradientU_H_onNeighEntity[ 0 ][ l ];
+                   JacobianRangeType diffusive_flux_y_S_outside;
+                   diffusion_.diffusiveFlux( outer_globalPoint,
+                                             direction_of_diffusion_outside,
+                                             diffusive_flux_y_S_outside );
 
+                   // ----------------------------------------------------
 
-                 //to save A_h( x_entity, y_k ) \nabla K_h(u_H)( x_entity, y_k )
-                 RangeType A_h_grad_COR_u_H_entity[dimension];
-                 for( int k = 0; k < dimension; ++k ) 
-                   A_h_grad_COR_u_H_entity[ k ] = 0; 
+                   RangeType aux_value = 0.0;
 
-                 //since we did not really compute K_h(u_H) but some K_h(u_H)(x_j + \epsilon y)
-                 //we need to use the transformation formula. Therefor we have:
-                 for( int k = 0; k < dimension; ++k )
-                   for( int l = 0; l < dimension; ++l )
-                     A_h_grad_COR_u_H_entity[ k ] +=
-                      (1.0 / epsilon_est) * a_entity[ k ][ l ] * grad_cor_u_H_entity[ 0 ][ l ];
+                   for( int k = 0; k < dimension; ++k )
+                     aux_value += ( diffusive_flux_y_S_outside[ 0 ][ k ] - diffusive_flux_y_S[ 0 ][ k ] ) * unitOuterNormal[ k ] ;
 
+                   local_indicator += pow( edge_length , 4.0 ) * pow( aux_value , 2.0 );
+                }
 
-                 //to save A_h( x_neighEntity, y_k ) \nabla K_h(u_H)( x_neighEntity, y_k )
-                 RangeType A_h_grad_COR_u_H_neighEntity[dimension];
-                 for( int k = 0; k < dimension; ++k ) 
-                   A_h_grad_COR_u_H_neighEntity[ k ] = 0; 
+            } // end Intersection iterator
+        } // endif: "y_S \in \eps/\delta Y"
 
-                 for( int k = 0; k < dimension; ++k )
-                   for( int l = 0; l < dimension; ++l )
-                     A_h_grad_COR_u_H_neighEntity[ k ] +=
-                      (1.0 / epsilon_est) * a_neighEntity[ k ][ l ] * grad_cor_u_H_neighEntity[ 0 ][ l ];
+        }
 
+       for( int id = 0; id < num_boundary_faces_per_direction; ++id )
+         {
+          local_indicator += ( pow( jump_up_down[ id ] , 2.0 ) + pow( jump_left_right[ id ] , 2.0 ) );
+         }
 
-                 //to save:
-                 //  A_h( x_entity, y_k ) ( \nabla u_H( x_entity ) + \nabla K_h(u_H) ( x_entity, y_k )
-                 RangeType w_entity[dimension];
-                 for( int k = 0; k < dimension; ++k ) 
-                   w_entity[ k ] = A_h_grad_u_H_entity[ k ] + A_h_grad_COR_u_H_entity[ k ]; 
-                 // REC stands for Reconstruction 
+       if ( eps_delta_boundary_edge_found == false )
+        {
+           std :: cout << "Error! Make sure that the restriction of the Y-triangulation on 'eps/delta Y' is a complete periodic triangulation of 'eps/delta Y' on its own. (for instance: delta = 2 epsilon should work)" << std :: endl; 
+           std :: abort();
+        }
 
-                 //to save:
-                 //  A_h( x_neighEntity, y_k ) [ \nabla u_H( x_neighEntity ) 
-                 //            + \nabla K_h(u_H) ( x_neighEntity, y_k ) ]
-                 RangeType w_neighEntity[dimension];
-                 for( int k = 0; k < dimension; ++k ) 
-                   w_neighEntity[ k ] = A_h_grad_u_H_neighEntity[ k ] + A_h_grad_COR_u_H_neighEntity[ k ]; 
+       local_indicator *= entityVolume;
 
-                 //to save: jump * 'size of the global face'
-                 RangeType jump(0.);
-                 for( int k = 0; k < dimension; ++k )
-                   jump += (w_entity[ k ] - w_neighEntity[ k ])
-                            * unitOuterNormal[ k ];
-
-//! End computing gradient jump
-
-                 const double localweight = localQuadrature.weight( 0 ) *
-                   localGeometry.integrationElement(localQuadrature.point( 0 ));
-
-                 averaged_jump += jump * localweight;
-
-               }
-
-             errorZeta += averaged_jump * averaged_jump * faceQuadrature.weight( 0 ) * face_size;
-
-           } // end of if-loop (if there is a neighbor entity...)
-
-         } //end global intersection Iterator
-
-     // every gradient-jump will occur twice:
-     errorZeta = errorZeta / 2.0;
-
-     return errorZeta;
+       return local_indicator;
 
      } // end of method
 
 #endif
+
+
 
 }; // end of class ErrorEstimater
 
