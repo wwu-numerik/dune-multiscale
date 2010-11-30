@@ -18,7 +18,7 @@
 
 // Note, that A^{\epsilon} is a monotone operator
 
-//!############################## Elliptic Problem 1 ###################################
+//!############################## Elliptic Problem 4 ###################################
 
 //! we define:
 
@@ -85,7 +85,7 @@ namespace Problem
 
     inline int get_Number_of_Model_Problem ( ) const
     {
-      return 1;
+      return 4;
     }
 
     // epsilon (the smaller epsilon, the finer the micro-structure)
@@ -118,7 +118,7 @@ namespace Problem
     {
 
       //name and location of the grid file that describes the macro-grid:
-      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf" );
+      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/corner_singularity.dgf" );
       macroGridName = macro_grid_location;
     }
 
@@ -143,7 +143,7 @@ namespace Problem
     {
       // required refinement level for a fine scale reference solution
       // (a saved/precomputed solution is either already available for this level or it must be computed with the following refinement level)
-      return 18;
+      return 20;
     }
 
 
@@ -193,15 +193,15 @@ namespace Problem
                                 RangeType &y ) const
     {
 
-#ifdef LINEAR_PROBLEM
+     // Krei um einspringende Ecke (Kreis um (0.5,0.5) )
+     double distance = sqrt( pow( x[0] - 0.5 , 2.0 ) + pow( x[1] - 0.5 , 2.0 ) );
 
-     y = 1.0;
+     if ( distance < 0.2 )
+      { y = 1.0; }
+     else
+      { y = 0.1; }
 
-#else
 
-     y = 1.0;
-
-#endif
 
     }
 

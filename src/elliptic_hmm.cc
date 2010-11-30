@@ -56,14 +56,33 @@
 // the second possibility requires a data file where the solutions are saved (file becomes large)
 //#define AD_HOC_COMPUTATION
 
-//! Do we compute a fine-scale reference solution?
-//#define FINE_SCALE_REFERENCE
+//! Do we have/want a fine-scale reference solution?
+#define FINE_SCALE_REFERENCE
+#ifdef FINE_SCALE_REFERENCE
+
+  // load the precomputed fine scale reference from a file
+  #define FSR_LOAD
+
+  #ifndef FSR_LOAD
+  // compute the fine scale reference (on the fly)
+    #define FSR_COMPUTE
+
+    #ifdef FSR_COMPUTE
+     // Do we write the discrete fine-scale solution to a file? (for later usage)
+      #define WRITE_FINESCALE_SOL_TO_FILE
+    #endif
+
+  #endif
+
+#endif
+
+
+//! Do we have a HMM reference solution? (precomputed detailed HMM simulation)
+// we might use a detailed HMM computation as a reference! (if it is available)
+//#define HMM_REFERENCE
 
 //! Do we write the discrete HMM solution to a file? (for later usage)
 #define WRITE_HMM_SOL_TO_FILE
-
-//! Do we write the discrete fine-scale solution to a file? (for later usage)
-//#define WRITE_FINESCALE_SOL_TO_FILE
 
 //! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
 // Not possible for ad-hoc computations! (in this case, error estimation is far too expensive)
@@ -73,7 +92,7 @@
   // only possible if we use error estimation:
   #ifdef ERRORESTIMATION
    // Do you want to allow adaptive mesh refinement?
-   #define ADAPTIVE
+   //#define ADAPTIVE
   #endif
 
 #endif
@@ -189,7 +208,7 @@ namespace Multiscale
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_1/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_4/problem_specification.hh>
 
 
 #include <dune/multiscale/operators/righthandside_assembler.hh>
@@ -377,7 +396,7 @@ typedef SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, Mat
 //! --------------- solver for the linear system of equations ----------------------------
 
 // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones. GMRES seems to be more stable, but is extremely slow!
-typedef OEMBICGSQOp< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
+typedef /*OEMBICGSQOp*/OEMBICGSTABOp< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
 //! --------------------------------------------------------------------------------------
 
@@ -418,6 +437,8 @@ double delta_; //edge length of the cells in the cell proplems,
 
 int refinement_level_macrogrid_;
 int refinement_level_referenceprob_;
+
+double error_tolerance_;
 
 //std :: ofstream data_file_; // file where we save the data
 
@@ -617,6 +638,9 @@ void algorithm ( std :: string &UnitCubeName,
 
   L2Error< DiscreteFunctionType > l2error;
 
+  // expensive hack to deal with discrete functions, defined on different grids
+  ImprovedL2Error< DiscreteFunctionType > impL2error;
+
   //! ---------------------------- grid parts ----------------------------------------------
 
   // grid part for the global function space, required for HMM-macro-problem
@@ -637,12 +661,6 @@ void algorithm ( std :: string &UnitCubeName,
 
   //! --------------------------------------------------------------------------------------
 
-
-#ifdef ADAPTIVE
-//!loeschen bzw. fuer ADAPTIVE verwenden
-for (int k = 0; k < 2; ++k )
-{
-#endif
 
 
   //! ------------------------- discrete function spaces -----------------------------------
@@ -679,17 +697,18 @@ for (int k = 0; k < 2; ++k )
 
 
 //    discFunc_location_1 = "data/Model_Problem_1/Macro_6_Micro_2/hmm_solution_discFunc_refLevel_6";
-  discFunc_location_1 = "data/Model_Problem_1/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
+//  discFunc_location_1 = "data/Model_Problem_1/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8_tolerance3.5e-06/hmm_solution_discFunc_refLevel_10";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_6_Micro_6/hmm_solution_discFunc_refLevel_6";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
 //  discFunc_location_1 = "data/Model_Problem_1/reference_solution_ref_16/finescale_solution_discFunc_refLevel_16";
+  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
 
 //  discFunc_location_2 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
 //  discFunc_location_2 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
   discFunc_location_2 = "data/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
 
-  int gridLevel_1 = 4; // Macro_'gridLevel_1'...
+  int gridLevel_1 = 10; // Macro_'gridLevel_1'...
   int gridLevel_2 = 18; // Macro_'gridLevel_2'...
 //! Note: gridLevel_2 >= gridLevel_1
 
@@ -748,6 +767,8 @@ for (int k = 0; k < 2; ++k )
 
   discrete_function_reader_2.read( 0, discrete_function_2 );
   std :: cout << "discrete_function_2 read." << std :: endl;
+
+#if 0
 
   //!warum wird das gebraucht, um das richtige Ergebnis zu bekommen???????
   #if 1
@@ -866,10 +887,10 @@ for (int k = 0; k < 2; ++k )
   std :: cout << "L2 norm test = " << difference_L2_test << std :: endl;
 
 #endif
+#endif
 
 
-
-  std::abort();
+  //std::abort();
 
 #endif
  //! --------------------------------------------------------------------------------------
@@ -906,8 +927,6 @@ for (int k = 0; k < 2; ++k )
   //! --------------------------------------------------------------------------------------
 
 
-  // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
-  CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
 
 
   //! define the right hand side assembler tool
@@ -915,24 +934,17 @@ for (int k = 0; k < 2; ++k )
   RightHandSideAssembler< DiscreteFunctionType > rhsassembler;
 
 
-
   //----------------------------------------------------------------------------------------------//
-  //----------------------- THE DISCRETE OPERATORS (FEM & HMM) -----------------------------------//
+  //----------------------- THE DISCRETE FEM OPERATOR -----------------------------------//
   //----------------------------------------------------------------------------------------------//
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
   EllipticOperatorType discrete_elliptic_op( finerDiscreteFunctionSpace, diffusion_op);
 
-
-  //! define the elliptic hmm operator that describes our 'homogenized' macro problem
-  // ( effect of the elliptic hmm operator on a certain discrete function )
-  EllipticHMMOperatorType discrete_elliptic_hmm_op( discreteFunctionSpace, periodicDiscreteFunctionSpace, diffusion_op, cp_num_manager, filename_);
-
   //----------------------------------------------------------------------------------------------//
   //----------------------------------------------------------------------------------------------//
   //----------------------------------------------------------------------------------------------//
-
 
   RangeType size_of_domain = get_size_of_domain(discreteFunctionSpace);
 
@@ -1001,6 +1013,7 @@ for (int k = 0; k < 2; ++k )
 
 #ifdef FINE_SCALE_REFERENCE
 
+ #ifdef FSR_COMPUTE
 //! *******************************************************************
 
   // starting value for the Newton method
@@ -1130,7 +1143,7 @@ for (int k = 0; k < 2; ++k )
          boundaryTreatment( *fine_it , fem_newton_rhs );
 
 
-     InverseFEMMatrix fem_newton_biCGStab( fem_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE );
+     InverseFEMMatrix fem_newton_biCGStab( fem_newton_matrix, 1e-8, 1e-8, 20000, true );
      fem_newton_biCGStab( fem_newton_rhs, fem_newton_residual );
 
      if( fem_newton_residual.dofsValid() )
@@ -1174,18 +1187,130 @@ for (int k = 0; k < 2; ++k )
 #endif // end '#ifdef LINEAR_PROBLEM <-> #else'
 
   //! ********************** End of assembling the reference problem ***************************
+#endif
+//end FSR_COMPUTE
+
+#ifdef FSR_LOAD
+
+  DiscreteFunctionType fem_newton_solution( filename_ + " Reference (FEM Newton) Solution", finerDiscreteFunctionSpace );
+  fem_newton_solution.clear();
+
+  char modeprob[50];
+  sprintf( modeprob, "/Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
+  std::string modeprob_s(modeprob);
+
+  char reference_solution_directory[50];
+  sprintf( reference_solution_directory, "/reference_solution_ref_%d", refinement_level_referenceprob_ );
+  std::string reference_solution_directory_s(reference_solution_directory);
+
+  char reference_solution_name[50];
+  sprintf( reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
+  std::string reference_solution_name_s(reference_solution_name);
+
+  std :: string location_fine_scale_ref = "data/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
+
+  bool reader_is_open = false;
+
+  // reader for the cell problem data file:
+  DiscreteFunctionReader discrete_function_reader_ref( (location_fine_scale_ref).c_str() );
+  discrete_function_reader_ref.open();
+
+  discrete_function_reader_ref.read( 0, fem_newton_solution );
+  std :: cout << "fine scale reference read." << std :: endl;
+
+#endif
+//end FSR_LOAD
 
 // end: FINE_SCALE_REFERENCE defined or not defined
 #endif 
 
+//noch per Hand die Daten eingetragen:
+#ifdef HMM_REFERENCE
+
+  int gridLevel_refHMM = 10; // Macro_'gridLevel'
+
+  std :: string macroGridName_refHMM;
+  problem_info.getMacroGridFile( macroGridName_refHMM );
+  std :: cout << "loading dgf: " << macroGridName_refHMM << std :: endl;
+
+  // create a grid pointer for the DGF file belongig to the macro grid:
+  GridPointerType macro_grid_pointer_refHMM( macroGridName_refHMM );
+  // refine the grid 'gridLevel_refHMM' times:
+  macro_grid_pointer_refHMM->globalRefine( gridLevel_refHMM );
+
+  GridPartType gridPart_refHMM( *macro_grid_pointer_refHMM);
+  GridType &grid_refHMM = gridPart_refHMM.grid();
+
+  DiscreteFunctionSpaceType discreteFunctionSpace_refHMM( gridPart_refHMM );
+
+  DiscreteFunctionType hmm_reference_solution( filename_ + " Reference (HMM) Solution", discreteFunctionSpace_refHMM );
+  hmm_reference_solution.clear();
+
+#if 0
+  char modeprob_name[50];
+  sprintf( modeprob_name, "/Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
+  std::string modeprob_name_s(modeprob_name);
+
+  char reference_hmm_solution_directory[50];
+  sprintf( reference_hmm_solution_directory, ".......", 10 );
+  std::string reference_solution_directory_s(reference_solution_directory);
+
+  char reference_solution_name[50];
+  sprintf( reference_solution_name, "....", refinement_level_referenceprob_ );
+  std::string reference_solution_name_s(reference_solution_name);
+
+  std :: string location_hmm_ref = "data/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
+#endif
+
+  std :: string location_hmm_ref = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+
+  bool hmm_ref_reader_is_open = false;
+
+  // reader for the cell problem data file:
+  DiscreteFunctionReader discrete_function_reader_hmm_ref( (location_hmm_ref).c_str() );
+  discrete_function_reader_hmm_ref.open();
+
+  discrete_function_reader_hmm_ref.read( 0, hmm_reference_solution );
+  std :: cout << "HMM reference read." << std :: endl;
+
+#endif
 
 
   //! ************************* Assembling and solving the HMM problem ****************************
+
+#ifdef ADAPTIVE
+// number of the loop cycle of the while-loop
+int loop_cycle = 1;
+bool repeat = true;
+while ( repeat == true )
+{
+
+  if (data_file.is_open())
+    {
+      data_file << "########################### LOOP CYCLE " << loop_cycle << " ###########################" << std :: endl << std :: endl << std :: endl;
+    }
+#endif
 
   std::cout << std :: endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
             << " unkowns and polynomial order "
             << DiscreteFunctionSpaceType :: polynomialOrder << "." 
             << std :: endl << std :: endl;
+
+  //----------------------------------------------------------------------------------------------//
+  //----------------------- THE DISCRETE HMM OPERATOR -----------------------------------//
+  //----------------------------------------------------------------------------------------------//
+
+  // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
+  CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
+
+
+  //! define the elliptic hmm operator that describes our 'homogenized' macro problem
+  // ( effect of the elliptic hmm operator on a certain discrete function )
+  EllipticHMMOperatorType discrete_elliptic_hmm_op( discreteFunctionSpace, periodicDiscreteFunctionSpace, diffusion_op, cp_num_manager, filename_);
+
+  //----------------------------------------------------------------------------------------------//
+  //----------------------------------------------------------------------------------------------//
+  //----------------------------------------------------------------------------------------------//
 
   //! matrix
   FEMMatrix hmm_newton_matrix( "HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace );
@@ -1316,10 +1441,10 @@ for (int k = 0; k < 2; ++k )
    // save the solutions of the cell problems for the set of macroscopic base functions
 
    cell_problem_solver.saveTheSolutions_baseSet< DiscreteFunctionType >(  discreteFunctionSpace, cp_num_manager, filename_ + "/cell_problems/");
-   #endif
 
    std :: cout << "Solving the cell problems for the base function set succeeded." << std :: endl;
    //  end solving and saving cell problems
+   #endif
 
    //! --------------- end solving and saving cell problems -----------------------------------------
   #endif
@@ -1351,7 +1476,7 @@ for (int k = 0; k < 2; ++k )
   #ifdef STOCHASTIC_PERTURBATION
   double hmm_tolerance = 1e-01 * VARIANCE;
   #else
-  double hmm_tolerance = 1e-06;
+  double hmm_tolerance = 0.002; //5e-04;//relative tolerance //1e-04; //
   #endif
   while( hmm_residual_L2_norm > hmm_tolerance )
    {
@@ -1532,6 +1657,10 @@ for (int k = 0; k < 2; ++k )
 
   RangeType local_error_indicator[discreteFunctionSpace.grid().size(0)];
 
+  RangeType minimal_loc_indicator = 10000.0;
+  RangeType maximal_loc_indicator = 0.0;
+  RangeType average_loc_indicator = 0.0;
+
   int element_number = 0;
   typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
   IteratorType endit = discreteFunctionSpace.end();
@@ -1669,9 +1798,19 @@ for (int k = 0; k < 2; ++k )
        local_error_indicator[element_number] += local_tfr_indicator;
 #endif
 
+       if ( local_error_indicator[element_number] < minimal_loc_indicator )
+        { minimal_loc_indicator = local_error_indicator[element_number]; }
+
+       if ( local_error_indicator[element_number] > maximal_loc_indicator )
+        { maximal_loc_indicator = local_error_indicator[element_number]; }
+
+       average_loc_indicator += local_error_indicator[element_number];
+
        element_number += 1;
 
      }
+
+  average_loc_indicator /= discreteFunctionSpace.grid().size(0);
 
   estimated_source_error = sqrt(estimated_source_error);
   estimated_approximation_error = sqrt(estimated_approximation_error);
@@ -1689,6 +1828,9 @@ for (int k = 0; k < 2; ++k )
 
   #ifdef ADAPTIVE
 
+  // maximum variation (up) from average 
+  double max_variation = average_loc_indicator / maximal_loc_indicator;
+  double min_variation = average_loc_indicator / minimal_loc_indicator;
 
   #endif
 
@@ -1701,37 +1843,22 @@ for (int k = 0; k < 2; ++k )
 
 #ifdef WRITE_HMM_SOL_TO_FILE
 
-  // adaptive grid refinement
-  #if 0
-
-  // one for the discreteFunctionSpace
-  RestrictProlongOperatorType rp( hmm_solution );
-  AdaptationManagerType adaptationManager( grid, rp );
-
-  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-  IteratorType endit = discreteFunctionSpace.end();
-  for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
-    { grid.mark( refinement_difference , *it ); }
-  adaptationManager.adapt();
-
-  if (data_file.is_open())
-   {
-     data_file << "Additional global refinement (for projection on fine grid): " << refinement_difference << " additional Levels." << std :: endl;
-     data_file << "(i.e. discrete function saved for grid with a total number of " << refinement_level_referenceprob_ << " refinement levels)" << std :: endl;
-   }
-
-  #endif
+ // for adaptive computations, the saved solution is not suitable for a later usage
+ #ifndef ADAPTIVE
 
   bool writer_is_open = false;
 
-  char fname[30];
+  char fname[40];
   sprintf( fname, "/hmm_solution_discFunc_refLevel_%d", refinement_level_macrogrid_ );
+  std :: string fname_s( fname );
 
-  std :: string location = "data/" + filename_ + fname;
+  std :: string location = "data/" + filename_ + fname_s;
   DiscreteFunctionWriter dfw( (location).c_str() );
   writer_is_open = dfw.open();
   if ( writer_is_open )
     dfw.append( hmm_solution );
+
+ #endif
 
 #endif
 
@@ -1742,10 +1869,11 @@ for (int k = 0; k < 2; ++k )
 
   bool fine_writer_is_open = false;
 
-  char fine_fname[30];
+  char fine_fname[50];
   sprintf( fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
+  std :: string fine_fname_s( fine_fname );
 
-  std :: string fine_location = "data/" + filename_ + fine_fname;
+  std :: string fine_location = "data/" + filename_ + fine_fname_s;
   DiscreteFunctionWriter fine_dfw( (fine_location).c_str() );
   fine_writer_is_open = fine_dfw.open();
   if ( fine_writer_is_open )
@@ -1765,20 +1893,53 @@ for (int k = 0; k < 2; ++k )
 
 
 #ifdef FINE_SCALE_REFERENCE
+  long double timeadapt = clock();
 
-  if ( refinement_level_referenceprob_ == refinement_level_macrogrid_ )
-     {
-       RangeType hmm_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_solution, fem_newton_solution );
+  RangeType hmm_error = impL2error.norm_adaptive_grids< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(hmm_solution,fem_newton_solution);
 
-       std :: cout << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std :: endl << std :: endl;
-       if (data_file.is_open())
+  std :: cout << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std :: endl << std :: endl;
+  if (data_file.is_open())
          { data_file << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std :: endl; }
-     }
 
+  timeadapt = clock() - timeadapt;
+  timeadapt = timeadapt / CLOCKS_PER_SEC;
+
+  // if it took longer then 1 minute to compute the error:
+  if ( timeadapt > 60 )
+   {
+     std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std :: endl << std :: endl;
+
+     if (data_file.is_open())
+         { std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std :: endl << std :: endl; }
+   }
+#endif
+
+
+#ifdef HMM_REFERENCE
+  long double timeadapthmmref = clock();
+
+  RangeType hmm_vs_hmm_ref_error = impL2error.norm_adaptive_grids< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(hmm_solution,hmm_reference_solution);
+
+  std :: cout << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+         { data_file << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std :: endl; }
+
+  timeadapthmmref = clock() - timeadapthmmref;
+  timeadapthmmref = timeadapthmmref / CLOCKS_PER_SEC;
+
+  // if it took longer then 1 minute to compute the error:
+  if ( timeadapthmmref > 60 )
+   {
+     std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std :: endl << std :: endl;
+
+     if (data_file.is_open())
+         { std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std :: endl << std :: endl; }
+   }
 #endif
 
 
 #ifdef HOMOGENIZEDSOL_AVAILABLE
+// not yet modified according to a generalized L2-error, here, homogenized_solution and fem_newton_solution still need to be defined on the same grid!
   RangeType hom_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( homogenized_solution, fem_newton_solution );
 
   std :: cout << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std :: endl << std :: endl;
@@ -1855,7 +2016,13 @@ for (int k = 0; k < 2; ++k )
 
   // create and initialize output class
   IOTupleType hmm_solution_series( &hmm_solution );
+  #ifdef ADAPTIVE
+  char hmm_prefix[30];
+  sprintf( hmm_prefix, "hmm_solution_%d", loop_cycle );
+  outputparam.set_prefix( hmm_prefix );
+  #else
   outputparam.set_prefix("hmm_solution");
+  #endif
   DataOutputType hmmsol_dataoutput( gridPart.grid(), hmm_solution_series, outputparam );
 
   // write data
@@ -1884,7 +2051,7 @@ for (int k = 0; k < 2; ++k )
 #endif
 
 
-#ifdef FINE_SCALE_REFERENCE
+#ifdef WRITE_FINESCALE_SOL_TO_FILE
   // --------- data output reference solution (fine fem newton computation) --------------
 
   // create and initialize output class
@@ -1923,19 +2090,65 @@ for (int k = 0; k < 2; ++k )
 //!-------------------------------------------------------------
 
 
-if ( k==0 )
-{
-  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-  IteratorType endit_test = discreteFunctionSpace.end();
-  for( IteratorType it = discreteFunctionSpace.begin(); it != endit_test; ++it )
-    { grid.mark( 2 , *it ); }
-adaptationManager.adapt();
-//grid.globalRefine(2);
-}
 
-//! loeschen bzw. mit ADAPTIVE verwurschteln
-}//! ende der komischen for Schleife
 
+#ifdef ADAPTIVE
+
+  //double error_tolerance_ = 0.2;
+
+  if ( estimated_error < error_tolerance_ )
+   {
+     repeat = false;
+   }
+  else
+   {
+
+    element_number = 0;
+    typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
+    IteratorType endit_test = discreteFunctionSpace.end();
+    for( IteratorType it = discreteFunctionSpace.begin(); it != endit_test; ++it )
+      {
+
+        int additional_refinement;
+
+        if ( local_error_indicator[element_number] <= average_loc_indicator )
+          { additional_refinement = 0; }
+        else
+          {
+            // 3 steps: //0-30%  30-80% 80-100%
+
+            double variation = (local_error_indicator[element_number] - average_loc_indicator ) / 
+                        ( maximal_loc_indicator - average_loc_indicator );
+
+            if ( variation <= 0.3 )
+              { additional_refinement = 1; }
+
+            if ( ( variation > 0.3 ) && ( variation <= 0.8 ) )
+              { additional_refinement = 2; }
+
+            if ( variation > 0.8 )
+              { additional_refinement = 3; }
+
+          }
+
+        grid.mark( additional_refinement , *it );
+        element_number += 1;
+
+      }
+
+    adaptationManager.adapt();
+
+  }
+
+  if (data_file.is_open())
+    {
+      data_file << std :: endl << "#########################################################################" << std :: endl << std :: endl << std :: endl;
+    }
+
+  loop_cycle += 1;
+
+}// end of repeat loop (for the adaptive cicles)
+#endif
 
 
 }
@@ -1995,13 +2208,20 @@ int main(int argc, char** argv)
   std :: cin >> refinement_level_cellgrid;
   std :: cout << std :: endl;
 
+#ifdef ADAPTIVE
+  // error tolerance (comparison with upper bound determined by the a-posteriori error estimate)
+  std :: cout << "Enter global error tolerance for program abort: ";
+  std :: cin >> error_tolerance_;
+  std :: cout << std :: endl;
+#endif
+
 
   // (starting) grid refinement level for solving the reference problem
   refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
   // in general: for the homogenized case = 11 and for the high resolution case = 14
   // Note that this depends on the model problem!
 #ifndef FINE_SCALE_REFERENCE
-  refinement_level_referenceprob_ = 10;
+  refinement_level_referenceprob_ = 0;
 #endif
 
 
@@ -2026,6 +2246,7 @@ int main(int argc, char** argv)
   GridPointerType fine_macro_grid_pointer( macroGridName );
   // refine the grid 'starting_refinement_level_reference' times:
   fine_macro_grid_pointer->globalRefine( refinement_level_referenceprob_ );
+
 
   // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
   std :: string UnitCubeName( "../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf" ); // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2
@@ -2072,6 +2293,9 @@ int main(int argc, char** argv)
                data_file << "Delta (edge length of cell-cube) = " << delta_ << std :: endl;
 #ifdef STOCHASTIC_PERTURBATION
                data_file << std :: endl << "Stochastic perturbation added. Variance = " << VARIANCE << std :: endl;
+#endif
+#ifdef ADAPTIVE
+               data_file << std :: endl << "Adaptive computation. Global error tolerance for program abort = " << error_tolerance_ << std :: endl;
 #endif
                data_file << std :: endl << std :: endl;
             }

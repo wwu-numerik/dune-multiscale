@@ -546,8 +546,6 @@ namespace Dune
 
     typedef DomainFieldType TimeType;
 
-    const FunctionSpaceType *functionSpace_;
-
   protected:
     // three values that determine the linear polynom in 2D
     DomainType a_0_;
@@ -561,16 +559,13 @@ namespace Dune
 
   public:
     // Constructor for LinearLagrangeFunction2D
-    inline explicit LinearLagrangeFunction2D ( const FunctionSpaceType &functionSpace,
-                                               DomainType &a_0,
+    inline explicit LinearLagrangeFunction2D ( DomainType &a_0,
                                                RangeType &p_a_0,
                                                DomainType &a_1,
                                                RangeType &p_a_1,
                                                DomainType &a_2,
                                                RangeType &p_a_2 )
-    : BaseType( functionSpace ),
-      functionSpace_( &functionSpace ),
-      a_0_( a_0 ),
+    : a_0_( a_0 ),
       p_a_0_( p_a_0 ),
       a_1_( a_1 ),
       p_a_1_( p_a_1 ),
@@ -846,8 +841,7 @@ namespace Dune
            }
 
          LinearLagrangeFunction2D< DiscreteFunctionSpaceType >
-               coarse_disc_func_entity( fine_discreteFunctionSpace,
-                                        coarse_quad_point[0],
+               coarse_disc_func_entity( coarse_quad_point[0],
                                         local_value_coarse_func[0],
                                         coarse_quad_point[1],
                                         local_value_coarse_func[1],
@@ -1104,8 +1098,7 @@ namespace Dune
          //! determine the Lagrange Interpolation of the coarse discrete function on the relevant coarse-grid element (determined in the previous loop):
 
          LinearLagrangeFunction2D< DiscreteFunctionSpaceType >
-                          coarse_disc_func_entity( fine_discreteFunctionSpace,
-                                                   coarse_quad_point[0],
+                          coarse_disc_func_entity( coarse_quad_point[0],
                                                    local_value_coarse_func[0],
                                                    coarse_quad_point[1],
                                                    local_value_coarse_func[1],
@@ -1673,8 +1666,7 @@ const IdSet& idset_coarse_grid = coarse_grid.localIdSet();
         }
 
        LinearLagrangeFunction2D< DiscreteFunctionSpaceType >
-              coarse_disc_func_entity( fine_discreteFunctionSpace,
-                                       coarse_quad_point[0],
+              coarse_disc_func_entity( coarse_quad_point[0],
                                        local_value_coarse_func[0],
                                        coarse_quad_point[1],
                                        local_value_coarse_func[1],

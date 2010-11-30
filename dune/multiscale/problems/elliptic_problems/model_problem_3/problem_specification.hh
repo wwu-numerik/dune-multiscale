@@ -40,18 +40,15 @@
 //!FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
 //The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
-// description see below //0.05 //0.001
+// description see below
+// vorher: 0.13
 #define EPSILON 0.05
 #define EPSILON_EST 0.05
-#define DELTA 0.05
-// DELTA > EPSILON    ==> Oversampling!
+#define DELTA 0.1
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // is an exact solution available?
-//#define EXACTSOLUTION_AVAILABLE
-
-// is an homogenized solution theoretically available (computable by a homogenizer)
-//#define HOMOGENIZEDSOL_AVAILABLE
+#define EXACTSOLUTION_AVAILABLE
 
 //Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem
@@ -87,7 +84,7 @@ namespace Problem
 
     inline int get_Number_of_Model_Problem ( ) const
     {
-      return 1;
+      return 3;
     }
 
     // epsilon (the smaller epsilon, the finer the micro-structure)
@@ -120,11 +117,8 @@ namespace Problem
     {
 
       //name and location of the grid file that describes the macro-grid:
-      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf" );
+      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/earth.dgf" );
       macroGridName = macro_grid_location;
-
-      //NOTE: Here we require an inital triangulation of Y=[-1/2,1/2]^N, so that a subset of this triangulation becomes itself a triangulation of Y_small=[-1/2*(epsilon_est/delta),1/2*(epsilon_est/delta)]^N
-
     }
 
 
@@ -146,7 +140,7 @@ namespace Problem
     // ( here we have heterogenious reference problem, therefore we need a high refinement level )
     inline int getRefinementLevelReferenceProblem ( ) const
     {
-      return 10;
+      return 18;//18;
     }
 
 
@@ -202,7 +196,10 @@ namespace Problem
 
 #else
 
-     y = 1.0;
+     if ( x[1] >= 0.1 ) 
+       { y = 1.0; }
+     else
+       { y = 0.1; }
 
 #endif
 
@@ -299,30 +296,28 @@ namespace Problem
                          JacobianRangeType &flux ) const
     {
 
+       double coefficient = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * sqrt(fabs(2.0*x[0])) / EPSILON)*sin(2.0 * M_PI * pow(1.5*x[1],2.0) / EPSILON);
+
+       if ( (x[1] > 0.3) && (x[1] < 0.6) )
+        {
+         coefficient *= ( (-3.0) * x[1] + 1.9 );
+        }
+
+       if ( x[1] >= 0.6 )
+        {
+         coefficient *= 0.1;
+        }
+
 #ifdef LINEAR_PROBLEM
-#if 0
-       flux[0][0] = (1e-5 + (0.1 * cos( 1.2432252 * M_PI * x[0] / EPSILON) * cos( 1.2432252 * M_PI * x[0] / EPSILON)) )*gradient[0][0];
-       flux[0][1] = (0.1 + 1e-5 + 0.1 * sin( 0.34663254 * M_PI * x[1] / EPSILON ))*gradient[0][1];
-#endif
-//!letztes Beispiel:
-#if 0
-       flux[0][0] = (1e-5 + (0.1 * cos( 2.0 * M_PI * (x[0] / EPSILON)) * cos( 2.0 * M_PI * (x[0] / EPSILON))) )*gradient[0][0];
-       flux[0][1] = (0.1 + 1e-5 + 0.1 * sin( 2.0 * M_PI * (x[0] / EPSILON) ))*gradient[0][1];
-#endif
-#if 1  
-       flux[0][0] = (0.1 + (1.0 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) * cos( 2.0 * M_PI * (x[0] / EPSILON) )) )*gradient[0][0];
-       flux[0][1] = (0.1 + 1e-3 + (0.1 * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) )*gradient[0][1];
-#endif
-#if 0
-       flux[0][0] = (3*cos( 2 * M_PI * x[0] / EPSILON) * cos( 2 * M_PI * x[0] / EPSILON)
-               + 4 * sin( 2 * M_PI * x[1] / EPSILON) * sin( 2 * M_PI * x[1] / EPSILON) )*gradient[0][0] + ((1.0/16.0)*gradient[0][1]);
-       flux[0][1] = ((1.0/16.0)*gradient[0][0]) + (2.0 + sin( 2.0 * M_PI * x[1] / EPSILON ))*gradient[0][1];
-#endif
+
+       flux[0][0] = coefficient * gradient[0][0];
+       flux[0][1] = coefficient * gradient[0][1];
+
 #else
-       flux[0][0] = (0.1 + (1.0 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) * cos( 2.0 * M_PI * (x[0] / EPSILON) )) )*gradient[0][0];
-       flux[0][1] = (0.1 + 1e-3 + (0.1 * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) )*gradient[0][1];
-     //std :: cout << "Nonlinear example not yet implemented." << std :: endl;
-     //std::abort();
+
+       flux[0][0] = coefficient * (gradient[0][0] + ((1.0/3.0)*pow(gradient[0][0], 3.0)));
+       flux[0][1] = coefficient * (gradient[0][1] + ((1.0/3.0)*pow(gradient[0][1], 3.0)));
+
 #endif
 
     }
@@ -338,68 +333,29 @@ namespace Problem
                                        JacobianRangeType &flux ) const
     {
 
+       double coefficient = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * sqrt(fabs(2.0*x[0])) / EPSILON)*sin(2.0 * M_PI * pow(1.5*x[1],2.0) / EPSILON);
+
+       if ( (x[1] > 0.3) && (x[1] < 0.6) )
+        {
+         coefficient *= ( (-3.0) * x[1] + 1.9 );
+        }
+
+       if ( x[1] >= 0.6 )
+        {
+         coefficient *= 0.1;
+        }
+
 #ifdef LINEAR_PROBLEM
-       flux[0][0] = (0.1 + (1.0 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) * cos( 2.0 * M_PI * (x[0] / EPSILON) )) )*direction_gradient[0][0];
-       flux[0][1] = (0.1 + 1e-3 + (0.1 * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) )*direction_gradient[0][1];
+       flux[0][0] = coefficient * direction_gradient[0][0];
+       flux[0][1] = coefficient * direction_gradient[0][1];
 #else
-       flux[0][0] = (0.1 + (1.0 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) * cos( 2.0 * M_PI * (x[0] / EPSILON) )) )*direction_gradient[0][0];
-       flux[0][1] = (0.1 + 1e-3 + (0.1 * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) )*direction_gradient[0][1];
+       flux[0][0] = coefficient * direction_gradient[0][0]
+                      * (1.0 + pow(position_gradient[0][0], 2.0));
+       flux[0][1] = coefficient * direction_gradient[0][1]
+                      * (1.0 + pow(position_gradient[0][1], 2.0));
 #endif
 
     }
-
-
-    inline void evaluate (const int i,
-                          const int j,
-                          const DomainType &x,
-                          const DomainType &y,
-                          RangeType &z ) const
-    { 
-
-//!zuletzt:
-#if 0
-         if(i == j)
-          {
-           if (i == 0)
-             { z = (1e-5 + (0.1 * cos( 2.0 * M_PI * y[0] ) * cos( 2.0 * M_PI * y[0] ) ) ); }
-           else
-             { z = (0.1 + 1e-5 + 0.1 * sin( 2.0 * M_PI * y[0] ) ); }
-          }
-         else 
-          {z = 0.0;}
-#endif
-         if(i == j)
-          {
-           if (i == 0)
-             { z = 0.1 + (1.0 * cos( 2.0 * M_PI * y[0] )*cos( 2.0 * M_PI * y[0] )); }
-           else
-             { z = 0.1 + 1e-3 + (0.1 * sin( 2.0 * M_PI * y[0] )); }
-          }
-         else 
-          {z = 0.0;}
-#if 0
-         if(i == j)
-          {
-           if (i == 0)
-             { z = 3*cos( 2 * M_PI * y[0]) * cos( 2 * M_PI * y[0])
-               + 4 * sin( 2 * M_PI * y[1]) * sin( 2 * M_PI * y[1]); } 
-           else
-             { z = 2 + sin( 2 * M_PI * y[1]); } 
-          }
-         else 
-          {z = 1/16;} 
-#endif
-#if 0
-      std :: cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details." << std :: endl; 
-
-      std::abort();
-
-      z = 0.0;
-#endif
-
-
-    }
-
 
 //deprecated
     //! defaults (not to be used):
@@ -411,28 +367,26 @@ namespace Problem
                            RangeType &z ) const
     {
 
-      evaluate(i,j,0.0,x,z);
-
-
-#if 0
-//!wieder einbinden (nach Reparatur):
-#if 1
       std :: cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details." << std :: endl; 
 
       std::abort();
-#endif
-
-         enum { dimension = DomainType :: dimension };
-
-         DomainType xeps;
-         for( int k = 0; k < dimension; ++k )
-           xeps[k] = x[k] / EPSILON;
-
-         evaluate(i , j , x , xeps , z);
-#endif
 
     }
 
+
+    inline void evaluate (const int i,
+                          const int j,
+                          const DomainType &x,
+                          const DomainType &y,
+                          RangeType &z ) const
+    { 
+
+      std :: cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details." << std :: endl; 
+
+      std::abort();
+
+      z = 0.0; 
+    }
 
     inline void evaluate ( const int i,
                            const int j,
@@ -456,14 +410,8 @@ namespace Problem
      std::abort();
     }
 
-
-
-
-
-
-
-
   };
+
 
 
 
@@ -515,6 +463,9 @@ namespace Problem
                          const JacobianRangeType &gradient,
                          JacobianRangeType &flux ) const
     {
+
+      std :: cout << "No homogenization available" << std :: endl;
+      std :: abort();
 
 #ifdef LINEAR_PROBLEM
        flux[0][0] = (*A_hom_)[0][0]*gradient[0][0] + (*A_hom_)[0][1]*gradient[0][1];
@@ -615,10 +566,6 @@ namespace Problem
 
 
 
-
-
-
-
   // define the mass term:
   template< class FunctionSpaceImp >
   class MassTerm
@@ -645,7 +592,7 @@ namespace Problem
     inline void evaluate ( const DomainType &x,
                            RangeType &y ) const
     {
-      y[ 0 ] = 0.00001;
+      y[ 0 ] = 0.00001; 
     }
 
     //dummy implementation
@@ -781,7 +728,28 @@ namespace Problem
     inline void evaluate ( const DomainType &x,
                            RangeType &y ) const
     {
-      y = 0.0; //sin( (1.0/2.0) * M_PI * x[0]) * sin( (1.0/2.0) * M_PI * x[1]);
+
+#if 0
+      // NOT THE EXACT SOLUTION!!!:
+      y = 0.0;
+      std :: cout << "Exact solution not available" << std :: endl;
+      std :: abort();
+#endif
+
+       double coefficient = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * sqrt(fabs(2.0*x[0])) / EPSILON)*sin(2.0 * M_PI * pow(1.5*x[1],2.0) / EPSILON);
+
+       if ( (x[1] > 0.3) && (x[1] < 0.6) )
+        {
+         coefficient *= ( (-3.0) * x[1] + 1.9 );
+        }
+
+       if ( x[1] >= 0.6 )
+        {
+         coefficient *= 0.1;
+        }
+
+       y = coefficient;
+
     }
 
     // in case 'u' HAS a time-dependency use the following method: 

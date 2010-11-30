@@ -40,14 +40,15 @@
 //!FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
 //The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
-// description see below 0.05
-#define EPSILON 0.13
-#define EPSILON_EST 0.13
-#define DELTA 0.13
+// description see below
+// vorher: 0.13
+#define EPSILON 0.05
+#define EPSILON_EST 0.05
+#define DELTA 0.05
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // is an exact solution available?
-#define EXACTSOLUTION_AVAILABLE
+//#define EXACTSOLUTION_AVAILABLE
 
 //Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem
@@ -139,7 +140,7 @@ namespace Problem
     // ( here we have heterogenious reference problem, therefore we need a high refinement level )
     inline int getRefinementLevelReferenceProblem ( ) const
     {
-      return 8;//18;
+      return 16;
     }
 
 
@@ -195,7 +196,10 @@ namespace Problem
 
 #else
 
-     y = 1.0;
+     if ( x[1] >= 0.1 ) 
+       { y = 1.0; }
+     else
+       { y = 0.1; }
 
 #endif
 
@@ -292,16 +296,21 @@ namespace Problem
                          JacobianRangeType &flux ) const
     {
 
-       double coefficient = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * x[0] / EPSILON)*sin(2.0 * M_PI * pow(x[1],2.0) / EPSILON);
+       double coefficient = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * sqrt(fabs(2.0*x[0])) / EPSILON)*sin(2.0 * M_PI * pow(1.5*x[1],2.0) / EPSILON);
+
+       if ( x[1] <= 0.3 )
+        {
+         coefficient *= 4.0;
+        }
 
        if ( (x[1] > 0.3) && (x[1] < 0.6) )
         {
-         coefficient *= ( (-3.0) * x[1] + 1.9 );
+         coefficient *= 2.0 * ( ((-5.0/3.0) * x[1]) + (3.0/2.0) );
         }
 
        if ( x[1] >= 0.6 )
         {
-         coefficient *= 0.1;
+         coefficient *= 1.0;
         }
 
 #ifdef LINEAR_PROBLEM
@@ -311,8 +320,8 @@ namespace Problem
 
 #else
 
-       std :: cout << "Nonlinear problem 2 not implemented!" << std :: endl;
-       abort();
+       flux[0][0] = coefficient * (gradient[0][0] + ((1.0/3.0)*pow(gradient[0][0], 3.0)));
+       flux[0][1] = coefficient * (gradient[0][1] + ((1.0/3.0)*pow(gradient[0][1], 3.0)));
 
 #endif
 
@@ -329,24 +338,31 @@ namespace Problem
                                        JacobianRangeType &flux ) const
     {
 
-       double coefficient = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * x[0] / EPSILON)*sin(2.0 * M_PI * pow(x[1],2.0) / EPSILON);
+       double coefficient = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * sqrt(fabs(2.0*x[0])) / EPSILON)*sin(2.0 * M_PI * pow(1.5*x[1],2.0) / EPSILON);
+
+       if ( x[1] <= 0.3 )
+        {
+         coefficient *= 4.0;
+        }
 
        if ( (x[1] > 0.3) && (x[1] < 0.6) )
         {
-         coefficient *= ( (-3.0) * x[1] + 1.9 );
+         coefficient *= 2.0 * ( ((-5.0/3.0) * x[1]) + (3.0/2.0) );
         }
 
        if ( x[1] >= 0.6 )
         {
-         coefficient *= 0.1;
+         coefficient *= 1.0;
         }
 
 #ifdef LINEAR_PROBLEM
        flux[0][0] = coefficient * direction_gradient[0][0];
        flux[0][1] = coefficient * direction_gradient[0][1];
 #else
-       std :: cout << "Nonlinear problem 2 not implemented!" << std :: endl;
-       abort();
+       flux[0][0] = coefficient * direction_gradient[0][0]
+                      * (1.0 + pow(position_gradient[0][0], 2.0));
+       flux[0][1] = coefficient * direction_gradient[0][1]
+                      * (1.0 + pow(position_gradient[0][1], 2.0));
 #endif
 
     }
@@ -457,6 +473,9 @@ namespace Problem
                          const JacobianRangeType &gradient,
                          JacobianRangeType &flux ) const
     {
+
+      std :: cout << "No homogenization available" << std :: endl;
+      std :: abort();
 
 #ifdef LINEAR_PROBLEM
        flux[0][0] = (*A_hom_)[0][0]*gradient[0][0] + (*A_hom_)[0][1]*gradient[0][1];
@@ -719,18 +738,34 @@ namespace Problem
     inline void evaluate ( const DomainType &x,
                            RangeType &y ) const
     {
+
+#if 1
       // NOT THE EXACT SOLUTION!!!:
-      y = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * x[0] / EPSILON)*sin(2.0 * M_PI * pow(x[1],2.0) / EPSILON);
+      y = 0.0;
+      std :: cout << "Exact solution not available" << std :: endl;
+      std :: abort();
+#endif
 
-      if ( (x[1] > 0.3) && (x[1] < 0.6) )
-       {
-         y *= ( (-3.0) * x[1] + 1.9 );
-       }
+       double coefficient = 1.0 + (9.0/10.0)*sin(2.0 * M_PI * sqrt(fabs(2.0*x[0])) / EPSILON)*sin(2.0 * M_PI * pow(1.5*x[1],2.0) / EPSILON);
 
-      if ( x[1] >= 0.6 )
-       {
-         y *= 0.1;
-       }
+       if ( x[1] <= 0.3 )
+        {
+         coefficient *= 4.0;
+        }
+
+       if ( (x[1] > 0.3) && (x[1] < 0.6) )
+        {
+         coefficient *= 2.0 * ( ((-5.0/3.0) * x[1]) + (3.0/2.0) );
+        }
+
+       if ( x[1] >= 0.6 )
+        {
+         coefficient *= 1.0;
+        }
+
+
+       y = coefficient;
+
     }
 
     // in case 'u' HAS a time-dependency use the following method: 
