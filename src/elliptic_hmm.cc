@@ -57,7 +57,7 @@
 //#define AD_HOC_COMPUTATION
 
 //! Do we have/want a fine-scale reference solution?
-#define FINE_SCALE_REFERENCE
+//#define FINE_SCALE_REFERENCE
 #ifdef FINE_SCALE_REFERENCE
 
   // load the precomputed fine scale reference from a file
@@ -105,6 +105,19 @@
  //! Do we want to force the algorithm to come to an end?
  // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht erreicht etc.)
  #define FORCE
+#endif
+
+//! if a computation was broken (after a certain HMM Newton step), we might want to resume to this computation,
+//! loading the solution of the last step that was succesfully carried out (it has to be saved somewhere!)
+//  (this only works for non-adaptive computations!)
+#define RESUME_TO_BROKEN_COMPUTATION
+
+#ifdef RESUME_TO_BROKEN_COMPUTATION
+ // last HMM Newton step that was succesfully carried out, saving the iterate afterwards
+ #define HMM_NEWTON_ITERATION_STEP 1
+#else
+ // default: we need a full computation. start with step 1:
+ #define HMM_NEWTON_ITERATION_STEP 0 
 #endif
 
 
@@ -1470,13 +1483,42 @@ while ( repeat == true )
   RangeType hmm_residual_L2_norm = 10000.0;
   RangeType hmm_rhs_L2_norm = 10000.0;
 
-  int hmm_iteration_step = 1;
+  // number of HMM Newton step (1 = first step)
+  // HMM_NEWTON_ITERATION_STEP' Netwon steps have been already performed,
+  // the next one is 'HMM_NEWTON_ITERATION_STEP+1' = hmm_iteration_step
+  int hmm_iteration_step = HMM_NEWTON_ITERATION_STEP + 1;
+
+
+  #ifdef RESUME_TO_BROKEN_COMPUTATION
+  
+  //std :: string location_hmm_newton_step_solution = "data/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
+
+  char fnewtonname[50];
+  sprintf( fnewtonname, "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d", refinement_level_macrogrid_, HMM_NEWTON_ITERATION_STEP );
+  std :: string fnewtonname_s( fnewtonname );
+  std :: string location_hmm_newton_step_solution = "data/" + filename_ + fnewtonname_s;
+
+  bool reader_open = false;
+
+  // reader for the cell problem data file:
+  DiscreteFunctionReader discrete_function_reader_hmm_newton_ref( (location_hmm_newton_step_solution).c_str() );
+  discrete_function_reader_hmm_newton_ref.open();
+
+  discrete_function_reader_hmm_newton_ref.read( 0, hmm_solution );
+
+  #endif
+
+
+
+
+  
+
   // the Newton step for the nonlinear HMM problem:
   // L2-Norm of residual < tolerance ?
   #ifdef STOCHASTIC_PERTURBATION
   double hmm_tolerance = 1e-01 * VARIANCE;
   #else
-  double hmm_tolerance = 0.002; //5e-04;//relative tolerance //1e-04; //
+  double hmm_tolerance = 1e-04;//0.002; //5e-04;//relative tolerance //1e-04; //
   #endif
   while( hmm_residual_L2_norm > hmm_tolerance )
    {
@@ -1575,6 +1617,57 @@ while ( repeat == true )
       {
 
         hmm_solution += hmm_newton_residual;
+		
+
+        // write the solution after the current HMM Newton step to a file
+		#ifdef WRITE_HMM_SOL_TO_FILE
+
+          // for adaptive computations, the saved solution is not suitable for a later usage
+          #ifndef ADAPTIVE
+
+		  bool writer_open = false;
+
+          char fname[50];
+          sprintf( fname, "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d", refinement_level_macrogrid_, hmm_iteration_step );
+          std :: string fname_s( fname );
+
+          std :: string location = "data/" + filename_ + fname_s;
+          DiscreteFunctionWriter dfw( (location).c_str() );
+          writer_open = dfw.open();
+          if ( writer_open )
+          dfw.append( hmm_solution );
+
+		  #endif
+
+          // writing paraview data output
+
+          // general output parameters
+          myDataOutputParameters outputparam;
+          outputparam.set_path( "data/" + filename_ );
+
+		  // sequence stamp
+          std::stringstream outstring;
+
+          // create and initialize output class
+		  IOTupleType hmm_solution_newton_step_series( &hmm_solution );
+          #ifdef ADAPTIVE
+          char hmm_prefix[50];
+          sprintf( hmm_prefix, "hmm_solution_%d_NewtonStep_%d", loop_cycle, hmm_iteration_step );
+          #else
+          char hmm_prefix[50];
+          sprintf( hmm_prefix, "hmm_solution_NewtonStep_%d", hmm_iteration_step );		  
+          #endif
+		  outputparam.set_prefix( hmm_prefix );
+		  DataOutputType hmmsol_dataoutput( gridPart.grid(), hmm_solution_newton_step_series, outputparam );
+
+          // write data
+          outstring << "hmm-solution-NewtonStep";
+          hmmsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+          // clear the std::stringstream:
+          outstring.str(std::string());
+
+        #endif
+
 
         hmm_residual_L2_norm = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_newton_residual, zero_func_coarse );
 
@@ -2182,7 +2275,15 @@ int main(int argc, char** argv)
      mkdir(("data/" + filename_).c_str() DIRMODUS);
    }
 
+
+
+  #ifdef RESUME_TO_BROKEN_COMPUTATION
+  // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
+  // (vorlauefig sollte diese Variante aber reichen) 
+  std :: string save_filename = "data/" + filename_ + "/problem-info-resumed-computation.txt";  
+  #else
   std :: string save_filename = "data/" + filename_ + "/problem-info.txt";
+  #endif
   std :: cout << "Data will be saved under: " << save_filename << std :: endl;
 
   // data for the model problem; the information manager
