@@ -1259,7 +1259,7 @@ public:
       cell_problem_residual.clear();
 
       L2Error< PeriodicDiscreteFunctionType > l2error;
-      RangeType residual_L2_norm = 10000.0;
+      RangeType relative_newton_error = 10000.0;
 
       int iteration_step = 0;
 
@@ -1270,7 +1270,7 @@ public:
       #else
       double tolerance = 1e-06;
       #endif
-      while( residual_L2_norm > tolerance )
+      while( relative_newton_error > tolerance )
         {
 
           // (here: cellproblem_solution = solution from the last iteration step)
@@ -1315,7 +1315,7 @@ public:
 
             if ( biCG_tolerance > 1e-4 )
              {
-               std :: cout << "WARNING! Iteration step " << iteration_step << ". Invalid dofs in 'cell_problem_residual', but '" << residual_L2_norm << " = residual_L2_norm > 1e-01' and 'biCG_tolerance > 1e-4'. L^2-Norm of right hand side of cell problem: " << norm_rhs << ". Therefore possibly inaccurate solution." << std :: endl;
+               std :: cout << "WARNING! Iteration step " << iteration_step << ". Invalid dofs in 'cell_problem_residual', but '" << relative_newton_error << " = relative_newton_error > 1e-01' and 'biCG_tolerance > 1e-4'. L^2-Norm of right hand side of cell problem: " << norm_rhs << ". Therefore possibly inaccurate solution." << std :: endl;
                  std :: cout << "Information:" << std :: endl;
                  std :: cout << "x_T = globalQuadPoint = " << globalQuadPoint << "." << std :: endl;
                  std :: cout << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "." << std :: endl;
@@ -1334,7 +1334,9 @@ public:
 
          cell_problem_solution += cell_problem_residual;
 
-         residual_L2_norm = l2error.template norm2 < (2 * polynomialOrder) + 2>( cell_problem_residual, zero_func );
+         relative_newton_error = l2error.template norm2 < (2 * polynomialOrder) + 2>( cell_problem_residual, zero_func );
+         RangeType norm_cell_solution = l2error.template norm2<(2 * polynomialOrder) + 2>( cell_problem_solution, zero_func );
+         relative_newton_error = relative_newton_error / norm_cell_solution;
 
          // std :: cout << "L2-Norm of cell problem residual = " << residual_L2_norm << std :: endl;
 
@@ -1342,7 +1344,7 @@ public:
 
          if ( iteration_step > 10 )
            { std :: cout << "Warning! Algorithm already reached Newton-iteration step " << iteration_step << " for computing the nonlinear cellproblem." << std :: endl;
-             std :: cout << "residual_L2_norm = " << residual_L2_norm << std :: endl << std :: endl;
+             std :: cout << "relative_newton_error = " << relative_newton_error << std :: endl << std :: endl;
              #ifdef FORCE
              residual_L2_norm = 0.0;
              #endif

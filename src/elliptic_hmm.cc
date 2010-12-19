@@ -57,11 +57,11 @@
 //#define AD_HOC_COMPUTATION
 
 //! Do we have/want a fine-scale reference solution?
-//#define FINE_SCALE_REFERENCE
+#define FINE_SCALE_REFERENCE
 #ifdef FINE_SCALE_REFERENCE
 
   // load the precomputed fine scale reference from a file
-  #define FSR_LOAD
+  //#define FSR_LOAD
 
   #ifndef FSR_LOAD
   // compute the fine scale reference (on the fly)
@@ -110,11 +110,11 @@
 //! if a computation was broken (after a certain HMM Newton step), we might want to resume to this computation,
 //! loading the solution of the last step that was succesfully carried out (it has to be saved somewhere!)
 //  (this only works for non-adaptive computations!)
-#define RESUME_TO_BROKEN_COMPUTATION
+//#define RESUME_TO_BROKEN_COMPUTATION
 
 #ifdef RESUME_TO_BROKEN_COMPUTATION
  // last HMM Newton step that was succesfully carried out, saving the iterate afterwards
- #define HMM_NEWTON_ITERATION_STEP 1
+ #define HMM_NEWTON_ITERATION_STEP 2
 #else
  // default: we need a full computation. start with step 1:
  #define HMM_NEWTON_ITERATION_STEP 0 
@@ -221,7 +221,7 @@ namespace Multiscale
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_4/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_2/problem_specification.hh>
 
 
 #include <dune/multiscale/operators/righthandside_assembler.hh>
@@ -697,7 +697,7 @@ void algorithm ( std :: string &UnitCubeName,
 //sollte bald in eigens Programm ausgelagert werden:
 // (hier werden bereits berechnete diskrete HMM solutions eingelesen und die L^2-Differenz berechnet
 // Leben tun alle diese Funktionen auf dem Makrogitter mit 10 Verfeinerungsleveln, wenn sie auf einem groeberen Gitter bestimmt worden sind, dann wurden sie spaeter darauf projeziert
-#if 0
+#if 1
 
   //name of the grid file that describes the macro-grid:
   std :: string macroGridName;
@@ -714,14 +714,22 @@ void algorithm ( std :: string &UnitCubeName,
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8_tolerance3.5e-06/hmm_solution_discFunc_refLevel_10";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_6_Micro_6/hmm_solution_discFunc_refLevel_6";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
-//  discFunc_location_1 = "data/Model_Problem_1/reference_solution_ref_16/finescale_solution_discFunc_refLevel_16";
-  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+//  discFunc_location_1 = "data/Model_Problem_2/reference_solution_ref_17/finescale_solution_discFunc_refLevel_17";
+//  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+  discFunc_location_1 = "data/Model_Problem_2/Macro_8_Micro_10_OVERSAMPLING/hmm_solution_discFunc_refLevel_8";
+
+
 
 //  discFunc_location_2 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
 //  discFunc_location_2 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
-  discFunc_location_2 = "data/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+//  discFunc_location_2 = "data/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+//  discFunc_location_2 = "data/Model_Problem_2/Macro_4_Micro_6_OVERSAMPLING/hmm_solution_discFunc_refLevel_4";
+  discFunc_location_2 = "data/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
 
-  int gridLevel_1 = 10; // Macro_'gridLevel_1'...
+
+
+
+  int gridLevel_1 = 8; // Macro_'gridLevel_1'...
   int gridLevel_2 = 18; // Macro_'gridLevel_2'...
 //! Note: gridLevel_2 >= gridLevel_1
 
@@ -781,7 +789,7 @@ void algorithm ( std :: string &UnitCubeName,
   discrete_function_reader_2.read( 0, discrete_function_2 );
   std :: cout << "discrete_function_2 read." << std :: endl;
 
-#if 0
+#if 1
 
   //!warum wird das gebraucht, um das richtige Ergebnis zu bekommen???????
   #if 1
@@ -903,7 +911,7 @@ void algorithm ( std :: string &UnitCubeName,
 #endif
 
 
-  //std::abort();
+  std::abort();
 
 #endif
  //! --------------------------------------------------------------------------------------
@@ -1111,14 +1119,14 @@ void algorithm ( std :: string &UnitCubeName,
   DiscreteFunctionType fem_newton_residual( filename_ + "FEM Newton Residual", finerDiscreteFunctionSpace );
   fem_newton_residual.clear();
 
-  RangeType residual_L2_norm = 10000.0;
+  RangeType relative_newton_error_finescale = 10000.0;
   RangeType rhs_L2_norm = 10000.0;
 
   int iteration_step = 1;
   // the Newton step for the FEM reference problem (solved with Newton Method):
   // L2-Norm of residual < tolerance ?
   double tolerance = 1e-06;
-  while( residual_L2_norm > tolerance )
+  while( relative_newton_error_finescale > tolerance )
    {
      // (here: fem_newton_solution = solution from the last iteration step)
 
@@ -1164,14 +1172,15 @@ void algorithm ( std :: string &UnitCubeName,
 
         fem_newton_solution += fem_newton_residual;
 
-        residual_L2_norm = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( fem_newton_residual, zero_func );
+        relative_newton_error_finescale = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( fem_newton_residual, zero_func );
+        relative_newton_error_finescale /= l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( fem_newton_solution, zero_func );
 
-        std :: cout << "L2-Norm of residual = " << residual_L2_norm << std :: endl;
+        std :: cout << "Relative L2-Newton Error = " << relative_newton_error_finescale << std :: endl;
         // residual solution almost identical to zero: break
         if (data_file.is_open())
            {
-             data_file << "L2-Norm of residual = " << residual_L2_norm << std :: endl;
-             if ( residual_L2_norm <= tolerance )
+             data_file << "Relative L2-Newton Error = " << relative_newton_error_finescale << std :: endl;
+             if ( relative_newton_error_finescale <= tolerance )
               {
                 data_file << "Since tolerance = " << tolerance << ": break loop." << std :: endl;
               }
@@ -1294,6 +1303,7 @@ void algorithm ( std :: string &UnitCubeName,
 #ifdef ADAPTIVE
 // number of the loop cycle of the while-loop
 int loop_cycle = 1;
+double total_hmm_time = 0.0;
 bool repeat = true;
 while ( repeat == true )
 {
@@ -1480,7 +1490,7 @@ while ( repeat == true )
   DiscreteFunctionType hmm_newton_residual( filename_ + "HMM Newton Residual", discreteFunctionSpace );
   hmm_newton_residual.clear();
 
-  RangeType hmm_residual_L2_norm = 10000.0;
+  RangeType relative_newton_error = 10000.0;
   RangeType hmm_rhs_L2_norm = 10000.0;
 
   // number of HMM Newton step (1 = first step)
@@ -1509,20 +1519,22 @@ while ( repeat == true )
   #endif
 
 
+  double old_error = 100.0;
+  double error_decay = 0.0;
 
-
-  
 
   // the Newton step for the nonlinear HMM problem:
   // L2-Norm of residual < tolerance ?
   #ifdef STOCHASTIC_PERTURBATION
   double hmm_tolerance = 1e-01 * VARIANCE;
   #else
-  double hmm_tolerance = 1e-04;//0.002; //5e-04;//relative tolerance //1e-04; //
+  double hmm_tolerance = 1e-05;
   #endif
-  while( hmm_residual_L2_norm > hmm_tolerance )
+  while( relative_newton_error > hmm_tolerance )
    {
      // (here: hmm_solution = solution from the last iteration step)
+
+     long double newton_step_time = clock();
 
      std :: cout << "HMM Newton iteration " << hmm_iteration_step << ":" << std :: endl;
      if (data_file.is_open())
@@ -1620,12 +1632,12 @@ while ( repeat == true )
 		
 
         // write the solution after the current HMM Newton step to a file
-		#ifdef WRITE_HMM_SOL_TO_FILE
+	#ifdef WRITE_HMM_SOL_TO_FILE
 
           // for adaptive computations, the saved solution is not suitable for a later usage
           #ifndef ADAPTIVE
 
-		  bool writer_open = false;
+	  bool writer_open = false;
 
           char fname[50];
           sprintf( fname, "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d", refinement_level_macrogrid_, hmm_iteration_step );
@@ -1637,7 +1649,8 @@ while ( repeat == true )
           if ( writer_open )
           dfw.append( hmm_solution );
 
-		  #endif
+          // if you want an utput for all newton steps, even for an adaptive computation, use:
+ 	  // #endif
 
           // writing paraview data output
 
@@ -1645,11 +1658,11 @@ while ( repeat == true )
           myDataOutputParameters outputparam;
           outputparam.set_path( "data/" + filename_ );
 
-		  // sequence stamp
+	  // sequence stamp
           std::stringstream outstring;
 
           // create and initialize output class
-		  IOTupleType hmm_solution_newton_step_series( &hmm_solution );
+	  IOTupleType hmm_solution_newton_step_series( &hmm_solution );
           #ifdef ADAPTIVE
           char hmm_prefix[50];
           sprintf( hmm_prefix, "hmm_solution_%d_NewtonStep_%d", loop_cycle, hmm_iteration_step );
@@ -1657,8 +1670,8 @@ while ( repeat == true )
           char hmm_prefix[50];
           sprintf( hmm_prefix, "hmm_solution_NewtonStep_%d", hmm_iteration_step );		  
           #endif
-		  outputparam.set_prefix( hmm_prefix );
-		  DataOutputType hmmsol_dataoutput( gridPart.grid(), hmm_solution_newton_step_series, outputparam );
+	  outputparam.set_prefix( hmm_prefix );
+	  DataOutputType hmmsol_dataoutput( gridPart.grid(), hmm_solution_newton_step_series, outputparam );
 
           // write data
           outstring << "hmm-solution-NewtonStep";
@@ -1666,22 +1679,32 @@ while ( repeat == true )
           // clear the std::stringstream:
           outstring.str(std::string());
 
+	  #endif
+
         #endif
 
+        // || u^(n+1) - u^(n) ||_L2
+        relative_newton_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_newton_residual, zero_func_coarse );
+        // || u^(n+1) - u^(n) ||_L2 / || u^(n+1) ||_L2
+        relative_newton_error = relative_newton_error / l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_solution, zero_func_coarse );
 
-        hmm_residual_L2_norm = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_newton_residual, zero_func_coarse );
-
-        std :: cout << "L2-Norm of HMM residual = " << hmm_residual_L2_norm << std :: endl;
+        std :: cout << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std :: endl;
 
         // residual solution almost identical to zero: break
         if (data_file.is_open())
            {
-             data_file << "L2-Norm of HMM residual = " << hmm_residual_L2_norm << std :: endl;
-             if ( hmm_residual_L2_norm <= hmm_tolerance )
+             data_file << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std :: endl;
+             if ( relative_newton_error <= hmm_tolerance )
               {
+                newton_step_time = clock() - newton_step_time;
+                newton_step_time = newton_step_time / CLOCKS_PER_SEC;
+                if (data_file.is_open())
+                 {
+                   data_file << std :: endl << "Total time for current HMM Newton step = " << newton_step_time << "s." << std :: endl << std :: endl;
+                 }
                 data_file << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std :: endl;
+                data_file << "....................................................." << std :: endl << std :: endl;
               }
-             data_file << "....................................................." << std :: endl << std :: endl;
            }
 
         hmm_newton_residual.clear();
@@ -1695,6 +1718,27 @@ while ( repeat == true )
 
      hmm_iteration_step += 1;
 
+     if ( relative_newton_error > hmm_tolerance )
+      {
+        newton_step_time = clock() - newton_step_time;
+        newton_step_time = newton_step_time / CLOCKS_PER_SEC;
+        if (data_file.is_open())
+         {
+           data_file << std :: endl << "Total time for current HMM Newton step = " << newton_step_time << "s." << std :: endl << std :: endl;
+
+           error_decay = relative_newton_error / old_error;
+           old_error = relative_newton_error;
+           // maximum number of Newton iterations
+           if ( (hmm_iteration_step >= 20) || (error_decay >= 0.95) )
+            {
+              data_file << std :: endl << "Reached constant or inceasing error decay or maximum number of Newton iterations:  break loop." << std :: endl;
+              data_file << "....................................................." << std :: endl << std :: endl;
+              break;
+            }
+           data_file << "....................................................." << std :: endl << std :: endl;
+         }
+      }
+
    }
 
   std :: cout << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std :: endl << std :: endl;
@@ -1703,7 +1747,9 @@ while ( repeat == true )
       data_file << "---------------------------------------------------------------------------------" << std :: endl;
       data_file << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
     }
-
+  #ifdef ADAPTIVE
+  total_hmm_time += hmmAssembleTimer.elapsed();
+  #endif
 #endif
 //end if not defined LINEAR_PROBLEM
 
@@ -2187,11 +2233,84 @@ while ( repeat == true )
 
 #ifdef ADAPTIVE
 
+
+  int default_refinement = 0;
+
   //double error_tolerance_ = 0.2;
+
+  // int(...) rundet ab zum naechsten Integer
+  // assuming we had a quadratic order of convergence of the error estimator and 
+  // that we have a certain estimated error for the current uniform grid, than we can compute how many additional uniform refinements are required to get under the error (estimator) tolerance:
+  // number_of_uniform_refinments = int( sqrt( (\eta_have) / (\eta_want) ) )
+  // (obtained from the EOC formula)
+  // uniform contribution only for the first loop cycle
+  if ( loop_cycle == 1 )
+   {
+
+     // "divided by 2.0" we go half the way with a uniform computation 
+     int number_of_uniform_refinements = 2*int(int( sqrt( estimated_error / error_tolerance_ ) ) / 2.0);
+
+      if ( data_file.is_open() )
+       {
+         data_file << std :: endl << "Uniform default refinement:" << std :: endl << std :: endl;
+         data_file << "sqrt( estimated_error / error_tolerance_ ) = " << sqrt( estimated_error / error_tolerance_ ) << std :: endl;
+         data_file << "number_of_uniform_refinements = " << number_of_uniform_refinements << std :: endl;
+         data_file << "***************" << std :: endl << std :: endl;
+       }
+
+     default_refinement = number_of_uniform_refinements;
+   }
+
+  int number_of_areas;
+  if ( loop_cycle == 1 )
+   {
+     number_of_areas = 1;
+   }
+  else
+   {
+     number_of_areas = 3;
+   }
+
+  double border[number_of_areas-1];
+  border[0] = 0.5;
+  for( int bo = 1; bo < (number_of_areas-1) ; ++bo )
+    { border[bo] = border[bo-1] + ((1.0 - border[bo-1])/2.0); }
+
+  // 3 areas: 1: |0-30%| 2: |30-80%| 3: |80-100%|
+  //border[0] = 0.3;
+  //border[1] = 0.8;
+  //border[2] = 0.95;
+
+  int refinements_in_area[number_of_areas];
+  for( int bo = 0; bo < number_of_areas ; ++bo )
+    { refinements_in_area[bo] = default_refinement + bo + 1; }
+
+  if ( data_file.is_open() )
+    {
+      data_file << "Adaption strategy:" << std :: endl << std :: endl;
+      data_file << "Define 'variation = (indicator_on_element - average_indicator) / (maximum_indicator - average_indicator)'" << std :: endl;
+      data_file << "Subdivide the region [average_indicator,maximum_indicator] into " << number_of_areas << " areas." << std :: endl;
+      if ( number_of_areas == 1 )
+       {
+         data_file << "1.: [average_indicator,maximum_indicator]. Mark elements for " << refinements_in_area[0] << " refinements." << std :: endl;
+       }
+      else
+       {
+         data_file << "1.: [average_indicator," << border[0] << "*maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[0] << " refinements." << std :: endl;
+         for( int bo = 1; bo < (number_of_areas-1) ; ++bo )
+           data_file << bo+1 << ".: [" << border[bo-1] << "*average_indicator," << border[bo] << "*maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[bo] << " refinements." << std :: endl;
+         data_file << number_of_areas << ".: [" << border[number_of_areas-2] << "*average_indicator,maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[number_of_areas-1] << " refinements." << std :: endl;
+       }
+      data_file << "Default refinement for elements with 'variance <= 0 ': " << default_refinement << std :: endl;
+    }
+
 
   if ( estimated_error < error_tolerance_ )
    {
      repeat = false;
+     std :: cout << "Total HMM time = " << total_hmm_time << "s." << std :: endl;
+     data_file << std :: endl << std :: endl << "Total HMM time = " << total_hmm_time << "s." << std :: endl << std :: endl;
+
    }
   else
    {
@@ -2205,22 +2324,29 @@ while ( repeat == true )
         int additional_refinement;
 
         if ( local_error_indicator[element_number] <= average_loc_indicator )
-          { additional_refinement = 0; }
+          { additional_refinement = default_refinement; }
         else
           {
-            // 3 steps: //0-30%  30-80% 80-100%
 
             double variation = (local_error_indicator[element_number] - average_loc_indicator ) / 
                         ( maximal_loc_indicator - average_loc_indicator );
 
-            if ( variation <= 0.3 )
-              { additional_refinement = 1; }
+            if ( number_of_areas == 1 )
+             {
+               additional_refinement = refinements_in_area[0];
+             }
+            else
+             {
+               if ( variation <= border[0] )
+                 { additional_refinement = refinements_in_area[0]; }
 
-            if ( ( variation > 0.3 ) && ( variation <= 0.8 ) )
-              { additional_refinement = 2; }
+               for( int bo = 1; bo <= (number_of_areas-2) ; ++bo )
+                 if ( ( variation > border[bo-1] ) && ( variation <= border[bo] ) )
+                  { additional_refinement = refinements_in_area[bo]; }
 
-            if ( variation > 0.8 )
-              { additional_refinement = 3; }
+               if ( variation > border[number_of_areas-2] )
+                 { additional_refinement = refinements_in_area[number_of_areas-1]; }
+             }
 
           }
 

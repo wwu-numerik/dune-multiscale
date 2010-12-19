@@ -44,7 +44,7 @@
 // vorher: 0.13
 #define EPSILON 0.05
 #define EPSILON_EST 0.05
-#define DELTA 0.05
+#define DELTA 0.1
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // is an exact solution available?
@@ -140,7 +140,7 @@ namespace Problem
     // ( here we have heterogenious reference problem, therefore we need a high refinement level )
     inline int getRefinementLevelReferenceProblem ( ) const
     {
-      return 16;
+      return 18;
     }
 
 
