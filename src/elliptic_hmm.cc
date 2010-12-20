@@ -57,7 +57,7 @@
 //#define AD_HOC_COMPUTATION
 
 //! Do we have/want a fine-scale reference solution?
-#define FINE_SCALE_REFERENCE
+//#define FINE_SCALE_REFERENCE
 #ifdef FINE_SCALE_REFERENCE
 
   // load the precomputed fine scale reference from a file
@@ -221,7 +221,7 @@ namespace Multiscale
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_2/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_5/problem_specification.hh>
 
 
 #include <dune/multiscale/operators/righthandside_assembler.hh>
@@ -409,7 +409,7 @@ typedef SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, Mat
 //! --------------- solver for the linear system of equations ----------------------------
 
 // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones. GMRES seems to be more stable, but is extremely slow!
-typedef /*OEMBICGSQOp*/OEMBICGSTABOp< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
+typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
 //! --------------------------------------------------------------------------------------
 
@@ -716,21 +716,21 @@ void algorithm ( std :: string &UnitCubeName,
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
 //  discFunc_location_1 = "data/Model_Problem_2/reference_solution_ref_17/finescale_solution_discFunc_refLevel_17";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
-  discFunc_location_1 = "data/Model_Problem_2/Macro_8_Micro_10_OVERSAMPLING/hmm_solution_discFunc_refLevel_8";
-
+//  discFunc_location_1 = "data/Model_Problem_2/Macro_8_Micro_10_OVERSAMPLING/hmm_solution_discFunc_refLevel_8";
+  discFunc_location_1 = "data/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING_TFR/hmm_solution_discFunc_refLevel_2";
 
 
 //  discFunc_location_2 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
 //  discFunc_location_2 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
 //  discFunc_location_2 = "data/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
 //  discFunc_location_2 = "data/Model_Problem_2/Macro_4_Micro_6_OVERSAMPLING/hmm_solution_discFunc_refLevel_4";
-  discFunc_location_2 = "data/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+//  discFunc_location_2 = "data/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+  discFunc_location_2 = "data/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING/hmm_solution_discFunc_refLevel_2";
 
 
 
-
-  int gridLevel_1 = 8; // Macro_'gridLevel_1'...
-  int gridLevel_2 = 18; // Macro_'gridLevel_2'...
+  int gridLevel_1 = 2; // Macro_'gridLevel_1'...
+  int gridLevel_2 = 2; // Macro_'gridLevel_2'...
 //! Note: gridLevel_2 >= gridLevel_1
 
   std :: cout << "gridLevel_1 = " << gridLevel_1 << std :: endl;
@@ -765,6 +765,8 @@ void algorithm ( std :: string &UnitCubeName,
 
   DiscreteFunctionType zero_function_1( " zero_function_1 ", discreteFunctionSpace_1 );
   zero_function_1.clear();
+  DiscreteFunctionType zero_function_2( " zero_function_2 ", discreteFunctionSpace_1 );
+  zero_function_2.clear();
 //L2 norm = 0.642166
 //L2 norm = 0.623333
 //L2 norm = 0.72218
@@ -900,12 +902,15 @@ void algorithm ( std :: string &UnitCubeName,
   std :: cout << "Grid 2 size = " << grid_2.size(0) << std :: endl;
 
   ImprovedL2Error< DiscreteFunctionType > improved_l2error;
+  L2Error< DiscreteFunctionType > l2error_test;
 
   RangeType difference_L2 = improved_l2error.norm_L2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( discrete_function_2, discrete_function_1 );
   RangeType difference_L2_test = improved_l2error.norm_L2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( discrete_function_1, discrete_function_2 );
+  RangeType norm_L2_function_2 = l2error_test.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( zero_function_2, discrete_function_2 );
 
-  std :: cout << "L2 norm = " << difference_L2 << std :: endl;
-  std :: cout << "L2 norm test = " << difference_L2_test << std :: endl;
+  std :: cout << "L2 difference = " << difference_L2 << std :: endl;
+  std :: cout << "L2 norm function_2 = " << norm_L2_function_2 << std :: endl;
+  std :: cout << "L2 difference (check) = " << difference_L2_test << std :: endl;
 
 #endif
 #endif

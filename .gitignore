@@ -3,7 +3,12 @@
 src/old_versions/*
 *.deps*
 *.libs*
-src/data/*
+*/.*
+src/data/test*
+src/data/Model_Problem_1/*
+src/data/Model_Problem_3/*
+src/data/Model_Problem_2/*cell_problems*
+src/data/Model_Problem_4/*
 src/*.o
 src/elliptic_hmm
 src/dune_multiscale
