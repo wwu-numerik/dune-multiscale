@@ -884,10 +884,10 @@ namespace Dune
   
 
 #if true
-  // expensive hack:
+  // expensive hack (no more required):
   template <int polOrd> 
-  RangeFieldType norm_adaptive_grids(const DiscreteFunctionType& coarse_disc_func,
-                                     const DiscreteFunctionType& fine_disc_func, double dummy = 0)
+  RangeFieldType norm_adaptive_grids_2(const DiscreteFunctionType& coarse_disc_func,
+                                       const DiscreteFunctionType& fine_disc_func, double dummy = 0)
   {
 
     // check if the discrete functions have valid dofs:
@@ -1147,6 +1147,95 @@ namespace Dune
     return sqrt(l2Norm);
   } // end method
 #endif
+
+
+#if 1
+
+
+  // expensive hack:
+  template <int polOrd> 
+  RangeFieldType norm_adaptive_grids(const DiscreteFunctionType& coarse_disc_func,
+                                     const DiscreteFunctionType& fine_disc_func, double dummy = 0)
+  {
+
+    // check if the discrete functions have valid dofs:
+    if( !coarse_disc_func.dofsValid() || !fine_disc_func.dofsValid() )
+      {
+        std :: cout << "Solution of discrete function invalid." << std :: endl;
+        return 0.0;
+      }
+
+    bool error_in_compuation = false;
+
+    // get function spaces
+    const DiscreteFunctionSpaceType & coarse_discreteFunctionSpace = coarse_disc_func.space();  
+    const DiscreteFunctionSpaceType & fine_discreteFunctionSpace = fine_disc_func.space();
+
+    const GridPartType & coarse_gridPart = coarse_discreteFunctionSpace.gridPart();
+    const GridPartType & fine_gridPart   = fine_discreteFunctionSpace.gridPart();
+
+    const GridType &coarse_grid = coarse_gridPart.grid();
+    const GridType &fine_grid   = fine_gridPart.grid();
+
+
+    typedef typename GridPartType :: GridType :: Traits :: 
+        CollectiveCommunication
+        CommunicatorType; 
+
+    const CommunicatorType & fine_comm = fine_gridPart.grid().comm();
+
+    // to return the L2 Norm:
+    RangeFieldType l2Norm=0.0;
+
+    // for product:
+    //int quadOrd = (polOrd*2)*(polOrd*2);
+    int quadOrd = polOrd;
+
+
+    // last entity of fine grid:
+    IteratorType fine_end   = fine_discreteFunctionSpace.end();
+    for (IteratorType fine_it = fine_discreteFunctionSpace.begin(); fine_it!=fine_end; ++fine_it)
+      {
+
+        // get geoemetry of fine grid entity:
+        const EnGeometryType& fine_geo = fine_it->geometry();
+
+        // entity
+        const EntityType& fine_entity = *fine_it;
+
+       CachingQuadrature <GridPartType , 0 > quadrature(fine_entity,polOrd); 
+
+       // integrate 
+       const int quadratureNop = quadrature.nop();
+       for(int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
+        {
+          const double det = quadrature.weight(quadraturePoint) * 
+              fine_geo.integrationElement(quadrature.point(quadraturePoint));
+
+          // das Zentrum des Fine-Grid Elements:
+          DomainType global_quad_point = fine_geo.global(quadrature.point(quadraturePoint));
+
+          RangeType coarse_value;
+          coarse_disc_func.evaluate( global_quad_point , coarse_value );
+
+          RangeType fine_value;
+          fine_disc_func.evaluate( global_quad_point , fine_value );
+
+          l2Norm += det * pow( coarse_value - fine_value, 2.0 );
+        }
+
+     } // end fine grid element iteration
+
+    l2Norm = fine_comm.sum(l2Norm);
+
+    return sqrt(l2Norm);
+  } // end method
+
+
+
+#endif
+
+
 
 #if 0
   // expensive hack:

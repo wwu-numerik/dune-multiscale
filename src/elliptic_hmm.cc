@@ -61,7 +61,7 @@
 #ifdef FINE_SCALE_REFERENCE
 
   // load the precomputed fine scale reference from a file
-  //#define FSR_LOAD
+  #define FSR_LOAD
 
   #ifndef FSR_LOAD
   // compute the fine scale reference (on the fly)
@@ -221,7 +221,7 @@ namespace Multiscale
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_5/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_2/problem_specification.hh>
 
 
 #include <dune/multiscale/operators/righthandside_assembler.hh>
@@ -697,7 +697,7 @@ void algorithm ( std :: string &UnitCubeName,
 //sollte bald in eigens Programm ausgelagert werden:
 // (hier werden bereits berechnete diskrete HMM solutions eingelesen und die L^2-Differenz berechnet
 // Leben tun alle diese Funktionen auf dem Makrogitter mit 10 Verfeinerungsleveln, wenn sie auf einem groeberen Gitter bestimmt worden sind, dann wurden sie spaeter darauf projeziert
-#if 1
+#if 0
 
   //name of the grid file that describes the macro-grid:
   std :: string macroGridName;
@@ -714,27 +714,31 @@ void algorithm ( std :: string &UnitCubeName,
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8_tolerance3.5e-06/hmm_solution_discFunc_refLevel_10";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_6_Micro_6/hmm_solution_discFunc_refLevel_6";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
-//  discFunc_location_1 = "data/Model_Problem_2/reference_solution_ref_17/finescale_solution_discFunc_refLevel_17";
+//  discFunc_location_1 = "data/Model_Problem_2/reference_solution_ref_16/finescale_solution_discFunc_refLevel_16";
 //  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
 //  discFunc_location_1 = "data/Model_Problem_2/Macro_8_Micro_10_OVERSAMPLING/hmm_solution_discFunc_refLevel_8";
-  discFunc_location_1 = "data/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING_TFR/hmm_solution_discFunc_refLevel_2";
+  discFunc_location_1 = "data/Model_Problem_2/Macro_6_Micro_6_tol_1e-08/hmm_solution_discFunc_refLevel_6";
+//  discFunc_location_1 = "data/Model_Problem_2/Macro_4_Micro_10_STRANGE_OVERSAMPLING_TFR/hmm_solution_discFunc_refLevel_4";
 
 
 //  discFunc_location_2 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
 //  discFunc_location_2 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
 //  discFunc_location_2 = "data/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
 //  discFunc_location_2 = "data/Model_Problem_2/Macro_4_Micro_6_OVERSAMPLING/hmm_solution_discFunc_refLevel_4";
-//  discFunc_location_2 = "data/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
-  discFunc_location_2 = "data/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING/hmm_solution_discFunc_refLevel_2";
+  discFunc_location_2 = "data/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+//  discFunc_location_2 = "data/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING/hmm_solution_discFunc_refLevel_2";
+//  discFunc_location_2 = "data/Model_Problem_2/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
+//  discFunc_location_2 = "data/Model_Problem_2/zzz_inProgress/done/DELTA_0.1_EPSILON_0.05/Macro_8_Micro_10/hmm_solution_discFunc_refLevel_8";
 
-
-
-  int gridLevel_1 = 2; // Macro_'gridLevel_1'...
-  int gridLevel_2 = 2; // Macro_'gridLevel_2'...
+  int gridLevel_1 = 6; // Macro_'gridLevel_1'...
+  int gridLevel_2 = 18; // Macro_'gridLevel_2'...
 //! Note: gridLevel_2 >= gridLevel_1
 
   std :: cout << "gridLevel_1 = " << gridLevel_1 << std :: endl;
-  std :: cout << "gridLevel_2 = " << gridLevel_2 << std :: endl;
+  std :: cout << "gridLevel_2 = " << gridLevel_2 << std :: endl << std :: endl;
+
+  std :: cout << "discFunc_location_1 = " << discFunc_location_1 << std :: endl;
+  std :: cout << "discFunc_location_2 = " << discFunc_location_2 << std :: endl << std :: endl;
 
   // create a grid pointer for the DGF file belongig to the macro grid:
   GridPointerType macro_grid_pointer_1( macroGridName );
@@ -775,7 +779,7 @@ void algorithm ( std :: string &UnitCubeName,
 //L2 norm = 0.792442
 
 
-  bool reader_is_open = false;
+  bool reader_open = false;
 
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader_1( (discFunc_location_1).c_str() );
@@ -822,7 +826,7 @@ void algorithm ( std :: string &UnitCubeName,
   // -------------------------------------------------------
 #endif
 
-#if 1
+#if 0
   std :: cout << "Starting adaption 1...";
 
   // one for the discreteFunctionSpace
@@ -904,13 +908,17 @@ void algorithm ( std :: string &UnitCubeName,
   ImprovedL2Error< DiscreteFunctionType > improved_l2error;
   L2Error< DiscreteFunctionType > l2error_test;
 
-  RangeType difference_L2 = improved_l2error.norm_L2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( discrete_function_2, discrete_function_1 );
-  RangeType difference_L2_test = improved_l2error.norm_L2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( discrete_function_1, discrete_function_2 );
+  RangeType difference_L2_alternative = 0.0; //!improved_l2error.norm_L2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( discrete_function_2, discrete_function_1 );
   RangeType norm_L2_function_2 = l2error_test.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( zero_function_2, discrete_function_2 );
+  RangeType difference_L2_test = 0.0; //!improved_l2error.norm_L2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( discrete_function_1, discrete_function_2 );
 
-  std :: cout << "L2 difference = " << difference_L2 << std :: endl;
+  RangeType difference_L2 = improved_l2error.norm_adaptive_grids_2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( discrete_function_1, discrete_function_2 );
+
+
+  std :: cout << "L2 difference  = " << difference_L2 << std :: endl;
+//!  std :: cout << "L2 difference (check) = " << difference_L2_test << std :: endl;
   std :: cout << "L2 norm function_2 = " << norm_L2_function_2 << std :: endl;
-  std :: cout << "L2 difference (check) = " << difference_L2_test << std :: endl;
+//!  std :: cout << "L2 difference (alternative check) = " << difference_L2_alternative << std :: endl;
 
 #endif
 #endif
@@ -2039,7 +2047,7 @@ while ( repeat == true )
 #ifdef FINE_SCALE_REFERENCE
   long double timeadapt = clock();
 
-  RangeType hmm_error = impL2error.norm_adaptive_grids< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(hmm_solution,fem_newton_solution);
+  RangeType hmm_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(hmm_solution,fem_newton_solution);
 
   std :: cout << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std :: endl << std :: endl;
   if (data_file.is_open())
@@ -2062,7 +2070,7 @@ while ( repeat == true )
 #ifdef HMM_REFERENCE
   long double timeadapthmmref = clock();
 
-  RangeType hmm_vs_hmm_ref_error = impL2error.norm_adaptive_grids< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(hmm_solution,hmm_reference_solution);
+  RangeType hmm_vs_hmm_ref_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(hmm_solution,hmm_reference_solution);
 
   std :: cout << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std :: endl << std :: endl;
   if (data_file.is_open())
@@ -2266,6 +2274,7 @@ while ( repeat == true )
      default_refinement = number_of_uniform_refinements;
    }
 
+
   int number_of_areas;
   if ( loop_cycle == 1 )
    {
@@ -2273,8 +2282,16 @@ while ( repeat == true )
    }
   else
    {
-     number_of_areas = 3;
+     if ( loop_cycle == 3 )
+      { number_of_areas = 2; }
+     else
+      { number_of_areas = 2; }
    }
+
+#if 0
+  if ( loop_cycle == 2 )
+     number_of_areas = 2;
+#endif
 
   double border[number_of_areas-1];
   border[0] = 0.5;
@@ -2289,6 +2306,17 @@ while ( repeat == true )
   int refinements_in_area[number_of_areas];
   for( int bo = 0; bo < number_of_areas ; ++bo )
     { refinements_in_area[bo] = default_refinement + bo + 1; }
+
+#if 0
+if ( loop_cycle > 1 ) { refinements_in_area[bo] = 6; }
+  if ( loop_cycle == 2 )
+   {
+     //go the full way 
+     int number_of_uniform_refinements = 2*int(int( sqrt( estimated_error / error_tolerance_ ) ) );
+     refinements_in_area[0] = number_of_uniform_refinements + 2.0;
+     refinements_in_area[1] = number_of_uniform_refinements + 2.0;
+   }
+#endif
 
   if ( data_file.is_open() )
     {

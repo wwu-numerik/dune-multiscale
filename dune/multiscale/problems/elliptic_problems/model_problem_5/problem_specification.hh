@@ -1,6 +1,8 @@
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
 
+//! IDENTICAL TO MODEL PROBLEM 2!!!!
+
 #include <dune/fem/function/common/function.hh>
 
 //! For more further details about the implementation of the following classes, see the end of the file
@@ -84,7 +86,7 @@ namespace Problem
 
     inline int get_Number_of_Model_Problem ( ) const
     {
-      return 5;
+      return 2;
     }
 
     // epsilon (the smaller epsilon, the finer the micro-structure)
