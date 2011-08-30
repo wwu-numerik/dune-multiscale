@@ -15,6 +15,7 @@
 // 2. A(x,y) = A(y)
 // 3. a_i_j(y) = a_i_j(y_1,y_2) = a_i_j(y_1)
 // 4. symmetrisch
+// Vermutlich  eher der Fall A(x,y) = A(y) und der Rest ist egal.
 
 #ifndef DUNE_HOMOGENIZER_HH
 #define DUNE_HOMOGENIZER_HH
@@ -23,7 +24,7 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
 
-#include <dune/multiscale/operators/matrix_assembler/elliptic/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/operators/matrix_assembler/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/operators/globalsolver.hh>
 
 //for data output:

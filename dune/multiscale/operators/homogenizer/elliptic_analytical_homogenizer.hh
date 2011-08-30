@@ -66,6 +66,8 @@ namespace Dune
          ( const TensorType &tensor, int polOrd = (2 * spacePolOrd + 2) ) const
     {
 
+      std :: cout << "WARNING! Use of deprecated homogenizer, which requires deprecated use of 'evaluate' in Diffusion-class!" << std :: endl; 
+
       GridPtr< GridType > gridptr( filename_ ); 
 
       gridptr->globalRefine( 12 );
@@ -97,7 +99,6 @@ namespace Dune
 
           tensor.evaluate( 0, 0,
                            geometry.global( quadrature.point( quadraturePoint ) ),
-                           geometry.global( quadrature.point( quadraturePoint ) ),
                            a[ 0 ][ 0 ] );
 
           tensorHom[ 0 ][ 0 ] += det * ( 1 / a[ 0 ][ 0 ] );
@@ -126,11 +127,9 @@ namespace Dune
 
           tensor.evaluate( 0, 0,
                            geometry.global( quadrature.point( quadraturePoint ) ),
-                           geometry.global( quadrature.point( quadraturePoint ) ),
                            a[ 0 ][ 0 ] );
 
           tensor.evaluate( 0, 1,
-                           geometry.global( quadrature.point( quadraturePoint ) ),
                            geometry.global( quadrature.point( quadraturePoint ) ),
                            a[ 0 ][ 1 ] );
 
@@ -163,21 +162,17 @@ namespace Dune
 
              tensor.evaluate( 0, 0,
                               geometry.global( quadrature.point( quadraturePoint ) ),
-                              geometry.global( quadrature.point( quadraturePoint ) ),
                               a[ 0 ][ 0 ] );
 
              tensor.evaluate( 0, 1,
-                              geometry.global( quadrature.point( quadraturePoint ) ),
                               geometry.global( quadrature.point( quadraturePoint ) ),
                               a[ 0 ][ 1 ] );
 
              tensor.evaluate( 1, 0,
                               geometry.global( quadrature.point( quadraturePoint ) ),
-                              geometry.global( quadrature.point( quadraturePoint ) ),
                               a[ 1 ][ 0 ] );
 
              tensor.evaluate( 1, 1,
-                              geometry.global( quadrature.point( quadraturePoint ) ),
                               geometry.global( quadrature.point( quadraturePoint ) ),
                               a[ 1 ][ 1 ] );
 

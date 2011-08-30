@@ -1,11 +1,20 @@
 
 SUBDIRS =
 
-noinst_PROGRAMS = elliptic_hmm
+noinst_PROGRAMS = elliptic_hmm elliptic_msfem
 
 elliptic_hmm_SOURCES = elliptic_hmm.cc
 
+elliptic_msfem_SOURCES = elliptic_msfem.cc
+
 elliptic_hmm_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS) \
+	$(UG_CPPFLAGS) \
+	$(AMIRAMESH_CPPFLAGS) \
+	$(ALBERTA_CPPFLAGS) \
+	$(ALUGRID_CPPFLAGS)
+
+elliptic_msfem_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
 	$(UG_CPPFLAGS) \
 	$(AMIRAMESH_CPPFLAGS) \
@@ -24,6 +33,22 @@ elliptic_hmm_LDADD = \
 	$(DUNEMPILIBS)	\
 	$(LDADD)
 elliptic_hmm_LDFLAGS = $(AM_LDFLAGS) \
+	$(DUNEMPILDFLAGS) \
+	$(UG_LDFLAGS) \
+	$(AMIRAMESH_LDFLAGS) \
+	$(ALBERTA_LDFLAGS) \
+	$(ALUGRID_LDFLAGS) \
+	$(DUNE_LDFLAGS)
+
+elliptic_msfem_LDADD = \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
+	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
+	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
+	$(UG_LDFLAGS) $(UG_LIBS) \
+	$(DUNEMPILIBS)	\
+	$(LDADD)
+elliptic_msfem_LDFLAGS = $(AM_LDFLAGS) \
 	$(DUNEMPILDFLAGS) \
 	$(UG_LDFLAGS) \
 	$(AMIRAMESH_LDFLAGS) \

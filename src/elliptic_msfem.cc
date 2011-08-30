@@ -38,10 +38,11 @@
 
 //! do we have a linear elliptic problem?
 // if yes, #define LINEAR_PROBLEM
-//#define LINEAR_PROBLEM
+// MsFEM currently only works for linear problems
+#define LINEAR_PROBLEM
 
-//! TFR-HMM or simple HMM?
-//#define TFR
+//! MsFEM in Petrov-Galerkin formulation (PGF) or standard MsFEM formulation?
+//#define PGF
 
 //! is an exact solution available?
 // this information should be provided by the 'problem specification file'
@@ -51,18 +52,14 @@
 // this information should be provided by the 'problem specification file'
 // there we define or don't define the macro HOMOGENIZEDSOL_AVAILABLE
 // (if HOMOGENIZEDSOL_AVAILABLE == true, it means that it can be computed. It still needs to be determined by using a homogenizer )
-// #define HOMOGENIZEDSOL_AVAILABLE
-
-//! Do we solve the cell problems ad hoc or in a pre-process?
-// the second possibility requires a data file where the solutions are saved (file becomes large)
-//#define AD_HOC_COMPUTATION
+#define HOMOGENIZEDSOL_AVAILABLE
 
 //! Do we have/want a fine-scale reference solution?
-//#define FINE_SCALE_REFERENCE
+#define FINE_SCALE_REFERENCE
 #ifdef FINE_SCALE_REFERENCE
 
   // load the precomputed fine scale reference from a file
-  #define FSR_LOAD
+  // #define FSR_LOAD
 
   #ifndef FSR_LOAD
   // compute the fine scale reference (on the fly)
@@ -85,19 +82,6 @@
 //! Do we write the discrete HMM solution to a file? (for later usage)
 #define WRITE_HMM_SOL_TO_FILE
 
-//! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
-// Not possible for ad-hoc computations! (in this case, error estimation is far too expensive)
-#ifndef AD_HOC_COMPUTATION
-  //
-  #define ERRORESTIMATION
-  // only possible if we use error estimation:
-  #ifdef ERRORESTIMATION
-   // Do you want to allow adaptive mesh refinement?
-   //#define ADAPTIVE
-  #endif
-
-#endif
-
 //! Do we want to add a stochastic perturbation on the data?
 //#define STOCHASTIC_PERTURBATION
 #ifdef STOCHASTIC_PERTURBATION
@@ -108,48 +92,12 @@
  #define FORCE
 #endif
 
-//! if a computation was broken (after a certain HMM Newton step), we might want to resume to this computation,
-//! loading the solution of the last step that was succesfully carried out (it has to be saved somewhere!)
-//  (this only works for non-adaptive computations!)
-//#define RESUME_TO_BROKEN_COMPUTATION
-
-#ifdef RESUME_TO_BROKEN_COMPUTATION
- // last HMM Newton step that was succesfully carried out, saving the iterate afterwards
- #define HMM_NEWTON_ITERATION_STEP 2
-#else
- // default: we need a full computation. start with step 1:
- #define HMM_NEWTON_ITERATION_STEP 0 
-#endif
 
 
-//!NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in problem_specification.hh), which provides us with information about epsilon, delta, etc.
-// HMM Assembler, Error Estimator, ... they all hark back to 'ModelProblemData'. Probably there is a better solution, but for me, it works perfectly.
-
-namespace Multiscale
-{
+//!NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in problem_specification.hh), which provides us with information about the problem itself.
+// MsFEM Assembler, Error Estimator, ... they all hark back to 'ModelProblemData'. Probably there is a better solution, but for me, it works perfectly.
 
 
-  // parameters for the current realization of the HMM
-  class HMMParameters
-  {
-
-
-  public:
-    // Constructor for ModelProblemData
-    inline explicit HMMParameters ( )
-    {
-    }
-
-    // do you want to save the solutions of the cell problems for a later usage?
-    // (e.g. for error estimation and adaptivity)
-    inline bool save_cell_problems ( ) const
-    {
-      return true;
-    }
-
-  };
-
-}
 
 
 
@@ -191,7 +139,6 @@ namespace Multiscale
 #include <dune/fem/space/common/adaptmanager.hh>
 
 #if 1
-//hmfemmain:
 //!---------
 #include <dune/fem/solver/oemsolver/oemsolver.hh>
 
@@ -202,55 +149,32 @@ namespace Multiscale
 //#include <dune/fem/io/visual/grape/datadisp/errordisplay.hh>
 //!-----------
 #endif
-#if 0
-//poisson
-//!--------
 
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-
-#include <dune/fem/misc/l2norm.hh>
-#include <dune/fem/misc/h1norm.hh>
-#include <dune/fem/misc/mpimanager.hh>
-#include <dune/fem/io/parameter.hh>
-#include <dune/fem/io/visual/grape/datadisp/errordisplay.hh>
-//!---------
-#endif
 #include <dune/fem/solver/inverseoperators.hh>
 
 
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_2/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
 
 
 #include <dune/multiscale/operators/righthandside_assembler.hh>
 
 #include <dune/multiscale/operators/disc_func_writer/discretefunctionwriter.hh>
 
-#include <dune/multiscale/operators/cell_problem_solving/cellproblemsolver.hh>
-
-#include <dune/multiscale/operators/reconstruction_manager/elliptic/reconstructionintegrator.hh>
-
-// we only use error estimation, if the solutions of the cell problems have been determined in a pre-process. Otherwise it is far too expensive!
-#ifndef AD_HOC_COMPUTATION
- #include <dune/multiscale/operators/errorestimation/elliptic_error_estimator.hh>
-#endif
+#include <dune/multiscale/operators/msfem_localproblems/localproblemsolver.hh>
 
 #include <dune/multiscale/operators/meanvalue.hh>
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/operators/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/operators/matrix_assembler/elliptic_hmm_matrix_assembler.hh>
+#include <dune/multiscale/operators/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
 
 //! (very restrictive) homogenizer
 #ifdef LINEAR_PROBLEM
 #include <dune/multiscale/operators/homogenizer/elliptic_analytical_homogenizer.hh>
 #include <dune/multiscale/operators/homogenizer/elliptic_homogenizer.hh>
-#else
-// dummy (does not work, since identical to HMM assembler)
-#include <dune/multiscale/operators/homogenizer/nonlinear_elliptic_homogenizer.hh>
 #endif
 
 using namespace Dune;
@@ -428,13 +352,6 @@ typedef DiscreteEllipticHMMOperator< DiscreteFunctionType, PeriodicDiscreteFunct
 
 
 
-//! --------------- ERROR ESTIMATOR NOT YET IMPLEMENTED ------------------------
-typedef ErrorEstimator< PeriodicDiscreteFunctionType, 
-                        DiscreteFunctionType,
-                        DiffusionType > ErrorEstimatorType;
-//! -----------------------------------------------------------------------------
-
-
 
 
 
@@ -451,8 +368,6 @@ double delta_; //edge length of the cells in the cell proplems,
 
 int refinement_level_macrogrid_;
 int refinement_level_referenceprob_;
-
-double error_tolerance_;
 
 //std :: ofstream data_file_; // file where we save the data
 
@@ -559,7 +474,7 @@ void boundaryTreatment( const EntityType &entity, DiscreteFunctionType &rhs )
     LagrangePointSetType;
 
   typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
-  
+
   enum { faceCodim = 1 };
 
   typedef typename GridPartType :: IntersectionIteratorType
@@ -647,9 +562,6 @@ void algorithm ( std :: string &UnitCubeName,
   // model problem data
   Problem::ModelProblemData problem_info;
 
-  // set of hmm parameters/information
-  Multiscale::HMMParameters method_info;
-
   L2Error< DiscreteFunctionType > l2error;
 
   // expensive hack to deal with discrete functions, defined on different grids
@@ -710,26 +622,26 @@ void algorithm ( std :: string &UnitCubeName,
   std :: string discFunc_location_2;
 
 
-//    discFunc_location_1 = "data/Model_Problem_1/Macro_6_Micro_2/hmm_solution_discFunc_refLevel_6";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8_tolerance3.5e-06/hmm_solution_discFunc_refLevel_10";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_6_Micro_6/hmm_solution_discFunc_refLevel_6";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
-//  discFunc_location_1 = "data/Model_Problem_2/reference_solution_ref_16/finescale_solution_discFunc_refLevel_16";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
-//  discFunc_location_1 = "data/Model_Problem_2/Macro_8_Micro_10_OVERSAMPLING/hmm_solution_discFunc_refLevel_8";
-  discFunc_location_1 = "data/Model_Problem_2/Macro_6_Micro_6_tol_1e-08/hmm_solution_discFunc_refLevel_6";
-//  discFunc_location_1 = "data/Model_Problem_2/Macro_4_Micro_10_STRANGE_OVERSAMPLING_TFR/hmm_solution_discFunc_refLevel_4";
+//    discFunc_location_1 = "data/MsFEM/Model_Problem_1/Macro_6_Micro_2/hmm_solution_discFunc_refLevel_6";
+//  discFunc_location_1 = "data/MsFEM/Model_Problem_1/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
+//  discFunc_location_1 = "data/MsFEM/Model_Problem_1/Macro_10_Micro_8_tolerance3.5e-06/hmm_solution_discFunc_refLevel_10";
+//  discFunc_location_1 = "data/MsFEM/Model_Problem_1/Macro_6_Micro_6/hmm_solution_discFunc_refLevel_6";
+//  discFunc_location_1 = "data/MsFEM/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
+//  discFunc_location_1 = "data/MsFEM/Model_Problem_2/reference_solution_ref_16/finescale_solution_discFunc_refLevel_16";
+//  discFunc_location_1 = "data/MsFEM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+//  discFunc_location_1 = "data/MsFEM/Model_Problem_2/Macro_8_Micro_10_OVERSAMPLING/hmm_solution_discFunc_refLevel_8";
+  discFunc_location_1 = "data/MsFEM/Model_Problem_2/Macro_6_Micro_6_tol_1e-08/hmm_solution_discFunc_refLevel_6";
+//  discFunc_location_1 = "data/MsFEM/Model_Problem_2/Macro_4_Micro_10_STRANGE_OVERSAMPLING_TFR/hmm_solution_discFunc_refLevel_4";
 
 
-//  discFunc_location_2 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
-//  discFunc_location_2 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
-//  discFunc_location_2 = "data/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
-//  discFunc_location_2 = "data/Model_Problem_2/Macro_4_Micro_6_OVERSAMPLING/hmm_solution_discFunc_refLevel_4";
-  discFunc_location_2 = "data/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
-//  discFunc_location_2 = "data/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING/hmm_solution_discFunc_refLevel_2";
-//  discFunc_location_2 = "data/Model_Problem_2/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
-//  discFunc_location_2 = "data/Model_Problem_2/zzz_inProgress/done/DELTA_0.1_EPSILON_0.05/Macro_8_Micro_10/hmm_solution_discFunc_refLevel_8";
+//  discFunc_location_2 = "data/MsFEM/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
+//  discFunc_location_2 = "data/MsFEM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+//  discFunc_location_2 = "data/MsFEM/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+//  discFunc_location_2 = "data/MsFEM/Model_Problem_2/Macro_4_Micro_6_OVERSAMPLING/hmm_solution_discFunc_refLevel_4";
+  discFunc_location_2 = "data/MsFEM/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+//  discFunc_location_2 = "data/MsFEM/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING/hmm_solution_discFunc_refLevel_2";
+//  discFunc_location_2 = "data/MsFEM/Model_Problem_2/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
+//  discFunc_location_2 = "data/MsFEM/Model_Problem_2/zzz_inProgress/done/DELTA_0.1_EPSILON_0.05/Macro_8_Micro_10/hmm_solution_discFunc_refLevel_8";
 
   int gridLevel_1 = 6; // Macro_'gridLevel_1'...
   int gridLevel_2 = 18; // Macro_'gridLevel_2'...
@@ -809,7 +721,7 @@ void algorithm ( std :: string &UnitCubeName,
 #if 0
   // general output parameters
   myDataOutputParameters outputparam_1_vorher;
-  outputparam_1_vorher.set_path( "data/" );
+  outputparam_1_vorher.set_path( "data/MsFEM/" );
 
   // sequence stamp
   std::stringstream outstring_1_vorher;
@@ -865,7 +777,7 @@ void algorithm ( std :: string &UnitCubeName,
 #if 0
   // general output parameters
   myDataOutputParameters outputparam_1;
-  outputparam_1.set_path( "data/" );
+  outputparam_1.set_path( "data/MsFEM/" );
 
   // sequence stamp
   std::stringstream outstring_1;
@@ -884,7 +796,7 @@ void algorithm ( std :: string &UnitCubeName,
 
 
   myDataOutputParameters outputparam_2;
-  outputparam_2.set_path( "data/" );
+  outputparam_2.set_path( "data/MsFEM/" );
 
   // sequence stamp
   std::stringstream outstring_2;
@@ -998,7 +910,6 @@ void algorithm ( std :: string &UnitCubeName,
   A_hom = ana_homogenizer.getHomTensor(diffusion_op);
   #endif
 
-
   // descretized homogenizer:
 
   #if 1
@@ -1009,8 +920,8 @@ void algorithm ( std :: string &UnitCubeName,
   // if known a-priori
 
   #if 0
-  A_hom[0][0] = 1.73224;
-  A_hom[1][1] = 2.0;
+  A_hom[0][0] = 1.0;
+  A_hom[1][1] = 1.0;
   A_hom[0][1] = 0.0;
   A_hom[1][0] = 0.0;
   #endif
@@ -1042,8 +953,6 @@ void algorithm ( std :: string &UnitCubeName,
 
   InverseFEMMatrix hom_biCGStab( hom_stiff_matrix, 1e-8, 1e-8, 20000, VERBOSE );
   hom_biCGStab( hom_rhs, homogenized_solution );
-
- #else
 
  #endif
 
@@ -1120,111 +1029,7 @@ void algorithm ( std :: string &UnitCubeName,
       data_file << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
     }
 
-// if non-linear problem
-#else
-
-  std :: cout << "Solving non-linear problem." << std :: endl;
-  if (data_file.is_open())
-    {
-      data_file << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = " << problem_info.getRefinementLevelReferenceProblem() << "." << std :: endl;
-      data_file << "---------------------------------------------------------------------------------" << std :: endl;
-    }
-
-  Dune::Timer assembleTimer;
-
-  //! residual vector
-  // current residual
-  DiscreteFunctionType fem_newton_residual( filename_ + "FEM Newton Residual", finerDiscreteFunctionSpace );
-  fem_newton_residual.clear();
-
-  RangeType relative_newton_error_finescale = 10000.0;
-  RangeType rhs_L2_norm = 10000.0;
-
-  int iteration_step = 1;
-  // the Newton step for the FEM reference problem (solved with Newton Method):
-  // L2-Norm of residual < tolerance ?
-  double tolerance = 1e-06;
-  while( relative_newton_error_finescale > tolerance )
-   {
-     // (here: fem_newton_solution = solution from the last iteration step)
-
-     std :: cout << "Newton iteration " << iteration_step << ":" << std :: endl;
-     if (data_file.is_open())
-      { data_file << "Newton iteration " << iteration_step << ":" << std :: endl; }
-
-     Dune::Timer stepAssembleTimer;
-
-     // assemble the stiffness matrix
-     discrete_elliptic_op.assemble_jacobian_matrix( fem_newton_solution, fem_newton_matrix );
-
-     std::cout << "Time to assemble FEM Newton stiffness matrix for current iteration: " << stepAssembleTimer.elapsed() << "s" << std::endl;
-
-     // assemble right hand side
-     rhsassembler.assemble_for_Newton_method< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( f , diffusion_op, fem_newton_solution, fem_newton_rhs);
-
-     rhs_L2_norm = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( fem_newton_rhs, zero_func );
-
-     if ( rhs_L2_norm < 1e-10 )
-      {
-        // residual solution almost identical to zero: break
-        if (data_file.is_open())
-           {
-             data_file << "Residual solution almost identical to zero. Therefore: break loop." << std :: endl;
-             data_file << "(L^2-Norm of current right hand side = " << rhs_L2_norm << " < 1e-10)" << std :: endl;
-           }
-        break;
-      }
-
-     // set Dirichlet Boundary to zero 
-     typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-     IteratorType fine_endit = finerDiscreteFunctionSpace.end();
-     for( IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it )
-         boundaryTreatment( *fine_it , fem_newton_rhs );
-
-
-     InverseFEMMatrix fem_newton_biCGStab( fem_newton_matrix, 1e-8, 1e-8, 20000, true );
-     fem_newton_biCGStab( fem_newton_rhs, fem_newton_residual );
-
-     if( fem_newton_residual.dofsValid() )
-      {
-
-        fem_newton_solution += fem_newton_residual;
-
-        relative_newton_error_finescale = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( fem_newton_residual, zero_func );
-        relative_newton_error_finescale /= l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( fem_newton_solution, zero_func );
-
-        std :: cout << "Relative L2-Newton Error = " << relative_newton_error_finescale << std :: endl;
-        // residual solution almost identical to zero: break
-        if (data_file.is_open())
-           {
-             data_file << "Relative L2-Newton Error = " << relative_newton_error_finescale << std :: endl;
-             if ( relative_newton_error_finescale <= tolerance )
-              {
-                data_file << "Since tolerance = " << tolerance << ": break loop." << std :: endl;
-              }
-           }
-
-        fem_newton_residual.clear();
-
-      }
-     else
-      {
-        std :: cout << "WARNING! Invalid dofs in 'fem_newton_residual'." << std :: endl;
-        break;
-      }
-
-     iteration_step += 1;
-
-   }
-
-  std :: cout << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl;
-  if (data_file.is_open())
-    {
-      data_file << "---------------------------------------------------------------------------------" << std :: endl;
-      data_file << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
-    }
-
-#endif // end '#ifdef LINEAR_PROBLEM <-> #else'
+#endif
 
   //! ********************** End of assembling the reference problem ***************************
 #endif
@@ -1247,7 +1052,7 @@ void algorithm ( std :: string &UnitCubeName,
   sprintf( reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
   std::string reference_solution_name_s(reference_solution_name);
 
-  std :: string location_fine_scale_ref = "data/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
+  std :: string location_fine_scale_ref = "data/MsFEM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
 
   bool reader_is_open = false;
 
@@ -1299,10 +1104,10 @@ void algorithm ( std :: string &UnitCubeName,
   sprintf( reference_solution_name, "....", refinement_level_referenceprob_ );
   std::string reference_solution_name_s(reference_solution_name);
 
-  std :: string location_hmm_ref = "data/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
+  std :: string location_hmm_ref = "data/MsFEM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
 #endif
 
-  std :: string location_hmm_ref = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+  std :: string location_hmm_ref = "data/MsFEM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
 
   bool hmm_ref_reader_is_open = false;
 
@@ -1366,22 +1171,13 @@ while ( repeat == true )
   DiscreteFunctionType hmm_solution( filename_ + " HMM (+Newton) Solution", discreteFunctionSpace );
   hmm_solution.clear();
 
-#ifdef ADAPTIVE
-  // one fot the discreteFunctionSpace
-  RestrictProlongOperatorType rp( hmm_solution );
-  AdaptationManagerType adaptationManager( grid, rp );
-#endif
-
   // starting value for the Newton method
   DiscreteFunctionType zero_func_coarse( filename_ + " constant zero function coarse ", discreteFunctionSpace );
   zero_func_coarse.clear();
 
 #ifdef LINEAR_PROBLEM
 
-
- // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
- #ifndef AD_HOC_COMPUTATION
-
+  // solve cell problems in a preprocess
   //! -------------- solve and save the cell problems for the base function set --------------------------------------
 
   CellProblemSolver< PeriodicDiscreteFunctionType, DiffusionType > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file /*optinal*/);
@@ -1391,13 +1187,13 @@ while ( repeat == true )
   std :: cout << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std :: endl;
 
   // generate directory for cell problem data output
-  if (mkdir(("data/" + filename_ + "/cell_problems/").c_str() DIRMODUS) == -1)
+  if (mkdir(("data/MsFEM/" + filename_ + "/cell_problems/").c_str() DIRMODUS) == -1)
    {
     std::cout << "WARNING! Directory for the solutions of the cell problems already exists!";
    }
   else
    {
-     mkdir(("data/" + filename_ + "/cell_problems/").c_str() DIRMODUS);
+     mkdir(("data/MsFEM/" + filename_ + "/cell_problems/").c_str() DIRMODUS);
    }
 
   // -------------- solve cell problems for the macro basefunction set ------------------------------
@@ -1408,7 +1204,7 @@ while ( repeat == true )
   // ------------- end solving and saving cell problems for the macro basefunction set --------------
 
   //! --------------- end solving and saving cell problems -----------------------------------------
- #endif
+
 
   std :: cout << "Solving linear HMM problem." << std :: endl;
   if (data_file.is_open())
@@ -1449,559 +1245,12 @@ while ( repeat == true )
       data_file << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
     }
 
-// if non-linear problem
-#else
-
-  // the nonlinear case
-
-  // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
-  #ifndef AD_HOC_COMPUTATION
-
-
-   //! -------------- solve and save the cell problems for the macroscopic base function set --------------------------------------
-
-   CellProblemSolver< PeriodicDiscreteFunctionType, DiffusionType > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file /*optinal*/);
-
-   int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
-
-   std :: cout << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std :: endl;
-
-   // generate directory for cell problem data output
-   if (mkdir(("data/" + filename_ + "/cell_problems/").c_str() DIRMODUS) == -1)
-    {
-     std::cout << "WARNING! Directory for the solutions of the cell problems already  exists!";
-    }
-   else
-    {
-      mkdir(("data/" + filename_ + "/cell_problems/").c_str() DIRMODUS);
-    }
-
-   // only for the case with test function reconstruction:
-   #ifdef TFR
-   // -------------- solve cell problems for the macro basefunction set ------------------------------
-   // save the solutions of the cell problems for the set of macroscopic base functions
-
-   cell_problem_solver.saveTheSolutions_baseSet< DiscreteFunctionType >(  discreteFunctionSpace, cp_num_manager, filename_ + "/cell_problems/");
-
-   std :: cout << "Solving the cell problems for the base function set succeeded." << std :: endl;
-   //  end solving and saving cell problems
-   #endif
-
-   //! --------------- end solving and saving cell problems -----------------------------------------
-  #endif
-
-  std :: cout << "Solving nonlinear HMM problem." << std :: endl;
-  if (data_file.is_open())
-    {
-      data_file << "Solving nonlinear HMM problem with Newton method." << std :: endl;
-      data_file << "---------------------------------------------------------------------------------" << std :: endl;
-    }
-
-  Dune::Timer hmmAssembleTimer;
-
-  // just to provide some information
-  PeriodicDiscreteFunctionType dummy_periodic_func( "a periodic dummy", periodicDiscreteFunctionSpace );
-  dummy_periodic_func.clear();
-
-  //! residual vector
-  // current residual
-  DiscreteFunctionType hmm_newton_residual( filename_ + "HMM Newton Residual", discreteFunctionSpace );
-  hmm_newton_residual.clear();
-
-  RangeType relative_newton_error = 10000.0;
-  RangeType hmm_rhs_L2_norm = 10000.0;
-
-  // number of HMM Newton step (1 = first step)
-  // HMM_NEWTON_ITERATION_STEP' Netwon steps have been already performed,
-  // the next one is 'HMM_NEWTON_ITERATION_STEP+1' = hmm_iteration_step
-  int hmm_iteration_step = HMM_NEWTON_ITERATION_STEP + 1;
-
-
-  #ifdef RESUME_TO_BROKEN_COMPUTATION
-  
-  //std :: string location_hmm_newton_step_solution = "data/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
-
-  char fnewtonname[50];
-  sprintf( fnewtonname, "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d", refinement_level_macrogrid_, HMM_NEWTON_ITERATION_STEP );
-  std :: string fnewtonname_s( fnewtonname );
-  std :: string location_hmm_newton_step_solution = "data/" + filename_ + fnewtonname_s;
-
-  bool reader_open = false;
-
-  // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_hmm_newton_ref( (location_hmm_newton_step_solution).c_str() );
-  discrete_function_reader_hmm_newton_ref.open();
-
-  discrete_function_reader_hmm_newton_ref.read( 0, hmm_solution );
-
-  #endif
-
-
-  double old_error = 100.0;
-  double error_decay = 0.0;
-
-
-  // the Newton step for the nonlinear HMM problem:
-  // L2-Norm of residual < tolerance ?
-  #ifdef STOCHASTIC_PERTURBATION
-  double hmm_tolerance = 1e-01 * VARIANCE;
-  #else
-  double hmm_tolerance = 1e-05;
-  #endif
-  while( relative_newton_error > hmm_tolerance )
-   {
-     // (here: hmm_solution = solution from the last iteration step)
-
-     long double newton_step_time = clock();
-
-     std :: cout << "HMM Newton iteration " << hmm_iteration_step << ":" << std :: endl;
-     if (data_file.is_open())
-      { data_file << "HMM Newton iteration " << hmm_iteration_step << ":" << std :: endl; }
-
-     #ifndef AD_HOC_COMPUTATION
-     // solve cell problems for the solution of the last iteration step
-     cell_problem_solver.saveTheSolutions_discFunc< DiscreteFunctionType >( hmm_solution, filename_ + "/cell_problems/");
-     cell_problem_solver.saveTheJacCorSolutions_baseSet_discFunc< DiscreteFunctionType >( hmm_solution, cp_num_manager, filename_ + "/cell_problems/");
-     #endif
-
-     // to assemble the computational time
-     Dune::Timer stepHmmAssembleTimer;
-
-     // assemble the stiffness matrix
-     discrete_elliptic_hmm_op.assemble_jacobian_matrix( hmm_solution, hmm_newton_matrix );
-
-     std::cout << "Time to assemble HMM stiffness matrix for current Newton iteration: " << stepHmmAssembleTimer.elapsed() << "s" << std::endl;
-     if (data_file.is_open())
-      {
-        data_file << "Time to assemble HMM stiffness matrix for current Newton iteration: " << stepHmmAssembleTimer.elapsed() << "s" << std::endl;
-      }
-
-     std::cout << "Assemble right hand side..." << std::endl;
-     // assemble right hand side
-     rhsassembler.assemble_for_HMM_Newton_method< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( f , diffusion_op, hmm_solution, cp_num_manager, dummy_periodic_func, hmm_newton_rhs, filename_);
-     std::cout << "Right hand side assembled!" << std::endl;
-
-     if ( !(hmm_newton_rhs.dofsValid()) )
-       {
-         std::cout << "Right hand side invalid!" << std::endl;
-         data_file << "Right hand side invalid!" << std::endl;
-         std :: abort();
-       }
-     else
-       {
-         std::cout << "Right hand side valid ";
-       }
-
-     hmm_rhs_L2_norm = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( zero_func_coarse, hmm_newton_rhs );
-
-     std::cout << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
-     data_file << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
-
-
-     if (  hmm_rhs_L2_norm < 1e-10 )
-      {
-        // residual solution almost identical to zero: break
-        if (data_file.is_open())
-           {
-             data_file << "HMM residual solution almost identical to zero. Therefore: break loop." << std :: endl;
-             data_file << "(L^2-Norm of current right hand side = " << hmm_rhs_L2_norm << " < 1e-10)" << std :: endl;
-           }
-        break;
-      }
-
-     // set Dirichlet Boundary to zero 
-     typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-     IteratorType endit = discreteFunctionSpace.end();
-     for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
-         boundaryTreatment( *it , hmm_newton_rhs );
-
-     #ifndef AD_HOC_COMPUTATION
-     double hmm_biCG_tolerance = 1e-8;
-     bool hmm_solution_convenient = false;
-     while( hmm_solution_convenient == false )
-       {
-
-         hmm_newton_residual.clear();
-         InverseFEMMatrix hmm_newton_biCGStab( hmm_newton_matrix,
-                                               1e-8, hmm_biCG_tolerance, 20000, VERBOSE );
-
-         hmm_newton_biCGStab( hmm_newton_rhs, hmm_newton_residual );
-
-         if ( hmm_newton_residual.dofsValid() )
-             { hmm_solution_convenient = true; }
-
-         if ( hmm_biCG_tolerance > 1e-4 )
-          {
-            std :: cout << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'." << std :: endl;
-            std :: abort();
-          }
-         hmm_biCG_tolerance *= 10.0;
-
-       }
-     #else
-     InverseFEMMatrix hmm_newton_biCGStab( hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE );
-     hmm_newton_biCGStab( hmm_newton_rhs, hmm_newton_residual );
-     #endif
-
-     if( hmm_newton_residual.dofsValid() )
-      {
-
-        hmm_solution += hmm_newton_residual;
-		
-
-        // write the solution after the current HMM Newton step to a file
-	#ifdef WRITE_HMM_SOL_TO_FILE
-
-          // for adaptive computations, the saved solution is not suitable for a later usage
-          #ifndef ADAPTIVE
-
-	  bool writer_open = false;
-
-          char fname[50];
-          sprintf( fname, "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d", refinement_level_macrogrid_, hmm_iteration_step );
-          std :: string fname_s( fname );
-
-          std :: string location = "data/" + filename_ + fname_s;
-          DiscreteFunctionWriter dfw( (location).c_str() );
-          writer_open = dfw.open();
-          if ( writer_open )
-          dfw.append( hmm_solution );
-
-          // if you want an utput for all newton steps, even for an adaptive computation, use:
- 	  // #endif
-
-          // writing paraview data output
-
-          // general output parameters
-          myDataOutputParameters outputparam;
-          outputparam.set_path( "data/" + filename_ );
-
-	  // sequence stamp
-          std::stringstream outstring;
-
-          // create and initialize output class
-	  IOTupleType hmm_solution_newton_step_series( &hmm_solution );
-          #ifdef ADAPTIVE
-          char hmm_prefix[50];
-          sprintf( hmm_prefix, "hmm_solution_%d_NewtonStep_%d", loop_cycle, hmm_iteration_step );
-          #else
-          char hmm_prefix[50];
-          sprintf( hmm_prefix, "hmm_solution_NewtonStep_%d", hmm_iteration_step );		  
-          #endif
-	  outputparam.set_prefix( hmm_prefix );
-	  DataOutputType hmmsol_dataoutput( gridPart.grid(), hmm_solution_newton_step_series, outputparam );
-
-          // write data
-          outstring << "hmm-solution-NewtonStep";
-          hmmsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-          // clear the std::stringstream:
-          outstring.str(std::string());
-
-	  #endif
-
-        #endif
-
-        // || u^(n+1) - u^(n) ||_L2
-        relative_newton_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_newton_residual, zero_func_coarse );
-        // || u^(n+1) - u^(n) ||_L2 / || u^(n+1) ||_L2
-        relative_newton_error = relative_newton_error / l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_solution, zero_func_coarse );
-
-        std :: cout << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std :: endl;
-
-        // residual solution almost identical to zero: break
-        if (data_file.is_open())
-           {
-             data_file << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std :: endl;
-             if ( relative_newton_error <= hmm_tolerance )
-              {
-                newton_step_time = clock() - newton_step_time;
-                newton_step_time = newton_step_time / CLOCKS_PER_SEC;
-                if (data_file.is_open())
-                 {
-                   data_file << std :: endl << "Total time for current HMM Newton step = " << newton_step_time << "s." << std :: endl << std :: endl;
-                 }
-                data_file << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std :: endl;
-                data_file << "....................................................." << std :: endl << std :: endl;
-              }
-           }
-
-        hmm_newton_residual.clear();
-
-      }
-     else
-      {
-        std :: cout << "WARNING! Invalid dofs in 'hmm_newton_residual'." << std :: endl;
-        break;
-      }
-
-     hmm_iteration_step += 1;
-
-     if ( relative_newton_error > hmm_tolerance )
-      {
-        newton_step_time = clock() - newton_step_time;
-        newton_step_time = newton_step_time / CLOCKS_PER_SEC;
-        if (data_file.is_open())
-         {
-           data_file << std :: endl << "Total time for current HMM Newton step = " << newton_step_time << "s." << std :: endl << std :: endl;
-
-           error_decay = relative_newton_error / old_error;
-           old_error = relative_newton_error;
-           // maximum number of Newton iterations
-           if ( (hmm_iteration_step >= 20) || (error_decay >= 0.95) )
-            {
-              data_file << std :: endl << "Reached constant or inceasing error decay or maximum number of Newton iterations:  break loop." << std :: endl;
-              data_file << "....................................................." << std :: endl << std :: endl;
-              break;
-            }
-           data_file << "....................................................." << std :: endl << std :: endl;
-         }
-      }
-
-   }
-
-  std :: cout << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std :: endl << std :: endl;
-  if (data_file.is_open())
-    {
-      data_file << "---------------------------------------------------------------------------------" << std :: endl;
-      data_file << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
-    }
-  #ifdef ADAPTIVE
-  total_hmm_time += hmmAssembleTimer.elapsed();
-  #endif
 #endif
-//end if not defined LINEAR_PROBLEM
-
-
-//! ---------- Error Estimation ----------
-#ifdef ERRORESTIMATION
-
-  // Notation: u_H = hmm_solution
-
-  // to load the solutions of the cell problems:
-
-  // location of the solutions of the cell problems for the base function set:
-  std :: string cell_solution_location_baseSet;
-  // location of the solutions of the cell problems for the discrete function u_H:
-  std :: string cell_solution_location_discFunc;
-
-  cell_solution_location_baseSet = "data/"+filename_+"/cell_problems/_cellSolutions_baseSet";
-  cell_solution_location_discFunc = "data/"+filename_+"/cell_problems/_cellSolutions_discFunc";
-
-  // reader for the cell problem data file (for tha macro base set):
-  DiscreteFunctionReader discrete_function_reader_baseSet( (cell_solution_location_baseSet).c_str() );
-  discrete_function_reader_baseSet.open();
-
-  // reader for the cell problem data file (for u_H):
-  DiscreteFunctionReader discrete_function_reader_discFunc( (cell_solution_location_discFunc).c_str() );
-  discrete_function_reader_discFunc.open();
-
-
-  ErrorEstimatorType error_estimator( periodicDiscreteFunctionSpace,
-                                      discreteFunctionSpace,
-                                      auxiliaryDiscreteFunctionSpace,
-                                      diffusion_op );
-
-  RangeType estimated_source_error = 0.0;
-  RangeType estimated_approximation_error = 0.0;
-  RangeType estimated_residual_error = 0.0;
-
-  // estimated_residual_error = sqrt( estimated_residual_error_micro_jumps^2 + estimated_residual_error_macro_jumps^2 )
-  RangeType estimated_residual_error_micro_jumps = 0.0;
-  RangeType estimated_residual_error_macro_jumps = 0.0;
-#ifdef TFR
-  RangeType estimated_tfr_error = 0.0;
-#endif
-
-  RangeType local_error_indicator[discreteFunctionSpace.grid().size(0)];
-
-  RangeType minimal_loc_indicator = 10000.0;
-  RangeType maximal_loc_indicator = 0.0;
-  RangeType average_loc_indicator = 0.0;
-
-  int element_number = 0;
-  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-  IteratorType endit = discreteFunctionSpace.end();
-  for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
-     {
-
-       const EntityType& entity = *it;
-
-       // corrector of u_H^(n-1) \approx u_H on the macro element T
-       PeriodicDiscreteFunctionType corrector_u_H_on_entity( "Corrector of u_H", periodicDiscreteFunctionSpace );
-       corrector_u_H_on_entity.clear();
-
-
-       // in the linear case, we still need to compute the corrector of u_H:
-       #ifdef LINEAR_PROBLEM
-       PeriodicDiscreteFunctionType corrector_of_base_func( "Corrector of macro base function", periodicDiscreteFunctionSpace );
-       corrector_of_base_func.clear();
-
-       DiscreteFunctionType::LocalFunctionType local_hmm_solution = hmm_solution.localFunction( entity );
-
-       const BaseFunctionSetType &baseSet = discreteFunctionSpace.baseFunctionSet(entity);
-       const unsigned int numMacroBaseFunctions = baseSet.numBaseFunctions();
-       int cell_problem_id [ numMacroBaseFunctions ];
-       for( unsigned int i = 0; i < numMacroBaseFunctions; ++i )
-        {
-          cell_problem_id[ i ] = cp_num_manager.get_number_of_cell_problem( it, i );
-
-          discrete_function_reader_baseSet.read( cell_problem_id[ i ], corrector_of_base_func );
-
-          corrector_of_base_func *= local_hmm_solution[ i ];
-
-          corrector_u_H_on_entity += corrector_of_base_func;
-
-          corrector_of_base_func.clear();
-
-        }
-       #else
-       // in the nonlinear case this corrector is already available
-       discrete_function_reader_discFunc.read( element_number, corrector_u_H_on_entity );
-       #endif
-
-
-       // contribution of the local source error
-
-       RangeType local_source_indicator = error_estimator.indicator_f( f , entity );
-
-       estimated_source_error += local_source_indicator;
-
-
-       // contribution of the local approximation error
-
-       RangeType local_approximation_indicator = error_estimator.indicator_app_1( entity, hmm_solution, corrector_u_H_on_entity );
-
-       local_approximation_indicator += error_estimator.indicator_app_2( entity, hmm_solution, corrector_u_H_on_entity );
-
-       estimated_approximation_error += local_approximation_indicator;
-
-
-       // contribution of the local residual error
-
-       RangeType local_residual_indicator = error_estimator.indicator_res_T( entity, hmm_solution, corrector_u_H_on_entity );
-
-       estimated_residual_error_micro_jumps += local_residual_indicator;
-
-       typedef GridPartType :: IntersectionIteratorType IntersectionIteratorType;
-       IntersectionIteratorType endnit = gridPart.iend(entity);
-       for(IntersectionIteratorType nit = gridPart.ibegin(entity); nit != endnit ; ++nit)
-         {
-
-           if ( nit->neighbor() ) //if there is a neighbor entity
-            {
-
-              // corrector of u_H^(n-1) \approx u_H on the neighbor element
-              PeriodicDiscreteFunctionType corrector_u_H_on_neighbor_entity( "Corrector of u_H", periodicDiscreteFunctionSpace );
-              corrector_u_H_on_neighbor_entity.clear();
-
-              EntityPointerType it_outside = nit->outside();
-              const EntityType& entity_outside = *it_outside;
-
-              // in the linear case, we still need to compute the corrector of u_H:
-              #ifdef LINEAR_PROBLEM
-              PeriodicDiscreteFunctionType corrector_of_base_func_neighbor( "Corrector of macro base function", periodicDiscreteFunctionSpace );
-              corrector_of_base_func_neighbor.clear();
-
-              DiscreteFunctionType::LocalFunctionType local_hmm_solution_neighbor = hmm_solution.localFunction( entity_outside );
-
-              const BaseFunctionSetType &baseSet_neighbor = discreteFunctionSpace.baseFunctionSet(entity_outside);
-              const unsigned int numMacroBaseFunctions_neighbor = baseSet_neighbor.numBaseFunctions();
-              int cell_problem_id_neighbor [ numMacroBaseFunctions_neighbor ];
-              for( unsigned int i = 0; i < numMacroBaseFunctions_neighbor; ++i )
-                {
-                  cell_problem_id_neighbor[ i ] = cp_num_manager.get_number_of_cell_problem( it_outside, i );
-
-                  discrete_function_reader_baseSet.read( cell_problem_id_neighbor[ i ], corrector_of_base_func_neighbor );
-
-                  corrector_of_base_func_neighbor *= local_hmm_solution_neighbor[ i ];
-
-                  corrector_u_H_on_neighbor_entity += corrector_of_base_func_neighbor;
-
-                  corrector_of_base_func_neighbor.clear();
-
-                }
-              #else
-              int neighbor_element_number = cp_num_manager.get_number_of_cell_problem( it_outside );
-              // in the nonlinear case this corrector is already available
-              discrete_function_reader_discFunc.read( neighbor_element_number, corrector_u_H_on_neighbor_entity );
-              #endif
-
-              RangeType val = error_estimator.indicator_res_E( *nit, hmm_solution, corrector_u_H_on_entity, corrector_u_H_on_neighbor_entity );
-
-              local_residual_indicator += val;
-
-              estimated_residual_error_macro_jumps += val;
-
-            }
-
-         }
-
-       estimated_residual_error += local_residual_indicator;
-
-#ifdef TFR
-       // use 'indicator_effective_tfr' or 'indicator_tfr_1'
-       // contribution of the local tfr error:
-
-       RangeType local_tfr_indicator = error_estimator.indicator_tfr_1( entity, hmm_solution, corrector_u_H_on_entity );
-
-       estimated_tfr_error += local_tfr_indicator;
-#endif
-
-       local_error_indicator[element_number] = local_source_indicator +
-                                               local_approximation_indicator +
-                                               local_residual_indicator;
-
-#ifdef TFR
-       local_error_indicator[element_number] += local_tfr_indicator;
-#endif
-
-       if ( local_error_indicator[element_number] < minimal_loc_indicator )
-        { minimal_loc_indicator = local_error_indicator[element_number]; }
-
-       if ( local_error_indicator[element_number] > maximal_loc_indicator )
-        { maximal_loc_indicator = local_error_indicator[element_number]; }
-
-       average_loc_indicator += local_error_indicator[element_number];
-
-       element_number += 1;
-
-     }
-
-  average_loc_indicator /= discreteFunctionSpace.grid().size(0);
-
-  estimated_source_error = sqrt(estimated_source_error);
-  estimated_approximation_error = sqrt(estimated_approximation_error);
-  estimated_residual_error = sqrt(estimated_residual_error);
-
-  estimated_residual_error_micro_jumps = sqrt( estimated_residual_error_micro_jumps );
-  estimated_residual_error_macro_jumps = sqrt( estimated_residual_error_macro_jumps );
-
-  RangeType estimated_error = estimated_source_error + estimated_approximation_error + estimated_residual_error;
-
-#ifdef TFR
-  estimated_tfr_error = sqrt(estimated_tfr_error);
-  estimated_error += estimated_tfr_error;
-#endif
-
-  #ifdef ADAPTIVE
-
-  // maximum variation (up) from average 
-  double max_variation = average_loc_indicator / maximal_loc_indicator;
-  double min_variation = average_loc_indicator / minimal_loc_indicator;
-
-  #endif
-
-//! -------- End Error Estimation --------
-#endif
-
 
 
 
 
 #ifdef WRITE_HMM_SOL_TO_FILE
-
- // for adaptive computations, the saved solution is not suitable for a later usage
- #ifndef ADAPTIVE
 
   bool writer_is_open = false;
 
@@ -2009,13 +1258,11 @@ while ( repeat == true )
   sprintf( fname, "/hmm_solution_discFunc_refLevel_%d", refinement_level_macrogrid_ );
   std :: string fname_s( fname );
 
-  std :: string location = "data/" + filename_ + fname_s;
+  std :: string location = "data/MsFEM/" + filename_ + fname_s;
   DiscreteFunctionWriter dfw( (location).c_str() );
   writer_is_open = dfw.open();
   if ( writer_is_open )
     dfw.append( hmm_solution );
-
- #endif
 
 #endif
 
@@ -2030,7 +1277,7 @@ while ( repeat == true )
   sprintf( fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
   std :: string fine_fname_s( fine_fname );
 
-  std :: string fine_location = "data/" + filename_ + fine_fname_s;
+  std :: string fine_location = "data/MsFEM/" + filename_ + fine_fname_s;
   DiscreteFunctionWriter fine_dfw( (fine_location).c_str() );
   fine_writer_is_open = fine_dfw.open();
   if ( fine_writer_is_open )
@@ -2047,6 +1294,7 @@ while ( repeat == true )
     { data_file << "The L2 errors:" << std :: endl << std :: endl; }
 
   //! ----------------- compute L2-errors -------------------
+
 
 #ifdef FINE_SCALE_REFERENCE
   long double timeadapt = clock();
@@ -2095,17 +1343,18 @@ while ( repeat == true )
 
 
 #ifdef HOMOGENIZEDSOL_AVAILABLE
-
+// not yet modified according to a generalized L2-error, here, homogenized_solution and fem_newton_solution still need to be defined on the same grid!
   #ifdef FINE_SCALE_REFERENCE
-  // not yet modified according to a generalized L2-error, here, homogenized_solution and fem_newton_solution still need to be defined on the same grid!
-  RangeType hom_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( homogenized_solution, fem_newton_solution );
+  // RangeType hom_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( homogenized_solution, fem_newton_solution );
+  RangeType hom_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( homogenized_solution, fem_newton_solution );
 
   std :: cout << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std :: endl << std :: endl;
   if (data_file.is_open())
     { data_file << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std :: endl; }
   #endif
 
-  RangeType hom_hmm_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_solution, homogenized_solution );
+  //RangeType hom_hmm_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( hmm_solution, homogenized_solution );
+  RangeType hom_hmm_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( hmm_solution, homogenized_solution );
 
   std :: cout << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std :: endl << std :: endl;
   if (data_file.is_open())
@@ -2131,32 +1380,6 @@ while ( repeat == true )
 #endif
 
 
-#ifdef ERRORESTIMATION
-  std :: cout << "Estimated error = " << estimated_error << "." << std :: endl;
-  std :: cout << "In detail:" << std :: endl;
-  std :: cout << "   Estimated source error = " << estimated_source_error << "." << std :: endl;
-  std :: cout << "   Estimated approximation error = " << estimated_approximation_error << "." << std :: endl;
-  std :: cout << "   Estimated residual error = " << estimated_residual_error << ", where:" << std :: endl;
-  std :: cout << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std :: endl;
-  std :: cout << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std :: endl;
-  #ifdef TFR
-   std :: cout << "   Estimated tfr error = " << estimated_tfr_error << "." << std :: endl;
-  #endif
-  if (data_file.is_open())
-    {
-      data_file << "Estimated error = " << estimated_error << "." << std :: endl;
-      data_file << "In detail:" << std :: endl;
-      data_file << "   Estimated source error = " << estimated_source_error << "." << std :: endl;
-      data_file << "   Estimated approximation error = " << estimated_approximation_error << "." << std :: endl;
-      data_file << "   Estimated residual error = " << estimated_residual_error << ", where:" << std :: endl;
-      data_file << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std :: endl;
-      data_file << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std :: endl;
-      #ifdef TFR
-       data_file << "   Estimated tfr error = " << estimated_tfr_error << "." << std :: endl;
-      #endif
-    }
-#endif
-
 //! -------------------------------------------------------
 
 
@@ -2165,7 +1388,7 @@ while ( repeat == true )
 
   // general output parameters
   myDataOutputParameters outputparam;
-  outputparam.set_path( "data/" + filename_ );
+  outputparam.set_path( "data/MsFEM/" + filename_ );
 
   // sequence stamp
   std::stringstream outstring;
@@ -2248,168 +1471,6 @@ while ( repeat == true )
 
 //!-------------------------------------------------------------
 
-
-
-
-#ifdef ADAPTIVE
-
-
-  int default_refinement = 0;
-
-  //double error_tolerance_ = 0.2;
-
-  // int(...) rundet ab zum naechsten Integer
-  // assuming we had a quadratic order of convergence of the error estimator and 
-  // that we have a certain estimated error for the current uniform grid, than we can compute how many additional uniform refinements are required to get under the error (estimator) tolerance:
-  // number_of_uniform_refinments = int( sqrt( (\eta_have) / (\eta_want) ) )
-  // (obtained from the EOC formula)
-  // uniform contribution only for the first loop cycle
-  if ( loop_cycle == 1 )
-   {
-
-     // "divided by 2.0" we go half the way with a uniform computation 
-     int number_of_uniform_refinements = 2*int(int( sqrt( estimated_error / error_tolerance_ ) ) / 2.0);
-
-      if ( data_file.is_open() )
-       {
-         data_file << std :: endl << "Uniform default refinement:" << std :: endl << std :: endl;
-         data_file << "sqrt( estimated_error / error_tolerance_ ) = " << sqrt( estimated_error / error_tolerance_ ) << std :: endl;
-         data_file << "number_of_uniform_refinements = " << number_of_uniform_refinements << std :: endl;
-         data_file << "***************" << std :: endl << std :: endl;
-       }
-
-     default_refinement = number_of_uniform_refinements;
-   }
-
-
-  int number_of_areas;
-  if ( loop_cycle == 1 )
-   {
-     number_of_areas = 1;
-   }
-  else
-   {
-     if ( loop_cycle == 3 )
-      { number_of_areas = 2; }
-     else
-      { number_of_areas = 2; }
-   }
-
-#if 0
-  if ( loop_cycle == 2 )
-     number_of_areas = 2;
-#endif
-
-  double border[number_of_areas-1];
-  border[0] = 0.5;
-  for( int bo = 1; bo < (number_of_areas-1) ; ++bo )
-    { border[bo] = border[bo-1] + ((1.0 - border[bo-1])/2.0); }
-
-  // 3 areas: 1: |0-30%| 2: |30-80%| 3: |80-100%|
-  //border[0] = 0.3;
-  //border[1] = 0.8;
-  //border[2] = 0.95;
-
-  int refinements_in_area[number_of_areas];
-  for( int bo = 0; bo < number_of_areas ; ++bo )
-    { refinements_in_area[bo] = default_refinement + bo + 1; }
-
-#if 0
-if ( loop_cycle > 1 ) { refinements_in_area[bo] = 6; }
-  if ( loop_cycle == 2 )
-   {
-     //go the full way 
-     int number_of_uniform_refinements = 2*int(int( sqrt( estimated_error / error_tolerance_ ) ) );
-     refinements_in_area[0] = number_of_uniform_refinements + 2.0;
-     refinements_in_area[1] = number_of_uniform_refinements + 2.0;
-   }
-#endif
-
-  if ( data_file.is_open() )
-    {
-      data_file << "Adaption strategy:" << std :: endl << std :: endl;
-      data_file << "Define 'variation = (indicator_on_element - average_indicator) / (maximum_indicator - average_indicator)'" << std :: endl;
-      data_file << "Subdivide the region [average_indicator,maximum_indicator] into " << number_of_areas << " areas." << std :: endl;
-      if ( number_of_areas == 1 )
-       {
-         data_file << "1.: [average_indicator,maximum_indicator]. Mark elements for " << refinements_in_area[0] << " refinements." << std :: endl;
-       }
-      else
-       {
-         data_file << "1.: [average_indicator," << border[0] << "*maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[0] << " refinements." << std :: endl;
-         for( int bo = 1; bo < (number_of_areas-1) ; ++bo )
-           data_file << bo+1 << ".: [" << border[bo-1] << "*average_indicator," << border[bo] << "*maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[bo] << " refinements." << std :: endl;
-         data_file << number_of_areas << ".: [" << border[number_of_areas-2] << "*average_indicator,maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[number_of_areas-1] << " refinements." << std :: endl;
-       }
-      data_file << "Default refinement for elements with 'variance <= 0 ': " << default_refinement << std :: endl;
-    }
-
-
-  if ( estimated_error < error_tolerance_ )
-   {
-     repeat = false;
-     std :: cout << "Total HMM time = " << total_hmm_time << "s." << std :: endl;
-     data_file << std :: endl << std :: endl << "Total HMM time = " << total_hmm_time << "s." << std :: endl << std :: endl;
-
-   }
-  else
-   {
-
-    element_number = 0;
-    typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-    IteratorType endit_test = discreteFunctionSpace.end();
-    for( IteratorType it = discreteFunctionSpace.begin(); it != endit_test; ++it )
-      {
-
-        int additional_refinement;
-
-        if ( local_error_indicator[element_number] <= average_loc_indicator )
-          { additional_refinement = default_refinement; }
-        else
-          {
-
-            double variation = (local_error_indicator[element_number] - average_loc_indicator ) / 
-                        ( maximal_loc_indicator - average_loc_indicator );
-
-            if ( number_of_areas == 1 )
-             {
-               additional_refinement = refinements_in_area[0];
-             }
-            else
-             {
-               if ( variation <= border[0] )
-                 { additional_refinement = refinements_in_area[0]; }
-
-               for( int bo = 1; bo <= (number_of_areas-2) ; ++bo )
-                 if ( ( variation > border[bo-1] ) && ( variation <= border[bo] ) )
-                  { additional_refinement = refinements_in_area[bo]; }
-
-               if ( variation > border[number_of_areas-2] )
-                 { additional_refinement = refinements_in_area[number_of_areas-1]; }
-             }
-
-          }
-
-        grid.mark( additional_refinement , *it );
-        element_number += 1;
-
-      }
-
-    adaptationManager.adapt();
-
-  }
-
-  if (data_file.is_open())
-    {
-      data_file << std :: endl << "#########################################################################" << std :: endl << std :: endl << std :: endl;
-    }
-
-  loop_cycle += 1;
-
-}// end of repeat loop (for the adaptive cicles)
-#endif
-
-
 }
 
 int main(int argc, char** argv)
@@ -2421,6 +1482,10 @@ int main(int argc, char** argv)
     exit(1);
   }
 
+ #ifndef LINEAR_PROBLEM
+  std :: cout << "Nonlinear case not implemented, please define LINEAR_PROBLEM." <<std :: endl;
+ #endif
+
   Dune::MPIManager::initialize(argc, argv);
 
   // name of the file in which you want to save the data:
@@ -2428,7 +1493,7 @@ int main(int argc, char** argv)
   std :: cin >> filename_;
 
   // generate directories for data output
-  if (mkdir(("data/" + filename_).c_str() DIRMODUS) == -1)
+  if (mkdir(("data/MsFEM/" + filename_).c_str() DIRMODUS) == -1)
    {
     std::cout << "Directory already exists! Overwrite? y/n: ";
     char answer;
@@ -2438,18 +1503,11 @@ int main(int argc, char** argv)
    }
   else
    {
-     mkdir(("data/" + filename_).c_str() DIRMODUS);
+     mkdir(("data/MsFEM/" + filename_).c_str() DIRMODUS);
    }
 
 
-
-  #ifdef RESUME_TO_BROKEN_COMPUTATION
-  // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
-  // (vorlauefig sollte diese Variante aber reichen) 
-  std :: string save_filename = "data/" + filename_ + "/problem-info-resumed-computation.txt";  
-  #else
-  std :: string save_filename = "data/" + filename_ + "/problem-info.txt";
-  #endif
+  std :: string save_filename = "data/MsFEM/" + filename_ + "/problem-info.txt";
   std :: cout << "Data will be saved under: " << save_filename << std :: endl;
 
   // data for the model problem; the information manager
@@ -2474,13 +1532,6 @@ int main(int argc, char** argv)
   std :: cout << "Enter refinement level for the cell problems: ";
   std :: cin >> refinement_level_cellgrid;
   std :: cout << std :: endl;
-
-#ifdef ADAPTIVE
-  // error tolerance (comparison with upper bound determined by the a-posteriori error estimate)
-  std :: cout << "Enter global error tolerance for program abort: ";
-  std :: cin >> error_tolerance_;
-  std :: cout << std :: endl;
-#endif
 
 
   // (starting) grid refinement level for solving the reference problem
@@ -2542,27 +1593,17 @@ int main(int argc, char** argv)
                data_file << "Computations were made for:" << std :: endl << std :: endl;
                data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std :: endl;
                data_file << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std :: endl << std :: endl;
-#ifdef TFR
-               data_file << "We use TFR-HMM (HMM with test function reconstruction)." << std :: endl;
+#ifdef PGF
+               data_file << "We use MsFEM in Petrov-Galerkin formulation." << std :: endl;
 #else
-               data_file << "We use HMM without test function reconstruction (NO TFR)." << std :: endl;
+               data_file << "We use MsFEM in its standard formulation." << std :: endl;
 #endif
-#ifdef AD_HOC_COMPUTATION
-               data_file << "Cell problems are solved ad hoc (where required)." << std :: endl << std :: endl;
-#else
                data_file << "Cell problems are solved and saved (in a pre-process)." << std :: endl << std :: endl;
-               #ifdef ERRORESTIMATION
-               data_file << "Error estimation activated!" << std :: endl << std :: endl;
-               #endif
-#endif
                data_file << "Epsilon = " << epsilon_ << std :: endl;
                data_file << "Estimated Epsilon = " << epsilon_est_ << std :: endl;
                data_file << "Delta (edge length of cell-cube) = " << delta_ << std :: endl;
 #ifdef STOCHASTIC_PERTURBATION
                data_file << std :: endl << "Stochastic perturbation added. Variance = " << VARIANCE << std :: endl;
-#endif
-#ifdef ADAPTIVE
-               data_file << std :: endl << "Adaptive computation. Global error tolerance for program abort = " << error_tolerance_ << std :: endl;
 #endif
                data_file << std :: endl << std :: endl;
             }
