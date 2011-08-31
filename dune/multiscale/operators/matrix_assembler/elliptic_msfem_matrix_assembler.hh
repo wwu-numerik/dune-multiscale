@@ -13,28 +13,22 @@ namespace Dune
 {
 
   // Imp stands for Implementation
-  template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp, class CellProblemNumberingManagerImp >
-  class DiscreteEllipticHMMOperator
+  template< class DiscreteFunctionImp, class DiffusionImp, class LocalProblemNumberingManagerImp >
+  class DiscreteEllipticMsFEMOperator
   : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType, DiscreteFunctionImp, DiscreteFunctionImp >
   {
-    typedef DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp, CellProblemNumberingManagerImp > This;
+    typedef DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp, LocalProblemNumberingManagerImp > This;
 
   public:
 
     typedef DiscreteFunctionImp DiscreteFunction;
-    typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunction;
     typedef DiffusionImp DiffusionModel;
-    typedef CellProblemNumberingManagerImp CellProblemNumberingManager;
+    typedef LocalProblemNumberingManagerImp LocalProblemNumberingManager;
 
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-    typedef typename PeriodicDiscreteFunction::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpace;
 
     typedef typename DiscreteFunctionSpace::GridPartType GridPart;
     typedef typename DiscreteFunctionSpace::GridType GridType;
-
-    typedef typename PeriodicDiscreteFunctionSpace::GridPartType PeriodicGridPart;
-    typedef typename PeriodicDiscreteFunctionSpace::GridType PeriodicGridType;
-
 
     typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
     typedef typename DiscreteFunctionSpace::DomainType DomainType;
@@ -43,7 +37,7 @@ namespace Dune
       JacobianRangeType;
 
     #ifdef AD_HOC_COMPUTATION
-    typedef CellProblemSolver< PeriodicDiscreteFunction, DiffusionModel > CellProblemSolverType;
+    typedef MsFEMLocalProblemSolver< DiscreteFunction, DiffusionModel > MsFEMLocalProblemSolverType;
     #endif
 
   protected:
@@ -66,31 +60,31 @@ namespace Dune
     typedef CachingQuadrature< GridPart, 0 > Quadrature;
 
   public:
-    DiscreteEllipticHMMOperator( const DiscreteFunctionSpace &discreteFunctionSpace,
-                                 const PeriodicDiscreteFunctionSpace &periodicDiscreteFunctionSpace,
-                                 DiffusionModel &diffusion_op,
-                                 CellProblemNumberingManager &cp_num_manager )
+    DiscreteEllipticMsFEMOperator( const DiscreteFunctionSpace &discreteFunctionSpace,
+                                   const DiscreteFunctionSpace &localDiscreteFunctionSpace,
+                                   DiffusionModel &diffusion_op,
+                                   LocalProblemNumberingManager &cp_num_manager )
     : discreteFunctionSpace_( discreteFunctionSpace ),
-      periodicDiscreteFunctionSpace_( periodicDiscreteFunctionSpace ),
+      localDiscreteFunctionSpace_( localDiscreteFunctionSpace ),
       diffusion_operator_( diffusion_op ),
       filename_( NULL )
     {}
 
-    DiscreteEllipticHMMOperator( const DiscreteFunctionSpace &discreteFunctionSpace,
-                                 const PeriodicDiscreteFunctionSpace &periodicDiscreteFunctionSpace,
-                                 DiffusionModel &diffusion_op,
-                                 CellProblemNumberingManager &cp_num_manager,
-                                 std :: string &filename )
+    DiscreteEllipticMsFEMOperator( const DiscreteFunctionSpace &discreteFunctionSpace,
+                                   const DiscreteFunctionSpace &localDiscreteFunctionSpace,
+                                   DiffusionModel &diffusion_op,
+                                   LocalProblemNumberingManager &cp_num_manager,
+                                   std :: string &filename )
     : discreteFunctionSpace_( discreteFunctionSpace ),
-      periodicDiscreteFunctionSpace_( periodicDiscreteFunctionSpace ),
+      localDiscreteFunctionSpace_( localDiscreteFunctionSpace ),
       diffusion_operator_( diffusion_op ),
       cp_num_manager_( cp_num_manager ),
       filename_( &filename )
     {}
 
-        
+
   private:
-    DiscreteEllipticHMMOperator ( const This & );
+    DiscreteEllipticMsFEMOperator ( const This & );
 
   public:
 
@@ -108,31 +102,31 @@ namespace Dune
 
   private:
     const DiscreteFunctionSpace &discreteFunctionSpace_;
-    const PeriodicDiscreteFunctionSpace &periodicDiscreteFunctionSpace_;
+    const DiscreteFunctionSpace &localDiscreteFunctionSpace_;
     DiffusionModel &diffusion_operator_;
 
     // name of data file, e.g. required if we want to use the saved solutions of the cell problems
     std :: string *filename_;
-    CellProblemNumberingManager &cp_num_manager_;
+    LocalProblemNumberingManager &cp_num_manager_;
   };
 
 
 
   // dummy implementation of "operator()"
   // 'w' = effect of the discrete operator on 'u'
-  template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp, class CellProblemNumberingManagerImp >
-  void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp, CellProblemNumberingManagerImp >::operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const 
+  template< class DiscreteFunctionImp, class DiffusionImp, class LocalProblemNumberingManagerImp >
+  void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp, LocalProblemNumberingManagerImp >::operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const 
   {
 
-    std :: cout << "the ()-operator of the DiscreteEllipticHMMOperator class is not yet implemented and still a dummy." << std :: endl;
+    std :: cout << "the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy." << std :: endl;
     std :: abort();
 
   }
 
 
-  template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp, class CellProblemNumberingManagerImp >
+  template< class DiscreteFunctionImp, class DiffusionImp, class LocalProblemNumberingManagerImp >
   template< class MatrixType >
-  void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp, CellProblemNumberingManagerImp >::assemble_matrix ( MatrixType &global_matrix ) const
+  void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp, LocalProblemNumberingManagerImp >::assemble_matrix ( MatrixType &global_matrix ) const
   {
 
     // if test function reconstruction
@@ -148,12 +142,12 @@ namespace Dune
     if ( filename_ )
      {
       // place, where we saved the solutions of the cell problems
-      cell_solution_location = "data/MsFEM/"+(*filename_)+"/cell_problems/_cellSolutions_baseSet";
+      cell_solution_location = "data/MsFEM/"+(*filename_)+"/local_problems/_localProblemSolutions_baseSet";
      }
     else
      {
       #ifndef AD_HOC_COMPUTATION
-      std :: cout << "ERROR! No 'filename_' in class 'DiscreteEllipticHMMOperator', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename_'-variable!" << std :: endl;
+      std :: cout << "ERROR! No 'filename_' in class 'DiscreteEllipticMsFEMOperator', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename_'-variable!" << std :: endl;
       std :: abort();
       #endif
      }
@@ -204,13 +198,13 @@ namespace Dune
 
       int cell_problem_id [ numMacroBaseFunctions ];
 
-      PeriodicDiscreteFunction* corrector_Phi[discreteFunctionSpace_.mapper().maxNumDofs()];
+      DiscreteFunction* corrector_Phi[discreteFunctionSpace_.mapper().maxNumDofs()];
 
       for( unsigned int i = 0; i < numMacroBaseFunctions; ++i )
         {
 
           // get number of cell problem from entity and number of base function
-          cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem( macro_grid_it, i );
+          cell_problem_id[i] = cp_num_manager_.get_number_of_local_problem( macro_grid_it, i );
 
           // jacobian of the base functions, with respect to the reference element
           typename BaseFunctionSet::JacobianRangeType gradient_Phi_ref_element;
@@ -219,11 +213,11 @@ namespace Dune
           // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
           inverse_jac.mv( gradient_Phi_ref_element[ 0 ], gradient_Phi[ i ][ 0 ] );
 
-          corrector_Phi[i] = new PeriodicDiscreteFunction( "Corrector Function of Phi", periodicDiscreteFunctionSpace_ );
+          corrector_Phi[i] = new DiscreteFunction( "Corrector Function of Phi", localDiscreteFunctionSpace_ );
           corrector_Phi[i]->clear();
           #ifdef AD_HOC_COMPUTATION
-          CellProblemSolverType cell_problem_solver( periodicDiscreteFunctionSpace_, diffusion_operator_ );
-          cell_problem_solver.template solvecellproblem<JacobianRangeType>
+          MsFEMLocalProblemSolverType cell_problem_solver( localDiscreteFunctionSpace_, diffusion_operator_ );
+          cell_problem_solver.template solvelocalproblem<JacobianRangeType>
                 ( gradient_Phi[ i ], macro_entity_barycenter, *(corrector_Phi[ i ]) );
           #else
           if (reader_is_open)
@@ -242,19 +236,19 @@ namespace Dune
 
             // nur checken ob der momentane Quadraturpunkt in der Zelle delta/epsilon_estimated*Y ist (0 bzw. 1 => Abschneidefunktion!)
 
-            const Iterator micro_grid_end = periodicDiscreteFunctionSpace_.end();
-            for( Iterator micro_grid_it = periodicDiscreteFunctionSpace_.begin(); micro_grid_it != micro_grid_end; ++micro_grid_it )
+            const Iterator micro_grid_end = localDiscreteFunctionSpace_.end();
+            for( Iterator micro_grid_it = localDiscreteFunctionSpace_.begin(); micro_grid_it != micro_grid_end; ++micro_grid_it )
               {
 
                 const Entity &micro_grid_entity = *micro_grid_it;
                 const Geometry &micro_grid_geometry = micro_grid_entity.geometry();
                 assert( micro_grid_entity.partitionType() == InteriorEntity );
 
-                typename PeriodicDiscreteFunction::LocalFunctionType localized_corrector_i = corrector_Phi[ i ]->localFunction( micro_grid_entity );
-                typename PeriodicDiscreteFunction::LocalFunctionType localized_corrector_j = corrector_Phi[ j ]->localFunction( micro_grid_entity );
+                typename DiscreteFunction::LocalFunctionType localized_corrector_i = corrector_Phi[ i ]->localFunction( micro_grid_entity );
+                typename DiscreteFunction::LocalFunctionType localized_corrector_j = corrector_Phi[ j ]->localFunction( micro_grid_entity );
 
                 // higher order quadrature, since A^{\epsilon} is highly variable
-                Quadrature micro_grid_quadrature( micro_grid_entity, 2*periodicDiscreteFunctionSpace_.order()+2 );
+                Quadrature micro_grid_quadrature( micro_grid_entity, 2*localDiscreteFunctionSpace_.order()+2 );
                 const size_t numQuadraturePoints = micro_grid_quadrature.nop();
 
                 for( size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint )
