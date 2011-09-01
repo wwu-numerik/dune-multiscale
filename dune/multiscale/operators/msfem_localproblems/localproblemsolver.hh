@@ -27,7 +27,23 @@
 // \int_T A^eps(x) ∇Q^eps(\Phi_H)(x) · ∇ \phi(x) + \int_T A^eps(x) ∇ \Phi_H(x_T) · ∇ \phi(x) = 0
 //  for all \phi \in \mathring{H}^1(T).
 // Applying the transformation formula, we get:
+// \int_{T_0} (A^eps ○ F)(x) ( ∇Q^eps(\Phi_H)) ○ F )(x) · ∇ \phi(x) 
+//        + \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi(x) = 0
+// This yields that (Q^eps(\Phi_H) ○ F) is the solution of
+// \int_{T_0} (A^eps ○ F)(x) (A^{-1})^T ∇( Q^eps(\Phi_H) ○ F )(x) · ∇ \phi(x) 
+//        + \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi(x) = 0
+//
+// Here, (A^{-1})^T denotes the transposed of the inverse of the matrix 'A' of F(x)=Ax+b
 
+// Let (a_0,a_1,a_2) deonte the corners of the 2-simplex T, then the matrix A in the affine transformation
+// F(x) = Ax + a_0, F : T_0 -> T is given by
+// A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
+// A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
+
+// define 'c := (a_1(1) - a_0(1))·(a_2(2) - a_0(2)) - (a_1(2) - a_0(2))·(a_2(1) - a_0(1))
+// then the inverse A^{-1} is given by:
+// A^{-1}_11 = (1/c) (a_2(2) - a_0(2))     A^{-1}_12 = (1/c) (a_0(1) - a_2(1))
+// A^{-1}_21 = (1/c) (a_0(2) - a_1(2))     A^{-1}_22 = (1/c) (a_1(1) - a_0(1))
 
 namespace Dune
 {
