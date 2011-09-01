@@ -23,8 +23,11 @@
 //  ( the rectangular triangle with corners (0,0), (1,0) and (0,1) )
 // let 'Fx = Ax + b' denote the corresponding affine transformation with ' F(T) = T_0 '
 // Now, for fixed 'T' and for fixed coarse grid basis function PHI_H,
-// we define the operaor Q^eps(PHI_H) \in H^1(T) and zero boundary by:
-// \int_T A^eps(x) \grad Q^eps(PHI_H)(x) · grad
+// we define the operaor Q^eps(\Phi_H) \in H^1(T) and zero boundary by:
+// \int_T A^eps(x) ∇Q^eps(\Phi_H)(x) · ∇ \phi(x) + \int_T A^eps(x) ∇ \Phi_H(x_T) · ∇ \phi(x) = 0
+//  for all \phi \in \mathring{H}^1(T).
+// Applying the transformation formula, we get:
+
 
 namespace Dune
 {
