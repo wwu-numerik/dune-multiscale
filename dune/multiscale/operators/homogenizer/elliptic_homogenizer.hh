@@ -27,6 +27,8 @@
 #include <dune/multiscale/operators/matrix_assembler/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/operators/globalsolver.hh>
 
+#include <dune/fem/gridpart/periodicgridpart.hh>
+
 //for data output:
 #include <dune/fem/io/file/dataoutput.hh>
 #include <dune/fem/io/parameter.hh>

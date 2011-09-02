@@ -45,6 +45,8 @@
 // A^{-1}_11 = (1/c) (a_2(2) - a_0(2))     A^{-1}_12 = (1/c) (a_0(1) - a_2(1))
 // A^{-1}_21 = (1/c) (a_0(2) - a_1(2))     A^{-1}_22 = (1/c) (a_1(1) - a_0(1))
 
+// jacobian-inverse-transposed
+
 namespace Dune
 {
 
@@ -189,6 +191,9 @@ namespace Dune
   }
 
 
+
+
+
   //! stiffness matrix for a linear elliptic diffusion operator 
   // we obtain entries of the following kind
   // (local msfem problem for the macro grid element 'T' and for the base-function '\Phi_H',
@@ -227,6 +232,62 @@ namespace Dune
       const Entity &local_grid_entity = *it;
       const Geometry &local_grid_geometry = local_grid_entity.geometry();
       assert( local_grid_entity.partitionType() == InteriorEntity );
+
+
+
+//!loeschen:
+#if 1
+
+      // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
+      // arguments: entity T, point in T_0, point in T.
+
+      // Let (a_0,a_1,a_2) deonte the corners of the 2-simplex T, then the matrix A in the affine transformation
+      // F(x) = Ax + a_0, F : T_0 -> T is given by
+      // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
+      // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
+
+     
+      // auxilliary quadrature just to determine the corners of the element:
+      Quadrature auxQuadrature( local_grid_entity, 2 ); //quadrature order = 2, means 0,1,2 = 3 quadrature points.
+
+
+
+      // corners of the reference element:
+      typename Quadrature::CoordinateType ref_corner_0, ref_corner_1, ref_corner_2;
+
+      ref_corner_0[ 0 ] = 0.0;
+      ref_corner_0[ 1 ] = 0.0;
+
+      ref_corner_1[ 0 ] = 1.0;
+      ref_corner_1[ 1 ] = 0.0;
+
+      ref_corner_2[ 0 ] = 0.0;
+      ref_corner_2[ 1 ] = 1.0;
+
+      // corner of the global element:
+      DomainType corner_0 = local_grid_geometry.global( ref_corner_0 );
+      DomainType corner_1 = local_grid_geometry.global( ref_corner_1 );
+      DomainType corner_2 = local_grid_geometry.global( ref_corner_2 );
+
+      std :: cout << "corner_0 = " << corner_0 << std :: endl;
+      std :: cout << "corner_1 = " << corner_1 << std :: endl;
+      std :: cout << "corner_2 = " << corner_2 << std :: endl;
+
+
+
+//abort();
+// define 'c := (a_1(1) - a_0(1))·(a_2(2) - a_0(2)) - (a_1(2) - a_0(2))·(a_2(1) - a_0(1))
+// then the inverse A^{-1} is given by:
+// A^{-1}_11 = (1/c) (a_2(2) - a_0(2))     A^{-1}_12 = (1/c) (a_0(1) - a_2(1))
+// A^{-1}_21 = (1/c) (a_0(2) - a_1(2))     A^{-1}_22 = (1/c) (a_1(1) - a_0(1))
+
+// jacobian-inverse-transposed
+
+#endif
+
+
+
+
 
       LocalMatrix local_matrix = global_matrix.localMatrix( local_grid_entity, local_grid_entity );
 
