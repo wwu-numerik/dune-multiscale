@@ -43,9 +43,9 @@
 //The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
 // description see below 0.05
-#define EPSILON 0.05
-#define EPSILON_EST 0.05
-#define DELTA 0.05
+#define EPSILON 0.008
+#define EPSILON_EST 0.01
+#define DELTA 0.01
 
 
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
@@ -118,9 +118,8 @@ namespace Problem
 
     inline void getMacroGridFile ( std :: string &macroGridName ) const
     {
-
       //name and location of the grid file that describes the macro-grid:
-      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf" );
+      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/cube_one.dgf" );
       macroGridName = macro_grid_location;
     }
 
@@ -357,8 +356,8 @@ namespace Problem
 #endif
 
 
-       double coefficient_0 = 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) );
-       double coefficient_1 = 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) );
+       double coefficient_0 = 1.01 + cos( 2.0 * M_PI * (x[0] / EPSILON) ); //!x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI * (x[0] / EPSILON) );
+       double coefficient_1 = 1.01 + cos( 2.0 * M_PI * (x[0] / EPSILON) ); //!x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI * (x[0] / EPSILON) );
 
 
 #ifdef STOCHASTIC_PERTURBATION
@@ -412,8 +411,8 @@ namespace Problem
 
 #endif
 
-       double coefficient_0 = 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) );
-       double coefficient_1 = 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) );
+       double coefficient_0 = 1.01 + cos( 2.0 * M_PI * (x[0] / EPSILON) ); //!x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI * (x[0] / EPSILON) );
+       double coefficient_1 = 1.01 + cos( 2.0 * M_PI * (x[0] / EPSILON) ); //!x[ 0 ] + x[ 1 ]; //!cos( 2.0 * M_PI * (x[0] / EPSILON) );
 
 #ifdef STOCHASTIC_PERTURBATION
 
@@ -447,7 +446,7 @@ namespace Problem
     {
 
        if ( i == j )
-        { z = 2.0 + cos( 2.0 * M_PI * x[0] ); }
+        { z = 1.01 + cos( 2.0 * M_PI * x[0] ); } //!x[ 0 ] + x[ 1 ];} //!cos( 2.0 * M_PI * x[0] ); }
        else
         { z = 0.0; }
 

@@ -95,14 +95,19 @@ public:
         return ok;
     }
 
+    void close()
+    {
+        file_.close();
+    }
+
     template < class DFType >
     void read( const unsigned long index, DFType& df )
     {
         typedef typename DFType::DomainFieldType
             Field;
         unsigned long bytes = df.size() * sizeof(Field);
-        assert( file_.is_open()
-                && size_ >= bytes * ( index + 1 ) );
+        assert( file_.is_open() );
+        assert( size_ >= bytes * ( index + 1 ) );
         file_.seekg( bytes * index );
 
         typedef typename DFType::DofIteratorType

@@ -1,6 +1,10 @@
 #ifndef DUNE_ERRORESTIMATER_HH
 #define DUNE_ERRORESTIMATER_HH
 
+//! #################################
+//! This class is DEPRECATED!!!!!!!!!
+//! #################################
+
 // where the quadratures are defined 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include "../../cell_problem_solving/elliptic/old_cellproblemsolver.hh"

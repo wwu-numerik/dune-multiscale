@@ -438,6 +438,206 @@ namespace Dune
 
 
 
+
+   ///############################ The rhs-assemble()-method for linear elliptic problems, solved with MsFEM in non-Petriv-Galerkin-Formulation #########################################
+
+    // assemble standard right hand side:
+    // if there is only one source (f) (there is no second source):
+    // discreteFunction is an output parameter (kind of return value)
+    template< int polOrd, class FirstSourceType, class LocalProblemNumberingManagerType >
+    void assemble_msfem( LocalProblemNumberingManagerType &lp_num_manager, //get number of local problem to determine the reconstruction
+                         const FirstSourceType &f,
+                         DiscreteFunctionType &rhsVector)
+    //discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite gespeichert
+    {
+
+      const DiscreteFunctionSpaceType& discreteFunctionSpace    
+        = rhsVector.space();
+
+// If we do not use the Petrov-Galerkin formulation
+#ifndef PGF
+      // get the local discrete function space 
+      const DiscreteFunctionSpaceType& localDiscreteFunctionSpace = lp_num_manager.get_local_discrete_function_space();
+
+      bool reader_is_open = false;
+
+      // reader for the local problem data file:
+      DiscreteFunctionReader discrete_function_reader( (lp_num_manager.get_location()).c_str() );
+      reader_is_open = discrete_function_reader.open();
+#endif
+
+      // set discreteFunction to zero:
+      rhsVector.clear();
+
+      const IteratorType endit = discreteFunctionSpace.end();
+      for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
+      {
+        //it* Pointer auf ein Element der Entity
+        const GeometryType &geometry = (*it).geometry(); //Referenz auf Geometrie
+
+        LocalFunctionType elementOfRHS = rhsVector.localFunction( *it ); //*it zeigt auf ein bestimmtes Element der entity
+	//hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in discreteFunction(aktuelleEntity)	
+
+        const BaseFunctionSetType baseSet //BaseFunctions leben immer auf Refernzelement!!!
+          = discreteFunctionSpace.baseFunctionSet( *it ); //*it Referenz auf eine bestimmtes Element der entity. In der ersten Klasse war das Element fest, deshalb konnte man sich dort Pointer sparen. //loeschen: discreteFunctionSpace statt functionSpace
+
+        CachingQuadrature< GridPartType, 0 > quadrature( *it, polOrd ); //0 --> codim 0
+
+#if 1
+
+        //transformation F : T_0 -> T
+        // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
+        // arguments: entity T, point in T_0, point in T.
+
+        // Let (a_0,a_1,a_2) deonte the corners of the 2-simplex T, then the matrix A in the affine transformation
+        // F(x) = Ax + a_0, F : T_0 -> T is given by
+        // A_11 = a_1( 1 ) - a_0( 1 )     A_12 = a_2( 1 ) - a_0( 1 )
+        // A_21 = a_1( 2 ) - a_0( 2 )     A_22 = a_2( 2 ) - a_0( 2 )
+
+        // corners of the reference element:
+        typename CachingQuadrature< GridPartType, 0 >::CoordinateType ref_corner_0, ref_corner_1, ref_corner_2;
+
+        ref_corner_0[ 0 ] = 0.0;
+        ref_corner_0[ 1 ] = 0.0;
+
+        ref_corner_1[ 0 ] = 1.0;
+        ref_corner_1[ 1 ] = 0.0;
+
+        ref_corner_2[ 0 ] = 0.0;
+        ref_corner_2[ 1 ] = 1.0;
+
+        // corner of the global element:
+        DomainType corner_0_of_T = geometry.global( ref_corner_0 );
+        DomainType corner_1_of_T = geometry.global( ref_corner_1 );
+        DomainType corner_2_of_T = geometry.global( ref_corner_2 );
+
+        // value of the matrix A (in F(x) = Ax + a_0)
+        double val_A[dimension][dimension];
+        val_A[0][0] = corner_1_of_T[ 0 ] - corner_0_of_T[ 0 ];
+        val_A[0][1] = corner_2_of_T[ 0 ] - corner_0_of_T[ 0 ];
+        val_A[1][0] = corner_1_of_T[ 1 ] - corner_0_of_T[ 1 ];
+        val_A[1][1] = corner_2_of_T[ 1 ] - corner_0_of_T[ 1 ];
+
+        // define 'c := (a_1(1) - a_0(1))·(a_2(2) - a_0(2)) - (a_1(2) - a_0(2))·(a_2(1) - a_0(1))
+        double c = 1.0 / ( (val_A[0][0] * val_A[1][1]) - (val_A[0][1] * val_A[1][0]) );
+
+        // |det(A)|:
+        double abs_det_A = fabs( 1.0 / c );
+
+#endif
+
+        const int numDofs = elementOfRHS.numDofs(); //Dofs = Freiheitsgrade (also die Unbekannten)
+
+	for( int i = 0; i < numDofs; ++i ) //Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
+        { 
+          //std :: cout << i << "discreteFunction.localFunction( *it ) " << i << ": " << discreteFunction.localFunction( *it )[ i ] << std :: endl;
+
+          // the return values:
+          RangeType f_x, phi_x;
+
+          JacobianRangeType gradientPhi;
+
+          const int numQuadraturePoints = quadrature.nop();
+          for( int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
+          {
+            const double det
+              = geometry.integrationElement( quadrature.point( quadraturePoint ) );
+
+	    // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'y':
+	    f.evaluate( geometry.global( quadrature.point( quadraturePoint ) ) , f_x );
+
+	    // evaluate the current base function at the current quadrature point and save its value in 'z':
+	    baseSet.evaluate( i, quadrature[quadraturePoint], phi_x ); //i = i'te Basisfunktion;
+
+
+            elementOfRHS[ i ] += det * quadrature.weight( quadraturePoint ) * (f_x * phi_x);
+
+          }
+
+// If we do not use the Petrov-Galerkin formulation,
+// we need to add the contribution of the corrector
+// (we splitt:  \int_T f ( \phi + Q(\phi) ) = \int_T f \phi + \int_{T_0} (f ○ F) (Q(\phi)○F) |det A|
+//  where we already added \int_T f \phi in the previous step )
+#ifndef PGF
+          // get number of cell problem from entity and number of base function
+          int cell_problem_id = lp_num_manager.get_number_of_local_problem( it, i );
+
+          DiscreteFunctionType corrector_phi( "Corrector Function of Phi", localDiscreteFunctionSpace );
+          corrector_phi.clear();
+
+          if (reader_is_open)
+            { discrete_function_reader.read( cell_problem_id, corrector_phi ); }
+
+          RangeType f_x_transformed, Q_phi_transformed;
+
+          // iterator for the micro grid ( grid for the reference element T_0 )
+          const IteratorType micro_grid_end = localDiscreteFunctionSpace.end();
+          for( IteratorType micro_grid_it = localDiscreteFunctionSpace.begin(); micro_grid_it != micro_grid_end; ++micro_grid_it )
+              {
+
+                 const EntityType &micro_grid_entity = *micro_grid_it;
+                 const GeometryType &micro_grid_geometry = micro_grid_entity.geometry();
+
+                 // ( Q^eps(\Phi) ○ F ):
+                 typename DiscreteFunctionType::LocalFunctionType localized_corrector = corrector_phi.localFunction( micro_grid_entity );
+
+                 // higher order quadrature
+                 Quadrature micro_grid_quadrature( micro_grid_entity, 2*localDiscreteFunctionSpace.order()+2 );
+                 const size_t locNumQuadraturePoints = micro_grid_quadrature.nop();
+
+                 for( size_t microQuadraturePoint = 0; microQuadraturePoint < locNumQuadraturePoints; ++microQuadraturePoint )
+                  {
+
+                    // local (barycentric) coordinates (with respect to entity)
+                    const typename Quadrature::CoordinateType &local_micro_point = micro_grid_quadrature.point( microQuadraturePoint );
+
+                    DomainType global_point_in_T_0 = micro_grid_geometry.global( local_micro_point );
+
+                    double weight_micro_quadrature = micro_grid_quadrature.weight(  microQuadraturePoint ) * micro_grid_geometry.integrationElement( local_micro_point );
+
+                    // new weight = old weight * |det A|
+                    weight_micro_quadrature *= abs_det_A;
+
+                    // Q^eps(\phi) ○ F :
+                    localized_corrector.evaluate( micro_grid_quadrature[ microQuadraturePoint ], Q_phi_transformed );
+
+                    // global point in the reference element T_0
+                    DomainType global_point = micro_grid_geometry.global( local_micro_point );
+
+                    // 'F(x)', i.e. F ( global point in the reference element T_0 )
+                    // (the transformation of the global point in T_0 to its position in T)
+                    DomainType global_point_transformed(0.0);
+
+                    for( int k = 0; k < dimension; ++k )
+                      for( int l = 0; l < dimension; ++l )
+                        global_point_transformed[ k ] += ( val_A[ k ][ l ] * global_point_in_T_0[ l ] );
+
+                    global_point_transformed += corner_0_of_T;
+
+                    // F(x) = Ax + a_0, F : T_0 -> T is given by
+                    // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
+                    // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
+
+                    f.evaluate( global_point_transformed, f_x_transformed );
+
+                    // note that |det A| is already contained in 'weight_micro_quadrature'
+                    elementOfRHS[ i ] += weight_micro_quadrature * f_x_transformed * Q_phi_transformed;
+
+                  }
+
+              }
+#endif
+
+
+        }
+      }
+    }  // end method
+
+
+
+
+
+
    ///############################ The rhs-assemble()-methods for non-linear elliptic problems, solved with the heterogenous multiscale method  #########################################
 
     // requires reconstruction of old_u_H and local fine scale averages

@@ -1,5 +1,3 @@
-//! NOTE: This MsFEM Code currently only works for a square base grid (coarse grid) which is uniformely refined with triangles!
-
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -55,6 +53,9 @@
 // there we define or don't define the macro HOMOGENIZEDSOL_AVAILABLE
 // (if HOMOGENIZEDSOL_AVAILABLE == true, it means that it can be computed. It still needs to be determined by using a homogenizer )
 #define HOMOGENIZEDSOL_AVAILABLE
+
+// compute the L2 errors? (might be expensive)
+#define ERROR_COMPUTATION
 
 //! Do we have/want a fine-scale reference solution?
 #define FINE_SCALE_REFERENCE
@@ -324,7 +325,7 @@ typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseF
 //! --------------------------------------------------------------------------------------
 
 
-//! --------------- the discrete operators (standard FEM and HMM) ------------------------
+//! --------------- the discrete operators (standard FEM and MsFEM) ------------------------
 
 // discrete elliptic operator (corresponds with FEM Matrix)
 typedef DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
@@ -533,10 +534,10 @@ RangeType get_size_of_domain( DiscreteFunctionSpaceType& discreteFunctionSpace )
 }
 
 
-void algorithm ( std :: string &UnitCubeName,
+void algorithm ( std :: string &RefElementName,
                  GridPointerType &macro_grid_pointer, // grid pointer that belongs to the macro grid
                  GridPointerType &fine_macro_grid_pointer, // grid pointer that belongs to the fine macro grid (for reference computations)
-                 GridPointerType &periodic_grid_pointer, // grid pointer that belongs to the periodic micro grid
+                 GridPointerType &ref_simplex_grid_pointer, // grid pointer that belongs to the grid for the refernce element
                  int refinement_difference, //refinement difference for the macro grid (problem-to-solve vs. reference problem)
                  std :: ofstream &data_file )
 {
@@ -554,11 +555,11 @@ void algorithm ( std :: string &UnitCubeName,
 
   //! ---------------------------- grid parts ----------------------------------------------
 
-  // grid part for the global function space, required for HMM-macro-problem
+  // grid part for the global function space, required for MsFEM-macro-problem
   GridPartType gridPart( *macro_grid_pointer);
 
-  // grid part for the periodic function space, required for HMM-cell-problems
-  GridPartType periodicGridPart ( *periodic_grid_pointer );
+  // grid part for the function space for T_0, required for the local HsFEM-problems
+  GridPartType refSimplexGridPart ( *ref_simplex_grid_pointer );
 
   // grid part for the global function space, required for the detailed fine-scale computation (very high resolution)
   GridPartType gridPartFine( *fine_macro_grid_pointer );
@@ -578,8 +579,8 @@ void algorithm ( std :: string &UnitCubeName,
   // the global-problem function space for the reference computation:
   DiscreteFunctionSpaceType finerDiscreteFunctionSpace( gridPartFine );
 
-  // the local-problem function space (containing periodic functions):
-  DiscreteFunctionSpaceType periodicDiscreteFunctionSpace( periodicGridPart );
+  // the local-problem function space:
+  DiscreteFunctionSpaceType refSimplexDiscreteFunctionSpace( refSimplexGridPart );
 
   //! --------------------------------------------------------------------------------------
 
@@ -878,7 +879,7 @@ while ( repeat == true )
     }
 #endif
 
-  std::cout << std :: endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
+  std::cout << std :: endl << "Solving MsFEM-macro-problem for " << discreteFunctionSpace.size()
             << " unkowns and polynomial order "
             << DiscreteFunctionSpaceType :: polynomialOrder << "." 
             << std :: endl << std :: endl;
@@ -888,12 +889,12 @@ while ( repeat == true )
   //----------------------------------------------------------------------------------------------//
 
   // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain local problem
-  LocProbNumberingManagerType lp_num_manager(discreteFunctionSpace);
+  LocProbNumberingManagerType lp_num_manager( discreteFunctionSpace, refSimplexDiscreteFunctionSpace, filename_);
 
 
   //! define the elliptic hmm operator that describes our 'homogenized' macro problem
   // ( effect of the elliptic hmm operator on a certain discrete function )
-  EllipticMsFEMOperatorType discrete_elliptic_msfem_op( discreteFunctionSpace, periodicDiscreteFunctionSpace, diffusion_op, lp_num_manager, filename_);
+  EllipticMsFEMOperatorType discrete_elliptic_msfem_op( discreteFunctionSpace, refSimplexDiscreteFunctionSpace, diffusion_op, lp_num_manager, filename_);
 
   //----------------------------------------------------------------------------------------------//
   //----------------------------------------------------------------------------------------------//
@@ -921,16 +922,16 @@ while ( repeat == true )
   // solve cell problems in a preprocess
   //! -------------- solve and save the cell problems for the base function set --------------------------------------
 
-  MsFEMLocalProblemSolver< DiscreteFunctionType, DiffusionType > local_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file /*optinal*/);
+  MsFEMLocalProblemSolver< DiscreteFunctionType, DiffusionType > local_problem_solver(refSimplexDiscreteFunctionSpace, diffusion_op, data_file /*optinal*/);
 
-  int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
+  int number_of_grid_elements = refSimplexDiscreteFunctionSpace.grid().size(0);
 
   std :: cout << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std :: endl;
 
   // generate directory for cell problem data output
   if (mkdir(("data/MsFEM/" + filename_ + "/local_problems/").c_str() DIRMODUS) == -1)
    {
-    std::cout << "WARNING! Directory for the solutions of the cell problems already exists!";
+    std::cout << "WARNING! Directory for the solutions of the cell problems already exists!" << std :: endl;
    }
   else
    {
@@ -947,10 +948,10 @@ while ( repeat == true )
   //! --------------- end solving and saving cell problems -----------------------------------------
 
 
-  std :: cout << "Solving linear HMM problem." << std :: endl;
+  std :: cout << "Solving linear MsFEM problem." << std :: endl;
   if (data_file.is_open())
     {
-      data_file << "Solving linear HMM problem." << std :: endl;
+      data_file << "Solving linear MsFEM problem." << std :: endl;
       data_file << "------------------------------------------------------------------------------" << std :: endl;
     }
 
@@ -961,14 +962,14 @@ while ( repeat == true )
   discrete_elliptic_msfem_op.assemble_matrix( msfem_matrix );
   // to print the matrix, use:   msfem_matrix.print();
 
-  std::cout << "Time to assemble HMM macro stiffness matrix: " << msfemAssembleTimer.elapsed() << "s" << std::endl;
+  std::cout << "Time to assemble MsFEM macro stiffness matrix: " << msfemAssembleTimer.elapsed() << "s" << std::endl;
   if (data_file.is_open())
     {
-      data_file << "Time to assemble HMM macro stiffness matrix: " << msfemAssembleTimer.elapsed() << "s" << std::endl;
+      data_file << "Time to assemble MsFEM macro stiffness matrix: " << msfemAssembleTimer.elapsed() << "s" << std::endl;
     }
 
   // assemble right hand side
-  rhsassembler.assemble< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( f , msfem_rhs);
+  rhsassembler.assemble_msfem< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( lp_num_manager, f , msfem_rhs);
 
   // set Dirichlet Boundary to zero 
   typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
@@ -1028,7 +1029,7 @@ while ( repeat == true )
 
 #endif
 
-  //! ******************** End of assembling and solving the HMM problem ***************************
+  //! ******************** End of assembling and solving the MsFEM problem ***************************
 
   std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
   if (data_file.is_open())
@@ -1036,6 +1037,8 @@ while ( repeat == true )
 
   //! ----------------- compute L2-errors -------------------
 
+
+#ifdef ERROR_COMPUTATION
 
 #ifdef FINE_SCALE_REFERENCE
   long double timeadapt = clock();
@@ -1058,6 +1061,20 @@ while ( repeat == true )
          { std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std :: endl << std :: endl; }
    }
 #endif
+
+//! STILL A TEST:
+#if 0
+
+  RangeType msfem_finescale_error = impL2error.error_L2_with_corrector
+       < LocProbNumberingManagerType , 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(fem_solution, msfem_solution, lp_num_manager);
+
+  std :: cout << "|| u_msfem_finescale - u_fine_scale ||_L2 = " << msfem_finescale_error << std :: endl << std :: endl;
+
+
+#endif
+
+
+
 
 
 #ifdef HMM_REFERENCE
@@ -1118,6 +1135,9 @@ while ( repeat == true )
     { data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std :: endl; }
  #endif
 
+#endif
+
+// endif for macro ERROR_COMPUTATION
 #endif
 
 
@@ -1269,9 +1289,9 @@ int main(int argc, char** argv)
   refinement_level_macrogrid_ = atoi( argv[ 1 ] );
 
   // grid refinement level for solving the cell problems, i.e. it describes 'h':
-  int refinement_level_cellgrid;
-  std :: cout << "Enter refinement level for the cell problems: ";
-  std :: cin >> refinement_level_cellgrid;
+  int refinement_level_grid_T0;
+  std :: cout << "Enter refinement level for the local problems: ";
+  std :: cin >> refinement_level_grid_T0;
   std :: cout << std :: endl;
 
 
@@ -1308,12 +1328,14 @@ int main(int argc, char** argv)
 
 
   // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
-  std :: string UnitCubeName( "../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf" ); // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2
-  // note that the centering is fundamentaly important for the implementation. Do NOT change it to e.g. [0,1]^2!!!
-  // to solve the cell problems, we always need a periodic gridPart.
-  // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated on such a grid )
-  GridPtr< GridType > periodic_grid_pointer( UnitCubeName );
-  periodic_grid_pointer->globalRefine( refinement_level_cellgrid );
+  std :: string RefElementName( "../dune/multiscale/grids/cell_grids/ref_simplex_2d.dgf" ); // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2
+ // std :: string RefElementName( "../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf" );
+
+
+  // to solve the local MsFEM problems, we always need a gridPart for T_0.
+  // Here it is always the refernece simplex that needs to be used (after transformation, local problems are always formulated on such a grid )
+  GridPtr< GridType > ref_simplex_grid_pointer( RefElementName );
+  ref_simplex_grid_pointer->globalRefine( refinement_level_grid_T0 );
 
 
   // to save all information in a file
@@ -1333,7 +1355,7 @@ int main(int argc, char** argv)
 #endif
                data_file << "Computations were made for:" << std :: endl << std :: endl;
                data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std :: endl;
-               data_file << "Refinement Level for Micro Grid (grid on macro entity) = " << refinement_level_cellgrid << std :: endl << std :: endl;
+               data_file << "Refinement Level for Micro Grid (grid on macro entity) = " << refinement_level_grid_T0 << std :: endl << std :: endl;
 #ifdef PGF
                data_file << "We use MsFEM in Petrov-Galerkin formulation." << std :: endl;
 #else
@@ -1349,10 +1371,10 @@ int main(int argc, char** argv)
                data_file << std :: endl << std :: endl;
             }
 
-     algorithm( UnitCubeName,
+     algorithm( RefElementName,
                 macro_grid_pointer,
                 fine_macro_grid_pointer,
-                periodic_grid_pointer,
+                ref_simplex_grid_pointer,
                 refinement_difference_for_referenceproblem,
                 data_file );
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the normal macro problem
