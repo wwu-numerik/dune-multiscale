@@ -15,6 +15,7 @@
 
 // where the quadratures are defined 
 #include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/fem/misc/l2error.hh>
 
 namespace Dune 
 {

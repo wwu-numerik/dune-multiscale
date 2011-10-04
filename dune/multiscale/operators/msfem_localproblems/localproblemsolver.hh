@@ -1,6 +1,7 @@
 #ifndef DiscreteEllipticMsFEMLocalProblem_HH
 #define DiscreteEllipticMsFEMLocalProblem_HH
 
+#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/common/fmatrix.hh>
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
