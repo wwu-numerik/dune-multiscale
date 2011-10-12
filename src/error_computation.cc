@@ -197,6 +197,10 @@ enum { dimension = GridType :: dimension};
 //name of the error file in which the data will be saved
 std :: string filename_;
 
+std :: string location_fine_scale_reference_;
+std :: string location_msfem_solution_;
+std :: string location_homogenized_solution_;
+
 int refinement_level_macrogrid_;
 int refinement_level_finescale_referenceprob_;
 int refinement_level_grid_T0_;
@@ -244,11 +248,11 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
   // grid part for the discrete function space that belongs to the available homogenized solution
   GridPartType gridPartHomog( *homog_macro_grid_pointer );
-    
+
   GridType &grid = gridPart.grid();
   GridType &gridFine = gridPartFine.grid();
   GridType &gridHomog = gridPartHomog.grid();
-    
+
   //! --------------------------------------------------------------------------------------
 
 
@@ -263,12 +267,24 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
   // the global-problem function space for the solution of the homog. problem:
   DiscreteFunctionSpaceType homogDiscreteFunctionSpace( gridPartHomog );
-    
+
   // the local-problem function space:
   DiscreteFunctionSpaceType refSimplexDiscreteFunctionSpace( refSimplexGridPart );
 
   //! --------------------------------------------------------------------------------------
 
+
+
+  //! solution vector
+  // solution of the MsFEM
+  DiscreteFunctionType msfem_solution( filename_ + " MsFEM Solution", discreteFunctionSpace );
+  msfem_solution.clear();
+
+  DiscreteFunctionReader discrete_function_reader_msfem( (location_msfem_solution_).c_str() );
+  discrete_function_reader_msfem.open();
+
+  discrete_function_reader_msfem.read( 0, msfem_solution );
+  std :: cout << "MsFEM solution read." << std :: endl;
 
 
 
@@ -278,37 +294,28 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
   DiscreteFunctionType homogenized_solution( filename_ + " Homogenized Solution", homogDiscreteFunctionSpace );
   homogenized_solution.clear();
 
-  //! DISC FUNC LADEN
-    
+  // reader for the cell problem data file:
+  DiscreteFunctionReader discrete_function_reader_hom( (location_homogenized_solution_).c_str() );
+  discrete_function_reader_hom.open();
+
+  discrete_function_reader_hom.read( 0, homogenized_solution );
+  std :: cout << "homogenized solution read." << std :: endl;
+
 #endif
 
 
 #ifdef FINE_SCALE_REFERENCE
 
-  DiscreteFunctionType fem_solution( filename_ + " Reference FEM Solution", finerDiscreteFunctionSpace );
-  fem_solution.clear();
-
-  char modeprob[50];
-  sprintf( modeprob, "/Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
-  std::string modeprob_s(modeprob);
-
-  char reference_solution_directory[50];
-  sprintf( reference_solution_directory, "/reference_solution_ref_%d", refinement_level_finescale_referenceprob_ );
-  std::string reference_solution_directory_s(reference_solution_directory);
-
-  char reference_solution_name[50];
-  sprintf( reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_finescale_referenceprob_ );
-  std::string reference_solution_name_s(reference_solution_name);
-
-  std :: string location_fine_scale_ref = "data/MsFEM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
+  DiscreteFunctionType fine_scale_fem_solution( filename_ + " Reference FEM Solution", finerDiscreteFunctionSpace );
+  fine_scale_fem_solution.clear();
 
   bool reader_is_open = false;
 
   // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_ref( (location_fine_scale_ref).c_str() );
+  DiscreteFunctionReader discrete_function_reader_ref( (location_fine_scale_reference_).c_str() );
   discrete_function_reader_ref.open();
 
-  discrete_function_reader_ref.read( 0, fem_solution );
+  discrete_function_reader_ref.read( 0, fine_scale_fem_solution );
   std :: cout << "fine scale reference read." << std :: endl;
 
 // end: FINE_SCALE_REFERENCE defined or not defined
@@ -317,6 +324,7 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
 //noch per Hand die Daten eingetragen:
 #ifdef HMM_REFERENCE
+#if 0
 
   int gridLevel_refHMM = 10; // Macro_'gridLevel'
 
@@ -337,21 +345,6 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
   DiscreteFunctionType hmm_reference_solution( filename_ + " Reference (HMM) Solution", discreteFunctionSpace_refHMM );
   hmm_reference_solution.clear();
 
-#if 0
-  char modeprob_name[50];
-  sprintf( modeprob_name, "/Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
-  std::string modeprob_name_s(modeprob_name);
-
-  char reference_msfem_solution_directory[50];
-  sprintf( reference_msfem_solution_directory, ".......", 10 );
-  std::string reference_solution_directory_s(reference_solution_directory);
-
-  char reference_solution_name[50];
-  sprintf( reference_solution_name, "....", refinement_level_finescale_referenceprob_ );
-  std::string reference_solution_name_s(reference_solution_name);
-
-  std :: string location_hmm_ref = "data/MsFEM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
-#endif
 
   std :: string location_hmm_ref = "data/MsFEM/Model_Problem_1/Macro_10_Micro_8/msfem_solution_discFunc_refLevel_10";
 
@@ -365,15 +358,10 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
   std :: cout << "HMM reference read." << std :: endl;
 
 #endif
+#endif
 
   // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain local problem
   LocProbNumberingManagerType lp_num_manager( discreteFunctionSpace, refSimplexDiscreteFunctionSpace, filename_);
-
-  //! solution vector
-  // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the non-linear system of equations
-  DiscreteFunctionType msfem_solution( filename_ + " MsFEM Solution", discreteFunctionSpace );
-  msfem_solution.clear();
-
 
 
   std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
@@ -384,32 +372,20 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
 
 #ifdef FINE_SCALE_REFERENCE
-  long double timeadapt = clock();
 
-  RangeType msfem_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution, fem_solution);
+  RangeType msfem_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution, fine_scale_fem_solution);
 
   std :: cout << "|| u_msfem - u_fine_scale ||_L2 =  " << msfem_error << std :: endl << std :: endl;
   if (data_file.is_open())
          { data_file << "|| u_msfem - u_fine_scale ||_L2 =  " << msfem_error << std :: endl; }
 
-  timeadapt = clock() - timeadapt;
-  timeadapt = timeadapt / CLOCKS_PER_SEC;
-
-  // if it took longer then 1 minute to compute the error:
-  if ( timeadapt > 60 )
-   {
-     std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std :: endl << std :: endl;
-
-     if (data_file.is_open())
-         { std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std :: endl << std :: endl; }
-   }
 #endif
 
 //! STILL A TEST:
 #if 0
 
   RangeType msfem_finescale_error = impL2error.error_L2_with_corrector
-       < LocProbNumberingManagerType , 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(fem_solution, msfem_solution, lp_num_manager);
+       < LocProbNumberingManagerType , 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(fine_scale_fem_solution, msfem_solution, lp_num_manager);
 
   std :: cout << "|| u_msfem_finescale - u_fine_scale ||_L2 = " << msfem_finescale_error << std :: endl << std :: endl;
 
@@ -421,10 +397,11 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
 
 #ifdef HOMOGENIZEDSOL_AVAILABLE
-// not yet modified according to a generalized L2-error, here, homogenized_solution and fem_solution still need to be defined on the same grid!
+
+// not yet modified according to a generalized L2-error, here, homogenized_solution and fine_scale_fem_solution still need to be defined on the same grid!
   #ifdef FINE_SCALE_REFERENCE
-  // RangeType hom_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( homogenized_solution, fem_solution );
-  RangeType hom_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( homogenized_solution, fem_solution );
+  // RangeType hom_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( homogenized_solution, fine_scale_fem_solution );
+  RangeType hom_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( homogenized_solution, fine_scale_fem_solution );
 
   std :: cout << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std :: endl << std :: endl;
   if (data_file.is_open())
@@ -450,11 +427,91 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 int main()
 {
 
-  // name of the file in which you want to save the data:
-  std :: cout << "Enter name of existing data directory: ";
-  std :: cin >> filename_;
 
-  // generate directories for data output
+
+
+  // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
+  refinement_level_macrogrid_ = 4;
+
+  // grid refinement level for solving the cell problems, i.e. it describes 'h':
+  refinement_level_grid_T0_ = 4;
+
+  // grid refinement level of the solution of the fine-scale reference problem
+  refinement_level_finescale_referenceprob_ = 4;
+
+  // grid refinement level of the solution of the homogenized problem
+  refinement_level_homogenized_prob_ = 4;
+
+
+
+
+
+  //! location of the fine scale reference solution (CHECKEN! - NOCH FEHLER!!!)
+
+  char modeprob[50];
+  //sprintf( modeprob, "Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
+  std::string modeprob_s(modeprob);
+
+  char reference_solution_directory[50];
+  sprintf( reference_solution_directory, "/fem_fine_scale_%d", refinement_level_finescale_referenceprob_ );
+  std::string reference_solution_directory_s(reference_solution_directory);
+
+  char reference_solution_name[50];
+  sprintf( reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_finescale_referenceprob_ );
+  std::string reference_solution_name_s(reference_solution_name);
+
+  location_fine_scale_reference_ = "data/MsFEM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
+
+  //! --------------------
+
+
+
+  //! location of the homogenized solution
+
+  //char modeprob[50];
+  //sprintf( modeprob, "Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
+  //std::string modeprob_s(modeprob);
+
+  char homogenized_solution_directory[50];
+  sprintf( homogenized_solution_directory, "/fem_homogenized_solution_%d", refinement_level_homogenized_prob_ );
+  std::string homogenized_solution_directory_s(homogenized_solution_directory);
+
+  char homogenized_solution_name[50];
+  sprintf( homogenized_solution_name, "/homogenized_solution_discFunc_refLevel_%d", refinement_level_homogenized_prob_ );
+  std::string homogenized_solution_name_s(homogenized_solution_name);
+
+  location_homogenized_solution_ = "data/MsFEM/" + modeprob_s + homogenized_solution_directory_s + homogenized_solution_name_s;
+
+  //! --------------------
+
+
+
+
+  //! location of the msfem solution 
+
+  //char modeprob[50];
+  //sprintf( modeprob, "Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
+  //std::string modeprob_s(modeprob);
+
+  char msfem_solution_directory[50];
+  sprintf( msfem_solution_directory, "macro_%d_micro_%d", refinement_level_macrogrid_, refinement_level_grid_T0_ );
+  std::string msfem_solution_directory_s(msfem_solution_directory);
+  filename_ = msfem_solution_directory_s;
+  msfem_solution_directory_s = "/" + msfem_solution_directory_s;
+
+  char msfem_solution_name[50];
+  sprintf( msfem_solution_name, "/msfem_solution_discFunc_refLevel_%d", refinement_level_macrogrid_ );
+  std::string msfem_solution_name_s( msfem_solution_name );
+
+  location_msfem_solution_ = "data/MsFEM/" + modeprob_s + msfem_solution_directory_s + msfem_solution_name_s;
+
+  //! --------------------
+
+
+
+
+
+  // check directories for data output
   if (mkdir(("data/MsFEM/" + filename_).c_str() DIRMODUS) == -1)
    {
     std::cout << "Directory '" << "data/MsFEM/" << filename_ << "' exists. Loading data.";
@@ -466,26 +523,14 @@ int main()
    }
 
 
+
+
   std :: string save_filename = "data/MsFEM/" + filename_ + "/computed-errors.txt";
   std :: cout << "Data will be saved under: " << save_filename << std :: endl;
 
   // data for the model problem; the information manager
   // (see 'problem_specification.hh' for details)
   Problem::ModelProblemData info( filename_ );
-
-  // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-  refinement_level_macrogrid_ = 4;
-
-  // grid refinement level for solving the cell problems, i.e. it describes 'h':
-  refinement_level_grid_T0_ = 4;
-
-  // grid refinement level of the solution of the fine-scale reference problem
-  refinement_level_finescale_referenceprob_ = 4;
-  
-  // grid refinement level of the solution of the homogenized problem
-  refinement_level_homogenized_prob_ = 4;
- 
-
 
 
 
@@ -511,8 +556,7 @@ int main()
   // create a GridPart for the solution of the homogenized problem. 
   GridPointerType homog_macro_grid_pointer( macroGridName );
   homog_macro_grid_pointer->globalRefine( refinement_level_homogenized_prob_ );
-    
-    
+
     
   // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
   std :: string RefElementName( "../dune/multiscale/grids/cell_grids/ref_simplex_2d.dgf" ); // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2

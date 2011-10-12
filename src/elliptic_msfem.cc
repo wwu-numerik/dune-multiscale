@@ -52,10 +52,10 @@
 // this information should be provided by the 'problem specification file'
 // there we define or don't define the macro HOMOGENIZEDSOL_AVAILABLE
 // (if HOMOGENIZEDSOL_AVAILABLE == true, it means that it can be computed. It still needs to be determined by using a homogenizer )
-#define HOMOGENIZEDSOL_AVAILABLE
+// #define HOMOGENIZEDSOL_AVAILABLE
 
 // compute the L2 errors? (might be expensive)
-#define ERROR_COMPUTATION
+// #define ERROR_COMPUTATION
 
 //! Do we have/want a fine-scale reference solution?
 #define FINE_SCALE_REFERENCE
@@ -1007,6 +1007,25 @@ while ( repeat == true )
     dfw.append( msfem_solution );
 
 #endif
+
+
+
+#ifdef HOMOGENIZEDSOL_AVAILABLE
+
+  bool hom_writer_is_open = false;
+
+  char fhom_name[40];
+  sprintf( fhom_name, "/homogenized_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
+  std :: string fhom_name_s( fhom_name );
+
+  std :: string hom_location = "data/MsFEM/" + filename_ + fhom_name_s;
+  DiscreteFunctionWriter hom_dfw( (hom_location).c_str() );
+  hom_writer_is_open = hom_dfw.open();
+  if ( hom_writer_is_open )
+    hom_dfw.append( homogenized_solution );
+
+#endif
+
 
 
 #ifdef FINE_SCALE_REFERENCE
