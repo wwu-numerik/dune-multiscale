@@ -47,6 +47,29 @@ double integrate( unsigned int N, double leftB, double rightB, FunctionType& fun
 
 
 
+// righ hand side function
+class f
+{
+
+
+    public:
+    
+    double evaluate( const double x )
+    {
+        return 1.0;
+    }
+
+    double evaluate_antiderivative( const double x )
+    {
+        return x;
+    }
+
+    
+};
+
+
+
+
 class A
 {
 
@@ -64,6 +87,13 @@ class A
         //double a_in_y = 2.0 + sin( 2.0 * M_PI * y ); 
         double a_in_y = 1.0 / ( 2.0 + cos( 2.0 * M_PI * y ) );
         return a_in_y;
+    }
+
+    double evaluate_antiderivative_of_inverse( const double y )
+    {
+        double val = 2.0 * y;
+        val += ( 1.0 / (2.0 * M_PI ) ) * sin( 2.0 * M_PI * y );
+        return val;
     }
 
     
@@ -92,7 +122,28 @@ class A_epsilon
         return a_eps_in_x;
         
     }
+
+
+    //evaluate a^{\epsilon}
+    double evaluate_antiderivative_of_inverse( const double x )
+    {
+        A diffusion_coefficient;
+        const double x_new = x / EPSILON;
+        double ret = diffusion_coefficient.evaluate_antiderivative_of_inverse( x_new );
+        ret *= EPSILON;
+        return ret;
+    }
     
+};
+
+
+class Exact_Solution
+{
+};
+
+
+class Homogenized_Solution
+{
 };
 
 
