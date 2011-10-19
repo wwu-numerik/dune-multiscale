@@ -48,7 +48,7 @@ double integrate( unsigned int N, double leftB, double rightB, FunctionType& fun
 
 
 // righ hand side function
-class f
+class SourceFunction
 {
 
 
@@ -56,6 +56,7 @@ class f
     
     double evaluate( const double x )
     {
+        // klappt momentan nur fuer f=const
         return 1.0;
     }
 
@@ -96,6 +97,13 @@ class A
         return val;
     }
 
+
+    double evaluate_antiderivative_antiderivative_of_inverse( const double y )
+    {
+        double val = y * y;
+        val -= ( 1.0 / (4.0 * M_PI * M_PI ) ) * cos( 2.0 * M_PI * y );
+        return val;
+    }
     
 };
 
@@ -134,11 +142,77 @@ class A_epsilon
         return ret;
     }
     
+    
+    //evaluate a^{\epsilon}
+    double evaluate_antiderivative_antiderivative_of_inverse( const double x )
+    {
+        A diffusion_coefficient;
+        const double x_new = x / EPSILON;
+        double ret = diffusion_coefficient.evaluate_antiderivative_antiderivative_of_inverse( x_new );
+        ret *= EPSILON * EPSILON;
+        return ret;
+    }
+
 };
+
 
 
 class Exact_Solution
 {
+
+private:
+    
+    // leftB = x_0 and rightB = x_1
+    double leftB_, rightB_;
+    
+public:
+    
+    Exact_Solution( double leftB, double rightB )
+    {
+        leftB_ = leftB;
+        rightB_ = rightB;
+    }
+    
+    double evaluate( const double x )
+    {
+        SourceFunction f;
+        double F_x_1 = f.evaluate_antiderivative( rightB );
+        double F_x_0 = f.evaluate_antiderivative( leftB );
+        double F_x = f.evaluate_antiderivative( x );
+        
+        A_epsilon a_eps;
+        
+        double ad_a_eps_inverse_x_1 = a_eps.evaluate_antiderivative_of_inverse( rightB );
+        double ad_a_eps_inverse_x_0 = a_eps.evaluate_antiderivative_of_inverse( leftB );
+        double ad_a_eps_inverse_x = a_eps.evaluate_antiderivative_of_inverse( x );
+        
+        double ad_ad_a_eps_inverse_x_1 = a_eps.evaluate_antiderivative_antiderivative_of_inverse( rightB );
+        double ad_ad_a_eps_inverse_x_0 = a_eps.evaluate_antiderivative_antiderivative_of_inverse( leftB );
+        double ad_ad_a_eps_inverse_x = a_eps.evaluate_antiderivative_antiderivative_of_inverse( x );
+        
+        double a_eps_x_1 = a_eps.evaluate( rightB );
+        
+        double g_x_1 = a_eps_x_1 * ( ad_a_eps_inverse_x_1 - ad_a_eps_inverse_x_0 );
+        double g_x = a_eps_x_1 * ( ad_a_eps_inverse_x - ad_a_eps_inverse_x_0 );        
+        
+        double v_x = F_x_1 * ( ad_a_eps_inverse_x - ad_a_eps_inverse_x_0 )
+        - ad_a_eps_inverse_x * F_x + ad_a_eps_inverse_x_0 * F_x_0;
+        
+        // + \int_{x_0}^x \int(1/A^eps) f 
+        v_x += (ad_ad_a_eps_inverse_x - ad_ad_a_eps_inverse_x_0); // in dieser Zeile klappt das nur fuer f=1.
+        // (man muss hier eine Stammfunktion von \int(1/A^eps) f kennen.)
+        
+        
+        double v_x_1 = F_x_1 * ( ad_a_eps_inverse_x_1 - ad_a_eps_inverse_x_0 )
+        - ad_a_eps_inverse_x_1 * F_x_1 + ad_a_eps_inverse_x_0 * F_x_0;
+        
+        // + \int_{x_0}^x \int(1/A^eps) f 
+        v_x_1 += (ad_ad_a_eps_inverse_x_1 - ad_ad_a_eps_inverse_x_0); // in dieser Zeile klappt das nur fuer f=1.
+        // (man muss hier eine Stammfunktion von \int(1/A^eps) f kennen.)
+        
+        return v_x - ( g_x * ( v_x_1 / g_x_1 ) );
+        
+    }
 };
 
 
