@@ -6,10 +6,10 @@ using namespace std;
 
 //#define EPSILON 0.038776
 //#define EPSILON 0.019355
-#define EPSILON 0.019355
+#define EPSILON 0.001
 
 
-#define NUMBER_OF_STEPS 20000
+#define NUMBER_OF_STEPS 89
 
 
 template < typename FunctionType >
@@ -201,6 +201,13 @@ public:
       value_vector_[i] = val;
     }
 
+    int get_cell_index( const double x )
+    {
+        
+        double h = (rightB_ - leftB_) / N_;
+        return static_cast<int>( (x - leftB_)  / h );
+    }
+    
     double evaluate( const double x )
     {
 
@@ -370,7 +377,7 @@ int main(int argc, char* argv[])
     ZeroFunction zero;
 
     double error_u_eps_and_u_0 = error_L2( 200000 , left_border, right_border, u_0, u_eps /*zero*/ );
-    std :: cout << "error_u_eps_and_u_0 = " << error_u_eps_and_u_0 << std :: endl;    
+    std :: cout << "|| u_eps - u_0 ||_L2 = " << error_u_eps_and_u_0 << std :: endl;    
 
     A_MsFEM a_msfem( left_border, right_border, NUMBER_OF_STEPS);
 
@@ -391,7 +398,7 @@ int main(int argc, char* argv[])
     double error_u_eps_and_u_MsFEM_0 = 0.0;
     double error_u_0_and_u_MsFEM_0 = 0.0;
 
-    int acc_N = 100 * NUMBER_OF_STEPS;
+    int acc_N = 10000 * NUMBER_OF_STEPS;
     double acc_h = (right_border - left_border) / acc_N;
 
     double v_x = 0.0;
@@ -409,12 +416,15 @@ int main(int argc, char* argv[])
 
         double F_x = f.evaluate_antiderivative( x );
         double a_msfem_x = a_msfem.evaluate( x );
-        v_x_1 += h * (1.0 / a_msfem_x ) * ( F_x_1 - F_x );
+        v_x_1 += acc_h * (1.0 / a_msfem_x ) * ( F_x_1 - F_x );
 
-        g_x_1 += h * a_msfem.evaluate( right_border ) * (1.0 / a_msfem_x );
+        g_x_1 += acc_h * a_msfem.evaluate( right_border -  acc_h ) * (1.0 / a_msfem_x );
 
     }
 
+    double* msfem_solution_vector = new double[NUMBER_OF_STEPS + 1];
+    msfem_solution_vector[ 0 ] = 0.0;
+    
     for (int j = 0; j < acc_N; j +=1 )
     {
 
@@ -423,22 +433,87 @@ int main(int argc, char* argv[])
         double F_x = f.evaluate_antiderivative( x );
         double a_msfem_x = a_msfem.evaluate( x );
 
-        v_x += h * ( 1.0 / a_msfem_x ) * ( F_x_1 - F_x );
-        g_x += h * a_msfem.evaluate( right_border ) * (1.0 / a_msfem_x );
+        v_x += acc_h * ( 1.0 / a_msfem_x ) * ( F_x_1 - F_x );
+        g_x += acc_h * a_msfem.evaluate( right_border - acc_h ) * (1.0 / a_msfem_x );
 
         double u_msfem_0_x = v_x - ( g_x * ( v_x_1 / g_x_1 ) );
+        
+        msfem_solution_vector[ a_msfem.get_cell_index(x) + 1 ] = u_msfem_0_x;
 
-        error_u_eps_and_u_MsFEM_0 += h * ( u_msfem_0_x - u_eps.evaluate(x) ) * ( u_msfem_0_x - u_eps.evaluate(x) );
-        error_u_0_and_u_MsFEM_0 += h * ( u_msfem_0_x - u_0.evaluate(x) ) * ( u_msfem_0_x - u_0.evaluate(x) );
-
+        error_u_eps_and_u_MsFEM_0 += acc_h * ( u_msfem_0_x - u_eps.evaluate(x) ) * ( u_msfem_0_x - u_eps.evaluate(x) );
+        error_u_0_and_u_MsFEM_0 += acc_h * ( u_msfem_0_x - u_0.evaluate(x) ) * ( u_msfem_0_x - u_0.evaluate(x) );
     }
 
     error_u_eps_and_u_MsFEM_0 = sqrt( error_u_eps_and_u_MsFEM_0 );
     error_u_0_and_u_MsFEM_0 = sqrt( error_u_0_and_u_MsFEM_0 );
 
-    std :: cout << "error_u_eps_and_u_MsFEM_0 = " << error_u_eps_and_u_MsFEM_0 << std :: endl;    
-    std :: cout << "error_u_0_and_u_MsFEM_0 = " << error_u_0_and_u_MsFEM_0 << std :: endl;    
+    std :: cout << "|| u_eps - u_MsFEM_0 ||_L2 = " << error_u_eps_and_u_MsFEM_0 << std :: endl;    
+    std :: cout << "|| u_0 - u_MsFEM_0 ||_L2 = " << error_u_0_and_u_MsFEM_0 << std :: endl;    
 
+    
+    double error_u_eps_and_u_MsFEM_eps = 0.0;
+    double error_u_0_and_u_MsFEM_eps = 0.0;
+
+    
+    for (int i = 0; i < NUMBER_OF_STEPS; i +=1 )
+    {
+                
+        double derivative_u_msfem_0_x = (msfem_solution_vector[ i + 1 ] - msfem_solution_vector[ i ] ) / h;
+        
+        double x_i = left_border + ( i * h );
+        
+        int num_sub_steps = 100000;
+        double sub_h = 1.0 / num_sub_steps;
+        for (int j = 0; j < num_sub_steps; j +=1 )
+        {
+            
+
+            
+           double x = x_i + ( h *  j * sub_h );
+           double u_msfem_0_x = msfem_solution_vector[i] + (( h *  j * sub_h )*derivative_u_msfem_0_x);
+            
+           double a_aps_x_i_and_1 = a_eps.evaluate( left_border + ( i * h ) ); 
+            
+
+           
+           double v_i_eps_x = a_aps_x_i_and_1 *
+             (a_eps.evaluate_antiderivative_of_inverse( x ) - a_eps.evaluate_antiderivative_of_inverse( left_border + ( i * h ) ) );
+           v_i_eps_x -= ( h *  j * sub_h );
+            
+           double g_i_eps_x = a_aps_x_i_and_1 *
+             (a_eps.evaluate_antiderivative_of_inverse( x ) - a_eps.evaluate_antiderivative_of_inverse( left_border + ( i * h ) ) );
+
+            
+           double g_i_eps_x_i_and_1 = a_aps_x_i_and_1 *
+            (a_eps.evaluate_antiderivative_of_inverse( left_border + ( (i+1) * h ) ) - a_eps.evaluate_antiderivative_of_inverse( left_border + ( i * h ) ) );
+            
+           double v_i_eps_x_i_and_1 = g_i_eps_x_i_and_1 - h;
+
+           double Q_i_eps = v_i_eps_x - ( g_i_eps_x * ( v_i_eps_x_i_and_1 / g_i_eps_x_i_and_1 ) );
+            
+            
+           double u_msfem_eps_x = u_msfem_0_x + ( Q_i_eps * derivative_u_msfem_0_x );
+
+           
+           error_u_eps_and_u_MsFEM_eps += acc_h * ( u_msfem_eps_x - u_eps.evaluate(x) ) * ( u_msfem_eps_x - u_eps.evaluate(x) );
+           error_u_0_and_u_MsFEM_eps += acc_h * ( u_msfem_eps_x - u_0.evaluate(x) ) * ( u_msfem_eps_x - u_0.evaluate(x) );
+            
+           //std :: cout << "u_msfem_0_x = " << u_msfem_0_x << std :: endl;
+           //std :: cout << "u_msfem_eps_x = " << u_msfem_eps_x << std :: endl;
+           //std :: cout << "u_eps_x = " << u_eps.evaluate(x) << std :: endl;
+           //std :: cout << "u_0_x = " << u_0.evaluate(x) << std :: endl;
+            
+            
+        }
+    }
+    
+
+    error_u_eps_and_u_MsFEM_eps = sqrt( error_u_eps_and_u_MsFEM_eps );
+    error_u_0_and_u_MsFEM_eps = sqrt( error_u_0_and_u_MsFEM_eps );
+    
+    std :: cout << "|| u_eps - u_MsFEM_eps ||_L2 = " << error_u_eps_and_u_MsFEM_eps << std :: endl;    
+    std :: cout << "|| u_0 - u_MsFEM_eps ||_L2 = " << error_u_0_and_u_MsFEM_eps << std :: endl;    
+    
 
     a_0_msfem = NUMBER_OF_STEPS * ( 1.0 / a_0_msfem );
 
