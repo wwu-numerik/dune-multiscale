@@ -5,12 +5,11 @@
 using namespace std;
 
 //#define EPSILON 0.038776
+//#define EPSILON 0.019355
 #define EPSILON 0.019355
 
-//#define NUMBER_STEPS 6
-#define NUMBER_STEPS 12
 
-#define NUMBER_SUBSTEPS 2000000
+#define NUMBER_OF_STEPS 20000
 
 
 template < typename FunctionType >
@@ -45,6 +44,32 @@ double integrate( unsigned int N, double leftB, double rightB, FunctionType& fun
 
 
 
+template < typename FunctionType1, typename FunctionType2 >
+double error_L2( unsigned int N, double leftB, double rightB, FunctionType1& function1, FunctionType2& function2)
+{
+
+    if ( rightB < leftB )
+    { 
+        std :: cout << "Linke Intervallgrenze " << leftB << " kleiner als rechte Intervallgrenze " << rightB << ". Fehler!" << std :: endl;
+        abort();
+    }
+
+    if ( rightB == leftB )
+    { return 0.0;}
+
+    double h = (rightB - leftB) / N;
+    
+    double error = 0.0;
+
+    for (int i = 0; i < N; i+=1 )
+         {
+           double x = leftB + (i*h);
+           error += h * ( function1.evaluate(x) - function2.evaluate(x) ) * ( function1.evaluate(x) - function2.evaluate(x) );
+         }
+
+    return sqrt(error);
+}
+
 
 
 // righ hand side function
@@ -65,7 +90,11 @@ class SourceFunction
         return x;
     }
 
-    
+    double evaluate_antiderivative_antiderivative( const double x )
+    {
+        return (0.5*x*x);
+    }
+
 };
 
 
@@ -76,13 +105,6 @@ class A
 
     public:
 
-    bool antiderivative_available;
-
-    public:
-
-    A ()
-     { antiderivative_available = false; }
-    
     double evaluate( const double y )
     {
         //double a_in_y = 2.0 + sin( 2.0 * M_PI * y ); 
@@ -110,15 +132,8 @@ class A
 
 class A_epsilon
 {
-    public:
-
-    bool antiderivative_available;
 
     public:
-    
-
-    A_epsilon ()
-     { antiderivative_available = false; }
 
     //evaluate a^{\epsilon}
     double evaluate( const double x )
@@ -131,7 +146,6 @@ class A_epsilon
         
     }
 
-
     //evaluate a^{\epsilon}
     double evaluate_antiderivative_of_inverse( const double x )
     {
@@ -141,8 +155,7 @@ class A_epsilon
         ret *= EPSILON;
         return ret;
     }
-    
-    
+
     //evaluate a^{\epsilon}
     double evaluate_antiderivative_antiderivative_of_inverse( const double x )
     {
@@ -155,6 +168,73 @@ class A_epsilon
 
 };
 
+
+class A_MsFEM
+{
+ 
+private:
+
+  double* value_vector_;
+
+  // leftB = x_0 and rightB = x_1
+  double leftB_, rightB_;
+
+  int N_;
+    
+public:
+    
+    A_MsFEM( double leftB, double rightB, int N )
+    {
+        leftB_ = leftB;
+        rightB_ = rightB;
+        N_ = N;
+        value_vector_ = new double[ N ];
+        for ( int i = 0; i < N; i+= 1 )
+          value_vector_[ i ] = 0.0;
+    }
+
+   void set_value( const int i, const double val )
+    {
+      if ( (i >= N_) || (i<0) )
+       { std :: cout << "Error" << std :: endl; std :: abort(); }
+
+      value_vector_[i] = val;
+    }
+
+    double evaluate( const double x )
+    {
+
+        double h = (rightB_ - leftB_) / N_;
+        int i = static_cast<int>( (x - leftB_)  / h );
+        return value_vector_[i];
+    }
+
+
+};
+
+
+
+class ZeroFunction
+{
+
+    public:
+
+    double evaluate( const double x )
+    {
+        return 0.0;
+    }
+
+    double evaluate_antiderivative_of_inverse( const double x )
+    {
+        return 0.0;
+    }
+
+    double evaluate_antiderivative_antiderivative_of_inverse( const double x )
+    {
+        return 0.0;
+    }
+
+};
 
 
 class Exact_Solution
@@ -176,21 +256,21 @@ public:
     double evaluate( const double x )
     {
         SourceFunction f;
-        double F_x_1 = f.evaluate_antiderivative( rightB );
-        double F_x_0 = f.evaluate_antiderivative( leftB );
+        double F_x_1 = f.evaluate_antiderivative( rightB_ );
+        double F_x_0 = f.evaluate_antiderivative( leftB_ );
         double F_x = f.evaluate_antiderivative( x );
         
         A_epsilon a_eps;
         
-        double ad_a_eps_inverse_x_1 = a_eps.evaluate_antiderivative_of_inverse( rightB );
-        double ad_a_eps_inverse_x_0 = a_eps.evaluate_antiderivative_of_inverse( leftB );
+        double ad_a_eps_inverse_x_1 = a_eps.evaluate_antiderivative_of_inverse( rightB_ );
+        double ad_a_eps_inverse_x_0 = a_eps.evaluate_antiderivative_of_inverse( leftB_ );
         double ad_a_eps_inverse_x = a_eps.evaluate_antiderivative_of_inverse( x );
         
-        double ad_ad_a_eps_inverse_x_1 = a_eps.evaluate_antiderivative_antiderivative_of_inverse( rightB );
-        double ad_ad_a_eps_inverse_x_0 = a_eps.evaluate_antiderivative_antiderivative_of_inverse( leftB );
+        double ad_ad_a_eps_inverse_x_1 = a_eps.evaluate_antiderivative_antiderivative_of_inverse( rightB_ );
+        double ad_ad_a_eps_inverse_x_0 = a_eps.evaluate_antiderivative_antiderivative_of_inverse( leftB_ );
         double ad_ad_a_eps_inverse_x = a_eps.evaluate_antiderivative_antiderivative_of_inverse( x );
         
-        double a_eps_x_1 = a_eps.evaluate( rightB );
+        double a_eps_x_1 = a_eps.evaluate( rightB_ );
         
         double g_x_1 = a_eps_x_1 * ( ad_a_eps_inverse_x_1 - ad_a_eps_inverse_x_0 );
         double g_x = a_eps_x_1 * ( ad_a_eps_inverse_x - ad_a_eps_inverse_x_0 );        
@@ -218,133 +298,52 @@ public:
 
 class Homogenized_Solution
 {
-};
 
-
-// (a^{epsilon})^{-1}
-class A_epsilon_inverse
-{
-
-    public:
-
-    bool antiderivative_available;
-
-public:
-    
-
-    A_epsilon_inverse ()
-     { antiderivative_available = true; }
-
-    double evaluate( const double x )
-    {
-        A_epsilon diffusion_coefficient;
-        
-        double a_eps_in_x = diffusion_coefficient.evaluate( x );
-        return (1.0 / a_eps_in_x);
-        
-    }
-
-    // Stammfunktion (falls bekannt) zum besseren integrieren
-    double evaluate_antiderivative( const double x )
-    {
-
-//! hard coding!!!!:
-
-        double ret = 2.0*x;
-        ret += ( EPSILON / ( 2.0 * M_PI ) ) * sin( 2.0 * ( M_PI / EPSILON ) * x );
-        return ret;
-        
-    }
-
-    
-};
-
-
-
-// u_n(x) = v_n(x) - g_n(x) ( v_n( x_(n+1) ) / g( x_(n+1) ) )
-
-// v_n( x ) = a^{\eps}( x_{n+1} ) \int_{x_n}^x 1 / ( a^{\eps}(y) ) dy + x_n - x
-class V 
-{
-    
 private:
     
-    double x_n_;
-    double h_;
+    // leftB = x_0 and rightB = x_1
+    double leftB_, rightB_;
     
 public:
     
-    
-    V ( double x_n, double h )
-    { x_n_ = x_n; h_ = h;}
-    
-    //evaluate a^{\epsilon}
-    double evaluate( const double x )
+    Homogenized_Solution( double leftB, double rightB )
     {
-
-        A_epsilon a_eps;
-        A_epsilon_inverse a_eps_inv;
-        
-        double x_n_and_1 = x_n_ + h_;
-        
-        double v_x = 0.0;
-        v_x += a_eps.evaluate( x_n_and_1 ) * integrate( NUMBER_SUBSTEPS, x_n_ , x , a_eps_inv );
-        v_x -= x - x_n_;  
-        
-        return v_x;
-        
+        leftB_ = leftB;
+        rightB_ = rightB;
     }
     
-    //if g_x is already computed
-    inline double evaluate( const double g_x, const double x )
+   double evaluate( const double x )
     {
+        SourceFunction f;
+
+        double F_x_1 = f.evaluate_antiderivative( rightB_ );
+
+        double F_F_x = f.evaluate_antiderivative_antiderivative( x );
+        double F_F_x_1 = f.evaluate_antiderivative_antiderivative( rightB_ );
+        double F_F_x_0 = f.evaluate_antiderivative_antiderivative( leftB_ );
+
+        double x_0 = leftB_;
+        double x_1 = rightB_;
         
-        double v_x = 0.0;
-        v_x += g_x;
-        v_x -= x - x_n_;  
-        
-        return v_x;
-        
+        A a;
+
+        double a_0 = (1.0 / ( a.evaluate_antiderivative_of_inverse( 1.0 ) - a.evaluate_antiderivative_of_inverse( 0.0 ) ) );
+
+        double v_x = F_x_1 * ( x - x_0 ) - F_F_x + F_F_x_0;
+        v_x /= a_0;
+
+        double v_x_1 = F_x_1 * ( x_1 - x_0 ) - F_F_x_1 + F_F_x_0;
+        v_x_1 /= a_0;
+
+
+        double g_x_1 = x_1 - x_0;
+        double g_x = x - x_0;
+
+        return v_x - ( g_x * ( v_x_1 / g_x_1 ) );
     }
 
 };
 
-
-
-// u_n(x) = v_n(x) - g_n(x) ( v_n( x_(n+1) ) / g( x_(n+1) ) )
-
-// g_n( x ) = a^{\eps}( x_{n+1} ) \int_{x_n}^x 1 / ( a^{\eps}(y) ) dy
-class G 
-{
-    
-private:
-    
-    double x_n_;
-    double h_;
-    
-public:
-    
-    
-    G ( double x_n, double h )
-    { x_n_ = x_n; h_ = h;}
-    
-    //evaluate a^{\epsilon}
-    double evaluate( const double x )
-    {
-        
-        A_epsilon a_eps;
-        A_epsilon_inverse a_eps_inv;
-        
-        double x_n_and_1 = x_n_ + h_;
-        
-        double g_x = 0.0;
-        g_x += a_eps.evaluate( x_n_and_1 ) * integrate( NUMBER_SUBSTEPS, x_n_ , x , a_eps_inv );
-        
-        return g_x;
-        
-    }
-    
-};
 
 
 int main(int argc, char* argv[])
@@ -352,90 +351,100 @@ int main(int argc, char* argv[])
     
     A a;
     A_epsilon a_eps;
-    A_epsilon_inverse a_eps_inv;
    
     double left_border = 0.0;
     double right_border = 1.0;
     
-    double a_0 = EPSILON / integrate( NUMBER_SUBSTEPS, 0.0, EPSILON, a_eps_inv );
+
+    double a_0 = (1.0 / ( a.evaluate_antiderivative_of_inverse( 1.0 ) - a.evaluate_antiderivative_of_inverse( 0.0 ) ) );
     double a_0_msfem = 0.0;
     
-    double h = (right_border - left_border) / NUMBER_STEPS;
+    double h = (right_border - left_border) / NUMBER_OF_STEPS;
 
     std :: cout << "EPSILON = " << EPSILON << std :: endl;
     std :: cout << "H = " << h << std :: endl << std :: endl;
-    std :: cout << "NUMBER_SUBSTEPS = " << NUMBER_SUBSTEPS << std :: endl << std :: endl;
+    std :: cout << "NUMBER_OF_STEPS = " << NUMBER_OF_STEPS << std :: endl << std :: endl;
 
-    double msfem_a_0 = 0.0;
+    Exact_Solution u_eps( left_border , right_border );
+    Homogenized_Solution u_0( left_border , right_border );
+    ZeroFunction zero;
 
-    for (int n = 0; n < NUMBER_STEPS; n +=1 )
+    double error_u_eps_and_u_0 = error_L2( 200000 , left_border, right_border, u_0, u_eps /*zero*/ );
+    std :: cout << "error_u_eps_and_u_0 = " << error_u_eps_and_u_0 << std :: endl;    
+
+    A_MsFEM a_msfem( left_border, right_border, NUMBER_OF_STEPS);
+
+    for (int i = 0; i < NUMBER_OF_STEPS; i +=1 )
     {
-        
-        double x_n = left_border + ( n * h );
-        double x_n_and_1 = left_border + ( (n+1) * h );
-        
-        G g(x_n,h);
-        V v(x_n,h);
+        double x_i = left_border + ( i * h );
+        double x_i_and_1 = left_border + ( (i+1) * h );
 
-        double int_a_eps_corrector_n = 0.0;
+        double msfem_a_i = h / ( a_eps.evaluate_antiderivative_of_inverse( x_i_and_1 ) - a_eps.evaluate_antiderivative_of_inverse( x_i ) );
+        //std :: cout << "msfem_a_i = " << msfem_a_i << std :: endl;
 
-        double previous_corrector_in_x = 0.0;
+        a_msfem.set_value(i, msfem_a_i );
 
-        double g_x_n_and_1 = g.evaluate(x_n_and_1);
-        // double v_x_n_and_1 = v.evaluate(x_n_and_1);
-        double v_x_n_and_1 = v.evaluate(g_x_n_and_1, x_n_and_1);
+        a_0_msfem += (1.0 / msfem_a_i);
 
-        for (int sub_n = 0; sub_n < NUMBER_SUBSTEPS; sub_n += 1 )
-        {
-            // corrector = u_n(x) = v_n(x) - g_n(x) ( v_n( x_(n+1) ) / g( x_(n+1) ) )
-            double corrector_in_x = 0.0;
-            
-            double sub_h = (x_n_and_1 - x_n) / NUMBER_SUBSTEPS;
-            double x = x_n + ( sub_h * sub_n );
-
-            double g_x = g.evaluate(x);
-
-            corrector_in_x += v.evaluate( g_x , x );
-            corrector_in_x -= ( g_x * v_x_n_and_1 ) / g_x_n_and_1;
-            
-            double gradient_corrector_in_x = 0.0;
-            if ( sub_n != 0 )
-             { gradient_corrector_in_x = (corrector_in_x - previous_corrector_in_x) / sub_h; }
-
-            int_a_eps_corrector_n += sub_h * ( gradient_corrector_in_x + 1.0 ) * a_eps.evaluate(x);
-
-            previous_corrector_in_x = corrector_in_x;
-        }
-        
-        int_a_eps_corrector_n /= h;
-
-        a_0_msfem += ( 1.0 / int_a_eps_corrector_n );
-
-        std :: cout << "int_a_eps_corrector_n = " << int_a_eps_corrector_n << std :: endl;
-        //std :: cout << "a_0_msfem = " << a_0_msfem << std :: endl;
     }
 
-    a_0_msfem = NUMBER_STEPS * (1.0 / a_0_msfem );
+    double error_u_eps_and_u_MsFEM_0 = 0.0;
+    double error_u_0_and_u_MsFEM_0 = 0.0;
 
-    
-    
-    
-#if 0 
-    double integral_a_eps = integrate( NUMBER_STEPS, -1.0, 1.0, a_eps );
-    std :: cout << "Integral A_eps = " << integral_a_eps << std :: endl;
-   
-    double integral_a = integrate( NUMBER_STEPS, -1.0, 1.0, a );
-    std :: cout << "Integral A = " << integral_a << std :: endl;
+    int acc_N = 100 * NUMBER_OF_STEPS;
+    double acc_h = (right_border - left_border) / acc_N;
 
-    std :: cout << "corrector_in_x = " << corrector_in_x << std :: endl;  
+    double v_x = 0.0;
+    double v_x_1 = 0.0;
+    double g_x = 0.0;
+    double g_x_1 = 0.0;
 
-#endif
+    SourceFunction f;
+    double F_x_1 = f.evaluate_antiderivative( right_border );
+
+    for (int j = 0; j < acc_N; j +=1 )
+    {
+
+        double x = left_border + ( j * acc_h );
+
+        double F_x = f.evaluate_antiderivative( x );
+        double a_msfem_x = a_msfem.evaluate( x );
+        v_x_1 += h * (1.0 / a_msfem_x ) * ( F_x_1 - F_x );
+
+        g_x_1 += h * a_msfem.evaluate( right_border ) * (1.0 / a_msfem_x );
+
+    }
+
+    for (int j = 0; j < acc_N; j +=1 )
+    {
+
+        double x = left_border + ( j * acc_h );
+
+        double F_x = f.evaluate_antiderivative( x );
+        double a_msfem_x = a_msfem.evaluate( x );
+
+        v_x += h * ( 1.0 / a_msfem_x ) * ( F_x_1 - F_x );
+        g_x += h * a_msfem.evaluate( right_border ) * (1.0 / a_msfem_x );
+
+        double u_msfem_0_x = v_x - ( g_x * ( v_x_1 / g_x_1 ) );
+
+        error_u_eps_and_u_MsFEM_0 += h * ( u_msfem_0_x - u_eps.evaluate(x) ) * ( u_msfem_0_x - u_eps.evaluate(x) );
+        error_u_0_and_u_MsFEM_0 += h * ( u_msfem_0_x - u_0.evaluate(x) ) * ( u_msfem_0_x - u_0.evaluate(x) );
+
+    }
+
+    error_u_eps_and_u_MsFEM_0 = sqrt( error_u_eps_and_u_MsFEM_0 );
+    error_u_0_and_u_MsFEM_0 = sqrt( error_u_0_and_u_MsFEM_0 );
+
+    std :: cout << "error_u_eps_and_u_MsFEM_0 = " << error_u_eps_and_u_MsFEM_0 << std :: endl;    
+    std :: cout << "error_u_0_and_u_MsFEM_0 = " << error_u_0_and_u_MsFEM_0 << std :: endl;    
+
+
+    a_0_msfem = NUMBER_OF_STEPS * ( 1.0 / a_0_msfem );
 
     std :: cout << "A^0 = " << a_0 << std :: endl;    
     std :: cout << "A^0_MsFEM = " << a_0_msfem << std :: endl;    
-    
 
-    
     return 0;
 
 }
