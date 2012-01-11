@@ -1349,6 +1349,11 @@ public:
              // take time
              long double time_now = clock();
 
+#if 1
+gradientPhi[ i ][ 0 ][ 0 ] = 1.0;
+gradientPhi[ i ][ 0 ][ 1 ] = 0.0;
+#endif
+
              solvelocalproblem<JacobianRangeType, IteratorType>
                   ( gradientPhi[ i ], it, correctorPhi_i );
 

@@ -1,4 +1,4 @@
-SUBDIRS = problems
+SUBDIRS = grids problems operators space
 
 multiscaleincludedir = $(includedir)/dune/multiscale
 

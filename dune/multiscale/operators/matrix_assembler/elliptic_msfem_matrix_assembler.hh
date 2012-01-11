@@ -306,6 +306,11 @@ namespace Dune
 
             RangeType local_integral = 0.0;
 
+
+#if 1
+DomainType A_0_MSFEM(0.0);
+#endif
+
             // iterator for the micro grid ( grid for the reference element T_0 )
             const Iterator micro_grid_end = localDiscreteFunctionSpace_.end();
             for( Iterator micro_grid_it = localDiscreteFunctionSpace_.begin(); micro_grid_it != micro_grid_end; ++micro_grid_it )
@@ -313,6 +318,11 @@ namespace Dune
 
                 // remember:
                 // |det(A)| \int_{T_0} (A^eps ○ F)(x) ( ∇\Phi_i(x_T) + (A^{-1})^T ∇( Q^eps(\Phi_i) ○ F )(x)) · ( ∇\Phi_j(x_T) + (A^{-1})^T ∇( Q^eps(\Phi_j) ○ F )(x))
+
+#if 1
+gradient_Phi[ i ][ 0 ][ 0 ] = 1.0;
+gradient_Phi[ i ][ 0 ][ 1 ] = 0.0;
+#endif
 
                 const Entity &micro_grid_entity = *micro_grid_it;
                 const Geometry &micro_grid_geometry = micro_grid_entity.geometry();
@@ -374,7 +384,6 @@ namespace Dune
 
                       }
 
-
                     JacobianRangeType diffusion_in_gradient_Phi_reconstructed;
                     diffusion_operator_.diffusiveFlux( global_point_transformed,
                                                        direction_of_diffusion, diffusion_in_gradient_Phi_reconstructed );
@@ -396,10 +405,21 @@ namespace Dune
                     local_integral += weight_micro_quadrature * ( diffusion_in_gradient_Phi_reconstructed[ 0 ] * grad_reconstruction_Phi_j[ 0 ]);
                     #else
                     local_integral += weight_micro_quadrature * ( diffusion_in_gradient_Phi_reconstructed[ 0 ] * gradient_Phi[ j ][ 0 ]);
+
+#if 1
+A_0_MSFEM[ 0 ] +=  2.0 * weight_micro_quadrature * diffusion_in_gradient_Phi_reconstructed[ 0 ][ 0 ];
+A_0_MSFEM[ 1 ] +=  2.0 * weight_micro_quadrature * diffusion_in_gradient_Phi_reconstructed[ 0 ][ 1 ];
+#endif
+
                     #endif
 
                   }
               }
+
+#if 1
+std :: cout << "A_0_MSFEM[ 0 ] = " << A_0_MSFEM[ 0 ] << std :: endl;
+std :: cout << "A_0_MSFEM[ 1 ] = " << A_0_MSFEM[ 1 ] << std :: endl;
+#endif
 
             // add |det(A)|*\int_{T_0} ...
             local_matrix.add( j, i, abs_det_A * local_integral );

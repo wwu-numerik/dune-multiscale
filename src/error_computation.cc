@@ -88,7 +88,8 @@
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
 
-
+#include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/space/common/adaptmanager.hh>
 
 
 //! local (dune-multiscale) includes
@@ -229,6 +230,7 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
   // model problem data
   Problem::ModelProblemData problem_info;
+  std :: cout << "Loaded Problem Data." << std :: endl;
 
   L2Error< DiscreteFunctionType > l2error;
 
@@ -237,21 +239,36 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
   //! ---------------------------- grid parts ----------------------------------------------
 
+
   // grid part for the global function space, required for MsFEM-macro-problem
   GridPartType gridPart( *macro_grid_pointer_msfem_sol);
+
+  std :: cout << "Created Grid Partition for the MsFEM Macro Grid." << std :: endl;
+
 
   // grid part for the function space for T_0, required for the local HsFEM-problems
   GridPartType refSimplexGridPart ( *ref_simplex_grid_pointer );
 
+  std :: cout << "Created Grid Partition for the Reference Simplex." << std :: endl;
+
+
   // grid part for the global function space, required for the detailed fine-scale computation (very high resolution)
   GridPartType gridPartFine( *fine_macro_grid_pointer );
+
+  std :: cout << "Created Grid Partition for the Fine Macro Grid of the fine-scale reference Problem." << std :: endl;
+
 
   // grid part for the discrete function space that belongs to the available homogenized solution
   GridPartType gridPartHomog( *homog_macro_grid_pointer );
 
+  std :: cout << "Created Grid Partition for the Grid of the homogenized Problem." << std :: endl;
+
+
   GridType &grid = gridPart.grid();
   GridType &gridFine = gridPartFine.grid();
   GridType &gridHomog = gridPartHomog.grid();
+
+  std :: cout << "Created Grids." << std :: endl;
 
   //! --------------------------------------------------------------------------------------
 
@@ -270,6 +287,8 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
   // the local-problem function space:
   DiscreteFunctionSpaceType refSimplexDiscreteFunctionSpace( refSimplexGridPart );
+
+  std :: cout << "Created Discrete Function Spaces." << std :: endl;
 
   //! --------------------------------------------------------------------------------------
 
@@ -373,7 +392,12 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
 #ifdef FINE_SCALE_REFERENCE
 
-  RangeType msfem_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution, fine_scale_fem_solution);
+  RangeType msfem_error;
+  if ( refinement_level_finescale_referenceprob_ == refinement_level_homogenized_prob_ )
+    { msfem_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution, fine_scale_fem_solution); }
+  else
+    { msfem_error = impL2error.norm_L2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution, fine_scale_fem_solution); }
+
 
   std :: cout << "|| u_msfem - u_fine_scale ||_L2 =  " << msfem_error << std :: endl << std :: endl;
   if (data_file.is_open())
@@ -424,23 +448,23 @@ void algorithm ( GridPointerType &macro_grid_pointer_msfem_sol, // grid pointer 
 
 }
 
-int main()
+int main(int argc, char** argv)
 {
 
-
-
+  Dune::MPIManager::initialize(argc, argv);
 
   // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-  refinement_level_macrogrid_ = 4;
+  refinement_level_macrogrid_ = 6;
 
   // grid refinement level for solving the cell problems, i.e. it describes 'h':
-  refinement_level_grid_T0_ = 4;
+  refinement_level_grid_T0_ = 14;
 
   // grid refinement level of the solution of the fine-scale reference problem
-  refinement_level_finescale_referenceprob_ = 4;
+  refinement_level_finescale_referenceprob_ = 14;
+  //refinement_level_finescale_referenceprob_2_ = 4; // in case of two ref. problems.
 
   // grid refinement level of the solution of the homogenized problem
-  refinement_level_homogenized_prob_ = 4;
+  refinement_level_homogenized_prob_ = 12;
 
 
 
@@ -569,23 +593,27 @@ int main()
   ref_simplex_grid_pointer->globalRefine( refinement_level_grid_T0_ );
 
 
+
   // to save all information in a file
   std :: ofstream data_file( (save_filename).c_str() );
   if (data_file.is_open())
             {
                data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std :: endl << std :: endl;
-               data_file << "For details on problem and method, see 'problem-info.txt'." << std :: endl;
+               data_file << "For details on problem and method, see 'problem-info.txt'." << std :: endl << std :: endl;
+               data_file << "Refinement level of finescale reference problem: " << refinement_level_finescale_referenceprob_ << std :: endl << std :: endl;
+               data_file << "Refinement level of homogenized problem: " << refinement_level_homogenized_prob_ << std :: endl << std :: endl;
                data_file << "This file just contains the associated L2 and H1 errors." << std :: endl << std :: endl;
                data_file << std :: endl << std :: endl;
             }
 
   algorithm( macro_grid_pointer_msfem_sol,
-                fine_macro_grid_pointer,
-                homog_macro_grid_pointer,
-                ref_simplex_grid_pointer,
-                data_file );
+             fine_macro_grid_pointer,
+             homog_macro_grid_pointer,
+             ref_simplex_grid_pointer,
+             data_file );
 
   data_file.close();
+
 
   return 0;
 

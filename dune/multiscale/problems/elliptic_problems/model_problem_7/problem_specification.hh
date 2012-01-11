@@ -97,7 +97,7 @@ namespace Problem
 
     inline int get_Number_of_Model_Problem ( ) const
     {
-      return 6;
+      return 7;
     }
 
     // epsilon (the smaller epsilon, the finer the micro-structure)
@@ -129,7 +129,7 @@ namespace Problem
     inline void getMacroGridFile ( std :: string &macroGridName ) const
     {
       //name and location of the grid file that describes the macro-grid:
-      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/cube_one.dgf" );
+      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf" );
       macroGridName = macro_grid_location;
     }
 

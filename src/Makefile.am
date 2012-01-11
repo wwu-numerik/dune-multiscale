@@ -1,13 +1,17 @@
 
 SUBDIRS =
 
-noinst_PROGRAMS = elliptic_hmm elliptic_msfem error_computation
+noinst_PROGRAMS = elliptic_hmm elliptic_msfem error_computation elliptic_sparse_hmm l2projection
 
 elliptic_hmm_SOURCES = elliptic_hmm.cc
 
 elliptic_msfem_SOURCES = elliptic_msfem.cc
 
 error_computation_SOURCES = error_computation.cc
+
+elliptic_sparse_hmm_SOURCES = elliptic_sparse_hmm.cc
+
+l2projection_SOURCES = l2projection.cc
 
 elliptic_hmm_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
@@ -24,6 +28,20 @@ elliptic_msfem_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(ALUGRID_CPPFLAGS)
 
 error_computation_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS) \
+	$(UG_CPPFLAGS) \
+	$(AMIRAMESH_CPPFLAGS) \
+	$(ALBERTA_CPPFLAGS) \
+	$(ALUGRID_CPPFLAGS)
+
+elliptic_sparse_hmm_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS) \
+	$(UG_CPPFLAGS) \
+	$(AMIRAMESH_CPPFLAGS) \
+	$(ALBERTA_CPPFLAGS) \
+	$(ALUGRID_CPPFLAGS)
+
+l2projection_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
 	$(UG_CPPFLAGS) \
 	$(AMIRAMESH_CPPFLAGS) \
@@ -81,6 +99,37 @@ error_computation_LDFLAGS = $(AM_LDFLAGS) \
 	$(ALUGRID_LDFLAGS) \
 	$(DUNE_LDFLAGS)
 
+elliptic_sparse_hmm_LDADD = \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
+	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
+	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
+	$(UG_LDFLAGS) $(UG_LIBS) \
+	$(DUNEMPILIBS)	\
+	$(LDADD)
+elliptic_sparse_hmm_LDFLAGS = $(AM_LDFLAGS) \
+	$(DUNEMPILDFLAGS) \
+	$(UG_LDFLAGS) \
+	$(AMIRAMESH_LDFLAGS) \
+	$(ALBERTA_LDFLAGS) \
+	$(ALUGRID_LDFLAGS) \
+	$(DUNE_LDFLAGS)
+
+l2projection_LDADD = \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
+	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
+	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
+	$(UG_LDFLAGS) $(UG_LIBS) \
+	$(DUNEMPILIBS)	\
+	$(LDADD)
+l2projection_LDFLAGS = $(AM_LDFLAGS) \
+	$(DUNEMPILDFLAGS) \
+	$(UG_LDFLAGS) \
+	$(AMIRAMESH_LDFLAGS) \
+	$(ALBERTA_LDFLAGS) \
+	$(ALUGRID_LDFLAGS) \
+	$(DUNE_LDFLAGS)
 # don't follow the full GNU-standard
 # we need automake 1.5
 AUTOMAKE_OPTIONS = foreign 1.5

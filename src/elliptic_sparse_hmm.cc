@@ -36,13 +36,15 @@
 //-----------------------------
 
 
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
+
+
 //! do we have a linear elliptic problem?
 // if yes, #define LINEAR_PROBLEM
 // MsFEM currently only works for linear problems
 #define LINEAR_PROBLEM
-
-//! MsFEM in Petrov-Galerkin formulation (PGF) or standard MsFEM formulation?
-#define PGF
 
 //! is an exact solution available?
 // this information should be provided by the 'problem specification file'
@@ -77,30 +79,15 @@
 
 #endif
 
-
-//! Do we have a HMM reference solution? (precomputed detailed HMM simulation)
-// we might use a detailed HMM computation as a reference! (if it is available)
-//#define HMM_REFERENCE
-
 //! Do we write the discrete MsFEM solution to a file? (for later usage)
 #define WRITE_MSFEM_SOL_TO_FILE
-
-//! Do we want to add a stochastic perturbation on the data?
-//#define STOCHASTIC_PERTURBATION
-#ifdef STOCHASTIC_PERTURBATION
- // size of variance:
- #define VARIANCE 0.01
- //! Do we want to force the algorithm to come to an end?
- // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht erreicht etc.)
- #define FORCE
-#endif
-
-
 
 //!NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in problem_specification.hh), which provides us with information about the problem itself.
 // MsFEM Assembler, Error Estimator, ... they all hark back to 'ModelProblemData'. Probably there is a better solution, but for me, it works perfectly.
 
-
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
 
 
 
@@ -132,6 +119,7 @@
 
 
 #include <dune/fem/gridpart/gridpart.hh>
+#include <dune/fem/gridpart/periodicgridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 
 #include <dune/fem/space/lagrangespace.hh>
@@ -158,26 +146,87 @@
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_7/problem_specification.hh>
 
 
 #include <dune/multiscale/operators/righthandside_assembler.hh>
 
 #include <dune/multiscale/operators/disc_func_writer/discretefunctionwriter.hh>
 
+
+
+
+
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 #include <dune/multiscale/operators/msfem_localproblems/localproblemsolver.hh>
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
+
+
+
 
 #include <dune/multiscale/operators/meanvalue.hh>
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/operators/matrix_assembler/elliptic_fem_matrix_assembler.hh>
+
+
+
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
+
 #include <dune/multiscale/operators/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
 
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
+
 //! (very restrictive) homogenizer
-#ifdef LINEAR_PROBLEM
 #include <dune/multiscale/operators/homogenizer/elliptic_analytical_homogenizer.hh>
 #include <dune/multiscale/operators/homogenizer/elliptic_homogenizer.hh>
+
 #endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
+
+
+
+
+//! TEST!!
+#if 1
+
+#include <dune/multiscale/space/ownbasisspace/reducedbasisspace.hh>
+
+#endif
+
+
+
+
+
+
 
 using namespace Dune;
 
@@ -284,12 +333,31 @@ typedef DiscreteFunctionType :: DofIteratorType DofIteratorType;
 
 
 
+//! --------- typedefs for the periodic micro grid and the corresponding discrete space ----
+
+typedef PeriodicLeafGridPart< GridType > PeriodicGridPartType;
+
+typedef LagrangeDiscreteFunctionSpace
+        < FunctionSpaceType, PeriodicGridPartType, 1 > // 1 =POLORDER
+  PeriodicDiscreteFunctionSpaceType;
+
+typedef AdaptiveDiscreteFunction < PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
+
+//!-----------------------------------------------------------------------------------------
+
+
+
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 //! ------------ cell problem solver and numbering manager -----------------------------------------
 
 typedef LocalProblemNumberingManager< DiscreteFunctionSpaceType > LocProbNumberingManagerType;
 
 //!-----------------------------------------------------------------------------------------
-
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
 
 //! --------------------- the standard matrix traits -------------------------------------
 
@@ -330,8 +398,21 @@ typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseF
 // discrete elliptic operator (corresponds with FEM Matrix)
 typedef DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
 
+
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
+
+
 // discrete elliptic HMM operator (corresponds with HMM (or HMFEM) Matrix)
 typedef DiscreteEllipticMsFEMOperator< DiscreteFunctionType, DiffusionType, LocProbNumberingManagerType > EllipticMsFEMOperatorType;
+
+
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
+
 
 //! --------------------------------------------------------------------------------------
 
@@ -406,7 +487,7 @@ public:
   std::string path() const 
     {
       if (my_path_ == "")
-        return "data_output_hmm";
+        return "data_output_sparse_hmm";
       else
         return my_path_;
 
@@ -431,7 +512,9 @@ public:
 
 
 
-
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 //!------------------------- for adaptive grid refinement ---------------------------------
 
 //! For adaption:
@@ -444,6 +527,10 @@ typedef AdaptationManager< GridType, RestrictProlongOperatorType >
   AdaptationManagerType;
 
 //!---------------------------------------------------------------------------------------
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
 
 
 
@@ -543,6 +630,9 @@ void algorithm ( std :: string &RefElementName,
 {
 
 
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
   //! ---- tools ----
 
   // model problem data
@@ -552,6 +642,10 @@ void algorithm ( std :: string &RefElementName,
 
   // expensive hack to deal with discrete functions, defined on different grids
   ImprovedL2Error< DiscreteFunctionType > impL2error;
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
 
   //! ---------------------------- grid parts ----------------------------------------------
 
@@ -638,9 +732,10 @@ void algorithm ( std :: string &RefElementName,
   RangeType size_of_domain = get_size_of_domain(discreteFunctionSpace);
 
 
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 #ifdef HOMOGENIZEDSOL_AVAILABLE
-
- #ifdef LINEAR_PROBLEM
 
   std :: string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
   FieldMatrix< RangeType, dimension, dimension > A_hom;
@@ -700,6 +795,10 @@ void algorithm ( std :: string &RefElementName,
  #endif
 
 #endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
+
 
 
 #ifdef FINE_SCALE_REFERENCE
@@ -731,8 +830,6 @@ void algorithm ( std :: string &RefElementName,
   fem_solution.clear();
   // By fem_solution, we denote the "fine scale reference solution" (used for comparison)
   // ( if the elliptic problem is linear, the 'fem_solution' is determined without the Newton method )
-
-#ifdef LINEAR_PROBLEM
 
   std :: cout << "Solving linear problem." << std :: endl;
   if (data_file.is_open())
@@ -772,12 +869,13 @@ void algorithm ( std :: string &RefElementName,
       data_file << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
     }
 
-#endif
-
   //! ********************** End of assembling the reference problem ***************************
 #endif
 //end FSR_COMPUTE
 
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 #ifdef FSR_LOAD
 
   DiscreteFunctionType fem_solution( filename_ + " Reference (FEM Newton) Solution", finerDiscreteFunctionSpace );
@@ -808,77 +906,16 @@ void algorithm ( std :: string &RefElementName,
 
 #endif
 //end FSR_LOAD
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
 
 // end: FINE_SCALE_REFERENCE defined or not defined
 #endif 
 
-//noch per Hand die Daten eingetragen:
-#ifdef HMM_REFERENCE
-
-  int gridLevel_refHMM = 10; // Macro_'gridLevel'
-
-  std :: string macroGridName_refHMM;
-  problem_info.getMacroGridFile( macroGridName_refHMM );
-  std :: cout << "loading dgf: " << macroGridName_refHMM << std :: endl;
-
-  // create a grid pointer for the DGF file belongig to the macro grid:
-  GridPointerType macro_grid_pointer_refHMM( macroGridName_refHMM );
-  // refine the grid 'gridLevel_refHMM' times:
-  macro_grid_pointer_refHMM->globalRefine( gridLevel_refHMM );
-
-  GridPartType gridPart_refHMM( *macro_grid_pointer_refHMM);
-  GridType &grid_refHMM = gridPart_refHMM.grid();
-
-  DiscreteFunctionSpaceType discreteFunctionSpace_refHMM( gridPart_refHMM );
-
-  DiscreteFunctionType hmm_reference_solution( filename_ + " Reference (HMM) Solution", discreteFunctionSpace_refHMM );
-  hmm_reference_solution.clear();
-
-#if 0
-  char modeprob_name[50];
-  sprintf( modeprob_name, "/Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
-  std::string modeprob_name_s(modeprob_name);
-
-  char reference_msfem_solution_directory[50];
-  sprintf( reference_msfem_solution_directory, ".......", 10 );
-  std::string reference_solution_directory_s(reference_solution_directory);
-
-  char reference_solution_name[50];
-  sprintf( reference_solution_name, "....", refinement_level_referenceprob_ );
-  std::string reference_solution_name_s(reference_solution_name);
-
-  std :: string location_hmm_ref = "data/MsFEM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
-#endif
-
-  std :: string location_hmm_ref = "data/MsFEM/Model_Problem_1/Macro_10_Micro_8/msfem_solution_discFunc_refLevel_10";
-
-  bool hmm_ref_reader_is_open = false;
-
-  // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_hmm_ref( (location_hmm_ref).c_str() );
-  discrete_function_reader_hmm_ref.open();
-
-  discrete_function_reader_hmm_ref.read( 0, hmm_reference_solution );
-  std :: cout << "HMM reference read." << std :: endl;
-
-#endif
-
 
   //! ************************* Assembling and solving the MsFEM problem ****************************
-
-#ifdef ADAPTIVE
-// number of the loop cycle of the while-loop
-int loop_cycle = 1;
-double total_hmm_time = 0.0;
-bool repeat = true;
-while ( repeat == true )
-{
-
-  if (data_file.is_open())
-    {
-      data_file << "########################### LOOP CYCLE " << loop_cycle << " ###########################" << std :: endl << std :: endl << std :: endl;
-    }
-#endif
 
   std::cout << std :: endl << "Solving MsFEM-macro-problem for " << discreteFunctionSpace.size()
             << " unkowns and polynomial order "
@@ -889,17 +926,61 @@ while ( repeat == true )
   //----------------------- THE DISCRETE HMM OPERATOR -----------------------------------//
   //----------------------------------------------------------------------------------------------//
 
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
   // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain local problem
   LocProbNumberingManagerType lp_num_manager( discreteFunctionSpace, refSimplexDiscreteFunctionSpace, filename_);
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
 
 
-  //! define the elliptic hmm operator that describes our 'homogenized' macro problem
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
+  //! define the elliptic sparse hmm operator that describes our 'homogenized' macro problem
   // ( effect of the elliptic hmm operator on a certain discrete function )
   EllipticMsFEMOperatorType discrete_elliptic_msfem_op( discreteFunctionSpace, refSimplexDiscreteFunctionSpace, diffusion_op, lp_num_manager, filename_);
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
 
   //----------------------------------------------------------------------------------------------//
   //----------------------------------------------------------------------------------------------//
   //----------------------------------------------------------------------------------------------//
+
+
+//!Testbereich!!!
+#if 1
+
+typedef DiscreteFunctionSpaceType :: BaseFunctionSetType BaseFunctionSet;
+
+
+//const BaseFunctionSet &baseSet = discreteFunctionSpace.baseFunctionSet();
+
+
+
+
+
+
+
+
+
+
+
+
+#endif
+
+
+
+
+
+
+
+
+
 
   //! matrix
   FEMMatrix msfem_matrix( "MsFEM stiffness matrix", discreteFunctionSpace, discreteFunctionSpace );
@@ -918,7 +999,9 @@ while ( repeat == true )
   DiscreteFunctionType zero_func_coarse( filename_ + " constant zero function coarse ", discreteFunctionSpace );
   zero_func_coarse.clear();
 
-#ifdef LINEAR_PROBLEM
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 
   // solve cell problems in a preprocess
   //! -------------- solve and save the cell problems for the base function set --------------------------------------
@@ -989,10 +1072,14 @@ while ( repeat == true )
     }
 
 #endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
 
 
 
-
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 #ifdef WRITE_MSFEM_SOL_TO_FILE
 
   bool writer_is_open = false;
@@ -1008,9 +1095,14 @@ while ( repeat == true )
     dfw.append( msfem_solution );
 
 #endif
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
 
 
-
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 #ifdef HOMOGENIZEDSOL_AVAILABLE
 
   bool hom_writer_is_open = false;
@@ -1026,9 +1118,14 @@ while ( repeat == true )
     hom_dfw.append( homogenized_solution );
 
 #endif
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
 
 
-
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 #ifdef FINE_SCALE_REFERENCE
 
  #ifdef WRITE_FINESCALE_SOL_TO_FILE
@@ -1048,9 +1145,15 @@ while ( repeat == true )
  #endif
 
 #endif
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
 
   //! ******************** End of assembling and solving the MsFEM problem ***************************
 
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
   std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
   if (data_file.is_open())
     { data_file << "The L2 errors:" << std :: endl << std :: endl; }
@@ -1096,30 +1199,6 @@ while ( repeat == true )
 
 
 
-
-#ifdef HMM_REFERENCE
-  long double timeadapthmmref = clock();
-
-  RangeType msfem_vs_hmm_ref_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution,hmm_reference_solution);
-
-  std :: cout << "|| u_msfem - u_hmm_ref ||_L2 =  " << msfem_vs_hmm_ref_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-         { data_file << "|| u_msfem - u_hmm_ref ||_L2 =  " << msfem_vs_hmm_ref_error << std :: endl; }
-
-  timeadapthmmref = clock() - timeadapthmmref;
-  timeadapthmmref = timeadapthmmref / CLOCKS_PER_SEC;
-
-  // if it took longer then 1 minute to compute the error:
-  if ( timeadapthmmref > 60 )
-   {
-     std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std :: endl << std :: endl;
-
-     if (data_file.is_open())
-         { std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std :: endl << std :: endl; }
-   }
-#endif
-
-
 #ifdef HOMOGENIZEDSOL_AVAILABLE
 // not yet modified according to a generalized L2-error, here, homogenized_solution and fem_solution still need to be defined on the same grid!
   #ifdef FINE_SCALE_REFERENCE
@@ -1163,6 +1242,15 @@ while ( repeat == true )
 
 //! -------------------------------------------------------
 
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
+
+
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Aus der alten MsFEM VERsion des Programms:
+#if 0
 
 //! --------------- writing data output ---------------------
 
@@ -1175,17 +1263,11 @@ while ( repeat == true )
   std::stringstream outstring;
 
 
-  // --------- data output hmm solution --------------
+  // --------- data output sparse hmm solution --------------
 
   // create and initialize output class
   IOTupleType msfem_solution_series( &msfem_solution );
-  #ifdef ADAPTIVE
-  char msfem_prefix[30];
-  sprintf( msfem_prefix, "msfem_solution_%d", loop_cycle );
-  outputparam.set_prefix( msfem_prefix );
-  #else
   outputparam.set_prefix("msfem_solution");
-  #endif
   DataOutputType msfemsol_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
 
   // write data
@@ -1252,6 +1334,10 @@ while ( repeat == true )
 
 //!-------------------------------------------------------------
 
+#endif
+//! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+///! Ende "Aus der alten MsFEM VERsion des Programms"
+
 }
 
 int main(int argc, char** argv)
@@ -1309,9 +1395,9 @@ int main(int argc, char** argv)
   refinement_level_macrogrid_ = atoi( argv[ 1 ] );
 
   // grid refinement level for solving the cell problems, i.e. it describes 'h':
-  int refinement_level_grid_T0;
-  std :: cout << "Enter refinement level for the local problems: ";
-  std :: cin >> refinement_level_grid_T0;
+  int refinement_level_cellgrid;
+  std :: cout << "Enter refinement level for the cell problems: ";
+  std :: cin >> refinement_level_cellgrid;
   std :: cout << std :: endl;
 
 
@@ -1348,14 +1434,12 @@ int main(int argc, char** argv)
 
 
   // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
-  std :: string RefElementName( "../dune/multiscale/grids/cell_grids/ref_simplex_2d.dgf" ); // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2
- // std :: string RefElementName( "../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf" );
-
-
-  // to solve the local MsFEM problems, we always need a gridPart for T_0.
-  // Here it is always the refernece simplex that needs to be used (after transformation, local problems are always formulated on such a grid )
-  GridPtr< GridType > ref_simplex_grid_pointer( RefElementName );
-  ref_simplex_grid_pointer->globalRefine( refinement_level_grid_T0 );
+  std :: string UnitCubeName( "../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf" ); // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2
+  // note that the centering is fundamentaly important for the implementation. Do NOT change it to e.g. [0,1]^2!!!
+  // to solve the cell problems, we always need a periodic gridPart.
+  // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated on such a grid )
+  GridPtr< GridType > unit_cell_grid_pointer( UnitCubeName );
+  unit_cell_grid_pointer->globalRefine( refinement_level_cellgrid );
 
 
   // to save all information in a file
@@ -1363,11 +1447,7 @@ int main(int argc, char** argv)
   if (data_file.is_open())
             {
                data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std :: endl << std :: endl;
-#ifdef LINEAR_PROBLEM
                data_file << "Problem is declared as being LINEAR." << std :: endl;
-#else
-               data_file << "Problem is declared as being NONLINEAR." << std :: endl;
-#endif
 #ifdef EXACTSOLUTION_AVAILABLE
                data_file << "Exact solution is available." << std :: endl << std :: endl;
 #else
@@ -1375,26 +1455,20 @@ int main(int argc, char** argv)
 #endif
                data_file << "Computations were made for:" << std :: endl << std :: endl;
                data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std :: endl;
-               data_file << "Refinement Level for Micro Grid (grid on macro entity) = " << refinement_level_grid_T0 << std :: endl << std :: endl;
-#ifdef PGF
-               data_file << "We use MsFEM in Petrov-Galerkin formulation." << std :: endl;
-#else
-               data_file << "We use MsFEM in its standard formulation." << std :: endl;
-#endif
+               data_file << "Refinement Level for Micro Grid (grid on unit cube) = " << refinement_level_cellgrid << std :: endl << std :: endl;
+
+               data_file << "We use a Sparse Grid HMM." << std :: endl;
                data_file << "Cell problems are solved and saved (in a pre-process)." << std :: endl << std :: endl;
                data_file << "Epsilon = " << epsilon_ << std :: endl;
                data_file << "Estimated Epsilon = " << epsilon_est_ << std :: endl;
                data_file << "Delta (edge length of cell-cube) = " << delta_ << std :: endl;
-#ifdef STOCHASTIC_PERTURBATION
-               data_file << std :: endl << "Stochastic perturbation added. Variance = " << VARIANCE << std :: endl;
-#endif
                data_file << std :: endl << std :: endl;
             }
 
-     algorithm( RefElementName,
+     algorithm( UnitCubeName,
                 macro_grid_pointer,
                 fine_macro_grid_pointer,
-                ref_simplex_grid_pointer,
+                unit_cell_grid_pointer,
                 refinement_difference_for_referenceproblem,
                 data_file );
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the normal macro problem
