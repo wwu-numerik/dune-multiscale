@@ -669,8 +669,8 @@ namespace Dune
          std :: abort();
        }
 
-      cell_solution_location_baseSet = "data/" + filename + "/cell_problems/_cellSolutions_baseSet";
-      cell_solution_location_discFunc = "data/" + filename + "/cell_problems/_cellSolutions_discFunc";
+      cell_solution_location_baseSet = "data/HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
+      cell_solution_location_discFunc = "data/HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
 
       bool reader_is_open = false;
 

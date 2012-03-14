@@ -369,9 +369,9 @@ namespace Dune
     if ( filename_ )
      {
       // place, where we saved the solutions of the cell problems
-      cell_solution_location_baseSet = "data/"+(*filename_)+"/cell_problems/_cellSolutions_baseSet";
-      cell_solution_location_discFunc = "data/"+(*filename_)+"/cell_problems/_cellSolutions_discFunc";
-      jac_cor_cell_solution_location_baseSet_discFunc = "data/"+(*filename_)+"/cell_problems/_JacCorCellSolutions_baseSet_discFunc";
+      cell_solution_location_baseSet = "data/HMM/"+(*filename_)+"/cell_problems/_cellSolutions_baseSet";
+      cell_solution_location_discFunc = "data/HMM/"+(*filename_)+"/cell_problems/_cellSolutions_discFunc";
+      jac_cor_cell_solution_location_baseSet_discFunc = "data/HMM/"+(*filename_)+"/cell_problems/_JacCorCellSolutions_baseSet_discFunc";
      }
     else
      {

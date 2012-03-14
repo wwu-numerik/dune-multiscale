@@ -38,7 +38,7 @@
 
 //! do we have a linear elliptic problem?
 // if yes, #define LINEAR_PROBLEM
-//#define LINEAR_PROBLEM
+// #define LINEAR_PROBLEM
 
 //! TFR-HMM or simple HMM?
 //#define TFR
@@ -89,7 +89,7 @@
 // Not possible for ad-hoc computations! (in this case, error estimation is far too expensive)
 #ifndef AD_HOC_COMPUTATION
   //
-  #define ERRORESTIMATION
+  //#define ERRORESTIMATION
   // only possible if we use error estimation:
   #ifdef ERRORESTIMATION
    // Do you want to allow adaptive mesh refinement?
@@ -222,7 +222,7 @@ namespace Multiscale
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_2/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_8/problem_specification.hh>
 
 
 #include <dune/multiscale/operators/righthandside_assembler.hh>
@@ -710,26 +710,26 @@ void algorithm ( std :: string &UnitCubeName,
   std :: string discFunc_location_2;
 
 
-//    discFunc_location_1 = "data/Model_Problem_1/Macro_6_Micro_2/hmm_solution_discFunc_refLevel_6";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8_tolerance3.5e-06/hmm_solution_discFunc_refLevel_10";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_6_Micro_6/hmm_solution_discFunc_refLevel_6";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
-//  discFunc_location_1 = "data/Model_Problem_2/reference_solution_ref_16/finescale_solution_discFunc_refLevel_16";
-//  discFunc_location_1 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
-//  discFunc_location_1 = "data/Model_Problem_2/Macro_8_Micro_10_OVERSAMPLING/hmm_solution_discFunc_refLevel_8";
-  discFunc_location_1 = "data/Model_Problem_2/Macro_6_Micro_6_tol_1e-08/hmm_solution_discFunc_refLevel_6";
-//  discFunc_location_1 = "data/Model_Problem_2/Macro_4_Micro_10_STRANGE_OVERSAMPLING_TFR/hmm_solution_discFunc_refLevel_4";
+//    discFunc_location_1 = "data/HMM/Model_Problem_1/Macro_6_Micro_2/hmm_solution_discFunc_refLevel_6";
+//  discFunc_location_1 = "data/HMM/Model_Problem_1/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
+//  discFunc_location_1 = "data/HMM/Model_Problem_1/Macro_10_Micro_8_tolerance3.5e-06/hmm_solution_discFunc_refLevel_10";
+//  discFunc_location_1 = "data/HMM/Model_Problem_1/Macro_6_Micro_6/hmm_solution_discFunc_refLevel_6";
+//  discFunc_location_1 = "data/HMM/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
+//  discFunc_location_1 = "data/HMM/Model_Problem_2/reference_solution_ref_16/finescale_solution_discFunc_refLevel_16";
+//  discFunc_location_1 = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+//  discFunc_location_1 = "data/HMM/Model_Problem_2/Macro_8_Micro_10_OVERSAMPLING/hmm_solution_discFunc_refLevel_8";
+  discFunc_location_1 = "data/HMM/Model_Problem_2/Macro_6_Micro_6_tol_1e-08/hmm_solution_discFunc_refLevel_6";
+//  discFunc_location_1 = "data/HMM/Model_Problem_2/Macro_4_Micro_10_STRANGE_OVERSAMPLING_TFR/hmm_solution_discFunc_refLevel_4";
 
 
-//  discFunc_location_2 = "data/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
-//  discFunc_location_2 = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
-//  discFunc_location_2 = "data/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
-//  discFunc_location_2 = "data/Model_Problem_2/Macro_4_Micro_6_OVERSAMPLING/hmm_solution_discFunc_refLevel_4";
-  discFunc_location_2 = "data/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
-//  discFunc_location_2 = "data/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING/hmm_solution_discFunc_refLevel_2";
-//  discFunc_location_2 = "data/Model_Problem_2/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
-//  discFunc_location_2 = "data/Model_Problem_2/zzz_inProgress/done/DELTA_0.1_EPSILON_0.05/Macro_8_Micro_10/hmm_solution_discFunc_refLevel_8";
+//  discFunc_location_2 = "data/HMM/Model_Problem_1/Macro_8_Micro_8/hmm_solution_discFunc_refLevel_8";
+//  discFunc_location_2 = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+//  discFunc_location_2 = "data/HMM/Model_Problem_1/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+//  discFunc_location_2 = "data/HMM/Model_Problem_2/Macro_4_Micro_6_OVERSAMPLING/hmm_solution_discFunc_refLevel_4";
+  discFunc_location_2 = "data/HMM/Model_Problem_2/reference_solution_ref_18/finescale_solution_discFunc_refLevel_18";
+//  discFunc_location_2 = "data/HMM/Model_Problem_2/Macro_2_Micro_8_STRANGE_OVERSAMPLING/hmm_solution_discFunc_refLevel_2";
+//  discFunc_location_2 = "data/HMM/Model_Problem_2/Macro_4_Micro_4/hmm_solution_discFunc_refLevel_4";
+//  discFunc_location_2 = "data/HMMModel_Problem_2/zzz_inProgress/done/DELTA_0.1_EPSILON_0.05/Macro_8_Micro_10/hmm_solution_discFunc_refLevel_8";
 
   int gridLevel_1 = 6; // Macro_'gridLevel_1'...
   int gridLevel_2 = 18; // Macro_'gridLevel_2'...
@@ -809,7 +809,7 @@ void algorithm ( std :: string &UnitCubeName,
 #if 0
   // general output parameters
   myDataOutputParameters outputparam_1_vorher;
-  outputparam_1_vorher.set_path( "data/" );
+  outputparam_1_vorher.set_path( "data/HMM/" );
 
   // sequence stamp
   std::stringstream outstring_1_vorher;
@@ -865,7 +865,7 @@ void algorithm ( std :: string &UnitCubeName,
 #if 0
   // general output parameters
   myDataOutputParameters outputparam_1;
-  outputparam_1.set_path( "data/" );
+  outputparam_1.set_path( "data/HMM/" );
 
   // sequence stamp
   std::stringstream outstring_1;
@@ -884,7 +884,7 @@ void algorithm ( std :: string &UnitCubeName,
 
 
   myDataOutputParameters outputparam_2;
-  outputparam_2.set_path( "data/" );
+  outputparam_2.set_path( "data/HMM/" );
 
   // sequence stamp
   std::stringstream outstring_2;
@@ -1247,7 +1247,7 @@ void algorithm ( std :: string &UnitCubeName,
   sprintf( reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
   std::string reference_solution_name_s(reference_solution_name);
 
-  std :: string location_fine_scale_ref = "data/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
+  std :: string location_fine_scale_ref = "data/HMM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
 
   bool reader_is_open = false;
 
@@ -1299,10 +1299,10 @@ void algorithm ( std :: string &UnitCubeName,
   sprintf( reference_solution_name, "....", refinement_level_referenceprob_ );
   std::string reference_solution_name_s(reference_solution_name);
 
-  std :: string location_hmm_ref = "data/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
+  std :: string location_hmm_ref = "data/HMM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
 #endif
 
-  std :: string location_hmm_ref = "data/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+  std :: string location_hmm_ref = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
 
   bool hmm_ref_reader_is_open = false;
 
@@ -1391,13 +1391,13 @@ while ( repeat == true )
   std :: cout << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std :: endl;
 
   // generate directory for cell problem data output
-  if (mkdir(("data/" + filename_ + "/cell_problems/").c_str() DIRMODUS) == -1)
+  if (mkdir(("data/HMM/" + filename_ + "/cell_problems/").c_str() DIRMODUS) == -1)
    {
     std::cout << "WARNING! Directory for the solutions of the cell problems already exists!";
    }
   else
    {
-     mkdir(("data/" + filename_ + "/cell_problems/").c_str() DIRMODUS);
+     mkdir(("data/HMM/" + filename_ + "/cell_problems/").c_str() DIRMODUS);
    }
 
   // -------------- solve cell problems for the macro basefunction set ------------------------------
@@ -1467,13 +1467,13 @@ while ( repeat == true )
    std :: cout << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std :: endl;
 
    // generate directory for cell problem data output
-   if (mkdir(("data/" + filename_ + "/cell_problems/").c_str() DIRMODUS) == -1)
+   if (mkdir(("data/HMM/" + filename_ + "/cell_problems/").c_str() DIRMODUS) == -1)
     {
      std::cout << "WARNING! Directory for the solutions of the cell problems already  exists!";
     }
    else
     {
-      mkdir(("data/" + filename_ + "/cell_problems/").c_str() DIRMODUS);
+      mkdir(("data/HMM/" + filename_ + "/cell_problems/").c_str() DIRMODUS);
     }
 
    // only for the case with test function reconstruction:
@@ -1519,12 +1519,12 @@ while ( repeat == true )
 
   #ifdef RESUME_TO_BROKEN_COMPUTATION
   
-  //std :: string location_hmm_newton_step_solution = "data/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
+  //std :: string location_hmm_newton_step_solution = "data/HMM/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
 
   char fnewtonname[50];
   sprintf( fnewtonname, "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d", refinement_level_macrogrid_, HMM_NEWTON_ITERATION_STEP );
   std :: string fnewtonname_s( fnewtonname );
-  std :: string location_hmm_newton_step_solution = "data/" + filename_ + fnewtonname_s;
+  std :: string location_hmm_newton_step_solution = "data/HMM/" + filename_ + fnewtonname_s;
 
   bool reader_open = false;
 
@@ -1661,7 +1661,7 @@ while ( repeat == true )
           sprintf( fname, "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d", refinement_level_macrogrid_, hmm_iteration_step );
           std :: string fname_s( fname );
 
-          std :: string location = "data/" + filename_ + fname_s;
+          std :: string location = "data/HMM/" + filename_ + fname_s;
           DiscreteFunctionWriter dfw( (location).c_str() );
           writer_open = dfw.open();
           if ( writer_open )
@@ -1674,7 +1674,7 @@ while ( repeat == true )
 
           // general output parameters
           myDataOutputParameters outputparam;
-          outputparam.set_path( "data/" + filename_ );
+          outputparam.set_path( "data/HMM/" + filename_ );
 
 	  // sequence stamp
           std::stringstream outstring;
@@ -1784,8 +1784,8 @@ while ( repeat == true )
   // location of the solutions of the cell problems for the discrete function u_H:
   std :: string cell_solution_location_discFunc;
 
-  cell_solution_location_baseSet = "data/"+filename_+"/cell_problems/_cellSolutions_baseSet";
-  cell_solution_location_discFunc = "data/"+filename_+"/cell_problems/_cellSolutions_discFunc";
+  cell_solution_location_baseSet = "data/HMM/"+filename_+"/cell_problems/_cellSolutions_baseSet";
+  cell_solution_location_discFunc = "data/HMM/"+filename_+"/cell_problems/_cellSolutions_discFunc";
 
   // reader for the cell problem data file (for tha macro base set):
   DiscreteFunctionReader discrete_function_reader_baseSet( (cell_solution_location_baseSet).c_str() );
@@ -2009,7 +2009,7 @@ while ( repeat == true )
   sprintf( fname, "/hmm_solution_discFunc_refLevel_%d", refinement_level_macrogrid_ );
   std :: string fname_s( fname );
 
-  std :: string location = "data/" + filename_ + fname_s;
+  std :: string location = "data/HMM/" + filename_ + fname_s;
   DiscreteFunctionWriter dfw( (location).c_str() );
   writer_is_open = dfw.open();
   if ( writer_is_open )
@@ -2030,7 +2030,7 @@ while ( repeat == true )
   sprintf( fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
   std :: string fine_fname_s( fine_fname );
 
-  std :: string fine_location = "data/" + filename_ + fine_fname_s;
+  std :: string fine_location = "data/HMM/" + filename_ + fine_fname_s;
   DiscreteFunctionWriter fine_dfw( (fine_location).c_str() );
   fine_writer_is_open = fine_dfw.open();
   if ( fine_writer_is_open )
@@ -2165,7 +2165,7 @@ while ( repeat == true )
 
   // general output parameters
   myDataOutputParameters outputparam;
-  outputparam.set_path( "data/" + filename_ );
+  outputparam.set_path( "data/HMM/" + filename_ );
 
   // sequence stamp
   std::stringstream outstring;
@@ -2428,7 +2428,7 @@ int main(int argc, char** argv)
   std :: cin >> filename_;
 
   // generate directories for data output
-  if (mkdir(("data/" + filename_).c_str() DIRMODUS) == -1)
+  if (mkdir(("data/HMM/" + filename_).c_str() DIRMODUS) == -1)
    {
     std::cout << "Directory already exists! Overwrite? y/n: ";
     char answer;
@@ -2438,7 +2438,7 @@ int main(int argc, char** argv)
    }
   else
    {
-     mkdir(("data/" + filename_).c_str() DIRMODUS);
+     mkdir(("data/HMM/" + filename_).c_str() DIRMODUS);
    }
 
 
@@ -2446,9 +2446,9 @@ int main(int argc, char** argv)
   #ifdef RESUME_TO_BROKEN_COMPUTATION
   // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
   // (vorlauefig sollte diese Variante aber reichen) 
-  std :: string save_filename = "data/" + filename_ + "/problem-info-resumed-computation.txt";  
+  std :: string save_filename = "data/HMM/" + filename_ + "/problem-info-resumed-computation.txt";  
   #else
-  std :: string save_filename = "data/" + filename_ + "/problem-info.txt";
+  std :: string save_filename = "data/HMM/" + filename_ + "/problem-info.txt";
   #endif
   std :: cout << "Data will be saved under: " << save_filename << std :: endl;
 
@@ -2488,7 +2488,7 @@ int main(int argc, char** argv)
   // in general: for the homogenized case = 11 and for the high resolution case = 14
   // Note that this depends on the model problem!
 #ifndef FINE_SCALE_REFERENCE
-  refinement_level_referenceprob_ = 0;
+  refinement_level_referenceprob_ = 8;
 #endif
 
 

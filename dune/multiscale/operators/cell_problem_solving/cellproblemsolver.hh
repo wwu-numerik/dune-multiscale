@@ -1513,7 +1513,7 @@ public:
 
       bool writer_is_open = false;
 
-      std :: string cell_solution_location = "data/"+filename+"_cellSolutions_baseSet";
+      std :: string cell_solution_location = "data/HMM/"+filename+"_cellSolutions_baseSet";
       DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
 
       writer_is_open = dfw.open();
@@ -1660,7 +1660,7 @@ public:
 
       bool writer_is_open = false;
 
-      std :: string cell_solution_location = "data/"+filename+"_cellSolutions_discFunc";
+      std :: string cell_solution_location = "data/HMM/"+filename+"_cellSolutions_discFunc";
       DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
 
       writer_is_open = dfw.open();
@@ -1733,7 +1733,7 @@ if ( number_of_entity == 341 )
    IOTupleType cellproblem_tuple( &cell_solution_on_entity );
 
    outputparam.set_prefix("cellSolution_saved_");
-   outputparam.set_path( "data/" );
+   outputparam.set_path( "data/HMM/" );
    DataOutputType cellSolution_dataoutput( periodicDiscreteFunctionSpace_.grid(), cellproblem_tuple, outputparam );
 
    // write data
@@ -1814,14 +1814,14 @@ if ( number_of_entity == 341 )
       bool writer_is_open = false;
 
       // where we save the solutions:
-      std :: string cell_solution_location = "data/"+filename+"_JacCorCellSolutions_baseSet_discFunc";
+      std :: string cell_solution_location = "data/HMM/"+filename+"_JacCorCellSolutions_baseSet_discFunc";
       DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
       writer_is_open = dfw.open();
 
 
       // where we saved the solutions for the discrete function
       // NOTE: they already need to be assembled, i.e. we already applied the method saveSolutions_discFunc!
-      std :: string cell_solution_discFunc_location = "data/"+filename+"_cellSolutions_discFunc";
+      std :: string cell_solution_discFunc_location = "data/HMM/"+filename+"_cellSolutions_discFunc";
 
       bool reader_is_open = false;
 
