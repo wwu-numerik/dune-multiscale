@@ -2,7 +2,7 @@ DGF
 Interval
 0.0 0.0              % first corner
 1.0 1.0              % second corner
-2   2                % 4 cells in both directions
+2   2                % 2 cells in both directions
 
 #Vertex        % the verticies of the grid
 #0.0 0.0       % vertex 0

@@ -1,7 +1,7 @@
 
 SUBDIRS =
 
-noinst_PROGRAMS = elliptic_hmm elliptic_msfem error_computation elliptic_sparse_hmm l2projection
+noinst_PROGRAMS = elliptic_hmm elliptic_msfem error_computation elliptic_sparse_hmm l2projection test
 
 elliptic_hmm_SOURCES = elliptic_hmm.cc
 
@@ -12,6 +12,8 @@ error_computation_SOURCES = error_computation.cc
 elliptic_sparse_hmm_SOURCES = elliptic_sparse_hmm.cc
 
 l2projection_SOURCES = l2projection.cc
+
+test_SOURCES = test.cc
 
 elliptic_hmm_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
@@ -42,6 +44,13 @@ elliptic_sparse_hmm_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(ALUGRID_CPPFLAGS)
 
 l2projection_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS) \
+	$(UG_CPPFLAGS) \
+	$(AMIRAMESH_CPPFLAGS) \
+	$(ALBERTA_CPPFLAGS) \
+	$(ALUGRID_CPPFLAGS)
+
+test_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
 	$(UG_CPPFLAGS) \
 	$(AMIRAMESH_CPPFLAGS) \
@@ -124,6 +133,22 @@ l2projection_LDADD = \
 	$(DUNEMPILIBS)	\
 	$(LDADD)
 l2projection_LDFLAGS = $(AM_LDFLAGS) \
+	$(DUNEMPILDFLAGS) \
+	$(UG_LDFLAGS) \
+	$(AMIRAMESH_LDFLAGS) \
+	$(ALBERTA_LDFLAGS) \
+	$(ALUGRID_LDFLAGS) \
+	$(DUNE_LDFLAGS)
+
+test_LDADD = \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
+	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
+	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
+	$(UG_LDFLAGS) $(UG_LIBS) \
+	$(DUNEMPILIBS)	\
+	$(LDADD)
+test_LDFLAGS = $(AM_LDFLAGS) \
 	$(DUNEMPILDFLAGS) \
 	$(UG_LDFLAGS) \
 	$(AMIRAMESH_LDFLAGS) \
