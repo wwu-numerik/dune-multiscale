@@ -548,10 +548,10 @@ abort();
   Dune::SeqILU0 < MatrixType, VectorType, VectorType > ilu0(A,1.0);        // preconditioner object
   Dune::SeqILUn < MatrixType, VectorType, VectorType > ilu1(A,1,0.92);     // preconditioner object
 
-  Dune::LoopSolver< VectorType > loop( op, jac, 1E-4, 18000, 2 );  // an inverse operator 
-  Dune::CGSolver< VectorType > cg(op, ilu0, 1E-4, 8000, 2);        // an inverse operator 
-  Dune::BiCGSTABSolver<VectorType> bcgs(op, ilu1, 1E-8, 8000, 2);  // an inverse operator 
-  Dune::GradientSolver<VectorType> gras(op, jac, 1E-4, 18000, 2);  // an inverse operator 
+  Dune::LoopSolver< VectorType > loop( op, jac, 1E-4, 18000, 2 );      // an inverse operator 
+  Dune::CGSolver< VectorType > cg( op, ilu0, 1E-4, 8000, 2 );          // an inverse operator 
+  Dune::BiCGSTABSolver< VectorType > bcgs( op, ilu1, 1E-8, 8000, 2 );  // an inverse operator 
+  Dune::GradientSolver< VectorType > gras( op, jac, 1E-4, 18000, 2 );  // an inverse operator 
 
   // call the solver
   Dune::InverseOperatorResult r;

@@ -45,11 +45,11 @@
 #include <dune/common/exceptions.hh> // We use exceptions
 
 // for yasp grid
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+// #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 // for ug grid
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
+// #include <dune/grid/io/file/dgfparser/dgfug.hh>
 // for alu grid:
-#include <dune/grid/io/file/dgfparser/dgfalu.hh>
+// #include <dune/grid/io/file/dgfparser/dgfalu.hh>
 // for alberta grid:
 #include <dune/grid/albertagrid/dgfparser.hh>
 
@@ -140,6 +140,19 @@ typedef FunctionSpace < double , double , WORLDDIM , 1 > FunctionSpaceType;
 //!-----------------------------------------------------------------------------------------
 
 
+//! --------- typedefs for the local grid and the corresponding local ('sub') )discrete space -------------
+      
+typedef SubGrid< WORLDDIM , GridType > SubGridType; 
+   
+typedef LeafGridPart< SubGridType > SubGridPartType; 
+   
+typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, SubGridPartType, 1 > //1=POLORDER
+   SubDiscreteFunctionSpaceType;
+   
+typedef AdaptiveDiscreteFunction < SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
+
+//!-----------------------------------------------------------------------------------------
+
 
 
 
@@ -183,7 +196,7 @@ typedef FunctionSpaceType::RangeType RangeType;
 //! see dune/fem/lagrangebase.hh
 typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, GridPartType, 1 > //1=POLORDER
    DiscreteFunctionSpaceType;
-
+   
 
 typedef DiscreteFunctionSpaceType :: DomainFieldType TimeType;
 
@@ -212,6 +225,40 @@ typedef DiscreteFunctionType :: DofIteratorType DofIteratorType;
 //!-----------------------------------------------------------------------------------------
 
 
+
+
+
+//! ---------  typedefs for the local function space (subgrid space) -------------
+
+typedef SubGridType :: Codim<0> :: Entity SubgridEntityType; 
+typedef SubGridType :: Codim<0> :: EntityPointer SubgridEntityPointerType; 
+typedef SubGridType :: Codim<0> :: Geometry SubgridEntityGeometryType; 
+typedef SubGridType :: Codim<1> :: Geometry SubgridFaceGeometryType;
+
+typedef SubDiscreteFunctionSpaceType :: IteratorType SubgridIteratorType;
+
+#if 0
+typedef DiscreteFunctionSpaceType     :: BaseFunctionSetType      BaseFunctionSetType;
+
+typedef CachingQuadrature < GridPartType , 0 > EntityQuadratureType;
+typedef CachingQuadrature < GridPartType , 1 > FaceQuadratureType;
+
+typedef DiscreteFunctionSpaceType :: DomainFieldType TimeType;
+typedef DiscreteFunctionSpaceType :: RangeFieldType RangeFieldType;
+
+typedef AdaptiveDiscreteFunction < DiscreteFunctionSpaceType > DiscreteFunctionType;
+
+
+typedef DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
+typedef DiscreteFunctionType :: DofIteratorType DofIteratorType;
+#endif
+
+//!-----------------------------------------------------------------------------------------
+
+
+
+
+
 //! --------------------- the standard matrix traits -------------------------------------
 
 struct MatrixTraits
@@ -231,9 +278,36 @@ struct MatrixTraits
 //! --------------------------------------------------------------------------------------
 
 
+
+
+//! --------------- the matrix traits for the subgrid matrix -----------------------------
+
+struct SubgridMatrixTraits
+{
+  typedef SubDiscreteFunctionSpaceType RowSubSpaceType;
+  typedef SubDiscreteFunctionSpaceType ColumnSubSpaceType;
+  typedef LagrangeMatrixSetup< false > StencilType;
+  typedef ParallelScalarProduct< SubDiscreteFunctionSpaceType > SubgridParallelScalarProductType;
+
+  template< class M >
+  struct Adapter
+  {
+    typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
+  };
+};
+
+//! --------------------------------------------------------------------------------------
+
+
+
+
 //! --------------------- type of fem stiffness matrix -----------------------------------
 
 typedef SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, MatrixTraits > FEMMatrix;
+
+typedef SparseRowMatrixOperator< SubDiscreteFunctionType,
+                                 SubDiscreteFunctionType,
+			          SubgridMatrixTraits > SubgridFEMMatrix;
 
 //! --------------------------------------------------------------------------------------
 
@@ -243,6 +317,8 @@ typedef SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, Mat
 // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones. GMRES seems to be more stable, but is extremely slow!
 typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
+typedef OEMBICGSQOp/*OEMBICGSTABOp*/< SubDiscreteFunctionType, SubgridFEMMatrix > InverseSubgridFEMMatrix;
+
 //! --------------------------------------------------------------------------------------
 
 
@@ -250,6 +326,8 @@ typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseF
 
 // discrete elliptic operator (corresponds with FEM Matrix)
 typedef DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
+
+typedef DiscreteEllipticOperator< SubDiscreteFunctionType, DiffusionType, MassTermType > SubgridEllipticOperatorType;
 
 //! --------------------------------------------------------------------------------------
 
@@ -277,6 +355,15 @@ int refinement_level_macrogrid_;
 
 typedef Tuple<DiscreteFunctionType*> IOTupleType;
 typedef DataOutput<GridType, IOTupleType> DataOutputType;
+
+
+//! loeschen:
+typedef Tuple<SubDiscreteFunctionType*> SubIOTupleType;
+typedef DataOutput<SubGridType, SubIOTupleType> SubDataOutputType;
+
+
+
+
 
 #ifdef EXACTSOLUTION_AVAILABLE
 // just for the discretized exact solution (in case it is available)
@@ -449,17 +536,44 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
    LevelEntityIteratorType level_0_iterator_end = grid.lend< codim >( gridlevel );
    LevelEntityIteratorType level_0_iterator_begin = grid.lbegin< codim >( gridlevel );
 
-   EntityPointerType a_level_0_entity = ++level_0_iterator_begin;
-
+   LevelEntityIteratorType a_level_0_entity = ++level_0_iterator_begin;
+   
 //   for( ; level_0_iterator_begin != level_0_iterator_end; ++level_0_iterator_begin )
 
 
-
+#if 1
+   
+   // create subgrid:
    SubGrid< dimension , GridType > subGrid(grid);
    subGrid.createBegin();
+
+   subGrid.insert( *a_level_0_entity );
+   ++a_level_0_entity;
+   subGrid.insert( *a_level_0_entity );
+   ++a_level_0_entity;
+   subGrid.insert( *a_level_0_entity );
+   ++a_level_0_entity;
    subGrid.insert( *a_level_0_entity );
    subGrid.createEnd();
 
+   // subGrid.report();
+    
+   SubGridPartType subGridPart( subGrid );
+   
+   SubDiscreteFunctionSpaceType subDiscreteFunctionSpace( subGridPart );
+
+   SubDiscreteFunctionType local_solution( filename_ + " Sub FEM Solution", subDiscreteFunctionSpace );
+   local_solution.clear();
+
+
+   SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
+   for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+        std :: cout << "subGridPart.indexSet().index( *sub_it ) = " << subGridPart.indexSet().index( *sub_it ) << std :: endl;
+
+   
+   
+   
+#endif
 
    int id = 0;
 
@@ -758,8 +872,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   outstring.str(std::string());
   // -------------------------------------------------------
 #endif
-
-
+  
   // --------- data output standard solution --------------
 
   // create and initialize output class
@@ -774,7 +887,28 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   outstring.str(std::string());
 
   // -------------------------------------------------------
+  
 
+#if 0
+  // --------- data output local solution --------------
+
+  // create and initialize output class
+  SubIOTupleType sub_fem_solution_series( &local_solution );
+  outputparam.set_prefix("local_solution");
+ 
+  SubDataOutputType sub_fem_dataoutput( subGrid, sub_fem_solution_series, outputparam );
+
+  // write data
+  outstring << "local_solution";
+  sub_fem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+  
+  // -------------------------------------------------------
+#endif
+  
+  
+  
 //!-------------------------------------------------------------
 
 
