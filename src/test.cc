@@ -237,6 +237,9 @@ typedef SubGridType :: Codim<1> :: Geometry SubgridFaceGeometryType;
 
 typedef SubDiscreteFunctionSpaceType :: IteratorType SubgridIteratorType;
 
+typedef SubDiscreteFunctionType :: DofIteratorType SubgridDofIteratorType;
+
+typedef SubDiscreteFunctionType :: LocalFunctionType SubLocalFunctionType;
 #if 0
 typedef DiscreteFunctionSpaceType     :: BaseFunctionSetType      BaseFunctionSetType;
 
@@ -540,9 +543,17 @@ void boundaryTreatment( const SubgridEntityType &subgrid_entity,
   const IntersectionIteratorType endiit = hostGridPart.iend( host_entity );
   for( ; iit != endiit; ++iit ) {
 
+  if ( iit->neighbor() ) //if there is a neighbor entity
+   {
+      // check if the neighbor entity is in the subgrid
+      const HostEntityPointerType neighborHostEntityPointer = iit->outside();
+      const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+      if ( subGrid.template contains<0>( neighborHostEntity ) )
+       {
+         continue;
+       }
 
-    if( !(*iit).boundary() )
-      continue;
+     }
 
     LocalFunctionType rhsLocal = rhs.localFunction( subgrid_entity );
     const LagrangePointSetType &lagrangePointSet
@@ -556,13 +567,63 @@ void boundaryTreatment( const SubgridEntityType &subgrid_entity,
       = lagrangePointSet.template endSubEntity< faceCodim >( face );
     for( ; faceIterator != faceEndIterator; ++faceIterator )
       rhsLocal[ *faceIterator ] = 0;
-    
+
   }
 
 
 
 }
 
+
+
+
+
+// create a hostgrid function from a subgridfunction
+template< class SubDiscreteFunctionType, class HostDiscreteFunctionType >
+void subgrid_to_hostrid_function( const SubDiscreteFunctionType &sub_func,
+                                        HostDiscreteFunctionType &host_func )
+{
+   typedef typename SubDiscreteFunctionType :: DiscreteFunctionSpaceType
+    SubDiscreteFunctionSpaceType;
+   typedef typename SubDiscreteFunctionSpaceType :: IteratorType SubgridIteratorType;
+   typedef typename SubgridIteratorType :: Entity SubEntityType;
+   typedef typename SubEntityType :: EntityPointer SubEntityPointerType; 
+
+   typedef typename HostDiscreteFunctionType :: DiscreteFunctionSpaceType
+    HostDiscreteFunctionSpaceType;
+   typedef typename HostDiscreteFunctionSpaceType :: IteratorType HostgridIteratorType;
+   typedef typename HostgridIteratorType :: Entity HostEntityType;
+   typedef typename HostEntityType :: EntityPointer HostEntityPointerType; 
+
+   typedef typename SubDiscreteFunctionType :: LocalFunctionType SubLocalFunctionType;
+   typedef typename HostDiscreteFunctionType :: LocalFunctionType HostLocalFunctionType;
+
+   host_func.clear();
+
+   const SubDiscreteFunctionSpaceType &subDiscreteFunctionSpace = sub_func.space();
+   const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
+
+   SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
+
+   for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+      {
+
+         const SubgridEntityType &sub_entity = *sub_it;
+
+         HostEntityPointerType host_entity_pointer = subGrid.getHostEntity<0>( *sub_it );
+         const HostEntityType& host_entity = *host_entity_pointer;
+
+         SubLocalFunctionType sub_loc_value = sub_func.localFunction( sub_entity );
+         HostLocalFunctionType host_loc_value = host_func.localFunction( host_entity );
+
+         const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+         for( unsigned int i = 0; i < numBaseFunctions; ++i )
+           {
+             host_loc_value[ i ] = sub_loc_value[ i ];
+           }
+
+      }
+}
 
 
 
@@ -738,6 +799,30 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   // oneLinePrint( std::cout , fem_solution );
 
+#if 0
+
+  DofIteratorType dit = fem_solution.dbegin();
+  std::cout << "\n" << fem_solution.name() << ": [ ";
+  for ( ; dit != fem_solution.dend(); ++dit )
+         std::cout << std::setw(5) << *dit << "  ";
+  std::cout << " ] " << std::endl;
+
+#endif
+
+#if 0
+   for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
+      {
+
+         const EntityType &entity = *it;
+         LocalFunctionType loc_value = fem_solution.localFunction( entity );
+         const unsigned int numBaseFunctions = loc_value.baseFunctionSet().numBaseFunctions();
+         for( unsigned int i = 0; i < numBaseFunctions; ++i )
+           {
+             std :: cout << "loc_value[ " << i << " ] = " << loc_value[ i ] << std :: endl;
+           }
+
+      }
+#endif
 
   //! ********************** End of assembling the standard fem problem ***************************
 
@@ -771,6 +856,12 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
    std :: vector< bool > cell_mark;
+
+
+//   std :: vector< bool > is_boundary_intersection;
+// dynamischer array: numEntityes / maxNumIntersections 
+// num Entity ueber index zugreifen und dann Intersection markieren?
+
    
 
    const int codim = 0;
@@ -792,8 +883,37 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
    SubGrid< dimension , GridType > subGrid(grid);
    subGrid.createBegin();
 
+
+   LevelEntityIteratorType a_level_0_ent = grid.lbegin< codim >( 0 );
+
    for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
-         subGrid.insert( *it );
+     {
+
+         const EntityType& entity = *it;
+
+#if 0
+         EntityPointerType level_0_father_entity = it;
+         for (int lev = 0; lev < maxlevel; ++lev)
+            level_0_father_entity = level_0_father_entity->father();
+
+         if ( level_0_father_entity == a_level_0_ent )
+          {
+            //std :: cout << "inserting element" << std :: endl;
+            subGrid.insert( entity );
+          }
+#endif
+
+#if 1
+         if ( a_level_0_ent == (it->father())->father() )
+          {
+            //std :: cout << "inserting element" << std :: endl;
+            subGrid.insert( entity );
+          }
+#endif
+
+       //subGrid.insert( entity );
+
+     }
       
    //++a_level_0_entity;
    //subGrid.insert( *a_level_0_entity );
@@ -806,7 +926,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 
-   // subGrid.report();
+   subGrid.report();
     
    SubGridPartType subGridPart( subGrid );
 
@@ -916,6 +1036,49 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 
+#if 0
+
+  SubgridDofIteratorType sub_dit = local_solution.dbegin();
+  std::cout << "\n" << local_solution.name() << ": [ ";
+  for ( ; sub_dit != local_solution.dend(); ++sub_dit )
+    {
+         const int sdadasasd = sub_dit.index();
+         //std::cout << "index = " <<  << " ";
+         std::cout << std::setw(5) << *sub_dit << "  ";
+     }
+  std::cout << " ] " << std::endl;
+
+#endif
+#if 1
+
+
+   for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+      {
+
+         const SubgridEntityType &sub_entity = *sub_it;
+
+         EntityPointerType host_entity_pointer = subGrid.getHostEntity<0>( *sub_it );
+         const EntityType& host_entity = *host_entity_pointer;
+
+         SubLocalFunctionType sub_loc_value = local_solution.localFunction( sub_entity );
+         LocalFunctionType loc_value = fem_solution.localFunction( host_entity );
+
+         const unsigned int numBaseFunctions = loc_value.baseFunctionSet().numBaseFunctions();
+         for( unsigned int i = 0; i < numBaseFunctions; ++i )
+           {
+             std :: cout << "sub_loc_value[ " << i << " ] = " << sub_loc_value[ i ] << std :: endl;
+             std :: cout << "xxx_loc_value[ " << i << " ] = " << loc_value[ i ] << std :: endl << std :: endl;
+           }
+
+      }
+
+
+#endif
+
+  DiscreteFunctionType host_solution( filename_ + " Host Solution", discreteFunctionSpace );
+  host_solution.clear();
+
+  subgrid_to_hostrid_function( local_solution, host_solution );
 
 
 
@@ -1014,6 +1177,17 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 #endif
 
+#ifdef EXACTSOLUTION_AVAILABLE
+
+  RangeType host_error = l2error.norm< ExactSolutionType >( u, host_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
+
+  std :: cout << "|| u_host - u_exact ||_L2 =  " << host_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_host - u_exact ||_L2 =  " << host_error << std :: endl; }
+
+#endif
+
+
 //! -------------------------------------------------------
 
 
@@ -1058,6 +1232,21 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   // -------------------------------------------------------
   
+
+  // --------- data output standard solution --------------
+
+  // create and initialize output class
+  IOTupleType host_solution_series( &host_solution );
+  outputparam.set_prefix("host_solution");
+  DataOutputType host_dataoutput( gridPart.grid(), host_solution_series, outputparam );
+
+  // write data
+  outstring << "host_solution";
+  host_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+  // -------------------------------------------------------
 
 #if 0
   // --------- data output local solution --------------

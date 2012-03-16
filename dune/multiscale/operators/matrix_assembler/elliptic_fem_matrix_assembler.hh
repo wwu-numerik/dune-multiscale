@@ -400,12 +400,22 @@ namespace Dune
 
             const LagrangePointSet &lagrangePointSet = discreteFunctionSpace_.lagrangePointSet( entity );
 
+
             const HostIntersectionIterator iend = hostGridPart.iend( host_entity );
             for( HostIntersectionIterator iit = hostGridPart.ibegin( host_entity ); iit != iend; ++iit )
               {
 
-                if( !(*iit).boundary() )
-                continue;
+                if ( iit->neighbor() ) //if there is a neighbor entity
+                  {
+                    // check if the neighbor entity is in the subgrid
+                   const HostEntityPointerType neighborHostEntityPointer = iit->outside();
+                   const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+                   if ( subGrid.template contains<0>( neighborHostEntity ) )
+                    {
+                      continue;
+                    }
+
+                  }
 
                 const int face = (*iit).indexInInside();
                 const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >( face );
@@ -413,7 +423,8 @@ namespace Dune
                 local_matrix.unitRow( *fdit );
 
               }
-              
+
+
           }
    
       }
