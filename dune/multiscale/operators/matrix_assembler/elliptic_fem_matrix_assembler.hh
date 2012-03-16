@@ -24,6 +24,7 @@ namespace Dune
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
     typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+    typedef typename GridPart::GridType Grid;
     typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
 
     typedef typename DiscreteFunctionSpace::DomainType DomainType;
@@ -73,6 +74,11 @@ namespace Dune
 
     template< class MatrixType >
     void assemble_matrix ( MatrixType &global_matrix, bool boundary_treatment ) const;
+    
+      
+    // Matrix Assembler for local problems on a Subgrid of the Hostgrid:
+    template< class MatrixType, class HostDiscreteFunctionSpaceType >
+    void assemble_matrix( MatrixType &global_matrix, HostDiscreteFunctionSpaceType& hostSpace, bool boundary_treatment ) const;
 
     template< class MatrixType >
     void assemble_jacobian_matrix ( DiscreteFunction &disc_func, MatrixType &global_matrix, bool boundary_treatment ) const;
@@ -278,6 +284,145 @@ namespace Dune
       }
   }
 
+  
+  // Matrix Assembler for local problems on a Subgrid of the Hostgrid:
+  template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
+  template< class MatrixType, class HostDiscreteFunctionSpaceType >
+  void DiscreteEllipticOperator< DiscreteFunctionImp,
+                                 DiffusionImp,
+				  ReactionImp >::assemble_matrix
+	( MatrixType &global_matrix, HostDiscreteFunctionSpaceType& hostSpace, bool boundary_treatment = true ) const
+  {
+    
+
+    typedef typename MatrixType::LocalMatrixType LocalMatrix;
+
+    global_matrix.reserve();
+    global_matrix.clear();
+
+    std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi( discreteFunctionSpace_.mapper().maxNumDofs() );
+
+    // micro scale base function:
+    std::vector< RangeType > phi( discreteFunctionSpace_.mapper().maxNumDofs() );
+
+    const Iterator end = discreteFunctionSpace_.end();
+    for( Iterator it = discreteFunctionSpace_.begin(); it != end; ++it )
+    {
+
+      const Entity &entity = *it;
+      const Geometry &geometry = entity.geometry();
+      assert( entity.partitionType() == InteriorEntity );
+
+      LocalMatrix local_matrix = global_matrix.localMatrix( entity, entity );
+
+      const BaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
+      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+
+      // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to use a higher order quadrature:
+      Quadrature quadrature( entity, 2*discreteFunctionSpace_.order()+2 );
+      const size_t numQuadraturePoints = quadrature.nop();
+      for( size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
+      {
+        // local (barycentric) coordinates (with respect to entity)
+        const typename Quadrature::CoordinateType &local_point = quadrature.point( quadraturePoint );
+
+        DomainType global_point = geometry.global( local_point );
+
+        const double weight = quadrature.weight( quadraturePoint ) * geometry.integrationElement( local_point );
+
+        // transposed of the the inverse jacobian
+        const FieldMatrix< double, dimension, dimension > &inverse_jac
+          = geometry.jacobianInverseTransposed( local_point );
+
+        for( unsigned int i = 0; i < numBaseFunctions; ++i )
+        {
+          // jacobian of the base functions, with respect to the reference element
+          typename BaseFunctionSet::JacobianRangeType gradient_phi_ref_element;
+          baseSet.jacobian( i, quadrature[ quadraturePoint ], gradient_phi_ref_element );
+
+          // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
+          inverse_jac.mv( gradient_phi_ref_element[ 0 ], gradient_phi[ i ][ 0 ] );
+
+          baseSet.evaluate( i, quadrature[ quadraturePoint ], phi[ i ]);
+
+        }
+
+        for( unsigned int i = 0; i < numBaseFunctions; ++i )
+        {
+          // A( \nabla \phi ) // diffusion operator evaluated in (x,\nabla \phi)
+          typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
+          diffusion_operator_.diffusiveFlux( global_point, gradient_phi[ i ], diffusion_in_gradient_phi );
+          for( unsigned int j = 0; j < numBaseFunctions; ++j )
+           {
+             local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[ 0 ] * gradient_phi[ j ][ 0 ]) );
+
+             if ( reaction_coefficient_ )
+              {
+                RangeType c;
+                reaction_coefficient_->evaluate(global_point, c);
+                local_matrix.add( j, i, weight * c * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+              }
+
+           }
+        }
+      }
+    }
+
+    
+    // boundary treatment
+    if ( boundary_treatment )
+      {
+
+        typedef typename HostDiscreteFunctionSpaceType :: GridPartType HostGridPartType;
+        typedef typename HostDiscreteFunctionSpaceType :: GridType HostGridType;
+
+        typedef typename HostDiscreteFunctionSpaceType :: IteratorType :: Entity HostEntityType;
+        typedef typename HostEntityType :: EntityPointer HostEntityPointerType; 
+
+        typedef typename HostGridPartType :: IntersectionIteratorType HostIntersectionIterator;
+
+        const HostGridPartType &hostGridPart = hostSpace.gridPart();
+ 
+        const GridPart &gridPart = discreteFunctionSpace_.gridPart();
+	const Grid &subGrid = discreteFunctionSpace_.grid();
+	 
+        for( Iterator it = discreteFunctionSpace_.begin(); it != end; ++it )
+          {
+            const Entity &entity = *it;
+	   
+            HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( entity );
+            const HostEntityType& host_entity = *host_entity_pointer;
+	    
+            if( !host_entity.hasBoundaryIntersections() )
+            continue;
+	    
+            LocalMatrix local_matrix = global_matrix.localMatrix( entity, entity );
+
+            const LagrangePointSet &lagrangePointSet = discreteFunctionSpace_.lagrangePointSet( entity );
+
+            const HostIntersectionIterator iend = hostGridPart.iend( host_entity );
+            for( HostIntersectionIterator iit = hostGridPart.ibegin( host_entity ); iit != iend; ++iit )
+              {
+
+                if( !(*iit).boundary() )
+                continue;
+
+                const int face = (*iit).indexInInside();
+                const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >( face );
+                for( FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >( face ); fdit != fdend; ++fdit )
+                local_matrix.unitRow( *fdit );
+
+              }
+              
+          }
+   
+      }
+      
+  }
+
+  
+  
+  
 #if 1
 
   // assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain discrete function (in case of the Newton method, it is the preceeding iterate u_H^{(n-1)} )

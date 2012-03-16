@@ -490,94 +490,75 @@ void boundaryTreatment( const EntityType &entity, DiscreteFunctionType &rhs )
 
 
 //! set the dirichlet points to zero
-template< class EntityType, class HostDiscreteFunctionType, class DiscreteFunctionType >
-void boundaryTreatment( const EntityType &entity, 
-                        const typename DiscreteFunctionType :: DiscreteFunctionSpaceType :: GridType &sub_grid,
-                        DiscreteFunctionType &rhs )
+template< class SubgridEntityType, class HostDiscreteFunctionSpaceType, class SubDiscreteFunctionType >
+void boundaryTreatment( const SubgridEntityType &subgrid_entity, 
+                        const HostDiscreteFunctionSpaceType &hostSpace,
+                        SubDiscreteFunctionType &rhs )
 {
-  typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
-    DiscreteFunctionSpaceType;
+  
 
-  typedef typename DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
+  typedef typename SubDiscreteFunctionType :: DiscreteFunctionSpaceType
+    SubDiscreteFunctionSpaceType;
 
-  typedef typename DiscreteFunctionSpaceType :: LagrangePointSetType
+  typedef typename SubDiscreteFunctionType :: LocalFunctionType LocalFunctionType;
+
+  typedef typename SubDiscreteFunctionSpaceType :: LagrangePointSetType
     LagrangePointSetType;
 
-  typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
-  typedef typename DiscreteFunctionSpaceType :: GridType GridType;
-
-
-  typedef typename HostDiscreteFunctionType :: DiscreteFunctionSpaceType
-    HostDiscreteFunctionSpaceType;
-
-  typedef typename HostDiscreteFunctionSpaceType :: GridType HostGridType;
+    
+  typedef typename SubDiscreteFunctionSpaceType :: GridPartType SubGridPartType;
+  typedef typename SubDiscreteFunctionSpaceType :: GridType SubGridType;
 
   typedef typename HostDiscreteFunctionSpaceType :: GridPartType HostGridPartType;
+  typedef typename HostDiscreteFunctionSpaceType :: GridType HostGridType;
 
   typedef typename HostDiscreteFunctionSpaceType :: IteratorType :: Entity HostEntityType;
-
   typedef typename HostEntityType :: EntityPointer HostEntityPointerType; 
 
-  HostEntityPointerType host_entity = sub_grid.template getHostEntity<0>( entity );
-
-
+  
+  
+  const SubDiscreteFunctionSpaceType &subDiscreteFunctionSpace = rhs.space();
+  
+  const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
+  
+  HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
+  const HostEntityType& host_entity = *host_entity_pointer;
+  
+  const HostGridPartType &hostGridPart = hostSpace.gridPart();
+  
   enum { faceCodim = 1 };
-
-  typedef typename GridPartType :: IntersectionIteratorType
-    IntersectionIteratorType;
+  
+  typedef typename HostGridPartType :: IntersectionIteratorType IntersectionIteratorType;
 
   typedef typename LagrangePointSetType :: template Codim< faceCodim >
                                         :: SubEntityIteratorType
     FaceDofIteratorType;
-
-  const DiscreteFunctionSpaceType &discreteFunctionSpace = rhs.space();
-
-
-  //! man muss das subgrid nicht uebergeben!!!
-  const GridType &saaasdsasadsad = discreteFunctionSpace.grid();
-
-  const GridPartType &gridPart = discreteFunctionSpace.gridPart();
+  
 
 
+  IntersectionIteratorType iit = hostGridPart.ibegin( host_entity );
+  const IntersectionIteratorType endiit = hostGridPart.iend( host_entity );
+  for( ; iit != endiit; ++iit ) {
 
-#if 0
 
-    LocalFunctionType rhsLocal = rhs.localFunction( entity );
-    const LagrangePointSetType &lagrangePointSet
-      = discreteFunctionSpace.lagrangePointSet( entity );
-
-    const int face = 0;
-    FaceDofIteratorType faceIterator
-      = lagrangePointSet.template beginSubEntity< faceCodim >( face );
-    const FaceDofIteratorType faceEndIterator
-      = lagrangePointSet.template endSubEntity< faceCodim >( face );
-    for( ; faceIterator != faceEndIterator; ++faceIterator )
-      rhsLocal[ *faceIterator ] = 0;
-
-#endif
-#if 0
-  IntersectionIteratorType it = gridPart.ibegin( entity );
-  const IntersectionIteratorType endit = gridPart.iend( entity );
-  for( ; it != endit; ++it ) {
-
-    if( !(*it).boundary() )
+    if( !(*iit).boundary() )
       continue;
 
-    LocalFunctionType rhsLocal = rhs.localFunction( entity );
+    LocalFunctionType rhsLocal = rhs.localFunction( subgrid_entity );
     const LagrangePointSetType &lagrangePointSet
-      = discreteFunctionSpace.lagrangePointSet( entity );
-
-    const int face = (*it).indexInInside();
-
+      = subDiscreteFunctionSpace.lagrangePointSet( subgrid_entity );
+      
+    const int face = (*iit).indexInInside();
+    
     FaceDofIteratorType faceIterator
       = lagrangePointSet.template beginSubEntity< faceCodim >( face );
     const FaceDofIteratorType faceEndIterator
       = lagrangePointSet.template endSubEntity< faceCodim >( face );
     for( ; faceIterator != faceEndIterator; ++faceIterator )
       rhsLocal[ *faceIterator ] = 0;
-
+    
   }
-#endif
+
 
 
 }
@@ -731,13 +712,21 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   // assemble right hand side
   rhsassembler.assemble< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( f , fem_rhs);
 
+ 
+  
+  //oneLinePrint( std::cout , fem_rhs );
+  
+  
   // set Dirichlet Boundary to zero 
   typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
   IteratorType endit = discreteFunctionSpace.end();
   for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
+    {
+         //std :: cout << "gridPart.indexSet().index( *it ) = " << gridPart.indexSet().index( *it ) << std :: endl;
          boundaryTreatment( *it , fem_rhs );
+    }
 
-
+  
   InverseFEMMatrix fem_biCGStab( fem_matrix, 1e-8, 1e-8, 20000, VERBOSE );
   fem_biCGStab( fem_rhs, fem_solution );
 
@@ -747,7 +736,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
       data_file << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
     }
 
-
+  // oneLinePrint( std::cout , fem_solution );
 
 
   //! ********************** End of assembling the standard fem problem ***************************
@@ -785,13 +774,13 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
    
 
    const int codim = 0;
-   const int gridlevel = 0;
    const int maxlevel = grid.maxLevel();
+   const int gridlevel = maxlevel;
+   
+   LevelEntityIteratorType level_iterator_end = grid.lend< codim >( gridlevel );
+   LevelEntityIteratorType level_iterator_begin = grid.lbegin< codim >( gridlevel );
 
-   LevelEntityIteratorType level_0_iterator_end = grid.lend< codim >( gridlevel );
-   LevelEntityIteratorType level_0_iterator_begin = grid.lbegin< codim >( gridlevel );
-
-   LevelEntityIteratorType a_level_0_entity = level_0_iterator_begin;
+   LevelEntityIteratorType a_level_0_entity = level_iterator_begin;
    ++a_level_0_entity;
 
 //   for( ; level_0_iterator_begin != level_0_iterator_end; ++level_0_iterator_begin )
@@ -803,16 +792,16 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
    SubGrid< dimension , GridType > subGrid(grid);
    subGrid.createBegin();
 
-   subGrid.insert( *a_level_0_entity );
-   ++a_level_0_entity;
-   subGrid.insert( *a_level_0_entity );
-   ++a_level_0_entity;
-   subGrid.insert( *a_level_0_entity );
-   ++a_level_0_entity;
-   subGrid.insert( *a_level_0_entity );
+   for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
+         subGrid.insert( *it );
+      
+   //++a_level_0_entity;
+   //subGrid.insert( *a_level_0_entity );
+
    subGrid.createEnd();
 
-   const EntityType& host_entity = *level_0_iterator_begin;//*a_level_0_entity;
+   
+   const EntityType& host_entity = *level_iterator_begin;//*a_level_0_entity;
    std :: cout << "subGrid.contains( host_entity ) = " << subGrid.contains<0>( host_entity ) << std :: endl;
 
 
@@ -829,10 +818,9 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
    SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
    for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
       {
-        std :: cout << "subGridPart.indexSet().index( *sub_it ) = " << subGridPart.indexSet().index( *sub_it ) << std :: endl;
-
-        EntityPointerType host_entity_2 = subGrid.getHostEntity<0>( *sub_it );
-
+        //std :: cout << "subGridPart.indexSet().index( *sub_it ) = " << subGridPart.indexSet().index( *sub_it ) << std :: endl;
+        EntityPointerType host_entity = subGrid.getHostEntity<0>( *sub_it );
+        //std :: cout << "gridPart.indexSet().index( *host_entity ) = " << gridPart.indexSet().index( *host_entity ) << std :: endl << std :: endl;
       }
 
 
@@ -855,8 +843,8 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
        //std :: cout << "indexSet.index( *max_level_it ) = " << indexSet.index( *max_level_it ) << std:: endl;
 
-        std :: cout << "gridPart.indexSet().index( *max_level_it ) = " << gridPart.indexSet().index( *max_level_it ) << std :: endl;
-        std :: cout << "id = " << id << std :: endl;
+        //!std :: cout << "gridPart.indexSet().index( *max_level_it ) = " << gridPart.indexSet().index( *max_level_it ) << std :: endl;
+        //!std :: cout << "id = " << id << std :: endl;
 
         EntityPointerType fine_father_entity = max_level_it;
         for (int lev = 0; lev < maxlevel; ++lev)
@@ -865,12 +853,12 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
         if ( fine_father_entity == a_level_0_entity )
          {
            cell_mark.push_back(true);
-           std :: cout << "true" << std :: endl;
+           // std :: cout << "true" << std :: endl;
          }
         else
          {
            cell_mark.push_back(false);
-           std :: cout << "false" << std :: endl;
+           // std :: cout << "false" << std :: endl;
          }
 
        id += 1;
@@ -894,39 +882,32 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   SubgridEllipticOperatorType sub_discrete_elliptic_op( subDiscreteFunctionSpace, diffusion_op);
   SubDiscreteFunctionType sub_zero_func( filename_ + " constant zero function ", subDiscreteFunctionSpace );
   sub_zero_func.clear();
-  SubgridFEMMatrix subgrid_fem_matrix( "Dubgrid FEM stiffness matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace );
+  SubgridFEMMatrix subgrid_fem_matrix( "subgrid FEM stiffness matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace );
 
   SubDiscreteFunctionType sub_fem_rhs( "subgrid fem rhs", subDiscreteFunctionSpace );
   sub_fem_rhs.clear();
 
 
-  sub_discrete_elliptic_op.assemble_matrix( subgrid_fem_matrix , false );
+  sub_discrete_elliptic_op.assemble_matrix( subgrid_fem_matrix , discreteFunctionSpace );
 
 
   subgridrhsassembler.assemble< 2 * SubDiscreteFunctionSpaceType :: polynomialOrder + 2 >( f , sub_fem_rhs);
 
 
+  // oneLinePrint( std::cout , sub_fem_rhs );
 
 #if 1
    for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
        {
-          boundaryTreatment< SubgridEntityType, DiscreteFunctionType, SubDiscreteFunctionType >( *sub_it , subGrid, sub_fem_rhs );
+          boundaryTreatment< SubgridEntityType, DiscreteFunctionSpaceType, SubDiscreteFunctionType >
+             ( *sub_it , discreteFunctionSpace, sub_fem_rhs );
        }
 #endif
 
   InverseSubgridFEMMatrix sub_fem_biCGStab( subgrid_fem_matrix, 1e-8, 1e-8, 20000, VERBOSE );
-  //sub_fem_biCGStab( sub_fem_rhs, local_solution );
+  sub_fem_biCGStab( sub_fem_rhs, local_solution );
 
-
-
-
-
-
-
-
-
-
-
+  // oneLinePrint( std::cout , local_solution );
 
 #endif
 
@@ -984,16 +965,26 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
   //! ----------------- compute L2-errors -------------------
+  
+  
+#if 0
+  RangeType local_global_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( fem_solution, local_solution );
+
+  std :: cout << "|| u_fem - u_local ||_L2 =  " << local_global_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+         { data_file << "|| u_fem - u_local ||_L2 =  " << local_global_error << std :: endl; }
+
+#endif
 #if 0
   long double timeadapt = clock();
 
 
 
-  RangeType msfem_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution, fem_solution);
+  RangeType local_global_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( fem_solution, local_solution);
 
-  std :: cout << "|| u_msfem - u_fine_scale ||_L2 =  " << msfem_error << std :: endl << std :: endl;
+  std :: cout << "|| u_fem - u_local ||_L2 =  " << local_global_error << std :: endl << std :: endl;
   if (data_file.is_open())
-         { data_file << "|| u_msfem - u_fine_scale ||_L2 =  " << msfem_error << std :: endl; }
+         { data_file << "|| u_msfem - u_fine_scale ||_L2 =  " << local_global_error << std :: endl; }
 
   timeadapt = clock() - timeadapt;
   timeadapt = timeadapt / CLOCKS_PER_SEC;
