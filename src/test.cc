@@ -543,6 +543,26 @@ void boundaryTreatment( const SubgridEntityType &subgrid_entity,
   const IntersectionIteratorType endiit = hostGridPart.iend( host_entity );
   for( ; iit != endiit; ++iit ) {
 
+#if 1
+
+typedef typename HostGridType :: template Codim<1> :: Geometry FaceGeometryType;
+typedef CachingQuadrature< HostGridPartType, 1 > FaceQuadrature;
+    
+const FaceGeometryType &facegeometry = (*iit).geometry();
+const typename FaceQuadrature::CoordinateType &local_point = 0.5;
+//        DomainType global_point = facegeometry.global( local_point );
+
+//      FaceQuadrature face_quadrature( *iit , 4 );
+      
+
+#if 0
+        const typename Quadrature::CoordinateType &local_point = quadrature.point( quadraturePoint );
+
+        DomainType global_point = geometry.global( local_point );
+#endif
+#endif
+    
+    
   if ( iit->neighbor() ) //if there is a neighbor entity
    {
       // check if the neighbor entity is in the subgrid
@@ -873,6 +893,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
    LevelEntityIteratorType a_level_0_entity = level_iterator_begin;
    ++a_level_0_entity;
+ 
 
 //   for( ; level_0_iterator_begin != level_0_iterator_end; ++level_0_iterator_begin )
 
@@ -885,28 +906,152 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
    LevelEntityIteratorType a_level_0_ent = grid.lbegin< codim >( 0 );
+   //const EntityPointerType a_level_0_ent = grid.lbegin< codim >( 0 );
+   ++a_level_0_ent;
+   
+#if 0
+   
+   typedef GridType::Codim<0>::Geometry EnGeometryType; 
+   
+   // das Zentrum des Referenzelements (bei einer Triangulierung mit Dreiecken): (1/3 , 1/3)
+   DomainType center_of_reference_element;
+   center_of_reference_element[0] = (1.0 / 3.0 );
+   center_of_reference_element[1] = (1.0 / 3.0 );
 
+   // die Eckpunkte des Referenzelements ( (0,0), (1,0) und (0,1) )
+
+   // (0,0)
+   DomainType reference_corner_0;
+   reference_corner_0[0] = 0.0;
+   reference_corner_0[1] = 0.0;
+
+   // (0,1)
+   DomainType reference_corner_1;
+   reference_corner_1[0] = 0.0;
+   reference_corner_1[1] = 1.0;
+   // map to global
+
+   // (1,0)
+   DomainType reference_corner_2;
+   reference_corner_2[0] = 1.0;
+   reference_corner_2[1] = 0.0;
+   
+   // get geoemetry of coarse entity
+   const EnGeometryType& host_geo = a_level_0_ent->geometry();
+  
+   // beschreibe das Dreieck mit Hilfe seiner Eckpunkt-Koordinaten (Konvexkombination) und schaue ob das Zentrum des Fine-Grid elements in dieser Konvexkombination liegt.
+   // map the reference corners to the global corners:
+   DomainType global_corner_0 = host_geo.global(reference_corner_0);
+   DomainType global_corner_1 = host_geo.global(reference_corner_1);
+   DomainType global_corner_2 = host_geo.global(reference_corner_2);
+
+   std :: cout << "global_corner_0 = " << global_corner_0 << std :: endl;
+   std :: cout << "global_corner_1 = " << global_corner_1 << std :: endl;
+   std :: cout << "global_corner_2 = " << global_corner_2 << std :: endl;
+   
+   // sei c (center) der Punkt von dem wir testen wollen, ob er im Coarse Grid Dreieck liegt, dann muss gelten (Konvexkombination), dass
+   // lambda_0 und lambda_1 existieren, mit (0<=lambda_0<=1) && (0<=lambda_1<=1) && (0<=lambda_0+lambda_1<=1) mit
+   // c = e_2 + lambda_0 (e_0 - e_2) + lambda_1 (e_1 - e_2)
+   // wobei e_0, e_1 und e_2 die Ecken des Dreiecks sind.   
+   RangeType lambda_0, lambda_1;
+#endif
+   
+   
    for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
      {
 
          const EntityType& entity = *it;
 
 #if 0
+         // get geoemetry of fine grid entity:
+         const EnGeometryType& fine_geo = it->geometry();
+
+         // das Zentrum des Fine-Grid Elements:
+         DomainType center_of_fine_it = fine_geo.global(center_of_reference_element);
+
+         // stellen wir das Gleichungssystem nach (lambda_0,lambda_1) auf, so ergibt sich:
+
+         if ( (global_corner_0[0] - global_corner_2[0]) == 0 )
+            {
+
+              lambda_1 = ( center_of_fine_it[0] - global_corner_2[0] ) / ( global_corner_1[0] - global_corner_2[0] );
+
+              lambda_0 = ( ( center_of_fine_it[1] - global_corner_2[1] ) + ( lambda_1 * (global_corner_2[1] - global_corner_1[1] ) ) )
+                             / ( global_corner_0[1] - global_corner_2[1] ); 
+
+            }
+         else
+            {
+
+              if ( (global_corner_1[0] - global_corner_2[0]) == 0 )
+               {
+
+                 lambda_0 = ( center_of_fine_it[0] - global_corner_2[0] ) / ( global_corner_0[0] - global_corner_2[0] );
+
+                 lambda_1 = ( ( center_of_fine_it[1] - global_corner_2[1] ) - ( lambda_0 * (global_corner_0[1] - global_corner_2[1] ) ) )
+                             / ( global_corner_1[1] - global_corner_2[1] );
+
+               }
+              else
+               {
+
+                 if ( (global_corner_1[1] - global_corner_2[1]) == 0 )
+                  {
+ 
+                    lambda_0 = ( center_of_fine_it[1] - global_corner_2[1] ) / ( global_corner_0[1] - global_corner_2[1] );
+
+                    lambda_1 = ( ( center_of_fine_it[0] - global_corner_2[0] ) - ( lambda_0 * (global_corner_0[0] - global_corner_2[0] ) ) )
+                               / ( global_corner_1[0] - global_corner_2[0] );
+
+                  }
+                 else
+                  {
+                    lambda_1 =  (   (center_of_fine_it[1] - global_corner_2[1]) / ( global_corner_1[1] - global_corner_2[1] ) )
+                              - (   ( (global_corner_0[1] - global_corner_2[1]) / (global_corner_0[0] - global_corner_2[0]) )
+                                  * ( (center_of_fine_it[0] - global_corner_2[0]) / (global_corner_1[1] - global_corner_2[1]) ) );
+
+
+                    lambda_1 = lambda_1 /
+                                ( 1.0 -
+                                   (   ( (global_corner_0[1] - global_corner_2[1]) / (global_corner_0[0] - global_corner_2[0]) )
+                                     * ( (global_corner_1[0] - global_corner_2[0]) / (global_corner_1[1] - global_corner_2[1]) ) ) );
+
+                     lambda_0 = ( ( center_of_fine_it[0] - global_corner_2[0] ) - ( lambda_1 * (global_corner_1[0] - global_corner_2[0] ) ) )
+                                  / ( global_corner_0[0] - global_corner_2[0] );
+                  }
+
+               }
+
+             }
+
+
+           if (     (0.0 <= lambda_0) && (lambda_0 <= 1.0)
+                 && (0.0 <= lambda_1) && (lambda_1 <= 1.0)
+                 && ( (lambda_0 + lambda_1) <= 1.0) )
+            {
+               std :: cout << "center_of_fine_it = " << center_of_fine_it << std :: endl;
+               subGrid.insert( entity );
+            }
+
+#endif
+            
+	 
+#if 1
          EntityPointerType level_0_father_entity = it;
          for (int lev = 0; lev < maxlevel; ++lev)
             level_0_father_entity = level_0_father_entity->father();
 
          if ( level_0_father_entity == a_level_0_ent )
           {
-            //std :: cout << "inserting element" << std :: endl;
-            subGrid.insert( entity );
+            std :: cout << "inserting element" << std :: endl;
+            subGrid.insertPartial( entity );
           }
 #endif
 
-#if 1
-         if ( a_level_0_ent == (it->father())->father() )
+#if 0
+         if ( a_level_0_ent == it->father() )
           {
-            //std :: cout << "inserting element" << std :: endl;
+            std :: cout << "inserting element" << std :: endl;
             subGrid.insert( entity );
           }
 #endif
@@ -938,6 +1083,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
    SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
    for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
       {
+	std :: cout << "x" << std :: endl;
         //std :: cout << "subGridPart.indexSet().index( *sub_it ) = " << subGridPart.indexSet().index( *sub_it ) << std :: endl;
         EntityPointerType host_entity = subGrid.getHostEntity<0>( *sub_it );
         //std :: cout << "gridPart.indexSet().index( *host_entity ) = " << gridPart.indexSet().index( *host_entity ) << std :: endl << std :: endl;
