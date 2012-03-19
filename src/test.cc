@@ -107,6 +107,8 @@
 #include <dune/multiscale/operators/matrix_assembler/elliptic_fem_matrix_assembler.hh>
 
 
+#include <dune/multiscale/operators/msfem_localproblems/new-localproblemsolver.hh>
+
 
 using namespace Dune;
 
@@ -543,26 +545,6 @@ void boundaryTreatment( const SubgridEntityType &subgrid_entity,
   const IntersectionIteratorType endiit = hostGridPart.iend( host_entity );
   for( ; iit != endiit; ++iit ) {
 
-#if 1
-
-typedef typename HostGridType :: template Codim<1> :: Geometry FaceGeometryType;
-typedef CachingQuadrature< HostGridPartType, 1 > FaceQuadrature;
-    
-const FaceGeometryType &facegeometry = (*iit).geometry();
-const typename FaceQuadrature::CoordinateType &local_point = 0.5;
-//        DomainType global_point = facegeometry.global( local_point );
-
-//      FaceQuadrature face_quadrature( *iit , 4 );
-      
-
-#if 0
-        const typename Quadrature::CoordinateType &local_point = quadrature.point( quadraturePoint );
-
-        DomainType global_point = geometry.global( local_point );
-#endif
-#endif
-    
-    
   if ( iit->neighbor() ) //if there is a neighbor entity
    {
       // check if the neighbor entity is in the subgrid
@@ -869,6 +851,14 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 //! BATTLE FIELD
 #if 1
+
+    // Use the host-grid entities of Level 'level' as computational domains for the subgrid computations
+   int level = 0;
+
+   MsFEMLocalProblemSolver< DiscreteFunctionSpaceType, DiffusionType > loc_prob_solver( discreteFunctionSpace, diffusion_op );
+   loc_prob_solver.assemble_all( level, filename_, false );
+
+abort();
 
 
    typedef GridType :: Codim< 0 > :: Partition< All_Partition > :: LevelIterator LevelEntityIteratorType;

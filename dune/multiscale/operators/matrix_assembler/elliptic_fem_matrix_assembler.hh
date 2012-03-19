@@ -388,14 +388,12 @@ namespace Dune
 	 
         for( Iterator it = discreteFunctionSpace_.begin(); it != end; ++it )
           {
+
             const Entity &entity = *it;
 	   
             HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( entity );
             const HostEntityType& host_entity = *host_entity_pointer;
-	    
-            if( !host_entity.hasBoundaryIntersections() )
-            continue;
-	    
+
             LocalMatrix local_matrix = global_matrix.localMatrix( entity, entity );
 
             const LagrangePointSet &lagrangePointSet = discreteFunctionSpace_.lagrangePointSet( entity );
