@@ -13,6 +13,9 @@
 // CELLSOLVER_VERBOSE: 0 = false, 1 = true
 #define LOCPROBLEMSOLVER_VERBOSE false
 
+// VTK output for local problems
+#define VTK_OUTPUT
+
 // write solutions of the local problems (vtk)
 //#define LOCALDATAOUTPUT
 
@@ -80,17 +83,21 @@ namespace Dune
 
   };
 
-#if 0
+
   // Imp stands for Implementation
-  template< class GlobalEntityDiscreteFunctionImp, class DiffusionImp >
+  template< class SubDiscreteFunctionType, class DiffusionOperatorType >
   class LocalProblemOperator
-  : public Operator< typename GlobalEntityDiscreteFunctionImp::RangeFieldType, typename GlobalEntityDiscreteFunctionImp::RangeFieldType, GlobalEntityDiscreteFunctionImp, GlobalEntityDiscreteFunctionImp >
+  : public Operator< typename SubDiscreteFunctionType::RangeFieldType,
+                     typename SubDiscreteFunctionType::RangeFieldType,
+		      SubDiscreteFunctionType,
+		      SubDiscreteFunctionType >
   {
-    typedef LocalProblemOperator< GlobalEntityDiscreteFunctionImp, DiffusionImp > This;
+    
+    typedef LocalProblemOperator< SubDiscreteFunctionType, DiffusionOperatorType > This;
 
   public:
-    typedef GlobalEntityDiscreteFunctionImp DiscreteFunction;
-    typedef DiffusionImp DiffusionModel;
+    typedef SubDiscreteFunctionType DiscreteFunction;
+    typedef DiffusionOperatorType DiffusionModel;
 
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
@@ -102,7 +109,7 @@ namespace Dune
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
     typedef typename DiscreteFunctionSpace::JacobianRangeType
       JacobianRangeType;
-
+      
   protected:
     static const int dimension = GridPart::GridType::dimension;
     static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
@@ -112,22 +119,22 @@ namespace Dune
     typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
     typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
     typedef typename LagrangePointSet::template Codim< 1 >::SubEntityIteratorType FaceDofIterator;
-
+    
     typedef typename DiscreteFunctionSpace::IteratorType Iterator;
     typedef typename Iterator::Entity Entity;
     typedef typename Entity::Geometry Geometry;
-
+    
     typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
     typedef typename IntersectionIterator::Intersection Intersection;
 
     typedef CachingQuadrature< GridPart, 0 > Quadrature;
-
+    
   public:
-    LocalProblemOperator( const DiscreteFunctionSpace &globalEntityDiscreteFunctionSpace, const DiffusionModel &diffusion_op )
-    : globalEntityDiscreteFunctionSpace_( globalEntityDiscreteFunctionSpace ),
+    LocalProblemOperator( const DiscreteFunctionSpace &subDiscreteFunctionSpace, const DiffusionModel &diffusion_op )
+    : subDiscreteFunctionSpace_( subDiscreteFunctionSpace ),
       diffusion_operator_( diffusion_op )
     {}
-        
+   
   private:
     LocalProblemOperator ( const This & );
 
@@ -136,115 +143,48 @@ namespace Dune
     // dummy operator
     virtual void
     operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const;
+    
 
+    // assemble stiffness matrix for local problems
     template< class MatrixType >
-    void assemble_matrix ( Iterator &pointer_on_entity, MatrixType &global_matrix ) const;
+    void assemble_matrix ( MatrixType &global_matrix ) const;
 
     // the right hand side assembler methods
-    void assemble_local_RHS ( //pointer on the coarse grid element T
-                              Iterator &pointer_on_entity,
-                              //\nabla_x \Phi_H(x_T) (the coarse function to reconstruct):
-                              JacobianRangeType &grad_coarse_function,
+    void assemble_local_RHS ( // direction 'e'
+                              JacobianRangeType &e,
                               // rhs local msfem problem:
                               DiscreteFunction &local_problem_RHS ) const;
-
+			      
     void printLocalRHS( DiscreteFunction &rhs) const;
 
     double normRHS( DiscreteFunction &rhs) const;
 
   private:
-    const DiscreteFunctionSpace &globalEntityDiscreteFunctionSpace_;
+    const DiscreteFunctionSpace &subDiscreteFunctionSpace_;
     const DiffusionModel &diffusion_operator_;
+    
+
   };
 
 
   // dummy implementation of "operator()"
   // 'w' = effect of the discrete operator on 'u'
   template< class DiscreteFunctionImp, class DiffusionImp >
-  void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const 
+  void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator() ( const DiscreteFunctionImp &u, DiscreteFunctionImp &w ) const 
   {
 
     std :: cout << "the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy." << std :: endl;
     std :: abort();
 
   }
-#endif
 
-
-#if 0
 
   //! stiffness matrix for a linear elliptic diffusion operator 
-  // we obtain entries of the following kind
-  // (local msfem problem for the macro grid element 'T' and for the base-function '\Phi_H',
-  // T_0 denotes the "reference element" in 2D
-  //  x_T denotes the barycenter of T
-  // We solve for (Q^eps(\Phi_H) ○ F), which is the solution of
-  // \int_{T_0} (A^eps ○ F)(x) (A^{-1})^T ∇( Q^eps(\Phi_H) ○ F )(x) · ∇ \phi(x) 
-  //        + \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi(x) = 0
-  // In the method "assemble_matrix", we are only concerened with
-  //  \int_{T_0} (A^eps ○ F)(x) (A^{-1})^T ∇( Q^eps(\Phi_H) ○ F )(x) · ∇ \phi(x)
-  template< class GlobalEntityDiscreteFunctionImp, class DiffusionImp >
+  template< class SubDiscreteFunctionImp, class DiffusionImp >
   template< class MatrixType >
-  void LocalProblemOperator< GlobalEntityDiscreteFunctionImp, DiffusionImp >::assemble_matrix ( Iterator &pointer_on_entity, MatrixType &global_matrix ) const
+  void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matrix ( MatrixType &global_matrix ) const
   // x_T is the barycenter of the macro grid element T
   {
-
-#if 1
-    // the coarse grid element T:
-    const Entity& entity_T = *pointer_on_entity;
-    const Geometry &geometry_of_T = entity_T.geometry();
-
-    //transformation F : T_0 -> T
-    // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
-    // arguments: entity T, point in T_0, point in T.
-
-    // Let (a_0,a_1,a_2) deonte the corners of the 2-simplex T, then the matrix A in the affine transformation
-    // F(x) = Ax + a_0, F : T_0 -> T is given by
-    // A_11 = a_1( 1 ) - a_0( 1 )     A_12 = a_2( 1 ) - a_0( 1 )
-    // A_21 = a_1( 2 ) - a_0( 2 )     A_22 = a_2( 2 ) - a_0( 2 )
-
-    // corners of the reference element:
-    typename Quadrature::CoordinateType ref_corner_0, ref_corner_1, ref_corner_2;
-
-    ref_corner_0[ 0 ] = 0.0;
-    ref_corner_0[ 1 ] = 0.0;
-
-    ref_corner_1[ 0 ] = 1.0;
-    ref_corner_1[ 1 ] = 0.0;
-
-    ref_corner_2[ 0 ] = 0.0;
-    ref_corner_2[ 1 ] = 1.0;
-
-    // corner of the global element:
-    DomainType corner_0_of_T = geometry_of_T.global( ref_corner_0 );
-    DomainType corner_1_of_T = geometry_of_T.global( ref_corner_1 );
-    DomainType corner_2_of_T = geometry_of_T.global( ref_corner_2 );
-
-    // std :: cout << "corner_0_of_T = " << corner_0_of_T << std :: endl;
-    // std :: cout << "corner_1_of_T = " << corner_1_of_T << std :: endl;
-    // std :: cout << "corner_2_of_T = " << corner_2_of_T << std :: endl;
-
-    // value of the matrix A (in F(x) = Ax + a_0)
-    double val_A[dimension][dimension];
-    val_A[0][0] = corner_1_of_T[ 0 ] - corner_0_of_T[ 0 ];
-    val_A[0][1] = corner_2_of_T[ 0 ] - corner_0_of_T[ 0 ];
-    val_A[1][0] = corner_1_of_T[ 1 ] - corner_0_of_T[ 1 ];
-    val_A[1][1] = corner_2_of_T[ 1 ] - corner_0_of_T[ 1 ];
-
-    // define 'c := (a_1(1) - a_0(1))·(a_2(2) - a_0(2)) - (a_1(2) - a_0(2))·(a_2(1) - a_0(1))
-    double c = 1.0 / ( (val_A[0][0] * val_A[1][1]) - (val_A[0][1] * val_A[1][0]) );
-    // then the inverse A^{-1} is given by:
-    // A^{-1}_11 = (1/c) (a_2(2) - a_0(2))     A^{-1}_12 = (1/c) (a_0(1) - a_2(1))
-    // A^{-1}_21 = (1/c) (a_0(2) - a_1(2))     A^{-1}_22 = (1/c) (a_1(1) - a_0(1))
-
-    // (A^{-1})^T:
-    double val_A_inverse_transposed[dimension][dimension];
-    val_A_inverse_transposed[0][0] = c * val_A[1][1];
-    val_A_inverse_transposed[1][0] = c * (-1.0)*val_A[0][1];
-    val_A_inverse_transposed[0][1] = c * (-1.0)*val_A[1][0];
-    val_A_inverse_transposed[1][1] = c * val_A[0][0];
-
-#endif
 
 
     typedef typename MatrixType::LocalMatrixType LocalMatrix;
@@ -254,62 +194,41 @@ namespace Dune
     global_matrix.reserve();
     global_matrix.clear();
 
-
-    // micro scale base function:
-    std::vector< RangeType > phi( globalEntityDiscreteFunctionSpace_.mapper().maxNumDofs() );
-
+    // local grid basis functions:
+    std::vector< RangeType > phi( subDiscreteFunctionSpace_.mapper().maxNumDofs() );
+    
     // gradient of micro scale base function:
-    std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi( globalEntityDiscreteFunctionSpace_.mapper().maxNumDofs() );
+    std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi( subDiscreteFunctionSpace_.mapper().maxNumDofs() );
 
-    const Iterator end = globalEntityDiscreteFunctionSpace_.end();
-    for( Iterator it = globalEntityDiscreteFunctionSpace_.begin(); it != end; ++it )
+    const Iterator end = subDiscreteFunctionSpace_.end();
+    for( Iterator it = subDiscreteFunctionSpace_.begin(); it != end; ++it )
     {
-
-      const Entity &local_grid_entity = *it;
-      const Geometry &local_grid_geometry = local_grid_entity.geometry();
-      assert( local_grid_entity.partitionType() == InteriorEntity );
-
-      LocalMatrix local_matrix = global_matrix.localMatrix( local_grid_entity, local_grid_entity );
+    
+      const Entity &sub_grid_entity = *it;
+      const Geometry &sub_grid_geometry = sub_grid_entity.geometry();
+      assert( sub_grid_entity.partitionType() == InteriorEntity );
+      
+      LocalMatrix local_matrix = global_matrix.localMatrix( sub_grid_entity, sub_grid_entity );
 
       const BaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
       const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
 
       // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to use a higher order quadrature:
-      Quadrature quadrature( local_grid_entity, 2*globalEntityDiscreteFunctionSpace_.order()+2 );
+      Quadrature quadrature( sub_grid_entity, 2*subDiscreteFunctionSpace_.order()+2 );
       const size_t numQuadraturePoints = quadrature.nop();
       for( size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
       {
+
         // local (barycentric) coordinates (with respect to local grid entity)
         const typename Quadrature::CoordinateType &local_point = quadrature.point( quadraturePoint );
-
-#if 1
-        // remember, we are concerned with: \int_{T_0} (A^eps ○ F)(x) (A^{-1})^T ∇( Q^eps(\Phi_H) ○ F )(x) · ∇ \phi(x)
-
-        // global point in the reference element T_0
-        DomainType global_point = local_grid_geometry.global( local_point );
-
-        // F ( global point in the reference element T_0 )
-        // (the transformation of the global point in T_0 to its position in T)
-        DomainType global_point_transformed(0.0);
-
-        for( int k = 0; k < dimension; ++k )
-          for( int l = 0; l < dimension; ++l )
-            global_point_transformed[ k ] += ( val_A[ k ][ l ] * global_point[ l ] );
-
-        global_point_transformed += corner_0_of_T; //= global_point;
-
-        // F(x) = Ax + a_0, F : T_0 -> T is given by
-        // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
-        // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
-
-#endif
+	DomainType global_point = sub_grid_geometry.global( local_point );
 
         const double weight = quadrature.weight( quadraturePoint ) *
-             local_grid_geometry.integrationElement( local_point );
+             sub_grid_geometry.integrationElement( local_point );
 
         // transposed of the the inverse jacobian
         const FieldMatrix< double, dimension, dimension > &inverse_jac
-          = local_grid_geometry.jacobianInverseTransposed( local_point );
+          = sub_grid_geometry.jacobianInverseTransposed( local_point );
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
@@ -326,43 +245,30 @@ namespace Dune
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
-          typename BaseFunctionSet::JacobianRangeType val_A_inverse_transposed_gradient_phi_i( 0.0 );
-          for( int k = 0; k < dimension; ++k )
-             for( int l = 0; l < dimension; ++l )
-               val_A_inverse_transposed_gradient_phi_i[ 0 ][ k ] += val_A_inverse_transposed[ k ][ l ] * gradient_phi[ i ][ 0 ][ l ];
-
-          // A( x_T + \delta y, \nabla \phi )
-          // diffusion operator evaluated in (x_T + \delta y , \nabla \phi)
-          typename LocalFunction::JacobianRangeType diffusion_in_A_inv_T_gradient_phi;
-          diffusion_operator_.diffusiveFlux( global_point_transformed , val_A_inverse_transposed_gradient_phi_i, diffusion_in_A_inv_T_gradient_phi );
+	  
+          // A( x, \nabla \phi(x) )
+          typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
+          diffusion_operator_.diffusiveFlux( global_point, gradient_phi[ i ], diffusion_in_gradient_phi );
           for( unsigned int j = 0; j < numBaseFunctions; ++j )
             {
 
-               typename BaseFunctionSet::JacobianRangeType val_A_inverse_transposed_gradient_phi_j( 0.0 );
-               for( int k = 0; k < dimension; ++k )
-                 for( int l = 0; l < dimension; ++l )
-                   val_A_inverse_transposed_gradient_phi_j[ 0 ][ k ] += val_A_inverse_transposed[ k ][ l ] * gradient_phi[ j ][ 0 ][ l ];
-
                // stiffness contribution
-               local_matrix.add( j, i, weight * (diffusion_in_A_inv_T_gradient_phi[ 0 ] * val_A_inverse_transposed_gradient_phi_j[ 0 ]) );
-
-
+               local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[ 0 ] * gradient_phi[ j ][ 0 ]) );
                // mass contribution (just for stabilization!)
                //local_matrix.add( j, i, 0.00000001 * weight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
 
             }
+
         }
+
       }
 
     }
 
-
-
-
   }
-#endif
 
-#if 0
+
+
   template< class DiscreteFunctionImp, class DiffusionImp >
   void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS( DiscreteFunctionImp &rhs) const
     {
@@ -434,19 +340,17 @@ namespace Dune
           RangeType value(0.0);
           localRHS.evaluate(quadrature[quadraturePoint],value);
 
-//std :: cout << "value rhs = " << value << std::endl;
-
           norm += weight * value * value;
         }
 
       }
 
      return norm;
-
+     
     }  // end method
-#endif
 
-#if 0
+
+
   // assemble the right hand side of a local problem (reconstruction problem on entity)
   // ----------------------------------------------
 
@@ -457,14 +361,11 @@ namespace Dune
   template< class DiscreteFunctionImp, class DiffusionImp >
   //template< class MatrixType >
   void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_RHS
-       ( // pointer in the macro grid element T
-         Iterator &pointer_on_entity,
-         // \nabla_x \Phi_H(x_T):
-         JacobianRangeType &gradient_PHI_H,
+       ( // direction 'e'
+         JacobianRangeType &e,
          // rhs local msfem problem:
-         DiscreteFunctionImp &local_problem_RHS ) const
+         DiscreteFunction &local_problem_RHS ) const
   {
-
 
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
@@ -478,64 +379,7 @@ namespace Dune
     typedef CachingQuadrature< GridPart, 0 > Quadrature;
 
     const DiscreteFunctionSpace &discreteFunctionSpace = local_problem_RHS.space();
-
-#if 1
-    // the coarse grid element T:
-    const Entity& entity_T = *pointer_on_entity;
-    const Geometry &geometry_of_T = entity_T.geometry();
-
-    //transformation F : T_0 -> T
-    // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
-    // arguments: entity T, point in T_0, point in T.
-
-    // Let (a_0,a_1,a_2) deonte the corners of the 2-simplex T, then the matrix A in the affine transformation
-    // F(x) = Ax + a_0, F : T_0 -> T is given by
-    // A_11 = a_1( 1 ) - a_0( 1 )     A_12 = a_2( 1 ) - a_0( 1 )
-    // A_21 = a_1( 2 ) - a_0( 2 )     A_22 = a_2( 2 ) - a_0( 2 )
-
-    // corners of the reference element:
-    typename Quadrature::CoordinateType ref_corner_0, ref_corner_1, ref_corner_2;
-
-    ref_corner_0[ 0 ] = 0.0;
-    ref_corner_0[ 1 ] = 0.0;
-
-    ref_corner_1[ 0 ] = 1.0;
-    ref_corner_1[ 1 ] = 0.0;
-
-    ref_corner_2[ 0 ] = 0.0;
-    ref_corner_2[ 1 ] = 1.0;
-
-    // corner of the global element:
-    DomainType corner_0_of_T = geometry_of_T.global( ref_corner_0 );
-    DomainType corner_1_of_T = geometry_of_T.global( ref_corner_1 );
-    DomainType corner_2_of_T = geometry_of_T.global( ref_corner_2 );
-
-    //std :: cout << "corner_0_of_T = " << corner_0_of_T << std :: endl;
-    //std :: cout << "corner_1_of_T = " << corner_1_of_T << std :: endl;
-    //std :: cout << "corner_2_of_T = " << corner_2_of_T << std :: endl << std :: endl;
-
-    // value of the matrix A (in F(x) = Ax + a_0)
-    double val_A[dimension][dimension];
-    val_A[0][0] = corner_1_of_T[ 0 ] - corner_0_of_T[ 0 ];
-    val_A[0][1] = corner_2_of_T[ 0 ] - corner_0_of_T[ 0 ];
-    val_A[1][0] = corner_1_of_T[ 1 ] - corner_0_of_T[ 1 ];
-    val_A[1][1] = corner_2_of_T[ 1 ] - corner_0_of_T[ 1 ];
-
-
-    // define 'c := (a_1(1) - a_0(1))·(a_2(2) - a_0(2)) - (a_1(2) - a_0(2))·(a_2(1) - a_0(1))
-    double c = 1.0 / ( (val_A[0][0] * val_A[1][1]) - (val_A[0][1] * val_A[1][0]) );
-    // then the inverse A^{-1} is given by:
-    // A^{-1}_11 = (1/c) (a_2(2) - a_0(2))     A^{-1}_12 = (1/c) (a_0(1) - a_2(1))
-    // A^{-1}_21 = (1/c) (a_0(2) - a_1(2))     A^{-1}_22 = (1/c) (a_1(1) - a_0(1))
-
-    // (A^{-1})^T:
-    double val_A_inverse_transposed[dimension][dimension];
-    val_A_inverse_transposed[0][0] = c * val_A[1][1];
-    val_A_inverse_transposed[1][0] = c * (-1.0)*val_A[0][1];
-    val_A_inverse_transposed[0][1] = c * (-1.0)*val_A[1][0];
-    val_A_inverse_transposed[1][1] = c * val_A[0][0];
-
-#endif
+    
 
     // set entries to zero:
     local_problem_RHS.clear();
@@ -568,27 +412,10 @@ namespace Dune
 
         const typename Quadrature::CoordinateType &local_point = quadrature.point( quadraturePoint );
 
-#if 1
-        // remember, we are concerned with: - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi(x)
+        // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
 
-        // global point in the reference element T_0
+        // global point in the subgrid
         DomainType global_point = geometry.global( local_point );
-
-        // F ( global point in the reference element T_0 )
-        // (the transformation of the global point in T_0 to its position in T)
-        DomainType global_point_transformed(0.0);
-
-        for( int k = 0; k < dimension; ++k )
-          for( int l = 0; l < dimension; ++l )
-            global_point_transformed[ k ] += ( val_A[ k ][ l ] * global_point[ l ] );
-
-        global_point_transformed += corner_0_of_T;
-
-        // F(x) = Ax + a_0, F : T_0 -> T is given by
-        // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
-        // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
-
-#endif
 
         const double weight = quadrature.weight( quadraturePoint ) * geometry.integrationElement( local_point );
 
@@ -597,10 +424,11 @@ namespace Dune
           = geometry.jacobianInverseTransposed( local_point );
 
 
-        // (A^eps ○ F)(x) ∇ \Phi_H(x_T)
-        // diffusion operator evaluated in 'F(x)' multiplied with ∇ PHI_H(x_T)
-        JacobianRangeType diffusion_in_gradient_PHI_H;
-        diffusion_operator_.diffusiveFlux( global_point_transformed, gradient_PHI_H, diffusion_in_gradient_PHI_H );
+        // A^eps(x) e
+        // diffusion operator evaluated in 'x' multiplied with e
+        JacobianRangeType diffusion_in_e;
+        diffusion_operator_.diffusiveFlux( global_point, e, diffusion_in_e );
+
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
@@ -614,27 +442,21 @@ namespace Dune
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
-
-          typename BaseFunctionSet::JacobianRangeType val_A_inverse_transposed_gradient_phi_i( 0.0 );
-          for( int k = 0; k < dimension; ++k )
-             for( int l = 0; l < dimension; ++l )
-               val_A_inverse_transposed_gradient_phi_i[ 0 ][ k ] += val_A_inverse_transposed[ k ][ l ] * gradient_phi[ i ][ 0 ][ l ];
-
-          elementOfRHS[ i ] -= weight * (diffusion_in_gradient_PHI_H[ 0 ] * val_A_inverse_transposed_gradient_phi_i[ 0 ]);
+	  
+          elementOfRHS[ i ] -= weight * (diffusion_in_e[ 0 ] * gradient_phi[ i ][ 0 ]);
 
         }
 
       }
+      
     }
 
   }
-#endif
+
 
 
 //! ------------------------------------------------------------------------------------------------
 //! ------------------------------------------------------------------------------------------------
-
-
 
 
 
@@ -667,6 +489,9 @@ namespace Dune
 
     //! type of range vectors
     typedef typename HostDiscreteFunctionSpaceType :: RangeType RangeType;
+    
+    //! type of value of a gradient of a function
+    typedef typename HostDiscreteFunctionSpaceType :: JacobianRangeType JacobianRangeType;
 
     //! type of range vectors
     typedef typename HostDiscreteFunctionSpaceType :: DomainType DomainType;
@@ -683,6 +508,10 @@ namespace Dune
 
     typedef typename HostGridType :: Traits :: LevelIndexSet HostGridLevelIndexSet;
 
+    typedef typename HostDiscreteFunctionType :: LocalFunctionType HostLocalFunctionType;
+    
+    typedef typename HostGridPartType :: IntersectionIteratorType HostIntersectionIterator;
+    
     //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
     //  ( typedefs for the local grid and the corresponding local ('sub') )discrete space ) 
 
@@ -699,38 +528,37 @@ namespace Dune
     //! type of subgrid discrete function
     typedef AdaptiveDiscreteFunction < SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
 
+    typedef typename SubDiscreteFunctionSpaceType :: IteratorType SubgridIteratorType;
+    
+    typedef typename SubgridIteratorType :: Entity SubgridEntityType;
+    
+    typedef typename SubgridEntityType :: EntityPointer SubgridEntityPointerType;
+    
+    typedef typename SubDiscreteFunctionType :: LocalFunctionType SubLocalFunctionType;
+    
+    typedef typename SubDiscreteFunctionSpaceType :: LagrangePointSetType SGLagrangePointSetType;
+    
 //!-----------------------------------------------------------------------------------------
 
 
 
-
-/*! // Not sure if required
-
-    typedef typename HostDiscreteFunctionType :: LocalFunctionType LocalHostFunctionType;
-
-*/
-#if 0
-
-    typedef typename GlobalEntityDiscreteFunctionSpaceType :: LagrangePointSetType LagrangePointSetType;
-
-
-
-
+//! ------------------ Matrix Traits for the local Problems ---------------------
+    
+    typedef typename SubDiscreteFunctionSpaceType :: LagrangePointSetType SubgridLagrangePointSetType;
+    
     enum { faceCodim = 1 };
-    typedef typename LagrangePointSetType :: template Codim< faceCodim > :: SubEntityIteratorType FaceDofIteratorType;
-
+    typedef typename SubgridLagrangePointSetType :: template Codim< faceCodim > :: SubEntityIteratorType SubgridFaceDofIteratorType;
+    
     //! polynomial order of base functions
-    enum { polynomialOrder = GlobalEntityDiscreteFunctionSpaceType :: polynomialOrder };
-
-    //! type of the (possibly non-linear) diffusion operator
-    typedef DiffusionOperatorImp DiffusionType;
-
+    enum { polynomialOrder = SubDiscreteFunctionSpaceType :: polynomialOrder };
+    
+    
     struct LocProbMatrixTraits
      {
-       typedef GlobalEntityDiscreteFunctionSpaceType RowSpaceType;
-       typedef GlobalEntityDiscreteFunctionSpaceType ColumnSpaceType;
+       typedef SubDiscreteFunctionSpaceType RowSpaceType;
+       typedef SubDiscreteFunctionSpaceType ColumnSpaceType;
        typedef LagrangeMatrixSetup< false > StencilType;
-       typedef ParallelScalarProduct< GlobalEntityDiscreteFunctionSpaceType > ParallelScalarProductType;
+       typedef ParallelScalarProduct< SubDiscreteFunctionSpaceType > ParallelScalarProductType;
 
        template< class M >
        struct Adapter
@@ -738,16 +566,16 @@ namespace Dune
           typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
         };
      };
+     
+    typedef SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType, LocProbMatrixTraits > LocProbFEMMatrix;
 
-    typedef SparseRowMatrixOperator< GlobalEntityDiscreteFunctionType, GlobalEntityDiscreteFunctionType, LocProbMatrixTraits > LocProbFEMMatrix;
 
     // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
-    typedef OEMBICGSTABOp< GlobalEntityDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
+    typedef OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
 
     // discrete elliptic operator describing the elliptic local msfem problems
-    typedef LocalProblemOperator< GlobalEntityDiscreteFunctionType, DiffusionType > LocalProblemOperatorType;
+    typedef LocalProblemOperator< SubDiscreteFunctionType, DiffusionOperatorType > LocalProblemOperatorType;
 
-#endif
 
   private:
 
@@ -758,7 +586,6 @@ namespace Dune
 
   public:
 
-#if 1
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
     MsFEMLocalProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
@@ -779,115 +606,143 @@ namespace Dune
     {
     }
 
-#endif
 
-#if 0
+
 
     //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
-    template < class JacobianRangeImp, class EntityPointerImp >
-    void solvelocalproblem( JacobianRangeImp &gradient_PHI_H,
-                            // the barycenter x_T of a macro grid element 'T'
-                            EntityPointerImp &entityPointer, //pointer on 'T'
-                            GlobalEntityDiscreteFunctionType &local_problem_solution)
+    void solvelocalproblem( JacobianRangeType &e,
+                            SubDiscreteFunctionType &local_problem_solution )
     {
 
       // set solution equal to zero:
       local_problem_solution.clear();
-
+      
+      const SubDiscreteFunctionSpaceType &subDiscreteFunctionSpace = local_problem_solution.space();
+  
+      
       //! the matrix in our linear system of equations
       // in the non-linear case, it is the matrix for each iteration step
-      LocProbFEMMatrix locprob_system_matrix( "Local Problem System Matrix", globalEntityDiscreteFunctionSpace_, globalEntityDiscreteFunctionSpace_ );
+      LocProbFEMMatrix locprob_system_matrix( "Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace );
 
       //! define the discrete (elliptic) local MsFEM problem operator
       // ( effect of the discretized differential operator on a certain discrete function )
-      LocalProblemOperatorType local_problem_op( globalEntityDiscreteFunctionSpace_, diffusion_);
-
-      const GridPartType &gridPart = globalEntityDiscreteFunctionSpace_.gridPart();
-      typedef typename GlobalEntityDiscreteFunctionSpaceType :: IteratorType GEIteratorType;
-      typedef typename GridPartType :: IntersectionIteratorType GEIntersectionIteratorType;
-      GEIteratorType ge_endit = globalEntityDiscreteFunctionSpace_.end();
+      LocalProblemOperatorType local_problem_op( subDiscreteFunctionSpace, diffusion_ );
+      
+      
+      const SubGridPartType &subgridPart = subDiscreteFunctionSpace.gridPart();
+      const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
+	    
+      typedef typename SubDiscreteFunctionSpaceType :: IteratorType SGIteratorType;
+      typedef typename SubGridPartType :: IntersectionIteratorType SGIntersectionIteratorType;
+      SGIteratorType sg_endit = subDiscreteFunctionSpace.end();
 
       //! right hand side vector of the algebraic local MsFEM problem
-      // (in the non-linear setting it changes for every iteration step)
-      GlobalEntityDiscreteFunctionType local_problem_rhs( "rhs of local MsFEM problem", globalEntityDiscreteFunctionSpace_ );
+      SubDiscreteFunctionType local_problem_rhs( "rhs of local MsFEM problem", subDiscreteFunctionSpace );
       local_problem_rhs.clear();
-
+      
       // NOTE:
       // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
       // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know the result.
 
       // assemble the stiffness matrix
-      local_problem_op.assemble_matrix( entityPointer, locprob_system_matrix );
+      local_problem_op.assemble_matrix( locprob_system_matrix );
 
 
       //! boundary treatment:
-#if 1
       typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
-      typedef typename GEIntersectionIteratorType::Intersection Intersection;
-
-      for( GEIteratorType it = globalEntityDiscreteFunctionSpace_.begin(); it != ge_endit; ++it )
-          {
-            const GEntityType &local_grid_entity = *it;
-            if( !local_grid_entity.hasBoundaryIntersections() )
-            continue;
-
-            LocalMatrix local_matrix = locprob_system_matrix.localMatrix( local_grid_entity , local_grid_entity );
-
-            const LagrangePointSetType &lagrangePointSet = globalEntityDiscreteFunctionSpace_.lagrangePointSet( local_grid_entity );
-
-            const GEIntersectionIteratorType iend = gridPart.iend( local_grid_entity );
-            for( GEIntersectionIteratorType iit = gridPart.ibegin( local_grid_entity ); iit != iend; ++iit )
-              {
-                const Intersection &intersection = *iit;
-                if( !intersection.boundary() )
-                  continue;
-
-                const int face = intersection.indexInInside();
-                const FaceDofIteratorType fdend = lagrangePointSet.template endSubEntity< 1 >( face );
-                for( FaceDofIteratorType fdit = lagrangePointSet.template beginSubEntity< 1 >( face ); fdit != fdend; ++fdit )
-                  local_matrix.unitRow( *fdit );
-              }
-         }
-#endif
-
-
-      // assemble right hand side of algebraic local msfem problem
-      local_problem_op.assemble_local_RHS( entityPointer, gradient_PHI_H, local_problem_rhs );
-
-      // zero boundary condition for 'cell problems':
-#if 1
-      // set Dirichlet Boundary to zero 
-      for( GEIteratorType it = globalEntityDiscreteFunctionSpace_.begin(); it != ge_endit; ++it )
+      
+      typedef typename SGLagrangePointSetType :: template Codim< faceCodim > :: SubEntityIteratorType
+        FaceDofIteratorType;
+      
+      const HostGridPartType &hostGridPart = hostDiscreteFunctionSpace_.gridPart();
+     
+      SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
+      for( SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it )
         {
 
-           GEIntersectionIteratorType iit = gridPart.ibegin( *it );
-           const GEIntersectionIteratorType ge_iendit = gridPart.iend( *it );
+            const SubgridEntityType &subgrid_entity = *sg_it;
+	   
+            HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
+            const HostEntityType& host_entity = *host_entity_pointer;
 
-           for( ; iit != ge_iendit; ++iit )
-             {
-                if( !(*iit).boundary() )
-                  continue;
+            LocalMatrix local_matrix = locprob_system_matrix.localMatrix( subgrid_entity, subgrid_entity );
 
-                LocalFunctionType rhs_on_entity = local_problem_rhs.localFunction( *it );
+            const SGLagrangePointSetType &lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet( subgrid_entity );
 
-                const LagrangePointSetType &lagrangePointSet
-                     = globalEntityDiscreteFunctionSpace_.lagrangePointSet( *it );
+            const HostIntersectionIterator iend = hostGridPart.iend( host_entity );
+            for( HostIntersectionIterator iit = hostGridPart.ibegin( host_entity ); iit != iend; ++iit )
+              {
+
+                if ( iit->neighbor() ) //if there is a neighbor entity
+                  {
+                    // check if the neighbor entity is in the subgrid
+                   const HostEntityPointerType neighborHostEntityPointer = iit->outside();
+                   const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+                   if ( subGrid.template contains<0>( neighborHostEntity ) )
+                    {
+                      continue;
+                    }
+
+                  }
 
                 const int face = (*iit).indexInInside();
+                const FaceDofIteratorType fdend = lagrangePointSet.template endSubEntity< 1 >( face );
+                for( FaceDofIteratorType fdit = lagrangePointSet.template beginSubEntity< 1 >( face ); fdit != fdend; ++fdit )
+                local_matrix.unitRow( *fdit );
+		
+              }
+   
+          }
 
-                FaceDofIteratorType faceIterator
-                     = lagrangePointSet.template beginSubEntity< faceCodim >( face );
+      // assemble right hand side of algebraic local msfem problem
+      local_problem_op.assemble_local_RHS( e, local_problem_rhs );
 
-                const FaceDofIteratorType faceEndIterator
-                     = lagrangePointSet.template endSubEntity< faceCodim >( face );
+      // zero boundary condition for 'cell problems':
+      // set Dirichlet Boundary to zero 
+      for( SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it )
+        {
 
-               for( ; faceIterator != faceEndIterator; ++faceIterator )
-                  rhs_on_entity[ *faceIterator ] = 0;
-             }
+            const SubgridEntityType &subgrid_entity = *sg_it;
+	   
+            HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
+            const HostEntityType& host_entity = *host_entity_pointer;
+
+            HostIntersectionIterator iit = hostGridPart.ibegin( host_entity );
+            const HostIntersectionIterator endiit = hostGridPart.iend( host_entity );
+            for( ; iit != endiit; ++iit ) {
+
+              if ( iit->neighbor() ) //if there is a neighbor entity
+               {
+                 // check if the neighbor entity is in the subgrid
+                 const HostEntityPointerType neighborHostEntityPointer = iit->outside();
+                 const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+           
+		  if ( subGrid.template contains<0>( neighborHostEntity ) )
+                   {
+                    continue;
+                   }
+
+               }
+
+            SubLocalFunctionType rhsLocal = local_problem_rhs.localFunction( subgrid_entity );
+            const SGLagrangePointSetType &lagrangePointSet
+               = subDiscreteFunctionSpace.lagrangePointSet( subgrid_entity );
+      
+            const int face = (*iit).indexInInside();
+    
+            FaceDofIteratorType faceIterator
+               = lagrangePointSet.template beginSubEntity< faceCodim >( face );
+            const FaceDofIteratorType faceEndIterator
+               = lagrangePointSet.template endSubEntity< faceCodim >( face );
+            for( ; faceIterator != faceEndIterator; ++faceIterator )
+               rhsLocal[ *faceIterator ] = 0;
+            }
 
         }
-#endif
+
+
+
 
       const double norm_rhs = local_problem_op.normRHS( local_problem_rhs );
 
@@ -917,9 +772,36 @@ namespace Dune
 
     //! ----------- end method: solve local MsFEM problem ------------------------------------------
 
-#endif
+    // create a hostgrid function from a subgridfunction
+    void subgrid_to_hostrid_function( const SubDiscreteFunctionType &sub_func,
+                                            HostDiscreteFunctionType &host_func )
+    {
+      
+       host_func.clear();
 
+       const SubDiscreteFunctionSpaceType &subDiscreteFunctionSpace = sub_func.space();
+       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();       
+       
+       SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
+       for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+          {
 
+             const SubgridEntityType &sub_entity = *sub_it;
+
+             HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( *sub_it );
+             const HostEntityType& host_entity = *host_entity_pointer;
+
+             SubLocalFunctionType sub_loc_value = sub_func.localFunction( sub_entity );
+             HostLocalFunctionType host_loc_value = host_func.localFunction( host_entity );
+
+             const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+             for( unsigned int i = 0; i < numBaseFunctions; ++i )
+               {
+                 host_loc_value[ i ] = sub_loc_value[ i ];
+               }
+
+          }
+    }
 
 
     // method for solving and saving the solutions of the local msfem problems
@@ -929,21 +811,21 @@ namespace Dune
 
     // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
     void assemble_all( const int computational_level,
-                       const std :: string &filename = "default",
+		       const std :: string &filename = "default",
                        bool silent = true /* state information on subgrids */ )
     {
 
       enum { dimension = GridType :: dimension};
       enum { maxnumOfBaseFct = 100 }; 
 
-      DomainType e[dimension];
+      JacobianRangeType e[dimension];
       for( int i = 0; i < dimension ; ++i )
         for( int j = 0; j < dimension ; ++j )
          {
            if ( i == j )
-             { e[i][j] = 1.0; }
+             { e[i][0][j] = 1.0; }
            else
-             { e[i][j] = 0.0; }
+             { e[i][0][j] = 0.0; }
          }
 
       const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
@@ -959,21 +841,6 @@ namespace Dune
 
 
       std :: cout << "number_of_level_host_entities = " << number_of_level_host_entities << std :: endl;
-
-
-      bool writer_is_open = false;
-
-      std :: string locprob_solution_location = "data/MsFEM/"+filename+"_localProblemSolutions_baseSet";
-      DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
-
-      writer_is_open = dfw.open();
-
-      long double starting_time = clock();
-
-      // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-      double minimum_time_c_p = 1000000;
-      double average_time_c_p = 0;
-      double maximum_time_c_p = 0;
 
       //! ----------- create subgrids --------------------
 
@@ -1029,159 +896,153 @@ namespace Dune
       //! ----------- end create subgrids --------------------
 
 
-#if 0
+      // --------------- writing data output ---------------------
+      // typedefs and initialization
+      #ifdef VTK_OUTPUT
 
-      typedef DiscreteFunctionImp DiscreteFunctionType;
+      typedef Tuple<HostDiscreteFunctionType*> IOTupleType;
+      typedef DataOutput<HostGridType, IOTupleType> DataOutputType;
 
-      typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
-         DiscreteFunctionSpaceType;
+      // general output parameters
+      LocalProblemDataOutputParameters outputparam;
+      outputparam.set_path( "data/MsFEM/" + filename );
 
-      typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
+      // sequence stamp
+      std::stringstream outstring;
+      // -------------------------------------------------------
+      #endif
+      
 
-      typedef typename DiscreteFunctionSpaceType :: GridType GridType;
+      bool writer_is_open = false;
 
-      typedef typename DiscreteFunctionSpaceType :: JacobianRangeType
-        JacobianRangeType;
+      std :: string locprob_solution_location = "data/MsFEM/"+filename+"_localProblemSolutions_baseSet";
+      DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
 
-      typedef typename DiscreteFunctionSpaceType :: BaseFunctionSetType
-        BaseFunctionSetType;
+      writer_is_open = dfw.open();
 
-      typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
+      long double starting_time = clock();
 
-      typedef typename DiscreteFunctionType :: LocalFunctionType
-         LocalFunctionType;
+      // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
+      double minimum_time_c_p = 1000000;
+      double average_time_c_p = 0;
+      double maximum_time_c_p = 0;
 
-      typedef typename GridType :: template Codim< 0 > :: Entity EntityType;
-      typedef typename EntityType :: Geometry EntityGeometryType;
-
-      typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
-
-
-
-
-      int number_of_local_problem = 0;
-
+      
       if ( writer_is_open )
       {
 
-        IteratorType endit = discreteFunctionSpace.end();
-        for(IteratorType it = discreteFunctionSpace.begin(); it != endit ; ++it)
+        for ( HostgridLevelEntityIteratorType lit = level_iterator_begin;
+              lit != level_iterator_end ; ++lit )
           {
+	    
+            int index = hostGridLevelIndexSet.index( *lit );
+	    
+            SubGridPartType subGridPart( *subGrid[ index ] );
 
-           // gradients of the macroscopic base functions
-           JacobianRangeType gradientPhi[ maxnumOfBaseFct ];
+            SubDiscreteFunctionSpaceType subDiscreteFunctionSpace( subGridPart );
 
-           // entity
-           const EntityType& entity = *it;
+	    char name_loc_sol[50];
+            sprintf( name_loc_sol, "Local Problem Solution %d", index );
+            std::string name_local_solution( name_loc_sol );
 
-           const BaseFunctionSetType baseSet
-              = discreteFunctionSpace.baseFunctionSet( entity );
-
-           const EntityGeometryType &geometry = entity.geometry();
-
-           EntityQuadratureType quadrature( entity, 0 );
-
-           DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
-
-           // number of base functions on entity
-           const int numBaseFunctions = baseSet.numBaseFunctions();
-
-           // calc Jacobian inverse before volume is evaluated
-           const FieldMatrix< double, dimension, dimension > &inv
-                    = geometry.jacobianInverseTransposed( quadrature.point( 0 /*=quadraturePoint*/ ) );
-
-           GlobalEntityDiscreteFunctionType correctorPhi_i( "corrector Phi_i" , globalEntityDiscreteFunctionSpace_ );
-
-
-           for( int i = 0; i < numBaseFunctions; ++i )
-            {
-              baseSet.jacobian( i, quadrature[0 /*=quadraturePoint*/], gradientPhi[ i ] );
-              // multiply with transpose of jacobian inverse
-              gradientPhi[ i ][ 0 ] = FMatrixHelp :: mult( inv, gradientPhi[ i ][ 0 ] );
-            }
-
-           for( int i = 0; i < numBaseFunctions; ++i )
-            {
-
-             std :: cout << "Number of the local problem: " << number_of_local_problem 
-             << " (of " << numBaseFunctions*discreteFunctionSpace.grid().size(0) << " problems in total)" << std :: endl;
-
-             correctorPhi_i.clear();
-
-             // take time
-             long double time_now = clock();
-
-#if 1
-gradientPhi[ i ][ 0 ][ 0 ] = 1.0;
-gradientPhi[ i ][ 0 ][ 1 ] = 0.0;
-#endif
-
-             solvelocalproblem<JacobianRangeType, IteratorType>
-                  ( gradientPhi[ i ], it, correctorPhi_i );
-
-             // min/max time
-             if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
+	    //! only for dimension 2!
+            SubDiscreteFunctionType local_problem_solution_0( name_local_solution, subDiscreteFunctionSpace );
+            local_problem_solution_0.clear();
+	    
+            SubDiscreteFunctionType local_problem_solution_1( name_local_solution, subDiscreteFunctionSpace );
+            local_problem_solution_1.clear();
+	    
+            std :: cout << "Number of the local problem: " << dimension*index << " (of " << (dimension*number_of_level_host_entities)-1 << " problems in total)" << std :: endl;
+	    
+            // take time
+            long double time_now = clock();
+	    
+	    // solve the problems
+	    solvelocalproblem( e[0], local_problem_solution_0 );
+	    
+	    // min/max time
+            if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
                { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-             if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
+            if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
                { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
+               
+               
+               
+            std :: cout << "Number of the local problem: " << (dimension*index)+1 << " (of " << (dimension*number_of_level_host_entities)-1 << " problems in total)" << std :: endl;
+	    
+            // take time
+            time_now = clock();
+	    
+	    // solve the problems
+	    solvelocalproblem( e[1], local_problem_solution_1 );
+	    
+	    // min/max time
+            if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
+               { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
+            if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
+               { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
+               
+            dfw.append( local_problem_solution_0);
+            dfw.append( local_problem_solution_1);
+	    
+	    HostDiscreteFunctionType host_local_solution( name_local_solution, hostDiscreteFunctionSpace_ );
+            subgrid_to_hostrid_function( local_problem_solution_0, host_local_solution );
+    
+            // --------------- writing data output ---------------------
+            // (writing)
+            #ifdef VTK_OUTPUT
+	    
+            // --------- data output local solution --------------
 
-             dfw.append( correctorPhi_i );
+            // create and initialize output class
+            IOTupleType local_solution_series_0( &host_local_solution );
 
-             // check if we use a correct numeration of the local msfem problems:
-             if ( !(lp_num_manager.get_number_of_local_problem( it, i ) == number_of_local_problem) )
-               { std :: cout << "Numeration of local problems incorrect." << std :: endl;
-                 std :: abort(); }
+            char ls_name_0[50];
+            sprintf( ls_name_0, "local_problem_solution_e0_%d", index );
+            std::string ls_name_0_s( ls_name_0 );
 
-#ifdef LOCALDATAOUTPUT
-             // --------------- writing data output ---------------------
+            outputparam.set_prefix( ls_name_0_s );
+            DataOutputType localsol_dataoutput_0( hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_0, outputparam );
 
-//if ( number_of_local_problem == 7 )
-             {
+            // write data
+            outstring << "local-problem-solution-0";
+            localsol_dataoutput_0.writeData( 1.0 /*dummy*/, outstring.str() );
+            // clear the std::stringstream:
+            outstring.str(std::string());
 
-             typedef Tuple<DiscreteFunctionType*> IOTupleType;
-             typedef DataOutput<GridType, IOTupleType> DataOutputType;
+            // -------------------------------------------------------
+            #endif	    
+	    
+	    
+            subgrid_to_hostrid_function( local_problem_solution_1, host_local_solution );
+    
+            // --------------- writing data output ---------------------
+            // (writing)
+            #ifdef VTK_OUTPUT
+	    
+            // --------- data output local solution --------------
 
-             // general output parameters
-             LocalProblemDataOutputParameters outputparam;
-             outputparam.set_path( "data/MsFEM/" + filename );
+            // create and initialize output class
+            IOTupleType local_solution_series_1( &host_local_solution );
 
-             // sequence stamp
-             std::stringstream outstring;
+            char ls_name_1[50];
+            sprintf( ls_name_1, "local_problem_solution_e1_%d", index );
+            std::string ls_name_1_s( ls_name_1 );
 
+            outputparam.set_prefix( ls_name_1_s );
+            DataOutputType localsol_dataoutput_1( hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_1, outputparam );
 
-             // --------- data output local solution --------------
+            // write data
+            outstring << "local-problem-solution-1";
+            localsol_dataoutput_1.writeData( 1.0 /*dummy*/, outstring.str() );
+            // clear the std::stringstream:
+            outstring.str(std::string());
 
-             // create and initialize output class
-             IOTupleType local_solution_series( &correctorPhi_i );
+            // -------------------------------------------------------
+            #endif	  	 
 
-             char ls_name[50];
-             sprintf( ls_name, "a_local_problem_solution_%d", number_of_local_problem );
-             std::string ls_name_s( ls_name );
+          }
 
-
-             outputparam.set_prefix( ls_name_s );
-             DataOutputType localsol_dataoutput( globalEntityDiscreteFunctionSpace_.gridPart().grid(), local_solution_series, outputparam );
-
-             // write data
-             outstring << "a-local-problem-solution";
-             localsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-             // clear the std::stringstream:
-             outstring.str(std::string());
-
-             // -------------------------------------------------------
-
-             //abort();
-             }
-
-
-
-#endif
-
-             number_of_local_problem++;
-
-            }
-
-         } // end: for-loop: IteratorType it
 
       } // end: 'if ( writer_is_open )'
 
@@ -1191,17 +1052,18 @@ gradientPhi[ i ][ 0 ][ 1 ] = 0.0;
          if (data_file_->is_open())
          {
            (*data_file_) << std :: endl;
-           (*data_file_) << "In method: saveTheSolutions_baseSet." << std :: endl << std :: endl;
-           (*data_file_) << "Local MsFEM problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std :: endl;
+           (*data_file_) << "In method: assemble_all." << std :: endl << std :: endl;
+           (*data_file_) << "MsFEM problems solved for " << number_of_level_host_entities << " coarse grid entities." << std :: endl;
+           (*data_file_) << dimension*number_of_level_host_entities << " local MsFEM problems solved in total." << std :: endl;
            (*data_file_) << "Minimum time for solving a local problem = " << minimum_time_c_p << "s." << std :: endl;
            (*data_file_) << "Maximum time for solving a localproblem = " << maximum_time_c_p << "s." << std :: endl;
-           (*data_file_) << "Average time for solving a localproblem = " << ((clock()-starting_time)/CLOCKS_PER_SEC)/number_of_local_problem << "s." << std :: endl;
+           (*data_file_) << "Average time for solving a localproblem = " << ((clock()-starting_time)/CLOCKS_PER_SEC)/(dimension*number_of_level_host_entities) << "s." << std :: endl;
            (*data_file_) << "Total time for computing and saving the localproblems = " << ((clock()-starting_time)/CLOCKS_PER_SEC) << "s," << std :: endl << std :: endl;
          }
       }
-#endif
 
-      delete[] subGrid;
+
+      // delete[] subGrid;
 
     }
 

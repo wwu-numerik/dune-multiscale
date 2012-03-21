@@ -105,7 +105,7 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/operators/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-
+#include <dune/multiscale/operators/matrix_assembler/new_elliptic_msfem_matrix_assembler.hh>
 
 #include <dune/multiscale/operators/msfem_localproblems/new-localproblemsolver.hh>
 
@@ -333,6 +333,8 @@ typedef OEMBICGSQOp/*OEMBICGSTABOp*/< SubDiscreteFunctionType, SubgridFEMMatrix 
 typedef DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
 
 typedef DiscreteEllipticOperator< SubDiscreteFunctionType, DiffusionType, MassTermType > SubgridEllipticOperatorType;
+
+typedef DiscreteEllipticMsFEMOperator< DiscreteFunctionType, DiffusionType > EllipticMsFEMOperatorType;
 
 //! --------------------------------------------------------------------------------------
 
@@ -839,11 +841,16 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 
+//! Naechste Schritte:
+// (Anmerkung: wir implementieren zunaechst nur den Fall uniformer Gitter!
+// Adaptiv gesteuert werden sollen nur die Groessen von U(T) und das globale MikroLevel)
 
-
-
-
-
+//! 1. Subgrids anreichern (2 Tage)
+//! 2. FEM Loeser in eine einzige Klasse auslagern (1 Tag)
+//! 3. MsFEM Loeser formal auslagern und den localProblemSolver in den Konstruktor packen (2 Tage)
+//! 4. MsFEM Loeser komplett aufbauen (coarse grid als subgrid initialisieren usw.) (3 Tage)
+//! 5. Implementierung der Fehlerschaetzer (10 Tage)
+//! 6. Adaptionstrategie (5 Tage)
 
 
 
@@ -855,7 +862,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
     // Use the host-grid entities of Level 'level' as computational domains for the subgrid computations
    int level = 0;
 
-   MsFEMLocalProblemSolver< DiscreteFunctionSpaceType, DiffusionType > loc_prob_solver( discreteFunctionSpace, diffusion_op );
+   MsFEMLocalProblemSolver< DiscreteFunctionType, DiffusionType > loc_prob_solver( discreteFunctionSpace, diffusion_op, data_file );
    loc_prob_solver.assemble_all( level, filename_, false );
 
 abort();
@@ -950,83 +957,8 @@ abort();
    for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
      {
 
-         const EntityType& entity = *it;
-
-#if 0
-         // get geoemetry of fine grid entity:
-         const EnGeometryType& fine_geo = it->geometry();
-
-         // das Zentrum des Fine-Grid Elements:
-         DomainType center_of_fine_it = fine_geo.global(center_of_reference_element);
-
-         // stellen wir das Gleichungssystem nach (lambda_0,lambda_1) auf, so ergibt sich:
-
-         if ( (global_corner_0[0] - global_corner_2[0]) == 0 )
-            {
-
-              lambda_1 = ( center_of_fine_it[0] - global_corner_2[0] ) / ( global_corner_1[0] - global_corner_2[0] );
-
-              lambda_0 = ( ( center_of_fine_it[1] - global_corner_2[1] ) + ( lambda_1 * (global_corner_2[1] - global_corner_1[1] ) ) )
-                             / ( global_corner_0[1] - global_corner_2[1] ); 
-
-            }
-         else
-            {
-
-              if ( (global_corner_1[0] - global_corner_2[0]) == 0 )
-               {
-
-                 lambda_0 = ( center_of_fine_it[0] - global_corner_2[0] ) / ( global_corner_0[0] - global_corner_2[0] );
-
-                 lambda_1 = ( ( center_of_fine_it[1] - global_corner_2[1] ) - ( lambda_0 * (global_corner_0[1] - global_corner_2[1] ) ) )
-                             / ( global_corner_1[1] - global_corner_2[1] );
-
-               }
-              else
-               {
-
-                 if ( (global_corner_1[1] - global_corner_2[1]) == 0 )
-                  {
- 
-                    lambda_0 = ( center_of_fine_it[1] - global_corner_2[1] ) / ( global_corner_0[1] - global_corner_2[1] );
-
-                    lambda_1 = ( ( center_of_fine_it[0] - global_corner_2[0] ) - ( lambda_0 * (global_corner_0[0] - global_corner_2[0] ) ) )
-                               / ( global_corner_1[0] - global_corner_2[0] );
-
-                  }
-                 else
-                  {
-                    lambda_1 =  (   (center_of_fine_it[1] - global_corner_2[1]) / ( global_corner_1[1] - global_corner_2[1] ) )
-                              - (   ( (global_corner_0[1] - global_corner_2[1]) / (global_corner_0[0] - global_corner_2[0]) )
-                                  * ( (center_of_fine_it[0] - global_corner_2[0]) / (global_corner_1[1] - global_corner_2[1]) ) );
-
-
-                    lambda_1 = lambda_1 /
-                                ( 1.0 -
-                                   (   ( (global_corner_0[1] - global_corner_2[1]) / (global_corner_0[0] - global_corner_2[0]) )
-                                     * ( (global_corner_1[0] - global_corner_2[0]) / (global_corner_1[1] - global_corner_2[1]) ) ) );
-
-                     lambda_0 = ( ( center_of_fine_it[0] - global_corner_2[0] ) - ( lambda_1 * (global_corner_1[0] - global_corner_2[0] ) ) )
-                                  / ( global_corner_0[0] - global_corner_2[0] );
-                  }
-
-               }
-
-             }
-
-
-           if (     (0.0 <= lambda_0) && (lambda_0 <= 1.0)
-                 && (0.0 <= lambda_1) && (lambda_1 <= 1.0)
-                 && ( (lambda_0 + lambda_1) <= 1.0) )
-            {
-               std :: cout << "center_of_fine_it = " << center_of_fine_it << std :: endl;
-               subGrid.insert( entity );
-            }
-
-#endif
-            
+         const EntityType& entity = *it;          
 	 
-#if 1
          EntityPointerType level_0_father_entity = it;
          for (int lev = 0; lev < maxlevel; ++lev)
             level_0_father_entity = level_0_father_entity->father();
@@ -1036,15 +968,6 @@ abort();
             std :: cout << "inserting element" << std :: endl;
             subGrid.insertPartial( entity );
           }
-#endif
-
-#if 0
-         if ( a_level_0_ent == it->father() )
-          {
-            std :: cout << "inserting element" << std :: endl;
-            subGrid.insert( entity );
-          }
-#endif
 
        //subGrid.insert( entity );
 
@@ -1073,7 +996,7 @@ abort();
    SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
    for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
       {
-	std :: cout << "x" << std :: endl;
+	//std :: cout << "x" << std :: endl;
         //std :: cout << "subGridPart.indexSet().index( *sub_it ) = " << subGridPart.indexSet().index( *sub_it ) << std :: endl;
         EntityPointerType host_entity = subGrid.getHostEntity<0>( *sub_it );
         //std :: cout << "gridPart.indexSet().index( *host_entity ) = " << gridPart.indexSet().index( *host_entity ) << std :: endl << std :: endl;
