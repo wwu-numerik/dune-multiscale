@@ -24,8 +24,7 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
 
-#include <dune/multiscale/operators/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/operators/globalsolver.hh>
+#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
 
 #include <dune/fem/gridpart/periodicgridpart.hh>
 
@@ -34,8 +33,6 @@
 #include <dune/fem/io/parameter.hh>
 #include <dune/fem/io/file/datawriter.hh>
 
-//!Wird nicht gebraucht, ist sinnlos:
-//#include "../../../problems/EllipticProblems/EllipticCellProblems/cellproblem.hh"
 
 namespace Dune 
 {

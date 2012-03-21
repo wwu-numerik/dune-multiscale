@@ -17,7 +17,7 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-#include <dune/multiscale/operators/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
 // the local problem:
 // Let 'T' denote a coarse grid element and

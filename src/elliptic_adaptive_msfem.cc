@@ -67,47 +67,26 @@
 #include <dune/fem/io/file/datawriter.hh>
 
 
+// dune-fem includes:
 
 #include <dune/fem/gridpart/gridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
-
-#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
-
-#if 1
-//!---------
-#include <dune/fem/solver/oemsolver/oemsolver.hh>
-
-
-#include <dune/fem/operator/discreteoperatorimp.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/l2norm.hh>
-//#include <dune/fem/io/visual/grape/datadisp/errordisplay.hh>
-//!-----------
-#endif
-
-#include <dune/fem/solver/inverseoperators.hh>
-
-#include <dune/subgrid/subgrid.hh>
-
 
 //! local (dune-multiscale) includes
 #include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
 
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
+#include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
+//! Bei Gelegenheit LOESCHEN:
 #include <dune/multiscale/tools/meanvalue.hh>
-
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/new_elliptic_msfem_matrix_assembler.hh>
-
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/new-localproblemsolver.hh>
 
 
 using namespace Dune;
@@ -129,7 +108,7 @@ using namespace Dune;
     #endif
 #endif
 
-//! --------- typedefs for the macro grid and the corresponding discrete space -------------
+//! ----- typedefs for the macro grid and the corresponding discrete space -----
 
 //Dune::InteriorBorder_Partition or Dune::All_Partition >?
 //see: http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
@@ -139,38 +118,17 @@ typedef GridPtr< GridType > GridPointerType;
 
 typedef FunctionSpace < double , double , WORLDDIM , 1 > FunctionSpaceType;
 
-//!-----------------------------------------------------------------------------------------
-
-
-//! --------- typedefs for the local grid and the corresponding local ('sub') )discrete space -------------
-
-typedef SubGrid< WORLDDIM , GridType > SubGridType; 
-
-typedef LeafGridPart< SubGridType > SubGridPartType; 
-
-typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, SubGridPartType, 1 > //1=POLORDER
-   SubDiscreteFunctionSpaceType;
-
-typedef AdaptiveDiscreteFunction < SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
-
-//!-----------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------
 
 
 
-
-//! --------- typedefs for the coefficient and data functions ------------------------------
+//! --------- typedefs for the coefficient and data functions ------------------
 
 // type of first source term (right hand side of differential equation or type of 'f')
 typedef Problem::FirstSource< FunctionSpaceType > FirstSourceType;
 
-// type of second source term 'G' (second right hand side of differential equation 'div G')
-typedef Problem::SecondSource< FunctionSpaceType > SecondSourceType;
-
 // type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
 typedef Problem::Diffusion< FunctionSpaceType > DiffusionType;
-
-// type of mass (or reaction) term (i.e. 'm' or 'c')
-typedef Problem::MassTerm< FunctionSpaceType > MassTermType;
 
 // default type for any missing coefficient function (e.g. advection,...)
 typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionType;
@@ -182,12 +140,12 @@ typedef DiscreteFunctionAdapter< ExactSolutionType, GridPartType >
   DiscreteExactSolutionType; //for data output with paraview or grape
 #endif
 
-//!-----------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------
 
 
 
 
-//! ---------  typedefs for the standard discrete function space (macroscopic) -------------
+//! ----  typedefs for the standard discrete function space (macroscopic) -----
 
 typedef FunctionSpaceType::DomainType DomainType; 
 
@@ -198,145 +156,10 @@ typedef FunctionSpaceType::RangeType RangeType;
 //! see dune/fem/lagrangebase.hh
 typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, GridPartType, 1 > //1=POLORDER
    DiscreteFunctionSpaceType;
-   
-
-typedef DiscreteFunctionSpaceType :: DomainFieldType TimeType;
-
-typedef DiscreteFunctionSpaceType :: JacobianRangeType JacobianRangeType;
-
-typedef GridType :: Codim<0> :: Entity EntityType; 
-typedef GridType :: Codim<0> :: EntityPointer EntityPointerType; 
-typedef GridType :: Codim<0> :: Geometry EntityGeometryType; 
-typedef GridType :: Codim<1> :: Geometry FaceGeometryType; 
-
-
-typedef DiscreteFunctionSpaceType     :: BaseFunctionSetType      BaseFunctionSetType;
-
-typedef CachingQuadrature < GridPartType , 0 > EntityQuadratureType;
-typedef CachingQuadrature < GridPartType , 1 > FaceQuadratureType;
-
-typedef DiscreteFunctionSpaceType :: DomainFieldType TimeType;
-typedef DiscreteFunctionSpaceType :: RangeFieldType RangeFieldType;
 
 typedef AdaptiveDiscreteFunction < DiscreteFunctionSpaceType > DiscreteFunctionType;
 
-
-typedef DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
-typedef DiscreteFunctionType :: DofIteratorType DofIteratorType;
-
-//!-----------------------------------------------------------------------------------------
-
-
-
-
-
-//! ---------  typedefs for the local function space (subgrid space) -------------
-
-typedef SubGridType :: Codim<0> :: Entity SubgridEntityType; 
-typedef SubGridType :: Codim<0> :: EntityPointer SubgridEntityPointerType; 
-typedef SubGridType :: Codim<0> :: Geometry SubgridEntityGeometryType; 
-typedef SubGridType :: Codim<1> :: Geometry SubgridFaceGeometryType;
-
-typedef SubDiscreteFunctionSpaceType :: IteratorType SubgridIteratorType;
-
-typedef SubDiscreteFunctionType :: DofIteratorType SubgridDofIteratorType;
-
-typedef SubDiscreteFunctionType :: LocalFunctionType SubLocalFunctionType;
-#if 0
-typedef DiscreteFunctionSpaceType     :: BaseFunctionSetType      BaseFunctionSetType;
-
-typedef CachingQuadrature < GridPartType , 0 > EntityQuadratureType;
-typedef CachingQuadrature < GridPartType , 1 > FaceQuadratureType;
-
-typedef DiscreteFunctionSpaceType :: DomainFieldType TimeType;
-typedef DiscreteFunctionSpaceType :: RangeFieldType RangeFieldType;
-
-typedef AdaptiveDiscreteFunction < DiscreteFunctionSpaceType > DiscreteFunctionType;
-
-
-typedef DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
-typedef DiscreteFunctionType :: DofIteratorType DofIteratorType;
-#endif
-
-//!-----------------------------------------------------------------------------------------
-
-
-
-
-
-//! --------------------- the standard matrix traits -------------------------------------
-
-struct MatrixTraits
-{
-  typedef DiscreteFunctionSpaceType RowSpaceType;
-  typedef DiscreteFunctionSpaceType ColumnSpaceType;
-  typedef LagrangeMatrixSetup< false > StencilType;
-  typedef ParallelScalarProduct< DiscreteFunctionSpaceType > ParallelScalarProductType;
-
-  template< class M >
-  struct Adapter
-  {
-    typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-  };
-};
-
-//! --------------------------------------------------------------------------------------
-
-
-
-
-//! --------------- the matrix traits for the subgrid matrix -----------------------------
-
-struct SubgridMatrixTraits
-{
-  typedef SubDiscreteFunctionSpaceType RowSubSpaceType;
-  typedef SubDiscreteFunctionSpaceType ColumnSubSpaceType;
-  typedef LagrangeMatrixSetup< false > StencilType;
-  typedef ParallelScalarProduct< SubDiscreteFunctionSpaceType > SubgridParallelScalarProductType;
-
-  template< class M >
-  struct Adapter
-  {
-    typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-  };
-};
-
-//! --------------------------------------------------------------------------------------
-
-
-
-
-//! --------------------- type of fem stiffness matrix -----------------------------------
-
-typedef SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, MatrixTraits > FEMMatrix;
-
-typedef SparseRowMatrixOperator< SubDiscreteFunctionType,
-                                 SubDiscreteFunctionType,
-			          SubgridMatrixTraits > SubgridFEMMatrix;
-
-//! --------------------------------------------------------------------------------------
-
-
-//! --------------- solver for the linear system of equations ----------------------------
-
-// use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones. GMRES seems to be more stable, but is extremely slow!
-typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
-
-typedef OEMBICGSQOp/*OEMBICGSTABOp*/< SubDiscreteFunctionType, SubgridFEMMatrix > InverseSubgridFEMMatrix;
-
-//! --------------------------------------------------------------------------------------
-
-
-//! --------------- the discrete operators (standard FEM) ------------------------
-
-// discrete elliptic operator (corresponds with FEM Matrix)
-typedef DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
-
-typedef DiscreteEllipticOperator< SubDiscreteFunctionType, DiffusionType, MassTermType > SubgridEllipticOperatorType;
-
-typedef DiscreteEllipticMsFEMOperator< DiscreteFunctionType, DiffusionType > EllipticMsFEMOperatorType;
-
-//! --------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------
 
 
 
@@ -344,7 +167,9 @@ typedef DiscreteEllipticMsFEMOperator< DiscreteFunctionType, DiffusionType > Ell
 
 
 
-//! -------------------------------- important variables ---------------------------------
+
+
+//! ---------------------- important variables ---------------------------------
 
 enum { dimension = GridType :: dimension};
 
@@ -353,22 +178,14 @@ std :: string filename_;
 
 int refinement_level_macrogrid_;
 
-
 //! -----------------------------------------------------------------------------
 
 
 
-//! --------- typedefs and classes for data output -----------------------------------------
+//! ------------------ typedefs and classes for data output ---------------------
 
 typedef Tuple<DiscreteFunctionType*> IOTupleType;
 typedef DataOutput< GridType, IOTupleType> DataOutputType;
-
-
-//! loeschen:
-typedef Tuple< SubDiscreteFunctionType* > SubIOTupleType;
-typedef DataOutput<SubGridType, SubIOTupleType> SubDataOutputType;
-
-
 
 
 
@@ -412,7 +229,7 @@ public:
   std::string path() const 
     {
       if (my_path_ == "")
-        return "data_output_hmm";
+        return "data_output_msfem";
       else
         return my_path_;
 
@@ -432,218 +249,6 @@ public:
 };
 
 //!---------------------------------------------------------------------------------------
-
-
-
-
-
-
-//! set the dirichlet points to zero
-template< class EntityType, class DiscreteFunctionType >
-void boundaryTreatment( const EntityType &entity, DiscreteFunctionType &rhs )
-{
-  typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
-    DiscreteFunctionSpaceType;
-
-  typedef typename DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
-
-  typedef typename DiscreteFunctionSpaceType :: LagrangePointSetType
-    LagrangePointSetType;
-
-  typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
-
-  enum { faceCodim = 1 };
-
-  typedef typename GridPartType :: IntersectionIteratorType
-    IntersectionIteratorType;
-
-  typedef typename LagrangePointSetType :: template Codim< faceCodim > 
-                                        :: SubEntityIteratorType
-    FaceDofIteratorType;
-
-  const DiscreteFunctionSpaceType &discreteFunctionSpace = rhs.space();
-
-  const GridPartType &gridPart = discreteFunctionSpace.gridPart();
-
-  IntersectionIteratorType it = gridPart.ibegin( entity );
-  const IntersectionIteratorType endit = gridPart.iend( entity );
-  for( ; it != endit; ++it ) {
-
-    if( !(*it).boundary() )
-      continue;
-
-    LocalFunctionType rhsLocal = rhs.localFunction( entity );
-    const LagrangePointSetType &lagrangePointSet
-      = discreteFunctionSpace.lagrangePointSet( entity );
-
-    const int face = (*it).indexInInside();
-
-    FaceDofIteratorType faceIterator
-      = lagrangePointSet.template beginSubEntity< faceCodim >( face );
-    const FaceDofIteratorType faceEndIterator
-      = lagrangePointSet.template endSubEntity< faceCodim >( face );
-    for( ; faceIterator != faceEndIterator; ++faceIterator )
-      rhsLocal[ *faceIterator ] = 0;
-
-  }
-
-
-}
-
-
-
-
-
-
-
-//! set the dirichlet points to zero
-template< class SubgridEntityType, class HostDiscreteFunctionSpaceType, class SubDiscreteFunctionType >
-void boundaryTreatment( const SubgridEntityType &subgrid_entity, 
-                        const HostDiscreteFunctionSpaceType &hostSpace,
-                        SubDiscreteFunctionType &rhs )
-{
-  
-
-  typedef typename SubDiscreteFunctionType :: DiscreteFunctionSpaceType
-    SubDiscreteFunctionSpaceType;
-
-  typedef typename SubDiscreteFunctionType :: LocalFunctionType LocalFunctionType;
-
-  typedef typename SubDiscreteFunctionSpaceType :: LagrangePointSetType
-    LagrangePointSetType;
-
-    
-  typedef typename SubDiscreteFunctionSpaceType :: GridPartType SubGridPartType;
-  typedef typename SubDiscreteFunctionSpaceType :: GridType SubGridType;
-
-  typedef typename HostDiscreteFunctionSpaceType :: GridPartType HostGridPartType;
-  typedef typename HostDiscreteFunctionSpaceType :: GridType HostGridType;
-
-  typedef typename HostDiscreteFunctionSpaceType :: IteratorType :: Entity HostEntityType;
-  typedef typename HostEntityType :: EntityPointer HostEntityPointerType; 
-
-  
-  
-  const SubDiscreteFunctionSpaceType &subDiscreteFunctionSpace = rhs.space();
-  
-  const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
-  
-  HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
-  const HostEntityType& host_entity = *host_entity_pointer;
-  
-  const HostGridPartType &hostGridPart = hostSpace.gridPart();
-  
-  enum { faceCodim = 1 };
-  
-  typedef typename HostGridPartType :: IntersectionIteratorType IntersectionIteratorType;
-
-  typedef typename LagrangePointSetType :: template Codim< faceCodim >
-                                        :: SubEntityIteratorType
-    FaceDofIteratorType;
-  
-
-
-  IntersectionIteratorType iit = hostGridPart.ibegin( host_entity );
-  const IntersectionIteratorType endiit = hostGridPart.iend( host_entity );
-  for( ; iit != endiit; ++iit ) {
-
-  if ( iit->neighbor() ) //if there is a neighbor entity
-   {
-      // check if the neighbor entity is in the subgrid
-      const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-      const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
-      if ( subGrid.template contains<0>( neighborHostEntity ) )
-       {
-         continue;
-       }
-
-     }
-
-    LocalFunctionType rhsLocal = rhs.localFunction( subgrid_entity );
-    const LagrangePointSetType &lagrangePointSet
-      = subDiscreteFunctionSpace.lagrangePointSet( subgrid_entity );
-      
-    const int face = (*iit).indexInInside();
-    
-    FaceDofIteratorType faceIterator
-      = lagrangePointSet.template beginSubEntity< faceCodim >( face );
-    const FaceDofIteratorType faceEndIterator
-      = lagrangePointSet.template endSubEntity< faceCodim >( face );
-    for( ; faceIterator != faceEndIterator; ++faceIterator )
-      rhsLocal[ *faceIterator ] = 0;
-
-  }
-
-
-
-}
-
-
-
-
-
-// create a hostgrid function from a subgridfunction
-template< class SubDiscreteFunctionType, class HostDiscreteFunctionType >
-void subgrid_to_hostrid_function( const SubDiscreteFunctionType &sub_func,
-                                        HostDiscreteFunctionType &host_func )
-{
-   typedef typename SubDiscreteFunctionType :: DiscreteFunctionSpaceType
-    SubDiscreteFunctionSpaceType;
-   typedef typename SubDiscreteFunctionSpaceType :: IteratorType SubgridIteratorType;
-   typedef typename SubgridIteratorType :: Entity SubEntityType;
-   typedef typename SubEntityType :: EntityPointer SubEntityPointerType; 
-
-   typedef typename HostDiscreteFunctionType :: DiscreteFunctionSpaceType
-    HostDiscreteFunctionSpaceType;
-   typedef typename HostDiscreteFunctionSpaceType :: IteratorType HostgridIteratorType;
-   typedef typename HostgridIteratorType :: Entity HostEntityType;
-   typedef typename HostEntityType :: EntityPointer HostEntityPointerType; 
-
-   typedef typename SubDiscreteFunctionType :: LocalFunctionType SubLocalFunctionType;
-   typedef typename HostDiscreteFunctionType :: LocalFunctionType HostLocalFunctionType;
-
-   host_func.clear();
-
-   const SubDiscreteFunctionSpaceType &subDiscreteFunctionSpace = sub_func.space();
-   const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
-
-   SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
-
-   for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
-      {
-
-         const SubgridEntityType &sub_entity = *sub_it;
-
-         HostEntityPointerType host_entity_pointer = subGrid.getHostEntity<0>( *sub_it );
-         const HostEntityType& host_entity = *host_entity_pointer;
-
-         SubLocalFunctionType sub_loc_value = sub_func.localFunction( sub_entity );
-         HostLocalFunctionType host_loc_value = host_func.localFunction( host_entity );
-
-         const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
-         for( unsigned int i = 0; i < numBaseFunctions; ++i )
-           {
-             host_loc_value[ i ] = sub_loc_value[ i ];
-           }
-
-      }
-}
-
-
-
-
-template < class Stream, class DiscFunc >
-void oneLinePrint( Stream& stream, const DiscFunc& func )
-{
-    typedef typename DiscFunc::ConstDofIteratorType
-        DofIteratorType;
-    DofIteratorType it = func.dbegin();
-    stream << "\n" << func.name() << ": [ ";
-    for ( ; it != func.dend(); ++it )
-        stream << std::setw(5) << *it << "  ";
-
-    stream << " ] " << std::endl;
-}
 
 
 
@@ -680,7 +285,6 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 
-
   //! --------------------------- coefficient functions ------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
@@ -689,155 +293,42 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   // define (first) source term:
   FirstSourceType f; // standard source f
 
-  // if we have some additional source term (-div G), define:
-  SecondSourceType G;
-  // - div ( A^{\epsilon} \nabla u^{\epsilon} ) = f - div G
-
-  //! Ueberdenken, ob wir das nicht rausschmeisen und nur im Hintergrund fuer die Zellprobleme verwenden:
-  // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
-  MassTermType mass;
-
-
-  // dummy coefficient (mass, advection, etc.)
-  DefaultDummyFunctionType dummy_coeff;
-
   // exact solution unknown?
 #ifdef EXACTSOLUTION_AVAILABLE
   ExactSolutionType u;
   DiscreteExactSolutionType discrete_exact_solution( "discrete exact solution ", u, gridPart );
 #endif
 
-  //! --------------------------------------------------------------------------------------
 
-
-
-  //! define the right hand side assembler tool
-  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler< DiscreteFunctionType > rhsassembler;
-
-
-  //----------------------------------------------------------------------------------------------//
-  //----------------------- THE DISCRETE FEM OPERATOR -----------------------------------//
-  //----------------------------------------------------------------------------------------------//
-
-  //! define the discrete (elliptic) operator that describes our problem
-  // ( effect of the discretized differential operator on a certain discrete function )
-  EllipticOperatorType discrete_elliptic_op( discreteFunctionSpace, diffusion_op);
-
-  //----------------------------------------------------------------------------------------------//
-  //----------------------------------------------------------------------------------------------//
-  //----------------------------------------------------------------------------------------------//
-
-
-//! *******************************************************************
-
-  // starting value for the Newton method
-  DiscreteFunctionType zero_func( filename_ + " constant zero function ", discreteFunctionSpace );
-  zero_func.clear();
-
-
-  //! *************************** Assembling the reference problem ****************************
-  // ( fine scale reference solution = fem_solution )
-
-  //! (stiffness) matrix
-  FEMMatrix fem_matrix( "FEM stiffness matrix", discreteFunctionSpace, discreteFunctionSpace );
-
-  //! right hand side vector
-  // right hand side for the finite element method:
-  DiscreteFunctionType fem_rhs( "fem newton rhs", discreteFunctionSpace );
-  fem_rhs.clear();
+  //! ---------------------- solve FEM problem ---------------------------
 
   //! solution vector
-  // solution of the finite element method, where we used the Newton method to solve the non-linear system of equations
-  // in general this will be an accurate approximation of the exact solution, that is why we it also called reference solution
+  // solution of the standard finite element method
   DiscreteFunctionType fem_solution( filename_ + " FEM Solution", discreteFunctionSpace );
   fem_solution.clear();
-  // By fem_solution, we denote the "fine scale reference solution" (used for comparison)
-  // ( if the elliptic problem is linear, the 'fem_solution' is determined without the Newton method )
 
-  std :: cout << "Solving linear problem." << std :: endl;
-  if (data_file.is_open())
-    {
-      data_file << "Solving linear problem with standard FEM and resolution level " << problem_info.getRefinementLevelReferenceProblem() << "." << std :: endl;
-      data_file << "------------------------------------------------------------------------------" << std :: endl;
-    }
+  // just for Dirichlet zero-boundary condition
+  Elliptic_FEM_Solver< DiscreteFunctionType > fem_solver( discreteFunctionSpace,  data_file );
+  fem_solver.solve_dirichlet_zero( diffusion_op, f, fem_solution );
 
-  // to assemble the computational time
-  Dune::Timer assembleTimer;
-
-  // assemble the stiffness matrix
-  discrete_elliptic_op.assemble_matrix( fem_matrix );
-
-  std::cout << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-  if (data_file.is_open())
-    {
-      data_file << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-    }
-
-  // assemble right hand side
-  rhsassembler.assemble< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( f , fem_rhs);
-
- 
-  
-  //oneLinePrint( std::cout , fem_rhs );
-  
-  
-  // set Dirichlet Boundary to zero 
-  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-  IteratorType endit = discreteFunctionSpace.end();
-  for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
-    {
-         //std :: cout << "gridPart.indexSet().index( *it ) = " << gridPart.indexSet().index( *it ) << std :: endl;
-         boundaryTreatment( *it , fem_rhs );
-    }
-
-  
-  InverseFEMMatrix fem_biCGStab( fem_matrix, 1e-8, 1e-8, 20000, VERBOSE );
-  fem_biCGStab( fem_rhs, fem_solution );
-
-  if (data_file.is_open())
-    {
-      data_file << "---------------------------------------------------------------------------------" << std :: endl;
-      data_file << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
-    }
-
-  // oneLinePrint( std::cout , fem_solution );
-
-#if 0
-
-  DofIteratorType dit = fem_solution.dbegin();
-  std::cout << "\n" << fem_solution.name() << ": [ ";
-  for ( ; dit != fem_solution.dend(); ++dit )
-         std::cout << std::setw(5) << *dit << "  ";
-  std::cout << " ] " << std::endl;
-
-#endif
-
-#if 0
-   for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
-      {
-
-         const EntityType &entity = *it;
-         LocalFunctionType loc_value = fem_solution.localFunction( entity );
-         const unsigned int numBaseFunctions = loc_value.baseFunctionSet().numBaseFunctions();
-         for( unsigned int i = 0; i < numBaseFunctions; ++i )
-           {
-             std :: cout << "loc_value[ " << i << " ] = " << loc_value[ i ] << std :: endl;
-           }
-
-      }
-#endif
-
-  //! ********************** End of assembling the standard fem problem ***************************
+  //! ----------------------------------------------------------------------
 
 
 
+  //! ---------------------- solve MsFEM problem ---------------------------
 
+  const int coarse_level = 0;
 
+  //! solution vector
+  // solution of the standard finite element method
+  DiscreteFunctionType msfem_solution( filename_ + " MsFEM Solution", discreteFunctionSpace );
+  msfem_solution.clear();
 
+  // just for Dirichlet zero-boundary condition
+  Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace,  data_file );
+  msfem_solver.solve_dirichlet_zero( diffusion_op, f, coarse_level, msfem_solution );
 
-
-
+  //! ----------------------------------------------------------------------
 
 
 
@@ -857,7 +348,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 //! BATTLE FIELD
-#if 1
+#if 0
 
     // Use the host-grid entities of Level 'level' as computational domains for the subgrid computations
    int level = 0;
@@ -1108,7 +599,7 @@ abort();
   std::cout << " ] " << std::endl;
 
 #endif
-#if 1
+#if 0
 
 
    for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
@@ -1134,6 +625,7 @@ abort();
 
 #endif
 
+#if 0
   DiscreteFunctionType host_solution( filename_ + " Host Solution", discreteFunctionSpace );
   host_solution.clear();
 
@@ -1329,6 +821,7 @@ abort();
   
 //!-------------------------------------------------------------
 
+#endif
 
 }
 

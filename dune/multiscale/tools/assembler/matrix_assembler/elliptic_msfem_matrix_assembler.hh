@@ -5,7 +5,7 @@
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
-#include <dune/multiscale/operators/msfem_localproblems/new-localproblemsolver.hh>
+#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
@@ -56,11 +56,9 @@ namespace Dune
     typedef typename IntersectionIterator::Intersection Intersection;
 
     typedef typename GridType :: template Codim< 0 > :: template  Partition< All_Partition > :: LevelIterator LevelEntityIterator;
-    
-    typedef CachingQuadrature< GridPart, 0 > Quadrature;
-    
 
-    
+    typedef CachingQuadrature< GridPart, 0 > Quadrature;
+
   public:
     
     DiscreteEllipticMsFEMOperator( const DiscreteFunctionSpace &discreteFunctionSpace,
@@ -70,6 +68,7 @@ namespace Dune
     : discreteFunctionSpace_( discreteFunctionSpace ),
       coarse_grid_level_( coarse_grid_level ),
       diffusion_operator_( diffusion_op )
+     //filename(filename)
     { /* typedef MsFEMLocalProblemSolver< DiscreteFunction, DiffusionModel > MsFEMLocalProblemSolverType;*/ }
 
 

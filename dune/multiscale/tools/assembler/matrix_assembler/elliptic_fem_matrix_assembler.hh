@@ -6,6 +6,15 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 
+#include <dune/fem/solver/oemsolver/oemsolver.hh>
+#include <dune/fem/solver/inverseoperators.hh>
+#include <dune/fem/operator/discreteoperatorimp.hh>
+
+#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
+
+#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+
 namespace Dune
 {
 
@@ -429,11 +438,6 @@ namespace Dune
       
   }
 
-  
-  
-  
-#if 1
-
   // assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain discrete function (in case of the Newton method, it is the preceeding iterate u_H^{(n-1)} )
   // stiffness matrix with entries
   // \int JA(\nabla disc_func) \nabla phi_i \nabla phi_j 
@@ -552,125 +556,7 @@ namespace Dune
               }
           }
       }
-
-
   }
-
-
-#endif
-
-//!NOTE DEPRECATED !!!!!!!!!!!!!!!!!!!!!!!! (loeschen):
-#if 0
-  // assembleRHS
-  // -----------
-
-  template< class Function, class DiscreteFunction >
-  void assembleRHS ( const Function &function, DiscreteFunction &rhs )
-  {
-    typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-    typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
-
-    typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
-    typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-    typedef typename Iterator::Entity Entity;
-    typedef typename Entity::Geometry Geometry;
-
-    typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-    typedef CachingQuadrature< GridPart, 0 > Quadrature;
-
-    const DiscreteFunctionSpace &discreteFunctionSpace = rhs.space();
-
-    const Iterator end = discreteFunctionSpace.end();
-    for( Iterator it = discreteFunctionSpace.begin(); it != end; ++it )
-    {
-      const Entity &entity = *it;
-      const Geometry &geometry = entity.geometry();
-      assert( entity.partitionType() == InteriorEntity );
-
-      LocalFunction rhsLocal = rhs.localFunction( entity );
-      
-      const BaseFunctionSet &baseSet = rhsLocal.baseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
-           
-      Quadrature quadrature( entity, 2*discreteFunctionSpace.order()+1 );
-      const size_t numQuadraturePoints = quadrature.nop();
-      for( size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
-      {
-        const typename Quadrature::CoordinateType &x = quadrature.point( quadraturePoint );
-        const double weight = quadrature.weight( quadraturePoint ) * geometry.integrationElement( x );
-
-        typename Function::RangeType f;
-        function.evaluate( geometry.global( x ), f );
-
-        for( unsigned int i = 0; i < numBaseFunctions; ++i )
-        {
-          typename BaseFunctionSet::RangeType phi;
-          baseSet.evaluate( i, quadrature[ quadraturePoint ], phi );
-          rhsLocal[ i ] += weight * (f * phi);
-        }
-      }
-    }
-  }
-
-
-
-  // boundaryTreatment
-  // -----------------
-
-  template< class GridFunction, class DiscreteFunction >
-  void boundaryTreatment ( const GridFunction &exactSolution,
-                           DiscreteFunction &rhs, DiscreteFunction &solution )
-  {
-    typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-    typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
-
-    typedef typename GridFunction::LocalFunctionType LocalExactSolution;
-
-    typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-    typedef typename Iterator::Entity Entity;
-
-    typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-    typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
-    typedef typename IntersectionIterator::Intersection Intersection;
-
-    typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-    typedef typename LagrangePointSet::template Codim< 1 >::SubEntityIteratorType FaceDofIterator;
-
-    const DiscreteFunctionSpace &discreteFunctionSpace = rhs.space();
-
-    const Iterator end = discreteFunctionSpace.end();
-    for( Iterator it = discreteFunctionSpace.begin(); it != end; ++it )
-    {
-      const Entity &entity = *it;
-      if( !entity.hasBoundaryIntersections() )
-        continue;
-
-      LocalExactSolution exactLocal = exactSolution.localFunction( entity );
-      LocalFunction rhsLocal = rhs.localFunction( entity );
-      LocalFunction solutionLocal = solution.localFunction( entity );
-
-      const LagrangePointSet &lagrangePointSet = discreteFunctionSpace.lagrangePointSet( entity );
-
-      const IntersectionIterator iend = discreteFunctionSpace.gridPart().iend( entity );
-      for( IntersectionIterator iit = discreteFunctionSpace.gridPart().ibegin( entity ); iit != iend; ++iit )
-      {
-        const Intersection &intersection = *iit;
-        if( !intersection.boundary() )
-          continue;
-
-        const int face = intersection.indexInInside();
-        const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >( face );
-        for( FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >( face ); fdit != fdend; ++fdit )
-        {
-          typename LocalExactSolution::RangeType phi;
-          exactLocal.evaluate( lagrangePointSet[ *fdit ], phi );
-          rhsLocal[ *fdit ] = phi[ 0 ];
-          solutionLocal[ *fdit ] = phi[ 0 ];
-        }
-      }
-    }
-  }
-#endif
 
 }
 

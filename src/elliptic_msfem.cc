@@ -161,22 +161,22 @@
 #include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
 
 
-#include <dune/multiscale/operators/righthandside_assembler.hh>
+#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 
-#include <dune/multiscale/operators/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
-#include <dune/multiscale/operators/msfem_localproblems/localproblemsolver.hh>
+#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/deprecated/localproblemsolver.hh>
 
-#include <dune/multiscale/operators/meanvalue.hh>
+#include <dune/multiscale/tools/meanvalue.hh>
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/multiscale/operators/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/operators/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
+#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/tools/assembler/matrix_assembler/deprecated/elliptic_msfem_matrix_assembler.hh>
 
 //! (very restrictive) homogenizer
 #ifdef LINEAR_PROBLEM
-#include <dune/multiscale/operators/homogenizer/elliptic_analytical_homogenizer.hh>
-#include <dune/multiscale/operators/homogenizer/elliptic_homogenizer.hh>
+#include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
+#include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
 #endif
 
 using namespace Dune;

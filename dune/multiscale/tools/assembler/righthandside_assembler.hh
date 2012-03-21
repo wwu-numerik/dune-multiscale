@@ -5,10 +5,10 @@
 #include <dune/fem/quadrature/quadrature.hh>
 
 #ifdef AD_HOC_COMPUTATION
-#include <dune/multiscale/operators/cell_problem_solving/cellproblemsolver.hh>
+#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/cellproblemsolver.hh>
 #endif
 
-#include <dune/multiscale/operators/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
 namespace Dune 
 {
