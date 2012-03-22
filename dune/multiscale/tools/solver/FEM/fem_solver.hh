@@ -45,8 +45,8 @@ namespace Dune
     inline void evaluate ( const DomainType &x,
                            RangeType &y ) const
     {
-      std :: cout << "Do not use the Dummy-class!!!" << std :: endl;
-      abort();
+      //std :: cout << "Do not use the Dummy-class!!!" << std :: endl;
+      //abort();
       y[ 0 ] = 0.0; 
     }
 

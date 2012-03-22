@@ -584,27 +584,30 @@ namespace Dune
 
     std :: ofstream *data_file_;
 
+    // path where to save the data output
+    std :: string path_;
+    
   public:
 
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
     MsFEMLocalProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
-                             DiffusionOperatorType &diffusion_operator )
+                             DiffusionOperatorType &diffusion_operator,
+			     std :: string path = "" )
     : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
       diffusion_( diffusion_operator ),
       data_file_( NULL )
-    {
-    }
+     { path_ = path; }
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
     MsFEMLocalProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
                              DiffusionOperatorType &diffusion_operator,
-                             std :: ofstream &data_file )
+                             std :: ofstream &data_file,
+			     std :: string path = "" )
     : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
       diffusion_( diffusion_operator ),
       data_file_( &data_file )
-    {
-    }
+     { path_ = path; }
 
 
 
@@ -811,7 +814,6 @@ namespace Dune
 
     // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
     void assemble_all( const int computational_level,
-		       const std :: string &filename = "default",
                        bool silent = true /* state information on subgrids */ )
     {
 
@@ -905,7 +907,7 @@ namespace Dune
 
       // general output parameters
       LocalProblemDataOutputParameters outputparam;
-      outputparam.set_path( "data/MsFEM/" + filename );
+      outputparam.set_path( path_ );
 
       // sequence stamp
       std::stringstream outstring;
@@ -915,7 +917,7 @@ namespace Dune
 
       bool writer_is_open = false;
 
-      std :: string locprob_solution_location = "data/MsFEM/"+filename+"_localProblemSolutions_baseSet";
+      std :: string locprob_solution_location = path_ + "_localProblemSolutions_baseSet";
       DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
 
       writer_is_open = dfw.open();

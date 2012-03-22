@@ -37,10 +37,17 @@ namespace Dune
 
    typedef typename DiscreteFunctionSpace :: GridPartType GridPart;
 
-   typedef typename DiscreteFunctionSpace :: GridType Grid;
+   typedef typename DiscreteFunctionSpace :: GridType HostGrid;
 
-   typedef typename GridType ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator LevelEntityIteratorType;
+   typedef typename HostGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator LevelEntityIteratorType;
 
+   typedef typename DiscreteFunctionSpace :: IteratorType HostgridIterator;
+   
+   typedef typename HostgridIterator :: Entity HostEntity;
+   
+   typedef typename HostEntity :: EntityPointer HostEntityPointer; 
+
+   
    enum { faceCodim = 1 };
 
    typedef typename GridPart :: IntersectionIteratorType IntersectionIterator;
@@ -51,7 +58,7 @@ namespace Dune
 
    // --------------------------- subgrid typedefs ------------------------------------
 
-   typedef SubGrid< GridType::dimension , Grid > SubGridType; 
+   typedef SubGrid< HostGrid::dimension , HostGrid > SubGridType; 
 
    typedef LeafGridPart< SubGridType > SubGridPart;
 
@@ -59,7 +66,17 @@ namespace Dune
       SubgridDiscreteFunctionSpace;
 
    typedef AdaptiveDiscreteFunction < SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
+   
+   typedef typename SubgridDiscreteFunctionSpace :: IteratorType CoarseGridIterator;
 
+   typedef typename SubgridDiscreteFunction :: LocalFunctionType CoarseGridLocalFunction;
+   
+   typedef typename SubgridDiscreteFunctionSpace :: LagrangePointSetType
+    CoarseGridLagrangePointSet;
+   
+   typedef typename CoarseGridLagrangePointSet :: template Codim< faceCodim > 
+                                               :: SubEntityIteratorType
+    CoarseGridFaceDofIterator;
 //!-----------------------------------------------------------------------------------------
 
 
@@ -101,18 +118,22 @@ namespace Dune
     const DiscreteFunctionSpace &discreteFunctionSpace_;
 
     std :: ofstream *data_file_;
+    
+    // path where to save the data output
+    std :: string path_;
 
+    
   public:
-   Elliptic_MsFEM_Solver( const DiscreteFunctionSpace &discreteFunctionSpace )
+   Elliptic_MsFEM_Solver( const DiscreteFunctionSpace &discreteFunctionSpace, std :: string path = "" )
      : discreteFunctionSpace_( discreteFunctionSpace ),
        data_file_( NULL )
-     {}
+     { path_ = path; }
 
-   Elliptic_MsFEM_Solver( const DiscreteFunctionSpace &discreteFunctionSpace, std :: ofstream& data_file )
+   Elliptic_MsFEM_Solver( const DiscreteFunctionSpace &discreteFunctionSpace, std :: ofstream& data_file, std :: string path = "" )
      : discreteFunctionSpace_( discreteFunctionSpace ),
        data_file_( &data_file )
-     {}
-
+     { path_ = path; }
+     
    template < class Stream >
    void oneLinePrint( Stream& stream, const DiscreteFunction& func )
     {
@@ -125,7 +146,6 @@ namespace Dune
 
       stream << " ] " << std::endl;
      }
-
 
 
    // - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
@@ -145,121 +165,159 @@ namespace Dune
    {
 
      // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
-     typedef DiscreteEllipticMsFEMOperator< DiscreteFunction, DiffusionOperator > EllipticMsFEMOperatorType;
-     const Grid &grid = discreteFunctionSpace_.grid();
+     typedef DiscreteEllipticMsFEMOperator< SubgridDiscreteFunction,
+                                            DiscreteFunction,
+					     DiffusionOperator > EllipticMsFEMOperatorType;
 
+     HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
+     const GridPart &gridPart = discreteFunctionSpace_.gridPart();
+  
      LevelEntityIteratorType coarse_level_it = grid.template lbegin< 0 >( coarse_level );
 
      // create subgrid:
      SubGridType subGrid( grid );
      subGrid.createBegin();
 
+     for( ; coarse_level_it != grid.template lend< 0 >( coarse_level ); ++coarse_level_it )
+         subGrid.insertPartial( *coarse_level_it );
 
+     subGrid.createEnd();
 
-//! 1. Anlegen des Coarse-Level discrete finction spaces mittels subgrid
+     subGrid.report();
+     
+     SubGridPart subGridPart( subGrid );
 
+     SubgridDiscreteFunctionSpace coarseDiscreteFunctionSpace( subGridPart );
 
-#if 0
-     const GridPart &gridPart = discreteFunctionSpace_.gridPart();
+     SubgridDiscreteFunction coarse_msfem_solution( "Coarse Part MsFEM Solution", coarseDiscreteFunctionSpace );
+     coarse_msfem_solution.clear();
 
+     
      //! define the right hand side assembler tool
      // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-     RightHandSideAssembler< DiscreteFunctionType > rhsassembler;
-
+     RightHandSideAssembler< SubgridDiscreteFunction > rhsassembler;
+     
      //! define the discrete (elliptic) operator that describes our problem
      // ( effect of the discretized differential operator on a certain discrete function )
-     DiscreteEllipticOperator< DiscreteFunction, DiffusionOperator, DummyMassType > discrete_elliptic_op( discreteFunctionSpace_, diffusion_op );
+     EllipticMsFEMOperatorType elliptic_msfem_op( coarseDiscreteFunctionSpace,
+						   discreteFunctionSpace_,
+						   diffusion_op, *data_file_, path_ );
      // discrete elliptic operator (corresponds with FEM Matrix)
-
+     
      //! (stiffness) matrix
-     FEMMatrix fem_matrix( "FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_ );
-
+     MsFEMMatrix msfem_matrix( "MsFEM stiffness matrix", coarseDiscreteFunctionSpace, coarseDiscreteFunctionSpace );
+     
      //! right hand side vector
      // right hand side for the finite element method:
-     DiscreteFunction fem_rhs( "fem newton rhs", discreteFunctionSpace_ );
-     fem_rhs.clear();
+     SubgridDiscreteFunction msfem_rhs( "MsFEM right hand side", coarseDiscreteFunctionSpace );
+     msfem_rhs.clear();
 
-     std :: cout << "Solving linear problem." << std :: endl;
+     std :: cout << "Solving MsFEM problem." << std :: endl;
 
      if ( data_file_ )
       {
         if (data_file_->is_open())
          {
-           *data_file_ << "Solving linear problem with standard FEM and resolution level " << discreteFunctionSpace_.grid().maxLevel() << "." << std :: endl;
+           *data_file_ << "Solving linear problem with MsFEM and coarse grid level " << coarse_level << "." << std :: endl;
            *data_file_ << "------------------------------------------------------------------------------" << std :: endl;
          }
       }
-
+      
      // to assemble the computational time
      Dune::Timer assembleTimer;
 
-     // assemble the stiffness matrix
-     discrete_elliptic_op.assemble_matrix( fem_matrix );
-
-     std::cout << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+     // assemble the MsFEM stiffness matrix
+     elliptic_msfem_op.assemble_matrix( msfem_matrix ); 
+     
+     std::cout << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
      if ( data_file_ )
       {
         if (data_file_->is_open())
          {
-           *data_file_ << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+           *data_file_ << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
          }
       }
-
+      
      // assemble right hand side
-     rhsassembler.template assemble< 2 * DiscreteFunctionSpace :: polynomialOrder + 2 >( f , fem_rhs);
+     rhsassembler.template assemble< 2 * SubgridDiscreteFunctionSpace :: polynomialOrder + 2 >( f , msfem_rhs);
 
      //oneLinePrint( std::cout , fem_rhs );
-
-
+    
+     
      // --- boundary treatment ---
      // set the dirichlet points to zero (in righ hand side of the fem problem)
-     typedef typename DiscreteFunctionSpace :: IteratorType EntityIterator;
-     EntityIterator endit = discreteFunctionSpace_.end();
-     for( EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it )
+     CoarseGridIterator endit = coarseDiscreteFunctionSpace.end();
+     for( CoarseGridIterator it = coarseDiscreteFunctionSpace.begin(); it != endit; ++it )
        {
 
-          IntersectionIterator iit = gridPart.ibegin( *it );
-          const IntersectionIterator endiit = gridPart.iend( *it );
-          for( ; iit != endiit; ++iit )
-            {
+         HostEntityPointer host_entity_pointer = subGrid.template getHostEntity<0>( *it );
+         const HostEntity& host_entity = *host_entity_pointer;
+
+         IntersectionIterator iit = gridPart.ibegin( host_entity );
+         const IntersectionIterator endiit = gridPart.iend( host_entity );
+         for( ; iit != endiit; ++iit )
+           {
 
               if( !(*iit).boundary() )
                 continue;
 
-              LocalFunction rhsLocal = fem_rhs.localFunction( *it );
-              const LagrangePointSet &lagrangePointSet
-                = discreteFunctionSpace_.lagrangePointSet( *it );
+              CoarseGridLocalFunction rhsLocal = msfem_rhs.localFunction( *it );
+	      
+              const CoarseGridLagrangePointSet &lagrangePointSet
+                = coarseDiscreteFunctionSpace.lagrangePointSet( *it );
 
               const int face = (*iit).indexInInside();
 
-              FaceDofIterator faceIterator
+              CoarseGridFaceDofIterator faceIterator
                 = lagrangePointSet.template beginSubEntity< faceCodim >( face );
-              const FaceDofIterator faceEndIterator
+              const CoarseGridFaceDofIterator faceEndIterator
                 = lagrangePointSet.template endSubEntity< faceCodim >( face );
               for( ; faceIterator != faceEndIterator; ++faceIterator )
                 rhsLocal[ *faceIterator ] = 0;
 
-            }
+           }
 
        }
      // --- end boundary treatment ---
 
-     InverseFEMMatrix fem_biCGStab( fem_matrix, 1e-8, 1e-8, 20000, VERBOSE );
-     fem_biCGStab( fem_rhs, solution );
+     InverseMsFEMMatrix msfem_biCGStab( msfem_matrix, 1e-8, 1e-8, 20000, VERBOSE );
+     msfem_biCGStab( msfem_rhs, coarse_msfem_solution );
 
      if ( data_file_ )
       {
         if (data_file_->is_open())
          {
            *data_file_ << "---------------------------------------------------------------------------------" << std :: endl;
-           *data_file_ << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
+           *data_file_ << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
          }
-      }
-
+      }      
+      
+      
      // oneLinePrint( std::cout , solution );
-#endif
 
+     // copy coarse grid function (defined on the subgrid) into a fine grid function
+     solution.clear();
+
+     for( CoarseGridIterator it = coarseDiscreteFunctionSpace.begin(); it != endit; ++it )
+       {
+
+         HostEntityPointer host_entity_pointer = subGrid.template getHostEntity<0>( *it );
+         const HostEntity& host_entity = *host_entity_pointer;
+
+
+         CoarseGridLocalFunction sub_loc_value = coarse_msfem_solution.localFunction( *it );
+         LocalFunction host_loc_value = solution.localFunction( host_entity );
+
+         const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+         for( unsigned int i = 0; i < numBaseFunctions; ++i )
+           {
+             host_loc_value[ i ] = sub_loc_value[ i ];
+           }
+
+       }
+
+     std :: cout << "Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren." << std :: endl << std :: endl;  
    }
 
 

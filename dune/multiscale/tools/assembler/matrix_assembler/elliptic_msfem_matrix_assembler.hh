@@ -13,63 +13,100 @@ namespace Dune
 {
 
   // Imp stands for Implementation
-  template< class DiscreteFunctionImp, class DiffusionImp >
+  template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
   class DiscreteEllipticMsFEMOperator
-  : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType, DiscreteFunctionImp, DiscreteFunctionImp >
+  : public Operator< typename CoarseDiscreteFunctionImp::RangeFieldType,
+                     typename CoarseDiscreteFunctionImp::RangeFieldType,
+		      CoarseDiscreteFunctionImp, CoarseDiscreteFunctionImp >
   {
-    typedef DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp > This;
-
-  public:
-
-    typedef DiscreteFunctionImp DiscreteFunction;
-   
-    typedef DiffusionImp DiffusionModel;
-
-    typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
-    typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-    typedef typename DiscreteFunctionSpace::GridType GridType;
-
-    typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
-    typedef typename DiscreteFunctionSpace::DomainType DomainType;
-    typedef typename DiscreteFunctionSpace::RangeType RangeType;
-    typedef typename DiscreteFunctionSpace::JacobianRangeType
-      JacobianRangeType;
-
-    typedef MsFEMLocalProblemSolver< DiscreteFunction, DiffusionModel > MsFEMLocalProblemSolverType;
-
-  protected:
-    static const int dimension = GridPart::GridType::dimension;
-    static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
-
-    typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
-
-    typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
-    typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-    typedef typename LagrangePointSet::template Codim< 1 >::SubEntityIteratorType FaceDofIterator;
-
-    typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-    typedef typename Iterator::Entity Entity;
-    typedef typename Entity::Geometry Geometry;
-
-    typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
-    typedef typename IntersectionIterator::Intersection Intersection;
-
-    typedef typename GridType :: template Codim< 0 > :: template  Partition< All_Partition > :: LevelIterator LevelEntityIterator;
-
-    typedef CachingQuadrature< GridPart, 0 > Quadrature;
+    typedef DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, FineDiscreteFunctionImp, DiffusionImp > This;
 
   public:
     
-    DiscreteEllipticMsFEMOperator( const DiscreteFunctionSpace &discreteFunctionSpace,
-				    const int coarse_grid_level, // Refinment Level for the coarse grid 
-                                   DiffusionModel &diffusion_op,
-                                   std :: string &filename = "default") //!NOTE: default ueberarbeiten!
-    : discreteFunctionSpace_( discreteFunctionSpace ),
-      coarse_grid_level_( coarse_grid_level ),
-      diffusion_operator_( diffusion_op )
-     //filename(filename)
-    { /* typedef MsFEMLocalProblemSolver< DiscreteFunction, DiffusionModel > MsFEMLocalProblemSolverType;*/ }
+    typedef CoarseDiscreteFunctionImp CoarseDiscreteFunction;
+    typedef FineDiscreteFunctionImp FineDiscreteFunction;
+   
+    typedef DiffusionImp DiffusionModel;
+    
+
+    typedef typename CoarseDiscreteFunction::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;    
+    typedef typename FineDiscreteFunction::DiscreteFunctionSpaceType FineDiscreteFunctionSpace;
+
+    typedef typename FineDiscreteFunctionSpace::GridPartType FineGridPart;
+    typedef typename FineDiscreteFunctionSpace::GridType FineGrid;
+
+    typedef typename FineDiscreteFunctionSpace::RangeFieldType RangeFieldType;
+    typedef typename FineDiscreteFunctionSpace::DomainType DomainType;
+    typedef typename FineDiscreteFunctionSpace::RangeType RangeType;
+    typedef typename FineDiscreteFunctionSpace::JacobianRangeType
+      JacobianRangeType;
+
+    typedef MsFEMLocalProblemSolver< FineDiscreteFunction, DiffusionModel > MsFEMLocalProblemSolverType;
+
+  protected:
+    static const int dimension = FineGridPart::GridType::dimension;
+    static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
+
+    typedef typename FineDiscreteFunction::LocalFunctionType FineLocalFunction;
+
+    typedef typename FineDiscreteFunctionSpace::BaseFunctionSetType FineBaseFunctionSet;
+    typedef typename FineDiscreteFunctionSpace::LagrangePointSetType FineLagrangePointSet;
+    typedef typename FineLagrangePointSet::template Codim< 1 >::SubEntityIteratorType FineFaceDofIterator;
+
+    typedef typename FineDiscreteFunctionSpace::IteratorType FineIterator;
+    typedef typename FineIterator::Entity FineEntity;
+    typedef typename FineEntity::Geometry FineGeometry;
+
+    typedef typename FineGridPart::IntersectionIteratorType FineIntersectionIterator;
+    typedef typename FineIntersectionIterator::Intersection FineIntersection;
+
+    typedef typename FineGrid :: template Codim< 0 > :: template  Partition< All_Partition > :: LevelIterator FineLevelEntityIterator;
+
+    typedef CachingQuadrature< FineGridPart, 0 > FineQuadrature;
+
+
+  public:
+
+    typedef typename CoarseDiscreteFunctionSpace::GridPartType CoarseGridPart;
+    typedef typename CoarseDiscreteFunctionSpace::GridType CoarseGrid;
+
+  protected:
+
+    typedef typename CoarseDiscreteFunction::LocalFunctionType CoarseLocalFunction;
+
+    typedef typename CoarseDiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
+    typedef typename CoarseDiscreteFunctionSpace::LagrangePointSetType CoarseLagrangePointSet;
+    typedef typename CoarseLagrangePointSet::template Codim< 1 >::SubEntityIteratorType CoarseFaceDofIterator;
+
+    typedef typename CoarseDiscreteFunctionSpace::IteratorType CoarseIterator;
+    typedef typename CoarseIterator::Entity CoarseEntity;
+    typedef typename CoarseEntity::Geometry CoarseGeometry;
+
+    typedef typename CoarseGridPart::IntersectionIteratorType CoarseIntersectionIterator;
+    typedef typename CoarseIntersectionIterator::Intersection CoarseIntersection;
+
+    typedef typename CoarseGrid :: template Codim< 0 > :: template  Partition< All_Partition > :: LevelIterator CoarseLevelEntityIterator;
+
+    typedef CachingQuadrature< CoarseGridPart, 0 > CoarseQuadrature;
+    
+  public:
+    
+    DiscreteEllipticMsFEMOperator( const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace,
+				    const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace,
+                                   const DiffusionModel &diffusion_op,
+                                   std :: ofstream& data_file,
+				    std :: string path = ""  )
+    : coarseDiscreteFunctionSpace_( coarseDiscreteFunctionSpace ),
+      fineDiscreteFunctionSpace_( fineDiscreteFunctionSpace ),
+      diffusion_operator_( diffusion_op ),
+      data_file_( &data_file ),
+      path_( path )
+    { 
+#if 0
+   MsFEMLocalProblemSolverType loc_prob_solver( discreteFunctionSpace_, diffusion_operator_, data_file );
+   loc_prob_solver.assemble_all( level, filename_, false );
+#endif
+    }
 
 
   private:
@@ -79,20 +116,23 @@ namespace Dune
 
     // dummy operator
     virtual void
-    operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const;
+    operator() ( const CoarseDiscreteFunction &u, CoarseDiscreteFunction &w ) const;
 
 
     template< class MatrixType >
     void assemble_matrix ( MatrixType &global_matrix ) const;
 
   private:
-    const DiscreteFunctionSpace &discreteFunctionSpace_;
-    DiffusionModel &diffusion_operator_;
-
-    const int coarse_grid_level_;
     
-    // name of data file, e.g. required if we want to use the saved solutions of the cell problems
-    std :: string *filename_;
+    const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace_;
+    const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace_;
+    const DiffusionModel &diffusion_operator_;
+
+    // data file for saving information
+    std :: ofstream *data_file_;
+
+    // path where to save the data output
+    std :: string path_;
 
   };
 
@@ -100,8 +140,10 @@ namespace Dune
 
   // dummy implementation of "operator()"
   // 'w' = effect of the discrete operator on 'u'
-  template< class DiscreteFunctionImp, class DiffusionImp >
-  void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp >::operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const 
+  template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
+  void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, 
+                                      FineDiscreteFunctionImp, 
+				       DiffusionImp > :: operator() ( const CoarseDiscreteFunction &u, CoarseDiscreteFunction &w ) const 
   {
 
     std :: cout << "the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy." << std :: endl;
@@ -110,9 +152,11 @@ namespace Dune
   }
 
 
-  template< class DiscreteFunctionImp, class DiffusionImp >
+  template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
   template< class MatrixType >
-  void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp >::assemble_matrix ( MatrixType &global_matrix ) const
+  void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, 
+                                      FineDiscreteFunctionImp, 
+				       DiffusionImp > :: assemble_matrix ( MatrixType &global_matrix ) const
   {
 #if 0
     
