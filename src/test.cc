@@ -830,12 +830,15 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   //! ********************** End of assembling the standard fem problem ***************************
 
+std :: vector< std :: vector < EntityPointerType > > entities_sharing_same_node( 9 );
+
 
 
 //std :: map < int , int /*EntityPointerType*/ > index_mapper;
 //std :: pair < int, int > index_pair;
 for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
     {
+
       const NodePointer node0 = (*it).subEntity<2>(0);
       const NodePointer node1 = (*it).subEntity<2>(1);
       const NodePointer node2 = (*it).subEntity<2>(2);
@@ -843,11 +846,18 @@ for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
       std :: cout << "Index Node 0 = " << gridPart.indexSet().index( *node0 ) << std :: endl;
       std :: cout << "Index Node 1 = " << gridPart.indexSet().index( *node1 ) << std :: endl;
       std :: cout << "Index Node 2 = " << gridPart.indexSet().index( *node2 ) << std :: endl;
+
+      entities_sharing_same_node[ gridPart.indexSet().index( *node0 ) ].push_back( it );
+      entities_sharing_same_node[ gridPart.indexSet().index( *node1 ) ].push_back( it );
+      entities_sharing_same_node[ gridPart.indexSet().index( *node2 ) ].push_back( it );
       //index_mapper[0] = 0;// gridPart.indexSet().index( *it )
     }
 
+for ( int i = 0; i < 9 ; i+=1 )
+ {
+   std :: cout << "Knoten " << i << " wird von " << entities_sharing_same_node[i].size() << "Entities geteilt." << std :: endl;
 
-
+ }
 
 
 
