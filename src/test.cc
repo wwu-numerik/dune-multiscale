@@ -209,6 +209,7 @@ typedef GridType :: Codim<0> :: Entity EntityType;
 typedef GridType :: Codim<0> :: EntityPointer EntityPointerType; 
 typedef GridType :: Codim<0> :: Geometry EntityGeometryType; 
 typedef GridType :: Codim<1> :: Geometry FaceGeometryType; 
+typedef EntityType :: Codim< 2 > :: EntityPointer NodePointer;
 
 
 typedef DiscreteFunctionSpaceType     :: BaseFunctionSetType      BaseFunctionSetType;
@@ -831,11 +832,18 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 
-std :: map < int , int /*EntityPointerType*/ > index_mapper;
+//std :: map < int , int /*EntityPointerType*/ > index_mapper;
 //std :: pair < int, int > index_pair;
 for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
     {
-      index_mapper[0] = 0;// gridPart.indexSet().index( *it )
+      const NodePointer node0 = (*it).subEntity<2>(0);
+      const NodePointer node1 = (*it).subEntity<2>(1);
+      const NodePointer node2 = (*it).subEntity<2>(2);
+      
+      std :: cout << "Index Node 0 = " << gridPart.indexSet().index( *node0 ) << std :: endl;
+      std :: cout << "Index Node 1 = " << gridPart.indexSet().index( *node1 ) << std :: endl;
+      std :: cout << "Index Node 2 = " << gridPart.indexSet().index( *node2 ) << std :: endl;
+      //index_mapper[0] = 0;// gridPart.indexSet().index( *it )
     }
 
 
