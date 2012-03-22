@@ -92,16 +92,16 @@ namespace Dune
   public:
     
     DiscreteEllipticMsFEMOperator( const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace,
-				    const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace,
+                                   const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace,
                                    const DiffusionModel &diffusion_op,
                                    std :: ofstream& data_file,
-				    std :: string path = ""  )
+                                   std :: string path = ""  )
     : coarseDiscreteFunctionSpace_( coarseDiscreteFunctionSpace ),
       fineDiscreteFunctionSpace_( fineDiscreteFunctionSpace ),
       diffusion_operator_( diffusion_op ),
       data_file_( &data_file ),
       path_( path )
-    { 
+    {
 #if 0
    MsFEMLocalProblemSolverType loc_prob_solver( discreteFunctionSpace_, diffusion_operator_, data_file );
    loc_prob_solver.assemble_all( level, filename_, false );
