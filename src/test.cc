@@ -25,6 +25,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <map>
 
 // for creation of directories
 #include <sys/types.h>
@@ -105,9 +106,9 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/new_elliptic_msfem_matrix_assembler.hh>
+#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
 
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/new-localproblemsolver.hh>
+#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
 
 
 using namespace Dune;
@@ -333,8 +334,6 @@ typedef OEMBICGSQOp/*OEMBICGSTABOp*/< SubDiscreteFunctionType, SubgridFEMMatrix 
 typedef DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
 
 typedef DiscreteEllipticOperator< SubDiscreteFunctionType, DiffusionType, MassTermType > SubgridEllipticOperatorType;
-
-typedef DiscreteEllipticMsFEMOperator< DiscreteFunctionType, DiffusionType > EllipticMsFEMOperatorType;
 
 //! --------------------------------------------------------------------------------------
 
@@ -832,8 +831,12 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 
-
-
+std :: map < int , int /*EntityPointerType*/ > index_mapper;
+//std :: pair < int, int > index_pair;
+for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
+    {
+      index_mapper[0] = 0;// gridPart.indexSet().index( *it )
+    }
 
 
 
@@ -862,10 +865,10 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
     // Use the host-grid entities of Level 'level' as computational domains for the subgrid computations
    int level = 0;
 
-   MsFEMLocalProblemSolver< DiscreteFunctionType, DiffusionType > loc_prob_solver( discreteFunctionSpace, diffusion_op, data_file );
-   loc_prob_solver.assemble_all( level, filename_, false );
+//   MsFEMLocalProblemSolver< DiscreteFunctionType, DiffusionType > loc_prob_solver( discreteFunctionSpace, diffusion_op, data_file );
+//   loc_prob_solver.assemble_all( level, filename_, false );
 
-abort();
+//abort();
 
 
    typedef GridType :: Codim< 0 > :: Partition< All_Partition > :: LevelIterator LevelEntityIteratorType;
