@@ -58,10 +58,11 @@ namespace Dune
     
     template< typename EntityPointerCollectionType >
     void enrichment( HostEntityPointerType& hit,
-		     const HostGridPartType& hostGridPart,
-		     SubGridType& subGrid,
-		     EntityPointerCollectionType& entities_sharing_same_node,
-		     int& layer )
+                     const HostGridPartType& hostGridPart,
+                     SubGridType& subGrid,
+                     EntityPointerCollectionType& entities_sharing_same_node,
+                     int& layer,
+                     int &Schritt )
     {
 
       layer -= 1;
@@ -74,13 +75,14 @@ namespace Dune
 
 	   for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
 	      {
+                 Schritt += 1;
 		 if ( !( subGrid.template contains <0>( *entities_sharing_same_node[ global_index_node ][ j ] ) ) )
 		   { subGrid.insertPartial( *entities_sharing_same_node[ global_index_node ][ j ] ); }
 		 
 		 if ( layer > 0 )
 		  {
 		    enrichment( entities_sharing_same_node[ global_index_node ][ j ],
-			        hostGridPart, subGrid, entities_sharing_same_node, layer );
+			        hostGridPart, subGrid, entities_sharing_same_node, layer, Schritt );
 		    layer += 1;
 		  }
 	      }
@@ -140,9 +142,8 @@ namespace Dune
       
 // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
 std :: vector < int > number_of_layers( number_of_level_host_entities );
-for ( int i = 0; i < number_of_level_host_entities; i+=1 ) { number_of_layers[i] = 5; }
-      
-      
+for ( int i = 0; i < number_of_level_host_entities; i+=1 ) { number_of_layers[i] = 2; }
+
       subGrid = new SubGridType* [ number_of_level_host_entities ];
       
       //! ----------- create subgrids --------------------
@@ -179,6 +180,14 @@ for ( int i = 0; i < number_of_level_host_entities; i+=1 ) { number_of_layers[i]
 	    }
         }
 
+
+
+
+
+int Schritt = 0;
+
+
+
       // a maxlevel iterator for the codim 0 hostgrid entities:
       MaxLevelHostIteratorType host_endit = hostSpace_.end();
       for( MaxLevelHostIteratorType host_it = hostSpace_.begin();
@@ -199,6 +208,7 @@ for ( int i = 0; i < number_of_level_host_entities; i+=1 ) { number_of_layers[i]
            int father_index = hostGridLevelIndexSet.index( *level_father_entity );
            // std :: cout << "father_index = " << father_index << std :: endl;
 
+           Schritt += 1;
            if ( !( subGrid[ father_index ]->template contains <0>(host_entity) ) )
             { subGrid[ father_index ]->insertPartial( host_entity ); }
 
@@ -236,48 +246,10 @@ for ( int i = 0; i < number_of_level_host_entities; i+=1 ) { number_of_layers[i]
               }
            if ( all_neighbors_have_same_father == true )
 	      { continue; }
-	      
+
 	   int layers = number_of_layers[ father_index ];
-	   enrichment( host_it, hostGridPart, *subGrid[ father_index ], entities_sharing_same_node, layers );
-	      
-#if 0
-           // enrichment:
-           //! TODO ENRICHMENT for layers > 1!
-           HostEntityPointerType hit = host_it;
-           for ( int i = 0; i < (*hit).template count<2>(); i += 1 )
-	        {
+	   enrichment( host_it, hostGridPart, *subGrid[ father_index ], entities_sharing_same_node, layers, Schritt );
 
-	          const HostNodePointer node = (*hit).template subEntity<2>(i);
-	          int global_index_node = hostGridPart.indexSet().index( *node );
-
-	          for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
-	            {
-		      if ( !( subGrid[ father_index ]->template contains <0>( *entities_sharing_same_node[ global_index_node ][ j ] ) ) )
-		       { subGrid[ father_index ]->insertPartial( *entities_sharing_same_node[ global_index_node ][ j ] ); }
-
-		       
-		       for ( int i_neu = 0; i_neu < (*entities_sharing_same_node[ global_index_node ][ j ]).template count<2>(); i_neu += 1 )
-	                {
-
-	                  const HostNodePointer node_neu = (*(entities_sharing_same_node[ global_index_node ][ j ])).template subEntity<2>(i_neu);
-	                  int global_index_node_neu = hostGridPart.indexSet().index( *node_neu );
-
-	                  for( int j_neu = 0; j_neu < entities_sharing_same_node[global_index_node_neu].size(); j_neu += 1 )
-	                    {
-		              if ( !( subGrid[ father_index ]->template contains <0>( *entities_sharing_same_node[ global_index_node_neu ][ j_neu ] ) ) )
-		               { subGrid[ father_index ]->insertPartial( *entities_sharing_same_node[ global_index_node_neu ][ j_neu ] ); }
-		      
-		             }
-		
-	                } 
-		       
-		       
-		       
-		    }
-		
-	        }
-
-#endif
 #if 0
            // enrichment:
            //! TODO ENRICHMENT for layers > 1!
@@ -302,6 +274,8 @@ for ( int i = 0; i < number_of_level_host_entities; i+=1 ) { number_of_layers[i]
             
         }
 
+
+std :: cout << "Schritt = " << Schritt << std :: endl; abort();
 
       for ( int i = 0; i < number_of_level_host_entities; ++i )
        {
