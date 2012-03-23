@@ -467,7 +467,7 @@ namespace Dune
 //! ------------------------------------------------------------------------------------------------
 //! --------------------- the essential local msfem problem solver class ---------------------------
 
-  template< class HostDiscreteFunctionType, class DiffusionOperatorType /*!, class SpecifierType*/ >
+  template< class HostDiscreteFunctionType, class SubGridListType, class DiffusionOperatorType /*!, class SpecifierType*/ >
   class MsFEMLocalProblemSolver	
   {
   public:
@@ -516,7 +516,7 @@ namespace Dune
     //  ( typedefs for the local grid and the corresponding local ('sub') )discrete space ) 
 
     //! type of grid
-    typedef SubGrid< WORLDDIM , HostGridType > SubGridType; 
+    typedef typename SubGridListType :: SubGridType SubGridType; 
 
     //! type of grid part
     typedef LeafGridPart< SubGridType > SubGridPartType; 
@@ -580,7 +580,9 @@ namespace Dune
   private:
 
     const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
-    DiffusionOperatorType& diffusion_;
+    const DiffusionOperatorType& diffusion_;
+    
+   /*const*/ SubGridListType& subgrid_list_; 
 
     std :: ofstream *data_file_;
 
@@ -592,19 +594,23 @@ namespace Dune
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
     MsFEMLocalProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
-                             DiffusionOperatorType &diffusion_operator,
+			            SubGridListType& subgrid_list,
+                             const DiffusionOperatorType &diffusion_operator,
 			     std :: string path = "" )
     : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
+      subgrid_list_( subgrid_list ),
       diffusion_( diffusion_operator ),
       data_file_( NULL )
      { path_ = path; }
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
     MsFEMLocalProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
-                             DiffusionOperatorType &diffusion_operator,
+			            SubGridListType& subgrid_list,
+                             const DiffusionOperatorType &diffusion_operator,
                              std :: ofstream &data_file,
 			     std :: string path = "" )
     : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
+      subgrid_list_( subgrid_list ),
       diffusion_( diffusion_operator ),
       data_file_( &data_file )
      { path_ = path; }
@@ -631,8 +637,7 @@ namespace Dune
       //! define the discrete (elliptic) local MsFEM problem operator
       // ( effect of the discretized differential operator on a certain discrete function )
       LocalProblemOperatorType local_problem_op( subDiscreteFunctionSpace, diffusion_ );
-      
-      
+
       const SubGridPartType &subgridPart = subDiscreteFunctionSpace.gridPart();
       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
 	    
@@ -844,60 +849,11 @@ namespace Dune
 
       std :: cout << "number_of_level_host_entities = " << number_of_level_host_entities << std :: endl;
 
-      //! ----------- create subgrids --------------------
-
-      const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet(computational_level);
-
-      SubGridType* subGrid[ number_of_level_host_entities ];
-
       HostgridLevelEntityIteratorType level_iterator_end = hostGrid.template lend< 0 >( computational_level );
       HostgridLevelEntityIteratorType level_iterator_begin = hostGrid.template lbegin< 0 >( computational_level );
-
-      int lev_index = 0;
-      for ( HostgridLevelEntityIteratorType lit = level_iterator_begin;
-         lit != level_iterator_end ; ++lit )
-        {
-          subGrid[ lev_index ] = new SubGridType( hostGrid );
-          subGrid[ lev_index ]->createBegin();
-
-          //level_entity_collection.push_back( lit );
-          lev_index += 1;
-        }
-
-
-      // a maxlevel iterator for the codim 0 hostgrid entities:
-      MaxLevelHostIteratorType host_endit = hostDiscreteFunctionSpace_.end();
-      for( MaxLevelHostIteratorType host_it = hostDiscreteFunctionSpace_.begin();
-           host_it != host_endit ;
-           ++host_it )
-        {
-
-           const HostEntityType& host_entity = *host_it;
-
-           // get the level 'computational_level'-father of host_entity (which is a maxlevel entity)
-           HostEntityPointerType level_father_entity = host_it;
-           for (int lev = 0; lev < level_difference; ++lev)
-             level_father_entity = level_father_entity->father();
-
-           int father_index = hostGridLevelIndexSet.index( *level_father_entity );
-           // std :: cout << "father_index = " << father_index << std :: endl;
-
-           if ( !( subGrid[ father_index ]->template contains <0>(host_entity) ) )
-            { subGrid[ father_index ]->insertPartial( host_entity ); }
-
-        }
-
-
-      for ( int i = 0; i < number_of_level_host_entities; ++i )
-       {
-          subGrid[ i ]->createEnd();
-          if ( !silent )
-            { subGrid[ i ]->report(); }
-       }
-
-      //! ----------- end create subgrids --------------------
-
-
+      
+      const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet( computational_level );
+      
       // --------------- writing data output ---------------------
       // typedefs and initialization
       #ifdef VTK_OUTPUT
@@ -939,7 +895,8 @@ namespace Dune
 	    
             int index = hostGridLevelIndexSet.index( *lit );
 	    
-            SubGridPartType subGridPart( *subGrid[ index ] );
+	    SubGridType& subGrid = subgrid_list_.getSubGrid( index );
+            SubGridPartType subGridPart( subGrid );
 
             SubDiscreteFunctionSpaceType subDiscreteFunctionSpace( subGridPart );
 
