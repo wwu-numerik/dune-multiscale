@@ -873,7 +873,7 @@ namespace Dune
 
       bool writer_is_open = false;
 
-      std :: string locprob_solution_location = path_ + "_localProblemSolutions_baseSet";
+      std :: string locprob_solution_location = path_ + "_localProblemSolutions";
       DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
 
       writer_is_open = dfw.open();

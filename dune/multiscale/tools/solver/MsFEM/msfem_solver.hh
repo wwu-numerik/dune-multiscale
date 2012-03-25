@@ -14,6 +14,7 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
 
 namespace Dune
@@ -163,6 +164,29 @@ namespace Dune
                               const int coarse_level,
                                     DiscreteFunction &solution )
    {
+     HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
+     const GridPart &gridPart = discreteFunctionSpace_.gridPart();
+     int number_of_level_host_entities = grid.size( coarse_level, 0 /*codim*/ );
+     
+     //! default - no layers
+     // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
+     std :: vector < int > number_of_layers( number_of_level_host_entities );
+     for ( int i = 0; i < number_of_level_host_entities; i+=1 )
+        { number_of_layers[i] = 0; }
+     
+     solve_dirichlet_zero( diffusion_op, f, coarse_level, number_of_layers, solution );
+   }
+   
+   
+   // homogenous Dirchilet boundary condition!:
+   template< class DiffusionOperator, class SourceTerm >
+   void solve_dirichlet_zero( const DiffusionOperator &diffusion_op,
+                              const SourceTerm &f,
+                              const int coarse_level,
+			       // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
+			       std :: vector < int >& number_of_layers,
+                              DiscreteFunction &solution )
+   {
 
      // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
      typedef DiscreteEllipticMsFEMOperator< SubgridDiscreteFunction,
@@ -171,7 +195,7 @@ namespace Dune
 
      HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
      const GridPart &gridPart = discreteFunctionSpace_.gridPart();
-  
+
      LevelEntityIteratorType coarse_level_it = grid.template lbegin< 0 >( coarse_level );
 
      // create subgrid:
@@ -200,7 +224,7 @@ namespace Dune
      //! define the discrete (elliptic) operator that describes our problem
      // ( effect of the discretized differential operator on a certain discrete function )
      EllipticMsFEMOperatorType elliptic_msfem_op( coarseDiscreteFunctionSpace,
-						   discreteFunctionSpace_,
+						   discreteFunctionSpace_, number_of_layers,
 						   diffusion_op, *data_file_, path_ );
      // discrete elliptic operator (corresponds with FEM Matrix)
      
