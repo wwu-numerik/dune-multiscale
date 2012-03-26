@@ -216,18 +216,26 @@ namespace Dune
      SubgridDiscreteFunction coarse_msfem_solution( "Coarse Part MsFEM Solution", coarseDiscreteFunctionSpace );
      coarse_msfem_solution.clear();
 
-     
+     //! create subgrids:
+     bool silence = false;
+
+     const int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
+
+     typedef SubGridList< DiscreteFunction, SubGridType > SubGridListType;
+     SubGridListType subgrid_list_( discreteFunctionSpace , number_of_layers, coarse_level , silence );
+
+
      //! define the right hand side assembler tool
      // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
      RightHandSideAssembler< SubgridDiscreteFunction > rhsassembler;
-     
+
      //! define the discrete (elliptic) operator that describes our problem
      // ( effect of the discretized differential operator on a certain discrete function )
      EllipticMsFEMOperatorType elliptic_msfem_op( coarseDiscreteFunctionSpace,
-						   discreteFunctionSpace_, number_of_layers,
-						   diffusion_op, *data_file_, path_ );
+                                                  discreteFunctionSpace_, number_of_layers,
+                                                  diffusion_op, *data_file_, path_ );
      // discrete elliptic operator (corresponds with FEM Matrix)
-     
+
      //! (stiffness) matrix
      MsFEMMatrix msfem_matrix( "MsFEM stiffness matrix", coarseDiscreteFunctionSpace, coarseDiscreteFunctionSpace );
      

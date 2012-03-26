@@ -120,15 +120,14 @@ namespace Dune
     typedef typename LocalDiscreteFunction :: LocalFunctionType LocalGridLocalFunction;
     
     typedef typename LocalDiscreteFunctionSpace :: LagrangePointSetType LGLagrangePointSet;
-    
+
 //!-----------------------------------------------------------------------------------------
-    
-    
+
   public:
-    
+
     DiscreteEllipticMsFEMOperator( const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace,
                                    const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace,
-				    // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers:
+                                   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers:
                                    const std :: vector < int >& number_of_layers,
                                    const DiffusionModel &diffusion_op,
                                    std :: ofstream& data_file,
@@ -141,13 +140,13 @@ namespace Dune
       path_( path )
     {
       bool silence = false;
-      
+
       const int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
-      
+
       subgrid_list_ = new SubGridListType( fineDiscreteFunctionSpace_ , number_of_layers_, coarse_level , silence );
 
       SubGridListType subgrid_list ( *subgrid_list_ );
-      
+
       //SubGridListType sl_( fineDiscreteFunctionSpace_ , number_of_layers_, coarse_level , silence );      
       //sl(sl_);
       //! Auslagern!!!!!!
