@@ -307,7 +307,7 @@ namespace Dune
             RangeType local_integral = 0.0;
 
 
-#if 1
+#if 0
 DomainType A_0_MSFEM(0.0);
 #endif
 
@@ -319,7 +319,7 @@ DomainType A_0_MSFEM(0.0);
                 // remember:
                 // |det(A)| \int_{T_0} (A^eps ○ F)(x) ( ∇\Phi_i(x_T) + (A^{-1})^T ∇( Q^eps(\Phi_i) ○ F )(x)) · ( ∇\Phi_j(x_T) + (A^{-1})^T ∇( Q^eps(\Phi_j) ○ F )(x))
 
-#if 1
+#if 0
 gradient_Phi[ i ][ 0 ][ 0 ] = 1.0;
 gradient_Phi[ i ][ 0 ][ 1 ] = 0.0;
 #endif
@@ -406,7 +406,7 @@ gradient_Phi[ i ][ 0 ][ 1 ] = 0.0;
                     #else
                     local_integral += weight_micro_quadrature * ( diffusion_in_gradient_Phi_reconstructed[ 0 ] * gradient_Phi[ j ][ 0 ]);
 
-#if 1
+#if 0
 A_0_MSFEM[ 0 ] +=  2.0 * weight_micro_quadrature * diffusion_in_gradient_Phi_reconstructed[ 0 ][ 0 ];
 A_0_MSFEM[ 1 ] +=  2.0 * weight_micro_quadrature * diffusion_in_gradient_Phi_reconstructed[ 0 ][ 1 ];
 #endif
@@ -416,7 +416,7 @@ A_0_MSFEM[ 1 ] +=  2.0 * weight_micro_quadrature * diffusion_in_gradient_Phi_rec
                   }
               }
 
-#if 1
+#if 0
 std :: cout << "A_0_MSFEM[ 0 ] = " << A_0_MSFEM[ 0 ] << std :: endl;
 std :: cout << "A_0_MSFEM[ 1 ] = " << A_0_MSFEM[ 1 ] << std :: endl;
 #endif

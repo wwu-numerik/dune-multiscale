@@ -58,6 +58,7 @@
 #include <dune/grid/io/visual/grapedatadisplay.hh>
 #endif
 
+#define PGF
 
 // to display data with ParaView:
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
@@ -79,6 +80,7 @@
 
 //! local (dune-multiscale) includes
 #include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
+//#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
 
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
@@ -302,21 +304,6 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 #endif
 
 
-  //! ---------------------- solve FEM problem ---------------------------
-
-  //! solution vector
-  // solution of the standard finite element method
-  DiscreteFunctionType fem_solution( filename_ + " FEM Solution", discreteFunctionSpace );
-  fem_solution.clear();
-
-  // just for Dirichlet zero-boundary condition
-  Elliptic_FEM_Solver< DiscreteFunctionType > fem_solver( discreteFunctionSpace,  data_file );
-  fem_solver.solve_dirichlet_zero( diffusion_op, f, fem_solution );
-
-  //! ----------------------------------------------------------------------
-
-
-
   //! ---------------------- solve MsFEM problem ---------------------------
 
   //! solution vector
@@ -328,11 +315,24 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   int number_of_level_host_entities = grid.size( coarse_grid_level_, 0 /*codim*/ );
   std :: vector < int > number_of_layers( number_of_level_host_entities );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
-    { number_of_layers[i] = 2; }
+    { number_of_layers[i] = 0; }
   
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
   msfem_solver.solve_dirichlet_zero( diffusion_op, f, coarse_grid_level_, number_of_layers, msfem_solution );
+
+  //! ----------------------------------------------------------------------
+
+  //! ---------------------- solve FEM problem ---------------------------
+
+  //! solution vector
+  // solution of the standard finite element method
+  DiscreteFunctionType fem_solution( filename_ + " FEM Solution", discreteFunctionSpace );
+  fem_solution.clear();
+
+  // just for Dirichlet zero-boundary condition
+  Elliptic_FEM_Solver< DiscreteFunctionType > fem_solver( discreteFunctionSpace,  data_file );
+  fem_solver.solve_dirichlet_zero( diffusion_op, f, fem_solution );
 
   //! ----------------------------------------------------------------------
 
