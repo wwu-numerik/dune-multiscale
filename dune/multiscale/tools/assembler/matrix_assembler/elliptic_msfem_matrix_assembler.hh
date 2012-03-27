@@ -133,6 +133,7 @@ namespace Dune
 
     DiscreteEllipticMsFEMOperator( const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace,
                                    const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace,
+const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2, //!loeschen//
                                    // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers:
                                    SubGridListType& subgrid_list,
                                    const DiffusionModel &diffusion_op,
@@ -140,16 +141,17 @@ namespace Dune
                                    std :: string path = ""  )
     : coarseDiscreteFunctionSpace_( coarseDiscreteFunctionSpace ),
       fineDiscreteFunctionSpace_( fineDiscreteFunctionSpace ),
+fineDiscreteFunctionSpace2_( fineDiscreteFunctionSpace2 ), //!loeschen//
       subgrid_list_( subgrid_list ),
       diffusion_operator_( diffusion_op ),
       data_file_( &data_file ),
       path_( path )
     {
-      
+
       bool silence = false;
 
       const int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
-      
+
       std :: string local_path =  path_ + "/local_problems/";
       MsFEMLocalProblemSolverType loc_prob_solver( fineDiscreteFunctionSpace_, subgrid_list_, diffusion_operator_, data_file, local_path );
       loc_prob_solver.assemble_all( coarse_level, silence );
@@ -172,6 +174,7 @@ namespace Dune
   private:
     
     const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace_;
+const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2_; //!loeschen//!
     const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace_;
      
     const DiffusionModel &diffusion_operator_;
@@ -193,7 +196,7 @@ namespace Dune
   template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
   void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, 
                                       FineDiscreteFunctionImp, 
-				       DiffusionImp > :: operator() ( const CoarseDiscreteFunction &u, CoarseDiscreteFunction &w ) const 
+                                      DiffusionImp > :: operator() ( const CoarseDiscreteFunction &u, CoarseDiscreteFunction &w ) const 
   {
 
     std :: cout << "the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy." << std :: endl;
@@ -326,7 +329,7 @@ namespace Dune
                 FineEntityPointer fine_entity_pointer_1 = coarseDiscreteFunctionSpace_.grid().template getHostEntity<0>( coarse_grid_entity );
 		FineEntityPointer fine_entity_pointer_2 = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
 		int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
-		int fine_level = fineDiscreteFunctionSpace_.gridPart().grid().maxLevel();
+		int fine_level = fineDiscreteFunctionSpace2_.gridPart().grid().maxLevel(); /*! 2 entfernen loeschen! */
 
                 for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
                        fine_entity_pointer_2 = fine_entity_pointer_2->father();
@@ -365,10 +368,9 @@ namespace Dune
                     JacobianRangeType direction_of_diffusion( 0.0 );
                     for( int k = 0; k < dimension; ++k )
                       {
-                        direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 0 ] * grad_loc_sol_e0[ 0 ][ k ];
-                        direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 1 ] * grad_loc_sol_e1[ 0 ][ k ];
+                        //!direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 0 ] * grad_loc_sol_e0[ 0 ][ k ];
+                        //!direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 1 ] * grad_loc_sol_e1[ 0 ][ k ];
                         direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ k ];
-			
                       }
                       
                     JacobianRangeType diffusive_flux( 0.0 );
@@ -417,8 +419,8 @@ namespace Dune
       
       const CoarseLagrangePointSet &lagrangePointSet = coarseDiscreteFunctionSpace_.lagrangePointSet( coarse_grid_entity );
       
-      const FineIntersectionIterator iend = fineDiscreteFunctionSpace_.gridPart().iend( fine_entity );
-      for( FineIntersectionIterator iit = fineDiscreteFunctionSpace_.gridPart().ibegin( fine_entity ); iit != iend; ++iit )
+      const FineIntersectionIterator iend = fineDiscreteFunctionSpace2_.gridPart().iend( fine_entity ); /*! 2 entfernen loeschen! */
+      for( FineIntersectionIterator iit = fineDiscreteFunctionSpace2_.gridPart().ibegin( fine_entity ); iit != iend; ++iit ) /*! 2 entfernen loeschen! */
         {
 	  
            if ( iit->neighbor() ) //if there is a neighbor entity

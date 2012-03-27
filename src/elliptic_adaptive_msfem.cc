@@ -304,6 +304,26 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 #endif
 
 
+
+
+
+//! delete me!!!
+#if 1
+
+  GridPointerType macro_grid_pointer2( "../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf" );
+  macro_grid_pointer2->globalRefine( coarse_grid_level_ );
+  GridPartType gridPart2( *macro_grid_pointer2);
+
+  GridType &grid2 = gridPart2.grid();
+  DiscreteFunctionSpaceType discreteFunctionSpace2( gridPart2 );
+
+
+#endif
+
+
+
+
+
   //! ---------------------- solve MsFEM problem ---------------------------
 
   //! solution vector
@@ -319,7 +339,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
-  msfem_solver.solve_dirichlet_zero( diffusion_op, f, coarse_grid_level_, number_of_layers, msfem_solution );
+  msfem_solver.solve_dirichlet_zero( diffusion_op, f, coarse_grid_level_, number_of_layers, discreteFunctionSpace2/*!*/, msfem_solution );
 
   //! ----------------------------------------------------------------------
 
@@ -335,6 +355,16 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   fem_solver.solve_dirichlet_zero( diffusion_op, f, fem_solution );
 
   //! ----------------------------------------------------------------------
+
+#if 1
+    std::cout << "loeschen!" << std :: endl;
+    DiscreteFunctionType::ConstDofIteratorType dit = fem_solution.dbegin();
+    for ( ; dit != fem_solution.dend(); ++dit )
+        std::cout << "*dit = " << *dit << std :: endl;
+
+#endif
+
+
 
 
 

@@ -17,6 +17,8 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/misc/l2error.hh>
 
+#include "misc/linear-lagrange-interpolation.hh"
+
 namespace Dune 
 {
   
@@ -526,119 +528,6 @@ namespace Dune
  
 }; // end of class Meanvalue
 
-  //a dummy function class for functions, vectors and matrices
-  template< class FunctionSpaceImp >
-  class LinearLagrangeFunction2D
-  : public Function< FunctionSpaceImp, LinearLagrangeFunction2D< FunctionSpaceImp > >
-  {
-  public:
-    typedef FunctionSpaceImp FunctionSpaceType;
-
-  private:
-    typedef LinearLagrangeFunction2D< FunctionSpaceType > ThisType;
-    typedef Function< FunctionSpaceType, ThisType > BaseType;
-
-  public:
-    typedef typename FunctionSpaceType :: DomainType DomainType;
-    typedef typename FunctionSpaceType :: RangeType RangeType;
-
-    typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
-    typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
-
-    typedef DomainFieldType TimeType;
-
-  protected:
-    // three values that determine the linear polynom in 2D
-    DomainType a_0_;
-    RangeType p_a_0_; // p(a_0) = p_a_0
-
-    DomainType a_1_;
-    RangeType p_a_1_;
-
-    DomainType a_2_;
-    RangeType p_a_2_;
-
-  public:
-    // Constructor for LinearLagrangeFunction2D
-    inline explicit LinearLagrangeFunction2D ( DomainType &a_0,
-                                               RangeType &p_a_0,
-                                               DomainType &a_1,
-                                               RangeType &p_a_1,
-                                               DomainType &a_2,
-                                               RangeType &p_a_2 )
-    : a_0_( a_0 ),
-      p_a_0_( p_a_0 ),
-      a_1_( a_1 ),
-      p_a_1_( p_a_1 ),
-      a_2_( a_2 ),
-      p_a_2_( p_a_2 )
-    {
-    }
-
-    //dummy implementation
-    inline void evaluate ( const DomainType &x,
-                           RangeType &y ) const
-    {
-
-      if ( p_a_0_ != p_a_0_ )
-        {std :: cout << "p_a_0 is nan" << std :: endl;
-         }//!abort();}
-
-      if ( p_a_1_ != p_a_1_ )
-        {std :: cout << "p_a_1 is nan" << std :: endl;
-         }//!abort();}
-
-      if ( p_a_2_ != p_a_2_ )
-        {std :: cout << "p_a_2 is nan" << std :: endl;
-         }//!abort();}
-
-      if ( x[0] != x[0] )
-        {std :: cout << "x[0] is nan" << std :: endl;
-         }//!abort();}
-
-      if ( x[1] != x[1] )
-        {std :: cout << "x[1] is nan" << std :: endl;
-         }//!abort();}
-
-      RangeType lambda_1;
-      RangeType lambda_0;
-
-      if (a_0_[0] == a_2_[0])
-       {
-         lambda_1 = (x[0] - a_2_[0]) / (a_1_[0] - a_2_[0]);
-
-         lambda_0 = ( (x[1] - a_2_[1]) - ( lambda_1 * (a_1_[1] - a_2_[1]) ) ) / (a_0_[1] - a_2_[1]);
-       }
-      else
-       {
-         lambda_1 = 
-                ( (x[1]    - a_2_[1]) - ( (a_0_[1] - a_2_[1]) * ( (x[0]    - a_2_[0]) / (a_0_[0] - a_2_[0]) ) ) )
-              / ( (a_1_[1] - a_2_[1]) - ( (a_0_[1] - a_2_[1]) * ( (a_1_[0] - a_2_[0]) / (a_0_[0] - a_2_[0]) ) ) );
-
-         lambda_0 =
-                ( ( x[0] - a_2_[0] ) / ( a_0_[0] - a_2_[0] ) ) - ( ( ( a_1_[0] - a_2_[0] ) / (a_0_[0] - a_2_[0] ) ) * lambda_1 );
-
-       }
-
-
-
-      y = (p_a_0_ * lambda_0) + (p_a_1_ * lambda_1) + (p_a_2_ * (1.0 - lambda_0 - lambda_1) );
-
-      if ( lambda_1 != lambda_1 )
-        {std :: cout << "a_0_[0] - a_2_[0] = " << a_0_[0] - a_2_[0] << std :: endl;
-         std :: cout << "ganzer Nenner = " << ( (a_1_[1] - a_2_[1]) - ( (a_0_[1] - a_2_[1]) * ( (a_1_[0] - a_2_[0]) / (a_0_[0] - a_2_[0]) ) ) ) << std :: endl;
-         std :: cout << "lambda_1 is nan" << std :: endl;
-         abort();}
-
-      if ( lambda_0 != lambda_0 )
-        {std :: cout << "lambda_0 is nan" << std :: endl;
-         abort();}
-
-    }
-
-  };
-
-  
 
 
 //! KLASSE IST NUR FUER DEN 2D FALL UND DIE VERWENDUNG VON EINER SIMPLIZIALEN TRIANGULIERUNG, SONST FUNKTIONIERT DAS ALLES NICHT!!!!!
