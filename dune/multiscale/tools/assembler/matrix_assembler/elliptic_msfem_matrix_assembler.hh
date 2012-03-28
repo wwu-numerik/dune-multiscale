@@ -133,7 +133,6 @@ namespace Dune
 
     DiscreteEllipticMsFEMOperator( const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace,
                                    const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace,
-const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2, //!loeschen//
                                    // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers:
                                    SubGridListType& subgrid_list,
                                    const DiffusionModel &diffusion_op,
@@ -141,7 +140,6 @@ const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2, //!loeschen//
                                    std :: string path = ""  )
     : coarseDiscreteFunctionSpace_( coarseDiscreteFunctionSpace ),
       fineDiscreteFunctionSpace_( fineDiscreteFunctionSpace ),
-fineDiscreteFunctionSpace2_( fineDiscreteFunctionSpace2 ), //!loeschen//
       subgrid_list_( subgrid_list ),
       diffusion_operator_( diffusion_op ),
       data_file_( &data_file ),
@@ -174,7 +172,7 @@ fineDiscreteFunctionSpace2_( fineDiscreteFunctionSpace2 ), //!loeschen//
   private:
     
     const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace_;
-const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2_; //!loeschen//!
+
     const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace_;
      
     const DiffusionModel &diffusion_operator_;
@@ -244,8 +242,7 @@ const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2_; //!loeschen//!
    
     int local_problem_id = 0;
 
-    // Coarse Entity Iterator
-    
+    // Coarse Entity Iterator 
     const CoarseIterator coarse_grid_end = coarseDiscreteFunctionSpace_.end();
     for( CoarseIterator coarse_grid_it = coarseDiscreteFunctionSpace_.begin(); coarse_grid_it != coarse_grid_end; ++coarse_grid_it )
     {
@@ -325,19 +322,39 @@ const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2_; //!loeschen//!
 		
 		// check if "local_grid_entity" (which is an entity of U(T)) is in T:
 		// -------------------------------------------------------------------
-#if 1
+
                 FineEntityPointer fine_entity_pointer_1 = coarseDiscreteFunctionSpace_.grid().template getHostEntity<0>( coarse_grid_entity );
-		FineEntityPointer fine_entity_pointer_2 = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
+                FineEntityPointer fine_entity_pointer_2 = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
 		int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
-		int fine_level = fineDiscreteFunctionSpace2_.gridPart().grid().maxLevel(); /*! 2 entfernen loeschen! */
+		int fine_level = fineDiscreteFunctionSpace_.gridPart().grid().maxLevel();
 
                 for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
                        fine_entity_pointer_2 = fine_entity_pointer_2->father();
+		
+		 bool entities_identical = true;
+                int number_of_nodes = (*fine_entity_pointer_1).template count<2>();
+                for ( int k = 0; k < number_of_nodes; k += 1 )
+                  {
+		     if ( !(fine_entity_pointer_1->geometry().corner(k) == fine_entity_pointer_2->geometry().corner(k)) )
+                      { entities_identical = false; }
+		  }
 
-		 if ( !( fine_entity_pointer_1 == fine_entity_pointer_2 ) )
-		  { continue; }
+		 if ( entities_identical == false )
+		  {
+                   // std :: cout << "fine_entity_pointer_1->geometry().corner(0) = " << fine_entity_pointer_1->geometry().corner(0) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_1->geometry().corner(1) = " << fine_entity_pointer_1->geometry().corner(1) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_1->geometry().corner(2) = " << fine_entity_pointer_1->geometry().corner(2) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_2->geometry().corner(0) = " << fine_entity_pointer_2->geometry().corner(0) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_2->geometry().corner(1) = " << fine_entity_pointer_2->geometry().corner(1) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_2->geometry().corner(2) = " << fine_entity_pointer_2->geometry().corner(2) << std :: endl << std :: endl;
+		   continue; 
+		  }
+       
+
+		 // if ( !( fine_entity_pointer_1 == fine_entity_pointer_2 ) )
+		 // { continue; }
+
 		// -------------------------------------------------------------------
-#endif
 		
                 const LocalGridGeometry &local_grid_geometry = local_grid_entity.geometry();
                 assert( local_grid_entity.partitionType() == InteriorEntity );
@@ -368,8 +385,8 @@ const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2_; //!loeschen//!
                     JacobianRangeType direction_of_diffusion( 0.0 );
                     for( int k = 0; k < dimension; ++k )
                       {
-                        //!direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 0 ] * grad_loc_sol_e0[ 0 ][ k ];
-                        //!direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 1 ] * grad_loc_sol_e1[ 0 ][ k ];
+                        direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 0 ] * grad_loc_sol_e0[ 0 ][ k ];
+                        direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 1 ] * grad_loc_sol_e1[ 0 ][ k ];
                         direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ k ];
                       }
                       
@@ -401,7 +418,7 @@ const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2_; //!loeschen//!
         }
 
     }
-    
+  
     
     // discrete_function_reader.close();
 
@@ -419,8 +436,8 @@ const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace2_; //!loeschen//!
       
       const CoarseLagrangePointSet &lagrangePointSet = coarseDiscreteFunctionSpace_.lagrangePointSet( coarse_grid_entity );
       
-      const FineIntersectionIterator iend = fineDiscreteFunctionSpace2_.gridPart().iend( fine_entity ); /*! 2 entfernen loeschen! */
-      for( FineIntersectionIterator iit = fineDiscreteFunctionSpace2_.gridPart().ibegin( fine_entity ); iit != iend; ++iit ) /*! 2 entfernen loeschen! */
+      const FineIntersectionIterator iend = fineDiscreteFunctionSpace_.gridPart().iend( fine_entity );
+      for( FineIntersectionIterator iit = fineDiscreteFunctionSpace_.gridPart().ibegin( fine_entity ); iit != iend; ++iit )
         {
 	  
            if ( iit->neighbor() ) //if there is a neighbor entity
