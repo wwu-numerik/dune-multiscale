@@ -170,7 +170,13 @@ namespace Dune
     void assemble_matrix ( MatrixType &global_matrix ) const;
 
   private:
-    
+
+    // create a hostgrid function from a subgridfunction
+    // Note: the maximum gride levels for both underlying grids must be the same
+    void subgrid_to_hostrid_function( const LocalDiscreteFunction &sub_func, FineDiscreteFunction &host_func );
+
+  private:
+
     const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace_;
 
     const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace_;
@@ -186,6 +192,45 @@ namespace Dune
     std :: string path_;
 
   };
+
+  // create a hostgrid function from a subgridfunction
+  template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
+  void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, 
+                                      FineDiscreteFunctionImp, 
+                                      DiffusionImp > :: 
+  subgrid_to_hostrid_function( const LocalDiscreteFunction &sub_func, FineDiscreteFunction &host_func )
+    {
+
+       if ( sub_func.space().gridPart().grid().maxLevel() != host_func.space().gridPart().grid().maxLevel() )
+         { std :: cout << "Error in method 'subgrid_to_hostrid_function': MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std :: endl; }
+
+       host_func.clear();
+
+       const LocalDiscreteFunctionSpace &subDiscreteFunctionSpace = sub_func.space();
+       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
+
+       LocalGridIterator sub_endit = subDiscreteFunctionSpace.end();
+       for( LocalGridIterator sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+          {
+
+             const LocalGridEntity &sub_entity = *sub_it;
+
+             FineEntityPointer host_entity_pointer = subGrid.template getHostEntity<0>( *sub_it );
+             const FineEntity& host_entity = *host_entity_pointer;
+
+             LocalGridLocalFunction sub_loc_value = sub_func.localFunction( sub_entity );
+             FineLocalFunction host_loc_value = host_func.localFunction( host_entity );
+
+             const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+             for( unsigned int i = 0; i < numBaseFunctions; ++i )
+               {
+                 host_loc_value[ i ] = sub_loc_value[ i ];
+               }
+
+          }
+
+    }
+
 
 
 
@@ -205,9 +250,9 @@ namespace Dune
 
   template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
   template< class MatrixType >
-  void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, 
-                                      FineDiscreteFunctionImp, 
-				       DiffusionImp > :: assemble_matrix ( MatrixType &global_matrix ) const
+  void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
+                                      FineDiscreteFunctionImp,
+                                      DiffusionImp > :: assemble_matrix ( MatrixType &global_matrix ) const
   {
    
     // the local problem:
@@ -221,17 +266,9 @@ namespace Dune
     std :: cout << "Assembling MsFEM Matrix." << std :: endl;
     #endif
 
-    std :: string local_solution_location;
-    
-    //! der braucht einen macro-space (der wird auch als subgrid-space generiert) und den total globalen Feinskalen-Raum
-    
-    // the file/place, where we saved the solutions of the cell problems
-    local_solution_location = path_ + "/local_problems/_localProblemSolutions";
 
-    bool reader_is_open = false;
-    // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
-    reader_is_open = discrete_function_reader.open();
+
+    //! der braucht einen macro-space (der wird auch als subgrid-space generiert) und den total globalen Feinskalen-Raum
 
     typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
@@ -252,7 +289,7 @@ namespace Dune
       const CoarseGeometry &coarse_grid_geometry = coarse_grid_entity.geometry();
       assert( coarse_grid_entity.partitionType() == InteriorEntity );
     
-      int global_index_entity =  coarseDiscreteFunctionSpace_.gridPart().indexSet().index( coarse_grid_entity );
+      int global_index_entity = coarseDiscreteFunctionSpace_.gridPart().indexSet().index( coarse_grid_entity );
       
       LocalMatrix local_matrix = global_matrix.localMatrix( coarse_grid_entity, coarse_grid_entity );
 
@@ -269,32 +306,47 @@ namespace Dune
       
       LocalDiscreteFunction local_problem_solution_e0( "Local problem Solution e_0", localDiscreteFunctionSpace );
       local_problem_solution_e0.clear();
-      
+
       LocalDiscreteFunction local_problem_solution_e1( "Local problem Solution e_1", localDiscreteFunctionSpace );
       local_problem_solution_e1.clear();
-     
+
       // --------- load local solutions -------
+
+      char location_lps[50];
+      sprintf( location_lps, "_localProblemSolutions_%d", global_index_entity );
+      std::string location_lps_s( location_lps );
+
+      std :: string local_solution_location;
+
+      // the file/place, where we saved the solutions of the cell problems
+      local_solution_location = path_ + location_lps_s;
+
+      bool reader_is_open = false;
+      // reader for the cell problem data file:
+      DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
+      reader_is_open = discrete_function_reader.open();
+
       if (reader_is_open)
-        { discrete_function_reader.read( local_problem_id, local_problem_solution_e0 ); }
-      local_problem_id += 1;
+        { discrete_function_reader.read( 0, local_problem_solution_e0 ); }
+
       if (reader_is_open)
-        { discrete_function_reader.read( local_problem_id, local_problem_solution_e1 ); }
+        { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
 
 #endif
-      
+
       // 1 point quadrature!! We only need the gradient of the base function,
       // which is constant on the whole entity.
       CoarseQuadrature one_point_quadrature( coarse_grid_entity, 0 );
-      
+
       // the barycenter of the macro_grid_entity
       const typename CoarseQuadrature::CoordinateType &local_coarse_point 
            = one_point_quadrature.point( 0 /*=quadraturePoint*/ );
       DomainType coarse_entity_barycenter = coarse_grid_geometry.global( local_coarse_point );
-      
+
       // transposed of the the inverse jacobian
       const FieldMatrix< double, dimension, dimension > &inverse_jac
           = coarse_grid_geometry.jacobianInverseTransposed( local_coarse_point );
-	  
+
       for( unsigned int i = 0; i < numMacroBaseFunctions; ++i )
         {
           // jacobian of the base functions, with respect to the reference element
@@ -407,7 +459,7 @@ namespace Dune
                     #else
                     local_integral += weight_local_quadrature * ( diffusive_flux[ 0 ] * gradient_Phi[ j ][ 0 ]);
                     #endif
-		     
+
 		  }
 	       }
 

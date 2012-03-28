@@ -46,6 +46,7 @@ namespace Dune
    
    typedef typename DiscreteFunctionSpace :: DomainType DomainType;
    typedef typename DiscreteFunctionSpace :: RangeType RangeType;
+   typedef typename DiscreteFunctionSpace :: JacobianRangeType JacobianRangeType;
    
    typedef typename HostGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator LevelEntityIteratorType;
 
@@ -55,7 +56,8 @@ namespace Dune
    
    typedef typename HostEntity :: EntityPointer HostEntityPointer; 
 
-   
+   typedef typename HostGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator HostGridLevelEntityIterator;
+
    enum { faceCodim = 1 };
 
    typedef typename GridPart :: IntersectionIteratorType IntersectionIterator;
@@ -163,6 +165,47 @@ namespace Dune
      }
 
 
+   // create a hostgrid function from a subgridfunction
+   // Note: the maximum gride levels for both underlying grids must be the same
+   void subgrid_to_hostrid_function( const SubgridDiscreteFunction &sub_func, DiscreteFunction &host_func )
+    {
+
+       if ( sub_func.space().gridPart().grid().maxLevel() != host_func.space().gridPart().grid().maxLevel() )
+         { std :: cout << "Error in method 'subgrid_to_hostrid_function': MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std :: endl; }
+
+       host_func.clear();
+
+       const SubgridDiscreteFunctionSpace &subDiscreteFunctionSpace = sub_func.space();
+       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
+
+       typedef typename SubgridDiscreteFunctionSpace :: IteratorType SubgridIterator;
+       typedef typename SubgridIterator :: Entity SubgridEntity;
+       typedef typename SubgridDiscreteFunction :: LocalFunctionType SubgridLocalFunction;
+
+       SubgridIterator sub_endit = subDiscreteFunctionSpace.end();
+       for( SubgridIterator sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+          {
+
+             const SubgridEntity &sub_entity = *sub_it;
+
+             HostEntityPointer host_entity_pointer = subGrid.template getHostEntity<0>( *sub_it );
+             const HostEntity& host_entity = *host_entity_pointer;
+
+             SubgridLocalFunction sub_loc_value = sub_func.localFunction( sub_entity );
+             LocalFunction host_loc_value = host_func.localFunction( host_entity );
+
+             const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+             for( unsigned int i = 0; i < numBaseFunctions; ++i )
+               {
+                 host_loc_value[ i ] = sub_loc_value[ i ];
+               }
+
+          }
+
+    }
+
+
+
    // - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
    // then:
    // A --> diffusion operator ('DiffusionOperatorType')
@@ -171,28 +214,27 @@ namespace Dune
    // f --> 'first' source term, scalar ('SourceTermType')
    // G --> 'second' source term, vector valued ('SecondSourceTermType')
 
-//! wieder einbinden:
-#if 0
+
    // homogenous Dirchilet boundary condition!:
    template< class DiffusionOperator, class SourceTerm >
    void solve_dirichlet_zero( const DiffusionOperator &diffusion_op,
                               const SourceTerm &f,
-                              const int coarse_level,
+                                    DiscreteFunctionSpace& coarse_space,
                                     DiscreteFunction &solution )
    {
      HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
      const GridPart &gridPart = discreteFunctionSpace_.gridPart();
-     int number_of_level_host_entities = grid.size( coarse_level, 0 /*codim*/ );
-     
+     int number_of_level_host_entities = grid.size( coarse_space.gridPart().grid().maxLevel(), 0 /*codim*/ );
+
      //! default - no layers
      // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
      std :: vector < int > number_of_layers( number_of_level_host_entities );
      for ( int i = 0; i < number_of_level_host_entities; i+=1 )
         { number_of_layers[i] = 0; }
-     
-     solve_dirichlet_zero( diffusion_op, f, coarse_level, number_of_layers, solution );
+
+     solve_dirichlet_zero( diffusion_op, f, coarse_space, number_of_layers, solution );
    }
-#endif
+
    
    // homogenous Dirchilet boundary condition!:
    template< class DiffusionOperator, class SourceTerm >
@@ -210,7 +252,7 @@ namespace Dune
                                             DiffusionOperator > EllipticMsFEMOperatorType;
 
      int coarse_level = coarse_space.gridPart().grid().maxLevel(); 
-					    
+
      HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
      const GridPart &gridPart = discreteFunctionSpace_.gridPart();
 
@@ -232,6 +274,48 @@ namespace Dune
      SubGridPart subGridPart( subGrid );
 
      SubgridDiscreteFunctionSpace coarseDiscreteFunctionSpace( subGridPart );
+
+     // ----- check index sets --------------------
+
+#if 0
+      typedef typename HostGrid :: Traits :: LevelIndexSet HostGridLevelIndexSet;
+      typedef typename SubGridType :: Traits :: LevelIndexSet SubGridLevelIndexSet;
+
+      HostGridLevelEntityIterator level_iterator_end = grid.template lend< 0 >( coarse_level );
+      HostGridLevelEntityIterator level_iterator_begin = grid.template lbegin< 0 >( coarse_level );
+      
+      const HostGridLevelIndexSet& hostGridLevelIndexSet = grid.levelIndexSet( coarse_level );
+
+      const SubGridLevelIndexSet& subGridLevelIndexSet = subGrid.levelIndexSet( coarse_level );
+
+      bool index_sets_correct = true;
+
+      CoarseGridIterator coarse_it_ = coarseDiscreteFunctionSpace.begin();
+      for ( HostGridLevelEntityIterator lit = level_iterator_begin;
+            lit != level_iterator_end ; ++lit )
+       {
+          int index_host = hostGridLevelIndexSet.index( *lit );
+
+          int index_sub = coarseDiscreteFunctionSpace.gridPart().indexSet().index( *coarse_it_ );
+
+          if ( index_host != index_sub )
+           { index_sets_correct = false; }
+
+          int number_of_nodes = (*lit).template count<2>();
+
+          for ( int i = 0; i < number_of_nodes; i += 1 )
+           {
+             if ( (*lit).geometry().corner(i) != (*coarse_it_).geometry().corner(i) )
+              { index_sets_correct = false; }
+           }
+         ++coarse_it_;
+       }
+
+     if ( index_sets_correct == false )
+      { std :: cout << "Index Sets not correct" << std :: endl; abort(); }
+#endif
+
+     // -------------------------------------------
 
      SubgridDiscreteFunction coarse_msfem_solution( "Coarse Part MsFEM Solution", coarseDiscreteFunctionSpace );
      coarse_msfem_solution.clear();
@@ -257,7 +341,7 @@ namespace Dune
 
      //! (stiffness) matrix
      MsFEMMatrix msfem_matrix( "MsFEM stiffness matrix", coarseDiscreteFunctionSpace, coarseDiscreteFunctionSpace );
-     
+
      //! right hand side vector
      // right hand side for the finite element method:
      SubgridDiscreteFunction msfem_rhs( "MsFEM right hand side", coarseDiscreteFunctionSpace );
@@ -353,6 +437,8 @@ namespace Dune
 
 #if 1
 
+    //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
+    // ------------------------------------------------------------------------------------
     typedef typename HostEntity :: template Codim< 2 > :: EntityPointer HostNodePointer;
     
     typedef typename GridPart :: IntersectionIteratorType HostIntersectionIterator;
@@ -399,8 +485,90 @@ namespace Dune
 
       }
 #endif
+     // ------------------------------------------------------------------------------------
 
-     std :: cout << "Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren." << std :: endl << std :: endl;  
+#if 1
+     DiscreteFunction fine_scale_part( "Fine Scale Part of MsFEM Solution", discreteFunctionSpace_ );
+     fine_scale_part.clear();
+
+    //! indentify fine scale part of MsFEM solution
+    // ------------------------------------------------------------------------------------
+
+    for( HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it )
+      {
+
+         DiscreteFunction correction_on_U_T( "correction_on_U_T", discreteFunctionSpace_ );
+         correction_on_U_T.clear();
+
+         // the coarse entity 'T'
+         HostEntityPointer father = it;
+         for (int lev = 0; lev < ( grid.maxLevel() - subGrid.maxLevel()) ; ++lev)
+           father = father->father();
+
+         const typename HostGrid :: Traits :: LevelIndexSet& hostGridLevelIndexSet = grid.levelIndexSet( subGrid.maxLevel() );
+
+         int index_father = hostGridLevelIndexSet.index( *father );
+
+         // the sub grid U(T) that belongs to the coarse_grid_entity T
+         SubGridType& sub_grid_U_T = subgrid_list.getSubGrid( index_father );
+         SubGridPart subGridPart( sub_grid_U_T );
+
+         SubgridDiscreteFunctionSpace localDiscreteFunctionSpace( subGridPart );
+
+         SubgridDiscreteFunction local_problem_solution_e0( "Local problem Solution e_0", localDiscreteFunctionSpace );
+         local_problem_solution_e0.clear();
+
+         SubgridDiscreteFunction local_problem_solution_e1( "Local problem Solution e_1", localDiscreteFunctionSpace );
+         local_problem_solution_e1.clear();
+
+         // --------- load local solutions -------
+
+         char location_lps[50];
+         sprintf( location_lps, "_localProblemSolutions_%d", index_father );
+         std::string location_lps_s( location_lps );
+
+         std :: string local_solution_location;
+
+         // the file/place, where we saved the solutions of the cell problems
+         local_solution_location = path_ + location_lps_s;
+
+         bool reader_is_open = false;
+         // reader for the cell problem data file:
+         DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
+         reader_is_open = discrete_function_reader.open();
+
+         if (reader_is_open)
+          { discrete_function_reader.read( 0, local_problem_solution_e0 ); }
+
+         if (reader_is_open)
+          { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
+
+         LocalFunction local_coarse_part = solution.localFunction( *it );
+
+         // 1 point quadrature!! We only need the gradient of the coarse scale part on the element, which is a constant.
+         CachingQuadrature< GridPart, 0 > one_point_quadrature( *it, 0 );
+
+         JacobianRangeType grad_coarse_msfem_on_entity;
+         local_coarse_part.jacobian( one_point_quadrature[ 0 ], grad_coarse_msfem_on_entity );
+
+         local_problem_solution_e0 *= grad_coarse_msfem_on_entity[ 0 ][ 0 ];
+         local_problem_solution_e1 *= grad_coarse_msfem_on_entity[ 0 ][ 1 ];
+         local_problem_solution_e0 += local_problem_solution_e1;
+
+         subgrid_to_hostrid_function( local_problem_solution_e0, correction_on_U_T );
+         // hol die den Gradient und addiere.
+
+//! Allgemeiner Ueberarbeiten!!!!!!!
+fine_scale_part+=correction_on_U_T;
+
+
+      }
+#endif
+    // ------------------------------------------------------------------------------------
+
+     // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
+     solution += fine_scale_part;
+
    }
 
 

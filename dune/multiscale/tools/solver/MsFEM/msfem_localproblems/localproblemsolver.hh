@@ -203,11 +203,11 @@ namespace Dune
     const Iterator end = subDiscreteFunctionSpace_.end();
     for( Iterator it = subDiscreteFunctionSpace_.begin(); it != end; ++it )
     {
-    
+
       const Entity &sub_grid_entity = *it;
       const Geometry &sub_grid_geometry = sub_grid_entity.geometry();
       assert( sub_grid_entity.partitionType() == InteriorEntity );
-      
+
       LocalMatrix local_matrix = global_matrix.localMatrix( sub_grid_entity, sub_grid_entity );
 
       const BaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
@@ -869,14 +869,6 @@ namespace Dune
       std::stringstream outstring;
       // -------------------------------------------------------
       #endif
-      
-
-      bool writer_is_open = false;
-
-      std :: string locprob_solution_location = path_ + "_localProblemSolutions";
-      DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
-
-      writer_is_open = dfw.open();
 
       long double starting_time = clock();
 
@@ -885,16 +877,27 @@ namespace Dune
       double average_time_c_p = 0;
       double maximum_time_c_p = 0;
 
-      
-      if ( writer_is_open )
+      for ( HostgridLevelEntityIteratorType lit = level_iterator_begin;
+            lit != level_iterator_end ; ++lit )
       {
 
-        for ( HostgridLevelEntityIteratorType lit = level_iterator_begin;
-              lit != level_iterator_end ; ++lit )
+          int index = hostGridLevelIndexSet.index( *lit );
+
+          bool writer_is_open = false;
+
+	  char location_lps[50];
+          sprintf( location_lps, "_localProblemSolutions_%d", index );
+          std::string location_lps_s( location_lps );
+
+          std :: string locprob_solution_location = path_ + location_lps_s;
+
+          DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
+
+          writer_is_open = dfw.open();
+
+          if ( writer_is_open )
           {
-	    
-            int index = hostGridLevelIndexSet.index( *lit );
-	    
+
 	    SubGridType& subGrid = subgrid_list_.getSubGrid( index );
             SubGridPartType subGridPart( subGrid );
 
@@ -907,26 +910,24 @@ namespace Dune
 	    //! only for dimension 2!
             SubDiscreteFunctionType local_problem_solution_0( name_local_solution, subDiscreteFunctionSpace );
             local_problem_solution_0.clear();
-	    
+
             SubDiscreteFunctionType local_problem_solution_1( name_local_solution, subDiscreteFunctionSpace );
             local_problem_solution_1.clear();
-	    
+
             std :: cout << "Number of the local problem: " << dimension*index << " (of " << (dimension*number_of_level_host_entities)-1 << " problems in total)" << std :: endl;
-	    
+
             // take time
             long double time_now = clock();
-	    
+
 	    // solve the problems
 	    solvelocalproblem( e[0], local_problem_solution_0 );
-	    
+
 	    // min/max time
             if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
                { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
             if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
                { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-               
-               
-               
+
             std :: cout << "Number of the local problem: " << (dimension*index)+1 << " (of " << (dimension*number_of_level_host_entities)-1 << " problems in total)" << std :: endl;
 	    
             // take time
@@ -940,8 +941,9 @@ namespace Dune
                { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
             if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
                { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-               
+
             dfw.append( local_problem_solution_0);
+
             dfw.append( local_problem_solution_1);
 	    
 	    HostDiscreteFunctionType host_local_solution( name_local_solution, hostDiscreteFunctionSpace_ );
@@ -1021,8 +1023,6 @@ namespace Dune
          }
       }
 
-
-      // delete[] subGrid;
 
     }
 

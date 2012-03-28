@@ -312,7 +312,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   Problem::ModelProblemData info( filename_ );
   std :: string macroGridName;
   info.getMacroGridFile( macroGridName );
-  
+
   GridPointerType macro_grid_pointer_coarse( macroGridName );
   macro_grid_pointer_coarse->globalRefine( coarse_grid_level_ );
   GridPartType gridPart_coarse( *macro_grid_pointer_coarse);
@@ -320,7 +320,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   GridType &grid_coarse = gridPart_coarse.grid();
   DiscreteFunctionSpaceType discreteFunctionSpace_coarse( gridPart_coarse );
 #endif
-  
+
   //! solution vector
   // solution of the standard finite element method
   DiscreteFunctionType msfem_solution( filename_ + " MsFEM Solution", discreteFunctionSpace );
@@ -330,8 +330,8 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   int number_of_level_host_entities = grid.size( coarse_grid_level_, 0 /*codim*/ );
   std :: vector < int > number_of_layers( number_of_level_host_entities );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
-    { number_of_layers[i] = 6; }
-  
+    { number_of_layers[i] = 0; }
+
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
   msfem_solver.solve_dirichlet_zero( diffusion_op, f, discreteFunctionSpace_coarse, number_of_layers, msfem_solution );

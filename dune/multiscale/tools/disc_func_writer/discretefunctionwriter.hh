@@ -95,6 +95,11 @@ public:
         return ok;
     }
 
+    long size()
+    {
+        return size_;
+    }
+
     void close()
     {
         file_.close();
@@ -106,6 +111,7 @@ public:
         typedef typename DFType::DomainFieldType
             Field;
         unsigned long bytes = df.size() * sizeof(Field);
+
         assert( file_.is_open() );
         assert( size_ >= bytes * ( index + 1 ) );
         file_.seekg( bytes * index );
@@ -125,6 +131,7 @@ public:
     	append( *it );
         }
     }*/
+
 
 private:
     const std::string filename_;
