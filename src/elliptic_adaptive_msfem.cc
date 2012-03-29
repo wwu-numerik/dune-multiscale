@@ -80,7 +80,7 @@
 
 //! local (dune-multiscale) includes
 // #include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
-#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
 
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
@@ -373,12 +373,12 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
     { number_of_layers[i] = 0; }
 
-#if 0
+
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
   msfem_solver.solve_dirichlet_zero( diffusion_op, f, discreteFunctionSpace_coarse, number_of_layers,
                                      coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution );
-#endif
+
 
   //! ----------------------------------------------------------------------
 
