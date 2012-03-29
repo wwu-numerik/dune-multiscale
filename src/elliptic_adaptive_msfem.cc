@@ -79,8 +79,8 @@
 #include <dune/fem/misc/l2norm.hh>
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
-//#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
+//#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
 
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
@@ -303,8 +303,43 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   DiscreteExactSolutionType discrete_exact_solution( "discrete exact solution ", u, gridPart );
 #endif
 
+  
+  //! ---------------------------- general output parameters ------------------------------
+  
+  // general output parameters
+  myDataOutputParameters outputparam;
+  outputparam.set_path( path_ );
+
+  // sequence stamp
+  std::stringstream outstring;
+  
+  //! --------------------------------------------------------------------------------------
 
 
+  
+  //! -------------------------- writing data output Exact Solution ------------------------
+
+#ifdef EXACTSOLUTION_AVAILABLE
+  // --------- data output discrete exact solution --------------
+
+  // create and initialize output class
+  ExSolIOTupleType exact_solution_series( &discrete_exact_solution );
+  outputparam.set_prefix("exact_solution");
+  ExSolDataOutputType exactsol_dataoutput( gridPart.grid(), exact_solution_series, outputparam );
+
+  // write data
+  outstring << "exact-solution";
+  exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+  // -------------------------------------------------------
+#endif
+  
+  //! --------------------------------------------------------------------------------------
+  
+  
+  
+  
   //! ---------------------- solve MsFEM problem ---------------------------
 
   // coarse space
@@ -338,6 +373,41 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   //! ----------------------------------------------------------------------
 
+  std :: cout << "Data output for MsFEM Solution." << std :: endl;
+  
+  //! ----------------- writing data output MsFEM Solution -----------------
+  
+  // --------- VTK data output for MsFEM solution --------------------------
+
+  // create and initialize output class
+  IOTupleType msfem_solution_series( &msfem_solution );
+  outputparam.set_prefix("msfem_solution");
+  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
+
+  // write data
+  outstring << "msfem_solution";
+  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+  // ---------------------------------------------------------------------- 
+  
+  // ---------------------- write discrete msfem solution to file ---------
+  bool writer_is_open = false;
+
+  char fname[50];
+  sprintf( fname, "/msfem_solution_discFunc_refLevel_%d_%d", total_refinement_level_, coarse_grid_level_);
+  std :: string fname_s( fname );
+
+  std :: string location = path_ + fname_s;
+  DiscreteFunctionWriter dfw( (location).c_str() );
+  writer_is_open = dfw.open();
+  if ( writer_is_open )
+    dfw.append( msfem_solution );
+    
+  //! --------------------------------------------------------------------
+    
+  
   //! ---------------------- solve FEM problem ---------------------------
 
   //! solution vector
@@ -351,29 +421,30 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   //! ----------------------------------------------------------------------
 
+   std :: cout << "Data output for FEM Solution." << std :: endl;
+ 
+  //! -------------------------- writing data output FEM Solution ----------
 
+  // ------------- VTK data output for FEM solution --------------
 
+  // create and initialize output class
+  IOTupleType fem_solution_series( &fem_solution );
+  outputparam.set_prefix("fem_solution");
+  DataOutputType fem_dataoutput( gridPart.grid(), fem_solution_series, outputparam );
 
+  // write data
+  outstring << "fem_solution";
+  fem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
 
-//! Naechste Schritte:
-// (Anmerkung: wir implementieren zunaechst nur den Fall uniformer Gitter!
-// Adaptiv gesteuert werden sollen nur die Groessen von U(T) und das globale MikroLevel)
+  // -------------------------------------------------------------
+ 
+   
+   
+  // ------------- write discrete fem solution to file -----------
 
-//! 1. Subgrids anreichern (2 Tage)
-//! 2. FEM Loeser in eine einzige Klasse auslagern (1 Tag)
-//! 3. MsFEM Loeser formal auslagern und den localProblemSolver in den Konstruktor packen (2 Tage)
-//! 4. MsFEM Loeser komplett aufbauen (coarse grid als subgrid initialisieren usw.) (3 Tage)
-//! 5. Implementierung der Fehlerschaetzer (10 Tage)
-//! 6. Adaptionstrategie (5 Tage)
-
-
-
-
-
-
-  //! -- write discrete fem solution to file ---
-
-  bool writer_is_open = false;
+  writer_is_open = false;
 
   char fem_fname[50];
   sprintf( fem_fname, "/fem_solution_discFunc_refLevel_%d", total_refinement_level_ );
@@ -384,24 +455,12 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   writer_is_open = fem_dfw.open();
   if ( writer_is_open )
     fem_dfw.append( fem_solution );
+  
+  // -------------------------------------------------------------
 
-  //! -----------------------------
-
-  //! -- write discrete msfem solution to file ---
-  writer_is_open = false;
-
-  char fname[50];
-  sprintf( fname, "/msfem_solution_discFunc_refLevel_%d_%d", total_refinement_level_, coarse_grid_level_);
-  std :: string fname_s( fname );
-
-  std :: string location = path_ + fname_s;
-  DiscreteFunctionWriter dfw( (location).c_str() );
-  writer_is_open = dfw.open();
-  if ( writer_is_open )
-    dfw.append( msfem_solution );
+  //! ------------------------------------------------------------
     
-  //! -----------------------------
-
+  
     
   std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
   if (data_file.is_open())
@@ -432,66 +491,6 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 //! -------------------------------------------------------
 
-
-//! --------------- writing data output ---------------------
-
-
-  // general output parameters
-  myDataOutputParameters outputparam;
-  outputparam.set_path( path_ );
-
-  // sequence stamp
-  std::stringstream outstring;
-
-#ifdef EXACTSOLUTION_AVAILABLE
-  // --------- data output discrete exact solution --------------
-
-  // create and initialize output class
-  ExSolIOTupleType exact_solution_series( &discrete_exact_solution );
-  outputparam.set_prefix("exact_solution");
-  ExSolDataOutputType exactsol_dataoutput( gridPart.grid(), exact_solution_series, outputparam );
-
-  // write data
-  outstring << "exact-solution";
-  exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str(std::string());
-  // -------------------------------------------------------
-#endif
-  
-  // --------- data output standard solution --------------
-
-  // create and initialize output class
-  IOTupleType fem_solution_series( &fem_solution );
-  outputparam.set_prefix("fem_solution");
-  DataOutputType fem_dataoutput( gridPart.grid(), fem_solution_series, outputparam );
-
-  // write data
-  outstring << "fem_solution";
-  fem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str(std::string());
-
-  // -------------------------------------------------------
-  
-
-  // --------- data output standard solution --------------
-
-  // create and initialize output class
-  IOTupleType msfem_solution_series( &msfem_solution );
-  outputparam.set_prefix("msfem_solution");
-  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
-
-  // write data
-  outstring << "msfem_solution";
-  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str(std::string());
-
-  // -------------------------------------------------------  
-  
-  
-//!-------------------------------------------------------------
 
 }
 

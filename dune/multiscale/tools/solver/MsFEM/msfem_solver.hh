@@ -165,9 +165,9 @@ namespace Dune
      }
 
 
-   // create a hostgrid function from a subgridfunction
+   // create a hostgrid function from a subgridfunction (projection for global continuity)
    // Note: the maximum gride levels for both underlying grids must be the same
-   void subgrid_to_hostrid_function( const SubgridDiscreteFunction &sub_func, DiscreteFunction &host_func )
+   void subgrid_to_hostrid_projection( const SubgridDiscreteFunction &sub_func, DiscreteFunction &host_func )
     {
 
        if ( sub_func.space().gridPart().grid().maxLevel() != host_func.space().gridPart().grid().maxLevel() )
@@ -436,7 +436,8 @@ namespace Dune
 
 
 #if 1
-
+    int fine_level = grid.maxLevel();
+     
     //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
     // ------------------------------------------------------------------------------------
     typedef typename HostEntity :: template Codim< 2 > :: EntityPointer HostNodePointer;
@@ -445,9 +446,6 @@ namespace Dune
     
     for( HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it )
       {
-
-        int coarse_level = subGrid.maxLevel();
-        int fine_level = grid.maxLevel();
 
         typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_father = it;
         for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
@@ -490,27 +488,47 @@ namespace Dune
 #if 1
      DiscreteFunction fine_scale_part( "Fine Scale Part of MsFEM Solution", discreteFunctionSpace_ );
      fine_scale_part.clear();
+     
 
-    //! indentify fine scale part of MsFEM solution
+     int number_of_nodes = grid.size( grid.maxLevel(), 2 /*codim*/ );
+     std :: vector< std :: vector < HostEntityPointer > > entities_sharing_same_node( number_of_nodes );
+      
+     for( HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it )
+        {
+	  int number_of_nodes_in_entity = (*it).template count<2>();
+	  for ( int i = 0; i < number_of_nodes_in_entity; i += 1 )
+	    {
+	      const typename HostEntity :: template Codim< 2 > :: EntityPointer node = (*it).template subEntity<2>(i);
+	      int global_index_node = gridPart.indexSet().index( *node );
+	      
+	      entities_sharing_same_node[ global_index_node ].push_back( it );
+	    }
+        }
+        
+
+    //! indentify fine scale part of MsFEM solution (including the projection!)
     // ------------------------------------------------------------------------------------
 
-    for( HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it )
-      {
+
+    
+    // iterator ueber coarse space
+     for( CoarseGridIterator it = coarseDiscreteFunctionSpace.begin(); it != endit; ++it )
+       {
+
+         // the coarse entity 'T'	 
+         HostEntityPointer host_entity_pointer = subGrid.template getHostEntity<0>( *it );
+         const HostEntity& host_entity = *host_entity_pointer;
 
          DiscreteFunction correction_on_U_T( "correction_on_U_T", discreteFunctionSpace_ );
          correction_on_U_T.clear();
 
-         // the coarse entity 'T'
-         HostEntityPointer father = it;
-         for (int lev = 0; lev < ( grid.maxLevel() - subGrid.maxLevel()) ; ++lev)
-           father = father->father();
+         const typename HostGrid :: Traits :: LevelIndexSet& hostGridLevelIndexSet
+               = coarse_space.gridPart().grid().levelIndexSet( subGrid.maxLevel() );
 
-         const typename HostGrid :: Traits :: LevelIndexSet& hostGridLevelIndexSet = grid.levelIndexSet( subGrid.maxLevel() );
-
-         int index_father = hostGridLevelIndexSet.index( *father );
+         int index = hostGridLevelIndexSet.index( host_entity );
 
          // the sub grid U(T) that belongs to the coarse_grid_entity T
-         SubGridType& sub_grid_U_T = subgrid_list.getSubGrid( index_father );
+         SubGridType& sub_grid_U_T = subgrid_list.getSubGrid( index );
          SubGridPart subGridPart( sub_grid_U_T );
 
          SubgridDiscreteFunctionSpace localDiscreteFunctionSpace( subGridPart );
@@ -524,7 +542,7 @@ namespace Dune
          // --------- load local solutions -------
 
          char location_lps[50];
-         sprintf( location_lps, "_localProblemSolutions_%d", index_father );
+         sprintf( location_lps, "_localProblemSolutions_%d", index );
          std::string location_lps_s( location_lps );
 
          std :: string local_solution_location;
@@ -543,10 +561,11 @@ namespace Dune
          if (reader_is_open)
           { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
 
-         LocalFunction local_coarse_part = solution.localFunction( *it );
+         typedef typename SubgridDiscreteFunction :: LocalFunctionType SubgridLocalFunction;
+	 SubgridLocalFunction local_coarse_part = coarse_msfem_solution.localFunction( *it );
 
          // 1 point quadrature!! We only need the gradient of the coarse scale part on the element, which is a constant.
-         CachingQuadrature< GridPart, 0 > one_point_quadrature( *it, 0 );
+         CachingQuadrature< SubGridPart, 0 > one_point_quadrature( *it, 0 );
 
          JacobianRangeType grad_coarse_msfem_on_entity;
          local_coarse_part.jacobian( one_point_quadrature[ 0 ], grad_coarse_msfem_on_entity );
@@ -555,11 +574,97 @@ namespace Dune
          local_problem_solution_e1 *= grad_coarse_msfem_on_entity[ 0 ][ 1 ];
          local_problem_solution_e0 += local_problem_solution_e1;
 
-         subgrid_to_hostrid_function( local_problem_solution_e0, correction_on_U_T );
+         subgrid_to_hostrid_projection( local_problem_solution_e0, correction_on_U_T );
          // hol die den Gradient und addiere.
+#if 1
+         if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() )
+           { std :: cout << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std :: endl; }
 
-//! Allgemeiner Ueberarbeiten!!!!!!!
-fine_scale_part+=correction_on_U_T;
+         correction_on_U_T.clear();
+ 
+	 typedef typename SubgridDiscreteFunctionSpace :: IteratorType SubgridIterator;
+         typedef typename SubgridIterator :: Entity SubgridEntity;
+         typedef typename SubgridDiscreteFunction :: LocalFunctionType SubgridLocalFunction;
+
+         SubgridIterator sub_endit = localDiscreteFunctionSpace.end();
+         for( SubgridIterator sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+           {
+
+             const SubgridEntity &sub_entity = *sub_it;
+
+             HostEntityPointer host_entity_pointer = sub_grid_U_T.template getHostEntity<0>( *sub_it );
+             const HostEntity& host_entity = *host_entity_pointer;
+
+             HostEntityPointer father = host_entity_pointer;
+             for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
+                 father = father->father();
+
+             bool entities_identical = true;
+             int number_of_nodes = (*father).template count<2>();
+             for ( int k = 0; k < number_of_nodes; k += 1 )
+               {
+		   if ( !(father->geometry().corner(k) == host_entity.geometry().corner(k)) )
+                    { entities_identical = false; }
+		}
+
+             if ( entities_identical == false )
+		{
+                   // std :: cout << "fine_entity_pointer_1->geometry().corner(0) = " << fine_entity_pointer_1->geometry().corner(0) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_1->geometry().corner(1) = " << fine_entity_pointer_1->geometry().corner(1) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_1->geometry().corner(2) = " << fine_entity_pointer_1->geometry().corner(2) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_2->geometry().corner(0) = " << fine_entity_pointer_2->geometry().corner(0) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_2->geometry().corner(1) = " << fine_entity_pointer_2->geometry().corner(1) << std :: endl;
+                   // std :: cout << "fine_entity_pointer_2->geometry().corner(2) = " << fine_entity_pointer_2->geometry().corner(2) << std :: endl << std :: endl;
+		   continue; 
+		}     
+	     
+             SubgridLocalFunction sub_loc_value = local_problem_solution_e0.localFunction( sub_entity );
+             LocalFunction host_loc_value = correction_on_U_T.localFunction( host_entity );
+
+	     int number_of_nodes_entity = (*sub_it).template count<2>();
+             for ( int i = 0; i < number_of_nodes_entity; i += 1 )
+               {
+                 const typename HostEntity :: template Codim< 2 > :: EntityPointer node = host_entity.template subEntity<2>(i);
+	         int global_index_node = gridPart.indexSet().index( *node );
+		 
+		 // check if node is a node on the boundary of the macro grid entity 'T'
+		 // (if yes we need modifications)
+		 bool patch_in_T = true;
+		 for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
+	           {
+                      HostEntityPointer inner_it = entities_sharing_same_node[ global_index_node ][ j ];
+                      for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev )
+                         inner_it = inner_it->father();
+		      
+                      for ( int k = 0; k < (*inner_it).template count<2>(); k += 1 )
+                        {
+		           if ( !(inner_it->geometry().corner(k) == host_entity.geometry().corner(k)) )
+                            {
+			       patch_in_T = false;
+			       break;
+			    }
+		        }
+		        
+                      if ( patch_in_T == false )
+		         { break; }
+
+		   }
+ 
+//! FALSCH!!!!!
+// Man muss in die angrenzenden Makro-Elemente zaehlen und nicht die angrenzenden Mikro-Elemente!
+
+		 // if node is a node on the boundary of T
+		 if ( patch_in_T == false )
+		  { host_loc_value[ i ] = ( sub_loc_value[ i ] / entities_sharing_same_node[ global_index_node ].size() ); }
+		 else
+		  { host_loc_value[ i ] = sub_loc_value[ i ]; }
+               }
+
+           }
+	 
+#endif
+	 
+	 fine_scale_part+=correction_on_U_T;
 
 
       }

@@ -55,7 +55,7 @@
 #define HOMOGENIZEDSOL_AVAILABLE
 
 // compute the L2 errors? (might be expensive)
-#define ERROR_COMPUTATION
+// #define ERROR_COMPUTATION
 
 //! Do we have/want a fine-scale reference solution?
 //#define FINE_SCALE_REFERENCE
