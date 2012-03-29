@@ -79,7 +79,7 @@
 #include <dune/fem/misc/l2norm.hh>
 
 //! local (dune-multiscale) includes
-//#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
+// #include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
 #include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
 
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
@@ -361,15 +361,24 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   DiscreteFunctionType msfem_solution( filename_ + " MsFEM Solution", discreteFunctionSpace );
   msfem_solution.clear();
 
+  DiscreteFunctionType coarse_part_msfem_solution( filename_ + " Coarse Part MsFEM Solution", discreteFunctionSpace );
+  coarse_part_msfem_solution.clear();
+
+  DiscreteFunctionType fine_part_msfem_solution( filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace );
+  fine_part_msfem_solution.clear();
+
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   int number_of_level_host_entities = grid.size( coarse_grid_level_, 0 /*codim*/ );
   std :: vector < int > number_of_layers( number_of_level_host_entities );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
     { number_of_layers[i] = 0; }
 
+#if 0
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
-  msfem_solver.solve_dirichlet_zero( diffusion_op, f, discreteFunctionSpace_coarse, number_of_layers, msfem_solution );
+  msfem_solver.solve_dirichlet_zero( diffusion_op, f, discreteFunctionSpace_coarse, number_of_layers,
+                                     coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution );
+#endif
 
   //! ----------------------------------------------------------------------
 
@@ -389,6 +398,32 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
   // clear the std::stringstream:
   outstring.str(std::string());
+
+
+  // create and initialize output class
+  IOTupleType coarse_msfem_solution_series( &coarse_part_msfem_solution );
+  outputparam.set_prefix("coarse_part_msfem_solution");
+  DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
+
+  // write data
+  outstring << "coarse_msfem_solution";
+  coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+
+
+  // create and initialize output class
+  IOTupleType fine_msfem_solution_series( &fine_part_msfem_solution );
+  outputparam.set_prefix("fine_part_msfem_solution");
+  DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
+
+  // write data
+  outstring << "fine_msfem_solution";
+  fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
 
   // ---------------------------------------------------------------------- 
   

@@ -279,11 +279,14 @@ namespace Dune
 
            int father_index = hostGridLevelIndexSet.index( *level_father_entity );
            // std :: cout << "father_index = " << father_index << std :: endl;
-	   
+
+           // add whole level if desired
+           // subGrid[ father_index ]->insertLevel( hostGrid.maxLevel() );
+
+
 
            if ( !( subGrid[ father_index ]->template contains <0>(host_entity) ) )
             { subGrid[ father_index ]->insertPartial( host_entity ); }
-
 
            // check the neighbor entities and look if they belong to the same father
            // if yes, continue
@@ -325,7 +328,7 @@ namespace Dune
 	       enrichment( host_it, level_father_entity, level_difference, father_index,
 		           hostGridPart, *subGrid[ father_index ], entities_sharing_same_node, layers, enriched );
 	    }
-            
+
         }
 
       for ( int i = 0; i < number_of_level_host_entities; ++i )

@@ -442,7 +442,6 @@ namespace Dune
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
-	  
           elementOfRHS[ i ] -= weight * (diffusion_in_e[ 0 ] * gradient_phi[ i ][ 0 ]);
 
         }
@@ -616,7 +615,18 @@ namespace Dune
      { path_ = path; }
 
 
+    template < class Stream >
+    void oneLinePrint( Stream& stream, const SubDiscreteFunctionType& func )
+    {
+      typedef typename SubDiscreteFunctionType::ConstDofIteratorType
+         DofIteratorType;
+      DofIteratorType it = func.dbegin();
+      stream << "\n" << func.name() << ": [ ";
+      for ( ; it != func.dend(); ++it )
+         stream << std::setw(5) << *it << "  ";
 
+      stream << " ] " << std::endl;
+     }
 
     //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
@@ -666,11 +676,12 @@ namespace Dune
       const HostGridPartType &hostGridPart = hostDiscreteFunctionSpace_.gridPart();
      
       SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
+#if 1
       for( SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it )
         {
 
             const SubgridEntityType &subgrid_entity = *sg_it;
-	   
+
             HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
             const HostEntityType& host_entity = *host_entity_pointer;
 
@@ -698,13 +709,15 @@ namespace Dune
                 const FaceDofIteratorType fdend = lagrangePointSet.template endSubEntity< 1 >( face );
                 for( FaceDofIteratorType fdit = lagrangePointSet.template beginSubEntity< 1 >( face ); fdit != fdend; ++fdit )
                 local_matrix.unitRow( *fdit );
-		
+
               }
-   
+
           }
+#endif
 
       // assemble right hand side of algebraic local msfem problem
       local_problem_op.assemble_local_RHS( e, local_problem_rhs );
+      // oneLinePrint( std::cout , local_problem_rhs );
 
       // zero boundary condition for 'cell problems':
       // set Dirichlet Boundary to zero 
@@ -749,7 +762,8 @@ namespace Dune
 
         }
 
-
+      // After boundary treatment:
+      // oneLinePrint( std::cout , local_problem_rhs );
 
 
       const double norm_rhs = local_problem_op.normRHS( local_problem_rhs );
@@ -759,10 +773,11 @@ namespace Dune
         { std :: cout << "Local MsFEM Problem RHS invalid." << std :: endl;
           abort(); }
 
-      if ( norm_rhs < /*1e-06*/ 1e-10 )
+
+      if ( norm_rhs < /*1e-06*/ 1e-30 )
         {
           local_problem_solution.clear();
-          //std :: cout << "Local MsFEM problem with solution zero." << std :: endl;
+          std :: cout << "Local MsFEM problem with solution zero." << std :: endl;
         }
       else
         {
@@ -775,6 +790,9 @@ namespace Dune
          std::cout << "Current solution of the local msfem problem invalid!" << std::endl;
          std :: abort();
        }
+
+     // oneLinePrint( std::cout , local_problem_solution );
+
 
     }
 
@@ -945,7 +963,10 @@ namespace Dune
             dfw.append( local_problem_solution_0);
 
             dfw.append( local_problem_solution_1);
-	    
+
+            // oneLinePrint( std::cout , local_problem_solution_0 );
+            // oneLinePrint( std::cout , local_problem_solution_1 );
+
 	    HostDiscreteFunctionType host_local_solution( name_local_solution, hostDiscreteFunctionSpace_ );
             subgrid_to_hostrid_function( local_problem_solution_0, host_local_solution );
     
@@ -972,15 +993,14 @@ namespace Dune
             outstring.str(std::string());
 
             // -------------------------------------------------------
-            #endif	    
-	    
-	    
+            #endif
+
             subgrid_to_hostrid_function( local_problem_solution_1, host_local_solution );
-    
+
             // --------------- writing data output ---------------------
             // (writing)
             #ifdef VTK_OUTPUT
-	    
+
             // --------- data output local solution --------------
 
             // create and initialize output class

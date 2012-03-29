@@ -151,6 +151,7 @@ namespace Dune
       const int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
 
       std :: string local_path =  path_ + "/local_problems/";
+
       MsFEMLocalProblemSolverType loc_prob_solver( fineDiscreteFunctionSpace_, subgrid_list_, diffusion_operator_, data_file, local_path );
       loc_prob_solver.assemble_all( coarse_level, silence );
     }
@@ -313,7 +314,7 @@ namespace Dune
       // --------- load local solutions -------
 
       char location_lps[50];
-      sprintf( location_lps, "_localProblemSolutions_%d", global_index_entity );
+      sprintf( location_lps, "/_localProblemSolutions_%d", global_index_entity );
       std::string location_lps_s( location_lps );
 
       std :: string local_solution_location;

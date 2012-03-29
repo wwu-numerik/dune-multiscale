@@ -164,6 +164,18 @@ namespace Dune
       stream << " ] " << std::endl;
      }
 
+   template < class Stream >
+   void oneLinePrint( Stream& stream, const SubgridDiscreteFunction& func )
+    {
+      typedef typename SubgridDiscreteFunction::ConstDofIteratorType
+         DofIteratorType;
+      DofIteratorType it = func.dbegin();
+      stream << "\n" << func.name() << ": [ ";
+      for ( ; it != func.dend(); ++it )
+         stream << std::setw(5) << *it << "  ";
+
+      stream << " ] " << std::endl;
+     }
 
    // create a hostgrid function from a subgridfunction (projection for global continuity)
    // Note: the maximum gride levels for both underlying grids must be the same
@@ -220,6 +232,8 @@ namespace Dune
    void solve_dirichlet_zero( const DiffusionOperator &diffusion_op,
                               const SourceTerm &f,
                                     DiscreteFunctionSpace& coarse_space,
+                                    DiscreteFunction& coarse_scale_part,
+                                    DiscreteFunction& fine_scale_part,
                                     DiscreteFunction &solution )
    {
      HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
@@ -232,7 +246,7 @@ namespace Dune
      for ( int i = 0; i < number_of_level_host_entities; i+=1 )
         { number_of_layers[i] = 0; }
 
-     solve_dirichlet_zero( diffusion_op, f, coarse_space, number_of_layers, solution );
+     solve_dirichlet_zero( diffusion_op, f, coarse_space, number_of_layers, coarse_scale_part, fine_scale_part, solution );
    }
 
    
@@ -243,7 +257,9 @@ namespace Dune
                               DiscreteFunctionSpace& coarse_space,
                               // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
                               std :: vector < int >& number_of_layers,
-                              DiscreteFunction &solution )
+                              DiscreteFunction& coarse_scale_part,
+                              DiscreteFunction& fine_scale_part,
+                              DiscreteFunction& solution )
    {
 
      // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
@@ -277,7 +293,7 @@ namespace Dune
 
      // ----- check index sets --------------------
 
-#if 0
+#if 1
       typedef typename HostGrid :: Traits :: LevelIndexSet HostGridLevelIndexSet;
       typedef typename SubGridType :: Traits :: LevelIndexSet SubGridLevelIndexSet;
 
@@ -437,7 +453,9 @@ namespace Dune
 
 #if 1
     int fine_level = grid.maxLevel();
-     
+
+    std :: cout << "Indentifying coarse scale part of the MsFEM solution... ";
+
     //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
     // ------------------------------------------------------------------------------------
     typedef typename HostEntity :: template Codim< 2 > :: EntityPointer HostNodePointer;
@@ -458,7 +476,7 @@ namespace Dune
         LinearLagrangeFunction2D< SubgridDiscreteFunctionSpace > interpolation_coarse( coarse_it );
         interpolation_coarse.set_corners( coarse_msfem_solution );
 
-        LocalFunction host_loc_value = solution.localFunction( *it );
+        LocalFunction host_loc_value = coarse_scale_part.localFunction( *it );
 
         int number_of_nodes = (*it).template count<2>();
         if (!( number_of_nodes == host_loc_value.baseFunctionSet().numBaseFunctions() ))
@@ -482,11 +500,11 @@ namespace Dune
           }
 
       }
+    std :: cout << " done." << std :: endl;
 #endif
      // ------------------------------------------------------------------------------------
 
 #if 1
-     DiscreteFunction fine_scale_part( "Fine Scale Part of MsFEM Solution", discreteFunctionSpace_ );
      fine_scale_part.clear();
      
 
@@ -509,15 +527,14 @@ namespace Dune
     //! indentify fine scale part of MsFEM solution (including the projection!)
     // ------------------------------------------------------------------------------------
 
-
-    
+    std :: cout << "Indentifying fine scale part of the MsFEM solution... ";
     // iterator ueber coarse space
      for( CoarseGridIterator it = coarseDiscreteFunctionSpace.begin(); it != endit; ++it )
        {
 
          // the coarse entity 'T'	 
-         HostEntityPointer host_entity_pointer = subGrid.template getHostEntity<0>( *it );
-         const HostEntity& host_entity = *host_entity_pointer;
+         HostEntityPointer coarse_host_entity_pointer = subGrid.template getHostEntity<0>( *it );
+         const HostEntity& coarse_host_entity = *coarse_host_entity_pointer;
 
          DiscreteFunction correction_on_U_T( "correction_on_U_T", discreteFunctionSpace_ );
          correction_on_U_T.clear();
@@ -525,7 +542,7 @@ namespace Dune
          const typename HostGrid :: Traits :: LevelIndexSet& hostGridLevelIndexSet
                = coarse_space.gridPart().grid().levelIndexSet( subGrid.maxLevel() );
 
-         int index = hostGridLevelIndexSet.index( host_entity );
+         int index = hostGridLevelIndexSet.index( coarse_host_entity );
 
          // the sub grid U(T) that belongs to the coarse_grid_entity T
          SubGridType& sub_grid_U_T = subgrid_list.getSubGrid( index );
@@ -542,7 +559,7 @@ namespace Dune
          // --------- load local solutions -------
 
          char location_lps[50];
-         sprintf( location_lps, "_localProblemSolutions_%d", index );
+         sprintf( location_lps, "/local_problems/_localProblemSolutions_%d", index );
          std::string location_lps_s( location_lps );
 
          std :: string local_solution_location;
@@ -574,6 +591,8 @@ namespace Dune
          local_problem_solution_e1 *= grad_coarse_msfem_on_entity[ 0 ][ 1 ];
          local_problem_solution_e0 += local_problem_solution_e1;
 
+         // oneLinePrint( std::cout , local_problem_solution_e0 );
+
          subgrid_to_hostrid_projection( local_problem_solution_e0, correction_on_U_T );
          // hol die den Gradient und addiere.
 #if 1
@@ -592,10 +611,10 @@ namespace Dune
 
              const SubgridEntity &sub_entity = *sub_it;
 
-             HostEntityPointer host_entity_pointer = sub_grid_U_T.template getHostEntity<0>( *sub_it );
-             const HostEntity& host_entity = *host_entity_pointer;
+             HostEntityPointer fine_host_entity_pointer = sub_grid_U_T.template getHostEntity<0>( *sub_it );
+             const HostEntity& fine_host_entity = *fine_host_entity_pointer;
 
-             HostEntityPointer father = host_entity_pointer;
+             HostEntityPointer father = fine_host_entity_pointer;
              for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
                  father = father->father();
 
@@ -603,75 +622,68 @@ namespace Dune
              int number_of_nodes = (*father).template count<2>();
              for ( int k = 0; k < number_of_nodes; k += 1 )
                {
-		   if ( !(father->geometry().corner(k) == host_entity.geometry().corner(k)) )
+		   if ( !(father->geometry().corner(k) == coarse_host_entity.geometry().corner(k)) )
                     { entities_identical = false; }
-		}
+               }
 
              if ( entities_identical == false )
-		{
-                   // std :: cout << "fine_entity_pointer_1->geometry().corner(0) = " << fine_entity_pointer_1->geometry().corner(0) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_1->geometry().corner(1) = " << fine_entity_pointer_1->geometry().corner(1) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_1->geometry().corner(2) = " << fine_entity_pointer_1->geometry().corner(2) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_2->geometry().corner(0) = " << fine_entity_pointer_2->geometry().corner(0) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_2->geometry().corner(1) = " << fine_entity_pointer_2->geometry().corner(1) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_2->geometry().corner(2) = " << fine_entity_pointer_2->geometry().corner(2) << std :: endl << std :: endl;
-		   continue; 
-		}     
-	     
+               {
+                    // std :: cout << "father->geometry().corner(0) = " << father->geometry().corner(0) << std :: endl;
+                    // std :: cout << "father->geometry().corner(1) = " << father->geometry().corner(1) << std :: endl;
+                    // std :: cout << "father->geometry().corner(2) = " << father->geometry().corner(2) << std :: endl;
+                    // std :: cout << "coarse_host_entity.geometry().corner(0) = " << coarse_host_entity.geometry().corner(0) << std :: endl;
+                    // std :: cout << "coarse_host_entity.geometry().corner(1) = " << coarse_host_entity.geometry().corner(1) << std :: endl;
+                    // std :: cout << "coarse_host_entity.geometry().corner(2) = " << coarse_host_entity.geometry().corner(2) << std :: endl << std :: endl;
+                   continue;
+               }
+
              SubgridLocalFunction sub_loc_value = local_problem_solution_e0.localFunction( sub_entity );
-             LocalFunction host_loc_value = correction_on_U_T.localFunction( host_entity );
+             LocalFunction host_loc_value = correction_on_U_T.localFunction( fine_host_entity );
 
 	     int number_of_nodes_entity = (*sub_it).template count<2>();
              for ( int i = 0; i < number_of_nodes_entity; i += 1 )
                {
-                 const typename HostEntity :: template Codim< 2 > :: EntityPointer node = host_entity.template subEntity<2>(i);
+                 const typename HostEntity :: template Codim< 2 > :: EntityPointer node = fine_host_entity.template subEntity<2>(i);
 	         int global_index_node = gridPart.indexSet().index( *node );
-		 
-		 // check if node is a node on the boundary of the macro grid entity 'T'
-		 // (if yes we need modifications)
-		 bool patch_in_T = true;
+
+                 // vector of coarse entities that share the above node
+                 std :: vector < HostEntityPointer > coarse_entities;
+
+		 // count the number of different coarse-grid-entities that share the above node
 		 for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
-	           {
+                   {
                       HostEntityPointer inner_it = entities_sharing_same_node[ global_index_node ][ j ];
                       for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev )
                          inner_it = inner_it->father();
-		      
-                      for ( int k = 0; k < (*inner_it).template count<2>(); k += 1 )
+
+                      bool new_entity_found = true;
+                      for ( int k = 0; k < coarse_entities.size(); k += 1 )
                         {
-		           if ( !(inner_it->geometry().corner(k) == host_entity.geometry().corner(k)) )
-                            {
-			       patch_in_T = false;
-			       break;
-			    }
-		        }
-		        
-                      if ( patch_in_T == false )
-		         { break; }
+                          if ( coarse_entities[k] == inner_it )
+                           { new_entity_found = false; }
+                        }
+                      if ( new_entity_found == true )
+                       { coarse_entities.push_back( inner_it ); }
 
-		   }
- 
-//! FALSCH!!!!!
-// Man muss in die angrenzenden Makro-Elemente zaehlen und nicht die angrenzenden Mikro-Elemente!
+                   }
 
-		 // if node is a node on the boundary of T
-		 if ( patch_in_T == false )
-		  { host_loc_value[ i ] = ( sub_loc_value[ i ] / entities_sharing_same_node[ global_index_node ].size() ); }
-		 else
-		  { host_loc_value[ i ] = sub_loc_value[ i ]; }
+                 host_loc_value[ i ] = ( sub_loc_value[ i ] / coarse_entities.size() );
                }
 
            }
-	 
+
 #endif
-	 
-	 fine_scale_part+=correction_on_U_T;
+
+        fine_scale_part+=correction_on_U_T;
 
 
       }
+    std :: cout << " done." << std :: endl;
 #endif
     // ------------------------------------------------------------------------------------
 
      // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
+     solution += coarse_scale_part;
      solution += fine_scale_part;
 
    }
