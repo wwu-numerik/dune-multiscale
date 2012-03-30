@@ -43,9 +43,9 @@
 //The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
 // description see below 0.05
-#define EPSILON 0.001
-#define EPSILON_EST 0.001
-#define DELTA 0.001
+#define EPSILON 0.1
+#define EPSILON_EST 0.1
+#define DELTA 0.1
 
 // eps = 0.001 => H Ref = 16
 // eps = 0.002 => H Ref = 14
