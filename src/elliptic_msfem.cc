@@ -47,15 +47,16 @@
 //! is an exact solution available?
 // this information should be provided by the 'problem specification file'
 // there we define or don't define the macro EXACTSOLUTION_AVAILABLE
+#define EXACTSOLUTION_AVAILABLE
 
 //! is the homogenized solution available?
 // this information should be provided by the 'problem specification file'
 // there we define or don't define the macro HOMOGENIZEDSOL_AVAILABLE
 // (if HOMOGENIZEDSOL_AVAILABLE == true, it means that it can be computed. It still needs to be determined by using a homogenizer )
-#define HOMOGENIZEDSOL_AVAILABLE
+//!#define HOMOGENIZEDSOL_AVAILABLE
 
 // compute the L2 errors? (might be expensive)
-// #define ERROR_COMPUTATION
+#define ERROR_COMPUTATION
 
 //! Do we have/want a fine-scale reference solution?
 //#define FINE_SCALE_REFERENCE
@@ -158,7 +159,7 @@
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
 
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
@@ -647,14 +648,14 @@ void algorithm ( std :: string &RefElementName,
 
   //analytical homogenizer:
 
-  #if 0
+  #if 1
   AnalyticalHomogenizer< GridType, DiffusionType > ana_homogenizer( unit_cell_location );
   A_hom = ana_homogenizer.getHomTensor(diffusion_op);
   #endif
 
   // descretized homogenizer:
 
-  #if 1
+  #if 0
   Homogenizer< GridType, DiffusionType > disc_homogenizer( unit_cell_location );
   A_hom = disc_homogenizer.getHomTensor(diffusion_op);
   #endif
@@ -1155,10 +1156,19 @@ while ( repeat == true )
     { data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std :: endl; }
  #endif
 
+ #ifdef HOMOGENIZEDSOL_AVAILABLE
+  RangeType hom_exact_error = l2error.norm< ExactSolutionType >( u, homogenized_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
+
+  std :: cout << "|| u_hom - u_exact ||_L2 =  " << hom_exact_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_hom - u_exact ||_L2 =  " << hom_exact_error << std :: endl; }
+ #endif
+
 #endif
 
 // endif for macro ERROR_COMPUTATION
 #endif
+
 
 
 //! -------------------------------------------------------

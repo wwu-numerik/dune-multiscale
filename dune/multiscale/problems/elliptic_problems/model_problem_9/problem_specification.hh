@@ -43,9 +43,9 @@
 //The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
 // description see below 0.05
-#define EPSILON 0.01
-#define EPSILON_EST 0.01
-#define DELTA 0.01
+#define EPSILON 0.001
+#define EPSILON_EST 0.001
+#define DELTA 0.001
 
 // eps = 0.001 => H Ref = 16
 // eps = 0.002 => H Ref = 14
@@ -338,10 +338,14 @@ namespace Problem
     {
 
        if ( i == j )
-        { z = 0.0; }
+        {
+           if ( i == 0 )
+            { z = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) ); }
+           else
+            { z = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) ); }
+        }
        else
         { z = 0.0; }
-        abort();
 
     }
 
@@ -383,6 +387,159 @@ namespace Problem
     }
 
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  template< class FunctionSpaceImp, class FieldMatrixImp >
+  class HomDiffusion
+  : public Dune::Fem::Function< FunctionSpaceImp, HomDiffusion< FunctionSpaceImp, FieldMatrixImp > >
+  {
+  public:
+    typedef FunctionSpaceImp FunctionSpaceType;
+    typedef FieldMatrixImp FieldMatrixType;
+
+  private:
+    typedef HomDiffusion< FunctionSpaceType, FieldMatrixType > ThisType;
+    typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+
+  public:
+    typedef typename FunctionSpaceType :: DomainType DomainType;
+    typedef typename FunctionSpaceType :: RangeType RangeType;
+    typedef typename FunctionSpaceType :: JacobianRangeType JacobianRangeType;
+
+    typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
+    typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
+
+    typedef DomainFieldType TimeType;
+
+  public:
+
+     FieldMatrixType *A_hom_;
+
+#if 1
+  public:
+    inline explicit  HomDiffusion ( FieldMatrixType &A_hom )
+    : A_hom_( &A_hom )
+    {
+    }
+#endif
+
+    // in the linear setting, use the structure
+    //    A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
+    // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
+    // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
+
+
+
+    // instantiate all possible cases of the evaluate-method:
+
+    // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
+    void diffusiveFlux ( const DomainType &x,
+                         const JacobianRangeType &gradient,
+                         JacobianRangeType &flux ) const
+    {
+
+       flux[0][0] = (*A_hom_)[0][0]*gradient[0][0] + (*A_hom_)[0][1]*gradient[0][1];
+       flux[0][1] = (*A_hom_)[1][0]*gradient[0][0] + (*A_hom_)[1][1]*gradient[0][1];
+
+    }
+
+
+    // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction "nabla w", i.e.
+    // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
+
+    // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
+    void jacobianDiffusiveFlux ( const DomainType &x,
+                                 const JacobianRangeType &position_gradient,
+                                 const JacobianRangeType &direction_gradient,
+                                       JacobianRangeType &flux ) const
+    {
+
+#ifdef LINEAR_PROBLEM
+     std :: cout << "Not yet implemented." << std :: endl;
+     std::abort();
+#else
+     std :: cout << "Nonlinear example not yet implemented."<< std :: endl;
+     std::abort();
+#endif
+
+    }
+
+
+    inline void evaluate (const int i,
+                          const int j,
+                          const DomainType &x,
+                          const DomainType &y,
+                          RangeType &z ) const
+    { 
+
+
+
+      std :: cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details." << std :: endl; 
+
+      std::abort();
+
+      z = 0.0;
+
+    }
+
+
+//deprecated
+    //! defaults (not to be used):
+    // z_i = A^{\epsilon}_i(x,vec)
+    // instantiate all possible cases of the evaluate-method: 
+    inline void evaluate ( const int i,
+                           const int j,
+                           const DomainType &x,
+                           RangeType &z ) const
+    {
+
+
+      std :: cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details." << std :: endl; 
+
+      std::abort();
+
+    }
+
+
+
+    inline void evaluate ( const int i,
+                           const int j,
+                           const DomainType &x,
+                           const TimeType &time,
+                           RangeType &z ) const
+    {
+
+      std :: cout << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation." << std :: endl;
+
+      std::abort();
+
+      return evaluate( i, j, x, z );
+    }
+
+    //dummy implementation
+    inline void evaluate ( const DomainType &x,
+                           RangeType &y ) const
+    {
+     std :: cout << "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead." << std :: endl; 
+     std::abort();
+    }
+
+  };
+
+
+
 
 
 

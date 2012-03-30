@@ -255,7 +255,7 @@ namespace Dune
        }
      // --- end boundary treatment ---
 
-     InverseFEMMatrix fem_biCGStab( fem_matrix, 1e-8, 1e-8, 20000, VERBOSE );
+     InverseFEMMatrix fem_biCGStab( fem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/ );
      fem_biCGStab( fem_rhs, solution );
 
      if ( data_file_ )

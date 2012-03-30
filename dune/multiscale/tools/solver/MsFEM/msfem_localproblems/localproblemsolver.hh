@@ -143,7 +143,6 @@ namespace Dune
     // dummy operator
     virtual void
     operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const;
-    
 
     // assemble stiffness matrix for local problems
     template< class MatrixType >
@@ -154,7 +153,7 @@ namespace Dune
                               JacobianRangeType &e,
                               // rhs local msfem problem:
                               DiscreteFunction &local_problem_RHS ) const;
-			      
+
     void printLocalRHS( DiscreteFunction &rhs) const;
 
     double normRHS( DiscreteFunction &rhs) const;
