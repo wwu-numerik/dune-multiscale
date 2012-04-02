@@ -78,12 +78,15 @@
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/l2norm.hh>
 
+
 //! local (dune-multiscale) includes
-// #include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
+//#include <dune/multiscale/problems/elliptic_problems/model_problem_toy/problem_specification.hh>
+//#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
 #include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
 
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
+#include <dune/multiscale/tools/misc/h1error.hh>
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
@@ -266,6 +269,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   Problem::ModelProblemData problem_info;
 
   L2Error< DiscreteFunctionType > l2error;
+  H1Error< DiscreteFunctionType > h1error;
 
   // expensive hack to deal with discrete functions, defined on different grids
   ImprovedL2Error< DiscreteFunctionType > impL2error;
@@ -373,7 +377,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   
   MacroMicroGridSpecifier specifier( number_of_level_host_entities , coarse_level_fine_level_difference );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
-    { specifier.setLayer( i , 10 ); }
+    { specifier.setLayer( i , 30 ); }
 
 #if 1
   // just for Dirichlet zero-boundary condition
@@ -504,7 +508,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   if (data_file.is_open())
     { data_file << "The L2 errors:" << std :: endl << std :: endl; }
 
-  //! ----------------- compute L2-errors -------------------
+  //! ----------------- compute L2- and H1- errors -------------------
 
 #ifdef EXACTSOLUTION_AVAILABLE
 
@@ -513,6 +517,14 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   std :: cout << "|| u_fem - u_exact ||_L2 =  " << fem_error << std :: endl << std :: endl;
   if (data_file.is_open())
     { data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std :: endl; }
+
+  RangeType h1_fem_error(0.0);
+  h1_fem_error = h1error.semi_norm< ExactSolutionType >( u, fem_solution );
+  h1_fem_error += fem_error;
+
+  std :: cout << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std :: endl << std :: endl; }
 
 #endif
 
@@ -523,6 +535,14 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   std :: cout << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std :: endl << std :: endl;
   if (data_file.is_open())
     { data_file << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std :: endl; }
+
+  RangeType h1_msfem_error(0.0);
+  h1_msfem_error = h1error.semi_norm< ExactSolutionType >( u, msfem_solution );
+  h1_msfem_error += msfem_error;
+
+  std :: cout << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl; }
 
 #endif
 

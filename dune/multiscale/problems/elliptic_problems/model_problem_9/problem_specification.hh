@@ -692,6 +692,8 @@ namespace Problem
     typedef typename FunctionSpaceType :: DomainType DomainType;
     typedef typename FunctionSpaceType :: RangeType RangeType;
 
+    typedef typename FunctionSpaceType :: JacobianRangeType JacobianRangeType;
+
     typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
     typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
 
@@ -709,6 +711,18 @@ namespace Problem
       // approximation obtained by homogenized solution + first corrector
         y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
         y += 0.5 * EPSILON * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) ;
+    }
+
+    inline void evaluateJacobian ( const DomainType& x, JacobianRangeType& grad_u ) const
+    {
+       grad_u[ 0 ][ 0 ] = 2.0 * M_PI * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
+       grad_u[ 0 ][ 1 ] = 2.0 * M_PI * sin( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] );
+
+       grad_u[ 0 ][ 0 ] += (-1.0) * EPSILON * M_PI * ( sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
+       grad_u[ 0 ][ 0 ] += M_PI * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * cos( 2.0 * M_PI * (x[0] / EPSILON) ) );
+
+       grad_u[ 0 ][ 1 ] += EPSILON * M_PI * ( cos( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
+
     }
 
     // in case 'u' HAS a time-dependency use the following method: 

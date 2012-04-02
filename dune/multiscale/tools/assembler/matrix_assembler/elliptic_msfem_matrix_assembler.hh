@@ -300,7 +300,18 @@ namespace Dune
 
       const CoarseBaseFunctionSet &coarse_grid_baseSet = local_matrix.domainBaseFunctionSet();
       const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.numBaseFunctions();
-      
+
+
+#if 0
+if ( global_index_entity == 0 )
+{
+std :: cout << "Im Assembler." << std :: endl;
+std :: cout << "coarse_grid_it->geometry().corner(0) = " << coarse_grid_it->geometry().corner(0) << std :: endl;
+std :: cout << "coarse_grid_it->geometry().corner(1) = " << coarse_grid_it->geometry().corner(1) << std :: endl;
+std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geometry().corner(2) << std :: endl;
+}
+#endif
+
 #if 1
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T

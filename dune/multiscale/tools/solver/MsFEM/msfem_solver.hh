@@ -640,6 +640,9 @@ namespace Dune
          JacobianRangeType grad_coarse_msfem_on_entity;
          local_coarse_part.jacobian( one_point_quadrature[ 0 ], grad_coarse_msfem_on_entity );
 
+         //!
+         // std :: cout << "grad_coarse_msfem_on_entity[ 0 ][ 1 ] = " << grad_coarse_msfem_on_entity[ 0 ][ 1 ] << std :: endl;
+         // std :: cout << "grad_coarse_msfem_on_entity[ 0 ][ 0 ] = " << grad_coarse_msfem_on_entity[ 0 ][ 0 ] << std :: endl;
          local_problem_solution_e0 *= grad_coarse_msfem_on_entity[ 0 ][ 0 ];
          local_problem_solution_e1 *= grad_coarse_msfem_on_entity[ 0 ][ 1 ];
          local_problem_solution_e0 += local_problem_solution_e1;

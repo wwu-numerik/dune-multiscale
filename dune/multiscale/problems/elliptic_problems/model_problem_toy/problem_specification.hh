@@ -22,7 +22,7 @@
 
 // Note, that A^{\epsilon} is a monotone operator
 
-//!############################## Elliptic Problem 0 ###################################
+//!############################## Elliptic Problem -1 ###################################
 
 //! we define:
 
@@ -90,7 +90,7 @@ namespace Problem
 
     inline int get_Number_of_Model_Problem ( ) const
     {
-      return 0;
+      return -1;
     }
 
     // epsilon (the smaller epsilon, the finer the micro-structure)
@@ -183,6 +183,7 @@ namespace Problem
   public:
      typedef typename FunctionSpaceType :: DomainType DomainType;
      typedef typename FunctionSpaceType :: RangeType RangeType;
+     typedef typename FunctionSpaceType :: JacobianRangeType JacobianRangeType;
 
      static const int dimDomain = DomainType::dimension;
 
@@ -197,17 +198,26 @@ namespace Problem
                                 RangeType &y ) const
     {
 
-     double a_0_x_0 = 2.0 + pow ( x[0] , 2.0 );
-     double a_1_x_1 = 2.0 + pow ( x[1] , 2.0 );
+     double a_0_x_0 = 1.0 + pow ( x[0] , 2.0 );
+     double a_1_x_1 = 1.0 + pow ( x[0] , 2.0 );
 
      double grad_a_0_x_0 = 2.0 * x[0];
-     double grad_a_1_x_1 = 2.0 * x[1];
+     double grad_a_1_x_1 = 0.0;
+
+     JacobianRangeType grad_u(0.0);
+     grad_u[ 0 ][ 0 ] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
+     grad_u[ 0 ][ 1 ] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
+
+     RangeType u = x[0] * (1.0 - x[0]) * (1.0 - x[1]) * x[1];
+     RangeType d_xx_u = (-2.0) * (1.0 - x[1]) * x[1];
+     RangeType d_yy_u = (-2.0) * (1.0 - x[0]) * x[0];
 
      y = 0.0;
-     y -= grad_a_0_x_0 * (1.0 - x[1] ) * x[1] * (1.0 - (2.0 * x[0] ) );
-     y += 2.0 * a_0_x_0 * (1.0 - x[1] ) * x[1];
-     y -= grad_a_1_x_1 * (1.0 - x[0] ) * x[0] * (1.0 - (2.0 * x[1] ) );
-     y += 2.0 * a_1_x_1 * (1.0 - x[0] ) * x[0];
+     y -= grad_a_0_x_0 * grad_u[ 0 ][ 0 ];
+     y -= a_0_x_0 *d_xx_u;
+
+     y -= grad_a_1_x_1 * grad_u[ 0 ][ 1 ];
+     y -= a_1_x_1 *d_yy_u;
 
     }
 
@@ -301,11 +311,10 @@ namespace Problem
                          JacobianRangeType &flux ) const
     {
 
-      double a_0_x_0 = 2.0 + pow ( x[0] , 2.0 );
-      double a_1_x_1 = 2.0 + pow ( x[1] , 2.0 );
+      double a_0 = 1.0 + pow ( x[0] , 2.0 );
 
-      flux[0][0] = a_0_x_0 * gradient[0][0];
-      flux[0][1] = a_1_x_1 * gradient[0][1];
+      flux[0][0] = a_0 * gradient[0][0];
+      flux[0][1] = a_0 * gradient[0][1];
 
     }
 

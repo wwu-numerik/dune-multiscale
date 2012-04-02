@@ -863,7 +863,6 @@ namespace Dune
       // number of grid entities of a given codim on a given level in this process.
       int number_of_level_host_entities = hostGrid.size( computational_level, 0 /*codim*/ );
 
-
       std :: cout << "number_of_level_host_entities = " << number_of_level_host_entities << std :: endl;
 
       HostgridLevelEntityIteratorType level_iterator_end = hostGrid.template lend< 0 >( computational_level );
@@ -899,6 +898,20 @@ namespace Dune
       {
 
           int index = hostGridLevelIndexSet.index( *lit );
+
+
+#if 0
+if ( index == 0 )
+{
+std :: cout << "Im lokal Problem Solver." << std :: endl;
+std :: cout << "lit->geometry().corner(0) = " << lit->geometry().corner(0) << std :: endl;
+std :: cout << "lit->geometry().corner(1) = " << lit->geometry().corner(1) << std :: endl;
+std :: cout << "lit->geometry().corner(2) = " << lit->geometry().corner(2) << std :: endl;
+}
+#endif
+
+
+
 
           bool writer_is_open = false;
 

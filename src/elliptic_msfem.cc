@@ -159,8 +159,8 @@
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
-
+// #include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 
