@@ -13,18 +13,19 @@
 namespace Dune
 {  
   // Imp stands for Implementation
-  template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
+  template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp, class DiffusionImp >
   class DiscreteEllipticMsFEMOperator
   : public Operator< typename CoarseDiscreteFunctionImp::RangeFieldType,
                      typename CoarseDiscreteFunctionImp::RangeFieldType,
 		      CoarseDiscreteFunctionImp, CoarseDiscreteFunctionImp >
   {
-    typedef DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, FineDiscreteFunctionImp, DiffusionImp > This;
+    typedef DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, MacroMicroGridSpecifierImp, FineDiscreteFunctionImp, DiffusionImp > This;
 
   public:
     
     typedef CoarseDiscreteFunctionImp CoarseDiscreteFunction;
     typedef FineDiscreteFunctionImp FineDiscreteFunction;
+    typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
    
     typedef DiffusionImp DiffusionModel;
         
@@ -44,7 +45,7 @@ namespace Dune
       
 
     typedef SubGrid< WORLDDIM , FineGrid > SubGridType;
-    typedef SubGridList< FineDiscreteFunction, SubGridType > SubGridListType;
+    typedef SubGridList< FineDiscreteFunction, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
     
     typedef MsFEMLocalProblemSolver< FineDiscreteFunction, SubGridListType, DiffusionModel > MsFEMLocalProblemSolverType;
     
@@ -195,8 +196,9 @@ namespace Dune
   };
 
   // create a hostgrid function from a subgridfunction
-  template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
+  template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp, class DiffusionImp >
   void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, 
+                                      MacroMicroGridSpecifierImp,
                                       FineDiscreteFunctionImp, 
                                       DiffusionImp > :: 
   subgrid_to_hostrid_function( const LocalDiscreteFunction &sub_func, FineDiscreteFunction &host_func )
@@ -237,8 +239,9 @@ namespace Dune
 
   // dummy implementation of "operator()"
   // 'w' = effect of the discrete operator on 'u'
-  template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
+  template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp, class DiffusionImp >
   void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, 
+                                      MacroMicroGridSpecifierImp,
                                       FineDiscreteFunctionImp, 
                                       DiffusionImp > :: operator() ( const CoarseDiscreteFunction &u, CoarseDiscreteFunction &w ) const 
   {
@@ -249,9 +252,10 @@ namespace Dune
   }
 
 
-  template< class CoarseDiscreteFunctionImp, class FineDiscreteFunctionImp, class DiffusionImp >
+  template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp, class DiffusionImp >
   template< class MatrixType >
   void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
+                                      MacroMicroGridSpecifierImp,
                                       FineDiscreteFunctionImp,
                                       DiffusionImp > :: assemble_matrix ( MatrixType &global_matrix ) const
   {

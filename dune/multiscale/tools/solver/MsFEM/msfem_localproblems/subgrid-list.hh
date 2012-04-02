@@ -12,12 +12,14 @@
 namespace Dune
 {
 
-  template< class HostDiscreteFunctionImp, class SubGridImp >
+  template< class HostDiscreteFunctionImp, class SubGridImp, class MacroMicroGridSpecifierImp >
   class SubGridList
   {
   public:
     //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
+    typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
+    
     typedef HostDiscreteFunctionImp HostDiscreteFunctionType;
     
     //! type of discrete function space
@@ -147,13 +149,15 @@ namespace Dune
 
    }
     
-    SubGridList( const HostDiscreteFunctionSpaceType& hostSpace, const std :: vector < int >& number_of_layers, const int& computational_level, bool silent = true )
+    SubGridList( const HostDiscreteFunctionSpaceType& hostSpace,
+		       MacroMicroGridSpecifierType& specifier,
+		 const int& computational_level, bool silent = true )
     : hostSpace_( hostSpace ),
-      number_of_layers_( number_of_layers ),
+      specifier_( specifier ),
       computational_level_( computational_level ),
       silent_( silent )
     {
-      
+
       const HostGridPartType& hostGridPart = hostSpace_.gridPart();
 
       HostGridType& hostGrid = hostSpace_.gridPart().grid();
@@ -177,9 +181,9 @@ namespace Dune
         }
 
       int max_num_layers = 0;
-      for ( int i = 0; i < number_of_layers.size(); i += 1 )
-        { if ( number_of_layers[i] > max_num_layers )
-	   { max_num_layers = number_of_layers[i]; }
+      for ( int i = 0; i < specifier_.getNumOfCoarseEntities(); i += 1 )
+        { if ( specifier_.getLayer(i) > max_num_layers )
+	   { max_num_layers = specifier_.getLayer(i); }
 	}
         
 #if 0
@@ -322,7 +326,7 @@ namespace Dune
            if ( all_neighbors_have_same_father == true )
 	      { continue; }
 
-	   int layers = number_of_layers[ father_index ];
+	   int layers = specifier_.getLayer( father_index );
 	   if ( layers > 0 )
 	    {
 	       enrichment( host_it, level_father_entity, level_difference, father_index,
@@ -355,7 +359,7 @@ namespace Dune
   private:
     
     const HostDiscreteFunctionSpaceType &hostSpace_;
-    const std :: vector < int >& number_of_layers_;
+    MacroMicroGridSpecifierType& specifier_;
     const int computational_level_;
     
     bool silent_;

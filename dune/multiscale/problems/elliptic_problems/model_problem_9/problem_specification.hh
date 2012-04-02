@@ -708,7 +708,7 @@ namespace Problem
     {
       // approximation obtained by homogenized solution + first corrector
         y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
-        y -= 0.5 * EPSILON * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) ;
+        y += 0.5 * EPSILON * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) ;
     }
 
     // in case 'u' HAS a time-dependency use the following method: 
