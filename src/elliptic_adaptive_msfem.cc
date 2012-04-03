@@ -379,7 +379,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
     { specifier.setLayer( i , 30 ); }
 
-#if 1
+#if 0
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
   msfem_solver.solve_dirichlet_zero( diffusion_op, f, discreteFunctionSpace_coarse, specifier,

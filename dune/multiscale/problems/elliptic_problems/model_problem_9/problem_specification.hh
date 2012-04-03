@@ -16,7 +16,8 @@
 // A^{\epsilon} = diffusion matrix (or tensor) with the structure A^{\epsilon}(x) = A(x,\frac{x}{\epsilon})
 // m^{\epsilon} = a mass term (or reaction term) with the structure m^{\epsilon}(x) = m(x,\frac{x}{\epsilon})
 // f = first source term with the structure f = f(x) (=> no micro-scale dependency)
-// G = second source term with the structure G = G(x) (=> no micro-scale dependency). Note that 'G' is directly implemented! ( we do not implement '- div G'!)
+// G = second source term with the structure G = G(x) (=> no micro-scale dependency).
+// Note that 'G' is directly implemented! ( we do not implement '- div G'!)
 
 // Note, that A^{\epsilon} is a monotone operator
 
@@ -30,7 +31,9 @@
 
 // The mass (or reaction) term m^{\epsilon} is given by:
       //! m^{\epsilon} := \epsilon
-// Since \epsilon tends to zero, we may say that we do not have a real mass term for our problem. It is a simple condition to fix the solution which is only unique up to a constant. In fact we still approximate the solution of the problem without mass.
+// Since \epsilon tends to zero, we may say that we do not have a real mass term for our 
+// problem. It is a simple condition to fix the solution which is only unique up to a constant.
+// In fact we still approximate the solution of the problem without mass.
 
 // The first source term f is given by:
       //! f(x) := ****
@@ -40,10 +43,12 @@
       //! G(x) := 0
 
 //!FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
-//The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it is part from. (f \in FunctionSpace)
+//The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'.
+//That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function
+// space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
 // description see below 0.05
-#define EPSILON 0.1
+#define EPSILON 0.01
 #define EPSILON_EST 0.1
 #define DELTA 0.1
 
@@ -173,7 +178,9 @@ namespace Problem
 
 
    //!FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
-   //The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it is part from. (f \in FunctionSpace)
+   //The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'.
+   // That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function
+   // space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
   template< class FunctionSpaceImp >
   class FirstSource
@@ -190,6 +197,8 @@ namespace Problem
   public:
      typedef typename FunctionSpaceType :: DomainType DomainType;
      typedef typename FunctionSpaceType :: RangeType RangeType;
+      
+     typedef typename FunctionSpaceType :: JacobianRangeType JacobianRangeType;
 
      static const int dimDomain = DomainType::dimension;
 
@@ -203,8 +212,40 @@ namespace Problem
     inline void evaluate( const DomainType &x,
                                 RangeType &y ) const
     {
+        
+        
+#if 1
+      double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
+      double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );  
+        
+      double d_x0_coefficient_0 = pow( 2.0 + cos(2.0 * M_PI * (x[0] / EPSILON)), -2.0 ) * (1.0 / (2.0 * M_PI) ) * ( 1.0 / EPSILON ) * sin(2.0 * M_PI * (x[0] / EPSILON)); 
+      
+      JacobianRangeType grad_u;
+      grad_u[ 0 ][ 0 ] = 2.0 * M_PI * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
+      grad_u[ 0 ][ 1 ] = 2.0 * M_PI * sin( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] );
+            
+      grad_u[ 0 ][ 0 ] += (-1.0) * EPSILON * M_PI * ( sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
+      grad_u[ 0 ][ 0 ] += M_PI * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * cos( 2.0 * M_PI * (x[0] / EPSILON) ) );
+            
+      grad_u[ 0 ][ 1 ] += EPSILON * M_PI * ( cos( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
+        
+      RangeType d_x0_x0_u(0.0);
+      d_x0_x0_u -= 4.0 * pow( M_PI, 2.0 ) * sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
+      d_x0_x0_u -= 2.0 * pow( M_PI, 2.0 ) * ( EPSILON + (1.0 / EPSILON ) ) * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) );
+      d_x0_x0_u -= 4.0 * pow( M_PI, 2.0 ) * sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * cos( 2.0 * M_PI * (x[0] / EPSILON) );
 
-     y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
+        
+      RangeType d_x1_x1_u(0.0);
+      d_x1_x1_u -= 4.0 * pow( M_PI, 2.0 ) * sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
+      d_x1_x1_u -= 2.0 * pow( M_PI, 2.0 ) * EPSILON * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) );
+        
+      y = 0.0;
+      y -= d_x0_coefficient_0 * grad_u[ 0 ][ 0 ];
+      y -= coefficient_0 * d_x0_x0_u;
+      y -= coefficient_1 * d_x1_x1_u;
+#endif
+        
+      //y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
 
     }
 
@@ -298,10 +339,8 @@ namespace Problem
                          JacobianRangeType &flux ) const
     {
 
-
        double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
        double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
-
 
        flux[0][0] = coefficient_0 * gradient[0][0];
        flux[0][1] = coefficient_1 * gradient[0][1];
@@ -322,8 +361,11 @@ namespace Problem
         double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
         double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
 
-       flux[0][0] = coefficient_0 * direction_gradient[0][0];
-       flux[0][1] = coefficient_1 * direction_gradient[0][1];
+        flux[0][0] = coefficient_0 * direction_gradient[0][0];
+        flux[0][1] = coefficient_1 * direction_gradient[0][1];
+        
+        //std :: cout << "Do not use this evaluate method." << std :: endl;
+        //abort();
 
     }
 
@@ -346,6 +388,9 @@ namespace Problem
         }
        else
         { z = 0.0; }
+        
+        std :: cout << "Do not use this evaluate method." << std :: endl;
+        abort();
 
     }
 
@@ -708,20 +753,23 @@ namespace Problem
     inline void evaluate ( const DomainType &x,
                            RangeType &y ) const
     {
+       
       // approximation obtained by homogenized solution + first corrector
         y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
         y += 0.5 * EPSILON * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) ;
+
     }
 
     inline void evaluateJacobian ( const DomainType& x, JacobianRangeType& grad_u ) const
     {
        grad_u[ 0 ][ 0 ] = 2.0 * M_PI * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
        grad_u[ 0 ][ 1 ] = 2.0 * M_PI * sin( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] );
-
+#if 1
        grad_u[ 0 ][ 0 ] += (-1.0) * EPSILON * M_PI * ( sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
        grad_u[ 0 ][ 0 ] += M_PI * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * cos( 2.0 * M_PI * (x[0] / EPSILON) ) );
 
        grad_u[ 0 ][ 1 ] += EPSILON * M_PI * ( cos( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
+#endif
 
     }
 
@@ -743,15 +791,11 @@ namespace Problem
 
 //we need to know the term 'abstract class'.
 
-//In short: An abstract class is only created to be a 'base class' for a set of other classes (the so called 'derived classes'). These derived classes typically share a number of methods that can be subsumed by the abstract class.
+//In short: An abstract class is only created to be a 'base class' for a set of other classes (the so called 'derived classes'). 
+//These derived classes typically share a number of methods that can be subsumed by the abstract class.
 //Abstract classes contain at least one virtual method, that means a method of the kind: 'virtual "datatype" methodname() = 0;'.
 //Examples for virtual methods are: 'virtual void evaluate() = 0;' or 'virtual integer sum() = 0;'.
-//Virtual methods can not be used, they will lead to error prompts! Therefor it is impossible to create objects of an abstract class. To use such a method nevertheless, the virtual method must be inherited and overwhrighten by an equally named method of a derived class. 
-
-
-//Example: We construct a class 'FirstSource' that inherits the features/methods of the abstract class 'Function'. In order to fill for instance the virtual method 'evaluate' (of //the abstract class 'Function') with life, we need to define an equally named method 'evaluate' in 'FirstSource'.
-//Unfortunately, if used very often, virtual methods cause long running times. Therefore, to avoid virtual methods for the sake of efficiency, Dune-programmers often make use of the so called Barton-Nackman trick: the derived class 'FirstSource' inherits the (virtual) methods of the class 'Function< FuncSpace, FirstSource >'. But the class template 'Function' recieves the template parameter 'FirstSource', which itself is derived of the class 'Function< FuncSpace, FirstSource >'. The snake seems to bite its tail! But it won't cause any errors. Simplified, the following happens: if the program wants to execute the method 'evaluate(...)' it is normaly searching in 'Function', there it finds out that the method is virtual and it has to search in the derived class 'FirstSource'. Such a process is not very efficient. By using the Barton-Nackman trick this process of 'searching' is reversed, the base class 'turns into' the derived class and the derived class 'turns into' the base class. Since the program always searches at first in the base class (now: 'FirstSource') it will immediately find a non-virtual method 'evaluate()' that can be executed.
-//To realize the Barton-Nackman trick we essentially need the order 'asimp()'. This order must be somewhere in the orginal base class ('Function'), before the virtual methods! It is responsible for the reversion of base class and derived class. 
-
+//Virtual methods can not be used, they will lead to error prompts! Therefor it is impossible to create objects of an abstract class.
+// To use such a method nevertheless, the virtual method must be inherited and overwhrighten by an equally named method of a derived class. 
 
 #endif
