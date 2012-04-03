@@ -48,7 +48,7 @@
 // space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
 // description see below 0.05
-#define EPSILON 0.01
+#define EPSILON 0.05
 #define EPSILON_EST 0.1
 #define DELTA 0.1
 
@@ -764,12 +764,12 @@ namespace Problem
     {
        grad_u[ 0 ][ 0 ] = 2.0 * M_PI * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
        grad_u[ 0 ][ 1 ] = 2.0 * M_PI * sin( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] );
-#if 1
+
        grad_u[ 0 ][ 0 ] += (-1.0) * EPSILON * M_PI * ( sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
        grad_u[ 0 ][ 0 ] += M_PI * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * cos( 2.0 * M_PI * (x[0] / EPSILON) ) );
 
        grad_u[ 0 ][ 1 ] += EPSILON * M_PI * ( cos( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
-#endif
+
 
     }
 

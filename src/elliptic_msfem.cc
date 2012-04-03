@@ -159,8 +159,8 @@
 
 
 //! local (dune-multiscale) includes
-// #include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
-#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
+//#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 
@@ -173,6 +173,7 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/tools/assembler/matrix_assembler/deprecated/elliptic_msfem_matrix_assembler.hh>
+#include <dune/multiscale/tools/misc/h1error.hh>
 
 //! (very restrictive) homogenizer
 #ifdef LINEAR_PROBLEM
@@ -550,6 +551,7 @@ void algorithm ( std :: string &RefElementName,
   Problem::ModelProblemData problem_info;
 
   L2Error< DiscreteFunctionType > l2error;
+  H1Error< DiscreteFunctionType > h1error;
 
   // expensive hack to deal with discrete functions, defined on different grids
   ImprovedL2Error< DiscreteFunctionType > impL2error;
@@ -1147,6 +1149,16 @@ while ( repeat == true )
   std :: cout << "|| u_msfem - u_exact ||_L2 =  " << exact_msfem_error << std :: endl << std :: endl;
   if (data_file.is_open())
     { data_file << "|| u_msfem - u_exact ||_L2 =  " << exact_msfem_error << std :: endl; }
+
+
+  RangeType h1_msfem_error(0.0);
+  h1_msfem_error = h1error.semi_norm< ExactSolutionType >( u, msfem_solution );
+  h1_msfem_error += exact_msfem_error;
+
+  std :: cout << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl; }
+
 
  #ifdef FINE_SCALE_REFERENCE
   RangeType fem_error = l2error.norm< ExactSolutionType >( u, fem_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
