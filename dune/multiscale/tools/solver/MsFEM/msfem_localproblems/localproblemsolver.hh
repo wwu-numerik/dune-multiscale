@@ -465,7 +465,10 @@ namespace Dune
 //! ------------------------------------------------------------------------------------------------
 //! --------------------- the essential local msfem problem solver class ---------------------------
 
-  template< class HostDiscreteFunctionType, class SubGridListType, class DiffusionOperatorType /*!, class SpecifierType*/ >
+  template< class HostDiscreteFunctionType,
+            class SubGridListType,
+	    class MacroMicroGridSpecifierType,
+	    class DiffusionOperatorType >
   class MsFEMLocalProblemSolver	
   {
   public:
@@ -494,18 +497,20 @@ namespace Dune
     //! type of range vectors
     typedef typename HostDiscreteFunctionSpaceType :: DomainType DomainType;
 
-    typedef typename HostDiscreteFunctionSpaceType :: IteratorType MaxLevelHostIteratorType;
+    typedef typename HostDiscreteFunctionSpaceType :: IteratorType HostGridEntityIteratorType;
 
-    typedef typename MaxLevelHostIteratorType :: Entity HostEntityType;
+    typedef typename HostGridEntityIteratorType :: Entity HostEntityType;
 
     typedef typename HostEntityType :: EntityPointer HostEntityPointerType;
 
+//! old:
+#if 1
     typedef typename HostGridType :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator HostgridLevelEntityIteratorType;
-
-    typedef typename HostGridType ::template Codim<0> :: Geometry HostGridEntityGeometry;
-
     typedef typename HostGridType :: Traits :: LevelIndexSet HostGridLevelIndexSet;
-
+#endif
+    
+    typedef typename HostGridType ::template Codim<0> :: Geometry HostGridEntityGeometry;
+        
     typedef typename HostDiscreteFunctionType :: LocalFunctionType HostLocalFunctionType;
     
     typedef typename HostGridPartType :: IntersectionIteratorType HostIntersectionIterator;
@@ -593,6 +598,7 @@ namespace Dune
     //! constructor - with diffusion operator A^{\epsilon}(x)
     MsFEMLocalProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
 			            SubGridListType& subgrid_list,
+			      //MacroMicroGridSpecifier<DiscreteFunctionSpace>& specifier,
                              const DiffusionOperatorType &diffusion_operator,
 			     std :: string path = "" )
     : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),

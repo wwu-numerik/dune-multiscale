@@ -47,7 +47,7 @@ namespace Dune
     typedef SubGrid< WORLDDIM , FineGrid > SubGridType;
     typedef SubGridList< FineDiscreteFunction, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
     
-    typedef MsFEMLocalProblemSolver< FineDiscreteFunction, SubGridListType, DiffusionModel > MsFEMLocalProblemSolverType;
+    typedef MsFEMLocalProblemSolver< FineDiscreteFunction, SubGridListType, MacroMicroGridSpecifierType, DiffusionModel > MsFEMLocalProblemSolverType;
     
 
   protected:
@@ -132,15 +132,15 @@ namespace Dune
 
   public:
 
-    DiscreteEllipticMsFEMOperator( const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace,
-                                   const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace,
+    DiscreteEllipticMsFEMOperator( MacroMicroGridSpecifierType& specifier,
+                                   const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace,
                                    // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers:
                                    SubGridListType& subgrid_list,
                                    const DiffusionModel &diffusion_op,
                                    std :: ofstream& data_file,
                                    std :: string path = ""  )
-    : coarseDiscreteFunctionSpace_( coarseDiscreteFunctionSpace ),
-      fineDiscreteFunctionSpace_( fineDiscreteFunctionSpace ),
+    : specifier_( specifier ),
+      coarseDiscreteFunctionSpace_( coarseDiscreteFunctionSpace ),
       subgrid_list_( subgrid_list ),
       diffusion_operator_( diffusion_op ),
       data_file_( &data_file ),
@@ -149,11 +149,14 @@ namespace Dune
 
       bool silence = false;
 
-      const int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
+      //coarseDiscreteFunctionSpace_ = specifier_.coarseSpace();
+      //fineDiscreteFunctionSpace_ = specifier_.fineSpace();
+      
+      const int coarse_level = specifier_.coarseSpace().gridPart().grid().maxLevel();
 
       std :: string local_path =  path_ + "/local_problems/";
 
-      MsFEMLocalProblemSolverType loc_prob_solver( fineDiscreteFunctionSpace_, subgrid_list_, diffusion_operator_, data_file, local_path );
+      MsFEMLocalProblemSolverType loc_prob_solver( specifier_.fineSpace(), subgrid_list_, diffusion_operator_, data_file, local_path );
       loc_prob_solver.assemble_all( coarse_level, silence );
     }
 
@@ -179,7 +182,7 @@ namespace Dune
 
   private:
 
-    const FineDiscreteFunctionSpace &fineDiscreteFunctionSpace_;
+    MacroMicroGridSpecifierType& specifier_;
 
     const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace_;
      
@@ -394,7 +397,7 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
                 FineEntityPointer fine_entity_pointer_1 = coarseDiscreteFunctionSpace_.grid().template getHostEntity<0>( coarse_grid_entity );
                 FineEntityPointer fine_entity_pointer_2 = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
 		int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
-		int fine_level = fineDiscreteFunctionSpace_.gridPart().grid().maxLevel();
+		int fine_level = specifier_.fineSpace().gridPart().grid().maxLevel();
 
                 for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
                        fine_entity_pointer_2 = fine_entity_pointer_2->father();
@@ -504,8 +507,8 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
       
       const CoarseLagrangePointSet &lagrangePointSet = coarseDiscreteFunctionSpace_.lagrangePointSet( coarse_grid_entity );
       
-      const FineIntersectionIterator iend = fineDiscreteFunctionSpace_.gridPart().iend( fine_entity );
-      for( FineIntersectionIterator iit = fineDiscreteFunctionSpace_.gridPart().ibegin( fine_entity ); iit != iend; ++iit )
+      const FineIntersectionIterator iend = specifier_.fineSpace().gridPart().iend( fine_entity );
+      for( FineIntersectionIterator iit = specifier_.fineSpace().gridPart().ibegin( fine_entity ); iit != iend; ++iit )
         {
 	  
            if ( iit->neighbor() ) //if there is a neighbor entity

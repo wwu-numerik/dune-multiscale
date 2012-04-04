@@ -24,16 +24,22 @@
 namespace Dune
 {
   
+  template< class DiscreteFunctionSpaceType >
   class MacroMicroGridSpecifier
   {
 
   public:
     
-    MacroMicroGridSpecifier( int& number_of_level_host_entities, int& coarse_level_fine_level_difference )
-    : coarse_level_fine_level_difference_( coarse_level_fine_level_difference ),
-      number_of_level_host_entities_( number_of_level_host_entities )
+    MacroMicroGridSpecifier( DiscreteFunctionSpaceType& coarse_scale_space,
+			      DiscreteFunctionSpaceType& fine_scale_space )
+    : coarse_scale_space_( coarse_scale_space ),
+      fine_scale_space_( fine_scale_space ),
+      coarse_level_fine_level_difference_( fine_scale_space.gridPart().grid().maxLevel() - coarse_scale_space.gridPart().grid().maxLevel() ),
+      // number of coarse space entities:
+      number_of_level_host_entities_( coarse_scale_space.gridPart().grid().size( 0 /*codim*/ ) )
      {
-       for ( int i = 0; i < number_of_level_host_entities; i+=1 )
+       int number_of_coarse_entities = coarse_scale_space.gridPart().grid().size( 0 /*codim*/ );
+       for ( int i = 0; i < number_of_coarse_entities; i+=1 )
          {
 	   // initialize with 0 layers:
 	   number_of_layers.push_back(0);  
@@ -63,6 +69,24 @@ namespace Dune
        return 0;
      }
      
+     // difference between coarse and fine level
+    int getLevelDiffernce()
+     {
+       return coarse_level_fine_level_difference_;
+     }
+
+     // the coarse space
+    DiscreteFunctionSpaceType& coarseSpace()
+     {
+       return coarse_scale_space_;
+     }
+ 
+     // the coarse space
+    DiscreteFunctionSpaceType& fineSpace()
+     {
+       return fine_scale_space_;
+     }
+
   private:
     
     // level difference bettween coarse grid level and fine grid level
@@ -73,6 +97,9 @@ namespace Dune
     
     // layers for each coarse grid entity
     std :: vector < int > number_of_layers;
+    
+    DiscreteFunctionSpaceType& coarse_scale_space_;
+    DiscreteFunctionSpaceType& fine_scale_space_;
     
   };
   
@@ -280,49 +307,28 @@ namespace Dune
    // G --> 'second' source term, vector valued ('SecondSourceTermType')
 
 
-   // homogenous Dirchilet boundary condition!:
-   template< class DiffusionOperator, class SourceTerm >
-   void solve_dirichlet_zero( const DiffusionOperator &diffusion_op,
-                              const SourceTerm &f,
-                                    DiscreteFunctionSpace& coarse_space,
-                                    DiscreteFunction& coarse_scale_part,
-                                    DiscreteFunction& fine_scale_part,
-                                    DiscreteFunction &solution )
-   {
-     HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
-     const GridPart &gridPart = discreteFunctionSpace_.gridPart();
-     int number_of_level_host_entities = grid.size( coarse_space.gridPart().grid().maxLevel(), 0 /*codim*/ );
-     int coarse_level_fine_level_difference = grid.maxLevel() - coarse_space.grid().maxLevel();
-     MacroMicroGridSpecifier specifier( coarse_space.size() , discreteFunctionSpace_.gridPart().grid().maxLevel() - coarse_space.grid().maxLevel() );
-     
-     //! default - no layers
-     // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-     for ( int i = 0; i < number_of_level_host_entities; i+=1 )
-       { specifier.setLayer( i , 0 ); }
-    
-     solve_dirichlet_zero( diffusion_op, f, coarse_space, specifier, coarse_scale_part, fine_scale_part, solution );
-   }
-
    
    // homogenous Dirchilet boundary condition!:
    template< class DiffusionOperator, class SourceTerm >
    void solve_dirichlet_zero( const DiffusionOperator &diffusion_op,
                               const SourceTerm &f,
-                              DiscreteFunctionSpace& coarse_space,
                               // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-                              MacroMicroGridSpecifier& specifier,
+                              MacroMicroGridSpecifier<DiscreteFunctionSpace>& specifier,
                               DiscreteFunction& coarse_scale_part,
                               DiscreteFunction& fine_scale_part,
                               DiscreteFunction& solution )
    {
      
      // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
-     typedef DiscreteEllipticMsFEMOperator< SubgridDiscreteFunction, MacroMicroGridSpecifier,
+     typedef DiscreteEllipticMsFEMOperator< SubgridDiscreteFunction, MacroMicroGridSpecifier<DiscreteFunctionSpace>,
                                             DiscreteFunction,
                                             DiffusionOperator > EllipticMsFEMOperatorType;
-
-     int coarse_level = coarse_space.gridPart().grid().maxLevel(); 
-
+    
+     DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
+     
+     HostgridIterator coarse_iterator_end = coarse_space.end();
+     HostgridIterator coarse_iterator_begin = coarse_space.begin();     
+     
      HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
      const GridPart &gridPart = discreteFunctionSpace_.gridPart();
 
@@ -330,11 +336,9 @@ namespace Dune
      SubGridType subGrid( coarse_space.gridPart().grid() );
      subGrid.createBegin();
 
-     //subGrid.insertLevel(coarse_level);
-     //!!!! Diesen Iterator durch einen Iterator uber den SubSpace ersetzen??? (Klappt dann die Entity Identifikation?)
-     LevelEntityIteratorType coarse_level_it = grid.template lbegin< 0 >( coarse_level );
-     for( ; coarse_level_it != grid.template lend< 0 >( coarse_level ); ++coarse_level_it )
-         subGrid.insertPartial( *coarse_level_it );
+     //subGrid.insertLevel( coarse_space.gridPart().grid().maxLevel() );
+     for( HostgridIterator coarse_it = coarse_iterator_begin ; coarse_it != coarse_iterator_end; ++coarse_it )
+         subGrid.insertPartial( *coarse_it );
 
      subGrid.createEnd();
 
@@ -342,28 +346,19 @@ namespace Dune
 
      SubGridPart subGridPart( subGrid );
 
+     // coarse discrete function space eventuell direkt verwenden (warum wird der vorher in einen subspace umgewandelt?
+     // das ist vermutlich noch ein Reminder von einer alten Version)
      SubgridDiscreteFunctionSpace coarseDiscreteFunctionSpace( subGridPart );
 
      // ----- check index sets --------------------
 
 #if 1
-      typedef typename HostGrid :: Traits :: LevelIndexSet HostGridLevelIndexSet;
-      typedef typename SubGridType :: Traits :: LevelIndexSet SubGridLevelIndexSet;
-
-      HostGridLevelEntityIterator level_iterator_end = grid.template lend< 0 >( coarse_level );
-      HostGridLevelEntityIterator level_iterator_begin = grid.template lbegin< 0 >( coarse_level );
-      
-      const HostGridLevelIndexSet& hostGridLevelIndexSet = grid.levelIndexSet( coarse_level );
-
-      const SubGridLevelIndexSet& subGridLevelIndexSet = subGrid.levelIndexSet( coarse_level );
-
       bool index_sets_correct = true;
-
+     
       CoarseGridIterator coarse_it_ = coarseDiscreteFunctionSpace.begin();
-      for ( HostGridLevelEntityIterator lit = level_iterator_begin;
-            lit != level_iterator_end ; ++lit )
+      for( HostgridIterator lit = coarse_iterator_begin; lit != coarse_iterator_begin; ++lit )
        {
-          int index_host = hostGridLevelIndexSet.index( *lit );
+          int index_host = coarse_space.gridPart().indexSet().index( *lit );
 
           int index_sub = coarseDiscreteFunctionSpace.gridPart().indexSet().index( *coarse_it_ );
 
@@ -392,8 +387,8 @@ namespace Dune
      //! create subgrids:
      bool silence = false;
 
-     typedef SubGridList< DiscreteFunction, SubGridType, MacroMicroGridSpecifier > SubGridListType;
-     SubGridListType subgrid_list( discreteFunctionSpace_ , specifier, coarse_level , silence );
+     typedef SubGridList< DiscreteFunction, SubGridType, MacroMicroGridSpecifier<DiscreteFunctionSpace> > SubGridListType;
+     SubGridListType subgrid_list( specifier, silence );
 
 
      //! define the right hand side assembler tool
@@ -402,8 +397,8 @@ namespace Dune
 
      //! define the discrete (elliptic) operator that describes our problem
      // ( effect of the discretized differential operator on a certain discrete function )
-     EllipticMsFEMOperatorType elliptic_msfem_op( coarseDiscreteFunctionSpace,
-                                                  discreteFunctionSpace_,
+     EllipticMsFEMOperatorType elliptic_msfem_op( specifier,
+                                                  coarseDiscreteFunctionSpace,
                                                   subgrid_list,
                                                   diffusion_op, *data_file_, path_ );
      // discrete elliptic operator (corresponds with FEM Matrix)
@@ -422,7 +417,7 @@ namespace Dune
       {
         if (data_file_->is_open())
          {
-           *data_file_ << "Solving linear problem with MsFEM and coarse grid level " << coarse_level << "." << std :: endl;
+           *data_file_ << "Solving linear problem with MsFEM and maximum coarse grid level " << coarse_space.gridPart().grid().maxLevel() << "." << std :: endl;
            *data_file_ << "------------------------------------------------------------------------------" << std :: endl;
          }
       }
@@ -505,8 +500,6 @@ namespace Dune
 
 
 #if 1
-    int fine_level = grid.maxLevel();
-
     std :: cout << "Indentifying coarse scale part of the MsFEM solution... ";
 
     //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
@@ -519,7 +512,7 @@ namespace Dune
       {
 
         typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_father = it;
-        for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
+        for (int lev = 0; lev < specifier.getLevelDiffernce() ; ++lev)
           coarse_father = coarse_father->father();
         if ( subGrid.template contains<0>( coarse_father ) == false )
           { std :: cout << "Error in msfem_solver.hh: Entity not in Subgrid!" << std :: endl; }
@@ -561,7 +554,7 @@ namespace Dune
      fine_scale_part.clear();
      
 
-     int number_of_nodes = grid.size( grid.maxLevel(), 2 /*codim*/ );
+     int number_of_nodes = grid.size( 2 /*codim*/ );
      std :: vector< std :: vector < HostEntityPointer > > entities_sharing_same_node( number_of_nodes );
       
      for( HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it )
@@ -591,11 +584,8 @@ namespace Dune
 
          DiscreteFunction correction_on_U_T( "correction_on_U_T", discreteFunctionSpace_ );
          correction_on_U_T.clear();
-
-         const typename HostGrid :: Traits :: LevelIndexSet& hostGridLevelIndexSet
-               = coarse_space.gridPart().grid().levelIndexSet( subGrid.maxLevel() );
-
-         int index = hostGridLevelIndexSet.index( coarse_host_entity );
+	 
+	 int index = coarse_space.gridPart().indexSet().index( coarse_host_entity );
 
          // the sub grid U(T) that belongs to the coarse_grid_entity T
          SubGridType& sub_grid_U_T = subgrid_list.getSubGrid( index );
@@ -671,7 +661,7 @@ namespace Dune
              const HostEntity& fine_host_entity = *fine_host_entity_pointer;
 
              HostEntityPointer father = fine_host_entity_pointer;
-             for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
+             for (int lev = 0; lev < specifier.getLevelDiffernce(); ++lev)
                  father = father->father();
 
              bool entities_identical = true;
@@ -709,7 +699,7 @@ namespace Dune
 		 for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
                    {
                       HostEntityPointer inner_it = entities_sharing_same_node[ global_index_node ][ j ];
-                      for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev )
+                      for (int lev = 0; lev < specifier.getLevelDiffernce(); ++lev )
                          inner_it = inner_it->father();
 
                       bool new_entity_found = true;

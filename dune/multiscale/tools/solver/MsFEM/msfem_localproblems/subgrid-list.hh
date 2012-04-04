@@ -35,16 +35,22 @@ namespace Dune
     //! type of grid
     typedef typename HostDiscreteFunctionSpaceType :: GridType HostGridType;
     
-    typedef typename HostDiscreteFunctionSpaceType :: IteratorType MaxLevelHostIteratorType;
+    typedef typename HostDiscreteFunctionSpaceType :: IteratorType HostGridEntityIteratorType;
     
-    typedef typename MaxLevelHostIteratorType :: Entity HostEntityType;
+    typedef typename HostGridEntityIteratorType :: Entity HostEntityType;
 
     typedef typename HostEntityType :: EntityPointer HostEntityPointerType;
     
+// old:
+#if 0
     typedef typename HostGridType :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator HostgridLevelEntityIteratorType;
-   
     typedef typename HostGridType :: Traits :: LevelIndexSet HostGridLevelIndexSet;
-
+    
+    //usage:
+    // const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet(computational_level_);
+    // int father_index = hostGridLevelIndexSet.index( *level_it );
+#endif
+    
     typedef typename HostEntityType :: template Codim< 2 > :: EntityPointer HostNodePointer;
     
     typedef typename HostGridPartType :: IntersectionIteratorType HostIntersectionIterator;
@@ -149,26 +155,25 @@ namespace Dune
 
    }
     
-    SubGridList( const HostDiscreteFunctionSpaceType& hostSpace,
-		       MacroMicroGridSpecifierType& specifier,
-		 const int& computational_level, bool silent = true )
-    : hostSpace_( hostSpace ),
+    SubGridList( MacroMicroGridSpecifierType& specifier, bool silent = true )
+    : hostSpace_( specifier.fineSpace() ),
       specifier_( specifier ),
-      computational_level_( computational_level ),
       silent_( silent )
     {
 
+      HostDiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
+      
       const HostGridPartType& hostGridPart = hostSpace_.gridPart();
 
       HostGridType& hostGrid = hostSpace_.gridPart().grid();
 
-      int number_of_nodes = hostGrid.size( hostGrid.maxLevel(), 2 /*codim*/ );
+      int number_of_nodes = hostGrid.size( 2 /*codim*/ );
       
       // -------- identify the entities that share a certain node -------
 
       std :: vector< std :: vector < HostEntityPointerType > > entities_sharing_same_node( number_of_nodes );
       
-      for( MaxLevelHostIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it )
+      for( HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it )
         {
 	  int number_of_nodes_in_entity = (*it).template count<2>();
 	  for ( int i = 0; i < number_of_nodes_in_entity; i += 1 )
@@ -196,42 +201,28 @@ namespace Dune
       // ---------------------------------------------------------------- 
      
       
-      // maximum level defined in this grid. Levels are numbered 0 ... maxLevel with 0 the coarsest level.
-      int maxLevel = hostGrid.maxLevel();
-      int level_difference = maxLevel - computational_level_;
+      // difference in levels between coarse and fine grid
+      int level_difference = specifier.getLevelDiffernce();
 
-      // number of grid entities of a given codim on a given level in this process.
-      int number_of_level_host_entities = hostGrid.size( computational_level_, 0 /*codim*/ );
+      // number of coarse grid entities (of codim 0).
+      int number_of_coarse_grid_entities = specifier.getNumOfCoarseEntities();
 
 
-      std :: cout << "number_of_level_host_entities = " << number_of_level_host_entities << std :: endl;
+      std :: cout << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std :: endl;
       
 
-      subGrid = new SubGridType* [ number_of_level_host_entities ];
+      subGrid = new SubGridType* [ number_of_coarse_grid_entities ];
       
       //! ----------- create subgrids --------------------
 
-      const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet(computational_level_);
-
-      //SubGridType* subGrid[ number_of_level_host_entities ];
-
-      HostgridLevelEntityIteratorType level_iterator_end = hostGrid.template lend< 0 >( computational_level_ );
-      HostgridLevelEntityIteratorType level_iterator_begin = hostGrid.template lbegin< 0 >( computational_level_ );
-
-      int lev_index = 0;
-      for ( HostgridLevelEntityIteratorType lit = level_iterator_begin;
-         lit != level_iterator_end ; ++lit )
+      for( HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it )
         {
+	  int coarse_index = coarseSpace.gridPart().indexSet().index( *coarse_it );
+          subGrid[ coarse_index ] = new SubGridType( hostGrid );
+          subGrid[ coarse_index ]->createBegin();
+	}
 
-          subGrid[ lev_index ] = new SubGridType( hostGrid );
-          subGrid[ lev_index ]->createBegin();
-
-          //level_entity_collection.push_back( lit );
-          lev_index += 1;
-
-        }
-
-      for( MaxLevelHostIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it )
+      for( HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it )
         {
 	  int number_of_nodes_in_entity = (*it).template count<2>();
 	  for ( int i = 0; i < number_of_nodes_in_entity; i += 1 )
@@ -243,19 +234,19 @@ namespace Dune
 	    }
         }
       
-       bool *** enriched = new bool ** [ number_of_level_host_entities ];
-       for ( int k = 0; k < number_of_level_host_entities ; k += 1 )
+       bool *** enriched = new bool ** [ number_of_coarse_grid_entities ];
+       for ( int k = 0; k < number_of_coarse_grid_entities ; k += 1 )
        {
-	 enriched[ k ] = new bool * [ hostGrid.size( hostGrid.maxLevel(), 0 ) ];
-         for ( int m = 0; m < hostGrid.size( hostGrid.maxLevel(), 0 ) ; m += 1 )
+	 enriched[ k ] = new bool * [ hostGrid.size( 0 /*codim*/ ) ];
+         for ( int m = 0; m < hostGrid.size( 0 /*codim*/ ) ; m += 1 )
 	 {
 	    enriched[ k ][ m ] = new bool [ max_num_layers + 1 ];
 	 }
        }
        
-       for ( int k = 0; k < number_of_level_host_entities ; k += 1 )
+       for ( int k = 0; k < number_of_coarse_grid_entities ; k += 1 )
        {
-         for ( int m = 0; m < hostGrid.size( hostGrid.maxLevel(), 0 ) ; m += 1 )
+         for ( int m = 0; m < hostGrid.size( 0 /*codim*/ ) ; m += 1 )
 	 {
 	    for ( int l = 0; l < max_num_layers + 1 ; l += 1 )
 	    enriched[ k ][ m ][ l ] = false;
@@ -264,9 +255,9 @@ namespace Dune
 
 	   
 	   
-      // a maxlevel iterator for the codim 0 hostgrid entities:
-      MaxLevelHostIteratorType host_endit = hostSpace_.end();
-      for( MaxLevelHostIteratorType host_it = hostSpace_.begin();
+      // a fine grid iterator for the codim 0 hostgrid entities:
+      HostGridEntityIteratorType host_endit = hostSpace_.end();
+      for( HostGridEntityIteratorType host_it = hostSpace_.begin();
            host_it != host_endit ;
            ++host_it )
         {
@@ -276,12 +267,20 @@ namespace Dune
            int number_of_nodes_in_entity = (*host_it).template count<2>();
 	   
 
-           // get the level 'computational_level'-father of host_entity (which is a maxlevel entity)
+           // get the coarse-grid-father of host_entity (which is a maxlevel entity)
            HostEntityPointerType level_father_entity = host_it;
            for (int lev = 0; lev < level_difference; ++lev)
              level_father_entity = level_father_entity->father();
 
-           int father_index = hostGridLevelIndexSet.index( *level_father_entity );
+	   //! new:
+           //int father_index = hostGridPart.indexSet().index( *level_father_entity );
+           int father_index = coarseSpace.gridPart().indexSet().index( *level_father_entity );
+	   
+	   
+	   // old:
+	   // const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet(computational_level_);
+           // int father_index = hostGridLevelIndexSet.index( *level_father_entity );
+	   
            // std :: cout << "father_index = " << father_index << std :: endl;
 
            // add whole level if desired
@@ -335,7 +334,7 @@ namespace Dune
 
         }
 
-      for ( int i = 0; i < number_of_level_host_entities; ++i )
+      for ( int i = 0; i < number_of_coarse_grid_entities; ++i )
        {
           subGrid[ i ]->createEnd();
           if ( !silent_ )
@@ -348,7 +347,7 @@ namespace Dune
     
   SubGridType& getSubGrid( int i )
   {
-    int size = hostSpace_.gridPart().grid().size( computational_level_, 0 /*codim*/ );
+    int size = specifier_.getNumOfCoarseEntities();
     
     if ( i < size )    
      { return *(subGrid[ i ]); }
@@ -360,7 +359,6 @@ namespace Dune
     
     const HostDiscreteFunctionSpaceType &hostSpace_;
     MacroMicroGridSpecifierType& specifier_;
-    const int computational_level_;
     
     bool silent_;
     
@@ -371,9 +369,9 @@ namespace Dune
     //Destruktor (Dynamisch angeforderter Speicher wird wieder freigegeben)
     ~SubGridList()
      {
-        int size = hostSpace_.gridPart().grid().size( computational_level_, 0 /*codim*/ );
+        int size = specifier_.getNumOfCoarseEntities();
         
-        for (unsigned int i = 0;i<size; ++i)
+        for ( unsigned int i = 0; i < size; ++i )
          delete subGrid[i];
         delete[] subGrid;
 

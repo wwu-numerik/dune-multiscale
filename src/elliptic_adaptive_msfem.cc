@@ -375,14 +375,14 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   int number_of_level_host_entities = grid.size( coarse_grid_level_, 0 /*codim*/ );  
   int coarse_level_fine_level_difference = grid.maxLevel() - grid_coarse.maxLevel();
   
-  MacroMicroGridSpecifier specifier( number_of_level_host_entities , coarse_level_fine_level_difference );
+  MacroMicroGridSpecifier< DiscreteFunctionSpaceType > specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
     { specifier.setLayer( i , 5 ); }
 
 #if 1
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
-  msfem_solver.solve_dirichlet_zero( diffusion_op, f, discreteFunctionSpace_coarse, specifier,
+  msfem_solver.solve_dirichlet_zero( diffusion_op, f, specifier,
                                      coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution );
 #endif
 
