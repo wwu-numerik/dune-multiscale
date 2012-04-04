@@ -621,6 +621,9 @@ namespace Dune
          if (reader_is_open)
           { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
 
+         // oneLinePrint( std::cout , local_problem_solution_e0 );
+         // oneLinePrint( std::cout , local_problem_solution_e1 );
+
          typedef typename SubgridDiscreteFunction :: LocalFunctionType SubgridLocalFunction;
 	 SubgridLocalFunction local_coarse_part = coarse_msfem_solution.localFunction( *it );
 

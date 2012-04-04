@@ -3,6 +3,11 @@
 
 #include <dune/fem/function/common/function.hh>
 
+//! is an exact solution available?
+// this information should be provided by the 'problem specification file'
+// there we define or don't define the macro EXACTSOLUTION_AVAILABLE
+#define EXACTSOLUTION_AVAILABLE
+
 //! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
 
 //! For more further details about the implementation of the following classes, see the end of the file
@@ -755,8 +760,9 @@ namespace Problem
     {
        
       // approximation obtained by homogenized solution + first corrector
-        y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
-        y += 0.5 * EPSILON * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) ;
+        y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ); // coarse part
+        y += 0.5 * EPSILON * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) ; // fine part
+        // || u_fine_part ||_L2 = 0.00883883 (fuer eps = 0.05 )
 
     }
 

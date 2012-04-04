@@ -44,16 +44,12 @@
 //! MsFEM in Petrov-Galerkin formulation (PGF) or standard MsFEM formulation?
 #define PGF
 
-//! is an exact solution available?
-// this information should be provided by the 'problem specification file'
-// there we define or don't define the macro EXACTSOLUTION_AVAILABLE
-#define EXACTSOLUTION_AVAILABLE
 
 //! is the homogenized solution available?
 // this information should be provided by the 'problem specification file'
 // there we define or don't define the macro HOMOGENIZEDSOL_AVAILABLE
 // (if HOMOGENIZEDSOL_AVAILABLE == true, it means that it can be computed. It still needs to be determined by using a homogenizer )
-//!#define HOMOGENIZEDSOL_AVAILABLE
+#define HOMOGENIZEDSOL_AVAILABLE
 
 // compute the L2 errors? (might be expensive)
 #define ERROR_COMPUTATION
@@ -159,7 +155,7 @@
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
 //#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
