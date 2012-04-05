@@ -21,6 +21,8 @@
 
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 
+// use leaf index set -> wahrscheinlich hier fertig
+
 namespace Dune
 {
   
@@ -124,11 +126,13 @@ namespace Dune
 
    typedef typename DiscreteFunctionSpace :: GridType HostGrid;
    
+   typedef typename HostGrid :: Traits :: LeafIndexSet HostGridLeafIndexSet;
+   
    typedef typename DiscreteFunctionSpace :: DomainType DomainType;
    typedef typename DiscreteFunctionSpace :: RangeType RangeType;
    typedef typename DiscreteFunctionSpace :: JacobianRangeType JacobianRangeType;
    
-   typedef typename HostGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator LevelEntityIteratorType;
+   //typedef typename HostGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator LevelEntityIteratorType;
 
    typedef typename DiscreteFunctionSpace :: IteratorType HostgridIterator;
    
@@ -136,7 +140,7 @@ namespace Dune
    
    typedef typename HostEntity :: EntityPointer HostEntityPointer; 
 
-   typedef typename HostGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator HostGridLevelEntityIterator;
+   //typedef typename HostGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator HostGridLevelEntityIterator;
 
    enum { faceCodim = 1 };
 
@@ -152,7 +156,9 @@ namespace Dune
 
    typedef LeafGridPart< SubGridType > SubGridPart;
 
-   typedef typename SubGridType ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator SubGridLevelEntityIteratorType;
+   typedef typename SubGridType :: Traits :: LeafIndexSet CoarseGridLeafIndexSet;
+   
+   // typedef typename SubGridType ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator SubGridLevelEntityIteratorType;
    
    typedef LagrangeDiscreteFunctionSpace < FunctionSpace, SubGridPart, 1 > //1=POLORDER
       SubgridDiscreteFunctionSpace;
@@ -357,10 +363,13 @@ namespace Dune
      
       CoarseGridIterator coarse_it_ = coarseDiscreteFunctionSpace.begin();
       for( HostgridIterator lit = coarse_iterator_begin; lit != coarse_iterator_begin; ++lit )
-       {
-          int index_host = coarse_space.gridPart().indexSet().index( *lit );
-
-          int index_sub = coarseDiscreteFunctionSpace.gridPart().indexSet().index( *coarse_it_ );
+       { 
+	 
+	  const HostGridLeafIndexSet& hostGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
+	  const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
+	 
+          int index_host = hostGridLeafIndexSet.index( *lit );
+          int index_sub = coarseGridLeafIndexSet.index( *coarse_it_ );	  
 
           if ( index_host != index_sub )
            { index_sets_correct = false; }
@@ -480,7 +489,7 @@ namespace Dune
        }
      // --- end boundary treatment ---
 
-     InverseMsFEMMatrix msfem_biCGStab( msfem_matrix, 1e-8, 1e-8, 20000, VERBOSE );
+     InverseMsFEMMatrix msfem_biCGStab( msfem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/ );
      msfem_biCGStab( msfem_rhs, coarse_msfem_solution );
 
      if ( data_file_ )
@@ -585,7 +594,9 @@ namespace Dune
          DiscreteFunction correction_on_U_T( "correction_on_U_T", discreteFunctionSpace_ );
          correction_on_U_T.clear();
 	 
-	 int index = coarse_space.gridPart().indexSet().index( coarse_host_entity );
+	 
+	 const HostGridLeafIndexSet& hostGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();	 
+	 int index = hostGridLeafIndexSet.index( coarse_host_entity );
 
          // the sub grid U(T) that belongs to the coarse_grid_entity T
          SubGridType& sub_grid_U_T = subgrid_list.getSubGrid( index );
@@ -693,6 +704,7 @@ namespace Dune
              for ( int i = 0; i < number_of_nodes_entity; i += 1 )
                {
                  const typename HostEntity :: template Codim< 2 > :: EntityPointer node = fine_host_entity.template subEntity<2>(i);
+		 
 	         int global_index_node = gridPart.indexSet().index( *node );
 
                  // vector of coarse entities that share the above node

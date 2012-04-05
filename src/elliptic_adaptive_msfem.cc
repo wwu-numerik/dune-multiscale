@@ -169,7 +169,18 @@ typedef AdaptiveDiscreteFunction < DiscreteFunctionSpaceType > DiscreteFunctionT
 
 
 
+//!------------------------- for adaptive grid refinement ---------------------------------
 
+//! For adaption:
+
+//! type of restrict-prolong operator
+typedef RestrictProlongDefault< DiscreteFunctionType >
+  RestrictProlongOperatorType;
+//! type of the adaption manager
+typedef AdaptationManager< GridType, RestrictProlongOperatorType >
+  AdaptationManagerType;
+
+//!---------------------------------------------------------------------------------------
 
 
 
@@ -283,11 +294,79 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   //! --------------------------------------------------------------------------------------
 
+  // coarse grid
+#if 1
+  Problem::ModelProblemData info( filename_ );
+  std :: string macroGridName;
+  info.getMacroGridFile( macroGridName );
 
+  GridPointerType macro_grid_pointer_coarse( macroGridName );
+  macro_grid_pointer_coarse->globalRefine( coarse_grid_level_ );
+  GridPartType gridPart_coarse( *macro_grid_pointer_coarse);
+
+  GridType &grid_coarse = gridPart_coarse.grid();
+#endif  
+  
+  
+#if 0
+typedef GridType :: LeafGridView GridView;
+typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
+
+typedef GridType :: Traits :: LeafIndexSet GridLeafIndexSet;
+const GridLeafIndexSet& gridLeafIndexSet = grid.leafIndexSet();
+// gridLeafIndexSet.index( *it )
+
+GridView gridView = grid.leafView();
+  
+
+for ( ElementLeafIterator it = gridView.begin<0>();
+      it != gridView.end<0>(); ++it )
+  {
+    std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
+    if ( gridLeafIndexSet.index( *it ) > 10 )
+      { grid.mark( 2 , *it ); }
+  }
+  
+grid.preAdapt();
+grid.adapt();
+grid.postAdapt();
+
+std::cout << std :: endl;
+
+GridView gridView2 = grid.leafView();
+for ( ElementLeafIterator it = gridView2.begin<0>();
+      it != gridView2.end<0>(); ++it )
+  {
+//    std::cout << "gridPart.indexSet().index( *it ) = " << gridPart.indexSet().index( *it ) << std :: endl;
+    std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
+    grid.mark( total_refinement_level_ - coarse_grid_level_ , *it );
+  }
+
+grid.preAdapt();
+grid.adapt();
+grid.postAdapt();
+
+GridView gridViewc = grid_coarse.leafView();
+
+for ( ElementLeafIterator it = gridViewc.begin<0>();
+      it != gridViewc.end<0>(); ++it )
+  {
+      if ( gridPart_coarse.indexSet().index( *it ) > 10 )
+       { grid_coarse.mark( 2 , *it ); }
+  }
+
+grid_coarse.preAdapt();
+grid_coarse.adapt();
+grid_coarse.postAdapt();
+#endif
+  
+  
   //! ------------------------- discrete function spaces -----------------------------------
 
   // the global-problem function space:
   DiscreteFunctionSpaceType discreteFunctionSpace( gridPart );
+  
+  DiscreteFunctionSpaceType discreteFunctionSpace_coarse( gridPart_coarse );
 
   //! --------------------------------------------------------------------------------------
 
@@ -321,6 +400,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
   
+  
   //! -------------------------- writing data output Exact Solution ------------------------
 
 #ifdef EXACTSOLUTION_AVAILABLE
@@ -344,21 +424,73 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   
   
   
-  //! ---------------------- solve MsFEM problem ---------------------------
+  //! ---------------------- solve MsFEM problem ---------------------------  
+  
+//!#################################
+#if 0
+  std :: cout << "Starting adaption...";
+  
+  DiscreteFunctionType dummy( "dummy", discreteFunctionSpace );
+  dummy.clear();
+  
+  // one for the discreteFunctionSpace
+  RestrictProlongOperatorType rp( dummy );
+  AdaptationManagerType adaptationManager( grid, rp );
 
-  // coarse space
 #if 1
-  Problem::ModelProblemData info( filename_ );
-  std :: string macroGridName;
-  info.getMacroGridFile( macroGridName );
-
-  GridPointerType macro_grid_pointer_coarse( macroGridName );
-  macro_grid_pointer_coarse->globalRefine( coarse_grid_level_ );
-  GridPartType gridPart_coarse( *macro_grid_pointer_coarse);
-
-  GridType &grid_coarse = gridPart_coarse.grid();
-  DiscreteFunctionSpaceType discreteFunctionSpace_coarse( gridPart_coarse );
+  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
+  IteratorType end_it = discreteFunctionSpace.end();
+  for( IteratorType it = discreteFunctionSpace.begin(); it != end_it; ++it )
+    { 
+      if ( gridPart.indexSet().index( *it ) > 10 )
+      { grid.mark( total_refinement_level_ - coarse_grid_level_ , *it ); }
+      
+    }
 #endif
+  adaptationManager.adapt();
+#if 1
+  DiscreteFunctionType dummyn( "dummyn", discreteFunctionSpace );
+  dummyn.clear();
+  RestrictProlongOperatorType rpn( dummyn );
+  AdaptationManagerType adaptationManagern( grid, rpn );
+
+  IteratorType end_it_new = discreteFunctionSpace.end();
+  for( IteratorType it = discreteFunctionSpace.begin(); it != end_it_new; ++it )
+    { 
+      //if ( gridPart.indexSet().index( *it ) > 10 )
+      grid.mark( total_refinement_level_ - coarse_grid_level_ , *it );
+      
+    }
+    
+  adaptationManagern.adapt();    
+#endif
+
+  
+#if 1
+  DiscreteFunctionType dummy2( "dummy", discreteFunctionSpace_coarse );
+  dummy2.clear();
+  
+  // one for the discreteFunctionSpace_coarse
+  RestrictProlongOperatorType rp2( dummy2 );
+  AdaptationManagerType adaptationManager2( grid_coarse, rp2 );
+
+  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
+  IteratorType end_it2 = discreteFunctionSpace_coarse.end();
+  for( IteratorType it = discreteFunctionSpace_coarse.begin(); it != end_it2; ++it )
+    { 
+      if ( gridPart_coarse.indexSet().index( *it ) > 10 )
+       { grid_coarse.mark( 2 , *it ); }
+      
+    }
+
+  adaptationManager2.adapt();
+#endif  
+
+  std :: cout << " done." << std :: endl;
+#endif  
+//!#################################
+  
+  
 
   //! solution vector
   // solution of the standard finite element method
@@ -613,9 +745,9 @@ int main(int argc, char** argv)
   // create a grid pointer for the DGF file belongig to the macro grid:
   GridPointerType macro_grid_pointer( macroGridName );
   // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine( total_refinement_level_ );
+  macro_grid_pointer->globalRefine( total_refinement_level_  ); //coarse_grid_level_ ); //
 
-
+  
   // to save all information in a file
   std :: ofstream data_file( (save_filename).c_str() );
   if (data_file.is_open())

@@ -14,7 +14,7 @@
 #define LOCPROBLEMSOLVER_VERBOSE false
 
 // VTK output for local problems
-//#define VTK_OUTPUT
+// #define VTK_OUTPUT
 
 // write solutions of the local problems (vtk)
 //#define LOCALDATAOUTPUT
@@ -28,6 +28,7 @@
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
+// level angepasst!
 
 namespace Dune
 {
@@ -502,12 +503,6 @@ namespace Dune
     typedef typename HostGridEntityIteratorType :: Entity HostEntityType;
 
     typedef typename HostEntityType :: EntityPointer HostEntityPointerType;
-
-//! old:
-#if 1
-    typedef typename HostGridType :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator HostgridLevelEntityIteratorType;
-    typedef typename HostGridType :: Traits :: LevelIndexSet HostGridLevelIndexSet;
-#endif
     
     typedef typename HostGridType ::template Codim<0> :: Geometry HostGridEntityGeometry;
         
@@ -585,6 +580,8 @@ namespace Dune
     const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
     const DiffusionOperatorType& diffusion_;
     
+    MacroMicroGridSpecifierType& specifier_;
+    
    /*const*/ SubGridListType& subgrid_list_; 
 
     std :: ofstream *data_file_;
@@ -597,11 +594,13 @@ namespace Dune
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
     MsFEMLocalProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
+			            MacroMicroGridSpecifierType& specifier,
 			            SubGridListType& subgrid_list,
 			      //MacroMicroGridSpecifier<DiscreteFunctionSpace>& specifier,
                              const DiffusionOperatorType &diffusion_operator,
 			     std :: string path = "" )
     : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
+      specifier_( specifier ),
       subgrid_list_( subgrid_list ),
       diffusion_( diffusion_operator ),
       data_file_( NULL )
@@ -609,11 +608,13 @@ namespace Dune
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
     MsFEMLocalProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
+			            MacroMicroGridSpecifierType& specifier,
 			            SubGridListType& subgrid_list,
                              const DiffusionOperatorType &diffusion_operator,
                              std :: ofstream &data_file,
 			     std :: string path = "" )
     : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
+      specifier_( specifier ),
       subgrid_list_( subgrid_list ),
       diffusion_( diffusion_operator ),
       data_file_( &data_file )
@@ -841,8 +842,7 @@ namespace Dune
     //! ---- method: solve and save the whole set of local msfem problems -----
 
     // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
-    void assemble_all( const int computational_level,
-                       bool silent = true /* state information on subgrids */ )
+    void assemble_all( bool silent = true /* state information on subgrids */ )
     {
 
       enum { dimension = GridType :: dimension};
@@ -862,19 +862,13 @@ namespace Dune
 
       HostGridType& hostGrid = hostDiscreteFunctionSpace_.gridPart().grid();
 
-      // maximum level defined in this grid. Levels are numbered 0 ... maxLevel with 0 the coarsest level.
-      int maxLevel = hostGrid.maxLevel();
-      int level_difference = maxLevel - computational_level;
+      // difference in levels between coarse and fine grid
+      int level_difference = specifier_.getLevelDiffernce();
 
-      // number of grid entities of a given codim on a given level in this process.
-      int number_of_level_host_entities = hostGrid.size( computational_level, 0 /*codim*/ );
+      // number of coarse grid entities (of codim 0).
+      int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
-      std :: cout << "number_of_level_host_entities = " << number_of_level_host_entities << std :: endl;
-
-      HostgridLevelEntityIteratorType level_iterator_end = hostGrid.template lend< 0 >( computational_level );
-      HostgridLevelEntityIteratorType level_iterator_begin = hostGrid.template lbegin< 0 >( computational_level );
-      
-      const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet( computational_level );
+      std :: cout << "in method 'assemble_all': number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std :: endl;
       
       // --------------- writing data output ---------------------
       // typedefs and initialization
@@ -899,30 +893,22 @@ namespace Dune
       double average_time_c_p = 0;
       double maximum_time_c_p = 0;
 
-      for ( HostgridLevelEntityIteratorType lit = level_iterator_begin;
-            lit != level_iterator_end ; ++lit )
-      {
 
-          int index = hostGridLevelIndexSet.index( *lit );
+      HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
+      for( HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it )
+        {
+	  int coarse_index = coarseSpace.gridPart().indexSet().index( *coarse_it );
 
-
-#if 0
-if ( index == 0 )
-{
-std :: cout << "Im lokal Problem Solver." << std :: endl;
-std :: cout << "lit->geometry().corner(0) = " << lit->geometry().corner(0) << std :: endl;
-std :: cout << "lit->geometry().corner(1) = " << lit->geometry().corner(1) << std :: endl;
-std :: cout << "lit->geometry().corner(2) = " << lit->geometry().corner(2) << std :: endl;
-}
-#endif
-
-
-
+          #if 0
+          std :: cout << "coarse_it->geometry().corner(0) = " << coarse_it->geometry().corner(0) << std :: endl;
+          std :: cout << "coarse_it->geometry().corner(1) = " << coarse_it->geometry().corner(1) << std :: endl;
+          std :: cout << "coarse_it->geometry().corner(2) = " << coarse_it->geometry().corner(2) << std :: endl;
+          #endif
 
           bool writer_is_open = false;
 
 	  char location_lps[50];
-          sprintf( location_lps, "_localProblemSolutions_%d", index );
+          sprintf( location_lps, "_localProblemSolutions_%d", coarse_index );
           std::string location_lps_s( location_lps );
 
           std :: string locprob_solution_location = path_ + location_lps_s;
@@ -934,13 +920,13 @@ std :: cout << "lit->geometry().corner(2) = " << lit->geometry().corner(2) << st
           if ( writer_is_open )
           {
 
-	    SubGridType& subGrid = subgrid_list_.getSubGrid( index );
+	    SubGridType& subGrid = subgrid_list_.getSubGrid( coarse_index );
             SubGridPartType subGridPart( subGrid );
 
             SubDiscreteFunctionSpaceType subDiscreteFunctionSpace( subGridPart );
 
 	    char name_loc_sol[50];
-            sprintf( name_loc_sol, "Local Problem Solution %d", index );
+            sprintf( name_loc_sol, "Local Problem Solution %d", coarse_index );
             std::string name_local_solution( name_loc_sol );
 
 	    //! only for dimension 2!
@@ -950,7 +936,7 @@ std :: cout << "lit->geometry().corner(2) = " << lit->geometry().corner(2) << st
             SubDiscreteFunctionType local_problem_solution_1( name_local_solution, subDiscreteFunctionSpace );
             local_problem_solution_1.clear();
 
-            std :: cout << "Number of the local problem: " << dimension*index << " (of " << (dimension*number_of_level_host_entities)-1 << " problems in total)" << std :: endl;
+            std :: cout << "Number of the local problem: " << dimension * coarse_index << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
 
             // take time
             long double time_now = clock();
@@ -964,7 +950,7 @@ std :: cout << "lit->geometry().corner(2) = " << lit->geometry().corner(2) << st
             if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
                { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
 
-            std :: cout << "Number of the local problem: " << (dimension*index)+1 << " (of " << (dimension*number_of_level_host_entities)-1 << " problems in total)" << std :: endl;
+            std :: cout << "Number of the local problem: " << (dimension*coarse_index)+1 << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
 	    
             // take time
             time_now = clock();
@@ -998,7 +984,7 @@ std :: cout << "lit->geometry().corner(2) = " << lit->geometry().corner(2) << st
             IOTupleType local_solution_series_0( &host_local_solution );
 
             char ls_name_0[50];
-            sprintf( ls_name_0, "local_problem_solution_e0_%d", index );
+            sprintf( ls_name_0, "local_problem_solution_e0_%d", coarse_index );
             std::string ls_name_0_s( ls_name_0 );
 
             outputparam.set_prefix( ls_name_0_s );
@@ -1025,7 +1011,7 @@ std :: cout << "lit->geometry().corner(2) = " << lit->geometry().corner(2) << st
             IOTupleType local_solution_series_1( &host_local_solution );
 
             char ls_name_1[50];
-            sprintf( ls_name_1, "local_problem_solution_e1_%d", index );
+            sprintf( ls_name_1, "local_problem_solution_e1_%d", coarse_index );
             std::string ls_name_1_s( ls_name_1 );
 
             outputparam.set_prefix( ls_name_1_s );
@@ -1052,11 +1038,11 @@ std :: cout << "lit->geometry().corner(2) = " << lit->geometry().corner(2) << st
          {
            (*data_file_) << std :: endl;
            (*data_file_) << "In method: assemble_all." << std :: endl << std :: endl;
-           (*data_file_) << "MsFEM problems solved for " << number_of_level_host_entities << " coarse grid entities." << std :: endl;
-           (*data_file_) << dimension*number_of_level_host_entities << " local MsFEM problems solved in total." << std :: endl;
+           (*data_file_) << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities." << std :: endl;
+           (*data_file_) << dimension*number_of_coarse_grid_entities << " local MsFEM problems solved in total." << std :: endl;
            (*data_file_) << "Minimum time for solving a local problem = " << minimum_time_c_p << "s." << std :: endl;
            (*data_file_) << "Maximum time for solving a localproblem = " << maximum_time_c_p << "s." << std :: endl;
-           (*data_file_) << "Average time for solving a localproblem = " << ((clock()-starting_time)/CLOCKS_PER_SEC)/(dimension*number_of_level_host_entities) << "s." << std :: endl;
+           (*data_file_) << "Average time for solving a localproblem = " << ((clock()-starting_time)/CLOCKS_PER_SEC)/(dimension*number_of_coarse_grid_entities) << "s." << std :: endl;
            (*data_file_) << "Total time for computing and saving the localproblems = " << ((clock()-starting_time)/CLOCKS_PER_SEC) << "s," << std :: endl << std :: endl;
          }
       }

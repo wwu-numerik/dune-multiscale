@@ -9,6 +9,8 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
+// level angepasst!
+
 namespace Dune
 {
 
@@ -253,8 +255,7 @@ namespace Dune
 	 }
        }
 
-	   
-	   
+
       // a fine grid iterator for the codim 0 hostgrid entities:
       HostGridEntityIteratorType host_endit = hostSpace_.end();
       for( HostGridEntityIteratorType host_it = hostSpace_.begin();

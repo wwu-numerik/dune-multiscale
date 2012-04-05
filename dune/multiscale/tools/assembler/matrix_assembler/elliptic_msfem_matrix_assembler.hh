@@ -10,6 +10,8 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
+// level angepasst!
+
 namespace Dune
 {  
   // Imp stands for Implementation
@@ -68,8 +70,6 @@ namespace Dune
     typedef typename FineGridPart::IntersectionIteratorType FineIntersectionIterator;
     typedef typename FineIntersectionIterator::Intersection FineIntersection;
 
-    typedef typename FineGrid :: template Codim< 0 > :: template  Partition< All_Partition > :: LevelIterator FineLevelEntityIterator;
-
     typedef CachingQuadrature< FineGridPart, 0 > FineQuadrature;
 
 
@@ -92,8 +92,6 @@ namespace Dune
 
     typedef typename CoarseGridPart::IntersectionIteratorType CoarseIntersectionIterator;
     typedef typename CoarseIntersectionIterator::Intersection CoarseIntersection;
-
-    typedef typename CoarseGrid :: template Codim< 0 > :: template  Partition< All_Partition > :: LevelIterator CoarseLevelEntityIterator;
 
     typedef CachingQuadrature< CoarseGridPart, 0 > CoarseQuadrature;
     
@@ -151,13 +149,11 @@ namespace Dune
 
       //coarseDiscreteFunctionSpace_ = specifier_.coarseSpace();
       //fineDiscreteFunctionSpace_ = specifier_.fineSpace();
-      
-      const int coarse_level = specifier_.coarseSpace().gridPart().grid().maxLevel();
 
       std :: string local_path =  path_ + "/local_problems/";
 
-      MsFEMLocalProblemSolverType loc_prob_solver( specifier_.fineSpace(), subgrid_list_, diffusion_operator_, data_file, local_path );
-      loc_prob_solver.assemble_all( coarse_level, silence );
+      MsFEMLocalProblemSolverType loc_prob_solver( specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, data_file, local_path );
+      loc_prob_solver.assemble_all( silence );
     }
 
 
@@ -432,10 +428,8 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
 
                 FineEntityPointer fine_entity_pointer_1 = coarseDiscreteFunctionSpace_.grid().template getHostEntity<0>( coarse_grid_entity );
                 FineEntityPointer fine_entity_pointer_2 = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
-		int coarse_level = coarseDiscreteFunctionSpace_.gridPart().grid().maxLevel();
-		int fine_level = specifier_.fineSpace().gridPart().grid().maxLevel();
 
-                for (int lev = 0; lev < ( fine_level - coarse_level) ; ++lev)
+                for (int lev = 0; lev < specifier_.getLevelDiffernce() ; ++lev)
                        fine_entity_pointer_2 = fine_entity_pointer_2->father();
 		
 		 bool entities_identical = true;
