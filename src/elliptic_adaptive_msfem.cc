@@ -308,7 +308,7 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 #endif  
   
   
-#if 0
+#if 1
 typedef GridType :: LeafGridView GridView;
 typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
 
@@ -322,7 +322,7 @@ GridView gridView = grid.leafView();
 for ( ElementLeafIterator it = gridView.begin<0>();
       it != gridView.end<0>(); ++it )
   {
-    std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
+    //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
     if ( gridLeafIndexSet.index( *it ) > 10 )
       { grid.mark( 2 , *it ); }
   }
@@ -338,7 +338,7 @@ for ( ElementLeafIterator it = gridView2.begin<0>();
       it != gridView2.end<0>(); ++it )
   {
 //    std::cout << "gridPart.indexSet().index( *it ) = " << gridPart.indexSet().index( *it ) << std :: endl;
-    std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
+    //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
     grid.mark( total_refinement_level_ - coarse_grid_level_ , *it );
   }
 
@@ -348,10 +348,13 @@ grid.postAdapt();
 
 GridView gridViewc = grid_coarse.leafView();
 
+const GridLeafIndexSet& gridLeafIndexSet2 = grid_coarse.leafIndexSet();
+
 for ( ElementLeafIterator it = gridViewc.begin<0>();
       it != gridViewc.end<0>(); ++it )
   {
-      if ( gridPart_coarse.indexSet().index( *it ) > 10 )
+      //std::cout << "gridLeafIndexSet2.index( *it ) = " << gridLeafIndexSet2.index( *it ) << std :: endl;
+      if ( gridLeafIndexSet2.index( *it ) > 10 )
        { grid_coarse.mark( 2 , *it ); }
   }
 
@@ -745,7 +748,7 @@ int main(int argc, char** argv)
   // create a grid pointer for the DGF file belongig to the macro grid:
   GridPointerType macro_grid_pointer( macroGridName );
   // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine( total_refinement_level_  ); //coarse_grid_level_ ); //
+  macro_grid_pointer->globalRefine( coarse_grid_level_ ); //total_refinement_level_  ); // //
 
   
   // to save all information in a file

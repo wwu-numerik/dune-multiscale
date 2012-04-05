@@ -9,7 +9,7 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-// level angepasst!
+// use leaf index set -> wahrscheinlich hier fertig
 
 namespace Dune
 {
@@ -36,13 +36,15 @@ namespace Dune
 
     //! type of grid
     typedef typename HostDiscreteFunctionSpaceType :: GridType HostGridType;
-    
+
+    typedef typename HostGridType :: Traits :: LeafIndexSet HostGridLeafIndexSet;
+
     typedef typename HostDiscreteFunctionSpaceType :: IteratorType HostGridEntityIteratorType;
-    
+
     typedef typename HostGridEntityIteratorType :: Entity HostEntityType;
 
     typedef typename HostEntityType :: EntityPointer HostEntityPointerType;
-    
+
 // old:
 #if 0
     typedef typename HostGridType :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator HostgridLevelEntityIteratorType;
@@ -111,10 +113,17 @@ namespace Dune
 		     bool***& enriched )
     {
 
+
+      const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
+
       for ( int l = 0; l <= layer; l+=1 )
-         enriched[ father_index ][ hostGridPart.indexSet().index( *hit ) ][ l ] = true; 
-   
+        {
+          enriched[ father_index ][ hostGridLeafIndexSet.index( *hit ) ][ l ] = true;
+         }
+
       layer -= 1;
+
+
       // loop over the nodes of the enity
       for ( int i = 0; i < (*hit).template count<2>(); i += 1 )
 	{
@@ -139,7 +148,7 @@ namespace Dune
 
 		      if ( !( father == level_father_it ) )
 		       { 
-			 if ( enriched[ father_index ][ hostGridPart.indexSet().index( *entities_sharing_same_node[ global_index_node ][ j ] ) ][ layer ] == false )
+			 if ( enriched[ father_index ][ hostGridLeafIndexSet.index( *entities_sharing_same_node[ global_index_node ][ j ] ) ][ layer ] == false )
 			  {
 			    enrichment( entities_sharing_same_node[ global_index_node ][ j ], level_father_it,
 			    	        level_difference, father_index,
@@ -217,12 +226,17 @@ namespace Dune
       
       //! ----------- create subgrids --------------------
 
+      const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+
       for( HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it )
         {
-	  int coarse_index = coarseSpace.gridPart().indexSet().index( *coarse_it );
+
+          int coarse_index = coarseGridLeafIndexSet.index( *coarse_it );
+
           subGrid[ coarse_index ] = new SubGridType( hostGrid );
           subGrid[ coarse_index ]->createBegin();
 	}
+
 
       for( HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it )
         {
@@ -264,29 +278,31 @@ namespace Dune
         {
 
            const HostEntityType& host_entity = *host_it;
-	   
+
            int number_of_nodes_in_entity = (*host_it).template count<2>();
-	   
+
 
            // get the coarse-grid-father of host_entity (which is a maxlevel entity)
            HostEntityPointerType level_father_entity = host_it;
            for (int lev = 0; lev < level_difference; ++lev)
              level_father_entity = level_father_entity->father();
 
+
+
 	   //! new:
+           int father_index = coarseGridLeafIndexSet.index( *level_father_entity );
+           // old:
            //int father_index = hostGridPart.indexSet().index( *level_father_entity );
-           int father_index = coarseSpace.gridPart().indexSet().index( *level_father_entity );
-	   
-	   
+           //int father_index = coarseSpace.gridPart().indexSet().index( *level_father_entity );
+
 	   // old:
 	   // const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet(computational_level_);
            // int father_index = hostGridLevelIndexSet.index( *level_father_entity );
-	   
+
            // std :: cout << "father_index = " << father_index << std :: endl;
 
            // add whole level if desired
            // subGrid[ father_index ]->insertLevel( hostGrid.maxLevel() );
-
 
 
            if ( !( subGrid[ father_index ]->template contains <0>(host_entity) ) )
@@ -323,6 +339,7 @@ namespace Dune
 		  }
 		
               }
+
            if ( all_neighbors_have_same_father == true )
 	      { continue; }
 
@@ -333,7 +350,10 @@ namespace Dune
 		           hostGridPart, *subGrid[ father_index ], entities_sharing_same_node, layers, enriched );
 	    }
 
+
         }
+
+//std::cout << "Bin hier." << std :: endl; abort();
 
       for ( int i = 0; i < number_of_coarse_grid_entities; ++i )
        {

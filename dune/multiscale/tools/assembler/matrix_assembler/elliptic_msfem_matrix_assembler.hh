@@ -10,27 +10,27 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-// level angepasst!
+// use leaf index set -> wahrscheinlich hier fertig
 
 namespace Dune
-{  
+{
   // Imp stands for Implementation
   template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp, class DiffusionImp >
   class DiscreteEllipticMsFEMOperator
   : public Operator< typename CoarseDiscreteFunctionImp::RangeFieldType,
                      typename CoarseDiscreteFunctionImp::RangeFieldType,
-		      CoarseDiscreteFunctionImp, CoarseDiscreteFunctionImp >
+                     CoarseDiscreteFunctionImp, CoarseDiscreteFunctionImp >
   {
     typedef DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, MacroMicroGridSpecifierImp, FineDiscreteFunctionImp, DiffusionImp > This;
 
   public:
-    
+
     typedef CoarseDiscreteFunctionImp CoarseDiscreteFunction;
     typedef FineDiscreteFunctionImp FineDiscreteFunction;
     typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
-   
+
     typedef DiffusionImp DiffusionModel;
-        
+
     typedef typename CoarseDiscreteFunction::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;    
     typedef typename FineDiscreteFunction::DiscreteFunctionSpaceType FineDiscreteFunctionSpace;
     
@@ -62,6 +62,8 @@ namespace Dune
     typedef typename FineDiscreteFunctionSpace::LagrangePointSetType FineLagrangePointSet;
     typedef typename FineLagrangePointSet::template Codim< 1 >::SubEntityIteratorType FineFaceDofIterator;
 
+    typedef typename FineGrid :: Traits :: LeafIndexSet FineGridLeafIndexSet;
+
     typedef typename FineDiscreteFunctionSpace::IteratorType FineIterator;
     typedef typename FineIterator::Entity FineEntity;
     typedef typename FineEntity::EntityPointer FineEntityPointer; 
@@ -87,6 +89,8 @@ namespace Dune
     typedef typename CoarseLagrangePointSet::template Codim< 1 >::SubEntityIteratorType CoarseFaceDofIterator;
 
     typedef typename CoarseDiscreteFunctionSpace::IteratorType CoarseIterator;
+    typedef typename CoarseGrid :: Traits :: LeafIndexSet CoarseGridLeafIndexSet;
+
     typedef typename CoarseIterator::Entity CoarseEntity;
     typedef typename CoarseEntity::Geometry CoarseGeometry;
 
@@ -113,7 +117,7 @@ namespace Dune
     typedef typename LocalDiscreteFunctionSpace :: IteratorType LocalGridIterator;
     
     typedef typename LocalGridIterator :: Entity LocalGridEntity;
-    
+
     typedef typename LocalGridEntity :: EntityPointer LocalGridEntityPointer;
     
     typedef typename LocalDiscreteFunction :: LocalFunctionType LocalGridLocalFunction;
@@ -310,9 +314,12 @@ namespace Dune
       const CoarseEntity &coarse_grid_entity = *coarse_grid_it;
       const CoarseGeometry &coarse_grid_geometry = coarse_grid_entity.geometry();
       assert( coarse_grid_entity.partitionType() == InteriorEntity );
-    
-      int global_index_entity = coarseDiscreteFunctionSpace_.gridPart().indexSet().index( coarse_grid_entity );
-      
+
+
+      const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
+
+      int global_index_entity = coarseGridLeafIndexSet.index( coarse_grid_entity );
+
       LocalMatrix local_matrix = global_matrix.localMatrix( coarse_grid_entity, coarse_grid_entity );
 
       const CoarseBaseFunctionSet &coarse_grid_baseSet = local_matrix.domainBaseFunctionSet();
@@ -334,9 +341,9 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       SubGridType& sub_grid_U_T = subgrid_list_.getSubGrid( global_index_entity );
       SubGridPart subGridPart( sub_grid_U_T );
-      
+
       LocalDiscreteFunctionSpace localDiscreteFunctionSpace( subGridPart );
-      
+
       LocalDiscreteFunction local_problem_solution_e0( "Local problem Solution e_0", localDiscreteFunctionSpace );
       local_problem_solution_e0.clear();
 
@@ -509,7 +516,7 @@ JacobianRangeType diffusive_flux2( 0.0 );
 diffusion_operator_.diffusiveFlux( global_point_in_U_T, direction_of_diffusion, diffusive_flux2 );
 std :: cout << "iffusive_flux fuer gradient_Phi[ i ] = " << diffusive_flux2[ 0 ] << std :: endl << std :: endl << std :: endl;
 #endif
-		    // if not Petrov-Galerkin:
+                    // if not Petrov-Galerkin:
                     #ifndef PGF
                     JacobianRangeType reconstruction_grad_phi_j( 0.0 );
                     for( int k = 0; k < dimension; ++k )

@@ -28,7 +28,7 @@
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
-// level angepasst!
+// use leaf index set -> wahrscheinlich hier fertig
 
 namespace Dune
 {
@@ -498,6 +498,8 @@ namespace Dune
     //! type of range vectors
     typedef typename HostDiscreteFunctionSpaceType :: DomainType DomainType;
 
+    typedef typename HostGridType :: Traits :: LeafIndexSet HostGridLeafIndexSet;
+
     typedef typename HostDiscreteFunctionSpaceType :: IteratorType HostGridEntityIteratorType;
 
     typedef typename HostGridEntityIteratorType :: Entity HostEntityType;
@@ -893,11 +895,14 @@ namespace Dune
       double average_time_c_p = 0;
       double maximum_time_c_p = 0;
 
-
       HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
+
+      const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+
       for( HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it )
         {
-	  int coarse_index = coarseSpace.gridPart().indexSet().index( *coarse_it );
+
+          int coarse_index = coarseGridLeafIndexSet.index( *coarse_it );
 
           #if 0
           std :: cout << "coarse_it->geometry().corner(0) = " << coarse_it->geometry().corner(0) << std :: endl;
