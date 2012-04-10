@@ -9,10 +9,6 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-// use leaf index set -> wahrscheinlich hier fertig
-
-//! TODO Ueberall wo wir den father nur ueber die Level-Difference bestimmen, muss noch die 'contains'-Abfrage eingebaut werden!!!! 
-
 namespace Dune
 {
 
@@ -51,14 +47,14 @@ namespace Dune
 #if 0
     typedef typename HostGridType :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator HostgridLevelEntityIteratorType;
     typedef typename HostGridType :: Traits :: LevelIndexSet HostGridLevelIndexSet;
-    
+
     //usage:
     // const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet(computational_level_);
     // int father_index = hostGridLevelIndexSet.index( *level_it );
 #endif
-    
+
     typedef typename HostEntityType :: template Codim< 2 > :: EntityPointer HostNodePointer;
-    
+
     typedef typename HostGridPartType :: IntersectionIteratorType HostIntersectionIterator;
 
     //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
@@ -101,12 +97,12 @@ namespace Dune
 
    }    
 
-    
-    
+
+
     template< typename EntityPointerCollectionType >
     void enrichment( HostEntityPointerType& hit,
 		     HostEntityPointerType& level_father_it,
-		     const int& level_difference,
+		     MacroMicroGridSpecifierType& specifier,
 		     int &father_index,
                      const HostGridPartType& hostGridPart,
                      SubGridType& subGrid,
@@ -115,6 +111,11 @@ namespace Dune
 		     bool***& enriched )
     {
 
+      // difference in levels between coarse and fine grid
+      int level_difference = specifier.getLevelDifference();
+      HostDiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
+
+      const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
       const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
 
@@ -130,40 +131,45 @@ namespace Dune
       for ( int i = 0; i < (*hit).template count<2>(); i += 1 )
 	{
 
-	   const HostNodePointer node = (*hit).template subEntity<2>(i);
+           const HostNodePointer node = (*hit).template subEntity<2>(i);
 	   int global_index_node = hostGridPart.indexSet().index( *node );
 
 	   for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
-	      {
+	     {
 
-		 if ( !( subGrid.template contains <0>( *entities_sharing_same_node[ global_index_node ][ j ] ) ) )
-		   {
-		      subGrid.insertPartial( *entities_sharing_same_node[ global_index_node ][ j ] );
-		   }
-		   
-		 if ( layer > 0 )
-		   {
-		     
-                     HostEntityPointerType father = entities_sharing_same_node[ global_index_node ][ j ];
-                     for (int lev = 0; lev < level_difference; ++lev)
+               if ( !( subGrid.template contains <0>( *entities_sharing_same_node[ global_index_node ][ j ] ) ) )
+		{
+		  subGrid.insertPartial( *entities_sharing_same_node[ global_index_node ][ j ] );
+                }
+
+               if ( layer > 0 )
+                {
+
+                  HostEntityPointerType father = entities_sharing_same_node[ global_index_node ][ j ];
+                  for (int lev = 0; lev < level_difference; ++lev)
                        father = father->father();
-		    
-		      if ( !( father == level_father_it ) )
-		       { 
-			 if ( enriched[ father_index ][ hostGridLeafIndexSet.index( *entities_sharing_same_node[ global_index_node ][ j ] ) ][ layer ] == false )
-			  {
-			    enrichment( entities_sharing_same_node[ global_index_node ][ j ], level_father_it,
-			    	        level_difference, father_index,
-			                hostGridPart, subGrid, entities_sharing_same_node, layer, enriched );
 
-     	                    layer += 1;
-			  }
-			 
-		      }
-		   }
+                  bool father_found = coarseGridLeafIndexSet.contains( *father );
+                  while ( father_found == false )
+                   {
+                     father = father->father();
+                     father_found = coarseGridLeafIndexSet.contains( *father );
+                   }
 
+                  if ( !( father == level_father_it ) )
+                   {
+                     if ( enriched[ father_index ][ hostGridLeafIndexSet.index( *entities_sharing_same_node[ global_index_node ][ j ] ) ][ layer ] == false )
+                      {
+                        enrichment( entities_sharing_same_node[ global_index_node ][ j ], level_father_it,
+                        specifier, father_index,
+                        hostGridPart, subGrid, entities_sharing_same_node, layer, enriched );
+
+                        layer += 1;
+                      }
+
+                   }
+                }
 	      }
-
 	}
 
    }
@@ -175,13 +181,13 @@ namespace Dune
     {
 
       HostDiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
-      
+
       const HostGridPartType& hostGridPart = hostSpace_.gridPart();
 
       HostGridType& hostGrid = hostSpace_.gridPart().grid();
 
       int number_of_nodes = hostGrid.size( 2 /*codim*/ );
-      
+
       // -------- identify the entities that share a certain node -------
 
       std :: vector< std :: vector < HostEntityPointerType > > entities_sharing_same_node( number_of_nodes );
@@ -193,29 +199,30 @@ namespace Dune
 	    {
 	      const HostNodePointer node = (*it).template subEntity<2>(i);
 	      int global_index_node = hostGridPart.indexSet().index( *node );
-	      
+
 	      entities_sharing_same_node[ global_index_node ].push_back( it );
 	    }
         }
 
       int max_num_layers = 0;
       for ( int i = 0; i < specifier_.getNumOfCoarseEntities(); i += 1 )
-        { if ( specifier_.getLayer(i) > max_num_layers )
-	   { max_num_layers = specifier_.getLayer(i); }
-	}
-        
-#if 0
+        {
+          if ( specifier_.getLayer(i) > max_num_layers )
+           { max_num_layers = specifier_.getLayer(i); }
+        }
+
+      #if 0
       for ( int i = 0; i < number_of_nodes ; i+=1 )
         {
-          std :: cout << "Knoten " << i << " wird von " << entities_sharing_same_node[i].size() << " Entities geteilt." << std :: endl;
+          std :: cout << "Node " << i << " is shared by " << entities_sharing_same_node[i].size() << " entities." << std :: endl;
         }
-#endif
+      #endif
 
       // ---------------------------------------------------------------- 
      
       
       // difference in levels between coarse and fine grid
-      int level_difference = specifier.getLevelDiffernce();
+      int level_difference = specifier.getLevelDifference();
 
       // number of coarse grid entities (of codim 0).
       int number_of_coarse_grid_entities = specifier.getNumOfCoarseEntities();
@@ -307,6 +314,10 @@ namespace Dune
            for (int lev = 0; lev < level_difference; ++lev)
 	     level_father_entity = level_father_entity->father();
 
+           // changed 'contains'-method in 'indexset.hh'
+           // we use: "return ( (subIndex >= 0) && (subIndex < size( codim )) );"
+           // instead of "return (subIndex >= 0);"
+
 	   // contains scheint nicht ganz so zu funktionieren wie es ollte, sonst braeuchte man die obige Schleife nicht
 	   bool father_found = coarseGridLeafIndexSet.contains( *level_father_entity );
 	   while ( father_found == false )
@@ -322,6 +333,7 @@ namespace Dune
            #endif
 
            int father_index = coarseGridLeafIndexSet.index( *level_father_entity );
+///std :: cout << "father_index = " << father_index << std :: endl;
 #endif
 
 
@@ -372,14 +384,12 @@ namespace Dune
 	   int layers = specifier_.getLayer( father_index );
 	   if ( layers > 0 )
 	    {
-	       enrichment( host_it, level_father_entity, level_difference, father_index,
+	       enrichment( host_it, level_father_entity, specifier, father_index,
 		           hostGridPart, *subGrid[ father_index ], entities_sharing_same_node, layers, enriched );
 	    }
 
 
         }
-
-//std::cout << "Bin hier." << std :: endl; abort();
 
       for ( int i = 0; i < number_of_coarse_grid_entities; ++i )
        {

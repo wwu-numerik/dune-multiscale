@@ -864,9 +864,6 @@ namespace Dune
 
       HostGridType& hostGrid = hostDiscreteFunctionSpace_.gridPart().grid();
 
-      // difference in levels between coarse and fine grid
-      int level_difference = specifier_.getLevelDiffernce();
-
       // number of coarse grid entities (of codim 0).
       int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 

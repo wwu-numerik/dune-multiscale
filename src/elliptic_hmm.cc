@@ -235,7 +235,7 @@ namespace Multiscale
 
 // we only use error estimation, if the solutions of the cell problems have been determined in a pre-process. Otherwise it is far too expensive!
 #ifndef AD_HOC_COMPUTATION
- #include <dune/multiscale/tools/errorestimation/elliptic_error_estimator.hh>
+ #include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
 #endif
 
 #include <dune/multiscale/tools/meanvalue.hh>

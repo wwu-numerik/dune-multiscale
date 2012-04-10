@@ -21,8 +21,6 @@
 
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 
-// use leaf index set -> wahrscheinlich hier fertig
-
 namespace Dune
 {
   
@@ -70,9 +68,9 @@ namespace Dune
         { std :: cout << "Error. Assertion (i < number_of_level_host_entities_) not filfilled." << std :: endl; abort(); }
        return 0;
      }
-     
+
      // difference between coarse and fine level
-    int getLevelDiffernce()
+    int getLevelDifference()
      {
        return coarse_level_fine_level_difference_;
      }
@@ -82,7 +80,7 @@ namespace Dune
      {
        return coarse_scale_space_;
      }
- 
+
      // the coarse space
     DiscreteFunctionSpaceType& fineSpace()
      {
@@ -90,21 +88,21 @@ namespace Dune
      }
 
   private:
-    
+
     // level difference bettween coarse grid level and fine grid level
     int coarse_level_fine_level_difference_;
-    
+
     // nomber of coarse grid entities
     int number_of_level_host_entities_;
-    
+
     // layers for each coarse grid entity
     std :: vector < int > number_of_layers;
-    
+
     DiscreteFunctionSpaceType& coarse_scale_space_;
     DiscreteFunctionSpaceType& fine_scale_space_;
-    
+
   };
-  
+
 
   template< class DiscreteFunctionType >
   class Elliptic_MsFEM_Solver
@@ -204,8 +202,7 @@ namespace Dune
 
    //! --------------------- type of fem stiffness matrix -----------------------------------
 
-   //! reloeschen
-   typedef SparseRowMatrixOperator< /*!Subgrid*/DiscreteFunction, /*!Subgrid*/DiscreteFunction, MatrixTraits > MsFEMMatrix;
+   typedef SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > MsFEMMatrix;
 
    //! --------------------------------------------------------------------------------------
 
@@ -213,7 +210,7 @@ namespace Dune
    //! --------------- solver for the linear system of equations ----------------------------
 
    // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones. GMRES seems to be more stable, but is extremely slow!
-   typedef OEMBICGSQOp/*CGInverseOp*//*OEMBICGSTABOp*/< /*!Subgrid*/DiscreteFunction, MsFEMMatrix > InverseMsFEMMatrix;
+   typedef OEMBICGSQOp/*CGInverseOp*//*OEMBICGSTABOp*/< DiscreteFunction, MsFEMMatrix > InverseMsFEMMatrix;
 
    //! --------------------------------------------------------------------------------------
 
@@ -269,8 +266,10 @@ namespace Dune
    void subgrid_to_hostrid_projection( const SubgridDiscreteFunction &sub_func, DiscreteFunction &host_func )
     {
 
+       #if 0
        if ( sub_func.space().gridPart().grid().maxLevel() != host_func.space().gridPart().grid().maxLevel() )
-         { std :: cout << "Error in method 'subgrid_to_hostrid_function': MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std :: endl; }
+         { std :: cout << "Error in method 'subgrid_to_hostrid_function': MaxLevel of SubGrid = " << sub_func.space().gridPart().grid().maxLevel() << " not identical to MaxLevel of FineGrid = " << host_func.space().gridPart().grid().maxLevel() << "." << std :: endl; }
+       #endif
 
        host_func.clear();
 
@@ -325,95 +324,37 @@ namespace Dune
                               DiscreteFunction& fine_scale_part,
                               DiscreteFunction& solution )
    {
-     //!reloeschen:
+
      // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
-     typedef DiscreteEllipticMsFEMOperator< /*!Subgrid*/DiscreteFunction, MacroMicroGridSpecifier<DiscreteFunctionSpace>,
-                                            DiscreteFunction,
+     typedef DiscreteEllipticMsFEMOperator< DiscreteFunction /*type of coarse space*/,
+                                            MacroMicroGridSpecifier<DiscreteFunctionSpace>,
+                                            DiscreteFunction /*type of fine space*/,
                                             DiffusionOperator > EllipticMsFEMOperatorType;
-    
+
      DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
-     
+
      HostgridIterator coarse_iterator_end = coarse_space.end();
-     HostgridIterator coarse_iterator_begin = coarse_space.begin();     
+     HostgridIterator coarse_iterator_begin = coarse_space.begin();
 
-  
-#if 0
-      int i = 0;
-      for( HostgridIterator coarse_it = coarse_iterator_begin; coarse_it != coarse_iterator_end; ++coarse_it )
-       { 
 
-	  #if 1
-	  std :: cout << "i = " << i << std :: endl;
+     #if 0
+     int i = 0;
+     for( HostgridIterator coarse_it = coarse_iterator_begin; coarse_it != coarse_iterator_end; ++coarse_it )
+       {
+          std :: cout << "i = " << i << std :: endl;
           std :: cout << "coarse element corner(0) = " << coarse_it->geometry().corner(0) << std :: endl;
           std :: cout << "coarse element corner(1) = " << coarse_it->geometry().corner(1) << std :: endl;
           std :: cout << "coarse element corner(2) = " << coarse_it->geometry().corner(2) << std :: endl << std :: endl;
-	  i += 1;
-          #endif
+          i += 1;
        }
-#endif
-     
+     #endif
+
      HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
      const GridPart &gridPart = discreteFunctionSpace_.gridPart();
 
-     // create subgrid:
-     SubGridType subGrid( coarse_space.gridPart().grid() );
-     subGrid.createBegin();
-
-     //subGrid.insertLevel( coarse_space.gridPart().grid().maxLevel() );
-     for( HostgridIterator coarse_it = coarse_iterator_begin ; coarse_it != coarse_iterator_end; ++coarse_it )
-         subGrid.insertPartial( *coarse_it );
-
-     subGrid.createEnd();
-
-     subGrid.report();
-
-     SubGridPart subGridPart( subGrid );
-
-     // coarse discrete function space eventuell direkt verwenden (warum wird der vorher in einen subspace umgewandelt?
-     // das ist vermutlich noch ein Reminder von einer alten Version)
-     SubgridDiscreteFunctionSpace coarseDiscreteFunctionSpace( subGridPart );
-
-     // ----- check index sets --------------------
-
-#if 0
-      bool index_sets_correct = true;
-     
-      CoarseGridIterator coarse_it_ = coarseDiscreteFunctionSpace.begin();
-      for( HostgridIterator lit = coarse_iterator_begin; lit != coarse_iterator_end; ++lit )
-       {
-
-          #if 0
-          std :: cout << "coarse element corner(0) = " << coarse_it_->geometry().corner(0) << std :: endl;
-          std :: cout << "coarse element corner(1) = " << coarse_it_->geometry().corner(1) << std :: endl;
-          std :: cout << "coarse element corner(2) = " << coarse_it_->geometry().corner(2) << std :: endl;
-          #endif
-	   
-	  const HostGridLeafIndexSet& hostGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
-	  const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
-	 
-          int index_host = hostGridLeafIndexSet.index( *lit );
-          int index_sub = coarseGridLeafIndexSet.index( *coarse_it_ );	  
-
-          if ( index_host != index_sub )
-           { index_sets_correct = false; }
-
-          int number_of_nodes = (*lit).template count<2>();
-
-          for ( int i = 0; i < number_of_nodes; i += 1 )
-           {
-             if ( (*lit).geometry().corner(i) != (*coarse_it_).geometry().corner(i) )
-              { index_sets_correct = false; }
-           }
-         ++coarse_it_;
-       }
-
-     if ( index_sets_correct == false )
-      { std :: cout << "Index Sets not correct." << std :: endl; abort(); }
-#endif
-
      // -------------------------------------------
 
-     /*!Subgrid*/DiscreteFunction coarse_msfem_solution( "Coarse Part MsFEM Solution", coarse_space/*!coarseDiscreteFunctionSpace*/ );
+     DiscreteFunction coarse_msfem_solution( "Coarse Part MsFEM Solution", coarse_space );
      coarse_msfem_solution.clear();
 
      //! create subgrids:
@@ -425,22 +366,22 @@ namespace Dune
 
      //! define the right hand side assembler tool
      // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-     RightHandSideAssembler< /*!Subgrid*/DiscreteFunction > rhsassembler;
+     RightHandSideAssembler< DiscreteFunction > rhsassembler;
 
      //! define the discrete (elliptic) operator that describes our problem
      // ( effect of the discretized differential operator on a certain discrete function )
      EllipticMsFEMOperatorType elliptic_msfem_op( specifier,
-                                                  coarse_space/*!coarseDiscreteFunctionSpace*/,
+                                                  coarse_space,
                                                   subgrid_list,
                                                   diffusion_op, *data_file_, path_ );
      // discrete elliptic operator (corresponds with FEM Matrix)
 
      //! (stiffness) matrix
-     MsFEMMatrix msfem_matrix( "MsFEM stiffness matrix", coarse_space/*!coarseDiscreteFunctionSpace*/, coarse_space/*!coarseDiscreteFunctionSpace*/ );
+     MsFEMMatrix msfem_matrix( "MsFEM stiffness matrix", coarse_space, coarse_space );
 
      //! right hand side vector
      // right hand side for the finite element method:
-     /*!Subgrid*/DiscreteFunction msfem_rhs( "MsFEM right hand side", coarse_space/*!coarseDiscreteFunctionSpace*/ );
+     DiscreteFunction msfem_rhs( "MsFEM right hand side", coarse_space );
      msfem_rhs.clear();
 
      std :: cout << "Solving MsFEM problem." << std :: endl;
@@ -471,11 +412,10 @@ namespace Dune
       }
       
      // assemble right hand side
-     rhsassembler.template assemble< 2 * /*!Subgrid*/DiscreteFunctionSpace :: polynomialOrder + 2 >( f , msfem_rhs);
+     rhsassembler.template assemble< 2 * DiscreteFunctionSpace :: polynomialOrder + 2 >( f , msfem_rhs);
 
      //oneLinePrint( std::cout , fem_rhs );
-    
-//! reloeschen
+
 #if 1
      // --- boundary treatment ---
      // set the dirichlet points to zero (in righ hand side of the fem problem)
@@ -483,12 +423,8 @@ namespace Dune
      for( HostgridIterator it = coarse_space.begin(); it != endit; ++it )
        {
 
-	 //! reloeschen
-         //!HostEntityPointer host_entity_pointer = subGrid.template getHostEntity<0>( *it );
-         //!const HostEntity& host_entity = *host_entity_pointer;
-
-         IntersectionIterator iit = coarse_space.gridPart().ibegin( *it /*!host_entity*/ );
-         const IntersectionIterator endiit = coarse_space.gridPart().iend( *it /*!host_entity*/ );
+         IntersectionIterator iit = coarse_space.gridPart().ibegin( *it );
+         const IntersectionIterator endiit = coarse_space.gridPart().iend( *it );
          for( ; iit != endiit; ++iit )
            {
 
@@ -533,8 +469,7 @@ namespace Dune
      // copy coarse grid function (defined on the subgrid) into a fine grid function
      solution.clear();
 
-     
-     
+     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
 
 #if 1
     std :: cout << "Indentifying coarse scale part of the MsFEM solution... ";
@@ -549,13 +484,17 @@ namespace Dune
       {
 
         typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_father = it;
-        for (int lev = 0; lev < specifier.getLevelDiffernce() ; ++lev)
+        for (int lev = 0; lev < specifier.getLevelDifference() ; ++lev)
           coarse_father = coarse_father->father();
-        if ( subGrid.template contains<0>( coarse_father ) == false )
-          { std :: cout << "Error in msfem_solver.hh: Entity not in Subgrid!" << std :: endl; }
 
-        //! reloeschen:
-        typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_it = coarse_father; //!subGrid.template getSubGridEntity<0>( *coarse_father );
+        bool father_found = coarseGridLeafIndexSet.contains( *coarse_father );
+        while ( father_found == false )
+           {
+             coarse_father = coarse_father->father();
+             father_found = coarseGridLeafIndexSet.contains( *coarse_father );
+           }
+
+        typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_it = coarse_father;
 
         LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse( coarse_it );
         interpolation_coarse.set_corners( coarse_msfem_solution );
@@ -589,7 +528,6 @@ namespace Dune
      // ------------------------------------------------------------------------------------
 
      fine_scale_part.clear();
-     
 
      int number_of_nodes = grid.size( 2 /*codim*/ );
      std :: vector< std :: vector < HostEntityPointer > > entities_sharing_same_node( number_of_nodes );
@@ -620,7 +558,6 @@ namespace Dune
          DiscreteFunction correction_on_U_T( "correction_on_U_T", discreteFunctionSpace_ );
          correction_on_U_T.clear();
 
-	 const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();	 
 	 int index = coarseGridLeafIndexSet.index( *coarse_it );
 	 
          // the sub grid U(T) that belongs to the coarse_grid_entity T
@@ -699,8 +636,15 @@ namespace Dune
              const HostEntity& fine_host_entity = *fine_host_entity_pointer;
 
              HostEntityPointer father = fine_host_entity_pointer;
-             for (int lev = 0; lev < specifier.getLevelDiffernce(); ++lev)
+             for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
                  father = father->father();
+
+             bool father_found = coarseGridLeafIndexSet.contains( *father );
+             while ( father_found == false )
+              {
+                father = father->father();
+                father_found = coarseGridLeafIndexSet.contains( *father );
+              }
 
              bool entities_identical = true;
              int number_of_nodes = (*father).template count<2>();
@@ -738,8 +682,15 @@ namespace Dune
 		 for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
                    {
                       HostEntityPointer inner_it = entities_sharing_same_node[ global_index_node ][ j ];
-                      for (int lev = 0; lev < specifier.getLevelDiffernce(); ++lev )
+                      for (int lev = 0; lev < specifier.getLevelDifference(); ++lev )
                          inner_it = inner_it->father();
+
+                      bool found = coarseGridLeafIndexSet.contains( *inner_it );
+                      while ( found == false )
+                       {
+                        inner_it = inner_it->father();
+                        found = coarseGridLeafIndexSet.contains( *inner_it );
+                       }
 
                       bool new_entity_found = true;
                       for ( int k = 0; k < coarse_entities.size(); k += 1 )
@@ -767,13 +718,10 @@ namespace Dune
 
     // ------------------------------------------------------------------------------------
 
-//!reloeschen:
-#if 1
-     // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
-     solution += coarse_scale_part;
-     solution += fine_scale_part;
-#endif
-     
+    // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
+    solution += coarse_scale_part;
+    solution += fine_scale_part;
+
    }
 
 

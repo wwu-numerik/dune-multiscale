@@ -93,6 +93,7 @@
 //! Bei Gelegenheit LOESCHEN:
 #include <dune/multiscale/tools/meanvalue.hh>
 
+#include <dune/multiscale/tools/errorestimation/MsFEM/elliptic_error_estimator.hh>
 
 using namespace Dune;
 
@@ -181,6 +182,17 @@ typedef AdaptationManager< GridType, RestrictProlongOperatorType >
   AdaptationManagerType;
 
 //!---------------------------------------------------------------------------------------
+
+
+typedef MacroMicroGridSpecifier< DiscreteFunctionSpaceType > MacroMicroGridSpecifierType;
+
+
+
+//! -------------------------- MsFEM error estimator ----------------------------
+typedef MsFEMErrorEstimator< DiscreteFunctionType,
+                             DiffusionType,
+                             MacroMicroGridSpecifierType > MsFEMErrorEstimatorType;
+//! -----------------------------------------------------------------------------
 
 
 
@@ -306,9 +318,10 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   GridType &grid_coarse = gridPart_coarse.grid();
 #endif  
-  
-  
-#if 1
+
+
+// strategy for adaptivity:
+#if 0
 typedef GridType :: LeafGridView GridView;
 typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
 
@@ -323,8 +336,8 @@ for ( ElementLeafIterator it = gridView.begin<0>();
       it != gridView.end<0>(); ++it )
   {
     //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
-    if ( gridLeafIndexSet.index( *it ) > 1 )
-      { grid.mark( 1 , *it ); }
+    if ( gridLeafIndexSet.index( *it ) < -7 )
+      { grid.mark( 3 , *it ); }
   }
   
 grid.preAdapt();
@@ -332,23 +345,12 @@ grid.adapt();
 grid.postAdapt();
 
 std::cout << std :: endl;
-
-grid.globalRefine( total_refinement_level_ - coarse_grid_level_ );
-#if 0
-GridView gridView2 = grid.leafView();
-for ( ElementLeafIterator it = gridView2.begin<0>();
-      it != gridView2.end<0>(); ++it )
-  {
-//    std::cout << "gridPart.indexSet().index( *it ) = " << gridPart.indexSet().index( *it ) << std :: endl;
-    //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
-    grid.mark( total_refinement_level_ - coarse_grid_level_ , *it );
-  }
-  
-grid.preAdapt();
-grid.adapt();
-grid.postAdapt();
 #endif
 
+grid.globalRefine( total_refinement_level_ - coarse_grid_level_ );
+
+// strategy for adaptivity:
+#if 0
 GridView gridViewc = grid_coarse.leafView();
 
 const GridLeafIndexSet& gridLeafIndexSet2 = grid_coarse.leafIndexSet();
@@ -357,8 +359,8 @@ for ( ElementLeafIterator it = gridViewc.begin<0>();
       it != gridViewc.end<0>(); ++it )
   {
       //std::cout << "gridLeafIndexSet2.index( *it ) = " << gridLeafIndexSet2.index( *it ) << std :: endl;
-      if ( gridLeafIndexSet2.index( *it ) > 1 )
-       { grid_coarse.mark( 1 , *it ); }
+      if ( gridLeafIndexSet2.index( *it ) < -7 )
+       { grid_coarse.mark( 3 , *it ); }
   }
 
 grid_coarse.preAdapt();
@@ -513,7 +515,7 @@ grid_coarse.postAdapt();
   int coarse_level_fine_level_difference = grid.maxLevel() - grid_coarse.maxLevel();
   
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-  MacroMicroGridSpecifier< DiscreteFunctionSpaceType > specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );
+  MacroMicroGridSpecifierType specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
     { specifier.setLayer( i , 5 ); }
 
@@ -526,6 +528,17 @@ grid_coarse.postAdapt();
 #endif
 
   //! ----------------------------------------------------------------------
+
+// error estimation
+#if 1
+
+  MsFEMErrorEstimatorType estimator( discreteFunctionSpace, specifier, diffusion_op );
+
+
+#endif
+
+
+
 
   std :: cout << "Data output for MsFEM Solution." << std :: endl;
   

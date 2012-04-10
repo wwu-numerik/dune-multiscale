@@ -10,8 +10,6 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-// use leaf index set -> wahrscheinlich hier fertig
-
 namespace Dune
 {
   // Imp stands for Implementation
@@ -280,11 +278,11 @@ namespace Dune
                                       FineDiscreteFunctionImp,
                                       DiffusionImp > :: assemble_matrix ( MatrixType &global_matrix ) const
   {
-   
+
     // the local problem:
     // Let 'T' denote a coarse grid element and
     // let 'U(T)' denote the environment of 'T' that corresponds with the subgrid.
-    
+
     // if Petrov-Galerkin-MsFEM
     #ifdef PGF
     std :: cout << "Assembling Petrov-Galerkin-MsFEM Matrix." << std :: endl;
@@ -292,18 +290,14 @@ namespace Dune
     std :: cout << "Assembling MsFEM Matrix." << std :: endl;
     #endif
 
-
-
-    //! der braucht einen macro-space (der wird auch als subgrid-space generiert) und den total globalen Feinskalen-Raum
-
     typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
     global_matrix.reserve();
     global_matrix.clear();
 
     std::vector< typename CoarseBaseFunctionSet::JacobianRangeType > gradient_Phi( coarseDiscreteFunctionSpace_.mapper().maxNumDofs() );
-   
-    int local_problem_id = 0;
+
+    const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
 
     // Coarse Entity Iterator 
     const CoarseIterator coarse_grid_end = coarseDiscreteFunctionSpace_.end();
@@ -315,9 +309,6 @@ namespace Dune
       const CoarseGeometry &coarse_grid_geometry = coarse_grid_entity.geometry();
       assert( coarse_grid_entity.partitionType() == InteriorEntity );
 
-
-      const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
-
       int global_index_entity = coarseGridLeafIndexSet.index( coarse_grid_entity );
 
       LocalMatrix local_matrix = global_matrix.localMatrix( coarse_grid_entity, coarse_grid_entity );
@@ -326,17 +317,17 @@ namespace Dune
       const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.numBaseFunctions();
 
 
-#if 0
-if ( global_index_entity == 0 )
-{
-std :: cout << "Im Assembler." << std :: endl;
-std :: cout << "coarse_grid_it->geometry().corner(0) = " << coarse_grid_it->geometry().corner(0) << std :: endl;
-std :: cout << "coarse_grid_it->geometry().corner(1) = " << coarse_grid_it->geometry().corner(1) << std :: endl;
-std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geometry().corner(2) << std :: endl;
-}
-#endif
+      #if 0
+      if ( global_index_entity == 0 )
+       {
+         std :: cout << "Im Assembler." << std :: endl;
+         std :: cout << "coarse_grid_it->geometry().corner(0) = " << coarse_grid_it->geometry().corner(0) << std :: endl;
+         std :: cout << "coarse_grid_it->geometry().corner(1) = " << coarse_grid_it->geometry().corner(1) << std :: endl;
+         std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geometry().corner(2) << std :: endl;
+       }
+      #endif
 
-//! reloeschen
+
 #if 1
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
@@ -373,7 +364,6 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
       if (reader_is_open)
         { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
 
-      // kann geloescht werden:
       #if 0
       typedef typename LocalDiscreteFunction::ConstDofIteratorType DofIteratorType;
 
@@ -433,45 +423,46 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
 		// check if "local_grid_entity" (which is an entity of U(T)) is in T:
 		// -------------------------------------------------------------------
 
-		//! reloeschen:
-                FineEntityPointer fine_entity_pointer_1 = coarse_grid_entity;//!coarseDiscreteFunctionSpace_.grid().template getHostEntity<0>( coarse_grid_entity );
-                FineEntityPointer fine_entity_pointer_2 = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
+                FineEntityPointer father_of_loc_grid_ent = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
 
-                for (int lev = 0; lev < specifier_.getLevelDiffernce() ; ++lev)
-                       fine_entity_pointer_2 = fine_entity_pointer_2->father();
-		
-		 bool entities_identical = true;
-                int number_of_nodes = (*fine_entity_pointer_1).template count<2>();
+                for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
+                       father_of_loc_grid_ent = father_of_loc_grid_ent->father();
+
+                bool father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_ent );
+                while ( father_found == false )
+                 {
+                   father_of_loc_grid_ent = father_of_loc_grid_ent->father();
+                   father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_ent );
+                 }
+
+                bool entities_identical = true;
+                int number_of_nodes = (*coarse_grid_it).template count<2>();
                 for ( int k = 0; k < number_of_nodes; k += 1 )
                   {
-		     if ( !(fine_entity_pointer_1->geometry().corner(k) == fine_entity_pointer_2->geometry().corner(k)) )
+                    if ( !(coarse_grid_it->geometry().corner(k) == father_of_loc_grid_ent->geometry().corner(k)) )
                       { entities_identical = false; }
-		  }
+                  }
 
-		 if ( entities_identical == false )
-		  {
-                   // std :: cout << "fine_entity_pointer_1->geometry().corner(0) = " << fine_entity_pointer_1->geometry().corner(0) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_1->geometry().corner(1) = " << fine_entity_pointer_1->geometry().corner(1) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_1->geometry().corner(2) = " << fine_entity_pointer_1->geometry().corner(2) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_2->geometry().corner(0) = " << fine_entity_pointer_2->geometry().corner(0) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_2->geometry().corner(1) = " << fine_entity_pointer_2->geometry().corner(1) << std :: endl;
-                   // std :: cout << "fine_entity_pointer_2->geometry().corner(2) = " << fine_entity_pointer_2->geometry().corner(2) << std :: endl << std :: endl;
-		   continue; 
-		  }
-       
+                if ( entities_identical == false )
+                  {
+                   // std :: cout << "coarse_grid_it->geometry().corner(0) = " << coarse_grid_it->geometry().corner(0) << std :: endl;
+                   // std :: cout << "coarse_grid_it->geometry().corner(1) = " << coarse_grid_it->geometry().corner(1) << std :: endl;
+                   // std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geometry().corner(2) << std :: endl;
+                   // std :: cout << "father_of_loc_grid_ent->geometry().corner(0) = " << father_of_loc_grid_ent->geometry().corner(0) << std :: endl;
+                   // std :: cout << "father_of_loc_grid_ent->geometry().corner(1) = " << father_of_loc_grid_ent->geometry().corner(1) << std :: endl;
+                   // std :: cout << "father_of_loc_grid_ent->geometry().corner(2) = " << father_of_loc_grid_ent->geometry().corner(2) << std :: endl << std :: endl;
+                   continue; 
+                  }
 
-		 // if ( !( fine_entity_pointer_1 == fine_entity_pointer_2 ) )
-		 // { continue; }
+                // -------------------------------------------------------------------
 
-		// -------------------------------------------------------------------
-		
                 const LocalGridGeometry &local_grid_geometry = local_grid_entity.geometry();
                 assert( local_grid_entity.partitionType() == InteriorEntity );
 
                 // higher order quadrature, since A^{\epsilon} is highly variable
                 LocalGridQuadrature local_grid_quadrature( local_grid_entity, 2*localDiscreteFunctionSpace.order()+2 );
                 const size_t numQuadraturePoints = local_grid_quadrature.nop();
-		
+
                 for( size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint )
                  {
                     // local (barycentric) coordinates (with respect to entity)
@@ -494,7 +485,6 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
                     JacobianRangeType direction_of_diffusion( 0.0 );
                     for( int k = 0; k < dimension; ++k )
                       {
-//! reloeschen: loeschen!
                         direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 0 ] * grad_loc_sol_e0[ 0 ][ k ];
                         direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 1 ] * grad_loc_sol_e1[ 0 ][ k ];
                         direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ k ];
@@ -503,21 +493,6 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
                     JacobianRangeType diffusive_flux( 0.0 );
                     diffusion_operator_.diffusiveFlux( global_point_in_U_T, direction_of_diffusion, diffusive_flux );
 
-//! loeschen:
-#if 0
-std :: cout << "grad_loc_sol_e0[ 0 ] = " << grad_loc_sol_e0[ 0 ] << std :: endl;
-std :: cout << "grad_loc_sol_e1[ 0 ] = " << grad_loc_sol_e1[ 0 ] << std :: endl;
-std :: cout << "direction_of_diffusion = " << direction_of_diffusion[ 0 ] << std :: endl;
-std :: cout << "gradient_Phi[ i ] = " << gradient_Phi[ i ][ 0 ] << std :: endl;
-
-
-
-std :: cout << "diffusive_flux = " << diffusive_flux[ 0 ] << std :: endl;
-//! loeschen:
-JacobianRangeType diffusive_flux2( 0.0 );
-diffusion_operator_.diffusiveFlux( global_point_in_U_T, direction_of_diffusion, diffusive_flux2 );
-std :: cout << "iffusive_flux fuer gradient_Phi[ i ] = " << diffusive_flux2[ 0 ] << std :: endl << std :: endl << std :: endl;
-#endif
                     // if not Petrov-Galerkin:
                     #ifndef PGF
                     JacobianRangeType reconstruction_grad_phi_j( 0.0 );
