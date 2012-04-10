@@ -323,8 +323,8 @@ for ( ElementLeafIterator it = gridView.begin<0>();
       it != gridView.end<0>(); ++it )
   {
     //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
-    if ( gridLeafIndexSet.index( *it ) > 10 )
-      { grid.mark( 2 , *it ); }
+    if ( gridLeafIndexSet.index( *it ) > 1 )
+      { grid.mark( 1 , *it ); }
   }
   
 grid.preAdapt();
@@ -333,6 +333,8 @@ grid.postAdapt();
 
 std::cout << std :: endl;
 
+grid.globalRefine( total_refinement_level_ - coarse_grid_level_ );
+#if 0
 GridView gridView2 = grid.leafView();
 for ( ElementLeafIterator it = gridView2.begin<0>();
       it != gridView2.end<0>(); ++it )
@@ -341,10 +343,11 @@ for ( ElementLeafIterator it = gridView2.begin<0>();
     //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
     grid.mark( total_refinement_level_ - coarse_grid_level_ , *it );
   }
-
+  
 grid.preAdapt();
 grid.adapt();
 grid.postAdapt();
+#endif
 
 GridView gridViewc = grid_coarse.leafView();
 
@@ -354,8 +357,8 @@ for ( ElementLeafIterator it = gridViewc.begin<0>();
       it != gridViewc.end<0>(); ++it )
   {
       //std::cout << "gridLeafIndexSet2.index( *it ) = " << gridLeafIndexSet2.index( *it ) << std :: endl;
-      if ( gridLeafIndexSet2.index( *it ) > 10 )
-       { grid_coarse.mark( 2 , *it ); }
+      if ( gridLeafIndexSet2.index( *it ) > 1 )
+       { grid_coarse.mark( 1 , *it ); }
   }
 
 grid_coarse.preAdapt();
@@ -506,14 +509,15 @@ grid_coarse.postAdapt();
   DiscreteFunctionType fine_part_msfem_solution( filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace );
   fine_part_msfem_solution.clear();
 
-  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-  int number_of_level_host_entities = grid.size( coarse_grid_level_, 0 /*codim*/ );  
+  int number_of_level_host_entities = grid_coarse.size( 0 /*codim*/ );  
   int coarse_level_fine_level_difference = grid.maxLevel() - grid_coarse.maxLevel();
   
+  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MacroMicroGridSpecifier< DiscreteFunctionSpaceType > specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
     { specifier.setLayer( i , 5 ); }
 
+//! reloeschen:
 #if 1
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
@@ -748,7 +752,7 @@ int main(int argc, char** argv)
   // create a grid pointer for the DGF file belongig to the macro grid:
   GridPointerType macro_grid_pointer( macroGridName );
   // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine( coarse_grid_level_ ); //total_refinement_level_  ); // //
+  macro_grid_pointer->globalRefine( coarse_grid_level_ );// //total_refinement_level_  ); // coarse_grid_level_ );  //
 
   
   // to save all information in a file

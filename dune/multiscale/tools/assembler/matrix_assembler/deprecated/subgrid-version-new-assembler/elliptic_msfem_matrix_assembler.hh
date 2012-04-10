@@ -155,7 +155,7 @@ namespace Dune
       //fineDiscreteFunctionSpace_ = specifier_.fineSpace();
 
       std :: string local_path =  path_ + "/local_problems/";
-      
+
       MsFEMLocalProblemSolverType loc_prob_solver( specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, data_file, local_path );
       loc_prob_solver.assemble_all( silence );
     }
@@ -336,7 +336,6 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
 }
 #endif
 
-//! reloeschen
 #if 1
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
@@ -373,7 +372,8 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
       if (reader_is_open)
         { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
 
-      // kann geloescht werden:
+
+      //! loeschen:
       #if 0
       typedef typename LocalDiscreteFunction::ConstDofIteratorType DofIteratorType;
 
@@ -433,8 +433,7 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
 		// check if "local_grid_entity" (which is an entity of U(T)) is in T:
 		// -------------------------------------------------------------------
 
-		//! reloeschen:
-                FineEntityPointer fine_entity_pointer_1 = coarse_grid_entity;//!coarseDiscreteFunctionSpace_.grid().template getHostEntity<0>( coarse_grid_entity );
+                FineEntityPointer fine_entity_pointer_1 = coarseDiscreteFunctionSpace_.grid().template getHostEntity<0>( coarse_grid_entity );
                 FineEntityPointer fine_entity_pointer_2 = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
 
                 for (int lev = 0; lev < specifier_.getLevelDiffernce() ; ++lev)
@@ -494,7 +493,6 @@ std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geom
                     JacobianRangeType direction_of_diffusion( 0.0 );
                     for( int k = 0; k < dimension; ++k )
                       {
-//! reloeschen: loeschen!
                         direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 0 ] * grad_loc_sol_e0[ 0 ][ k ];
                         direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ 1 ] * grad_loc_sol_e1[ 0 ][ k ];
                         direction_of_diffusion[ 0 ][ k ] += gradient_Phi[ i ][ 0 ][ k ];
@@ -546,37 +544,44 @@ std :: cout << "iffusive_flux fuer gradient_Phi[ i ] = " << diffusive_flux2[ 0 ]
   
     
     // discrete_function_reader.close();
-    
-    
-// boundary treatment
-#if 1
 
-        const CoarseGridPart &coarseGridPart = coarseDiscreteFunctionSpace_.gridPart();
-        for( CoarseIterator it = coarseDiscreteFunctionSpace_.begin(); it != coarseDiscreteFunctionSpace_.end(); ++it )
-          {
-            const CoarseEntity &entity = *it;
-            if( !entity.hasBoundaryIntersections() )
-            continue;
+    // boundary treatment
 
-            LocalMatrix local_matrix = global_matrix.localMatrix( entity, entity );
+    for( CoarseIterator coarse_grid_it = coarseDiscreteFunctionSpace_.begin(); coarse_grid_it != coarse_grid_end; ++coarse_grid_it )
+    {
+      
+      const CoarseEntity &coarse_grid_entity = *coarse_grid_it;
+      FineEntityPointer fine_entity_pointer = coarseDiscreteFunctionSpace_.grid().template getHostEntity<0>( coarse_grid_entity );
+      
+      const FineEntity& fine_entity = *fine_entity_pointer;
+      
+      LocalMatrix local_matrix = global_matrix.localMatrix( coarse_grid_entity, coarse_grid_entity );
+      
+      const CoarseLagrangePointSet &lagrangePointSet = coarseDiscreteFunctionSpace_.lagrangePointSet( coarse_grid_entity );
+      
+      const FineIntersectionIterator iend = specifier_.fineSpace().gridPart().iend( fine_entity );
+      for( FineIntersectionIterator iit = specifier_.fineSpace().gridPart().ibegin( fine_entity ); iit != iend; ++iit )
+        {
+	  
+           if ( iit->neighbor() ) //if there is a neighbor entity
+            {
+              // check if the neighbor entity is in the subgrid
+              const FineEntityPointer neighborFineEntityPointer = iit->outside();
+              const FineEntity& neighborFineEntity = *neighborFineEntityPointer;
+              if ( coarseDiscreteFunctionSpace_.grid().template contains<0>( neighborFineEntity ) )
+               {
+                 continue;
+               }
 
-            const CoarseLagrangePointSet &lagrangePointSet = coarseDiscreteFunctionSpace_.lagrangePointSet( entity );
-
-            const CoarseIntersectionIterator iend = coarseGridPart.iend( entity );
-            for( CoarseIntersectionIterator iit = coarseGridPart.ibegin( entity ); iit != iend; ++iit )
-              {
-                const CoarseIntersection &intersection = *iit;
-                if( !intersection.boundary() )
-                continue;
-
-                const int face = intersection.indexInInside();
-                const CoarseFaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >( face );
-                for( CoarseFaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >( face ); fdit != fdend; ++fdit )
-                local_matrix.unitRow( *fdit );
-              }
-          }
-#endif
-
+            }
+            
+           const int face = (*iit).indexInInside();
+           const CoarseFaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >( face );
+           for( CoarseFaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >( face ); fdit != fdend; ++fdit )
+              local_matrix.unitRow( *fdit );	
+        }
+  
+    }
 
   }
 

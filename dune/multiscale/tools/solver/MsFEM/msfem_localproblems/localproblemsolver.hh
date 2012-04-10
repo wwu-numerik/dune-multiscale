@@ -14,7 +14,7 @@
 #define LOCPROBLEMSOLVER_VERBOSE false
 
 // VTK output for local problems
-// #define VTK_OUTPUT
+#define VTK_OUTPUT
 
 // write solutions of the local problems (vtk)
 //#define LOCALDATAOUTPUT
@@ -846,7 +846,7 @@ namespace Dune
     // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
     void assemble_all( bool silent = true /* state information on subgrids */ )
     {
-
+ 
       enum { dimension = GridType :: dimension};
       enum { maxnumOfBaseFct = 100 }; 
 
@@ -897,8 +897,8 @@ namespace Dune
 
       HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
 
-      const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-
+      const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();     
+      
       for( HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it )
         {
 

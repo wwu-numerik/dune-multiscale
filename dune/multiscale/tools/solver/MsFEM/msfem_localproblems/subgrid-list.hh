@@ -11,6 +11,8 @@
 
 // use leaf index set -> wahrscheinlich hier fertig
 
+//! TODO Ueberall wo wir den father nur ueber die Level-Difference bestimmen, muss noch die 'contains'-Abfrage eingebaut werden!!!! 
+
 namespace Dune
 {
 
@@ -145,7 +147,7 @@ namespace Dune
                      HostEntityPointerType father = entities_sharing_same_node[ global_index_node ][ j ];
                      for (int lev = 0; lev < level_difference; ++lev)
                        father = father->father();
-
+		    
 		      if ( !( father == level_father_it ) )
 		       { 
 			 if ( enriched[ father_index ][ hostGridLeafIndexSet.index( *entities_sharing_same_node[ global_index_node ][ j ] ) ][ layer ] == false )
@@ -237,7 +239,6 @@ namespace Dune
           subGrid[ coarse_index ]->createBegin();
 	}
 
-
       for( HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it )
         {
 	  int number_of_nodes_in_entity = (*it).template count<2>();
@@ -249,7 +250,7 @@ namespace Dune
 	      entities_sharing_same_node[ global_index_node ].push_back( it );
 	    }
         }
-      
+   
        bool *** enriched = new bool ** [ number_of_coarse_grid_entities ];
        for ( int k = 0; k < number_of_coarse_grid_entities ; k += 1 )
        {
@@ -269,7 +270,6 @@ namespace Dune
 	 }
        }
 
-
       // a fine grid iterator for the codim 0 hostgrid entities:
       HostGridEntityIteratorType host_endit = hostSpace_.end();
       for( HostGridEntityIteratorType host_it = hostSpace_.begin();
@@ -281,28 +281,48 @@ namespace Dune
 
            int number_of_nodes_in_entity = (*host_it).template count<2>();
 
-
+	   #if 0
+           std :: cout << "host_it->geometry().corner(0) = " << host_it->geometry().corner(0) << std :: endl;
+           std :: cout << "host_it->geometry().corner(1) = " << host_it->geometry().corner(1) << std :: endl;
+           std :: cout << "host_it->geometry().corner(2) = " << host_it->geometry().corner(2) << std :: endl;
+           #endif
+	  
+	   
            // get the coarse-grid-father of host_entity (which is a maxlevel entity)
            HostEntityPointerType level_father_entity = host_it;
-           for (int lev = 0; lev < level_difference; ++lev)
-             level_father_entity = level_father_entity->father();
+	   
+// funktioniert nicht! (aber warum???)
+#if 0
+	   bool father_found = coarseGridLeafIndexSet.contains( *level_father_entity );
+	   while ( father_found == false )
+	   {
+	     level_father_entity = level_father_entity->father();
+	     father_found = coarseGridLeafIndexSet.contains( *level_father_entity );
+	   }
 
-
-
-	   //! new:
            int father_index = coarseGridLeafIndexSet.index( *level_father_entity );
-           // old:
-           //int father_index = hostGridPart.indexSet().index( *level_father_entity );
-           //int father_index = coarseSpace.gridPart().indexSet().index( *level_father_entity );
+#endif   
+// funktioniert (eventuell level_difference irgendwann durch minimale level difference ersetzen):
+#if 1
+           for (int lev = 0; lev < level_difference; ++lev)
+	     level_father_entity = level_father_entity->father();
 
-	   // old:
-	   // const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet(computational_level_);
-           // int father_index = hostGridLevelIndexSet.index( *level_father_entity );
+	   // contains scheint nicht ganz so zu funktionieren wie es ollte, sonst braeuchte man die obige Schleife nicht
+	   bool father_found = coarseGridLeafIndexSet.contains( *level_father_entity );
+	   while ( father_found == false )
+	   {
+	     level_father_entity = level_father_entity->father();
+	     father_found = coarseGridLeafIndexSet.contains( *level_father_entity );
+	   }
+ 
+           #if 0
+           std :: cout << "level_father_entity->geometry().corner(0) = " << level_father_entity->geometry().corner(0) << std :: endl;
+           std :: cout << "level_father_entity->geometry().corner(1) = " << level_father_entity->geometry().corner(1) << std :: endl;
+           std :: cout << "level_father_entity->geometry().corner(2) = " << level_father_entity->geometry().corner(2) << std :: endl << std :: endl;
+           #endif
 
-           // std :: cout << "father_index = " << father_index << std :: endl;
-
-           // add whole level if desired
-           // subGrid[ father_index ]->insertLevel( hostGrid.maxLevel() );
+           int father_index = coarseGridLeafIndexSet.index( *level_father_entity );
+#endif
 
 
            if ( !( subGrid[ father_index ]->template contains <0>(host_entity) ) )
@@ -325,7 +345,13 @@ namespace Dune
                    HostEntityPointerType level_father_neighbor_entity = neighborHostEntityPointer;
                    for (int lev = 0; lev < level_difference; ++lev)
                        level_father_neighbor_entity = level_father_neighbor_entity->father();
-	   
+
+	           father_found = coarseGridLeafIndexSet.contains( *level_father_neighbor_entity );
+	           while ( father_found == false )
+	             {
+	               level_father_neighbor_entity = level_father_neighbor_entity->father();
+	               father_found = coarseGridLeafIndexSet.contains( *level_father_neighbor_entity );
+	             }
 	   
                    if ( !(level_father_neighbor_entity == level_father_entity) )
                     {
