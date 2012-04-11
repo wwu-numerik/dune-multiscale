@@ -17,6 +17,7 @@
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
+
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
 
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
@@ -31,7 +32,7 @@ namespace Dune
   public:
     
     MacroMicroGridSpecifier( DiscreteFunctionSpaceType& coarse_scale_space,
-			      DiscreteFunctionSpaceType& fine_scale_space )
+                             DiscreteFunctionSpaceType& fine_scale_space )
     : coarse_scale_space_( coarse_scale_space ),
       fine_scale_space_( fine_scale_space ),
       coarse_level_fine_level_difference_( fine_scale_space.gridPart().grid().maxLevel() - coarse_scale_space.gridPart().grid().maxLevel() ),
@@ -45,7 +46,8 @@ namespace Dune
 	   number_of_layers.push_back(0);  
 	 }
      }
-     
+
+
     // get number of coarse grid entities
     int getNumOfCoarseEntities()
      {
@@ -178,7 +180,9 @@ namespace Dune
    typedef typename CoarseGridLagrangePointSet :: template Codim< faceCodim > 
                                                :: SubEntityIteratorType
     CoarseGridFaceDofIterator;
-//!-----------------------------------------------------------------------------------------
+    
+   //!-----------------------------------------------------------------------------------------
+
 
 
    //! --------------------- the standard matrix traits -------------------------------------
@@ -223,7 +227,6 @@ namespace Dune
     // path where to save the data output
     std :: string path_;
 
-    
   public:
    Elliptic_MsFEM_Solver( const DiscreteFunctionSpace &discreteFunctionSpace, std :: string path = "" )
      : discreteFunctionSpace_( discreteFunctionSpace ),
@@ -301,7 +304,7 @@ namespace Dune
           }
 
     }
-
+    
 
 
    // - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
@@ -315,11 +318,12 @@ namespace Dune
 
    
    // homogenous Dirchilet boundary condition!:
-   template< class DiffusionOperator, class SourceTerm >
+   template< class DiffusionOperator, class SourceTerm, class SubGridListType>
    void solve_dirichlet_zero( const DiffusionOperator &diffusion_op,
                               const SourceTerm &f,
                               // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
                               MacroMicroGridSpecifier<DiscreteFunctionSpace>& specifier,
+                              SubGridListType& subgrid_list,
                               DiscreteFunction& coarse_scale_part,
                               DiscreteFunction& fine_scale_part,
                               DiscreteFunction& solution )
@@ -352,17 +356,13 @@ namespace Dune
      HostGrid &grid = discreteFunctionSpace_.gridPart().grid();
      const GridPart &gridPart = discreteFunctionSpace_.gridPart();
 
-     // -------------------------------------------
+     // ------------------------------------------------------------
 
      DiscreteFunction coarse_msfem_solution( "Coarse Part MsFEM Solution", coarse_space );
      coarse_msfem_solution.clear();
 
      //! create subgrids:
      bool silence = false;
-
-     typedef SubGridList< DiscreteFunction, SubGridType, MacroMicroGridSpecifier<DiscreteFunctionSpace> > SubGridListType;
-     SubGridListType subgrid_list( specifier, silence );
-
 
      //! define the right hand side assembler tool
      // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )

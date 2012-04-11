@@ -2,6 +2,7 @@
 #define SUBGRIDLIST_HH
 
 #include <dune/common/fmatrix.hh>
+#include <dune/subgrid/subgrid.hh>
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
@@ -333,7 +334,7 @@ namespace Dune
            #endif
 
            int father_index = coarseGridLeafIndexSet.index( *level_father_entity );
-///std :: cout << "father_index = " << father_index << std :: endl;
+
 #endif
 
 
@@ -401,6 +402,24 @@ namespace Dune
       //! ----------- end create subgrids --------------------
 
     }
+    
+// Kopierkonstruktor klappt nicht, da SubGrid keinen passenden Kopierkonstruktor besitzt
+#if 0
+  SubGridList( const SubGridList& list )
+  : hostSpace_( list.hostSpace_ ),
+    specifier_( list.specifier_ ),
+    silent_( list.silent_ )
+  {
+      // number of coarse grid entities (of codim 0).
+      int number_of_coarse_grid_entities = this->specifier_.getNumOfCoarseEntities();
+      this->subGrid = new SubGridType* [ number_of_coarse_grid_entities ];
+      
+      for ( int i = 0; i < number_of_coarse_grid_entities; ++i )
+       {
+	  subGrid[ i ] = new SubGridType( *(list.subGrid[ i ]) );
+       }
+  }
+#endif
     
   SubGridType& getSubGrid( int i )
   {

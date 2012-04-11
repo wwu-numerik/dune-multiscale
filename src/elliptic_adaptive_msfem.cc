@@ -85,6 +85,8 @@
 #include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
 
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
+
+#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
 
@@ -185,13 +187,16 @@ typedef AdaptationManager< GridType, RestrictProlongOperatorType >
 
 
 typedef MacroMicroGridSpecifier< DiscreteFunctionSpaceType > MacroMicroGridSpecifierType;
-
+typedef SubGrid< GridType :: dimension , GridType > SubGridType; 
+typedef SubGridList< DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
 
 
 //! -------------------------- MsFEM error estimator ----------------------------
 typedef MsFEMErrorEstimator< DiscreteFunctionType,
                              DiffusionType,
-                             MacroMicroGridSpecifierType > MsFEMErrorEstimatorType;
+                             FirstSourceType,
+                             MacroMicroGridSpecifierType,
+                             SubGridListType > MsFEMErrorEstimatorType;
 //! -----------------------------------------------------------------------------
 
 
@@ -519,11 +524,14 @@ grid_coarse.postAdapt();
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
     { specifier.setLayer( i , 5 ); }
 
-//! reloeschen:
+  //! create subgrids:
+  bool silence = false;
+  SubGridListType subgrid_list( specifier, silence );
+     
 #if 1
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
-  msfem_solver.solve_dirichlet_zero( diffusion_op, f, specifier,
+  msfem_solver.solve_dirichlet_zero( diffusion_op, f, specifier, subgrid_list,
                                      coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution );
 #endif
 
@@ -532,7 +540,10 @@ grid_coarse.postAdapt();
 // error estimation
 #if 1
 
-  MsFEMErrorEstimatorType estimator( discreteFunctionSpace, specifier, diffusion_op );
+  MsFEMErrorEstimatorType estimator( discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f );
+  estimator.adaptive_refinement( grid_coarse,
+				  msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution,
+				  data_file, path_ );
 
 
 #endif
