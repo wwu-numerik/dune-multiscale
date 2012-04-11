@@ -1487,6 +1487,7 @@ namespace Dune
 //! first test concerning conservativ flux computation:
 #if 1
 
+ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiffusionOperatorType > flux_problem_solver( diffusion_ );
 
 
 

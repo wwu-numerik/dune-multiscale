@@ -541,7 +541,7 @@ namespace Dune
 //! ------------------ Matrix Traits for the local Problems ---------------------
 
     enum { faceCodim = 1 };
-    typedef typename SubGridLagrangePointSetType :: template Codim< faceCodim > :: SubGridEntityIteratorType SubGridFaceDofIteratorType;
+    typedef typename SubGridLagrangePointSetType :: template Codim< faceCodim > :: SubEntityIteratorType SubGridFaceDofIteratorType;
 
     //! polynomial order of base functions
     enum { polynomialOrder = SubGridDiscreteFunctionSpaceType :: polynomialOrder };
@@ -573,33 +573,23 @@ namespace Dune
 
     const DiffusionOperatorType& diffusion_;
 
-    const SubGridDiscreteFunctionSpaceType& subgridDiscreteFunctionSpace_;
+    //!const SubGridDiscreteFunctionSpaceType& subgridDiscreteFunctionSpace_;
 
-#endif
-
-#if 0
   public:
 
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
-    ConservativeFluxProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
-			            MacroMicroGridSpecifierType& specifier,
-			            SubGridListType& subgrid_list,
-			      //MacroMicroGridSpecifier<DiscreteFunctionSpace>& specifier,
-                             const DiffusionOperatorType &diffusion_operator,
-			     std :: string path = "" )
-    : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
-      specifier_( specifier ),
-      subgrid_list_( subgrid_list ),
-      diffusion_( diffusion_operator ),
-      data_file_( NULL )
-     { path_ = path; }
+    ConservativeFluxProblemSolver( //const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
+                                   const DiffusionOperatorType& diffusion_operator )
+    : //hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
+      diffusion_( diffusion_operator )
+     { }
 
 
     template < class Stream >
-    void oneLinePrint( Stream& stream, const SubDiscreteFunctionType& func )
+    void oneLinePrint( Stream& stream, const SubGridDiscreteFunctionType& func )
     {
-      typedef typename SubDiscreteFunctionType::ConstDofIteratorType
+      typedef typename SubGridDiscreteFunctionType::ConstDofIteratorType
          DofIteratorType;
       DofIteratorType it = func.dbegin();
       stream << "\n" << func.name() << ": [ ";
@@ -609,6 +599,10 @@ namespace Dune
       stream << " ] " << std::endl;
      }
 
+#endif
+
+#if 0     
+     
     //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
     void solvelocalproblem( JacobianRangeType &e,
