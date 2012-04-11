@@ -4,6 +4,8 @@
 // where the quadratures are defined 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
+#include <dune/multiscale/tools/errorestimation/MsFEM/conservative_flux_solver.hh>
+
 
 namespace Dune 
 {
@@ -25,9 +27,10 @@ namespace Dune
     //! Necessary typedefs for the DiscreteFunctionImp:
 
     typedef DiscreteFunctionImp DiscreteFunctionType;
+    typedef typename DiscreteFunctionType :: FunctionSpaceType FunctionSpaceType;
 
-    typedef typename DiscreteFunctionType      :: LocalFunctionType LocalFunctionType;
-    typedef typename DiscreteFunctionType      :: DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+    typedef typename DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
+    typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
     typedef typename DiscreteFunctionSpaceType :: RangeFieldType RangeFieldType;
     typedef typename DiscreteFunctionSpaceType :: DomainType DomainType;
@@ -35,15 +38,15 @@ namespace Dune
     typedef typename DiscreteFunctionSpaceType :: JacobianRangeType
       JacobianRangeType;
 
-    typedef typename DiscreteFunctionType      :: DofIteratorType   DofIteratorType;
-    typedef typename DiscreteFunctionSpaceType :: GridPartType      GridPartType;
-    typedef typename DiscreteFunctionSpaceType :: GridType          GridType;
-    typedef typename DiscreteFunctionSpaceType :: IteratorType      IteratorType;
+    typedef typename DiscreteFunctionType :: DofIteratorType DofIteratorType;
+    typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
+    typedef typename DiscreteFunctionSpaceType :: GridType GridType;
+    typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
 
     typedef typename GridType :: Traits :: LeafIndexSet LeafIndexSetType;
     
-    typedef typename GridPartType                  :: IntersectionIteratorType IntersectionIteratorType;
-    typedef typename GridType :: template Codim<0> :: Entity                   EntityType; 
+    typedef typename GridPartType :: IntersectionIteratorType IntersectionIteratorType;
+    typedef typename GridType :: template Codim<0> :: Entity EntityType; 
     typedef typename GridType :: template Codim<0> :: EntityPointer            EntityPointerType; 
     typedef typename GridType :: template Codim<0> :: Geometry                 EntityGeometryType; 
     typedef typename GridType :: template Codim<1> :: Geometry                 FaceGeometryType;
@@ -51,6 +54,40 @@ namespace Dune
 
     typedef CachingQuadrature < GridPartType , 0 > EntityQuadratureType;
     typedef CachingQuadrature < GridPartType , 1 > FaceQuadratureType;
+
+
+    // --------------------------- subgrid typedefs ------------------------------------
+
+    typedef SubGrid< GridType::dimension , GridType > SubGridType; 
+    typedef LeafGridPart< SubGridType > SubGridPart;
+
+    typedef typename SubGridType :: Traits :: LeafIndexSet SubGridLeafIndexSet;
+
+    typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, SubGridPart, 1 > //1=POLORDER
+      SubGridDiscreteFunctionSpaceType;
+
+   typedef AdaptiveDiscreteFunction < SubGridDiscreteFunctionSpaceType > SubGridDiscreteFunctionType;
+
+   typedef typename SubGridDiscreteFunctionSpaceType :: IteratorType SubGridIteratorType;
+
+   typedef typename SubGridIteratorType :: Entity SubGridEntityType;
+
+   typedef typename SubGridEntityType :: EntityPointer SubGridEntityPointerType; 
+
+   typedef typename SubGridDiscreteFunctionType :: LocalFunctionType SubGridLocalFunctionType;
+
+   typedef typename SubGridDiscreteFunctionSpaceType :: LagrangePointSetType
+    SubGridLagrangePointSetType;
+
+   enum { faceCodim = 1 };
+   typedef typename SubGridLagrangePointSetType :: template Codim< faceCodim > 
+                                                :: SubEntityIteratorType
+    SubGridFaceDofIteratorType;
+
+   typedef typename SubGridType :: template Codim<0> :: Geometry                 SubGridEntityGeometryType; 
+
+   //!-----------------------------------------------------------------------------------------
+
 
     enum { dimension = GridType :: dimension};
     enum { spacePolOrd = DiscreteFunctionSpaceType :: polynomialOrder }; 
@@ -130,7 +167,7 @@ namespace Dune
 
 
     // for a coarse grid entity T:
-    // return:  H_T^4 ||f||_{L^2(T)}^2
+    // return:  H_T ||f||_{L^2(T)}
     RangeType indicator_f( const EntityType &entity )
     {
 
@@ -157,9 +194,9 @@ namespace Dune
           local_indicator += weight * y;
          }
 
-        local_indicator *= pow(H_T, 4.0);
+        local_indicator *= pow(H_T, 2.0);
 
-        return local_indicator;
+        return sqrt(local_indicator);
     }
     
 #if 0
@@ -1350,150 +1387,168 @@ namespace Dune
     {
        std :: cout << "Starting error estimation..." << std :: endl;
 
+       const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+       const int number_of_fine_grid_entities = msfem_solution.space().gridPart().grid().size( 0 /*codim*/ );
+
+       // error contribution of H^2 ||f||_L2(T):
+       std :: vector < RangeType > loc_coarse_residual( number_of_coarse_grid_entities );
+
+       std :: vector < RangeType > loc_projection_error( number_of_coarse_grid_entities );
+
+       std :: vector < RangeType > loc_coarse_grid_jumps( number_of_coarse_grid_entities );
+
+       std :: vector < RangeType > loc_conservative_flux_jumps( number_of_coarse_grid_entities );
+
+       // Summation ueber die einzelnen fine-grid indicators die zu coarse grid entity beitragen:
+
+       std :: vector < RangeType > loc_approximation_error( number_of_coarse_grid_entities );
+
+       std :: vector < RangeType > loc_fine_grid_jumps( number_of_coarse_grid_entities );
+
+       RangeType total_coarse_residual( 0.0 );
+       RangeType total_projection_error( 0.0 );
+       RangeType total_coarse_grid_jumps( 0.0 );
+       RangeType total_conservative_flux_jumps( 0.0 );
+       RangeType total_approximation_error( 0.0 );
+       RangeType total_fine_grid_jumps( 0.0 );
+
+       RangeType total_estimated_error( 0.0 );
+
        const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
        const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
-       
+
        // Coarse Entity Iterator 
        const IteratorType coarse_grid_end = coarseDiscreteFunctionSpace.end();
        for( IteratorType coarse_grid_it = coarseDiscreteFunctionSpace.begin(); coarse_grid_it != coarse_grid_end; ++coarse_grid_it )
         {
           int global_index_entity = coarseGridLeafIndexSet.index( *coarse_grid_it );
-	}
+
+          loc_coarse_residual[ global_index_entity ] = indicator_f( *coarse_grid_it );
+          total_coarse_residual += pow( loc_coarse_residual[ global_index_entity ], 2.0 );
+
+//! loeschen oder einbinden?
 #if 0
 
+          // the coarse grid element T:
+          const EntityType &coarse_grid_entity = *coarse_grid_it;
+          const EntityGeometryType &coarse_grid_geometry = coarse_grid_entity.geometry();
+          assert( coarse_grid_entity.partitionType() == InteriorEntity );
 
+          // 1 point quadrature!! We only need the gradient of the base function,
+          // which is constant on the whole coarse grid entity.
+          EntityQuadratureType one_point_quadrature( coarse_grid_entity, 0 );
 
+          // the barycenter of the macro_grid_entity
+          const typename EntityQuadratureType::CoordinateType &local_coarse_point 
+           = one_point_quadrature.point( 0 /*=quadraturePoint*/ );
+          DomainType coarse_entity_barycenter = coarse_grid_geometry.global( local_coarse_point );
 
-
-      // the coarse grid element T:
-      const CoarseEntity &coarse_grid_entity = *coarse_grid_it;
-      const CoarseGeometry &coarse_grid_geometry = coarse_grid_entity.geometry();
-      assert( coarse_grid_entity.partitionType() == InteriorEntity );
-
-
-
-      LocalMatrix local_matrix = global_matrix.localMatrix( coarse_grid_entity, coarse_grid_entity );
-
-      const CoarseBaseFunctionSet &coarse_grid_baseSet = local_matrix.domainBaseFunctionSet();
-      const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.numBaseFunctions();
 #endif
-#if 0
+#if 1
 
           // the sub grid U(T) that belongs to the coarse_grid_entity T
           SubGridType& sub_grid_U_T = subgrid_list_.getSubGrid( global_index_entity );
           SubGridPart subGridPart( sub_grid_U_T );
 
-          LocalDiscreteFunctionSpace localDiscreteFunctionSpace( subGridPart );
+          SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace( subGridPart );
 
-      LocalDiscreteFunction local_problem_solution_e0( "Local problem Solution e_0", localDiscreteFunctionSpace );
-      local_problem_solution_e0.clear();
+          SubGridDiscreteFunctionType local_problem_solution_e0( "Local problem Solution e_0", localDiscreteFunctionSpace );
+          local_problem_solution_e0.clear();
 
-      LocalDiscreteFunction local_problem_solution_e1( "Local problem Solution e_1", localDiscreteFunctionSpace );
-      local_problem_solution_e1.clear();
+          SubGridDiscreteFunctionType local_problem_solution_e1( "Local problem Solution e_1", localDiscreteFunctionSpace );
+          local_problem_solution_e1.clear();
 
-      // --------- load local solutions -------
+          // --------- load local solutions -------
 
-      char location_lps[50];
-      sprintf( location_lps, "/local_problems/_localProblemSolutions_%d", global_index_entity );
-      std::string location_lps_s( location_lps );
+          char location_lps[50];
+          sprintf( location_lps, "/local_problems/_localProblemSolutions_%d", global_index_entity );
+          std::string location_lps_s( location_lps );
 
-      std :: string local_solution_location;
+          std :: string local_solution_location;
 
-      // the file/place, where we saved the solutions of the cell problems
-      local_solution_location = path_ + location_lps_s;
+          // the file/place, where we saved the solutions of the cell problems
+          local_solution_location = path + location_lps_s;
 
-      bool reader_is_open = false;
-      // reader for the cell problem data file:
-      DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
-      reader_is_open = discrete_function_reader.open();
+          bool reader_is_open = false;
+          // reader for the cell problem data file:
+          DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
+          reader_is_open = discrete_function_reader.open();
 
-      if (reader_is_open)
-        { discrete_function_reader.read( 0, local_problem_solution_e0 ); }
+          if (reader_is_open)
+           { discrete_function_reader.read( 0, local_problem_solution_e0 ); }
+          else
+           { std :: cout << "Error! Could not read data file for the local problem solutions." << std :: endl; abort(); }
 
-      if (reader_is_open)
-        { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
-
-
+          if (reader_is_open)
+           { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
 
 #endif
 
-#if 0
-      // 1 point quadrature!! We only need the gradient of the base function,
-      // which is constant on the whole entity.
-      CoarseQuadrature one_point_quadrature( coarse_grid_entity, 0 );
+//! first test concerning conservativ flux computation:
+#if 1
 
-      // the barycenter of the macro_grid_entity
-      const typename CoarseQuadrature::CoordinateType &local_coarse_point 
-           = one_point_quadrature.point( 0 /*=quadraturePoint*/ );
-      DomainType coarse_entity_barycenter = coarse_grid_geometry.global( local_coarse_point );
 
-      // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension > &inverse_jac
-          = coarse_grid_geometry.jacobianInverseTransposed( local_coarse_point );
 
-      for( unsigned int i = 0; i < numMacroBaseFunctions; ++i )
-        {
-          // jacobian of the base functions, with respect to the reference element
-          typename CoarseBaseFunctionSet::JacobianRangeType gradient_Phi_ref_element;
-          coarse_grid_baseSet.jacobian( i, one_point_quadrature[ 0 ], gradient_Phi_ref_element );
 
-          // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-          inverse_jac.mv( gradient_Phi_ref_element[ 0 ], gradient_Phi[ i ][ 0 ] );
-        }
+#endif //! end - first test concerning conservativ flux computation.
 
-      for( unsigned int i = 0; i < numMacroBaseFunctions; ++i )
-        {
 
-          for( unsigned int j = 0; j < numMacroBaseFunctions; ++j )
-           {
+#if 1
 
-            RangeType local_integral = 0.0;
-   
-            // iterator for the micro grid ( grid for the reference element T_0 )
-            const LocalGridIterator local_grid_end = localDiscreteFunctionSpace.end();
-            for( LocalGridIterator local_grid_it = localDiscreteFunctionSpace.begin(); local_grid_it != local_grid_end; ++local_grid_it )
+          // iterator for the local micro grid ('the subgrid corresponding with U(T)')
+          const SubGridIteratorType local_grid_it_end = localDiscreteFunctionSpace.end();
+          for( SubGridIteratorType local_grid_it = localDiscreteFunctionSpace.begin(); local_grid_it != local_grid_it_end; ++local_grid_it )
               {
-		
-                const LocalGridEntity &local_grid_entity = *local_grid_it;
-		
-		// check if "local_grid_entity" (which is an entity of U(T)) is in T:
-		// -------------------------------------------------------------------
 
-                FineEntityPointer father_of_loc_grid_ent = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
+                const SubGridEntityType &local_grid_entity = *local_grid_it;
+
+                // check if "local_grid_entity" (which is an entity of U(T)) is in T:
+                // -------------------------------------------------------------------
+
+                const EntityPointerType host_local_grid_it = localDiscreteFunctionSpace.grid().template getHostEntity<0>( local_grid_entity );
+
+                EntityPointerType father_of_loc_grid_it = host_local_grid_it;
 
                 for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
-                       father_of_loc_grid_ent = father_of_loc_grid_ent->father();
+                       father_of_loc_grid_it = father_of_loc_grid_it->father();
 
-                bool father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_ent );
+                bool father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_it );
                 while ( father_found == false )
                  {
-                   father_of_loc_grid_ent = father_of_loc_grid_ent->father();
-                   father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_ent );
+                   father_of_loc_grid_it = father_of_loc_grid_it->father();
+                   father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_it );
                  }
 
                 bool entities_identical = true;
                 int number_of_nodes = (*coarse_grid_it).template count<2>();
                 for ( int k = 0; k < number_of_nodes; k += 1 )
                   {
-                    if ( !(coarse_grid_it->geometry().corner(k) == father_of_loc_grid_ent->geometry().corner(k)) )
+                    if ( !(coarse_grid_it->geometry().corner(k) == father_of_loc_grid_it->geometry().corner(k)) )
                       { entities_identical = false; }
                   }
 
                 if ( entities_identical == false )
-                  {
-                   // std :: cout << "coarse_grid_it->geometry().corner(0) = " << coarse_grid_it->geometry().corner(0) << std :: endl;
-                   // std :: cout << "coarse_grid_it->geometry().corner(1) = " << coarse_grid_it->geometry().corner(1) << std :: endl;
-                   // std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geometry().corner(2) << std :: endl;
-                   // std :: cout << "father_of_loc_grid_ent->geometry().corner(0) = " << father_of_loc_grid_ent->geometry().corner(0) << std :: endl;
-                   // std :: cout << "father_of_loc_grid_ent->geometry().corner(1) = " << father_of_loc_grid_ent->geometry().corner(1) << std :: endl;
-                   // std :: cout << "father_of_loc_grid_ent->geometry().corner(2) = " << father_of_loc_grid_ent->geometry().corner(2) << std :: endl << std :: endl;
-                   continue; 
-                  }
+                  continue;
 
                 // -------------------------------------------------------------------
 
-                const LocalGridGeometry &local_grid_geometry = local_grid_entity.geometry();
+                const SubGridEntityGeometryType &local_grid_geometry = local_grid_entity.geometry();
                 assert( local_grid_entity.partitionType() == InteriorEntity );
+#if 0
+		
+
+		
+
+
+
+
+
+
+
+
+
+
+
 
                 // higher order quadrature, since A^{\epsilon} is highly variable
                 LocalGridQuadrature local_grid_quadrature( local_grid_entity, 2*localDiscreteFunctionSpace.order()+2 );
@@ -1546,17 +1601,50 @@ namespace Dune
 
 		  }
 	       }
-
-            // add entries
-            local_matrix.add( j, i, local_integral );
-           }
-
+#endif
+              }
+#endif
         }
 
-    }
-  
-      
-#endif
+       total_coarse_residual = sqrt( total_coarse_residual );
+       total_projection_error = sqrt( total_projection_error );
+       total_coarse_grid_jumps = sqrt( total_projection_error );
+       total_conservative_flux_jumps = sqrt( total_projection_error );
+       total_approximation_error = sqrt( total_projection_error );
+       total_fine_grid_jumps = sqrt( total_projection_error );
+
+       total_estimated_error += total_coarse_residual;
+       total_estimated_error += total_projection_error;
+       total_estimated_error += total_coarse_grid_jumps;
+       total_estimated_error += total_conservative_flux_jumps;
+       total_estimated_error += total_approximation_error;
+       total_estimated_error += total_fine_grid_jumps;
+
+       if (data_file.is_open())
+        {
+           data_file << std :: endl;
+           data_file << "Estimated Errors:" << std :: endl << std :: endl;
+           data_file << "Total estimated error = " << total_estimated_error << "." << std :: endl;
+           data_file << "where: " << std :: endl;
+           data_file << "total_coarse_residual = " << total_coarse_residual << "." << std :: endl;
+           data_file << "total_projection_error = " << total_projection_error << "." << std :: endl;
+           data_file << "total_coarse_grid_jumps = " << total_coarse_grid_jumps << "." << std :: endl;
+           data_file << "total_conservative_flux_jumps = " << total_conservative_flux_jumps << "." << std :: endl;
+           data_file << "total_approximation_error = " << total_approximation_error << "." << std :: endl;
+           data_file << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std :: endl;
+        }
+
+       std :: cout << std :: endl;
+       std :: cout << "Estimated Errors:" << std :: endl << std :: endl;
+       std :: cout << "Total estimated error = " << total_estimated_error << "." << std :: endl;
+       std :: cout << "where: " << std :: endl;
+       std :: cout << "total_coarse_residual = " << total_coarse_residual << "." << std :: endl;
+       std :: cout << "total_projection_error = " << total_projection_error << "." << std :: endl;
+       std :: cout << "total_coarse_grid_jumps = " << total_coarse_grid_jumps << "." << std :: endl;
+       std :: cout << "total_conservative_flux_jumps = " << total_conservative_flux_jumps << "." << std :: endl;
+       std :: cout << "total_approximation_error = " << total_approximation_error << "." << std :: endl;
+       std :: cout << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std :: endl;
+
     }
 
 }; // end of class MsFEMErrorEstimator
