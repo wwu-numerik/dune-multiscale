@@ -1487,7 +1487,26 @@ namespace Dune
 //! first test concerning conservativ flux computation:
 #if 1
 
+//! wir brauchen hier eigentlich noch ein neues Subgrid!!!
+
+//!generalize:
+#if 1
+JacobianRangeType e[dimension];
+for( int i = 0; i < dimension ; ++i )
+  for( int j = 0; j < dimension ; ++j )
+    {
+      if ( i == j )
+        { e[i][0][j] = 1.0; }
+      else
+        { e[i][0][j] = 0.0; }
+    }
+#endif
+
+SubGridDiscreteFunctionType conservative_flux_e0( "Conservative Flux for e_0", localDiscreteFunctionSpace );
+
 ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiffusionOperatorType > flux_problem_solver( diffusion_ );
+flux_problem_solver.solve( e[0], local_problem_solution_e0, conservative_flux_e0 );
+
 
 
 

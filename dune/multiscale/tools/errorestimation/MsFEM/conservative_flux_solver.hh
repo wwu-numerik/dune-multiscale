@@ -143,7 +143,9 @@ namespace Dune
     void assemble_matrix ( MatrixType &global_matrix ) const;
 
     // the right hand side assembler methods
-    void assemble_RHS ( // solution of the local corrector problem
+    void assemble_RHS ( // direction 'e_i'
+                        JacobianRangeType &e_i,
+                        // solution of the local corrector problem
                         const DiscreteFunction &local_corrector_e_i,
                         // rhs local msfem problem:
                         DiscreteFunction &rhs_flux_problem ) const;
@@ -352,13 +354,15 @@ namespace Dune
   template< class DiscreteFunctionImp, class DiffusionImp >
   //template< class MatrixType >
   void ConservativeFluxOperator< DiscreteFunctionImp, DiffusionImp >::assemble_RHS
-       ( // solution of the local corrector problem
+       ( // direction 'e'
+         JacobianRangeType &e_i,
+         // solution of the local corrector problem
          const DiscreteFunction &local_corrector_e_i,
          // rhs flux problem:
          DiscreteFunction &rhs_flux_problem ) const
   {
 
-#if 0
+
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
 
@@ -370,14 +374,10 @@ namespace Dune
     typedef typename DiscreteFunctionSpace::GridPartType GridPart;
     typedef CachingQuadrature< GridPart, 0 > Quadrature;
 
-    const DiscreteFunctionSpace &discreteFunctionSpace = local_problem_RHS.space();
-    
+    const DiscreteFunctionSpace &discreteFunctionSpace = rhs_flux_problem.space();
 
     // set entries to zero:
-    local_problem_RHS.clear();
-
-    // model problem data:
-    Problem::ModelProblemData problem_info;
+    rhs_flux_problem.clear();
 
     // gradient of micro scale base function:
     std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
@@ -392,7 +392,7 @@ namespace Dune
       const Geometry &geometry = local_grid_entity.geometry();
       assert( local_grid_entity.partitionType() == InteriorEntity );
 
-      LocalFunction elementOfRHS = local_problem_RHS.localFunction( local_grid_entity );
+      LocalFunction elementOfRHS = rhs_flux_problem.localFunction( local_grid_entity );
 
       const BaseFunctionSet &baseSet = elementOfRHS.baseFunctionSet();
       const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
@@ -416,11 +416,15 @@ namespace Dune
           = geometry.jacobianInverseTransposed( local_point );
 
 
-        // A^eps(x) e
+        // A^eps(x) ( e
         // diffusion operator evaluated in 'x' multiplied with e
-        JacobianRangeType diffusion_in_e;
-        diffusion_operator_.diffusiveFlux( global_point, e, diffusion_in_e );
+        JacobianRangeType diffusion_in_e_i;
+        diffusion_operator_.diffusiveFlux( global_point, e_i, diffusion_in_e_i );
 
+        JacobianRangeType total_diffusive_flux;
+        total_diffusive_flux[ 0 ] += diffusion_in_e_i[ 0 ];
+
+//! -------------- diffusion in ... ...
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
@@ -434,14 +438,14 @@ namespace Dune
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
-          elementOfRHS[ i ] -= weight * (diffusion_in_e[ 0 ] * gradient_phi[ i ][ 0 ]);
+          elementOfRHS[ i ] -= weight * (diffusion_in_e_i[ 0 ] * gradient_phi[ i ][ 0 ]);
 
         }
 
       }
-      
-    }
-#endif
+
+    } // end for-loop of 'Iterator'
+
 
   }
 
@@ -516,6 +520,11 @@ namespace Dune
     typedef typename SubGridDiscreteFunctionType :: DiscreteFunctionSpaceType
       SubGridDiscreteFunctionSpaceType;
 
+    typedef typename SubGridDiscreteFunctionSpaceType :: RangeFieldType RangeFieldType;
+    typedef typename SubGridDiscreteFunctionSpaceType :: DomainType DomainType;
+    typedef typename SubGridDiscreteFunctionSpaceType :: RangeType RangeType;
+    typedef typename SubGridDiscreteFunctionSpaceType :: JacobianRangeType
+      JacobianRangeType;
 
     //! type of grid partition
     typedef typename SubGridDiscreteFunctionSpaceType :: GridPartType SubGridPartType;
@@ -601,177 +610,74 @@ namespace Dune
 
 #endif
 
-#if 0     
-     
+
+
     //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
-    void solvelocalproblem( JacobianRangeType &e,
-                            SubDiscreteFunctionType &local_problem_solution )
+    void solve( JacobianRangeType &e_i, // direction 'e_i'
+                const SubGridDiscreteFunctionType &local_corrector_e_i,
+                SubGridDiscreteFunctionType &conservative_flux )
     {
 
       // set solution equal to zero:
-      local_problem_solution.clear();
+      conservative_flux.clear();
       
-      const SubDiscreteFunctionSpaceType &subDiscreteFunctionSpace = local_problem_solution.space();
-  
-      
+      const SubGridDiscreteFunctionSpaceType &localDiscreteFunctionSpace = local_corrector_e_i.space();
+
+
       //! the matrix in our linear system of equations
-      // in the non-linear case, it is the matrix for each iteration step
-      LocProbFEMMatrix locprob_system_matrix( "Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace );
+      FluxProbFEMMatrix flux_prob_system_matrix( "Conservative Flux Problem System Matrix", localDiscreteFunctionSpace, localDiscreteFunctionSpace );
 
       //! define the discrete (elliptic) local MsFEM problem operator
       // ( effect of the discretized differential operator on a certain discrete function )
-      LocalProblemOperatorType local_problem_op( subDiscreteFunctionSpace, diffusion_ );
+      ConservativeFluxOperatorType cf_problem_operator( localDiscreteFunctionSpace, diffusion_ );
 
-      const SubGridPartType &subgridPart = subDiscreteFunctionSpace.gridPart();
-      const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
-	    
-      typedef typename SubDiscreteFunctionSpaceType :: IteratorType SGIteratorType;
-      typedef typename SubGridPartType :: IntersectionIteratorType SGIntersectionIteratorType;
-      SGIteratorType sg_endit = subDiscreteFunctionSpace.end();
+      const SubGridPartType &subGridPart = localDiscreteFunctionSpace.gridPart();
+      const SubGridType &subGrid = localDiscreteFunctionSpace.grid();
 
       //! right hand side vector of the algebraic local MsFEM problem
-      SubDiscreteFunctionType local_problem_rhs( "rhs of local MsFEM problem", subDiscreteFunctionSpace );
-      local_problem_rhs.clear();
-      
-      // NOTE:
-      // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
-      // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know the result.
+      SubGridDiscreteFunctionType rhs( "RHS of Conservative Flux Problem", localDiscreteFunctionSpace );
+      rhs.clear();
 
       // assemble the stiffness matrix
-      local_problem_op.assemble_matrix( locprob_system_matrix );
-
-
-      //! boundary treatment:
-      typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
-      
-      typedef typename SGLagrangePointSetType :: template Codim< faceCodim > :: SubEntityIteratorType
-        FaceDofIteratorType;
-      
-      const HostGridPartType &hostGridPart = hostDiscreteFunctionSpace_.gridPart();
-     
-      SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
-#if 1
-      for( SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it )
-        {
-
-            const SubgridEntityType &subgrid_entity = *sg_it;
-
-            HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
-            const HostEntityType& host_entity = *host_entity_pointer;
-
-            LocalMatrix local_matrix = locprob_system_matrix.localMatrix( subgrid_entity, subgrid_entity );
-
-            const SGLagrangePointSetType &lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet( subgrid_entity );
-
-            const HostIntersectionIterator iend = hostGridPart.iend( host_entity );
-            for( HostIntersectionIterator iit = hostGridPart.ibegin( host_entity ); iit != iend; ++iit )
-              {
-
-                if ( iit->neighbor() ) //if there is a neighbor entity
-                  {
-                    // check if the neighbor entity is in the subgrid
-                   const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-                   const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
-                   if ( subGrid.template contains<0>( neighborHostEntity ) )
-                    {
-                      continue;
-                    }
-
-                  }
-
-                const int face = (*iit).indexInInside();
-                const FaceDofIteratorType fdend = lagrangePointSet.template endSubEntity< 1 >( face );
-                for( FaceDofIteratorType fdit = lagrangePointSet.template beginSubEntity< 1 >( face ); fdit != fdend; ++fdit )
-                local_matrix.unitRow( *fdit );
-
-              }
-
-          }
-#endif
+      cf_problem_operator.assemble_matrix( flux_prob_system_matrix );
 
       // assemble right hand side of algebraic local msfem problem
-      local_problem_op.assemble_local_RHS( e, local_problem_rhs );
-      // oneLinePrint( std::cout , local_problem_rhs );
+      cf_problem_operator.assemble_RHS( e_i, local_corrector_e_i, rhs );
 
-      // zero boundary condition for 'cell problems':
-      // set Dirichlet Boundary to zero 
-      for( SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it )
-        {
+      // oneLinePrint( std::cout , rhs );
 
-            const SubgridEntityType &subgrid_entity = *sg_it;
-	   
-            HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
-            const HostEntityType& host_entity = *host_entity_pointer;
+      const double norm_rhs = cf_problem_operator.normRHS( rhs );
 
-            HostIntersectionIterator iit = hostGridPart.ibegin( host_entity );
-            const HostIntersectionIterator endiit = hostGridPart.iend( host_entity );
-            for( ; iit != endiit; ++iit ) {
-
-              if ( iit->neighbor() ) //if there is a neighbor entity
-               {
-                 // check if the neighbor entity is in the subgrid
-                 const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-                 const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
-           
-		  if ( subGrid.template contains<0>( neighborHostEntity ) )
-                   {
-                    continue;
-                   }
-
-               }
-
-            SubLocalFunctionType rhsLocal = local_problem_rhs.localFunction( subgrid_entity );
-            const SGLagrangePointSetType &lagrangePointSet
-               = subDiscreteFunctionSpace.lagrangePointSet( subgrid_entity );
-      
-            const int face = (*iit).indexInInside();
-    
-            FaceDofIteratorType faceIterator
-               = lagrangePointSet.template beginSubEntity< faceCodim >( face );
-            const FaceDofIteratorType faceEndIterator
-               = lagrangePointSet.template endSubEntity< faceCodim >( face );
-            for( ; faceIterator != faceEndIterator; ++faceIterator )
-               rhsLocal[ *faceIterator ] = 0;
-            }
-
-        }
-
-      // After boundary treatment:
-      // oneLinePrint( std::cout , local_problem_rhs );
-
-
-      const double norm_rhs = local_problem_op.normRHS( local_problem_rhs );
-
-
-      if ( !( local_problem_rhs.dofsValid() ) )
-        { std :: cout << "Local MsFEM Problem RHS invalid." << std :: endl;
+      if ( !( rhs.dofsValid() ) )
+        { std :: cout << "Local Flux Problem RHS invalid." << std :: endl;
           abort(); }
-
 
       if ( norm_rhs < /*1e-06*/ 1e-30 )
         {
-          local_problem_solution.clear();
-          std :: cout << "Local MsFEM problem with solution zero." << std :: endl;
+          conservative_flux.clear();
+          std :: cout << "Local Flux Problem with solution zero." << std :: endl;
         }
       else
         {
-          InverseLocProbFEMMatrix locprob_fem_biCGStab( locprob_system_matrix, 1e-8, 1e-8, 20000, LOCPROBLEMSOLVER_VERBOSE );
-          locprob_fem_biCGStab( local_problem_rhs, local_problem_solution );
+          InverseFluxProbFEMMatrix flux_prob_biCGStab( flux_prob_system_matrix, 1e-8, 1e-8, 20000, FLUX_SOLVER_VERBOSE );
+          flux_prob_biCGStab( rhs, conservative_flux );
         }
 
-     if ( !(local_problem_solution.dofsValid()) )
+     if ( !(conservative_flux.dofsValid()) )
        {
-         std::cout << "Current solution of the local msfem problem invalid!" << std::endl;
+         std::cout << "Solution of the Local Flux Problem is invalid!" << std::endl;
          std :: abort();
        }
 
-     // oneLinePrint( std::cout , local_problem_solution );
+     // oneLinePrint( std::cout , conservative_flux );
 
 
     }
 
     //! ----------- end method: solve local MsFEM problem ------------------------------------------
+
+#if 0     
 
     // create a hostgrid function from a subgridfunction
     void subgrid_to_hostrid_function( const SubDiscreteFunctionType &sub_func,
