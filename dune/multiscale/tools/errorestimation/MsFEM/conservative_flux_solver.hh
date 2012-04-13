@@ -7,6 +7,9 @@
 #include <dune/common/fmatrix.hh>
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
+
+#include <dune/grid/common/quadraturerules.hh>
+
 #include <dune/fem/operator/common/operator.hh>
 
 
@@ -122,10 +125,13 @@ namespace Dune
     
     typedef typename DiscreteFunctionSpace::IteratorType Iterator;
     typedef typename Iterator::Entity Entity;
+    typedef typename Entity :: EntityPointer EntityPointer;
     typedef typename Entity::Geometry Geometry;
     
     typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
     typedef typename IntersectionIterator::Intersection Intersection;
+    typedef typename Intersection::LocalCoordinate LocalCoordinate;
+
 
     typedef typename SubGridDiscreteFunctionSpace::BaseFunctionSetType SubGridBaseFunctionSet;
     typedef typename SubGridDiscreteFunctionSpace::LagrangePointSetType SubGridLagrangePointSet;
@@ -137,13 +143,15 @@ namespace Dune
     
     typedef typename SubGridPart::IntersectionIteratorType SubGridIntersectionIterator;
     typedef typename SubGridIntersectionIterator::Intersection SubGridIntersection;
-    
+
     typedef CachingQuadrature< GridPart, 0 > Quadrature;
+
+    typedef QuadratureRule< double, 1 > FaceQuadratureRule;
     typedef CachingQuadrature< GridPart, 1 > FaceQuadrature;
-    
+
     typedef CachingQuadrature< SubGridPart, 0 > SubGridQuadrature;
 
-    typedef typename GridType :: template Codim<1> :: Geometry FaceGeometryType;
+    typedef typename GridType :: template Codim< 1 > :: Geometry FaceGeometryType;
 
   public:
 
@@ -219,6 +227,9 @@ namespace Dune
     {
 
       const SubGridEntity &sub_grid_entity = *it;
+
+      EntityPointer host_entity_pointer = subDiscreteFunctionSpace_.gridPart().grid().template getHostEntity<0>( sub_grid_entity );
+
       const SubGridGeometry &sub_grid_geometry = sub_grid_entity.geometry();
       assert( sub_grid_entity.partitionType() == InteriorEntity );
 
@@ -227,57 +238,68 @@ namespace Dune
       const SubGridBaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
       const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
 
-#if 0
-      // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to use a higher order quadrature:
-      Quadrature quadrature( sub_grid_entity, 2*subDiscreteFunctionSpace_.order()+2 );
-      const size_t numQuadraturePoints = quadrature.nop();
-      for( size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
-      {
-
-        // local (barycentric) coordinates (with respect to local grid entity)
-        const typename Quadrature::CoordinateType &local_point = quadrature.point( quadraturePoint );
-	DomainType global_point = sub_grid_geometry.global( local_point );
-
-        const double weight = quadrature.weight( quadraturePoint ) *
-             sub_grid_geometry.integrationElement( local_point );
-
-        // transposed of the the inverse jacobian
-        const FieldMatrix< double, dimension, dimension > &inverse_jac
-          = sub_grid_geometry.jacobianInverseTransposed( local_point );
-
-        for( unsigned int i = 0; i < numBaseFunctions; ++i )
+      const IntersectionIterator iend = discreteFunctionSpace_.gridPart().iend( *host_entity_pointer );
+      for( IntersectionIterator iit = discreteFunctionSpace_.gridPart().ibegin( *host_entity_pointer ); iit != iend; ++iit )
         {
-          // jacobian of the base functions, with respect to the reference element
-          typename BaseFunctionSet::JacobianRangeType gradient_phi_ref_element;
-          baseSet.jacobian( i, quadrature[ quadraturePoint ], gradient_phi_ref_element );
+          FaceQuadrature faceQuadrature( discreteFunctionSpace_.gridPart(), *iit, 2*subDiscreteFunctionSpace_.order()+ 1, FaceQuadrature::INSIDE);
 
-          // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-          inverse_jac.mv( gradient_phi_ref_element[ 0 ], gradient_phi[ i ][ 0 ] );
+          const FaceGeometryType& faceGeometry = iit->geometry();
 
-          baseSet.evaluate( i, quadrature[ quadraturePoint ], phi[ i ]);
+//! spaeter loeschen:
+#if 1
 
-        }
+if ( iit->neighbor() )
+  {
+    EntityPointer outside_it = iit->outside();
+    if ( subDiscreteFunctionSpace_.gridPart().grid().template contains<0>( *outside_it ) == true )
+      { continue; }
+  }
+          // check if face
+#endif
 
-        for( unsigned int i = 0; i < numBaseFunctions; ++i )
-        {
-	  
-          // A( x, \nabla \phi(x) )
-          typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
-          diffusion_operator_.diffusiveFlux( global_point, gradient_phi[ i ], diffusion_in_gradient_phi );
-          for( unsigned int j = 0; j < numBaseFunctions; ++j )
+          const size_t numQuadraturePoints = faceQuadrature.nop();
+
+          RangeType check_sum( 0.0 );
+
+          for( size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
             {
 
-               // stiffness contribution
-               local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[ 0 ] * gradient_phi[ j ][ 0 ]) );
-               // mass contribution (just for stabilization!)
-               //local_matrix.add( j, i, 0.00000001 * weight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+              const LocalCoordinate local_point = faceGeometry.local( faceQuadrature.point( quadraturePoint ) );
 
-            }
+              const DomainType global_point = faceGeometry.global( local_point );
+
+              // integration factors
+              const double integrationFactor = faceGeometry.integrationElement( local_point );
+
+              // weight
+              const double quadratureWeight = faceQuadrature.weight(  quadraturePoint );
+
+              check_sum += integrationFactor * quadratureWeight;
+
+              for( unsigned int i = 0; i < numBaseFunctions; ++i )
+                {
+                  baseSet.evaluate( i, faceQuadrature[ quadraturePoint ], phi[ i ]);
+                }
+
+
+              for( unsigned int i = 0; i < numBaseFunctions; ++i )
+                {
+
+                 for( unsigned int j = 0; j < numBaseFunctions; ++j )
+                   {
+
+                     local_matrix.add( j, i, integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+
+                   }
+
+                }
+
+            } // done loop over all quadrature points
+
+          if ( check_sum != faceGeometry.volume())
+           { std :: cout << "Error in Face Quadrature." << std :: endl; abort(); }
 
         }
-
-      }
-#endif
 
     }
 
@@ -668,28 +690,29 @@ namespace Dune
          std :: abort();
        }
 
-     // oneLinePrint( std::cout , conservative_flux );
+     oneLinePrint( std::cout , conservative_flux );
     
     }
 
     //! ----------- end method: solve local MsFEM problem ------------------------------------------
 
-#if 0     
+
 
     // create a hostgrid function from a subgridfunction
-    void subgrid_to_hostrid_function( const SubDiscreteFunctionType &sub_func,
+    void subgrid_to_hostrid_function( const SubGridDiscreteFunctionType &sub_func,
                                             HostDiscreteFunctionType &host_func )
     {
       
        host_func.clear();
 
-       const SubDiscreteFunctionSpaceType &subDiscreteFunctionSpace = sub_func.space();
-       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();       
-       
+
+       const SubGridDiscreteFunctionSpaceType &subDiscreteFunctionSpace = sub_func.space();
+       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
+
        SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
        for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
           {
-
+#if 0
              const SubgridEntityType &sub_entity = *sub_it;
 
              HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( *sub_it );
@@ -703,11 +726,12 @@ namespace Dune
                {
                  host_loc_value[ i ] = sub_loc_value[ i ];
                }
-
+#endif
           }
+
     }
 
-
+#if 0     
     // method for solving and saving the solutions of the local msfem problems
     // for the whole set of macro-entities and for every unit vector e_i
 

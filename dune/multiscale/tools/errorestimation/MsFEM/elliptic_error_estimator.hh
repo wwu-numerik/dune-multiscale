@@ -1509,7 +1509,7 @@ ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType
 
 flux_problem_solver.solve( e[0], local_problem_solution_e0, conservative_flux_e0 );
 
-
+std :: cout << "Flux Problem solved succesfully." << std :: endl;
 
 
 #endif //! end - first test concerning conservativ flux computation.
