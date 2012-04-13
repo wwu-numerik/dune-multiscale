@@ -1504,7 +1504,9 @@ for( int i = 0; i < dimension ; ++i )
 
 SubGridDiscreteFunctionType conservative_flux_e0( "Conservative Flux for e_0", localDiscreteFunctionSpace );
 
-ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiffusionOperatorType > flux_problem_solver( diffusion_ );
+ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType >
+     flux_problem_solver( fineDiscreteFunctionSpace_, diffusion_ );
+
 flux_problem_solver.solve( e[0], local_problem_solution_e0, conservative_flux_e0 );
 
 

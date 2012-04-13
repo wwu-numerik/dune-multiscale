@@ -79,26 +79,31 @@ namespace Dune
 
 
   // Imp stands for Implementation
-  template< class SubDiscreteFunctionType, class DiffusionOperatorType >
+  template< class SubGridDiscreteFunctionType, class DiscreteFunctionType, class DiffusionOperatorType >
   class ConservativeFluxOperator
-  : public Operator< typename SubDiscreteFunctionType::RangeFieldType,
-                     typename SubDiscreteFunctionType::RangeFieldType,
-		     SubDiscreteFunctionType,
-		     SubDiscreteFunctionType >
+  : public Operator< typename SubGridDiscreteFunctionType::RangeFieldType,
+                     typename SubGridDiscreteFunctionType::RangeFieldType,
+		     SubGridDiscreteFunctionType,
+		     SubGridDiscreteFunctionType >
   {
     
-    typedef ConservativeFluxOperator< SubDiscreteFunctionType, DiffusionOperatorType > This;
+    typedef ConservativeFluxOperator< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType > This;
 
   public:
-    typedef SubDiscreteFunctionType DiscreteFunction;
+    typedef SubGridDiscreteFunctionType SubGridDiscreteFunction;
+    typedef DiscreteFunctionType DiscreteFunction;
     typedef DiffusionOperatorType DiffusionModel;
 
+    typedef typename SubGridDiscreteFunction::DiscreteFunctionSpaceType SubGridDiscreteFunctionSpace;
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
+    
     typedef typename DiscreteFunctionSpace::GridPartType GridPart;
     typedef typename DiscreteFunctionSpace::GridType GridType;
-    typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
 
+    typedef typename SubGridDiscreteFunctionSpace::GridPartType SubGridPart;
+    typedef typename SubGridDiscreteFunctionSpace::GridType SubGridType;
+    
+    typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
     typedef typename DiscreteFunctionSpace::DomainType DomainType;
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
     typedef typename DiscreteFunctionSpace::JacobianRangeType
@@ -109,7 +114,8 @@ namespace Dune
     static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
     typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
-
+    typedef typename SubGridDiscreteFunction::LocalFunctionType SubGridLocalFunction;
+    
     typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
     typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
     typedef typename LagrangePointSet::template Codim< 1 >::SubEntityIteratorType FaceDofIterator;
@@ -121,14 +127,34 @@ namespace Dune
     typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
     typedef typename IntersectionIterator::Intersection Intersection;
 
-    typedef CachingQuadrature< GridPart, 0 > Quadrature;
+    typedef typename SubGridDiscreteFunctionSpace::BaseFunctionSetType SubGridBaseFunctionSet;
+    typedef typename SubGridDiscreteFunctionSpace::LagrangePointSetType SubGridLagrangePointSet;
+    typedef typename SubGridLagrangePointSet::template Codim< 1 >::SubEntityIteratorType SubGridFaceDofIterator;
     
+    typedef typename SubGridDiscreteFunctionSpace::IteratorType SubGridIterator;
+    typedef typename SubGridIterator::Entity SubGridEntity;
+    typedef typename SubGridEntity::Geometry SubGridGeometry;
+    
+    typedef typename SubGridPart::IntersectionIteratorType SubGridIntersectionIterator;
+    typedef typename SubGridIntersectionIterator::Intersection SubGridIntersection;
+    
+    typedef CachingQuadrature< GridPart, 0 > Quadrature;
+    typedef CachingQuadrature< GridPart, 1 > FaceQuadrature;
+    
+    typedef CachingQuadrature< SubGridPart, 0 > SubGridQuadrature;
+
+    typedef typename GridType :: template Codim<1> :: Geometry FaceGeometryType;
+
   public:
-    ConservativeFluxOperator ( const DiscreteFunctionSpace &subDiscreteFunctionSpace, const DiffusionModel &diffusion_op )
+
+    ConservativeFluxOperator ( const SubGridDiscreteFunctionSpace &subDiscreteFunctionSpace,
+                               const DiscreteFunctionSpace &discreteFunctionSpace,
+                               const DiffusionModel &diffusion_op )
     : subDiscreteFunctionSpace_( subDiscreteFunctionSpace ),
+      discreteFunctionSpace_( discreteFunctionSpace ),
       diffusion_operator_( diffusion_op )
     {}
-   
+
   private:
     ConservativeFluxOperator ( const This & );
 
@@ -136,7 +162,7 @@ namespace Dune
 
     // dummy operator
     virtual void
-    operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const;
+    operator() ( const SubGridDiscreteFunction &u, SubGridDiscreteFunction &w ) const;
 
     // assemble stiffness matrix for local problems
     template< class MatrixType >
@@ -146,25 +172,26 @@ namespace Dune
     void assemble_RHS ( // direction 'e_i'
                         JacobianRangeType &e_i,
                         // solution of the local corrector problem
-                        const DiscreteFunction &local_corrector_e_i,
+                        const SubGridDiscreteFunction &local_corrector_e_i,
                         // rhs local msfem problem:
-                        DiscreteFunction &rhs_flux_problem ) const;
+                        SubGridDiscreteFunction &rhs_flux_problem ) const;
 
-    void printLocalRHS( DiscreteFunction &rhs) const;
+    void printLocalRHS( SubGridDiscreteFunction &rhs) const;
 
-    double normRHS( DiscreteFunction &rhs) const;
+    double normRHS( SubGridDiscreteFunction &rhs) const;
 
   private:
-    const DiscreteFunctionSpace &subDiscreteFunctionSpace_;
-    const DiffusionModel &diffusion_operator_;
-
+    const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace_;
+    const DiscreteFunctionSpace& discreteFunctionSpace_;
+    const DiffusionModel& diffusion_operator_;
 
   };
 
   // dummy implementation of "operator()"
   // 'w' = effect of the discrete operator on 'u'
-  template< class DiscreteFunctionImp, class DiffusionImp >
-  void ConservativeFluxOperator< DiscreteFunctionImp, DiffusionImp >::operator() ( const DiscreteFunctionImp &u, DiscreteFunctionImp &w ) const 
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
+  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >
+  :: operator() ( const SubGridDiscreteFunctionImp &u, SubGridDiscreteFunctionImp &w ) const 
   {
 
     std :: cout << "the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy." << std :: endl;
@@ -172,42 +199,35 @@ namespace Dune
 
   }
 
-
+#if 1
   //! assemble system matrix
-  template< class SubDiscreteFunctionImp, class DiffusionImp >
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
   template< class MatrixType >
-  void ConservativeFluxOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matrix ( MatrixType &global_matrix ) const
+  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >::assemble_matrix ( MatrixType &global_matrix ) const
   {
-
 
     typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
     global_matrix.reserve();
     global_matrix.clear();
 
-#if 0
-
-    Problem::ModelProblemData model_info;
-
     // local grid basis functions:
     std::vector< RangeType > phi( subDiscreteFunctionSpace_.mapper().maxNumDofs() );
     
-    // gradient of micro scale base function:
-    std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi( subDiscreteFunctionSpace_.mapper().maxNumDofs() );
-
-    const Iterator end = subDiscreteFunctionSpace_.end();
-    for( Iterator it = subDiscreteFunctionSpace_.begin(); it != end; ++it )
+    const SubGridIterator end = subDiscreteFunctionSpace_.end();
+    for( SubGridIterator it = subDiscreteFunctionSpace_.begin(); it != end; ++it )
     {
 
-      const Entity &sub_grid_entity = *it;
-      const Geometry &sub_grid_geometry = sub_grid_entity.geometry();
+      const SubGridEntity &sub_grid_entity = *it;
+      const SubGridGeometry &sub_grid_geometry = sub_grid_entity.geometry();
       assert( sub_grid_entity.partitionType() == InteriorEntity );
 
       LocalMatrix local_matrix = global_matrix.localMatrix( sub_grid_entity, sub_grid_entity );
 
-      const BaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
+      const SubGridBaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
       const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
 
+#if 0
       // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to use a higher order quadrature:
       Quadrature quadrature( sub_grid_entity, 2*subDiscreteFunctionSpace_.order()+2 );
       const size_t numQuadraturePoints = quadrature.nop();
@@ -257,20 +277,20 @@ namespace Dune
         }
 
       }
+#endif
 
     }
 
-#endif
 
   }
 
 
 
-  template< class DiscreteFunctionImp, class DiffusionImp >
-  void ConservativeFluxOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS( DiscreteFunctionImp &rhs) const
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
+  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >::printLocalRHS( SubGridDiscreteFunctionImp &rhs) const
     {
 
-      typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+      typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
       typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
       typedef typename DiscreteFunctionImp::LocalFunctionType LocalFunctionType;
 
@@ -294,16 +314,16 @@ namespace Dune
     }  // end method
 
 
-  template< class DiscreteFunctionImp, class DiffusionImp >
-  double ConservativeFluxOperator< DiscreteFunctionImp, DiffusionImp >::normRHS( DiscreteFunctionImp &rhs) const
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
+  double ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >::normRHS( SubGridDiscreteFunctionImp &rhs) const
     {
 
       double norm = 0.0;
 
-      typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+      typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
       typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
       typedef typename IteratorType::Entity EntityType;
-      typedef typename DiscreteFunctionImp::LocalFunctionType LocalFunctionType;
+      typedef typename SubGridDiscreteFunctionImp::LocalFunctionType LocalFunctionType;
       typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
       typedef typename DiscreteFunctionSpaceType::GridType GridType;
       typedef typename GridType::template Codim<0>::Geometry
@@ -351,58 +371,46 @@ namespace Dune
   // assemble the right hand side of the conservative flux problem 
   // ----------------------------------------------
 
-  template< class DiscreteFunctionImp, class DiffusionImp >
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
   //template< class MatrixType >
-  void ConservativeFluxOperator< DiscreteFunctionImp, DiffusionImp >::assemble_RHS
+  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >::assemble_RHS
        ( // direction 'e'
          JacobianRangeType &e_i,
          // solution of the local corrector problem
-         const DiscreteFunction &local_corrector_e_i,
+         const SubGridDiscreteFunction &local_corrector_e_i,
          // rhs flux problem:
-         DiscreteFunction &rhs_flux_problem ) const
+         SubGridDiscreteFunction &rhs_flux_problem ) const
   {
-
-
-    typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-    typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
-
-    typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
-    typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-    typedef typename Iterator::Entity Entity;
-    typedef typename Entity::Geometry Geometry;
-
-    typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-    typedef CachingQuadrature< GridPart, 0 > Quadrature;
-
-    const DiscreteFunctionSpace &discreteFunctionSpace = rhs_flux_problem.space();
+    
+    const SubGridDiscreteFunctionSpace &subDiscreteFunctionSpace = rhs_flux_problem.space();
 
     // set entries to zero:
     rhs_flux_problem.clear();
 
     // gradient of micro scale base function:
-    std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
+    std::vector< JacobianRangeType > gradient_phi( subDiscreteFunctionSpace.mapper().maxNumDofs() );
 
     RangeType rhs_L2_Norm = 0.0; 
 
-    const Iterator end = discreteFunctionSpace.end();
-    for( Iterator it = discreteFunctionSpace.begin(); it != end; ++it )
+    const SubGridIterator end = subDiscreteFunctionSpace.end();
+    for( SubGridIterator it = subDiscreteFunctionSpace.begin(); it != end; ++it )
     {
 
-      const Entity &local_grid_entity = *it;
-      const Geometry &geometry = local_grid_entity.geometry();
+      const SubGridEntity &local_grid_entity = *it;
+      const SubGridGeometry &geometry = local_grid_entity.geometry();
       assert( local_grid_entity.partitionType() == InteriorEntity );
 
-      LocalFunction elementOfRHS = rhs_flux_problem.localFunction( local_grid_entity );
+      SubGridLocalFunction elementOfRHS = rhs_flux_problem.localFunction( local_grid_entity );
 
-      const BaseFunctionSet &baseSet = elementOfRHS.baseFunctionSet();
+      const SubGridBaseFunctionSet &baseSet = elementOfRHS.baseFunctionSet();
       const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
 
-      Quadrature quadrature( local_grid_entity, 2*discreteFunctionSpace.order()+2 );
+      SubGridQuadrature quadrature( local_grid_entity, 2*subDiscreteFunctionSpace.order()+2 );
       const size_t numQuadraturePoints = quadrature.nop();
       for( size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
       {
 
-        const typename Quadrature::CoordinateType &local_point = quadrature.point( quadraturePoint );
+        const typename SubGridQuadrature::CoordinateType &local_point = quadrature.point( quadraturePoint );
 
         // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
 
@@ -422,9 +430,13 @@ namespace Dune
         diffusion_operator_.diffusiveFlux( global_point, e_i, diffusion_in_e_i );
 
         JacobianRangeType total_diffusive_flux;
-        total_diffusive_flux[ 0 ] += diffusion_in_e_i[ 0 ];
 
-//! -------------- diffusion in ... ...
+        JacobianRangeType grad_corrector_e_i;
+	SubGridLocalFunction localized_corrector_e_i = local_corrector_e_i.localFunction( local_grid_entity );
+        localized_corrector_e_i.jacobian( quadrature[ quadraturePoint ], grad_corrector_e_i );
+        diffusion_operator_.diffusiveFlux( global_point, grad_corrector_e_i, total_diffusive_flux );       
+
+        total_diffusive_flux[ 0 ] += diffusion_in_e_i[ 0 ];
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
@@ -438,7 +450,7 @@ namespace Dune
 
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
-          elementOfRHS[ i ] -= weight * (diffusion_in_e_i[ 0 ] * gradient_phi[ i ][ 0 ]);
+          elementOfRHS[ i ] -= weight * (total_diffusive_flux[ 0 ] * gradient_phi[ i ][ 0 ]);
 
         }
 
@@ -446,10 +458,9 @@ namespace Dune
 
     } // end for-loop of 'Iterator'
 
-
   }
 
-
+#endif
 
 //! ------------------------------------------------------------------------------------------------
 //! ------------------------------------------------------------------------------------------------
@@ -466,12 +477,11 @@ namespace Dune
 
 
   template< class SubGridDiscreteFunctionType,
-	    class DiffusionOperatorType >
+            class HostDiscreteFunctionType,
+            class DiffusionOperatorType >
   class ConservativeFluxProblemSolver	
   {
   public:
-
-#if 0
 
     //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
@@ -488,15 +498,6 @@ namespace Dune
     //! type of grid
     typedef typename HostDiscreteFunctionSpaceType :: GridType HostGridType;
 
-    //! type of range vectors
-    typedef typename HostDiscreteFunctionSpaceType :: RangeType RangeType;
-    
-    //! type of value of a gradient of a function
-    typedef typename HostDiscreteFunctionSpaceType :: JacobianRangeType JacobianRangeType;
-
-    //! type of range vectors
-    typedef typename HostDiscreteFunctionSpaceType :: DomainType DomainType;
-
     typedef typename HostGridType :: Traits :: LeafIndexSet HostGridLeafIndexSet;
 
     typedef typename HostDiscreteFunctionSpaceType :: IteratorType HostGridEntityIteratorType;
@@ -510,9 +511,8 @@ namespace Dune
     typedef typename HostDiscreteFunctionType :: LocalFunctionType HostLocalFunctionType;
     
     typedef typename HostGridPartType :: IntersectionIteratorType HostIntersectionIterator;
-#endif
 
-#if 1
+
     //! ---------------- typedefs for the SubGridDiscreteFunctionSpace -----------------------
     //  ( typedefs for the local grid and the corresponding local ('sub') )discrete space ) 
 
@@ -575,22 +575,18 @@ namespace Dune
     // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
     typedef OEMBICGSTABOp< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
 
-    // discrete elliptic operator describing the elliptic local msfem problems
-    typedef ConservativeFluxOperator< SubGridDiscreteFunctionType, DiffusionOperatorType > ConservativeFluxOperatorType;
-
   private:
 
     const DiffusionOperatorType& diffusion_;
-
-    //!const SubGridDiscreteFunctionSpaceType& subgridDiscreteFunctionSpace_;
+    const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
 
   public:
 
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
-    ConservativeFluxProblemSolver( //const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
+    ConservativeFluxProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
                                    const DiffusionOperatorType& diffusion_operator )
-    : //hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
+    : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
       diffusion_( diffusion_operator )
      { }
 
@@ -608,7 +604,6 @@ namespace Dune
       stream << " ] " << std::endl;
      }
 
-#endif
 
 
 
@@ -622,6 +617,7 @@ namespace Dune
       // set solution equal to zero:
       conservative_flux.clear();
       
+
       const SubGridDiscreteFunctionSpaceType &localDiscreteFunctionSpace = local_corrector_e_i.space();
 
 
@@ -630,7 +626,9 @@ namespace Dune
 
       //! define the discrete (elliptic) local MsFEM problem operator
       // ( effect of the discretized differential operator on a certain discrete function )
-      ConservativeFluxOperatorType cf_problem_operator( localDiscreteFunctionSpace, diffusion_ );
+      // discrete elliptic operator describing the elliptic local msfem problems
+      typedef ConservativeFluxOperator< SubGridDiscreteFunctionType, HostDiscreteFunctionType, DiffusionOperatorType > ConservativeFluxOperatorType;
+      ConservativeFluxOperatorType cf_problem_operator( localDiscreteFunctionSpace, hostDiscreteFunctionSpace_, diffusion_ );
 
       const SubGridPartType &subGridPart = localDiscreteFunctionSpace.gridPart();
       const SubGridType &subGrid = localDiscreteFunctionSpace.grid();
@@ -671,8 +669,7 @@ namespace Dune
        }
 
      // oneLinePrint( std::cout , conservative_flux );
-
-
+    
     }
 
     //! ----------- end method: solve local MsFEM problem ------------------------------------------
