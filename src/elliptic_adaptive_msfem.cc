@@ -540,10 +540,10 @@ grid_coarse.postAdapt();
 // error estimation
 #if 1
 
-  MsFEMErrorEstimatorType estimator( discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f );
+  MsFEMErrorEstimatorType estimator( discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_ );
   estimator.adaptive_refinement( grid_coarse,
 				  msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution,
-				  data_file, path_ );
+				  data_file );
 
 
 #endif

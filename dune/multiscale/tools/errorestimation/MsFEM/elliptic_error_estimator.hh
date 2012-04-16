@@ -46,6 +46,7 @@ namespace Dune
     typedef typename GridType :: Traits :: LeafIndexSet LeafIndexSetType;
     
     typedef typename GridPartType :: IntersectionIteratorType IntersectionIteratorType;
+    typedef typename IntersectionIteratorType::Intersection Intersection;
     typedef typename GridType :: template Codim<0> :: Entity EntityType; 
     typedef typename GridType :: template Codim<0> :: EntityPointer            EntityPointerType; 
     typedef typename GridType :: template Codim<0> :: Geometry                 EntityGeometryType; 
@@ -110,6 +111,7 @@ namespace Dune
     SubGridListType& subgrid_list_;
     const DiffusionOperatorType &diffusion_;
     const SourceType& f_;
+    std :: string& path_;
 
 
   public:
@@ -118,13 +120,88 @@ namespace Dune
                           MacroMicroGridSpecifierType& specifier,
                           SubGridListType& subgrid_list,
                           const DiffusionOperatorType& diffusion,
-                          const SourceType& f )
+                          const SourceType& f,
+                          std :: string& path )
     : fineDiscreteFunctionSpace_( fineDiscreteFunctionSpace ),
       specifier_( specifier ),
       subgrid_list_( subgrid_list ),
       diffusion_( diffusion ),
-      f_( f )
+      f_( f ),
+      path_( path )
     {
+    }
+
+
+    // create a hostgrid function from a subgridfunction
+    void subgrid_to_hostrid_function( const SubGridDiscreteFunctionType &sub_func,
+                                            DiscreteFunctionType &host_func )
+    {
+
+       host_func.clear();
+
+       const SubGridDiscreteFunctionSpaceType &subDiscreteFunctionSpace = sub_func.space();
+       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();       
+       
+       SubGridIteratorType sub_endit = subDiscreteFunctionSpace.end();
+       for( SubGridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+          {
+
+             const SubGridEntityType &sub_entity = *sub_it;
+
+             EntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( *sub_it );
+             const EntityType& host_entity = *host_entity_pointer;
+
+             SubGridLocalFunctionType sub_loc_value = sub_func.localFunction( sub_entity );
+             LocalFunctionType host_loc_value = host_func.localFunction( host_entity );
+
+             const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+             for( unsigned int i = 0; i < numBaseFunctions; ++i )
+               {
+                 host_loc_value[ i ] = sub_loc_value[ i ];
+               }
+
+          }
+    }
+
+
+
+
+
+    // create twoa hostgrid functions from two subgridfunctions
+    void subgrid_to_hostrid_function( const SubGridDiscreteFunctionType &sub_func_1,
+                                      const SubGridDiscreteFunctionType &sub_func_2,
+                                            DiscreteFunctionType &host_func_1,
+                                            DiscreteFunctionType &host_func_2 )
+    {
+
+       host_func_1.clear();
+       host_func_2.clear();
+
+       const SubGridDiscreteFunctionSpaceType &subDiscreteFunctionSpace = sub_func_1.space();
+       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();       
+       
+       SubGridIteratorType sub_endit = subDiscreteFunctionSpace.end();
+       for( SubGridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+          {
+
+             const SubGridEntityType &sub_entity = *sub_it;
+
+             EntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( *sub_it );
+             const EntityType& host_entity = *host_entity_pointer;
+
+             SubGridLocalFunctionType sub_loc_value_1 = sub_func_1.localFunction( sub_entity );
+             SubGridLocalFunctionType sub_loc_value_2 = sub_func_2.localFunction( sub_entity );
+             LocalFunctionType host_loc_value_1 = host_func_1.localFunction( host_entity );
+             LocalFunctionType host_loc_value_2 = host_func_2.localFunction( host_entity );
+
+             const unsigned int numBaseFunctions = sub_loc_value_1.baseFunctionSet().numBaseFunctions();
+             for( unsigned int i = 0; i < numBaseFunctions; ++i )
+               {
+                 host_loc_value_1[ i ] = sub_loc_value_1[ i ];
+                 host_loc_value_2[ i ] = sub_loc_value_2[ i ];
+               }
+
+          }
     }
 
 
@@ -198,14 +275,240 @@ namespace Dune
 
         return sqrt(local_indicator);
     }
-    
+
+    // is a given point on a given face?
+    bool point_on_face( const Intersection& face, const DomainType& point )
+     {
+
+       DomainType corner_0 = face.geometry().corner(0);
+       DomainType corner_1 = face.geometry().corner(1);
+
+       if ( corner_0[0] == corner_1[0] )
+        {
+          if ( point[0] != corner_0[0] )
+            { return false; }
+          else
+            {
+              RangeType lambda = ( point[1] - corner_1[1] ) / ( corner_0[1] - corner_1[1] );
+              if ( (lambda >= 0.0) && (lambda <= 1.0) )
+               { return true; }
+              else
+               { return false; }
+            }
+        }
+       else
+        {
+          RangeType lambda = ( point[0] - corner_1[0] ) / ( corner_0[0] - corner_1[0] );
+
+          if ( (lambda >= 0.0) && (lambda <= 1.0) )
+           {
+             RangeType convex_comb = (lambda * corner_0[1]) + ((1.0 - lambda) * corner_1[1]);
+             if ( convex_comb == point[1] )
+              { return true; }
+             else
+              { return false; }
+           }
+          else
+           { return false; }
+
+        }
+     }
+
+    // is a given face part of another given coarse face
+    bool is_subface( const Intersection& fine_face, const Intersection& coarse_face )
+     {
+
+       DomainType corner_0 = fine_face.geometry().corner(0);
+       DomainType corner_1 = fine_face.geometry().corner(1);
+
+       if ( point_on_face( coarse_face, corner_0 ) && point_on_face( coarse_face, corner_1 ) )
+        { return true; }
+       else
+        { return false; }
+
+     }
+
 #if 1
     // jump in conservative flux
     RangeType jump_conservative_flux( const EntityType &coarse_entity )
      {
-       
+
        RangeType jump(0.0);
-       
+
+       const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
+       const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
+
+       int index_coarse_entity = coarseGridLeafIndexSet.index( coarse_entity );
+
+       //! ---- get sub grid that for coarse entity
+
+       // the sub grid U(T) that belongs to the coarse_grid_entity T
+       SubGridType& sub_grid_U_T = subgrid_list_.getSubGrid( index_coarse_entity );
+       SubGridPart subGridPart( sub_grid_U_T );
+
+       SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace( subGridPart );
+
+       SubGridDiscreteFunctionType conservative_flux_coarse_ent_e0( "Conservative Flux on coarse entity for e_0", localDiscreteFunctionSpace );
+       conservative_flux_coarse_ent_e0.clear();
+
+       SubGridDiscreteFunctionType conservative_flux_coarse_ent_e1( "Conservative Flux on coarse entity for e_1", localDiscreteFunctionSpace );
+       conservative_flux_coarse_ent_e1.clear();
+
+       // --------- load local solutions -------
+
+       char location_lps_0[50];
+       sprintf( location_lps_0, "_conservativeFlux_e_%d_sg_%d", 0, index_coarse_entity );
+       std::string location_lps_s_0( location_lps_0 );
+
+       std :: string cf_solution_location_0;
+
+       // the file/place, where we saved the solutions conservative flux problems problems
+       cf_solution_location_0 = path_ + "/cf_problems/" + location_lps_s_0;
+
+       bool reader_is_open = false;
+       // reader for data file:
+       DiscreteFunctionReader discrete_function_reader_0( (cf_solution_location_0).c_str() );
+       reader_is_open = discrete_function_reader_0.open();
+
+       if (reader_is_open)
+        { discrete_function_reader_0.read( 0, conservative_flux_coarse_ent_e0 ); }
+
+       // flux for e_1 ...
+
+       char location_lps_1[50];
+       sprintf( location_lps_1, "_conservativeFlux_e_%d_sg_%d", 1, index_coarse_entity );
+       std::string location_lps_s_1( location_lps_1 );
+
+       std :: string cf_solution_location_1;
+
+       // the file/place, where we saved the solutions conservative flux problems problems
+       cf_solution_location_1 = path_ + "/cf_problems/" + location_lps_s_1;
+
+       reader_is_open = false;
+       // reader for data file:
+       DiscreteFunctionReader discrete_function_reader_1( (cf_solution_location_1).c_str() );
+       reader_is_open = discrete_function_reader_1.open();
+
+       if (reader_is_open)
+        { discrete_function_reader_1.read( 0, conservative_flux_coarse_ent_e1 ); }
+
+       DiscreteFunctionType cflux_coarse_ent_e0_host( "Conservative Flux on coarse entity for e_0", fineDiscreteFunctionSpace_ );
+       DiscreteFunctionType cflux_coarse_ent_e1_host( "Conservative Flux on coarse entity for e_1", fineDiscreteFunctionSpace_ );
+
+       subgrid_to_hostrid_function( conservative_flux_coarse_ent_e0,
+                                    conservative_flux_coarse_ent_e1,
+                                    cflux_coarse_ent_e0_host,
+                                    cflux_coarse_ent_e1_host );
+
+       // flux for each neighbor entity
+       DiscreteFunctionType* cflux_neighbor_ent_e0_host[ 3 ];
+       DiscreteFunctionType* cflux_neighbor_ent_e1_host[ 3 ];
+
+       Intersection coarse_face[ 3 ];
+
+       const GridPartType &coarseGridPart = specifier_.coarseSpace().gridPart();
+
+       int local_face_index = 0;
+       // compute the size of the faces of the entities and selected the largest.
+       IntersectionIteratorType endnit = coarseGridPart.iend( coarse_entity );
+       for( IntersectionIteratorType face_it = coarseGridPart.ibegin( coarse_entity ); face_it != endnit ; ++face_it)
+        {
+
+          coarse_face[ local_face_index ] = face_it;
+
+          if ( face_it->neighbor() )
+            {
+              EntityPointerType outside_it = face_it->outside();
+
+              EntityPointerType father_of_neighbor = outside_it;
+              for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
+                 father_of_neighbor = father_of_neighbor->father();
+
+              bool father_found = coarseGridLeafIndexSet.contains( *father_of_neighbor );
+              while ( father_found == false )
+               {
+                father_of_neighbor = father_of_neighbor->father();
+                father_found = coarseGridLeafIndexSet.contains( *father_of_neighbor );
+               }
+
+              int index_coarse_neighbor_entity = coarseGridLeafIndexSet.index( *father_of_neighbor );
+
+              // --- get subgrids and load fluxes ---
+
+              SubGridType& sub_grid_neighbor_U_T = subgrid_list_.getSubGrid( index_coarse_neighbor_entity );
+
+              SubGridPart subGridPart_neighbor( sub_grid_neighbor_U_T );
+              SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_neighbor( subGridPart_neighbor );
+
+              SubGridDiscreteFunctionType conservative_flux_coarse_ent_e0_neighbor( "Conservative Flux on neighbor coarse entity for e_0", localDiscreteFunctionSpace_neighbor );
+              conservative_flux_coarse_ent_e0_neighbor.clear();
+
+              SubGridDiscreteFunctionType conservative_flux_coarse_ent_e1_neighbor( "Conservative Flux on neighbor coarse entity for e_1", localDiscreteFunctionSpace_neighbor );
+              conservative_flux_coarse_ent_e1_neighbor.clear();
+
+              // --------- load local solutions -------
+
+              char location_lps_0_neighbor[50];
+              sprintf( location_lps_0_neighbor, "_conservativeFlux_e_%d_sg_%d", 0, index_coarse_neighbor_entity );
+              std::string location_lps_s_0_neighbor( location_lps_0_neighbor );
+
+              std :: string cf_solution_location_0_neighbor;
+
+              // the file/place, where we saved the solutions conservative flux problems problems
+              cf_solution_location_0_neighbor = path_ + "/cf_problems/" + location_lps_s_0_neighbor;
+
+              reader_is_open = false;
+              // reader for data file:
+              DiscreteFunctionReader discrete_function_reader_0_neighbor( (cf_solution_location_0_neighbor).c_str() );
+              reader_is_open = discrete_function_reader_0_neighbor.open();
+
+              if (reader_is_open)
+               { discrete_function_reader_0_neighbor.read( 0, conservative_flux_coarse_ent_e0_neighbor ); }
+
+              // flux for e_1 ...
+
+              char location_lps_1_neighbor[50];
+              sprintf( location_lps_1_neighbor, "_conservativeFlux_e_%d_sg_%d", 1, index_coarse_neighbor_entity );
+              std::string location_lps_s_1_neighbor( location_lps_1_neighbor );
+
+              std :: string cf_solution_location_1_neighbor;
+
+              // the file/place, where we saved the solutions conservative flux problems problems
+              cf_solution_location_1_neighbor = path_ + "/cf_problems/" + location_lps_s_1_neighbor;
+
+              reader_is_open = false;
+              // reader for data file:
+              DiscreteFunctionReader discrete_function_reader_1_neighbor( (cf_solution_location_1_neighbor).c_str() );
+              reader_is_open = discrete_function_reader_1_neighbor.open();
+
+              if (reader_is_open)
+               { discrete_function_reader_1_neighbor.read( 0, conservative_flux_coarse_ent_e1_neighbor ); }
+
+              cflux_neighbor_ent_e0_host[ local_face_index ] = new DiscreteFunctionType ( "Conservative Flux on neighbor coarse entity for e_0", fineDiscreteFunctionSpace_ );
+
+              cflux_neighbor_ent_e1_host[ local_face_index ] = new DiscreteFunctionType ( "Conservative Flux on neighbor coarse entity for e_1", fineDiscreteFunctionSpace_ );
+
+              subgrid_to_hostrid_function( conservative_flux_coarse_ent_e0_neighbor,
+                                           conservative_flux_coarse_ent_e1_neighbor,
+                                           cflux_neighbor_ent_e0_host[ local_face_index ],
+                                           cflux_neighbor_ent_e1_host[ local_face_index ] );
+            }
+
+          local_face_index += 1;
+        }
+
+       if ( local_face_index != 3 )
+        { std :: cout << "Error! Implementation only for triangular mesh in 2d!" << std :: endl; abort(); }
+
+
+// is_subface( fine_face, coarse_face[ local_face_index ] )
+
+
+// laufe jetzt ueber das Subgrid der Coarse entity
+// wandele die sub entities in host entities um und nutze den 'subgrid intersection iterator'
+// checke ob die Intersection Teil einer coarse intersection ist
+// wenn ja addiere die jeweiligen conservative fluxes ausgewertet im Quadraturpunkt auf auf dem subgrid face.
+
      }
 #endif
     
@@ -1392,14 +1695,13 @@ namespace Dune
                               const DiscreteFunctionType& msfem_solution,
                               const DiscreteFunctionType& msfem_coarse_part,
                               const DiscreteFunctionType& msfem_fine_part,
-                              std :: ofstream& data_file,
-                              std :: string path )
+                              std :: ofstream& data_file )
     {
       
        std :: cout << "Start computing conservative fluxes..." << std :: endl;
       
        ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType, MacroMicroGridSpecifierImp >
-           flux_problem_solver( fineDiscreteFunctionSpace_, diffusion_, specifier_, data_file, path );
+           flux_problem_solver( fineDiscreteFunctionSpace_, diffusion_, specifier_, data_file, path_ );
 
        flux_problem_solver.solve_all( subgrid_list_ );
        
@@ -1489,7 +1791,7 @@ namespace Dune
           std :: string local_solution_location;
 
           // the file/place, where we saved the solutions of the cell problems
-          local_solution_location = path + location_lps_s;
+          local_solution_location = path_ + location_lps_s;
 
           bool reader_is_open = false;
           // reader for the cell problem data file:
