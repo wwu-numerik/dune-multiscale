@@ -199,6 +199,16 @@ namespace Dune
         return sqrt(local_indicator);
     }
     
+#if 1
+    // jump in conservative flux
+    RangeType jump_conservative_flux( const EntityType &coarse_entity )
+     {
+       
+       RangeType jump(0.0);
+       
+     }
+#endif
+    
 #if 0
 
     // \eta_T^{app}
@@ -1385,6 +1395,17 @@ namespace Dune
                               std :: ofstream& data_file,
                               std :: string path )
     {
+      
+       std :: cout << "Start computing conservative fluxes..." << std :: endl;
+      
+       ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType, MacroMicroGridSpecifierImp >
+           flux_problem_solver( fineDiscreteFunctionSpace_, diffusion_, specifier_, data_file, path );
+
+       flux_problem_solver.solve_all( subgrid_list_ );
+       
+       std :: cout << "Conservative fluxes computed successfully." << std :: endl;
+       
+      
        std :: cout << "Starting error estimation..." << std :: endl;
 
        const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
@@ -1425,6 +1446,7 @@ namespace Dune
 
           loc_coarse_residual[ global_index_entity ] = indicator_f( *coarse_grid_it );
           total_coarse_residual += pow( loc_coarse_residual[ global_index_entity ], 2.0 );
+
 
 //! loeschen oder einbinden?
 #if 0
@@ -1483,37 +1505,6 @@ namespace Dune
            { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
 
 #endif
-
-//! first test concerning conservativ flux computation:
-#if 1
-
-//! wir brauchen hier eigentlich noch ein neues Subgrid!!!
-
-//!generalize:
-#if 1
-JacobianRangeType e[dimension];
-for( int i = 0; i < dimension ; ++i )
-  for( int j = 0; j < dimension ; ++j )
-    {
-      if ( i == j )
-        { e[i][0][j] = 1.0; }
-      else
-        { e[i][0][j] = 0.0; }
-    }
-#endif
-
-SubGridDiscreteFunctionType conservative_flux_e0( "Conservative Flux for e_0", localDiscreteFunctionSpace );
-
-ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType >
-     flux_problem_solver( fineDiscreteFunctionSpace_, diffusion_ );
-
-flux_problem_solver.solve( e[0], local_problem_solution_e0, conservative_flux_e0 );
-
-std :: cout << "Flux Problem solved succesfully." << std :: endl;
-
-
-#endif //! end - first test concerning conservativ flux computation.
-
 
 #if 1
 

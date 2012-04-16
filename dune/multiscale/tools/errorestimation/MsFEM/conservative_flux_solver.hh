@@ -82,7 +82,7 @@ namespace Dune
 
 
   // Imp stands for Implementation
-  template< class SubGridDiscreteFunctionType, class DiscreteFunctionType, class DiffusionOperatorType >
+  template< class SubGridDiscreteFunctionType, class DiscreteFunctionType, class DiffusionOperatorType, class MacroMicroGridSpecifierType >
   class ConservativeFluxOperator
   : public Operator< typename SubGridDiscreteFunctionType::RangeFieldType,
                      typename SubGridDiscreteFunctionType::RangeFieldType,
@@ -90,7 +90,7 @@ namespace Dune
 		     SubGridDiscreteFunctionType >
   {
     
-    typedef ConservativeFluxOperator< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType > This;
+    typedef ConservativeFluxOperator< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType, MacroMicroGridSpecifierType > This;
 
   public:
     typedef SubGridDiscreteFunctionType SubGridDiscreteFunction;
@@ -157,10 +157,12 @@ namespace Dune
 
     ConservativeFluxOperator ( const SubGridDiscreteFunctionSpace &subDiscreteFunctionSpace,
                                const DiscreteFunctionSpace &discreteFunctionSpace,
-                               const DiffusionModel &diffusion_op )
+                               const DiffusionModel &diffusion_op,
+                               MacroMicroGridSpecifierType& specifier )
     : subDiscreteFunctionSpace_( subDiscreteFunctionSpace ),
       discreteFunctionSpace_( discreteFunctionSpace ),
-      diffusion_operator_( diffusion_op )
+      diffusion_operator_( diffusion_op ),
+      specifier_( specifier )
     {}
 
   private:
@@ -174,13 +176,14 @@ namespace Dune
 
     // assemble stiffness matrix for local problems
     template< class MatrixType >
-    void assemble_matrix ( MatrixType &global_matrix ) const;
+    void assemble_matrix ( const int sub_grid_id, MatrixType &global_matrix ) const;
 
     // the right hand side assembler methods
     void assemble_RHS ( // direction 'e_i'
                         JacobianRangeType &e_i,
                         // solution of the local corrector problem
                         const SubGridDiscreteFunction &local_corrector_e_i,
+                        const int sub_grid_id,
                         // rhs local msfem problem:
                         SubGridDiscreteFunction &rhs_flux_problem ) const;
 
@@ -192,13 +195,14 @@ namespace Dune
     const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace_;
     const DiscreteFunctionSpace& discreteFunctionSpace_;
     const DiffusionModel& diffusion_operator_;
+    MacroMicroGridSpecifierType& specifier_;
 
   };
 
   // dummy implementation of "operator()"
   // 'w' = effect of the discrete operator on 'u'
-  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
-  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp, class MacroMicroGridSpecifierImp >
+  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp, MacroMicroGridSpecifierImp >
   :: operator() ( const SubGridDiscreteFunctionImp &u, SubGridDiscreteFunctionImp &w ) const 
   {
 
@@ -209,9 +213,10 @@ namespace Dune
 
 #if 1
   //! assemble system matrix
-  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp, class MacroMicroGridSpecifierImp >
   template< class MatrixType >
-  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >::assemble_matrix ( MatrixType &global_matrix ) const
+  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp, MacroMicroGridSpecifierImp >
+  ::assemble_matrix ( const int sub_grid_id, MatrixType &global_matrix ) const
   {
 
     typedef typename MatrixType::LocalMatrixType LocalMatrix;
@@ -229,7 +234,23 @@ namespace Dune
       const SubGridEntity &sub_grid_entity = *it;
 
       EntityPointer host_entity_pointer = subDiscreteFunctionSpace_.gridPart().grid().template getHostEntity<0>( sub_grid_entity );
-
+        
+      typedef typename GridType :: Traits :: LeafIndexSet CoarseGridLeafIndexSet;
+      const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
+    
+      EntityPointer father_of_sub_grid_entity = host_entity_pointer;
+      for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
+         father_of_sub_grid_entity = father_of_sub_grid_entity->father();
+      
+      bool father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
+      while ( father_found == false )
+          {
+             father_of_sub_grid_entity = father_of_sub_grid_entity->father();
+             father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
+          }
+          
+      int coarse_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
+      
       const SubGridGeometry &sub_grid_geometry = sub_grid_entity.geometry();
       assert( sub_grid_entity.partitionType() == InteriorEntity );
 
@@ -245,16 +266,55 @@ namespace Dune
 
           const FaceGeometryType& faceGeometry = iit->geometry();
 
-//! spaeter loeschen:
 #if 1
+          bool set_zero = false;
+          if ( coarse_index != sub_grid_id )
+            { set_zero = true; }
 
-if ( iit->neighbor() )
-  {
-    EntityPointer outside_it = iit->outside();
-    if ( subDiscreteFunctionSpace_.gridPart().grid().template contains<0>( *outside_it ) == true )
-      { continue; }
-  }
+          if ( (iit->neighbor()) && (set_zero == false) )
+            {
+              EntityPointer outside_it = iit->outside();
+
+              EntityPointer father_of_neighbor = outside_it;
+              for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
+                 father_of_neighbor = father_of_neighbor->father();
+      
+              father_found = coarseGridLeafIndexSet.contains( *father_of_neighbor );
+              while ( father_found == false )
+               {
+                father_of_neighbor = father_of_neighbor->father();
+                father_found = coarseGridLeafIndexSet.contains( *father_of_neighbor );
+               }
+
+             bool entities_identical = true;
+             int number_of_nodes = (*father_of_neighbor).template count<2>();
+             for ( int k = 0; k < number_of_nodes; k += 1 )
+               {
+                 if ( !(father_of_sub_grid_entity->geometry().corner(k) == father_of_neighbor->geometry().corner(k)) )
+                      { entities_identical = false; }
+               }
+
+             if ( entities_identical == true )
+	      {
+		 set_zero = true;
+	      } 
+
+            }
+
+//! old:
+#if 0
+          bool set_zero = false;
+          if ( iit->neighbor() )
+            {
+              EntityPointer outside_it = iit->outside();
+              if ( subDiscreteFunctionSpace_.gridPart().grid().template contains<0>( *outside_it ) == true )
+               {
+		 set_zero = true;
+		 
+	      }//continue; }
+            }
           // check if face
+#endif
 #endif
 
           const size_t numQuadraturePoints = faceQuadrature.nop();
@@ -288,7 +348,14 @@ if ( iit->neighbor() )
                  for( unsigned int j = 0; j < numBaseFunctions; ++j )
                    {
 
-                     local_matrix.add( j, i, integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+                     if ( set_zero == false )
+                      {  
+                        local_matrix.add( j, i, integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+                      }
+                     else
+                      { // stabilization (should be close to zero):
+                        local_matrix.add( j, i, 0.00000001 * integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+                      }
 
                    }
 
@@ -308,8 +375,9 @@ if ( iit->neighbor() )
 
 
 
-  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
-  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >::printLocalRHS( SubGridDiscreteFunctionImp &rhs) const
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp, class MacroMicroGridSpecifierImp >
+  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp, MacroMicroGridSpecifierImp >
+  ::printLocalRHS( SubGridDiscreteFunctionImp &rhs) const
     {
 
       typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
@@ -336,8 +404,9 @@ if ( iit->neighbor() )
     }  // end method
 
 
-  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
-  double ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >::normRHS( SubGridDiscreteFunctionImp &rhs) const
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp, class MacroMicroGridSpecifierImp >
+  double ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp, MacroMicroGridSpecifierImp >
+  ::normRHS( SubGridDiscreteFunctionImp &rhs) const
     {
 
       double norm = 0.0;
@@ -393,13 +462,15 @@ if ( iit->neighbor() )
   // assemble the right hand side of the conservative flux problem 
   // ----------------------------------------------
 
-  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp >
+  template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp, class MacroMicroGridSpecifierImp >
   //template< class MatrixType >
-  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp >::assemble_RHS
+  void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp, MacroMicroGridSpecifierImp >
+  ::assemble_RHS
        ( // direction 'e'
          JacobianRangeType &e_i,
          // solution of the local corrector problem
          const SubGridDiscreteFunction &local_corrector_e_i,
+         const int sub_grid_id,
          // rhs flux problem:
          SubGridDiscreteFunction &rhs_flux_problem ) const
   {
@@ -419,6 +490,30 @@ if ( iit->neighbor() )
     {
 
       const SubGridEntity &local_grid_entity = *it;
+      
+#if 1
+      EntityPointer host_entity_pointer = subDiscreteFunctionSpace.gridPart().grid().template getHostEntity<0>( local_grid_entity );
+        
+      typedef typename GridType :: Traits :: LeafIndexSet CoarseGridLeafIndexSet;
+      const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
+    
+      EntityPointer father_of_sub_grid_entity = host_entity_pointer;
+      for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
+         father_of_sub_grid_entity = father_of_sub_grid_entity->father();
+      
+      bool father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
+      while ( father_found == false )
+          {
+             father_of_sub_grid_entity = father_of_sub_grid_entity->father();
+             father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
+          }
+          
+      int coarse_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
+      
+      if ( coarse_index != sub_grid_id )
+       { continue; }
+#endif   
+      
       const SubGridGeometry &geometry = local_grid_entity.geometry();
       assert( local_grid_entity.partitionType() == InteriorEntity );
 
@@ -500,10 +595,13 @@ if ( iit->neighbor() )
 
   template< class SubGridDiscreteFunctionType,
             class HostDiscreteFunctionType,
-            class DiffusionOperatorType >
+            class DiffusionOperatorType,
+	    class MacroMicroGridSpecifierImp >
   class ConservativeFluxProblemSolver	
   {
   public:
+    
+    typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
 
     //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
@@ -533,8 +631,11 @@ if ( iit->neighbor() )
     typedef typename HostDiscreteFunctionType :: LocalFunctionType HostLocalFunctionType;
     
     typedef typename HostGridPartType :: IntersectionIteratorType HostIntersectionIterator;
+    
+    typedef typename HostGridType :: Traits :: LeafIndexSet LeafIndexSetType;
 
-
+    static const int dimension = HostGridType::dimension;
+    
     //! ---------------- typedefs for the SubGridDiscreteFunctionSpace -----------------------
     //  ( typedefs for the local grid and the corresponding local ('sub') )discrete space ) 
 
@@ -594,7 +695,7 @@ if ( iit->neighbor() )
 
     typedef SparseRowMatrixOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType, FluxProbMatrixTraits > FluxProbFEMMatrix;
 
-    // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
+    // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp /*CGInverseOp*/
     typedef OEMBICGSTABOp< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
 
   private:
@@ -602,14 +703,27 @@ if ( iit->neighbor() )
     const DiffusionOperatorType& diffusion_;
     const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
 
+    MacroMicroGridSpecifierType& specifier_;
+    
+    // path where to save the data output
+    std :: string path_;
+    
+    std :: ofstream *data_file_;
+    
   public:
 
 
     //! constructor - with diffusion operator A^{\epsilon}(x)
     ConservativeFluxProblemSolver( const HostDiscreteFunctionSpaceType &hostDiscreteFunctionSpace,
-                                   const DiffusionOperatorType& diffusion_operator )
+                                   const DiffusionOperatorType& diffusion_operator,
+                                   MacroMicroGridSpecifierType& specifier,
+                                   std :: ofstream &data_file,
+                                   std :: string path = "" )
     : hostDiscreteFunctionSpace_( hostDiscreteFunctionSpace ),
-      diffusion_( diffusion_operator )
+      diffusion_( diffusion_operator ),
+      specifier_( specifier ),
+      data_file_( &data_file ),
+      path_( path )
      { }
 
 
@@ -633,6 +747,8 @@ if ( iit->neighbor() )
 
     void solve( JacobianRangeType &e_i, // direction 'e_i'
                 const SubGridDiscreteFunctionType &local_corrector_e_i,
+                const int sub_grid_id,
+                const int direction_index,
                 SubGridDiscreteFunctionType &conservative_flux )
     {
 
@@ -649,8 +765,11 @@ if ( iit->neighbor() )
       //! define the discrete (elliptic) local MsFEM problem operator
       // ( effect of the discretized differential operator on a certain discrete function )
       // discrete elliptic operator describing the elliptic local msfem problems
-      typedef ConservativeFluxOperator< SubGridDiscreteFunctionType, HostDiscreteFunctionType, DiffusionOperatorType > ConservativeFluxOperatorType;
-      ConservativeFluxOperatorType cf_problem_operator( localDiscreteFunctionSpace, hostDiscreteFunctionSpace_, diffusion_ );
+      typedef ConservativeFluxOperator< SubGridDiscreteFunctionType,
+                                        HostDiscreteFunctionType,
+                                        DiffusionOperatorType,
+                                        MacroMicroGridSpecifierType > ConservativeFluxOperatorType;
+      ConservativeFluxOperatorType cf_problem_operator( localDiscreteFunctionSpace, hostDiscreteFunctionSpace_, diffusion_, specifier_ );
 
       const SubGridPartType &subGridPart = localDiscreteFunctionSpace.gridPart();
       const SubGridType &subGrid = localDiscreteFunctionSpace.grid();
@@ -660,10 +779,10 @@ if ( iit->neighbor() )
       rhs.clear();
 
       // assemble the stiffness matrix
-      cf_problem_operator.assemble_matrix( flux_prob_system_matrix );
+      cf_problem_operator.assemble_matrix( sub_grid_id, flux_prob_system_matrix );
 
       // assemble right hand side of algebraic local msfem problem
-      cf_problem_operator.assemble_RHS( e_i, local_corrector_e_i, rhs );
+      cf_problem_operator.assemble_RHS( e_i, local_corrector_e_i, sub_grid_id, rhs );
 
       // oneLinePrint( std::cout , rhs );
 
@@ -690,8 +809,105 @@ if ( iit->neighbor() )
          std :: abort();
        }
 
-     oneLinePrint( std::cout , conservative_flux );
+#ifdef VTK_OUTPUT
+     vtk_output( conservative_flux, sub_grid_id, direction_index );
+#endif
+     file_data_output( conservative_flux, sub_grid_id, direction_index );
+     
+     //oneLinePrint( std::cout , conservative_flux );
     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+//! loeschen
+#if 0
+      // set Dirichlet Boundary to zero 
+      for( SubGridIteratorType sg_it = localDiscreteFunctionSpace.begin(); sg_it != localDiscreteFunctionSpace.end(); ++sg_it )
+        {
+
+            const SubGridEntityType &subgrid_entity = *sg_it;
+ 
+            HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
+            const HostEntityType& host_entity = *host_entity_pointer;
+	  
+            HostIntersectionIterator iit = hostDiscreteFunctionSpace_.gridPart().ibegin( host_entity );
+            const HostIntersectionIterator endiit = hostDiscreteFunctionSpace_.gridPart().iend( host_entity );
+            for( ; iit != endiit; ++iit ) {
+
+              if ( iit->neighbor() ) //if there is a neighbor entity
+               {
+                 // check if the neighbor entity is in the subgrid
+                 const HostEntityPointerType neighborHostEntityPointer = iit->outside();
+                 const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+           
+		  if ( subGrid.template contains<0>( neighborHostEntity ) )
+                   {
+                    //!continue;
+                   }
+
+               }
+
+              SubGridLocalFunctionType local_conservative_flux = conservative_flux.localFunction( subgrid_entity );
+	      
+              typedef CachingQuadrature< HostGridPartType, 1 > FaceQuadrature;
+              FaceQuadrature faceQuadrature( hostDiscreteFunctionSpace_.gridPart(), *iit, 0, FaceQuadrature::INSIDE);
+	      typedef typename HostGridType :: template Codim< 1 > :: Geometry FaceGeometryType;
+              const FaceGeometryType& faceGeometry = iit->geometry();
+	      
+              JacobianRangeType grad_corrector_e_i;
+              SubGridLocalFunctionType localized_corrector_e_i = local_corrector_e_i.localFunction( subgrid_entity );
+	      
+              localized_corrector_e_i.jacobian( faceQuadrature[ 0 ], grad_corrector_e_i );
+	      
+
+#if 1
+	      
+
+              const DomainType global_point = faceGeometry.global( faceGeometry.local( faceQuadrature.point( 0 ) ) );
+              JacobianRangeType diffusive_flux; 
+              diffusion_.diffusiveFlux( global_point, grad_corrector_e_i, diffusive_flux );
+	      
+              JacobianRangeType diffusion_in_e_i;
+              diffusion_.diffusiveFlux( global_point, e_i, diffusion_in_e_i );
+	      
+              DomainType scaledOuterNormal = iit->integrationOuterNormal( faceQuadrature.localPoint(0) /*faceGeometry.local( faceQuadrature.point( 0 ) )*/ );
+	      scaledOuterNormal *= (1.0 / sqrt( scaledOuterNormal[0]*scaledOuterNormal[0] + scaledOuterNormal[1]*scaledOuterNormal[1] ) );
+	      
+              std :: cout << "diffusive_flux[0] = " << diffusive_flux[0] << std :: endl; 
+              std :: cout << "scaledOuterNormal = " << scaledOuterNormal << std :: endl; 
+              std :: cout << "numerical flux = " << (diffusive_flux[0] /*+ diffusion_in_e_i[0]*/) *scaledOuterNormal << std :: endl << std :: endl;      
+
+#endif
+
+	      const SubGridLagrangePointSetType &lagrangePointSet
+               = localDiscreteFunctionSpace.lagrangePointSet( subgrid_entity );
+      
+              const int face = (*iit).indexInInside();
+
+              SubGridFaceDofIteratorType faceIterator
+               = lagrangePointSet.template beginSubEntity< faceCodim >( face );
+
+              const SubGridFaceDofIteratorType faceEndIterator
+               = lagrangePointSet.template endSubEntity< faceCodim >( face );
+              for( ; faceIterator != faceEndIterator; ++faceIterator )
+                 std :: cout << "conservative flux = " << local_conservative_flux[ *faceIterator ] << std :: endl;
+
+std :: cout << std :: endl;
+            }
+
+        }
+#endif
+     
+     
+     
     }
 
     //! ----------- end method: solve local MsFEM problem ------------------------------------------
@@ -709,16 +925,16 @@ if ( iit->neighbor() )
        const SubGridDiscreteFunctionSpaceType &subDiscreteFunctionSpace = sub_func.space();
        const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
 
-       SubgridIteratorType sub_endit = subDiscreteFunctionSpace.end();
-       for( SubgridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+       SubGridIteratorType sub_endit = subDiscreteFunctionSpace.end();
+       for( SubGridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
           {
-#if 0
-             const SubgridEntityType &sub_entity = *sub_it;
+
+             const SubGridEntityType &sub_entity = *sub_it;
 
              HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( *sub_it );
              const HostEntityType& host_entity = *host_entity_pointer;
 
-             SubLocalFunctionType sub_loc_value = sub_func.localFunction( sub_entity );
+             SubGridLocalFunctionType sub_loc_value = sub_func.localFunction( sub_entity );
              HostLocalFunctionType host_loc_value = host_func.localFunction( host_entity );
 
              const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
@@ -726,58 +942,92 @@ if ( iit->neighbor() )
                {
                  host_loc_value[ i ] = sub_loc_value[ i ];
                }
-#endif
+
           }
 
     }
 
-#if 0     
-    // method for solving and saving the solutions of the local msfem problems
-    // for the whole set of macro-entities and for every unit vector e_i
+    
 
-    //! ---- method: solve and save the whole set of local msfem problems -----
-
-    // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
-    void assemble_all( bool silent = true /* state information on subgrids */ )
+    void vtk_output( const SubGridDiscreteFunctionType &subgrid_disc_func, const int sub_grid_index, const int direction_index )
     {
- 
-      enum { dimension = GridType :: dimension};
-      enum { maxnumOfBaseFct = 100 }; 
-
-      JacobianRangeType e[dimension];
-      for( int i = 0; i < dimension ; ++i )
-        for( int j = 0; j < dimension ; ++j )
-         {
-           if ( i == j )
-             { e[i][0][j] = 1.0; }
-           else
-             { e[i][0][j] = 0.0; }
-         }
 
       const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
 
       HostGridType& hostGrid = hostDiscreteFunctionSpace_.gridPart().grid();
+     
 
-      // number of coarse grid entities (of codim 0).
-      int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
-
-      std :: cout << "in method 'assemble_all': number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std :: endl;
-      
       // --------------- writing data output ---------------------
       // typedefs and initialization
-      #ifdef VTK_OUTPUT
-
       typedef Tuple<HostDiscreteFunctionType*> IOTupleType;
       typedef DataOutput<HostGridType, IOTupleType> DataOutputType;
 
       // general output parameters
-      LocalProblemDataOutputParameters outputparam;
-      outputparam.set_path( path_ );
+      ConFluxProblemDataOutputParameters outputparam;
+      outputparam.set_path( path_ + "/cf_problems/" );
 
       // sequence stamp
       std::stringstream outstring;
       // -------------------------------------------------------
-      #endif
+
+      HostDiscreteFunctionType host_disc_func( "Conservative Flux" , hostDiscreteFunctionSpace_ );
+      subgrid_to_hostrid_function( subgrid_disc_func, host_disc_func );
+    
+      // create and initialize output class
+      IOTupleType conservative_flux_series( &host_disc_func );
+
+      char cf_name_0[50];
+      sprintf( cf_name_0, "conservative_flux_e_%d_sg_%d", direction_index, sub_grid_index );
+      std::string cf_name_0_s( cf_name_0 );
+
+      outputparam.set_prefix( cf_name_0_s );
+      DataOutputType cf_dataoutput( hostDiscreteFunctionSpace_.gridPart().grid(), conservative_flux_series, outputparam );
+
+      // write data
+      outstring << "conservative-flux";
+      cf_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+      // clear the std::stringstream:
+      outstring.str(std::string());
+    }
+    
+      
+    void file_data_output( const SubGridDiscreteFunctionType &subgrid_disc_func, const int sub_grid_index, const int direction_index )
+    {
+      
+       bool writer_is_open = false;
+
+       char location_lps[50];
+       sprintf( location_lps, "_conservativeFlux_e_%d_sg_%d", direction_index, sub_grid_index );
+       std::string location_lps_s( location_lps );
+
+       std :: string locprob_solution_location = path_ + "/cf_problems/" + location_lps_s;
+
+       DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
+
+       writer_is_open = dfw.open();
+
+       if ( writer_is_open )
+         dfw.append( subgrid_disc_func );
+       
+    }
+    
+    template< typename SubGridListType >
+    void solve_all( SubGridListType& subgrid_list )
+    {
+      
+
+      JacobianRangeType e[dimension];
+      for( int i = 0; i < dimension ; ++i )
+        for( int j = 0; j < dimension ; ++j )
+          {
+            if ( i == j )
+             { e[i][0][j] = 1.0; }
+            else
+             { e[i][0][j] = 0.0; }
+          }
+
+      // number of coarse grid entities (of codim 0).
+      int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
       long double starting_time = clock();
 
@@ -787,166 +1037,101 @@ if ( iit->neighbor() )
       double maximum_time_c_p = 0;
 
       HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
-
-      const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();     
-      
-      for( HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it )
+      const LeafIndexSetType& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+       
+       // Coarse Entity Iterator 
+       const HostGridEntityIteratorType coarse_grid_end = coarseSpace.end();
+       for( HostGridEntityIteratorType coarse_grid_it = coarseSpace.begin(); coarse_grid_it != coarse_grid_end; ++coarse_grid_it )
         {
+          int global_index_entity = coarseGridLeafIndexSet.index( *coarse_grid_it );
+	  
+          // the sub grid U(T) that belongs to the coarse_grid_entity T
+          SubGridType& sub_grid_U_T = subgrid_list.getSubGrid( global_index_entity );
+          SubGridPartType subGridPart( sub_grid_U_T );
+	  
+          SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace( subGridPart );
+	  
+          SubGridDiscreteFunctionType local_problem_solution_e0( "Local problem Solution e_0", localDiscreteFunctionSpace );
+          local_problem_solution_e0.clear();
 
-          int coarse_index = coarseGridLeafIndexSet.index( *coarse_it );
+          SubGridDiscreteFunctionType local_problem_solution_e1( "Local problem Solution e_1", localDiscreteFunctionSpace );
+          local_problem_solution_e1.clear();
 
-          #if 0
-          std :: cout << "coarse_it->geometry().corner(0) = " << coarse_it->geometry().corner(0) << std :: endl;
-          std :: cout << "coarse_it->geometry().corner(1) = " << coarse_it->geometry().corner(1) << std :: endl;
-          std :: cout << "coarse_it->geometry().corner(2) = " << coarse_it->geometry().corner(2) << std :: endl;
-          #endif
+          // --------- load local solutions -------
 
-          bool writer_is_open = false;
-
-	  char location_lps[50];
-          sprintf( location_lps, "_localProblemSolutions_%d", coarse_index );
+          char location_lps[50];
+          sprintf( location_lps, "/local_problems/_localProblemSolutions_%d", global_index_entity );
           std::string location_lps_s( location_lps );
 
-          std :: string locprob_solution_location = path_ + location_lps_s;
+          std :: string local_solution_location;
 
-          DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
+          // the file/place, where we saved the solutions of the cell problems
+          local_solution_location = path_ + location_lps_s;
 
-          writer_is_open = dfw.open();
+          bool reader_is_open = false;
+          // reader for the cell problem data file:
+          DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
+          reader_is_open = discrete_function_reader.open();
 
-          if ( writer_is_open )
-          {
+          if (reader_is_open)
+           { discrete_function_reader.read( 0, local_problem_solution_e0 ); }
+          else
+           { std :: cout << "Error! Could not read data file for the conservative flux problem solutions." << std :: endl; abort(); }
 
-	    SubGridType& subGrid = subgrid_list_.getSubGrid( coarse_index );
-            SubGridPartType subGridPart( subGrid );
+          if (reader_is_open)
+           { discrete_function_reader.read( 1, local_problem_solution_e1 ); }
 
-            SubDiscreteFunctionSpaceType subDiscreteFunctionSpace( subGridPart );
+          SubGridDiscreteFunctionType conservative_flux_e0( "Conservative Flux for e_0", localDiscreteFunctionSpace );
+          SubGridDiscreteFunctionType conservative_flux_e1( "Conservative Flux for e_1", localDiscreteFunctionSpace );
 
-	    char name_loc_sol[50];
-            sprintf( name_loc_sol, "Local Problem Solution %d", coarse_index );
-            std::string name_local_solution( name_loc_sol );
+          std :: cout << "Number of the 'conservative flux problem': " << dimension * global_index_entity << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
 
-	    //! only for dimension 2!
-            SubDiscreteFunctionType local_problem_solution_0( name_local_solution, subDiscreteFunctionSpace );
-            local_problem_solution_0.clear();
+          // take time
+          long double time_now = clock();
+  
+          this->solve( e[0], local_problem_solution_e0, global_index_entity, 0, conservative_flux_e0 );
 
-            SubDiscreteFunctionType local_problem_solution_1( name_local_solution, subDiscreteFunctionSpace );
-            local_problem_solution_1.clear();
+          // min/max time
+          if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
+            { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
+          if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
+            { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
 
-            std :: cout << "Number of the local problem: " << dimension * coarse_index << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
+          std :: cout << "Number of the 'conservative flux problem': " << (dimension*global_index_entity)+1 << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
 
-            // take time
-            long double time_now = clock();
-
-	    // solve the problems
-	    solvelocalproblem( e[0], local_problem_solution_0 );
-
-	    // min/max time
-            if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
-               { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-            if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
-               { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-
-            std :: cout << "Number of the local problem: " << (dimension*coarse_index)+1 << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
-	    
-            // take time
-            time_now = clock();
-	    
-	    // solve the problems
-	    solvelocalproblem( e[1], local_problem_solution_1 );
-	    
-	    // min/max time
-            if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
-               { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-            if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
-               { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-
-            dfw.append( local_problem_solution_0);
-
-            dfw.append( local_problem_solution_1);
-
-            // oneLinePrint( std::cout , local_problem_solution_0 );
-            // oneLinePrint( std::cout , local_problem_solution_1 );
-
-	    HostDiscreteFunctionType host_local_solution( name_local_solution, hostDiscreteFunctionSpace_ );
-            subgrid_to_hostrid_function( local_problem_solution_0, host_local_solution );
-    
-            // --------------- writing data output ---------------------
-            // (writing)
-            #ifdef VTK_OUTPUT
-	    
-            // --------- data output local solution --------------
-
-            // create and initialize output class
-            IOTupleType local_solution_series_0( &host_local_solution );
-
-            char ls_name_0[50];
-            sprintf( ls_name_0, "local_problem_solution_e0_%d", coarse_index );
-            std::string ls_name_0_s( ls_name_0 );
-
-            outputparam.set_prefix( ls_name_0_s );
-            DataOutputType localsol_dataoutput_0( hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_0, outputparam );
-
-            // write data
-            outstring << "local-problem-solution-0";
-            localsol_dataoutput_0.writeData( 1.0 /*dummy*/, outstring.str() );
-            // clear the std::stringstream:
-            outstring.str(std::string());
-
-            // -------------------------------------------------------
-            #endif
-
-            subgrid_to_hostrid_function( local_problem_solution_1, host_local_solution );
-
-            // --------------- writing data output ---------------------
-            // (writing)
-            #ifdef VTK_OUTPUT
-
-            // --------- data output local solution --------------
-
-            // create and initialize output class
-            IOTupleType local_solution_series_1( &host_local_solution );
-
-            char ls_name_1[50];
-            sprintf( ls_name_1, "local_problem_solution_e1_%d", coarse_index );
-            std::string ls_name_1_s( ls_name_1 );
-
-            outputparam.set_prefix( ls_name_1_s );
-            DataOutputType localsol_dataoutput_1( hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_1, outputparam );
-
-            // write data
-            outstring << "local-problem-solution-1";
-            localsol_dataoutput_1.writeData( 1.0 /*dummy*/, outstring.str() );
-            // clear the std::stringstream:
-            outstring.str(std::string());
-
-            // -------------------------------------------------------
-            #endif	  	 
-
-          }
-
-
-      } // end: 'if ( writer_is_open )'
-
+          // take time
+          time_now = clock();
+	  
+          this->solve( e[1], local_problem_solution_e1, global_index_entity, 1, conservative_flux_e1 );
+	  
+          // min/max time
+          if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
+            { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
+          if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
+            { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
+            
+          // oneLinePrint( std::cout , conservative_flux_e0 );
+          // oneLinePrint( std::cout , conservative_flux_e1 );
+	}
 
       if (data_file_)
       {
          if (data_file_->is_open())
          {
            (*data_file_) << std :: endl;
-           (*data_file_) << "In method: assemble_all." << std :: endl << std :: endl;
-           (*data_file_) << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities." << std :: endl;
-           (*data_file_) << dimension*number_of_coarse_grid_entities << " local MsFEM problems solved in total." << std :: endl;
-           (*data_file_) << "Minimum time for solving a local problem = " << minimum_time_c_p << "s." << std :: endl;
-           (*data_file_) << "Maximum time for solving a localproblem = " << maximum_time_c_p << "s." << std :: endl;
-           (*data_file_) << "Average time for solving a localproblem = " << ((clock()-starting_time)/CLOCKS_PER_SEC)/(dimension*number_of_coarse_grid_entities) << "s." << std :: endl;
-           (*data_file_) << "Total time for computing and saving the localproblems = " << ((clock()-starting_time)/CLOCKS_PER_SEC) << "s," << std :: endl << std :: endl;
+           (*data_file_) << "In: 'assemble all conservatice fluxes'." << std :: endl << std :: endl;
+           (*data_file_) << "Conservative Flux determined for " << number_of_coarse_grid_entities << " coarse grid entities." << std :: endl;
+           (*data_file_) << dimension*number_of_coarse_grid_entities << " conservative flux problems solved in total." << std :: endl;
+           (*data_file_) << "Minimum time for solving a conservative flux problem = " << minimum_time_c_p << "s." << std :: endl;
+           (*data_file_) << "Maximum time for solving a conservative flux problem = " << maximum_time_c_p << "s." << std :: endl;
+           (*data_file_) << "Average time for solving a conservative flux problem = " << ((clock()-starting_time)/CLOCKS_PER_SEC)/(dimension*number_of_coarse_grid_entities) << "s." << std :: endl;
+           (*data_file_) << "Total time for computing and saving the conservative flux problems = " << ((clock()-starting_time)/CLOCKS_PER_SEC) << "s," << std :: endl << std :: endl;
          }
-      }
+      }   
 
 
     }
 
-#endif
 
  }; //end class
 
