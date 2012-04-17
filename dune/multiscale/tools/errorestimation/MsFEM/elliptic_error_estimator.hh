@@ -42,17 +42,20 @@ namespace Dune
     typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
     typedef typename DiscreteFunctionSpaceType :: GridType GridType;
     typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
-
+    typedef typename DiscreteFunctionSpaceType :: LagrangePointSetType LagrangePointSetType;
+    
     typedef typename GridType :: Traits :: LeafIndexSet LeafIndexSetType;
     
     typedef typename GridPartType :: IntersectionIteratorType IntersectionIteratorType;
     typedef typename IntersectionIteratorType::Intersection Intersection;
     typedef typename GridType :: template Codim<0> :: Entity EntityType; 
-    typedef typename GridType :: template Codim<0> :: EntityPointer            EntityPointerType; 
+    typedef typename GridType :: template Codim<0> :: EntityPointer            EntityPointerType;
+    typedef typename GridType :: template Codim<1> :: Entity FaceType; 
+    typedef typename GridType :: template Codim<1> :: EntityPointer            FacePointerType;    
     typedef typename GridType :: template Codim<0> :: Geometry                 EntityGeometryType; 
     typedef typename GridType :: template Codim<1> :: Geometry                 FaceGeometryType;
     typedef typename DiscreteFunctionSpaceType     :: BaseFunctionSetType      BaseFunctionSetType;
-
+    
     typedef CachingQuadrature < GridPartType , 0 > EntityQuadratureType;
     typedef CachingQuadrature < GridPartType , 1 > FaceQuadratureType;
 
@@ -83,7 +86,13 @@ namespace Dune
    enum { faceCodim = 1 };
    typedef typename SubGridLagrangePointSetType :: template Codim< faceCodim > 
                                                 :: SubEntityIteratorType
-    SubGridFaceDofIteratorType;
+   SubGridFaceDofIteratorType;
+    
+    
+   typedef typename LagrangePointSetType :: template Codim< faceCodim > 
+                                         :: SubEntityIteratorType
+   FaceDofIteratorType;
+    
 
    typedef typename SubGridType :: template Codim<0> :: Geometry                 SubGridEntityGeometryType; 
 
@@ -404,34 +413,24 @@ namespace Dune
        DiscreteFunctionType* cflux_neighbor_ent_e0_host[ 3 ];
        DiscreteFunctionType* cflux_neighbor_ent_e1_host[ 3 ];
 
-       Intersection coarse_face[ 3 ];
+       std :: vector < IntersectionIteratorType > coarse_face;
 
        const GridPartType &coarseGridPart = specifier_.coarseSpace().gridPart();
 
        int local_face_index = 0;
-       // compute the size of the faces of the entities and selected the largest.
+
        IntersectionIteratorType endnit = coarseGridPart.iend( coarse_entity );
        for( IntersectionIteratorType face_it = coarseGridPart.ibegin( coarse_entity ); face_it != endnit ; ++face_it)
         {
 
-          coarse_face[ local_face_index ] = face_it;
+          coarse_face.push_back( face_it );
 
           if ( face_it->neighbor() )
             {
+
               EntityPointerType outside_it = face_it->outside();
 
-              EntityPointerType father_of_neighbor = outside_it;
-              for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
-                 father_of_neighbor = father_of_neighbor->father();
-
-              bool father_found = coarseGridLeafIndexSet.contains( *father_of_neighbor );
-              while ( father_found == false )
-               {
-                father_of_neighbor = father_of_neighbor->father();
-                father_found = coarseGridLeafIndexSet.contains( *father_of_neighbor );
-               }
-
-              int index_coarse_neighbor_entity = coarseGridLeafIndexSet.index( *father_of_neighbor );
+              int index_coarse_neighbor_entity = coarseGridLeafIndexSet.index( *outside_it );
 
               // --- get subgrids and load fluxes ---
 
@@ -490,8 +489,9 @@ namespace Dune
 
               subgrid_to_hostrid_function( conservative_flux_coarse_ent_e0_neighbor,
                                            conservative_flux_coarse_ent_e1_neighbor,
-                                           cflux_neighbor_ent_e0_host[ local_face_index ],
-                                           cflux_neighbor_ent_e1_host[ local_face_index ] );
+                                           *cflux_neighbor_ent_e0_host[ local_face_index ],
+                                           *cflux_neighbor_ent_e1_host[ local_face_index ] );
+
             }
 
           local_face_index += 1;
@@ -501,6 +501,124 @@ namespace Dune
         { std :: cout << "Error! Implementation only for triangular mesh in 2d!" << std :: endl; abort(); }
 
 
+       SubGridIteratorType sub_endit = localDiscreteFunctionSpace.end();
+       for( SubGridIteratorType sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
+          {
+
+             const SubGridEntityType &sub_entity = *sub_it;
+
+             EntityPointerType host_entity_pointer = sub_grid_U_T.template getHostEntity<0>( *sub_it );
+             const EntityType& host_entity = *host_entity_pointer;
+
+             IntersectionIteratorType end_it_U_T = fineDiscreteFunctionSpace_.gridPart().iend( host_entity );
+             for( IntersectionIteratorType face_it_U_T = fineDiscreteFunctionSpace_.gridPart().ibegin( host_entity );
+                  face_it_U_T != end_it_U_T ; ++face_it_U_T)
+               {
+                 FaceQuadratureType faceQuadrature( fineDiscreteFunctionSpace_.gridPart(), *face_it_U_T,
+						      2, FaceQuadratureType::INSIDE);
+
+                 const FaceGeometryType& faceGeometry = face_it_U_T->geometry();
+
+                 const size_t numQuadraturePoints = faceQuadrature.nop();
+                 assert( numQuadraturePoints == 2 );
+		 
+                 RangeType check_sum( 0.0 );
+ 
+                 for( size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
+                   {
+
+                      typedef typename Intersection::LocalCoordinate LocalCoordinate;
+                      const LocalCoordinate local_point = faceGeometry.local( faceQuadrature.point( quadraturePoint ) );
+
+                      const DomainType global_point = faceGeometry.global( local_point );
+
+                      // integration factors
+                      const double integrationFactor = faceGeometry.integrationElement( local_point );
+
+                      // weight
+                      const double quadratureWeight = faceQuadrature.weight(  quadraturePoint );
+      
+                      check_sum += integrationFactor * quadratureWeight;
+
+LocalFunctionType loc_cf_coarse_ent_e0 = cflux_coarse_ent_e0_host.localFunction( host_entity );
+
+const LagrangePointSetType &lagrangePointSet = fineDiscreteFunctionSpace_.lagrangePointSet( host_entity );
+const int face_index = (*face_it_U_T).indexInInside();
+FaceDofIteratorType faceIterator = lagrangePointSet.template beginSubEntity< faceCodim >( face_index );
+const FaceDofIteratorType faceEndIterator = lagrangePointSet.template endSubEntity< faceCodim >( face_index );
+for( ; faceIterator != faceEndIterator; ++faceIterator )
+     loc_cf_coarse_ent_e0[ *faceIterator ] = 0;
+	      
+#if 0
+    RangeType val;
+ std :: cout << "val = " << val << std :: endl;
+    loc_cf_coarse_ent_e0.evaluate( faceQuadrature[ quadraturePoint ], val );
+    
+    //check:
+    //! loeschen:
+    RangeType val2;
+    cflux_coarse_ent_e0_host.evaluate(global_point, val2 );
+ std :: cout << "val2 = " << val2 << std :: endl;
+    if ( val != val2 ) { std::cout << " val != val2 " << std :: endl; abort(); }
+#endif
+
+#if 0
+
+
+
+
+
+
+
+
+              for( unsigned int i = 0; i < numBaseFunctions; ++i )
+                {
+                  baseSet.evaluate( i, faceQuadrature[ quadraturePoint ], phi[ i ]);
+                }
+
+
+              for( unsigned int i = 0; i < numBaseFunctions; ++i )
+                {
+
+                 for( unsigned int j = 0; j < numBaseFunctions; ++j )
+                   {
+
+                     if ( set_zero == false )
+                      {  
+                        local_matrix.add( j, i, integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+                      }
+                     else
+                      { // stabilization (should be close to zero):
+                        local_matrix.add( j, i, 0.00000001 * integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+                      }
+
+                   }
+
+                }
+#endif
+                   } // done loop over all quadrature points
+
+                 if ( check_sum != faceGeometry.volume())
+                  { std :: cout << "Error in Face Quadrature." << std :: endl; abort(); }
+
+
+               }
+#if 0
+             SubGridLocalFunctionType sub_loc_value_1 = sub_func_1.localFunction( sub_entity );
+             SubGridLocalFunctionType sub_loc_value_2 = sub_func_2.localFunction( sub_entity );
+             LocalFunctionType host_loc_value_1 = host_func_1.localFunction( host_entity );
+             LocalFunctionType host_loc_value_2 = host_func_2.localFunction( host_entity );
+
+             const unsigned int numBaseFunctions = sub_loc_value_1.baseFunctionSet().numBaseFunctions();
+             for( unsigned int i = 0; i < numBaseFunctions; ++i )
+               {
+                 host_loc_value_1[ i ] = sub_loc_value_1[ i ];
+                 host_loc_value_2[ i ] = sub_loc_value_2[ i ];
+               }
+#endif
+          }
+
+
 // is_subface( fine_face, coarse_face[ local_face_index ] )
 
 
@@ -508,6 +626,7 @@ namespace Dune
 // wandele die sub entities in host entities um und nutze den 'subgrid intersection iterator'
 // checke ob die Intersection Teil einer coarse intersection ist
 // wenn ja addiere die jeweiligen conservative fluxes ausgewertet im Quadraturpunkt auf auf dem subgrid face.
+
 
      }
 #endif
@@ -1749,6 +1868,8 @@ namespace Dune
           loc_coarse_residual[ global_index_entity ] = indicator_f( *coarse_grid_it );
           total_coarse_residual += pow( loc_coarse_residual[ global_index_entity ], 2.0 );
 
+//! loeschen:
+jump_conservative_flux( *coarse_grid_it );
 
 //! loeschen oder einbinden?
 #if 0
