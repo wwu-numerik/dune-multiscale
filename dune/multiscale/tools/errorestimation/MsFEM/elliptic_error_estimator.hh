@@ -1,7 +1,7 @@
 #ifndef DUNE_MSFEM_ERRORESTIMATOR_HH
 #define DUNE_MSFEM_ERRORESTIMATOR_HH
 
-#include <dune/common/classname.hh>
+//#include <dune/common/classname.hh>
 
 // where the quadratures are defined 
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -503,6 +503,8 @@ namespace Dune
         { std :: cout << "Error! Implementation only for triangular mesh in 2d!" << std :: endl; abort(); }
 
 
+int c = 0;        
+        
        SubGridIteratorType sub_endit = localDiscreteFunctionSpace.end();
        for( SubGridIteratorType sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
           {
@@ -511,7 +513,25 @@ namespace Dune
 
              EntityPointerType host_entity_pointer = sub_grid_U_T.template getHostEntity<0>( *sub_it );
              const EntityType& host_entity = *host_entity_pointer;
+	     
+             EntityPointerType father_of_sub_grid_entity = host_entity_pointer;
+             for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
+               father_of_sub_grid_entity = father_of_sub_grid_entity->father();
 
+             bool father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
+             while ( father_found == false )
+               {
+                 father_of_sub_grid_entity = father_of_sub_grid_entity->father();
+                 father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
+               }
+          
+             int coarse_sub_father_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
+	     if ( coarse_sub_father_index != index_coarse_entity )
+	      { continue; }
+
+std :: cout << "subentity " << c << std :: endl;
+c+=1;
+	      
              LocalFunctionType loc_cf_coarse_ent_e0 = cflux_coarse_ent_e0_host.localFunction( host_entity );
              LocalFunctionType loc_cf_coarse_ent_e1 = cflux_coarse_ent_e1_host.localFunction( host_entity );
 
@@ -539,13 +559,12 @@ namespace Dune
                 LocalFunctionType loc_cf_coarse_neighbor_ent_e0 = (*cflux_neighbor_ent_e0_host[ relevant_face_index ]).localFunction( host_entity );
                 LocalFunctionType loc_cf_coarse_neighbor_ent_e1 = (*cflux_neighbor_ent_e1_host[ relevant_face_index ]).localFunction( host_entity );
 
-                 FaceQuadratureType faceQuadrature( fineDiscreteFunctionSpace_.gridPart(), *face_it_U_T, 2 /* QuadOrder */ , FaceQuadratureType::INSIDE);
+                 FaceQuadratureType faceQuadrature( fineDiscreteFunctionSpace_.gridPart(), *face_it_U_T, 2*fineDiscreteFunctionSpace_.order()+ 1 , FaceQuadratureType::INSIDE);
                  // inside macht hier keinen Unterschied, da wir formal stetige Funktionen haben und nicht die Gradienten auswerten
 
                  const FaceGeometryType& faceGeometry = face_it_U_T->geometry();
 
                  const size_t numQuadraturePoints = faceQuadrature.nop();
-                 assert( numQuadraturePoints == 2 );
 
                  RangeType jump_integral( 0.0 );
 
@@ -555,8 +574,6 @@ namespace Dune
 
                       typedef typename Intersection::LocalCoordinate LocalCoordinate;
                       const LocalCoordinate local_point = faceGeometry.local( faceQuadrature.point( quadraturePoint ) );
-
-                      const DomainType global_point = faceGeometry.global( local_point );
 
                       // integration factors
                       const double integrationFactor = faceGeometry.integrationElement( local_point );
@@ -579,10 +596,14 @@ namespace Dune
     RangeType value_neighbor_ent_e1;
     loc_cf_coarse_neighbor_ent_e1.evaluate( faceQuadrature[ quadraturePoint ], value_neighbor_ent_e1 );
 
+std :: cout << "index_coarse_entity = " << index_coarse_entity << std ::endl;
+std :: cout << "(local_point,quadraturePoint) = (" << local_point << "," << quadraturePoint << ")" << std :: endl;
+
 std :: cout << "value_ent_e0 = " << value_ent_e0 << std :: endl;
 std :: cout << "value_neighbor_ent_e0 = " << value_neighbor_ent_e0 << std :: endl;
 std :: cout << "value_ent_e1 = " << value_ent_e1 << std :: endl;
 std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: endl << std :: endl;
+
 //integral += integrationFactor * quadratureWeight * val;
 
 #endif
@@ -623,7 +644,7 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
                 }
 #endif
                    } // done loop over all quadrature points
-
+std :: cout << "--------------------------------------------" << std :: endl << std :: endl;
 
                  if ( check_sum != faceGeometry.volume())
                   { std :: cout << "Error in Face Quadrature." << std :: endl; abort(); }

@@ -324,9 +324,8 @@ namespace Dune
           for( size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint )
             {
 
+	      // das liefert immer den gleichen 'local_point' egal fuer welchen Quadraturpunkt.
               const LocalCoordinate local_point = faceGeometry.local( faceQuadrature.point( quadraturePoint ) );
-
-              const DomainType global_point = faceGeometry.global( local_point );
 
               // integration factors
               const double integrationFactor = faceGeometry.integrationElement( local_point );
@@ -354,7 +353,7 @@ namespace Dune
                       }
                      else
                       { // stabilization (should be close to zero):
-                        local_matrix.add( j, i, 0.00000001 * integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+                        local_matrix.add( j, i, 0.0000000001 * integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
                       }
 
                    }

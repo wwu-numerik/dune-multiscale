@@ -522,7 +522,7 @@ grid_coarse.postAdapt();
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MacroMicroGridSpecifierType specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
-    { specifier.setLayer( i , 5 ); }
+    { specifier.setLayer( i , 10 ); }
 
   //! create subgrids:
   bool silence = false;
