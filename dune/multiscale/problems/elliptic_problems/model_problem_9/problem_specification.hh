@@ -139,7 +139,7 @@ namespace Problem
     inline void getMacroGridFile ( std :: string &macroGridName ) const
     {
       //name and location of the grid file that describes the macro-grid:
-      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf" );
+      std :: string macro_grid_location( "../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf" );//_strange_grid
       macroGridName = macro_grid_location;
     }
 
@@ -347,8 +347,10 @@ namespace Problem
        double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
        double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
 
-       flux[0][0] = coefficient_0 * gradient[0][0];
-       flux[0][1] = coefficient_1 * gradient[0][1];
+       double stab = 0.0;
+
+       flux[0][0] = coefficient_0 * gradient[0][0] + stab * gradient[0][1];
+       flux[0][1] = coefficient_1 * gradient[0][1] + stab * gradient[0][0];
 
     }
 

@@ -341,10 +341,15 @@ namespace Dune
 
 #if 1
     // jump in conservative flux
-    RangeType jump_conservative_flux( const EntityType &coarse_entity )
+    RangeType jump_conservative_flux( const EntityType &coarse_entity, const DiscreteFunctionType& msfem_coarse_part )
      {
 
-       RangeType jump(0.0);
+       // jump for each face
+       RangeType jump[3];
+
+       jump[0] = 0.0;
+       jump[1] = 0.0;
+       jump[2] = 0.0;
 
        const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
        const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
@@ -416,6 +421,7 @@ namespace Dune
        DiscreteFunctionType* cflux_neighbor_ent_e1_host[ 3 ];
 
        std :: vector < IntersectionIteratorType > coarse_face;
+       RangeType coarse_face_volume[ 3 ];
 
        const GridPartType &coarseGridPart = specifier_.coarseSpace().gridPart();
 
@@ -426,6 +432,8 @@ namespace Dune
         {
 
           coarse_face.push_back( face_it );
+
+          coarse_face_volume[ local_face_index ] = face_it->geometry().volume();
 
           if ( face_it->neighbor() )
             {
@@ -503,8 +511,6 @@ namespace Dune
         { std :: cout << "Error! Implementation only for triangular mesh in 2d!" << std :: endl; abort(); }
 
 
-int c = 0;        
-        
        SubGridIteratorType sub_endit = localDiscreteFunctionSpace.end();
        for( SubGridIteratorType sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
           {
@@ -528,12 +534,12 @@ int c = 0;
              int coarse_sub_father_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
 	     if ( coarse_sub_father_index != index_coarse_entity )
 	      { continue; }
-
-std :: cout << "subentity " << c << std :: endl;
-c+=1;
 	      
              LocalFunctionType loc_cf_coarse_ent_e0 = cflux_coarse_ent_e0_host.localFunction( host_entity );
              LocalFunctionType loc_cf_coarse_ent_e1 = cflux_coarse_ent_e1_host.localFunction( host_entity );
+
+             LocalFunctionType loc_msfem_coarse_part = msfem_coarse_part.localFunction( host_entity );
+
 
              IntersectionIteratorType end_it_U_T = fineDiscreteFunctionSpace_.gridPart().iend( host_entity );
              for( IntersectionIteratorType face_it_U_T = fineDiscreteFunctionSpace_.gridPart().ibegin( host_entity );
@@ -554,12 +560,26 @@ c+=1;
                 if ( ( relevant_face_index == -1 ) || ( face_it_U_T->neighbor() == false ) )
                  { continue; }
 
-//                EntityPointerType outside_sub_it = face_it_U_T->outside();
+                EntityPointerType outside_sub_it = face_it_U_T->outside();
 
                 LocalFunctionType loc_cf_coarse_neighbor_ent_e0 = (*cflux_neighbor_ent_e0_host[ relevant_face_index ]).localFunction( host_entity );
                 LocalFunctionType loc_cf_coarse_neighbor_ent_e1 = (*cflux_neighbor_ent_e1_host[ relevant_face_index ]).localFunction( host_entity );
 
-                 FaceQuadratureType faceQuadrature( fineDiscreteFunctionSpace_.gridPart(), *face_it_U_T, 2*fineDiscreteFunctionSpace_.order()+ 1 , FaceQuadratureType::INSIDE);
+
+                LocalFunctionType loc_msfem_coarse_part_neighbor = msfem_coarse_part.localFunction( *outside_sub_it );
+
+                // evaluate the gradient of the MsfEM coarse part in the center of the coarse entity
+                EntityQuadratureType coarseEntQuadrature( host_entity , 0 );
+                JacobianRangeType gradient_msfem_coarse_ent(0.);
+                loc_msfem_coarse_part.jacobian(coarseEntQuadrature[ 0 ], gradient_msfem_coarse_ent );
+
+                // evaluate the gradient of the MsfEM coarse part in the center of the current neighbor of the coarse entity
+                EntityQuadratureType coarseEntQuadratureNeighbor( *outside_sub_it , 0 );
+                JacobianRangeType gradient_msfem_coarse_neighbor_ent(0.);
+                loc_msfem_coarse_part_neighbor.jacobian(coarseEntQuadratureNeighbor[ 0 ], gradient_msfem_coarse_neighbor_ent );
+
+
+                FaceQuadratureType faceQuadrature( fineDiscreteFunctionSpace_.gridPart(), *face_it_U_T, 2*fineDiscreteFunctionSpace_.order()+2 , FaceQuadratureType::INSIDE);
                  // inside macht hier keinen Unterschied, da wir formal stetige Funktionen haben und nicht die Gradienten auswerten
 
                  const FaceGeometryType& faceGeometry = face_it_U_T->geometry();
@@ -580,22 +600,38 @@ c+=1;
 
                       // weight
                       const double quadratureWeight = faceQuadrature.weight(  quadraturePoint );
-      
+
                       check_sum += integrationFactor * quadratureWeight;
 
-#if 1
-    RangeType value_ent_e0;
-    loc_cf_coarse_ent_e0.evaluate( faceQuadrature[ quadraturePoint ], value_ent_e0 );
 
-    RangeType value_neighbor_ent_e0;
-    loc_cf_coarse_neighbor_ent_e0.evaluate( faceQuadrature[ quadraturePoint ], value_neighbor_ent_e0 );
+                      RangeType value_ent_e0;
+                      loc_cf_coarse_ent_e0.evaluate( faceQuadrature[ quadraturePoint ], value_ent_e0 );
 
-    RangeType value_ent_e1;
-    loc_cf_coarse_ent_e1.evaluate( faceQuadrature[ quadraturePoint ], value_ent_e1 );
+                      RangeType value_neighbor_ent_e0;
+                      loc_cf_coarse_neighbor_ent_e0.evaluate( faceQuadrature[ quadraturePoint ], value_neighbor_ent_e0 );
 
-    RangeType value_neighbor_ent_e1;
-    loc_cf_coarse_neighbor_ent_e1.evaluate( faceQuadrature[ quadraturePoint ], value_neighbor_ent_e1 );
+                      RangeType value_ent_e1;
+                      loc_cf_coarse_ent_e1.evaluate( faceQuadrature[ quadraturePoint ], value_ent_e1 );
 
+                      RangeType value_neighbor_ent_e1;
+                      loc_cf_coarse_neighbor_ent_e1.evaluate( faceQuadrature[ quadraturePoint ], value_neighbor_ent_e1 );
+
+                      RangeType H_E = coarse_face_volume[ relevant_face_index ];
+
+                      // wenn man tunen moechtet... fabs() einbinden und das Vorzeichen davor aendern.
+
+                      RangeType jump_contribution = gradient_msfem_coarse_ent[0][0] * ( /*fabs*/(value_ent_e0) + /*-fabs*/(value_neighbor_ent_e0));
+                      jump_contribution +=  gradient_msfem_coarse_ent[0][1] * (/*fabs*/(value_ent_e1) + /*-fabs*/(value_neighbor_ent_e1));
+
+                      jump[ relevant_face_index ] += H_E * integrationFactor * quadratureWeight * pow( jump_contribution, 2.0 );
+
+
+                      jump_contribution = gradient_msfem_coarse_neighbor_ent[0][0] * (/*fabs*/(value_ent_e0) + /*-fabs*/(value_neighbor_ent_e0));
+                      jump_contribution += gradient_msfem_coarse_neighbor_ent[0][1] * (/*fabs*/(value_ent_e1) + /*-fabs*/(value_neighbor_ent_e1));
+
+                      jump[ relevant_face_index ] += H_E * integrationFactor * quadratureWeight * pow( jump_contribution, 2.0 );
+
+#if 0
 std :: cout << "index_coarse_entity = " << index_coarse_entity << std ::endl;
 std :: cout << "(local_point,quadraturePoint) = (" << local_point << "," << quadraturePoint << ")" << std :: endl;
 
@@ -603,72 +639,25 @@ std :: cout << "value_ent_e0 = " << value_ent_e0 << std :: endl;
 std :: cout << "value_neighbor_ent_e0 = " << value_neighbor_ent_e0 << std :: endl;
 std :: cout << "value_ent_e1 = " << value_ent_e1 << std :: endl;
 std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: endl << std :: endl;
-
-//integral += integrationFactor * quadratureWeight * val;
-
 #endif
 
-
-#if 0
-
-
-
-
-
-
-
-
-              for( unsigned int i = 0; i < numBaseFunctions; ++i )
-                {
-                  baseSet.evaluate( i, faceQuadrature[ quadraturePoint ], phi[ i ]);
-                }
-
-
-              for( unsigned int i = 0; i < numBaseFunctions; ++i )
-                {
-
-                 for( unsigned int j = 0; j < numBaseFunctions; ++j )
-                   {
-
-                     if ( set_zero == false )
-                      {  
-                        local_matrix.add( j, i, integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
-                      }
-                     else
-                      { // stabilization (should be close to zero):
-                        local_matrix.add( j, i, 0.00000001 * integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
-                      }
-
-                   }
-
-                }
-#endif
                    } // done loop over all quadrature points
-std :: cout << "--------------------------------------------" << std :: endl << std :: endl;
+//std :: cout << "--------------------------------------------" << std :: endl << std :: endl;
 
                  if ( check_sum != faceGeometry.volume())
                   { std :: cout << "Error in Face Quadrature." << std :: endl; abort(); }
 
 
                }
-#if 0
-             SubGridLocalFunctionType sub_loc_value_1 = sub_func_1.localFunction( sub_entity );
-             SubGridLocalFunctionType sub_loc_value_2 = sub_func_2.localFunction( sub_entity );
-             LocalFunctionType host_loc_value_1 = host_func_1.localFunction( host_entity );
-             LocalFunctionType host_loc_value_2 = host_func_2.localFunction( host_entity );
 
-             const unsigned int numBaseFunctions = sub_loc_value_1.baseFunctionSet().numBaseFunctions();
-             for( unsigned int i = 0; i < numBaseFunctions; ++i )
-               {
-                 host_loc_value_1[ i ] = sub_loc_value_1[ i ];
-                 host_loc_value_2[ i ] = sub_loc_value_2[ i ];
-               }
-#endif
           }
 
 
-// is_subface( fine_face, coarse_face[ local_face_index ] )
 
+std :: cout << "jump[0] = " << jump[0] << std :: endl;
+std :: cout << "jump[1] = " << jump[1] << std :: endl;
+std :: cout << "jump[2] = " << jump[2] << std :: endl;
+std :: cout << std :: endl;
 
 // laufe jetzt ueber das Subgrid der Coarse entity
 // wandele die sub entities in host entities um und nutze den 'subgrid intersection iterator'
@@ -676,9 +665,11 @@ std :: cout << "--------------------------------------------" << std :: endl << 
 // wenn ja addiere die jeweiligen conservative fluxes ausgewertet im Quadraturpunkt auf auf dem subgrid face.
 
 
+      return ( sqrt(jump[0]) + sqrt(jump[1]) + sqrt(jump[2]) );
+
      }
 #endif
-    
+
 #if 0
 
     // \eta_T^{app}
@@ -1916,8 +1907,8 @@ std :: cout << "--------------------------------------------" << std :: endl << 
           loc_coarse_residual[ global_index_entity ] = indicator_f( *coarse_grid_it );
           total_coarse_residual += pow( loc_coarse_residual[ global_index_entity ], 2.0 );
 
-//! loeschen:
-jump_conservative_flux( *coarse_grid_it );
+          loc_conservative_flux_jumps[ global_index_entity ] = jump_conservative_flux( *coarse_grid_it, msfem_coarse_part );
+          total_conservative_flux_jumps += pow( loc_conservative_flux_jumps[ global_index_entity ], 2.0 );
 
 //! loeschen oder einbinden?
 #if 0
@@ -2092,10 +2083,10 @@ jump_conservative_flux( *coarse_grid_it );
 
        total_coarse_residual = sqrt( total_coarse_residual );
        total_projection_error = sqrt( total_projection_error );
-       total_coarse_grid_jumps = sqrt( total_projection_error );
-       total_conservative_flux_jumps = sqrt( total_projection_error );
-       total_approximation_error = sqrt( total_projection_error );
-       total_fine_grid_jumps = sqrt( total_projection_error );
+       total_coarse_grid_jumps = sqrt( total_coarse_grid_jumps );
+       total_conservative_flux_jumps = sqrt( total_conservative_flux_jumps );
+       total_approximation_error = sqrt( total_approximation_error );
+       total_fine_grid_jumps = sqrt( total_fine_grid_jumps );
 
        total_estimated_error += total_coarse_residual;
        total_estimated_error += total_projection_error;

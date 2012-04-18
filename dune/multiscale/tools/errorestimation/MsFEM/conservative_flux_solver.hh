@@ -348,12 +348,12 @@ namespace Dune
                    {
 
                      if ( set_zero == false )
-                      {  
+                      {
                         local_matrix.add( j, i, integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
                       }
                      else
                       { // stabilization (should be close to zero):
-                        local_matrix.add( j, i, 0.0000000001 * integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+                        local_matrix.add( j, i, /*0.0*/ 0.00000001 * integrationFactor * quadratureWeight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
                       }
 
                    }
@@ -564,6 +564,7 @@ namespace Dune
           inverse_jac.mv( gradient_phi_ref_element[ 0 ], gradient_phi[ i ][ 0 ] );
         }
 
+
         for( unsigned int i = 0; i < numBaseFunctions; ++i )
         {
           elementOfRHS[ i ] -= weight * (total_diffusive_flux[ 0 ] * gradient_phi[ i ][ 0 ]);
@@ -695,7 +696,7 @@ namespace Dune
     typedef SparseRowMatrixOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType, FluxProbMatrixTraits > FluxProbFEMMatrix;
 
     // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp /*CGInverseOp*/
-    typedef OEMBICGSTABOp< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
+    typedef CGInverseOp< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
 
   private:
 
@@ -833,10 +834,10 @@ namespace Dune
         {
 
             const SubGridEntityType &subgrid_entity = *sg_it;
- 
+
             HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>( subgrid_entity );
             const HostEntityType& host_entity = *host_entity_pointer;
-	  
+
             HostIntersectionIterator iit = hostDiscreteFunctionSpace_.gridPart().ibegin( host_entity );
             const HostIntersectionIterator endiit = hostDiscreteFunctionSpace_.gridPart().iend( host_entity );
             for( ; iit != endiit; ++iit ) {
@@ -846,8 +847,8 @@ namespace Dune
                  // check if the neighbor entity is in the subgrid
                  const HostEntityPointerType neighborHostEntityPointer = iit->outside();
                  const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
-           
-		  if ( subGrid.template contains<0>( neighborHostEntity ) )
+
+                 if ( subGrid.template contains<0>( neighborHostEntity ) )
                    {
                     //!continue;
                    }

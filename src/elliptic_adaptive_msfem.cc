@@ -522,12 +522,12 @@ grid_coarse.postAdapt();
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MacroMicroGridSpecifierType specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
-    { specifier.setLayer( i , 10 ); }
+    { specifier.setLayer( i , 5 ); }
 
   //! create subgrids:
   bool silence = false;
   SubGridListType subgrid_list( specifier, silence );
-     
+
 #if 1
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
