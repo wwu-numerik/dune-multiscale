@@ -1937,24 +1937,6 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
           total_conservative_flux_jumps += pow( loc_conservative_flux_jumps[ global_index_entity ], 2.0 );
           total_coarse_grid_jumps += pow( loc_coarse_grid_jumps[ global_index_entity ], 2.0 );
 
-//! loeschen oder einbinden?
-#if 0
-
-          // the coarse grid element T:
-          const EntityType &coarse_grid_entity = *coarse_grid_it;
-          const EntityGeometryType &coarse_grid_geometry = coarse_grid_entity.geometry();
-          assert( coarse_grid_entity.partitionType() == InteriorEntity );
-
-          // 1 point quadrature!! We only need the gradient of the base function,
-          // which is constant on the whole coarse grid entity.
-          EntityQuadratureType one_point_quadrature( coarse_grid_entity, 0 );
-
-          // the barycenter of the macro_grid_entity
-          const typename EntityQuadratureType::CoordinateType &local_coarse_point 
-           = one_point_quadrature.point( 0 /*=quadraturePoint*/ );
-          DomainType coarse_entity_barycenter = coarse_grid_geometry.global( local_coarse_point );
-
-#endif
 #if 1
 
           // the sub grid U(T) that belongs to the coarse_grid_entity T
@@ -2107,6 +2089,125 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
               }
 #endif
         }
+
+
+
+
+// fine-grid iterator:
+#if 1
+
+
+       // Coarse Entity Iterator 
+       const IteratorType fine_grid_end = fineDiscreteFunctionSpace_.end();
+       for( IteratorType fine_grid_it = fineDiscreteFunctionSpace_.begin(); fine_grid_it != fine_grid_end; ++fine_grid_it )
+        {
+
+          EntityType& entity = *fine_grid_it;
+
+          // identify coarse grid father entity
+          EntityPointerType coarse_father = fine_grid_it;
+          for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
+            coarse_father = coarse_father->father();
+
+          bool father_found = coarseGridLeafIndexSet.contains( *coarse_father );
+          while ( father_found == false )
+               {
+                 coarse_father = coarse_father->father();
+                 father_found = coarseGridLeafIndexSet.contains( *coarse_father );
+               }
+
+          int coarse_father_index = coarseGridLeafIndexSet.index( *coarse_father );
+
+          const EntityGeometryType& entityGeometry = entity.geometry();
+
+          EntityQuadratureType entityQuadrature( entity , 0 ); // 0 = polynomial order
+          const DomainType &x = entityGeometry.global( entityQuadrature.point(0) );
+
+          LocalFunctionType local_msfem_sol = msfem_solution.localFunction( entity );
+          JacobianRangeType gradient_msfem_sol(0.);
+          local_msfem_sol.jacobian( entityQuadrature[ 0 ], gradient_msfem_sol);
+
+          JacobianRangeType diffusive_flux_x;
+          diffusion_.diffusiveFlux( x, gradient_msfem_sol, diffusive_flux_x );
+
+          EntityQuadratureType highOrder_entityQuadrature( entity , 2*spacePolOrd+2 );
+
+          const int quadratureNop = highOrder_entityQuadrature.nop();
+          for( int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint )
+            {
+              const double weight = highOrder_entityQuadrature.weight( quadraturePoint ) *
+                entityGeometry.integrationElement( highOrder_entityQuadrature.point( quadraturePoint ) );
+
+              DomainType point = entityGeometry.global( highOrder_entityQuadrature.point( quadraturePoint ) );
+
+              JacobianRangeType diffusive_flux_high_order;
+              diffusion_.diffusiveFlux( point, gradient_msfem_sol, diffusive_flux_high_order );
+
+              RangeType value = 0.0;
+              for ( int i = 0; i < dimension; ++i )
+                value += pow( diffusive_flux_x[ 0 ][ i ] - diffusive_flux_high_order[ 0 ][ i ], 2.0 );
+
+              loc_approximation_error[ coarse_father_index ] += weight * value;
+              total_approximation_error += weight * value;
+
+            }
+
+
+          const GridPartType &fineGridPart = fineDiscreteFunctionSpace_.gridPart();
+
+          IntersectionIteratorType endnit = fineGridPart.iend( *fine_grid_it );
+          for( IntersectionIteratorType nit = fineGridPart.ibegin( *fine_grid_it ); nit != endnit ; ++nit)
+            {
+              FaceQuadratureType innerFaceQuadrature( fineGridPart, *nit, 0 , FaceQuadratureType::INSIDE);
+              const FaceGeometryType& faceGeometry = nit->geometry();
+
+              if ( nit->neighbor() == false )
+               { continue; }
+
+              EntityPointerType outer_fine_grid_it = nit->outside();
+              EntityType& outer_entity = *outer_fine_grid_it;
+
+              EntityQuadratureType outer_entityQuadrature( outer_entity , 0 ); // 0 = polynomial order
+              const EntityGeometryType& outer_entityGeometry = outer_entity.geometry();
+              const DomainType &outer_x = outer_entityGeometry.global( outer_entityQuadrature.point(0) );
+
+              LocalFunctionType outer_local_msfem_sol = msfem_solution.localFunction( outer_entity );
+              JacobianRangeType outer_gradient_msfem_sol(0.);
+              outer_local_msfem_sol.jacobian( outer_entityQuadrature[ 0 ], outer_gradient_msfem_sol);
+
+              JacobianRangeType diffusive_flux_outside;
+              diffusion_.diffusiveFlux( outer_x, outer_gradient_msfem_sol, diffusive_flux_outside );
+
+              DomainType unitOuterNormal =
+                 nit->unitOuterNormal( innerFaceQuadrature.localPoint( 0 ) );
+
+              const RangeType edge_length = faceGeometry.volume();
+
+              RangeType int_value = 0.0;
+              for ( int i = 0; i < dimension; ++i )
+                int_value[ i ] += (diffusive_flux_x[ 0 ][ i ] - diffusive_flux_outside[ 0 ][ i ]) * unitOuterNormal[ i ];
+              int_value = pow( int_value, 2.0 );
+
+              loc_fine_grid_jumps[ coarse_father_index ] += edge_length * edge_length * int_value;
+              total_fine_grid_jumps += edge_length * edge_length * int_value;
+            }
+
+        }
+
+    for ( int m = 0; m < number_of_coarse_grid_entities; ++m )
+      {
+        loc_approximation_error[ m ] = sqrt( loc_approximation_error[ m ] );
+        loc_fine_grid_jumps[ m ] = sqrt( loc_fine_grid_jumps[ m ] );
+      }
+
+#endif
+
+
+
+
+
+
+
 
        total_coarse_residual = sqrt( total_coarse_residual );
        total_projection_error = sqrt( total_projection_error );
