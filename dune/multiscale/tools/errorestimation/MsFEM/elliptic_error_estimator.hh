@@ -341,16 +341,26 @@ namespace Dune
 
 #if 1
     // jump in conservative flux
-    RangeType jump_conservative_flux( const EntityType &coarse_entity, const DiscreteFunctionType& msfem_coarse_part )
+    void getFluxes( const EntityType &coarse_entity,
+                    const DiscreteFunctionType& msfem_coarse_part,
+                          RangeType& jump_conservative_flux,
+                          RangeType& jump_coarse_flux )
      {
-
+       
        // jump for each face
        RangeType jump[3];
 
        jump[0] = 0.0;
        jump[1] = 0.0;
        jump[2] = 0.0;
-
+       
+       // coarse grid jump for each face
+       RangeType coarse_jump[3];
+       
+       coarse_jump[0] = 0.0;
+       coarse_jump[1] = 0.0;
+       coarse_jump[2] = 0.0;
+       
        const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
        const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
 
@@ -631,6 +641,17 @@ namespace Dune
 
                       jump[ relevant_face_index ] += H_E * integrationFactor * quadratureWeight * pow( jump_contribution, 2.0 );
 
+
+                      JacobianRangeType coarse_jump_contribution;
+                      coarse_jump_contribution[0] = gradient_msfem_coarse_ent[0] - gradient_msfem_coarse_neighbor_ent[0];
+
+     
+                      RangeType cjump(0.0);
+                      cjump += fabs( value_ent_e0 * coarse_jump_contribution[0][0] + value_ent_e1 * coarse_jump_contribution[0][1] );
+                      cjump += fabs( value_neighbor_ent_e0 * coarse_jump_contribution[0][0] + value_neighbor_ent_e1 * coarse_jump_contribution[0][1] );
+		      
+                      coarse_jump[ relevant_face_index ] += H_E * integrationFactor * quadratureWeight * pow( cjump , 2.0 );
+   
 #if 0
 std :: cout << "index_coarse_entity = " << index_coarse_entity << std ::endl;
 std :: cout << "(local_point,quadraturePoint) = (" << local_point << "," << quadraturePoint << ")" << std :: endl;
@@ -654,10 +675,10 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
 
 
 
-std :: cout << "jump[0] = " << jump[0] << std :: endl;
-std :: cout << "jump[1] = " << jump[1] << std :: endl;
-std :: cout << "jump[2] = " << jump[2] << std :: endl;
-std :: cout << std :: endl;
+      // std :: cout << "jump[0] = " << jump[0] << std :: endl;
+      // std :: cout << "jump[1] = " << jump[1] << std :: endl;
+      // std :: cout << "jump[2] = " << jump[2] << std :: endl;
+      // std :: cout << std :: endl;
 
 // laufe jetzt ueber das Subgrid der Coarse entity
 // wandele die sub entities in host entities um und nutze den 'subgrid intersection iterator'
@@ -665,7 +686,8 @@ std :: cout << std :: endl;
 // wenn ja addiere die jeweiligen conservative fluxes ausgewertet im Quadraturpunkt auf auf dem subgrid face.
 
 
-      return ( sqrt(jump[0]) + sqrt(jump[1]) + sqrt(jump[2]) );
+      jump_conservative_flux = ( sqrt(jump[0]) + sqrt(jump[1]) + sqrt(jump[2]) );
+      jump_coarse_flux = sqrt(coarse_jump[0]) + sqrt(coarse_jump[1]) + sqrt(coarse_jump[2]);
 
      }
 #endif
@@ -1907,8 +1929,13 @@ std :: cout << std :: endl;
           loc_coarse_residual[ global_index_entity ] = indicator_f( *coarse_grid_it );
           total_coarse_residual += pow( loc_coarse_residual[ global_index_entity ], 2.0 );
 
-          loc_conservative_flux_jumps[ global_index_entity ] = jump_conservative_flux( *coarse_grid_it, msfem_coarse_part );
+	  getFluxes( *coarse_grid_it,
+                     msfem_coarse_part,
+                     loc_conservative_flux_jumps[ global_index_entity ],
+                     loc_coarse_grid_jumps[ global_index_entity ] );
+
           total_conservative_flux_jumps += pow( loc_conservative_flux_jumps[ global_index_entity ], 2.0 );
+          total_coarse_grid_jumps += pow( loc_coarse_grid_jumps[ global_index_entity ], 2.0 );
 
 //! loeschen oder einbinden?
 #if 0
