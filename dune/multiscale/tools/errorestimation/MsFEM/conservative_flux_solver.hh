@@ -17,7 +17,7 @@
 #define FLUX_SOLVER_VERBOSE false
 
 // VTK output for conservative flux solution
-#define VTK_OUTPUT
+//! #define VTK_OUTPUT
 
 // dune-subgrid include:
 #include <dune/subgrid/subgrid.hh>
@@ -965,6 +965,8 @@ std :: cout << std :: endl;
       // general output parameters
       ConFluxProblemDataOutputParameters outputparam;
       outputparam.set_path( path_ + "/cf_problems/" );
+
+      mkdir((path_ + "/cf_problems").c_str() DIRMODUS);
 
       // sequence stamp
       std::stringstream outstring;

@@ -14,7 +14,7 @@
 #define LOCPROBLEMSOLVER_VERBOSE false
 
 // VTK output for local problems
-#define VTK_OUTPUT
+//! #define VTK_OUTPUT
 
 // write solutions of the local problems (vtk)
 //#define LOCALDATAOUTPUT
@@ -847,6 +847,8 @@ namespace Dune
     void assemble_all( bool silent = true /* state information on subgrids */ )
     {
  
+      mkdir((path_).c_str() DIRMODUS);
+
       enum { dimension = GridType :: dimension};
       enum { maxnumOfBaseFct = 100 }; 
 

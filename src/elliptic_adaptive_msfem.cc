@@ -35,6 +35,15 @@
 #include <stdlib.h>
 //-----------------------------
 
+
+
+//#define ADAPTIVE
+
+#ifndef ADAPTIVE
+#define UNIFORM
+#endif
+
+
 //! is an exact solution available?
 // this information should be provided by the 'problem specification file'
 // there we define or don't define the macro EXACTSOLUTION_AVAILABLE
@@ -212,6 +221,9 @@ std :: string path_;
 
 int total_refinement_level_;
 int coarse_grid_level_;
+
+// only for uniform computations / use the same number of layers for every coarse grid entity
+int number_of_layers_;
 
 //! -----------------------------------------------------------------------------
 
@@ -522,7 +534,7 @@ grid_coarse.postAdapt();
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MacroMicroGridSpecifierType specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );
   for ( int i = 0; i < number_of_level_host_entities; i+=1 )
-    { specifier.setLayer( i , 5 ); }
+    { specifier.setLayer( i , number_of_layers_ ); }
 
   //! create subgrids:
   bool silence = false;
@@ -731,7 +743,9 @@ int main(int argc, char** argv)
   // name of the file in which you want to save the data:
   std :: cout << "Enter name for data directory: ";
   std :: cin >> filename_;
-  
+
+  path_ = "data/MsFEM/" + filename_;
+
   // generate directories for data output
   if (mkdir((path_).c_str() DIRMODUS) == -1)
    {
@@ -746,8 +760,9 @@ int main(int argc, char** argv)
      mkdir((path_).c_str() DIRMODUS);
    }
 
-  path_ = "data/MsFEM/" + filename_;
-  
+  std :: string save_filename = path_ + "/problem-info.txt";
+  std :: cout << "Data will be saved under: " << save_filename << std :: endl;
+
   std :: cout << "Enter coarse grid level: ";
   std :: cin >> coarse_grid_level_;
   if ( coarse_grid_level_ > atoi( argv[ 1 ] ))
@@ -755,9 +770,11 @@ int main(int argc, char** argv)
      std :: cout << "Coarse grid level must be smaller than the starting refinment level." << std :: endl;
      abort();
    }
-   
-  std :: string save_filename = path_ + "/problem-info.txt";
-  std :: cout << "Data will be saved under: " << save_filename << std :: endl;
+
+#ifdef UNIFORM
+  std :: cout << "Enter number of layers for oversampling:";
+  std :: cin >> number_of_layers_;
+#endif
 
   // data for the model problem; the information manager
   // (see 'problem_specification.hh' for details)
@@ -783,10 +800,17 @@ int main(int argc, char** argv)
   std :: ofstream data_file( (save_filename).c_str() );
   if (data_file.is_open())
             {
-               data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std :: endl << std :: endl;
+               data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << " with epsilon = " << info.getEpsilon() << "." << std :: endl << std :: endl;
+#ifdef UNIFORM
+               data_file << "Use MsFEM with an uniform computation, i.e.:" << std :: endl;
+               data_file << "Uniformly refined coarse and fine mesh and" << std :: endl;
+               data_file << "the same number of layers for each (oversampled) local grid computation." << std :: endl << std :: endl;
                data_file << "Computations were made for:" << std :: endl << std :: endl;
-               data_file << "Refinement Level for (uniform) Macro Grid = " << total_refinement_level_ << std :: endl;
+               data_file << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std :: endl;
+               data_file << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std :: endl;
+               data_file << "Number of layers for oversampling = " << number_of_layers_ << std :: endl;
                data_file << std :: endl << std :: endl;
+#endif
             }
 
     algorithm( macro_grid_pointer, data_file );
