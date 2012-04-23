@@ -690,11 +690,11 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
 
 
     // adaptive_refinement
-    void adaptive_refinement( GridType &coarse_grid,
-                              const DiscreteFunctionType& msfem_solution,
-                              const DiscreteFunctionType& msfem_coarse_part,
-                              const DiscreteFunctionType& msfem_fine_part,
-                              std :: ofstream& data_file )
+    RangeType adaptive_refinement( GridType &coarse_grid,
+                                   const DiscreteFunctionType& msfem_solution,
+                                   const DiscreteFunctionType& msfem_coarse_part,
+                                   const DiscreteFunctionType& msfem_fine_part,
+                                   std :: ofstream& data_file )
     {
       
        std :: cout << "Start computing conservative fluxes..." << std :: endl;
@@ -726,7 +726,9 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
        std :: vector < RangeType > loc_approximation_error( number_of_coarse_grid_entities );
 
        std :: vector < RangeType > loc_fine_grid_jumps( number_of_coarse_grid_entities );
-       
+
+       specifier_.initialize_local_error_manager();
+
        for ( int m = 0; m < number_of_coarse_grid_entities; ++m )
          {
            loc_coarse_residual[ m ] = 0.0;
@@ -746,9 +748,7 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
 
        RangeType total_estimated_error( 0.0 );
 
-//! loeschen
-RangeType check = 0.0;
-       
+
        const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
        const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
 
@@ -759,12 +759,17 @@ RangeType check = 0.0;
           int global_index_entity = coarseGridLeafIndexSet.index( *coarse_grid_it );
 
           loc_coarse_residual[ global_index_entity ] = indicator_f( *coarse_grid_it );
+          specifier_.set_loc_coarse_residual( global_index_entity, loc_coarse_residual[ global_index_entity ] );
           total_coarse_residual += pow( loc_coarse_residual[ global_index_entity ], 2.0 );
 
 	  getFluxes( *coarse_grid_it,
                      msfem_coarse_part,
                      loc_conservative_flux_jumps[ global_index_entity ],
                      loc_coarse_grid_jumps[ global_index_entity ] );
+
+          specifier_.set_loc_coarse_grid_jumps( global_index_entity, loc_coarse_grid_jumps[ global_index_entity ] );
+
+          specifier_.set_loc_conservative_flux_jumps( global_index_entity, loc_conservative_flux_jumps[ global_index_entity ] );
 
           total_conservative_flux_jumps += pow( loc_conservative_flux_jumps[ global_index_entity ], 2.0 );
           total_coarse_grid_jumps += pow( loc_coarse_grid_jumps[ global_index_entity ], 2.0 );
@@ -914,7 +919,6 @@ value += pow ( loc_msfem_fine_part - ( loc_sol_e0 * grad_msfem_coarse_part[ 0 ][
 std :: cout << "value L2 = " << value << std :: endl;
 std :: cout << "loc_msfem_fine_part 1 = " << loc_msfem_fine_part << std :: endl;
 std :: cout << "loc_msfem_fine_part 2 = " << loc_sol_e0 * grad_msfem_coarse_part[ 0 ][ 0 ] + loc_sol_e1 * grad_msfem_coarse_part[ 0 ][ 1 ] << std :: endl;
-check += weight_local_quadrature;
 #endif
                     loc_projection_error[ global_index_entity ] += value * weight_local_quadrature;
                     total_projection_error += value * weight_local_quadrature;
@@ -923,10 +927,6 @@ check += weight_local_quadrature;
               }
 #endif
         }
-
-//! loeschen:
-std :: cout << "check = " << check << std :: endl;
-
 
 
 // fine-grid iterator:
@@ -1035,6 +1035,11 @@ std :: cout << "check = " << check << std :: endl;
         loc_approximation_error[ m ] = sqrt( loc_approximation_error[ m ] );
         loc_fine_grid_jumps[ m ] = sqrt( loc_fine_grid_jumps[ m ] );
         loc_projection_error[ m ] = sqrt( loc_projection_error[ m ] );
+
+        specifier_.set_loc_approximation_error( m, loc_approximation_error[ m ] );
+        specifier_.set_loc_fine_grid_jumps( m, loc_fine_grid_jumps[ m ] );
+        specifier_.set_loc_projection_error( m, loc_projection_error[ m ] );
+
       }
 
 #endif
@@ -1078,6 +1083,7 @@ std :: cout << "check = " << check << std :: endl;
        std :: cout << "total_approximation_error = " << total_approximation_error << "." << std :: endl;
        std :: cout << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std :: endl;
 
+       return total_estimated_error;
     }
 
 }; // end of class MsFEMErrorEstimator

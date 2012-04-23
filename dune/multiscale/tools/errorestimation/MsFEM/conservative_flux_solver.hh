@@ -809,6 +809,7 @@ namespace Dune
          std :: abort();
        }
 
+      mkdir((path_ + "/cf_problems").c_str() DIRMODUS);
 #ifdef VTK_OUTPUT
      vtk_output( conservative_flux, sub_grid_id, direction_index );
 #endif
@@ -965,8 +966,6 @@ std :: cout << std :: endl;
       // general output parameters
       ConFluxProblemDataOutputParameters outputparam;
       outputparam.set_path( path_ + "/cf_problems/" );
-
-      mkdir((path_ + "/cf_problems").c_str() DIRMODUS);
 
       // sequence stamp
       std::stringstream outstring;

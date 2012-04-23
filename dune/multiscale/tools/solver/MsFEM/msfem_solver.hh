@@ -29,6 +29,8 @@ namespace Dune
   class MacroMicroGridSpecifier
   {
 
+  typedef typename DiscreteFunctionSpaceType :: RangeType RangeType;
+
   public:
     
     MacroMicroGridSpecifier( DiscreteFunctionSpaceType& coarse_scale_space,
@@ -89,6 +91,97 @@ namespace Dune
        return fine_scale_space_;
      }
 
+    void initialize_local_error_manager()
+     {
+       for ( int i = 0; i < number_of_level_host_entities_; ++i )
+         {
+           loc_coarse_residual_.push_back( 0.0 );
+           loc_projection_error_.push_back( 0.0 );
+           loc_coarse_grid_jumps_.push_back( 0.0 );
+           loc_conservative_flux_jumps_.push_back( 0.0 );
+           loc_approximation_error_.push_back( 0.0 );
+           loc_fine_grid_jumps_.push_back( 0.0 );
+         }
+     }
+
+    void set_loc_coarse_residual( int& index, RangeType& loc_coarse_residual )
+     {
+       loc_coarse_residual_[ index ] = loc_coarse_residual;
+     }
+
+    void set_loc_coarse_grid_jumps( int& index, RangeType& loc_coarse_grid_jumps )
+     {
+       loc_coarse_grid_jumps_[ index ] = loc_coarse_grid_jumps;
+     }
+
+    void set_loc_projection_error( int& index, RangeType& loc_projection_error )
+     {
+       loc_projection_error_[ index ] = loc_projection_error;
+     }
+
+    void set_loc_conservative_flux_jumps( int& index, RangeType& loc_conservative_flux_jumps )
+     {
+       loc_conservative_flux_jumps_[ index ] = loc_conservative_flux_jumps;
+     }
+
+    void set_loc_approximation_error( int& index, RangeType& loc_approximation_error )
+     {
+       loc_approximation_error_[ index ] = loc_approximation_error;
+     }
+
+    void set_loc_fine_grid_jumps( int& index, RangeType& loc_fine_grid_jumps )
+     {
+       loc_fine_grid_jumps_[ index ] = loc_fine_grid_jumps;
+     }
+
+    RangeType get_loc_coarse_residual( int& index )
+     {
+       if ( loc_coarse_residual_.size() == 0 )
+        { std :: cout << "Error! Use: initialize_local_error_manager()-method for the grid specifier first!" << std ::endl; }
+       else
+        { return loc_coarse_residual_[ index ]; }
+     }
+
+    RangeType get_loc_coarse_grid_jumps( int& index )
+     {
+       if ( loc_coarse_grid_jumps_.size() == 0 )
+        { std :: cout << "Error! Use: initialize_local_error_manager()-method for the grid specifier first!" << std ::endl; }
+       else
+        { return loc_coarse_grid_jumps_[ index ]; }
+     }
+
+    RangeType get_loc_projection_error( int& index )
+     {
+       if ( loc_projection_error_.size() == 0 )
+        { std :: cout << "Error! Use: initialize_local_error_manager()-method for the grid specifier first!" << std ::endl; }
+       else
+        { return loc_projection_error_[ index ]; }
+     }
+
+    RangeType get_loc_conservative_flux_jumps( int& index )
+     {
+       if ( loc_conservative_flux_jumps_.size() == 0 )
+        { std :: cout << "Error! Use: initialize_local_error_manager()-method for the grid specifier first!" << std ::endl; }
+       else
+        { return loc_conservative_flux_jumps_[ index ]; }
+     }
+
+    RangeType get_loc_approximation_error( int& index )
+     {
+       if ( loc_approximation_error_.size() == 0 )
+        { std :: cout << "Error! Use: initialize_local_error_manager()-method for the grid specifier first!" << std ::endl; }
+       else
+        { return loc_approximation_error_[ index ]; }
+     }
+
+    RangeType get_loc_fine_grid_jumps( int& index )
+     {
+       if ( loc_fine_grid_jumps_.size() == 0 )
+        { std :: cout << "Error! Use: initialize_local_error_manager()-method for the grid specifier first!" << std ::endl; }
+       else
+        { return loc_fine_grid_jumps_[ index ]; }
+     }
+
   private:
 
     // level difference bettween coarse grid level and fine grid level
@@ -102,6 +195,26 @@ namespace Dune
 
     DiscreteFunctionSpaceType& coarse_scale_space_;
     DiscreteFunctionSpaceType& fine_scale_space_;
+
+    // ----- local error indicators (for each coarse grid element T) -------------
+
+    // local coarse residual, i.e. H ||f||_{L^2(T)}
+    std :: vector < RangeType > loc_coarse_residual_;
+
+    // local coarse grid jumps (contribute to the total coarse residual)
+    std :: vector < RangeType > loc_coarse_grid_jumps_;
+
+    // local projection error (we project to get a globaly continous approximation)
+    std :: vector < RangeType > loc_projection_error_;
+
+    // local jump in the conservative flux
+    std :: vector < RangeType > loc_conservative_flux_jumps_;
+
+    // local approximation error
+    std :: vector < RangeType > loc_approximation_error_;
+
+    // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
+    std :: vector < RangeType > loc_fine_grid_jumps_;
 
   };
 

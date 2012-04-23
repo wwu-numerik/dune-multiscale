@@ -229,6 +229,48 @@ int number_of_layers_;
 
 
 
+//! ---------------------- local error indicators --------------------------------
+
+// ----- local error indicators (for each coarse grid element T) -------------
+
+int max_loop_number = 10;
+
+bool local_indicators_available = false;
+
+// local coarse residual, i.e. H ||f||_{L^2(T)}
+std :: vector < std :: vector < RangeType > > loc_coarse_residual_( max_loop_number );
+
+// local coarse grid jumps (contribute to the total coarse residual)
+std :: vector < std :: vector < RangeType > > loc_coarse_grid_jumps_( max_loop_number );
+
+// local projection error (we project to get a globaly continous approximation)
+std :: vector < std :: vector < RangeType > > loc_projection_error_( max_loop_number );
+
+// local jump in the conservative flux
+std :: vector < std :: vector < RangeType > > loc_conservative_flux_jumps_( max_loop_number );
+
+// local approximation error
+std :: vector < std :: vector < RangeType > > loc_approximation_error_( max_loop_number );
+
+// local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
+std :: vector < std :: vector < RangeType > > loc_fine_grid_jumps_( max_loop_number );
+
+
+std :: vector < RangeType > total_coarse_residual_( max_loop_number );
+std :: vector < RangeType > total_projection_error_( max_loop_number );
+std :: vector < RangeType > total_coarse_grid_jumps_( max_loop_number );
+std :: vector < RangeType > total_conservative_flux_jumps_( max_loop_number );
+std :: vector < RangeType > total_approximation_error_( max_loop_number );
+std :: vector < RangeType > total_fine_grid_jumps_( max_loop_number );
+
+
+bool repeat_algorithm_ = true;
+int loop_number_ = 0;
+
+//! -----------------------------------------------------------------------------
+
+
+
 //! ------------------ typedefs and classes for data output ---------------------
 
 typedef Tuple<DiscreteFunctionType*> IOTupleType;
@@ -338,24 +380,29 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 // strategy for adaptivity:
+#if 1
+  if ( local_indicators_available == true )
+   {
+      typedef GridType :: LeafGridView GridView;
+      typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
+
+      typedef GridType :: Traits :: LeafIndexSet GridLeafIndexSet;
+      const GridLeafIndexSet& gridLeafIndexSet = grid.leafIndexSet();
+
+      GridView gridView = grid.leafView();
+
+      for ( ElementLeafIterator it = gridView.begin<0>();
+            it != gridView.end<0>(); ++it )
+        {
+         //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
+         // if ( gridLeafIndexSet.index( *it ) < -7 )
+          { grid.mark( 0 , *it ); }
+        }
+   }
+#endif
+
 #if 0
-typedef GridType :: LeafGridView GridView;
-typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
 
-typedef GridType :: Traits :: LeafIndexSet GridLeafIndexSet;
-const GridLeafIndexSet& gridLeafIndexSet = grid.leafIndexSet();
-// gridLeafIndexSet.index( *it )
-
-GridView gridView = grid.leafView();
-  
-
-for ( ElementLeafIterator it = gridView.begin<0>();
-      it != gridView.end<0>(); ++it )
-  {
-    //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
-    if ( gridLeafIndexSet.index( *it ) < -7 )
-      { grid.mark( 3 , *it ); }
-  }
   
 grid.preAdapt();
 grid.adapt();
@@ -552,11 +599,63 @@ grid_coarse.postAdapt();
 // error estimation
 #if 1
 
-  MsFEMErrorEstimatorType estimator( discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_ );
-  estimator.adaptive_refinement( grid_coarse,
-				  msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution,
-				  data_file );
+  RangeType total_estimated_H1_error( 0.0 );
 
+  MsFEMErrorEstimatorType estimator( discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_ );
+  total_estimated_H1_error = estimator.adaptive_refinement( grid_coarse, msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, data_file );
+
+  loc_coarse_residual_[ loop_number_ ].clear();
+  loc_coarse_grid_jumps_[ loop_number_ ].clear();
+  loc_projection_error_[ loop_number_ ].clear();
+  loc_conservative_flux_jumps_[ loop_number_ ].clear();
+  loc_approximation_error_[ loop_number_ ].clear();
+  loc_fine_grid_jumps_[ loop_number_ ].clear();
+
+  for ( int m = 0; m < specifier.getNumOfCoarseEntities(); ++m )
+    {
+      loc_coarse_residual_[ loop_number_ ].push_back( 0.0 );
+      loc_coarse_grid_jumps_[ loop_number_ ].push_back( 0.0 );
+      loc_projection_error_[ loop_number_ ].push_back( 0.0 );
+      loc_conservative_flux_jumps_[ loop_number_ ].push_back( 0.0 );
+      loc_approximation_error_[ loop_number_ ].push_back( 0.0 );
+      loc_fine_grid_jumps_[ loop_number_ ].push_back( 0.0 );
+    }
+
+  total_coarse_residual_[ loop_number_ ] = 0.0;
+  total_projection_error_[ loop_number_ ] = 0.0;
+  total_coarse_grid_jumps_[ loop_number_ ] = 0.0;
+  total_conservative_flux_jumps_[ loop_number_ ] = 0.0;
+  total_approximation_error_[ loop_number_ ] = 0.0;
+  total_fine_grid_jumps_[ loop_number_ ] = 0.0;
+
+  for ( int m = 0; m < specifier.getNumOfCoarseEntities(); ++m )
+    {
+      loc_coarse_residual_[ loop_number_ ][ m ] = specifier.get_loc_coarse_residual( m );
+      loc_coarse_grid_jumps_[ loop_number_ ][ m ] = specifier.get_loc_coarse_grid_jumps( m );
+      loc_projection_error_[ loop_number_ ][ m ] = specifier.get_loc_projection_error( m );
+      loc_conservative_flux_jumps_[ loop_number_ ][ m ] = specifier.get_loc_conservative_flux_jumps( m );
+      loc_approximation_error_[ loop_number_ ][ m ] = specifier.get_loc_approximation_error( m );
+      loc_fine_grid_jumps_[ loop_number_ ][ m ] = specifier.get_loc_fine_grid_jumps( m );
+
+      total_coarse_residual_[ loop_number_ ] += pow( loc_coarse_residual_[ loop_number_ ][ m ] , 2.0 );
+      total_projection_error_[ loop_number_ ] += pow( loc_projection_error_[ loop_number_ ][ m ] , 2.0 );
+      total_coarse_grid_jumps_[ loop_number_ ] += pow( loc_coarse_grid_jumps_[ loop_number_ ][ m ] , 2.0 );
+      total_conservative_flux_jumps_[ loop_number_ ] += pow( loc_conservative_flux_jumps_[ loop_number_ ][ m ] , 2.0 );
+      total_approximation_error_[ loop_number_ ] += pow( loc_approximation_error_[ loop_number_ ][ m ] , 2.0 );
+      total_fine_grid_jumps_[ loop_number_ ] += pow( loc_fine_grid_jumps_[ loop_number_ ][ m ] , 2.0 );
+    }
+
+  total_coarse_residual_[ loop_number_ ] = sqrt( total_coarse_residual_[ loop_number_ ] );
+  total_projection_error_[ loop_number_ ] = sqrt( total_projection_error_[ loop_number_ ] );
+  total_coarse_grid_jumps_[ loop_number_ ] = sqrt( total_coarse_grid_jumps_[ loop_number_ ] );
+  total_conservative_flux_jumps_[ loop_number_ ] = sqrt( total_conservative_flux_jumps_[ loop_number_ ] );
+  total_approximation_error_[ loop_number_ ] = sqrt( total_approximation_error_[ loop_number_ ] );
+  total_fine_grid_jumps_[ loop_number_ ] = sqrt( total_fine_grid_jumps_[ loop_number_ ] );
+
+  local_indicators_available = true;
+
+  if ( total_estimated_H1_error >= 0.0 )
+    repeat_algorithm_ = false;
 
 #endif
 
@@ -622,7 +721,7 @@ grid_coarse.postAdapt();
     dfw.append( msfem_solution );
 
   //! --------------------------------------------------------------------
-    
+
 
 
   //! ---------------------- solve FEM problem ---------------------------
@@ -656,9 +755,8 @@ grid_coarse.postAdapt();
   outstring.str(std::string());
 
   // -------------------------------------------------------------
- 
-   
-   
+
+
   // ------------- write discrete fem solution to file -----------
 
   writer_is_open = false;
@@ -813,7 +911,15 @@ int main(int argc, char** argv)
 #endif
             }
 
-    algorithm( macro_grid_pointer, data_file );
+    loop_number_ = 0;
+    while ( repeat_algorithm_ == true )
+     {
+       data_file << "------------------ run " << loop_number_ + 1<< " -------------------" << std :: endl;
+       algorithm( macro_grid_pointer, data_file );
+       data_file << std :: endl << std :: endl;
+       data_file << "---------------------------------------------" << std :: endl;
+       loop_number_ += 1;
+     }
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the normal macro problem
 
 
