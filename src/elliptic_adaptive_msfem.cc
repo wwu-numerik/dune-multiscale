@@ -36,8 +36,7 @@
 //-----------------------------
 
 
-
-//#define ADAPTIVE
+#define ADAPTIVE
 
 #ifndef ADAPTIVE
 #define UNIFORM
@@ -380,58 +379,63 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
 
 // strategy for adaptivity:
-#if 1
+#ifdef ADAPTIVE
+  
+  typedef GridType :: LeafGridView GridView;
+  typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
+
+  typedef GridType :: Traits :: LeafIndexSet GridLeafIndexSet;
+  
   if ( local_indicators_available == true )
-   {
-      typedef GridType :: LeafGridView GridView;
-      typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
-
-      typedef GridType :: Traits :: LeafIndexSet GridLeafIndexSet;
-      const GridLeafIndexSet& gridLeafIndexSet = grid.leafIndexSet();
-
-      GridView gridView = grid.leafView();
-
-      for ( ElementLeafIterator it = gridView.begin<0>();
-            it != gridView.end<0>(); ++it )
+   {      
+      for ( int l = 0; l < loop_number_; ++l )
         {
-         //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
-         // if ( gridLeafIndexSet.index( *it ) < -7 )
-          { grid.mark( 0 , *it ); }
+
+          const GridLeafIndexSet& gridLeafIndexSet = grid.leafIndexSet();
+          GridView gridView = grid.leafView();
+
+          for ( ElementLeafIterator it = gridView.begin<0>();
+                it != gridView.end<0>(); ++it )
+            {
+	      //! STRATEGY
+              //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
+              // if ( gridLeafIndexSet.index( *it ) < -7 )
+              { grid.mark( 0 , *it ); }
+            }
+            
+          grid.preAdapt();
+          grid.adapt();
+          grid.postAdapt();
         }
    }
-#endif
 
-#if 0
+  if ( local_indicators_available == true )
+   {
+      for ( int l = 0; l < loop_number_; ++l )
+        {
 
-  
-grid.preAdapt();
-grid.adapt();
-grid.postAdapt();
+          GridView gridView_coarse = grid_coarse.leafView();
 
-std::cout << std :: endl;
-#endif
+          const GridLeafIndexSet& gridLeafIndexSet_coarse = grid_coarse.leafIndexSet();
 
-grid.globalRefine( total_refinement_level_ - coarse_grid_level_ );
+          for ( ElementLeafIterator it = gridView_coarse.begin<0>();
+                it != gridView_coarse.end<0>(); ++it )
+            {
+	      //! SAME STRATEGY
+              //std::cout << "gridLeafIndexSet_coarse.index( *it ) = " << gridLeafIndexSet_coarse.index( *it ) << std :: endl;
+              // if ( gridLeafIndexSet_coarse.index( *it ) < -7 )
+               { grid_coarse.mark( 0 , *it ); }
+            }
 
-// strategy for adaptivity:
-#if 0
-GridView gridViewc = grid_coarse.leafView();
-
-const GridLeafIndexSet& gridLeafIndexSet2 = grid_coarse.leafIndexSet();
-
-for ( ElementLeafIterator it = gridViewc.begin<0>();
-      it != gridViewc.end<0>(); ++it )
-  {
-      //std::cout << "gridLeafIndexSet2.index( *it ) = " << gridLeafIndexSet2.index( *it ) << std :: endl;
-      if ( gridLeafIndexSet2.index( *it ) < -7 )
-       { grid_coarse.mark( 3 , *it ); }
-  }
-
-grid_coarse.preAdapt();
-grid_coarse.adapt();
-grid_coarse.postAdapt();
+          grid_coarse.preAdapt();
+          grid_coarse.adapt();
+          grid_coarse.postAdapt();
+	}
+   }
+     
 #endif
   
+  grid.globalRefine( total_refinement_level_ - coarse_grid_level_ );
   
   //! ------------------------- discrete function spaces -----------------------------------
 
@@ -656,6 +660,11 @@ grid_coarse.postAdapt();
 
   if ( total_estimated_H1_error >= 0.0 )
     repeat_algorithm_ = false;
+  
+  
+  #ifndef ADAPTIVE
+  repeat_algorithm_ = false;
+  #endif
 
 #endif
 
@@ -908,17 +917,30 @@ int main(int argc, char** argv)
                data_file << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std :: endl;
                data_file << "Number of layers for oversampling = " << number_of_layers_ << std :: endl;
                data_file << std :: endl << std :: endl;
+#else
+               data_file << "Use MsFEM with an adaptive computation, i.e.:" << std :: endl;
+               data_file << "Starting with a uniformly refined coarse and fine mesh and" << std :: endl;
+               data_file << "the same number of layers for each (oversampled) local grid computation." << std :: endl << std :: endl;
+               data_file << "Computations were made for:" << std :: endl << std :: endl;
+               data_file << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std :: endl;
+               data_file << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std :: endl;
+               data_file << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std :: endl;
+               data_file << std :: endl << std :: endl;
 #endif
             }
 
     loop_number_ = 0;
     while ( repeat_algorithm_ == true )
      {
+#ifdef ADAPTIVE
        data_file << "------------------ run " << loop_number_ + 1<< " -------------------" << std :: endl;
+#endif
        algorithm( macro_grid_pointer, data_file );
+#ifdef ADAPTIVE
        data_file << std :: endl << std :: endl;
        data_file << "---------------------------------------------" << std :: endl;
        loop_number_ += 1;
+#endif
      }
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the normal macro problem
 
