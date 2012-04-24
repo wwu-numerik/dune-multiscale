@@ -234,7 +234,7 @@ int number_of_layers_;
 
 int max_loop_number = 10;
 
-bool local_indicators_available = false;
+bool local_indicators_available_ = false;
 
 // local coarse residual, i.e. H ||f||_{L^2(T)}
 std :: vector < std :: vector < RangeType > > loc_coarse_residual_( max_loop_number );
@@ -262,9 +262,14 @@ std :: vector < RangeType > total_conservative_flux_jumps_( max_loop_number );
 std :: vector < RangeType > total_approximation_error_( max_loop_number );
 std :: vector < RangeType > total_fine_grid_jumps_( max_loop_number );
 
+std :: vector < RangeType > total_estimated_H1_error_( max_loop_number );
 
 bool repeat_algorithm_ = true;
 int loop_number_ = 0;
+
+#ifdef ADAPTIVE
+double error_tolerance_;
+#endif
 
 //! -----------------------------------------------------------------------------
 
@@ -340,10 +345,20 @@ public:
 
 
 
-void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belongs to the macro grid
-                 std :: ofstream &data_file )
+void algorithm ( std :: string& macroGridName,
+                 std :: ofstream& data_file )
 {
 
+  std :: cout << "loading dgf: " << macroGridName << std :: endl;
+
+  // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values for the parameters:
+
+  // create a grid pointer for the DGF file belongig to the macro grid:
+  GridPointerType macro_grid_pointer( macroGridName );
+  // refine the grid 'starting_refinement_level' times:
+  macro_grid_pointer->globalRefine( coarse_grid_level_ );
+  
+  
   //! ---- tools ----
 
   // model problem data
@@ -366,10 +381,6 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   // coarse grid
 #if 1
-  Problem::ModelProblemData info( filename_ );
-  std :: string macroGridName;
-  info.getMacroGridFile( macroGridName );
-
   GridPointerType macro_grid_pointer_coarse( macroGridName );
   macro_grid_pointer_coarse->globalRefine( coarse_grid_level_ );
   GridPartType gridPart_coarse( *macro_grid_pointer_coarse);
@@ -386,51 +397,113 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   typedef GridType :: Traits :: LeafIndexSet GridLeafIndexSet;
   
-  if ( local_indicators_available == true )
-   {      
+  if ( local_indicators_available_ == true )
+   { 
+     
+      bool coarse_scale_error_dominant = false;
+      bool fine_scale_error_dominant = false; // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
+      bool oversampling_error_dominant = false; // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
+
+      // identify the dominant contribution:
+      double average_est_error = total_estimated_H1_error_[ loop_number_ - 1 ] / 6.0; // 6 contributions
+      
+      // double variance = 1.0;
+       
+      if ( (total_approximation_error_[ loop_number_ - 1 ] >= average_est_error ) || 
+           (total_fine_grid_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
+       {
+         fine_scale_error_dominant = true; /* increase fine level resolution by 2 levels */
+         total_refinement_level_ += 2; // 'the fine grid level'
+         data_file << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2." << std :: endl;
+         data_file << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std :: endl;
+         data_file << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
+                   << " refinement levels finer than the coarse grid." << std :: endl;
+      }
+       
+      if ( (total_projection_error_[ loop_number_ - 1 ] >= average_est_error ) || 
+           (total_conservative_flux_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
+       {
+         oversampling_error_dominant = true; /* increase number of layers by 1 */
+         number_of_layers_ += 1;
+         data_file << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 1." << std :: endl;
+         data_file << "NEW: Number of layers = " << number_of_layers_ << std :: endl; 
+       }
+
+      if ( (total_coarse_residual_[ loop_number_ - 1 ] >= average_est_error ) || 
+           (total_coarse_grid_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
+       {
+         data_file << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment." << std :: endl;
+         coarse_scale_error_dominant = true; /* mark elementwise for 2 refinments */
+       }
+
+      std :: vector < RangeType > average_coarse_error_indicator( loop_number_ ); //arithmetic average
+      for ( int l = 0; l < loop_number_; ++l )
+        {
+          assert( loc_coarse_residual_[ l ].size() == loc_coarse_grid_jumps_[ l ].size() );
+          average_coarse_error_indicator[ l ] = 0.0;
+          for ( int i = 0; i < loc_coarse_grid_jumps_[ l ].size(); ++i )
+            {
+              average_coarse_error_indicator[ l ] += loc_coarse_residual_[ l ][ i ]  + loc_coarse_grid_jumps_[ l ][ i ];
+            }
+          average_coarse_error_indicator[ l ] = average_coarse_error_indicator[ l ] / total_coarse_grid_jumps_.size();
+        }
+
+      // allgemeineren Algorithmus nur vorstellen, aber nicht implementieren
+
+      if ( coarse_scale_error_dominant == true ) {
       for ( int l = 0; l < loop_number_; ++l )
         {
 
           const GridLeafIndexSet& gridLeafIndexSet = grid.leafIndexSet();
           GridView gridView = grid.leafView();
 
+          int total_number_of_entities = 0;
+          int number_of_marked_entities = 0;
           for ( ElementLeafIterator it = gridView.begin<0>();
                 it != gridView.end<0>(); ++it )
             {
-	      //! STRATEGY
-              //std::cout << "gridLeafIndexSet.index( *it ) = " << gridLeafIndexSet.index( *it ) << std :: endl;
-              // if ( gridLeafIndexSet.index( *it ) < -7 )
-              { grid.mark( 0 , *it ); }
+              RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[ l ][ gridLeafIndexSet.index( *it ) ] + loc_coarse_residual_[ l ][ gridLeafIndexSet.index( *it ) ];
+              total_number_of_entities += 1;
+
+              if ( loc_coarse_error_indicator <= average_coarse_error_indicator[ l ] )
+                {
+                  grid.mark( 2 , *it );
+                  number_of_marked_entities += 1;
+                }
             }
-            
+
+          if ( l == (loop_number_-1) )
+           {
+             data_file << number_of_marked_entities << " coarse grid entities marked for mesh refinement." << std :: endl;
+           }
+
           grid.preAdapt();
           grid.adapt();
           grid.postAdapt();
         }
-   }
 
-  if ( local_indicators_available == true )
-   {
       for ( int l = 0; l < loop_number_; ++l )
         {
 
           GridView gridView_coarse = grid_coarse.leafView();
-
           const GridLeafIndexSet& gridLeafIndexSet_coarse = grid_coarse.leafIndexSet();
 
           for ( ElementLeafIterator it = gridView_coarse.begin<0>();
                 it != gridView_coarse.end<0>(); ++it )
             {
-	      //! SAME STRATEGY
-              //std::cout << "gridLeafIndexSet_coarse.index( *it ) = " << gridLeafIndexSet_coarse.index( *it ) << std :: endl;
-              // if ( gridLeafIndexSet_coarse.index( *it ) < -7 )
-               { grid_coarse.mark( 0 , *it ); }
+              RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[ l ][ gridLeafIndexSet_coarse.index( *it ) ] + loc_coarse_residual_[ l ][ gridLeafIndexSet_coarse.index( *it ) ];
+
+              if ( loc_coarse_error_indicator <= average_coarse_error_indicator[ l ] )
+               { grid_coarse.mark( 2 , *it ); }
             }
 
           grid_coarse.preAdapt();
           grid_coarse.adapt();
           grid_coarse.postAdapt();
 	}
+
+      }
+
    }
      
 #endif
@@ -655,10 +728,18 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
   total_conservative_flux_jumps_[ loop_number_ ] = sqrt( total_conservative_flux_jumps_[ loop_number_ ] );
   total_approximation_error_[ loop_number_ ] = sqrt( total_approximation_error_[ loop_number_ ] );
   total_fine_grid_jumps_[ loop_number_ ] = sqrt( total_fine_grid_jumps_[ loop_number_ ] );
+  
+  total_estimated_H1_error_[ loop_number_ ] = total_coarse_residual_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_projection_error_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_coarse_grid_jumps_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_conservative_flux_jumps_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_approximation_error_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_fine_grid_jumps_[ loop_number_ ];
+  
+  
+  local_indicators_available_ = true;
 
-  local_indicators_available = true;
-
-  if ( total_estimated_H1_error >= 0.0 )
+  if ( total_estimated_H1_error <= error_tolerance_ )
     repeat_algorithm_ = false;
   
   
@@ -679,11 +760,22 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   // create and initialize output class
   IOTupleType msfem_solution_series( &msfem_solution );
+  
+#ifdef ADAPTIVE
+  char msfem_fname[50];
+  sprintf( msfem_fname, "msfem_solution_%d_", loop_number_ );
+  std :: string msfem_fname_s( msfem_fname );
+  outputparam.set_prefix( msfem_fname_s );
+  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
+  // write data
+  outstring << msfem_fname_s;
+#else
   outputparam.set_prefix("msfem_solution");
   DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
-
   // write data
   outstring << "msfem_solution";
+#endif
+  
   msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
   // clear the std::stringstream:
   outstring.str(std::string());
@@ -691,11 +783,22 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   // create and initialize output class
   IOTupleType coarse_msfem_solution_series( &coarse_part_msfem_solution );
+  
+#ifdef ADAPTIVE
+  char coarse_msfem_fname[50];
+  sprintf( coarse_msfem_fname, "coarse_part_msfem_solution_%d_", loop_number_ );
+  std :: string coarse_msfem_fname_s( coarse_msfem_fname );
+  outputparam.set_prefix( coarse_msfem_fname_s );
+  DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
+  // write data
+  outstring << coarse_msfem_fname_s;
+#else
   outputparam.set_prefix("coarse_part_msfem_solution");
   DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
-
   // write data
-  outstring << "coarse_msfem_solution";
+  outstring << "coarse_part_msfem_solution";
+#endif
+
   coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
   // clear the std::stringstream:
   outstring.str(std::string());
@@ -704,11 +807,22 @@ void algorithm ( GridPointerType &macro_grid_pointer, // grid pointer that belon
 
   // create and initialize output class
   IOTupleType fine_msfem_solution_series( &fine_part_msfem_solution );
+  
+#ifdef ADAPTIVE
+  char fine_msfem_fname[50];
+  sprintf( fine_msfem_fname, "fine_part_msfem_solution_%d_", loop_number_ );
+  std :: string fine_msfem_fname_s( fine_msfem_fname );
+  outputparam.set_prefix( fine_msfem_fname_s );
+  DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
+  // write data
+  outstring << fine_msfem_fname_s;
+#else
   outputparam.set_prefix("fine_part_msfem_solution");
   DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
-
   // write data
   outstring << "fine_msfem_solution";
+#endif
+  
   fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
   // clear the std::stringstream:
   outstring.str(std::string());
@@ -879,8 +993,16 @@ int main(int argc, char** argv)
    }
 
 #ifdef UNIFORM
-  std :: cout << "Enter number of layers for oversampling:";
+  std :: cout << "Enter number of layers for oversampling: ";
   std :: cin >> number_of_layers_;
+#else
+  std :: cout << "Enter initial number of layers for oversampling: ";
+  std :: cin >> number_of_layers_;  
+#endif
+
+#ifdef ADAPTIVE
+  std :: cout << "Enter error tolerance: ";
+  std :: cin >> error_tolerance_;
 #endif
 
   // data for the model problem; the information manager
@@ -893,14 +1015,6 @@ int main(int argc, char** argv)
   //name of the grid file that describes the macro-grid:
   std :: string macroGridName;
   info.getMacroGridFile( macroGridName );
-  std :: cout << "loading dgf: " << macroGridName << std :: endl;
-
-  // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values for the parameters:
-
-  // create a grid pointer for the DGF file belongig to the macro grid:
-  GridPointerType macro_grid_pointer( macroGridName );
-  // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine( coarse_grid_level_ );// //total_refinement_level_  ); // coarse_grid_level_ );  //
 
   
   // to save all information in a file
@@ -921,6 +1035,7 @@ int main(int argc, char** argv)
                data_file << "Use MsFEM with an adaptive computation, i.e.:" << std :: endl;
                data_file << "Starting with a uniformly refined coarse and fine mesh and" << std :: endl;
                data_file << "the same number of layers for each (oversampled) local grid computation." << std :: endl << std :: endl;
+               data_file << "Error tolerance = " <<  error_tolerance_ << std :: endl << std :: endl;
                data_file << "Computations were made for:" << std :: endl << std :: endl;
                data_file << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std :: endl;
                data_file << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std :: endl;
@@ -933,9 +1048,9 @@ int main(int argc, char** argv)
     while ( repeat_algorithm_ == true )
      {
 #ifdef ADAPTIVE
-       data_file << "------------------ run " << loop_number_ + 1<< " -------------------" << std :: endl;
+       data_file << "------------------ run " << loop_number_ + 1<< " --------------------" << std :: endl << std :: endl;
 #endif
-       algorithm( macro_grid_pointer, data_file );
+       algorithm( macroGridName , data_file );
 #ifdef ADAPTIVE
        data_file << std :: endl << std :: endl;
        data_file << "---------------------------------------------" << std :: endl;
