@@ -445,7 +445,7 @@ void algorithm ( std :: string& macroGridName,
             {
               average_coarse_error_indicator[ l ] += loc_coarse_residual_[ l ][ i ]  + loc_coarse_grid_jumps_[ l ][ i ];
             }
-          average_coarse_error_indicator[ l ] = average_coarse_error_indicator[ l ] / total_coarse_grid_jumps_.size();
+          average_coarse_error_indicator[ l ] = average_coarse_error_indicator[ l ] / loc_coarse_residual_[ l ].size();
         }
 
       // allgemeineren Algorithmus nur vorstellen, aber nicht implementieren
