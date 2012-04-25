@@ -10,6 +10,8 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
+// done
+
 namespace Dune
 {
   // Imp stands for Implementation
@@ -428,12 +430,25 @@ namespace Dune
                 for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
                        father_of_loc_grid_ent = father_of_loc_grid_ent->father();
 
-                bool father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_ent );
+                bool father_found = false;
                 while ( father_found == false )
-                 {
-                   father_of_loc_grid_ent = father_of_loc_grid_ent->father();
-                   father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_ent );
-                 }
+                    {
+
+                      if ( coarseGridLeafIndexSet.contains( *father_of_loc_grid_ent ) == true )
+                       {
+                         if ( father_of_loc_grid_ent->hasFather() == false )
+                          { father_found = true; }
+                         else
+                          {
+                            if ( coarseGridLeafIndexSet.contains( *(father_of_loc_grid_ent->father())) == false )
+                              { father_found = true; }
+                          }
+                       }
+
+                      if ( father_found == false )
+                         { father_of_loc_grid_ent = father_of_loc_grid_ent->father(); }
+
+                    }
 
                 bool entities_identical = true;
                 int number_of_nodes = (*coarse_grid_it).template count<2>();

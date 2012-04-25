@@ -8,6 +8,9 @@
 // there we define or don't define the macro EXACTSOLUTION_AVAILABLE
 #define EXACTSOLUTION_AVAILABLE
 
+// if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
+#define SYMMETRIC_DIFFUSION_MATRIX
+
 //! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
 
 //! For more further details about the implementation of the following classes, see the end of the file

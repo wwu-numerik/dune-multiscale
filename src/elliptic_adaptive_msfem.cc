@@ -480,10 +480,8 @@ void algorithm ( std :: string& macroGridName,
           grid.preAdapt();
           grid.adapt();
           grid.postAdapt();
-        }
 
-      for ( int l = 0; l < loop_number_; ++l )
-        {
+          // coarse grid
 
           GridView gridView_coarse = grid_coarse.leafView();
           const GridLeafIndexSet& gridLeafIndexSet_coarse = grid_coarse.leafIndexSet();
@@ -505,16 +503,16 @@ void algorithm ( std :: string& macroGridName,
       }
 
    }
-     
+
 #endif
-  
+
   grid.globalRefine( total_refinement_level_ - coarse_grid_level_ );
-  
+
   //! ------------------------- discrete function spaces -----------------------------------
 
   // the global-problem function space:
   DiscreteFunctionSpaceType discreteFunctionSpace( gridPart );
-  
+
   DiscreteFunctionSpaceType discreteFunctionSpace_coarse( gridPart_coarse );
 
   //! --------------------------------------------------------------------------------------
@@ -535,21 +533,19 @@ void algorithm ( std :: string& macroGridName,
   DiscreteExactSolutionType discrete_exact_solution( "discrete exact solution ", u, gridPart );
 #endif
 
-  
   //! ---------------------------- general output parameters ------------------------------
-  
+
   // general output parameters
   myDataOutputParameters outputparam;
   outputparam.set_path( path_ );
 
   // sequence stamp
   std::stringstream outstring;
-  
+
   //! --------------------------------------------------------------------------------------
 
 
-  
-  
+
   //! -------------------------- writing data output Exact Solution ------------------------
 
 #ifdef EXACTSOLUTION_AVAILABLE
@@ -569,10 +565,50 @@ void algorithm ( std :: string& macroGridName,
 #endif
   
   //! --------------------------------------------------------------------------------------
-  
-  
-  
-  
+
+
+
+  //! --------------- writing data output for the coarse grid visualization ------------------
+
+  DiscreteFunctionType coarse_grid_visualization( filename_ + " Visualization of the coarse grid", discreteFunctionSpace_coarse );
+  coarse_grid_visualization.clear();
+
+  // -------------------------- data output -------------------------
+
+  // create and initialize output class
+  IOTupleType coarse_grid_series( &coarse_grid_visualization );
+
+
+
+  char coarse_grid_fname[50];
+  sprintf( coarse_grid_fname, "coarse_grid_visualization_%d_", loop_number_ );
+  std :: string coarse_grid_fname_s( coarse_grid_fname );
+  outputparam.set_prefix( coarse_grid_fname_s );
+  DataOutputType coarse_grid_dataoutput( gridPart_coarse.grid(), coarse_grid_series, outputparam );
+  // write data
+  outstring << coarse_grid_fname_s;
+
+  coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+  // -------------------------------------------------------
+
+  //! --------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   //! ---------------------- solve MsFEM problem ---------------------------  
   
 //!#################################
@@ -760,7 +796,7 @@ void algorithm ( std :: string& macroGridName,
 
   // create and initialize output class
   IOTupleType msfem_solution_series( &msfem_solution );
-  
+
 #ifdef ADAPTIVE
   char msfem_fname[50];
   sprintf( msfem_fname, "msfem_solution_%d_", loop_number_ );

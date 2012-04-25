@@ -14,7 +14,7 @@
 #define LOCPROBLEMSOLVER_VERBOSE false
 
 // VTK output for local problems
-//! #define VTK_OUTPUT
+// #define VTK_OUTPUT
 
 // write solutions of the local problems (vtk)
 //#define LOCALDATAOUTPUT
@@ -569,9 +569,12 @@ namespace Dune
      
     typedef SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType, LocProbMatrixTraits > LocProbFEMMatrix;
 
-
+#ifdef SYMMETRIC_DIFFUSION_MATRIX
+    typedef CGInverseOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
+#else
     // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
     typedef OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
+#endif
 
     // discrete elliptic operator describing the elliptic local msfem problems
     typedef LocalProblemOperator< SubDiscreteFunctionType, DiffusionOperatorType > LocalProblemOperatorType;
@@ -903,6 +906,9 @@ namespace Dune
 
           int coarse_index = coarseGridLeafIndexSet.index( *coarse_it );
 
+          std :: cout << "-------------------------" << std :: endl;
+          std :: cout << "Coarse index " << coarse_index << std :: endl;
+
           #if 0
           std :: cout << "coarse_it->geometry().corner(0) = " << coarse_it->geometry().corner(0) << std :: endl;
           std :: cout << "coarse_it->geometry().corner(1) = " << coarse_it->geometry().corner(1) << std :: endl;
@@ -920,12 +926,19 @@ namespace Dune
           DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
 
           writer_is_open = dfw.open();
+          if ( writer_is_open == false )
+          { std :: cout << "Error. Could not open 'Discrete Function Writer." << std :: endl; }
 
           if ( writer_is_open )
           {
 
-	    SubGridType& subGrid = subgrid_list_.getSubGrid( coarse_index );
+            SubGridType& subGrid = subgrid_list_.getSubGrid( coarse_index );
+
             SubGridPartType subGridPart( subGrid );
+
+            std :: cout << std :: endl;
+            std :: cout << "Number of the local problem: " << dimension * coarse_index << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
+            std :: cout << "   Subgrid " << coarse_index << " contains " << subGrid.size( 0 ) << " elements and " << subGrid.size( 2 ) << " nodes." << std :: endl;
 
             SubDiscreteFunctionSpaceType subDiscreteFunctionSpace( subGridPart );
 
@@ -940,8 +953,6 @@ namespace Dune
             SubDiscreteFunctionType local_problem_solution_1( name_local_solution, subDiscreteFunctionSpace );
             local_problem_solution_1.clear();
 
-            std :: cout << "Number of the local problem: " << dimension * coarse_index << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
-
             // take time
             long double time_now = clock();
 
@@ -954,26 +965,7 @@ namespace Dune
             if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
                { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
 
-            std :: cout << "Number of the local problem: " << (dimension*coarse_index)+1 << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
-	    
-            // take time
-            time_now = clock();
-	    
-	    // solve the problems
-	    solvelocalproblem( e[1], local_problem_solution_1 );
-	    
-	    // min/max time
-            if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
-               { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-            if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
-               { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
-
             dfw.append( local_problem_solution_0);
-
-            dfw.append( local_problem_solution_1);
-
-            // oneLinePrint( std::cout , local_problem_solution_0 );
-            // oneLinePrint( std::cout , local_problem_solution_1 );
 
 	    HostDiscreteFunctionType host_local_solution( name_local_solution, hostDiscreteFunctionSpace_ );
             subgrid_to_hostrid_function( local_problem_solution_0, host_local_solution );
@@ -1002,6 +994,29 @@ namespace Dune
 
             // -------------------------------------------------------
             #endif
+
+            std :: cout << std :: endl;
+            std :: cout << "Number of the local problem: " << (dimension*coarse_index)+1 << " (of " << (dimension*number_of_coarse_grid_entities)-1 << " problems in total)" << std :: endl;
+            std :: cout << "   Subgrid " << coarse_index << " contains " << subGrid.size( 0 ) << " elements and " << subGrid.size( 2 ) << " nodes." << std :: endl;
+
+            // take time
+            time_now = clock();
+	    
+	    // solve the problems
+	    solvelocalproblem( e[1], local_problem_solution_1 );
+	    
+	    // min/max time
+            if ( (clock()-time_now)/CLOCKS_PER_SEC > maximum_time_c_p )
+               { maximum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
+            if ( (clock()-time_now)/CLOCKS_PER_SEC < minimum_time_c_p )
+               { minimum_time_c_p = (clock()-time_now)/CLOCKS_PER_SEC; }
+
+
+
+            dfw.append( local_problem_solution_1);
+
+            // oneLinePrint( std::cout , local_problem_solution_0 );
+            // oneLinePrint( std::cout , local_problem_solution_1 );
 
             subgrid_to_hostrid_function( local_problem_solution_1, host_local_solution );
 

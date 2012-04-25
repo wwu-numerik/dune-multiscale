@@ -26,6 +26,8 @@
 #include <dune/fem/gridpart/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
+// done
+
 namespace Dune
 {
 
@@ -241,14 +243,27 @@ namespace Dune
       EntityPointer father_of_sub_grid_entity = host_entity_pointer;
       for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
          father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-      
-      bool father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
+
+      bool father_found = false;
       while ( father_found == false )
-          {
-             father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-             father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
-          }
-          
+        {
+
+           if ( coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity ) == true )
+            {
+               if ( father_of_sub_grid_entity->hasFather() == false )
+                { father_found = true; }
+               else
+                {
+                  if ( coarseGridLeafIndexSet.contains( *(father_of_sub_grid_entity->father())) == false )
+                   { father_found = true; }
+               }
+            }
+
+           if ( father_found == false )
+           { father_of_sub_grid_entity = father_of_sub_grid_entity->father(); }
+
+        }
+
       int coarse_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
       
       const SubGridGeometry &sub_grid_geometry = sub_grid_entity.geometry();
@@ -278,12 +293,25 @@ namespace Dune
               EntityPointer father_of_neighbor = outside_it;
               for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
                  father_of_neighbor = father_of_neighbor->father();
-      
-              father_found = coarseGridLeafIndexSet.contains( *father_of_neighbor );
+
+
+              father_found = false;
               while ( father_found == false )
                {
-                father_of_neighbor = father_of_neighbor->father();
-                father_found = coarseGridLeafIndexSet.contains( *father_of_neighbor );
+
+                if ( coarseGridLeafIndexSet.contains( *father_of_neighbor ) == true )
+                 {
+                   if ( father_of_neighbor->hasFather() == false )
+                    { father_found = true; }
+                   else
+                    {
+                     if ( coarseGridLeafIndexSet.contains( *(father_of_neighbor->father())) == false )
+                       { father_found = true; }
+                    }
+                 }
+
+                if ( father_found == false )
+                 { father_of_neighbor = father_of_neighbor->father(); }
                }
 
              bool entities_identical = true;
@@ -499,14 +527,28 @@ namespace Dune
       EntityPointer father_of_sub_grid_entity = host_entity_pointer;
       for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
          father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-      
-      bool father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
+
+
+
+      bool father_found = false;
       while ( father_found == false )
-          {
-             father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-             father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
-          }
-          
+            {
+
+             if ( coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity ) == true )
+              {
+                if ( father_of_sub_grid_entity->hasFather() == false )
+                 { father_found = true; }
+                else
+                 {
+                  if ( coarseGridLeafIndexSet.contains( *(father_of_sub_grid_entity->father())) == false )
+                    { father_found = true; }
+                 }
+              }
+
+             if ( father_found == false )
+              { father_of_sub_grid_entity = father_of_sub_grid_entity->father(); }
+            }
+
       int coarse_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
       
       if ( coarse_index != sub_grid_id )

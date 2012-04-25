@@ -22,6 +22,8 @@
 
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 
+// done
+
 namespace Dune
 {
   
@@ -240,7 +242,9 @@ namespace Dune
    typedef typename DiscreteFunctionSpace :: GridType HostGrid;
    
    typedef typename HostGrid :: Traits :: LeafIndexSet HostGridLeafIndexSet;
-   
+
+   typedef typename HostGrid :: Traits :: LeafIndexSet CoarseGridLeafIndexSet;
+
    typedef typename DiscreteFunctionSpace :: DomainType DomainType;
    typedef typename DiscreteFunctionSpace :: RangeType RangeType;
    typedef typename DiscreteFunctionSpace :: JacobianRangeType JacobianRangeType;
@@ -268,8 +272,6 @@ namespace Dune
    typedef SubGrid< HostGrid::dimension , HostGrid > SubGridType; 
 
    typedef LeafGridPart< SubGridType > SubGridPart;
-
-   typedef typename SubGridType :: Traits :: LeafIndexSet CoarseGridLeafIndexSet;
    
    // typedef typename SubGridType ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator SubGridLevelEntityIteratorType;
    
@@ -497,6 +499,7 @@ namespace Dune
      DiscreteFunction msfem_rhs( "MsFEM right hand side", coarse_space );
      msfem_rhs.clear();
 
+     std :: cout << std :: endl;
      std :: cout << "Solving MsFEM problem." << std :: endl;
 
      if ( data_file_ )
@@ -574,9 +577,8 @@ namespace Dune
            *data_file_ << "---------------------------------------------------------------------------------" << std :: endl;
            *data_file_ << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
          }
-      }      
-      
-      
+      }
+
      // oneLinePrint( std::cout , solution );
 
      // copy coarse grid function (defined on the subgrid) into a fine grid function
@@ -600,16 +602,60 @@ namespace Dune
         for (int lev = 0; lev < specifier.getLevelDifference() ; ++lev)
           coarse_father = coarse_father->father();
 
-        bool father_found = coarseGridLeafIndexSet.contains( *coarse_father );
+        bool father_found = false;
         while ( father_found == false )
            {
-             coarse_father = coarse_father->father();
-             father_found = coarseGridLeafIndexSet.contains( *coarse_father );
+
+             if ( coarseGridLeafIndexSet.contains( *coarse_father ) == true )
+              {
+                  if ( coarse_father->hasFather() == false )
+                   { father_found = true; }
+                  else
+                   {
+                     if ( coarseGridLeafIndexSet.contains( *(coarse_father->father())) == false )
+                        {
+
+
+
+                  if ( (coarse_father->father())->hasFather() == false )
+                   { father_found = true; }
+                  else
+                   {
+                     if ( coarseGridLeafIndexSet.contains( *((coarse_father->father())->father())) == false )
+                       { father_found = true; }
+                   }
+
+
+// father_found = true;
+
+
+
+
+                        }
+                   }
+              }
+
+             if ( father_found == false )
+              { coarse_father = coarse_father->father(); }
+
            }
 
-        typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_it = coarse_father;
+#if 0
+std :: cout << "Jetzt kommt's!" << std :: endl;
+int index_ce = coarseGridLeafIndexSet.index( *coarse_father );
+std :: cout << "index_ce = " << index_ce << std :: endl;
+std :: cout << "fine element corner(0) = " << it->geometry().corner(0) << std :: endl;
+std :: cout << "fine element corner(1) = " << it->geometry().corner(1) << std :: endl;
+std :: cout << "fine element corner(2) = " << it->geometry().corner(2) << std :: endl << std :: endl;
+std :: cout << "coarse element corner(0) = " << coarse_father->geometry().corner(0) << std :: endl;
+std :: cout << "coarse element corner(1) = " << coarse_father->geometry().corner(1) << std :: endl;
+std :: cout << "coarse element corner(2) = " << coarse_father->geometry().corner(2) << std :: endl << std :: endl;
+LocalFunction testtest = coarse_msfem_solution.localFunction( *coarse_father );
+std :: cout << "ding." << std :: endl;
+#endif
 
-        LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse( coarse_it );
+        LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse( coarse_father );
+
         interpolation_coarse.set_corners( coarse_msfem_solution );
 
         LocalFunction host_loc_value = coarse_scale_part.localFunction( *it );
@@ -652,7 +698,7 @@ namespace Dune
 	    {
 	      const typename HostEntity :: template Codim< 2 > :: EntityPointer node = (*it).template subEntity<2>(i);
 	      int global_index_node = gridPart.indexSet().index( *node );
-	      
+
 	      entities_sharing_same_node[ global_index_node ].push_back( it );
 	    }
         }
@@ -752,12 +798,27 @@ namespace Dune
              for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
                  father = father->father();
 
-             bool father_found = coarseGridLeafIndexSet.contains( *father );
+
+             bool father_found = false;
              while ( father_found == false )
               {
-                father = father->father();
-                father_found = coarseGridLeafIndexSet.contains( *father );
-              }
+
+                if ( coarseGridLeafIndexSet.contains( *father ) == true )
+                 {
+                     if ( father->hasFather() == false )
+                      { father_found = true; }
+                     else
+                      {
+                        if ( coarseGridLeafIndexSet.contains( *(father->father())) == false )
+                           { father_found = true; }
+                      }
+                 }
+
+                if ( father_found == false )
+                  { father = father->father(); }
+
+               }
+
 
              bool entities_identical = true;
              int number_of_nodes = (*father).template count<2>();

@@ -164,21 +164,29 @@ namespace Dune
     template< typename DiscreteFunctionType >
     inline void set_corners( const DiscreteFunctionType& disc_func )
     {
+std :: cout << "HIER Line 167" << std :: endl;
       typedef typename DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
       typedef typename EntityType :: template Codim< 2 > :: EntityPointer NodePointerType;
 
       LocalFunctionType loc_func = disc_func.localFunction( *(*it_) );
+std :: cout << "HIER Line 172" << std :: endl;
 
       int number_of_nodes = (*(*it_)).template count<2>();
+std :: cout << "HIER Line 175" << std :: endl;
       if (!( number_of_nodes == loc_func.baseFunctionSet().numBaseFunctions() ))
        { std :: cout << "Error! Inconsistency in 'linear-lagrange-interpolation.hh'." << std :: endl; }
 
+std :: cout << "HIER Line 179" << std :: endl;
       for ( int i = 0; i < number_of_nodes; i += 1 )
        {
+std :: cout << "HIER Line 182" << std :: endl;
           const NodePointerType node = (*(*it_)).template subEntity<2>(i);
+std :: cout << "HIER Line 184" << std :: endl;
 
+#if 1
           if ( !(node->geometry().corner(0) == (*it_)->geometry().corner(i)) )
            { std :: cout << "Error! Inconsistency in 'linear-lagrange-interpolation.hh'." << std :: endl; }
+#endif
 
           if ( i == 0 )
            { p_a_0_ = loc_func[0]; }
