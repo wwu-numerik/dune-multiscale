@@ -474,7 +474,7 @@ void algorithm ( std :: string& macroGridName,
 
           if ( l == (loop_number_-1) )
            {
-             data_file << number_of_marked_entities << " coarse grid entities marked for mesh refinement." << std :: endl;
+             data_file << number_of_marked_entities << " of " << total_number_of_entities << " coarse grid entities marked for mesh refinement." << std :: endl;
            }
 
           grid.preAdapt();
