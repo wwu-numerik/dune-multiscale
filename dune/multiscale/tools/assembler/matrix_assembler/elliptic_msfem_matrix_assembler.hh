@@ -10,7 +10,7 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-// done
+/// done
 
 namespace Dune
 {
@@ -430,6 +430,27 @@ namespace Dune
                 for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
                        father_of_loc_grid_ent = father_of_loc_grid_ent->father();
 
+//! new version:
+#if 1
+                FineEntityPointer coarse_father_test = father_of_loc_grid_ent;
+	
+                bool father_found = false;
+                while ( father_found == false )
+                     {
+
+                       if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+                        { father_of_loc_grid_ent = coarse_father_test; }
+
+                       if ( coarse_father_test->hasFather() == false )
+                        { father_found = true; }
+                       else
+                        { coarse_father_test = coarse_father_test->father(); }
+
+                     }
+#endif
+
+//! old version
+#if 0
                 bool father_found = false;
                 while ( father_found == false )
                     {
@@ -449,6 +470,7 @@ namespace Dune
                          { father_of_loc_grid_ent = father_of_loc_grid_ent->father(); }
 
                     }
+#endif
 
                 bool entities_identical = true;
                 int number_of_nodes = (*coarse_grid_it).template count<2>();

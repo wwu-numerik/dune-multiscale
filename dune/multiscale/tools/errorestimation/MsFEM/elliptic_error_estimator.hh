@@ -535,13 +535,35 @@ namespace Dune
              for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
                father_of_sub_grid_entity = father_of_sub_grid_entity->father();
 
+//! new version:
+#if 1
+             EntityPointerType coarse_father_test = father_of_sub_grid_entity;
+	
+             bool father_found = false;
+             while ( father_found == false )
+               {
+
+                 if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+                  { father_of_sub_grid_entity = coarse_father_test; }
+
+                 if ( coarse_father_test->hasFather() == false )
+                  { father_found = true; }
+                 else
+                  { coarse_father_test = coarse_father_test->father(); }
+
+               }
+#endif
+
+//! old version
+#if 0
              bool father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
              while ( father_found == false )
                {
                  father_of_sub_grid_entity = father_of_sub_grid_entity->father();
                  father_found = coarseGridLeafIndexSet.contains( *father_of_sub_grid_entity );
                }
-          
+#endif
+
              int coarse_sub_father_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
 	     if ( coarse_sub_father_index != index_coarse_entity )
 	      { continue; }
@@ -833,12 +855,34 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
                 for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
                        father_of_loc_grid_it = father_of_loc_grid_it->father();
 
+//! new version:
+#if 1
+                EntityPointerType coarse_father_test = father_of_loc_grid_it;
+	
+                bool father_found = false;
+                while ( father_found == false )
+                 {
+
+                   if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+                    { father_of_loc_grid_it = coarse_father_test; }
+
+                   if ( coarse_father_test->hasFather() == false )
+                    { father_found = true; }
+                   else
+                    { coarse_father_test = coarse_father_test->father(); }
+
+                 }
+#endif
+
+//! old version
+#if 0
                 bool father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_it );
                 while ( father_found == false )
                  {
                    father_of_loc_grid_it = father_of_loc_grid_it->father();
                    father_found = coarseGridLeafIndexSet.contains( *father_of_loc_grid_it );
                  }
+#endif
 
                 bool entities_identical = true;
                 int number_of_nodes = (*coarse_grid_it).template count<2>();
@@ -945,12 +989,34 @@ std :: cout << "loc_msfem_fine_part 2 = " << loc_sol_e0 * grad_msfem_coarse_part
           for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
             coarse_father = coarse_father->father();
 
+//! new version:
+#if 1
+          EntityPointerType coarse_father_test = coarse_father;
+	
+          bool father_found = false;
+          while ( father_found == false )
+            {
+
+               if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+                { coarse_father = coarse_father_test; }
+
+               if ( coarse_father_test->hasFather() == false )
+                { father_found = true; }
+               else
+                { coarse_father_test = coarse_father_test->father(); }
+
+            }
+#endif
+
+//! old version
+#if 0
           bool father_found = coarseGridLeafIndexSet.contains( *coarse_father );
           while ( father_found == false )
                {
                  coarse_father = coarse_father->father();
                  father_found = coarseGridLeafIndexSet.contains( *coarse_father );
                }
+#endif
 
           int coarse_father_index = coarseGridLeafIndexSet.index( *coarse_father );
 

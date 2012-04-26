@@ -22,7 +22,7 @@
 
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 
-// done
+/// done
 
 namespace Dune
 {
@@ -602,6 +602,29 @@ namespace Dune
         for (int lev = 0; lev < specifier.getLevelDifference() ; ++lev)
           coarse_father = coarse_father->father();
 
+//! new version:
+#if 1
+        typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_father_test = coarse_father;
+	
+        bool father_found = false;
+        while ( father_found == false )
+           {
+
+             if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+              {
+                coarse_father = coarse_father_test;
+              }
+
+             if ( coarse_father_test->hasFather() == false )
+                { father_found = true; }
+             else
+	        { coarse_father_test = coarse_father_test->father(); }
+	        
+           }
+#endif
+
+//! old version
+#if 0
         bool father_found = false;
         while ( father_found == false )
            {
@@ -613,25 +636,7 @@ namespace Dune
                   else
                    {
                      if ( coarseGridLeafIndexSet.contains( *(coarse_father->father())) == false )
-                        {
-
-
-
-                  if ( (coarse_father->father())->hasFather() == false )
-                   { father_found = true; }
-                  else
-                   {
-                     if ( coarseGridLeafIndexSet.contains( *((coarse_father->father())->father())) == false )
-                       { father_found = true; }
-                   }
-
-
-// father_found = true;
-
-
-
-
-                        }
+                        { father_found = true; }
                    }
               }
 
@@ -639,20 +644,18 @@ namespace Dune
               { coarse_father = coarse_father->father(); }
 
            }
-
-#if 0
-std :: cout << "Jetzt kommt's!" << std :: endl;
-int index_ce = coarseGridLeafIndexSet.index( *coarse_father );
-std :: cout << "index_ce = " << index_ce << std :: endl;
-std :: cout << "fine element corner(0) = " << it->geometry().corner(0) << std :: endl;
-std :: cout << "fine element corner(1) = " << it->geometry().corner(1) << std :: endl;
-std :: cout << "fine element corner(2) = " << it->geometry().corner(2) << std :: endl << std :: endl;
-std :: cout << "coarse element corner(0) = " << coarse_father->geometry().corner(0) << std :: endl;
-std :: cout << "coarse element corner(1) = " << coarse_father->geometry().corner(1) << std :: endl;
-std :: cout << "coarse element corner(2) = " << coarse_father->geometry().corner(2) << std :: endl << std :: endl;
-LocalFunction testtest = coarse_msfem_solution.localFunction( *coarse_father );
-std :: cout << "ding." << std :: endl;
 #endif
+
+        #if 0
+        int index_ce = coarseGridLeafIndexSet.index( *coarse_father );
+        std :: cout << "index_ce = " << index_ce << std :: endl;
+        std :: cout << "fine element corner(0) = " << it->geometry().corner(0) << std :: endl;
+        std :: cout << "fine element corner(1) = " << it->geometry().corner(1) << std :: endl;
+        std :: cout << "fine element corner(2) = " << it->geometry().corner(2) << std :: endl << std :: endl;
+        std :: cout << "coarse element corner(0) = " << coarse_father->geometry().corner(0) << std :: endl;
+        std :: cout << "coarse element corner(1) = " << coarse_father->geometry().corner(1) << std :: endl;
+        std :: cout << "coarse element corner(2) = " << coarse_father->geometry().corner(2) << std :: endl << std :: endl;
+        #endif
 
         LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse( coarse_father );
 
@@ -798,7 +801,29 @@ std :: cout << "ding." << std :: endl;
              for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
                  father = father->father();
 
+//! new version:
+#if 1
+             typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_father_test = father;
 
+             bool father_found = false;
+             while ( father_found == false )
+              {
+
+                if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+                 {
+                   father = coarse_father_test;
+                 }
+
+                if ( coarse_father_test->hasFather() == false )
+                   { father_found = true; }
+                else
+	           { coarse_father_test = coarse_father_test->father(); }
+	        
+              }
+#endif
+
+//! old version:
+#if 0   
              bool father_found = false;
              while ( father_found == false )
               {
@@ -818,7 +843,7 @@ std :: cout << "ding." << std :: endl;
                   { father = father->father(); }
 
                }
-
+#endif
 
              bool entities_identical = true;
              int number_of_nodes = (*father).template count<2>();
@@ -859,12 +884,34 @@ std :: cout << "ding." << std :: endl;
                       for (int lev = 0; lev < specifier.getLevelDifference(); ++lev )
                          inner_it = inner_it->father();
 
+//! new version:
+#if 1
+                      typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_father_test = inner_it;
+
+                      bool father_found = false;
+                      while ( father_found == false )
+                        {
+
+                          if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+                           { inner_it = coarse_father_test; }
+
+                          if ( coarse_father_test->hasFather() == false )
+                           { father_found = true; }
+                          else
+                           { coarse_father_test = coarse_father_test->father(); }
+	        
+                        }
+#endif
+
+//! old version:
+#if 0
                       bool found = coarseGridLeafIndexSet.contains( *inner_it );
                       while ( found == false )
                        {
                         inner_it = inner_it->father();
                         found = coarseGridLeafIndexSet.contains( *inner_it );
                        }
+#endif
 
                       bool new_entity_found = true;
                       for ( int k = 0; k < coarse_entities.size(); k += 1 )

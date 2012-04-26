@@ -26,7 +26,7 @@
 #include <dune/fem/gridpart/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-// done
+/// done
 
 namespace Dune
 {
@@ -244,6 +244,27 @@ namespace Dune
       for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
          father_of_sub_grid_entity = father_of_sub_grid_entity->father();
 
+//! new version:
+#if 1
+      EntityPointer coarse_father_test = father_of_sub_grid_entity;
+	
+      bool father_found = false;
+      while ( father_found == false )
+        {
+
+           if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+             { father_of_sub_grid_entity = coarse_father_test; }
+
+           if ( coarse_father_test->hasFather() == false )
+             { father_found = true; }
+           else
+             { coarse_father_test = coarse_father_test->father(); }
+
+        }
+#endif
+
+//! old version
+#if 0
       bool father_found = false;
       while ( father_found == false )
         {
@@ -263,6 +284,7 @@ namespace Dune
            { father_of_sub_grid_entity = father_of_sub_grid_entity->father(); }
 
         }
+#endif
 
       int coarse_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
       
@@ -294,7 +316,27 @@ namespace Dune
               for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
                  father_of_neighbor = father_of_neighbor->father();
 
+//! new version:
+#if 1
+              EntityPointer coarse_father_test = father_of_neighbor;
+	
+              bool father_found = false;
+              while ( father_found == false )
+               {
 
+                 if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+                  { father_of_neighbor = coarse_father_test; }
+
+                 if ( coarse_father_test->hasFather() == false )
+                  { father_found = true; }
+                 else
+                  { coarse_father_test = coarse_father_test->father(); }
+
+               }
+#endif
+
+//! old version
+#if 0
               father_found = false;
               while ( father_found == false )
                {
@@ -313,6 +355,7 @@ namespace Dune
                 if ( father_found == false )
                  { father_of_neighbor = father_of_neighbor->father(); }
                }
+#endif
 
              bool entities_identical = true;
              int number_of_nodes = (*father_of_neighbor).template count<2>();
@@ -529,7 +572,27 @@ namespace Dune
          father_of_sub_grid_entity = father_of_sub_grid_entity->father();
 
 
+//! new version:
+#if 1
+      EntityPointer coarse_father_test = father_of_sub_grid_entity;
+	
+      bool father_found = false;
+      while ( father_found == false )
+        {
 
+           if ( coarseGridLeafIndexSet.contains( *coarse_father_test ) == true )
+            { father_of_sub_grid_entity = coarse_father_test; }
+
+           if ( coarse_father_test->hasFather() == false )
+            { father_found = true; }
+           else
+            { coarse_father_test = coarse_father_test->father(); }
+
+        }
+#endif
+
+//! old version
+#if 0
       bool father_found = false;
       while ( father_found == false )
             {
@@ -548,6 +611,7 @@ namespace Dune
              if ( father_found == false )
               { father_of_sub_grid_entity = father_of_sub_grid_entity->father(); }
             }
+#endif
 
       int coarse_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
       
