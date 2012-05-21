@@ -46,7 +46,7 @@
 //! is an exact solution available?
 // this information should be provided by the 'problem specification file'
 // there we define or don't define the macro EXACTSOLUTION_AVAILABLE
-#define EXACTSOLUTION_AVAILABLE
+// #define EXACTSOLUTION_AVAILABLE
 
 
 #include <dune/common/mpihelper.hh> // An initializer of MPI
@@ -90,7 +90,7 @@
 //! local (dune-multiscale) includes
 //#include <dune/multiscale/problems/elliptic_problems/model_problem_toy/problem_specification.hh>
 //#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
-#include <dune/multiscale/problems/elliptic_problems/model_problem_9/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_10/problem_specification.hh>
 
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
 
@@ -424,8 +424,8 @@ void algorithm ( std :: string& macroGridName,
            (total_conservative_flux_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
        {
          oversampling_error_dominant = true; /* increase number of layers by 1 */
-         number_of_layers_ += 1;
-         data_file << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 1." << std :: endl;
+         number_of_layers_ += 5;
+         data_file << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5." << std :: endl;
          data_file << "NEW: Number of layers = " << number_of_layers_ << std :: endl; 
        }
 
@@ -451,6 +451,12 @@ void algorithm ( std :: string& macroGridName,
       // allgemeineren Algorithmus nur vorstellen, aber nicht implementieren
 
       if ( coarse_scale_error_dominant == true ) {
+
+      int number_of_refinements = 2;
+
+      // allowed varianve from average ( in percent )
+      double variance = 1.1; // = 110 % of the average
+
       for ( int l = 0; l < loop_number_; ++l )
         {
 
@@ -465,9 +471,9 @@ void algorithm ( std :: string& macroGridName,
               RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[ l ][ gridLeafIndexSet.index( *it ) ] + loc_coarse_residual_[ l ][ gridLeafIndexSet.index( *it ) ];
               total_number_of_entities += 1;
 
-              if ( loc_coarse_error_indicator <= average_coarse_error_indicator[ l ] )
+              if ( loc_coarse_error_indicator >= variance * average_coarse_error_indicator[ l ] )
                 {
-                  grid.mark( 2 , *it );
+                  grid.mark( number_of_refinements , *it );
                   number_of_marked_entities += 1;
                 }
             }
@@ -491,8 +497,8 @@ void algorithm ( std :: string& macroGridName,
             {
               RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[ l ][ gridLeafIndexSet_coarse.index( *it ) ] + loc_coarse_residual_[ l ][ gridLeafIndexSet_coarse.index( *it ) ];
 
-              if ( loc_coarse_error_indicator <= average_coarse_error_indicator[ l ] )
-               { grid_coarse.mark( 2 , *it ); }
+              if ( loc_coarse_error_indicator >= variance * average_coarse_error_indicator[ l ] )
+               { grid_coarse.mark( number_of_refinements , *it ); }
             }
 
           grid_coarse.preAdapt();
@@ -764,21 +770,21 @@ void algorithm ( std :: string& macroGridName,
   total_conservative_flux_jumps_[ loop_number_ ] = sqrt( total_conservative_flux_jumps_[ loop_number_ ] );
   total_approximation_error_[ loop_number_ ] = sqrt( total_approximation_error_[ loop_number_ ] );
   total_fine_grid_jumps_[ loop_number_ ] = sqrt( total_fine_grid_jumps_[ loop_number_ ] );
-  
+
   total_estimated_H1_error_[ loop_number_ ] = total_coarse_residual_[ loop_number_ ];
   total_estimated_H1_error_[ loop_number_ ] += total_projection_error_[ loop_number_ ];
   total_estimated_H1_error_[ loop_number_ ] += total_coarse_grid_jumps_[ loop_number_ ];
   total_estimated_H1_error_[ loop_number_ ] += total_conservative_flux_jumps_[ loop_number_ ];
   total_estimated_H1_error_[ loop_number_ ] += total_approximation_error_[ loop_number_ ];
   total_estimated_H1_error_[ loop_number_ ] += total_fine_grid_jumps_[ loop_number_ ];
-  
-  
+
   local_indicators_available_ = true;
 
+  #ifdef ADAPTIVE
   if ( total_estimated_H1_error <= error_tolerance_ )
     repeat_algorithm_ = false;
-  
-  
+  #endif
+
   #ifndef ADAPTIVE
   repeat_algorithm_ = false;
   #endif
@@ -978,6 +984,22 @@ void algorithm ( std :: string& macroGridName,
 
 #endif
 
+
+#ifndef EXACTSOLUTION_AVAILABLE
+
+  std :: cout << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution." << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution." << std :: endl << std :: endl; }
+
+
+  RangeType approx_msfem_error = l2error.norm2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( fem_solution, msfem_solution );
+
+  std :: cout << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std :: endl; }
+
+
+#endif
 
 //! -------------------------------------------------------
 

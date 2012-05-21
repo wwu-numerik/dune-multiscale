@@ -6,7 +6,7 @@
 //! is an exact solution available?
 // this information should be provided by the 'problem specification file'
 // there we define or don't define the macro EXACTSOLUTION_AVAILABLE
-#define EXACTSOLUTION_AVAILABLE
+// #define EXACTSOLUTION_AVAILABLE
 
 // if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
 #define SYMMETRIC_DIFFUSION_MATRIX
@@ -29,7 +29,7 @@
 
 // Note, that A^{\epsilon} is a monotone operator
 
-//!############################## Elliptic Problem 9 ###################################
+//!############################## Elliptic Problem 10 ###################################
 
 //! we define:
 
@@ -57,24 +57,6 @@
 
 // description see below 0.05
 #define EPSILON 0.05
-#define EPSILON_EST 0.1
-#define DELTA 0.1
-
-// eps = 0.001 => H Ref = 16
-// eps = 0.002 => H Ref = 14
-// eps = 0.004 => H Ref = 12
-// eps = 0.008 => H Ref = 10
-// eps = 0.016 => H Ref = 8
-// eps = 0.032 => H Ref = 6
-// eps = 0.064 => H Ref = 4
-// eps = 0.128 => H Ref = 2
-// eps = 0.256 => H Ref = 0
-
-
-// NOTE that (delta/epsilon_est) needs to be a positive integer!
-
-// is an exact solution available?
-//#define EXACTSOLUTION_AVAILABLE
 
 //Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem
@@ -110,7 +92,7 @@ namespace Problem
 
     inline int get_Number_of_Model_Problem ( ) const
     {
-      return 9;
+      return 10;
     }
 
     // epsilon (the smaller epsilon, the finer the micro-structure)
@@ -122,20 +104,18 @@ namespace Problem
       return epsilon;
     }
 
+
     // epsilon (the smaller epsilon, the finer the micro-structure)
     inline double getEpsilonEstimated ( ) const
     {
-      const double epsilon_est = EPSILON_EST;
-      return epsilon_est;
+      return 0.0;
     }
 
     // edge length of a cell (where we solve the cell problems)
     // we need delta >= epsilon
     inline double getDelta ( ) const
     {
-      const double delta = DELTA;
-      return delta;
-      // NOTE that (delta/epsilon_est) needs to be a positive integer!
+      return 0.0;
     }
 
 
@@ -220,40 +200,8 @@ namespace Problem
     inline void evaluate( const DomainType &x,
                                 RangeType &y ) const
     {
-        
-        
-#if 1
-      double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
-      double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );  
-        
-      double d_x0_coefficient_0 = pow( 2.0 + cos(2.0 * M_PI * (x[0] / EPSILON)), -2.0 ) * (1.0 / (2.0 * M_PI) ) * ( 1.0 / EPSILON ) * sin(2.0 * M_PI * (x[0] / EPSILON)); 
-      
-      JacobianRangeType grad_u;
-      grad_u[ 0 ][ 0 ] = 2.0 * M_PI * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
-      grad_u[ 0 ][ 1 ] = 2.0 * M_PI * sin( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] );
-            
-      grad_u[ 0 ][ 0 ] += (-1.0) * EPSILON * M_PI * ( sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
-      grad_u[ 0 ][ 0 ] += M_PI * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * cos( 2.0 * M_PI * (x[0] / EPSILON) ) );
-            
-      grad_u[ 0 ][ 1 ] += EPSILON * M_PI * ( cos( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
-        
-      RangeType d_x0_x0_u(0.0);
-      d_x0_x0_u -= 4.0 * pow( M_PI, 2.0 ) * sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
-      d_x0_x0_u -= 2.0 * pow( M_PI, 2.0 ) * ( EPSILON + (1.0 / EPSILON ) ) * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) );
-      d_x0_x0_u -= 4.0 * pow( M_PI, 2.0 ) * sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * cos( 2.0 * M_PI * (x[0] / EPSILON) );
 
-        
-      RangeType d_x1_x1_u(0.0);
-      d_x1_x1_u -= 4.0 * pow( M_PI, 2.0 ) * sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
-      d_x1_x1_u -= 2.0 * pow( M_PI, 2.0 ) * EPSILON * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) );
-        
-      y = 0.0;
-      y -= d_x0_coefficient_0 * grad_u[ 0 ][ 0 ];
-      y -= coefficient_0 * d_x0_x0_u;
-      y -= coefficient_1 * d_x1_x1_u;
-#endif
-        
-      //y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
+      y = 1.0;
 
     }
 
@@ -338,7 +286,7 @@ namespace Problem
     // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
     // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
 
-      
+
     // instantiate all possible cases of the evaluate-method:
 
     // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
@@ -347,13 +295,66 @@ namespace Problem
                          JacobianRangeType &flux ) const
     {
 
-       double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
-       double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
+#if 1
+       double diff_coef = 0.0;
+
+       double coefficient = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) * sin( 2.0 * M_PI * (x[1] / EPSILON) ) ) );
+
+
+       double constant_val = 0.0005;
+
+       double r1 = 0.425;
+       double r2 = 0.125;
+
+       // check if x part of the ellipse
+       double position = ( pow( x[0] - 0.5 , 2.0 ) / pow( r1 , 2.0) ) + ( pow( x[1] - 0.5 , 2.0 ) / pow( r2 , 2.0) );
+
+       if ( position <= 1.0 )
+        {
+          if ( position >= 0.9 )
+           {
+             diff_coef = ( (10.0 * position) - 9.0 ) * coefficient;
+             diff_coef += ( 1.0 - ( (10.0 * position) - 9.0 ) ) * constant_val;
+           }
+          else
+           {
+             diff_coef = constant_val;
+
+             r1 = 0.35;
+             r2 = 0.022;
+
+             double new_position = ( pow( x[0] - 0.5 , 2.0 ) / pow( r1 , 2.0) ) + ( pow( x[1] - 0.5 , 2.0 ) / pow( r2 , 2.0) );
+
+             if ( new_position <= 1.0 )
+               diff_coef *= 100.0;
+
+             r1 = 0.25;
+             r2 = 0.022;
+
+             new_position = ( pow( x[0] - 0.5 , 2.0 ) / pow( r1 , 2.0) ) + ( pow( x[1] - 0.56 , 2.0 ) / pow( r2 , 2.0) );
+
+             if ( new_position <= 1.0 )
+               diff_coef *= 100.0;
+
+             new_position = ( pow( x[0] - 0.5 , 2.0 ) / pow( r1 , 2.0) ) + ( pow( x[1] - 0.44 , 2.0 ) / pow( r2 , 2.0) );
+
+             if ( new_position <= 1.0 )
+               diff_coef *= 100.0;
+
+           }
+        }
+       else
+        {
+          diff_coef = coefficient;
+        }
+
+
+#endif
 
        double stab = 0.0;
 
-       flux[0][0] = coefficient_0 * gradient[0][0] + stab * gradient[0][1];
-       flux[0][1] = coefficient_1 * gradient[0][1] + stab * gradient[0][0];
+       flux[0][0] = diff_coef * gradient[0][0] + stab * gradient[0][1];
+       flux[0][1] = diff_coef * gradient[0][1] + stab * gradient[0][0];
 
     }
 
@@ -368,12 +369,65 @@ namespace Problem
                                        JacobianRangeType &flux ) const
     {
 
-        double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
-        double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
+#if 1
+       double diff_coef = 0.0;
 
-        flux[0][0] = coefficient_0 * direction_gradient[0][0];
-        flux[0][1] = coefficient_1 * direction_gradient[0][1];
-        
+       double coefficient = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) * sin( 2.0 * M_PI * (x[1] / EPSILON) ) ) );
+
+
+       double constant_val = 0.0005;
+
+       double r1 = 0.425;
+       double r2 = 0.125;
+
+       // check if x part of the ellipse
+       double position = ( pow( x[0] - 0.5 , 2.0 ) / pow( r1 , 2.0) ) + ( pow( x[1] - 0.5 , 2.0 ) / pow( r2 , 2.0) );
+
+       if ( position <= 1.0 )
+        {
+          if ( position >= 0.9 )
+           {
+             diff_coef = ( (10.0 * position) - 9.0 ) * coefficient;
+             diff_coef += ( 1.0 - ( (10.0 * position) - 9.0 ) ) * constant_val;
+           }
+          else
+           {
+             diff_coef = constant_val;
+
+             r1 = 0.35;
+             r2 = 0.022;
+
+             double new_position = ( pow( x[0] - 0.5 , 2.0 ) / pow( r1 , 2.0) ) + ( pow( x[1] - 0.5 , 2.0 ) / pow( r2 , 2.0) );
+
+             if ( new_position <= 1.0 )
+               diff_coef *= 100.0;
+
+             r1 = 0.25;
+             r2 = 0.022;
+
+             new_position = ( pow( x[0] - 0.5 , 2.0 ) / pow( r1 , 2.0) ) + ( pow( x[1] - 0.56 , 2.0 ) / pow( r2 , 2.0) );
+
+             if ( new_position <= 1.0 )
+               diff_coef *= 100.0;
+
+             new_position = ( pow( x[0] - 0.5 , 2.0 ) / pow( r1 , 2.0) ) + ( pow( x[1] - 0.44 , 2.0 ) / pow( r2 , 2.0) );
+
+             if ( new_position <= 1.0 )
+               diff_coef *= 100.0;
+
+           }
+        }
+       else
+        {
+          diff_coef = coefficient;
+        }
+
+
+#endif
+
+        flux[0][0] = diff_coef * direction_gradient[0][0];
+        flux[0][1] = diff_coef * direction_gradient[0][1];
+
         //std :: cout << "Do not use this evaluate method." << std :: endl;
         //abort();
 
@@ -389,16 +443,7 @@ namespace Problem
                            RangeType &z ) const
     {
 
-       if ( i == j )
-        {
-           if ( i == 0 )
-            { z = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * (1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) ); }
-           else
-            { z = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) ); }
-        }
-       else
-        { z = 0.0; }
-        
+        z = 0.0;
         std :: cout << "Do not use this evaluate method." << std :: endl;
         abort();
 
@@ -442,16 +487,6 @@ namespace Problem
     }
 
   };
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -764,24 +799,20 @@ namespace Problem
                            RangeType &y ) const
     {
 
-
-      // approximation obtained by homogenized solution + first corrector
-        y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ); // coarse part
-        y += 0.5 * EPSILON * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) ) ; // fine part
-        // || u_fine_part ||_L2 = 0.00883883 (fuer eps = 0.05 )
+#ifndef EXACTSOLUTION_AVAILABLE
+       std :: cout << "Exact solution not available!" << std :: endl;
+       abort();
+#endif
 
     }
 
     inline void evaluateJacobian ( const DomainType& x, JacobianRangeType& grad_u ) const
     {
-       grad_u[ 0 ][ 0 ] = 2.0 * M_PI * cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
-       grad_u[ 0 ][ 1 ] = 2.0 * M_PI * sin( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] );
 
-       grad_u[ 0 ][ 0 ] += (-1.0) * EPSILON * M_PI * ( sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
-       grad_u[ 0 ][ 0 ] += M_PI * ( cos( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] ) * cos( 2.0 * M_PI * (x[0] / EPSILON) ) );
-
-       grad_u[ 0 ][ 1 ] += EPSILON * M_PI * ( cos( 2.0 * M_PI * x[0] ) * cos( 2.0 * M_PI * x[1] ) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
-
+#ifndef EXACTSOLUTION_AVAILABLE
+       std :: cout << "Exact solution not available!" << std :: endl;
+       abort();
+#endif
 
     }
 
@@ -794,6 +825,7 @@ namespace Problem
     {
       evaluate(x,y);
     }
+
   };
 
 
