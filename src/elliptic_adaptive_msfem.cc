@@ -1132,8 +1132,17 @@ void algorithm ( std :: string& macroGridName,
 
 //! loeschen?!
 #if 1
-     typedef DiscreteFunctionSpaceType :: IteratorType :: Entity :: EntityPointer EntityPointerType;
 
+     DiscreteFunctionType oversampling_error_visualization( filename_ + " Visualization of the oversampling error", discreteFunctionSpace_coarse );
+     oversampling_error_visualization.clear();
+
+     typedef DiscreteFunctionSpaceType :: IteratorType :: Entity EntityType;
+
+     typedef EntityType :: EntityPointer EntityPointerType;
+     typedef EntityType :: Codim< 2 > :: EntityPointer NodePointerType;
+     
+     typedef DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
+     
      int number_of_coarse_nodes = gridPart_coarse.grid().size( 2 /*codim*/ );
      std :: vector< std :: vector < EntityPointerType > > entities_sharing_same_node( number_of_coarse_nodes );
 
@@ -1146,13 +1155,108 @@ void algorithm ( std :: string& macroGridName,
           int number_of_nodes_in_entity = (*it).count<2>();
           for ( int i = 0; i < number_of_nodes_in_entity; i += 1 )
 	    {
-	      const DiscreteFunctionSpaceType :: IteratorType :: Entity :: Codim< 2 > :: EntityPointer node = (*it).subEntity<2>(i);
+	      const NodePointerType node = (*it).subEntity<2>(i);
 	      int global_index_node = gridPart_coarse.indexSet().index( *node );
 
 	      entities_sharing_same_node[ global_index_node ].push_back( it );
 	    }
         }
 
+     RangeType average_conservative_flux_jumps = 0.0;
+        
+std :: cout << "total_conservative_flux_jumps_[ loop_number_ ] = " << total_conservative_flux_jumps_[ loop_number_ ] << std :: endl;
+std :: cout << "average_conservative_flux_jumps = " << average_conservative_flux_jumps << std :: endl << std :: endl;
+
+
+     double cum = 0;
+     for ( ElementLeafIterator it = gridView_coarse_new.begin<0>();
+           it != gridView_coarse_new.end<0>(); ++it )
+        {
+           average_conservative_flux_jumps += loc_conservative_flux_jumps_[ loop_number_ ][ gridLeafIndexSet_coarse_new.index( *it ) ];
+           cum += 1.0;
+        }
+     average_conservative_flux_jumps /= cum;
+        
+
+     for ( ElementLeafIterator it = gridView_coarse_new.begin<0>();
+           it != gridView_coarse_new.end<0>(); ++it )
+        {
+
+           int number_of_nodes = (*it).count<2>();
+
+           LocalFunctionType loc_func = oversampling_error_visualization.localFunction( *it );
+
+           RangeType loc_oversampling_indicator = loc_conservative_flux_jumps_[ loop_number_ ][ gridLeafIndexSet_coarse_new.index( *it ) ];
+std :: cout << "loc_oversampling_indicator = " << loc_oversampling_indicator << std :: endl;
+
+           for ( int i = 0; i < number_of_nodes; i += 1 )
+             {
+                const NodePointerType node = (*it).subEntity<2>(i);
+                int global_index_node = gridPart_coarse.indexSet().index( *node );
+
+                if ( loc_oversampling_indicator <= 0.2 * average_conservative_flux_jumps )
+                 { loc_func[ i ] += ( 0.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 0.2 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.4 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 1.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 0.4 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.6 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 2.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 0.6 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.8 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 3.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 0.8 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.0 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 4.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.0 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.2 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 5.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.2 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.4 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 6.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.4 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.6 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 7.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.6 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.8 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 8.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.8 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 200.0 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 9.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+
+             }
+  
+        }
+        
+  // -------------------------- data output -------------------------
+
+  // create and initialize output class
+  IOTupleType oversampling_coarse_grid_series( &oversampling_error_visualization );
+
+  char oversampling_coarse_grid_fname[50];
+  sprintf( oversampling_coarse_grid_fname, "oversampling_error_visualization_%d_", loop_number_ );
+  std :: string oversampling_coarse_grid_fname_s( oversampling_coarse_grid_fname );
+  outputparam.set_prefix( oversampling_coarse_grid_fname_s );
+  DataOutputType oversampling_coarse_grid_dataoutput( gridPart_coarse.grid(), oversampling_coarse_grid_series, outputparam );
+  // write data
+  outstring << oversampling_coarse_grid_fname_s;
+
+  oversampling_coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+  // -------------------------------------------------------
+        
 #endif
 
 
