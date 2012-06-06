@@ -81,10 +81,13 @@
 #include <dune/fem/gridpart/gridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
+#include <dune/fem/space/dgspace.hh>
+
 #include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/l2norm.hh>
+#include <dune/fem/misc/h1norm.hh>
 
 
 //! local (dune-multiscale) includes
@@ -130,6 +133,8 @@ using namespace Dune;
 //see: http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
 typedef AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
 
+typedef DGAdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > DGGridPartType;
+
 typedef GridPtr< GridType > GridPointerType;
 
 typedef FunctionSpace < double , double , WORLDDIM , 1 > FunctionSpaceType;
@@ -170,10 +175,15 @@ typedef FunctionSpaceType::RangeType RangeType;
 
 //! defines the function space to which the numerical solution belongs to 
 //! see dune/fem/lagrangebase.hh
-typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, GridPartType, 1 > //1=POLORDER
+typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, GridPartType, 1 > // 1 = POLORDER
    DiscreteFunctionSpaceType;
 
+typedef DiscontinuousGalerkinSpace < FunctionSpaceType, DGGridPartType, 0, CachingStorage > // 0 = POLORDER
+   DGDiscreteFunctionSpaceType;
+
 typedef AdaptiveDiscreteFunction < DiscreteFunctionSpaceType > DiscreteFunctionType;
+
+typedef AdaptiveDiscreteFunction < DGDiscreteFunctionSpaceType > DGDiscreteFunctionType;
 
 //!-----------------------------------------------------------------------------
 
@@ -280,6 +290,8 @@ double error_tolerance_;
 typedef Tuple<DiscreteFunctionType*> IOTupleType;
 typedef DataOutput< GridType, IOTupleType> DataOutputType;
 
+typedef Tuple< DGDiscreteFunctionType* > DGIOTupleType;
+typedef DataOutput< GridType, DGIOTupleType> DGDataOutputType;
 
 
 #ifdef EXACTSOLUTION_AVAILABLE
@@ -333,7 +345,7 @@ public:
   int outputformat() const
     {
       //return 0; // GRAPE (lossless format)
-      return 1; // VTK
+      return 1;   // VTK
       //return 2; // VTK vertex data
       //return 3; // gnuplot
     }
@@ -357,8 +369,7 @@ void algorithm ( std :: string& macroGridName,
   GridPointerType macro_grid_pointer( macroGridName );
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine( coarse_grid_level_ );
-  
-  
+
   //! ---- tools ----
 
   // model problem data
@@ -383,22 +394,32 @@ void algorithm ( std :: string& macroGridName,
 #if 1
   GridPointerType macro_grid_pointer_coarse( macroGridName );
   macro_grid_pointer_coarse->globalRefine( coarse_grid_level_ );
-  GridPartType gridPart_coarse( *macro_grid_pointer_coarse);
 
+  GridPartType gridPart_coarse( *macro_grid_pointer_coarse);
   GridType &grid_coarse = gridPart_coarse.grid();
-#endif  
+
+#endif
+
+  // dg coarse grid
+#if 1
+  GridPointerType dg_macro_grid_pointer_coarse( macroGridName );
+  dg_macro_grid_pointer_coarse->globalRefine( coarse_grid_level_ );
+
+  DGGridPartType dg_gridPart_coarse( *dg_macro_grid_pointer_coarse);
+  GridType &dg_grid_coarse = dg_gridPart_coarse.grid();
+#endif
 
 
 // strategy for adaptivity:
 #ifdef ADAPTIVE
-  
+
   typedef GridType :: LeafGridView GridView;
   typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
 
   typedef GridType :: Traits :: LeafIndexSet GridLeafIndexSet;
-  
+
   if ( local_indicators_available_ == true )
-   { 
+   {
      
       bool coarse_scale_error_dominant = false;
       bool fine_scale_error_dominant = false; // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
@@ -408,7 +429,10 @@ void algorithm ( std :: string& macroGridName,
       double average_est_error = total_estimated_H1_error_[ loop_number_ - 1 ] / 6.0; // 6 contributions
       
       // double variance = 1.0;
-       
+
+//! erstes 'if' wieder loeschen!!!!
+//if ( total_refinement_level_ <= 10 )
+{
       if ( (total_approximation_error_[ loop_number_ - 1 ] >= average_est_error ) || 
            (total_fine_grid_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
        {
@@ -419,15 +443,20 @@ void algorithm ( std :: string& macroGridName,
          data_file << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
                    << " refinement levels finer than the coarse grid." << std :: endl;
       }
-       
+}
+
+//! erstes 'if' wieder loeschen!!!!
+//if ( number_of_layers_ < 10 )
+{
       if ( (total_projection_error_[ loop_number_ - 1 ] >= average_est_error ) || 
            (total_conservative_flux_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
        {
          oversampling_error_dominant = true; /* increase number of layers by 1 */
-         number_of_layers_ += 5;
+         number_of_layers_ += 1;
          data_file << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5." << std :: endl;
          data_file << "NEW: Number of layers = " << number_of_layers_ << std :: endl; 
        }
+}
 
       if ( (total_coarse_residual_[ loop_number_ - 1 ] >= average_est_error ) || 
            (total_coarse_grid_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
@@ -452,7 +481,7 @@ void algorithm ( std :: string& macroGridName,
 
       if ( coarse_scale_error_dominant == true ) {
 
-      int number_of_refinements = 2;
+      int number_of_refinements = 4;
 
       // allowed varianve from average ( in percent )
       double variance = 1.1; // = 110 % of the average
@@ -507,6 +536,76 @@ void algorithm ( std :: string& macroGridName,
 	}
 
       }
+
+//! loeschen
+// dg coarse grid
+#if 1
+  if ( local_indicators_available_ == true )
+   {
+
+      bool coarse_scale_error_dominant = false;
+      bool fine_scale_error_dominant = false; // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
+      bool oversampling_error_dominant = false; // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
+
+      // identify the dominant contribution:
+      double average_est_error = total_estimated_H1_error_[ loop_number_ - 1 ] / 6.0; // 6 contributions
+
+      if ( (total_coarse_residual_[ loop_number_ - 1 ] >= average_est_error ) || 
+           (total_coarse_grid_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
+       {
+         data_file << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment." << std :: endl;
+         coarse_scale_error_dominant = true; /* mark elementwise for 2 refinments */
+       }
+
+      std :: vector < RangeType > average_coarse_error_indicator( loop_number_ ); //arithmetic average
+      for ( int l = 0; l < loop_number_; ++l )
+        {
+          assert( loc_coarse_residual_[ l ].size() == loc_coarse_grid_jumps_[ l ].size() );
+          average_coarse_error_indicator[ l ] = 0.0;
+          for ( int i = 0; i < loc_coarse_grid_jumps_[ l ].size(); ++i )
+            {
+              average_coarse_error_indicator[ l ] += loc_coarse_residual_[ l ][ i ]  + loc_coarse_grid_jumps_[ l ][ i ];
+            }
+          average_coarse_error_indicator[ l ] = average_coarse_error_indicator[ l ] / loc_coarse_residual_[ l ].size();
+        }
+
+      // allgemeineren Algorithmus nur vorstellen, aber nicht implementieren
+
+      if ( coarse_scale_error_dominant == true ) {
+
+      int number_of_refinements = 4;
+
+      // allowed varianve from average ( in percent )
+      double variance = 1.1; // = 110 % of the average
+
+      for ( int l = 0; l < loop_number_; ++l )
+        {
+
+          // coarse grid
+
+          GridView dg_gridView_coarse = dg_grid_coarse.leafView();
+          const GridLeafIndexSet& dg_gridLeafIndexSet_coarse = dg_grid_coarse.leafIndexSet();
+
+          for ( ElementLeafIterator it = dg_gridView_coarse.begin<0>();
+                it != dg_gridView_coarse.end<0>(); ++it )
+            {
+              RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[ l ][ dg_gridLeafIndexSet_coarse.index( *it ) ] + loc_coarse_residual_[ l ][ dg_gridLeafIndexSet_coarse.index( *it ) ];
+
+              if ( loc_coarse_error_indicator >= variance * average_coarse_error_indicator[ l ] )
+               { dg_grid_coarse.mark( number_of_refinements , *it ); }
+            }
+
+          dg_grid_coarse.preAdapt();
+          dg_grid_coarse.adapt();
+          dg_grid_coarse.postAdapt();
+	}
+
+      }
+   }
+
+  dg_macro_grid_pointer_coarse->globalRefine( 0 );
+
+#endif
 
    }
 
@@ -713,6 +812,138 @@ void algorithm ( std :: string& macroGridName,
                                      coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution );
 #endif
 
+
+
+
+
+
+
+  std :: cout << "Data output for MsFEM Solution." << std :: endl;
+
+  //! ----------------- writing data output MsFEM Solution -----------------
+
+  // --------- VTK data output for MsFEM solution --------------------------
+
+  // create and initialize output class
+  IOTupleType msfem_solution_series( &msfem_solution );
+
+#ifdef ADAPTIVE
+  char msfem_fname[50];
+  sprintf( msfem_fname, "msfem_solution_%d_", loop_number_ );
+  std :: string msfem_fname_s( msfem_fname );
+  outputparam.set_prefix( msfem_fname_s );
+  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
+  // write data
+  outstring << msfem_fname_s;
+#else
+  outputparam.set_prefix("msfem_solution");
+  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
+  // write data
+  outstring << "msfem_solution";
+#endif
+  
+  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+
+  // create and initialize output class
+  IOTupleType coarse_msfem_solution_series( &coarse_part_msfem_solution );
+  
+#ifdef ADAPTIVE
+  char coarse_msfem_fname[50];
+  sprintf( coarse_msfem_fname, "coarse_part_msfem_solution_%d_", loop_number_ );
+  std :: string coarse_msfem_fname_s( coarse_msfem_fname );
+  outputparam.set_prefix( coarse_msfem_fname_s );
+  DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
+  // write data
+  outstring << coarse_msfem_fname_s;
+#else
+  outputparam.set_prefix("coarse_part_msfem_solution");
+  DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
+  // write data
+  outstring << "coarse_part_msfem_solution";
+#endif
+
+  coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+
+
+  // create and initialize output class
+  IOTupleType fine_msfem_solution_series( &fine_part_msfem_solution );
+  
+#ifdef ADAPTIVE
+  char fine_msfem_fname[50];
+  sprintf( fine_msfem_fname, "fine_part_msfem_solution_%d_", loop_number_ );
+  std :: string fine_msfem_fname_s( fine_msfem_fname );
+  outputparam.set_prefix( fine_msfem_fname_s );
+  DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
+  // write data
+  outstring << fine_msfem_fname_s;
+#else
+  outputparam.set_prefix("fine_part_msfem_solution");
+  DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
+  // write data
+  outstring << "fine_msfem_solution";
+#endif
+  
+  fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+
+  // ---------------------------------------------------------------------- 
+
+  // ---------------------- write discrete msfem solution to file ---------
+  bool writer_is_open = false;
+
+  char fname[50];
+  sprintf( fname, "/msfem_solution_discFunc_refLevel_%d_%d", total_refinement_level_, coarse_grid_level_);
+  std :: string fname_s( fname );
+
+  std :: string location = path_ + fname_s;
+  DiscreteFunctionWriter dfw( (location).c_str() );
+  writer_is_open = dfw.open();
+  if ( writer_is_open )
+    dfw.append( msfem_solution );
+
+  //! --------------------------------------------------------------------
+
+
+
+
+  //! ------------------------------------------------------------
+
+  std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "The L2 errors:" << std :: endl << std :: endl; }
+
+  //! ----------------- compute L2- and H1- errors -------------------
+
+#ifdef EXACTSOLUTION_AVAILABLE
+
+  RangeType msfem_error = l2error.norm< ExactSolutionType >( u, msfem_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
+
+  std :: cout << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std :: endl; }
+
+  RangeType h1_msfem_error(0.0);
+  h1_msfem_error = h1error.semi_norm< ExactSolutionType >( u, msfem_solution );
+  h1_msfem_error += msfem_error;
+
+  std :: cout << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl; }
+
+#endif
+
+  //! ----------------------------------------------------------------------
+
+
+
   //! ----------------------------------------------------------------------
 
 // error estimation
@@ -792,103 +1023,6 @@ void algorithm ( std :: string& macroGridName,
 #endif
 
 
-
-
-  std :: cout << "Data output for MsFEM Solution." << std :: endl;
-  
-  //! ----------------- writing data output MsFEM Solution -----------------
-  
-  // --------- VTK data output for MsFEM solution --------------------------
-
-  // create and initialize output class
-  IOTupleType msfem_solution_series( &msfem_solution );
-
-#ifdef ADAPTIVE
-  char msfem_fname[50];
-  sprintf( msfem_fname, "msfem_solution_%d_", loop_number_ );
-  std :: string msfem_fname_s( msfem_fname );
-  outputparam.set_prefix( msfem_fname_s );
-  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
-  // write data
-  outstring << msfem_fname_s;
-#else
-  outputparam.set_prefix("msfem_solution");
-  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
-  // write data
-  outstring << "msfem_solution";
-#endif
-  
-  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str(std::string());
-
-
-  // create and initialize output class
-  IOTupleType coarse_msfem_solution_series( &coarse_part_msfem_solution );
-  
-#ifdef ADAPTIVE
-  char coarse_msfem_fname[50];
-  sprintf( coarse_msfem_fname, "coarse_part_msfem_solution_%d_", loop_number_ );
-  std :: string coarse_msfem_fname_s( coarse_msfem_fname );
-  outputparam.set_prefix( coarse_msfem_fname_s );
-  DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
-  // write data
-  outstring << coarse_msfem_fname_s;
-#else
-  outputparam.set_prefix("coarse_part_msfem_solution");
-  DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
-  // write data
-  outstring << "coarse_part_msfem_solution";
-#endif
-
-  coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str(std::string());
-
-
-
-  // create and initialize output class
-  IOTupleType fine_msfem_solution_series( &fine_part_msfem_solution );
-  
-#ifdef ADAPTIVE
-  char fine_msfem_fname[50];
-  sprintf( fine_msfem_fname, "fine_part_msfem_solution_%d_", loop_number_ );
-  std :: string fine_msfem_fname_s( fine_msfem_fname );
-  outputparam.set_prefix( fine_msfem_fname_s );
-  DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
-  // write data
-  outstring << fine_msfem_fname_s;
-#else
-  outputparam.set_prefix("fine_part_msfem_solution");
-  DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
-  // write data
-  outstring << "fine_msfem_solution";
-#endif
-  
-  fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str(std::string());
-
-
-  // ---------------------------------------------------------------------- 
-  
-  // ---------------------- write discrete msfem solution to file ---------
-  bool writer_is_open = false;
-
-  char fname[50];
-  sprintf( fname, "/msfem_solution_discFunc_refLevel_%d_%d", total_refinement_level_, coarse_grid_level_);
-  std :: string fname_s( fname );
-
-  std :: string location = path_ + fname_s;
-  DiscreteFunctionWriter dfw( (location).c_str() );
-  writer_is_open = dfw.open();
-  if ( writer_is_open )
-    dfw.append( msfem_solution );
-
-  //! --------------------------------------------------------------------
-
-
-
   //! ---------------------- solve FEM problem ---------------------------
 
   //! solution vector
@@ -939,9 +1073,7 @@ void algorithm ( std :: string& macroGridName,
   // -------------------------------------------------------------
 
   //! ------------------------------------------------------------
-    
-  
-    
+
   std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
   if (data_file.is_open())
     { data_file << "The L2 errors:" << std :: endl << std :: endl; }
@@ -966,24 +1098,6 @@ void algorithm ( std :: string& macroGridName,
 
 #endif
 
-#ifdef EXACTSOLUTION_AVAILABLE
-
-  RangeType msfem_error = l2error.norm< ExactSolutionType >( u, msfem_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
-
-  std :: cout << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std :: endl; }
-
-  RangeType h1_msfem_error(0.0);
-  h1_msfem_error = h1error.semi_norm< ExactSolutionType >( u, msfem_solution );
-  h1_msfem_error += msfem_error;
-
-  std :: cout << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl; }
-
-#endif
-
 
 #ifndef EXACTSOLUTION_AVAILABLE
 
@@ -999,9 +1113,156 @@ void algorithm ( std :: string& macroGridName,
     { data_file << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std :: endl; }
 
 
+  H1Norm< GridPartType > h1norm( gridPart );
+  RangeType h1_approx_msfem_error = h1norm.distance( fem_solution, msfem_solution );
+
+  std :: cout << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std :: endl; }
+
 #endif
 
 //! -------------------------------------------------------
+
+
+
+
+
+
+
+//! loeschen?!
+#if 1
+     typedef DiscreteFunctionSpaceType :: IteratorType :: Entity :: EntityPointer EntityPointerType;
+
+     int number_of_coarse_nodes = gridPart_coarse.grid().size( 2 /*codim*/ );
+     std :: vector< std :: vector < EntityPointerType > > entities_sharing_same_node( number_of_coarse_nodes );
+
+     GridView gridView_coarse_new = grid_coarse.leafView();
+     const GridLeafIndexSet& gridLeafIndexSet_coarse_new = grid_coarse.leafIndexSet();
+
+     for ( ElementLeafIterator it = gridView_coarse_new.begin<0>();
+           it != gridView_coarse_new.end<0>(); ++it )
+        {
+          int number_of_nodes_in_entity = (*it).count<2>();
+          for ( int i = 0; i < number_of_nodes_in_entity; i += 1 )
+	    {
+	      const DiscreteFunctionSpaceType :: IteratorType :: Entity :: Codim< 2 > :: EntityPointer node = (*it).subEntity<2>(i);
+	      int global_index_node = gridPart_coarse.indexSet().index( *node );
+
+	      entities_sharing_same_node[ global_index_node ].push_back( it );
+	    }
+        }
+
+#endif
+
+
+//! loeschen?!
+#if 0
+
+  //! --------------- writing data output for the oversampling error visualization ------------------
+
+  DGDiscreteFunctionSpaceType dg_discreteFunctionSpace_coarse( dg_gridPart_coarse );
+
+  std :: cout << "dg_gridPart_coarse.grid().size(0) = " << dg_gridPart_coarse.grid().size(0) << std :: endl;
+  std :: cout << "dg_discreteFunctionSpace_coarse.size() = " << dg_discreteFunctionSpace_coarse.size() << std :: endl;
+
+#if 1
+  typedef DGDiscreteFunctionType :: LocalFunctionType DGLocalFunctionType;
+
+  DGDiscreteFunctionType oversampling_error_visualization( filename_ + " Visualization of the oversampling error", dg_discreteFunctionSpace_coarse );
+  oversampling_error_visualization.clear();
+
+  std :: cout << "oversampling_error_visualization.size() = " << oversampling_error_visualization.size() << std :: endl;
+
+  RangeType average_conservative_flux_jumps = total_conservative_flux_jumps_[ loop_number_ ] / loc_conservative_flux_jumps_[ loop_number_ ].size();
+
+
+  GridView gridView_coarse_new = dg_grid_coarse.leafView();
+  const GridLeafIndexSet& gridLeafIndexSet_coarse_new = dg_grid_coarse.leafIndexSet();
+
+  int c = 0;
+
+  for ( ElementLeafIterator it = gridView_coarse_new.begin<0>();
+           it != gridView_coarse_new.end<0>(); ++it )
+        {
+
+              std :: cout << "c = " << c << std :: endl;
+              c+=1;
+
+#if 1
+              DGLocalFunctionType loc_func = oversampling_error_visualization.localFunction( *it );
+              loc_func[ 0 ] = 0.7071067;
+
+              RangeType loc_oversampling_indicator = loc_conservative_flux_jumps_[ loop_number_ ][ gridLeafIndexSet_coarse_new.index( *it ) ];
+
+              if ( loc_oversampling_indicator <= 0.2 * average_conservative_flux_jumps )
+               { }
+
+              if ( ( loc_oversampling_indicator > 0.2 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.4 * average_conservative_flux_jumps) )
+               {}
+
+              if ( ( loc_oversampling_indicator > 0.4 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.6 * average_conservative_flux_jumps) )
+               {}
+
+              if ( ( loc_oversampling_indicator > 0.6 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.8 * average_conservative_flux_jumps) )
+               {}
+
+              if ( ( loc_oversampling_indicator > 0.8 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.0 * average_conservative_flux_jumps) )
+               {}
+
+              if ( ( loc_oversampling_indicator > 1.0 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.2 * average_conservative_flux_jumps) )
+               {}
+
+              if ( ( loc_oversampling_indicator > 1.2 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.4 * average_conservative_flux_jumps) )
+               {}
+
+              if ( ( loc_oversampling_indicator > 1.4 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.6 * average_conservative_flux_jumps) )
+               {}
+
+              if ( ( loc_oversampling_indicator > 1.6 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.8 * average_conservative_flux_jumps) )
+               {}
+
+              if ( ( loc_oversampling_indicator > 1.8 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 200.0 * average_conservative_flux_jumps) )
+               {}
+#endif
+ }
+#endif
+
+#if 0
+
+  // -------------------------- data output -------------------------
+
+  // create and initialize output class
+  DGIOTupleType dg_coarse_grid_series( &oversampling_error_visualization );
+
+  char dg_coarse_grid_fname[50];
+  sprintf( dg_coarse_grid_fname, "oversampling_error_visualization_%d_", loop_number_ );
+  std :: string dg_coarse_grid_fname_s( dg_coarse_grid_fname );
+  outputparam.set_prefix( dg_coarse_grid_fname_s );
+  DGDataOutputType dg_coarse_grid_dataoutput( gridPart_coarse.grid(), dg_coarse_grid_series, outputparam );
+  // write data
+  outstring << dg_coarse_grid_fname_s;
+
+  dg_coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+  // -------------------------------------------------------
+
+  //! --------------------------------------------------------------------------------------
+
+#endif
+
+#endif
 
 
 }

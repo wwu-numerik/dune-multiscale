@@ -508,7 +508,10 @@ namespace Dune
 #endif
 
           if ( !silent_ )
-            { subGrid[ i ]->report(); }
+            {
+              std :: cout << "Subgrid " << i << ":" << std :: endl;
+              subGrid[ i ]->report();
+            }
 
           if ( subGrid[ i ]->size( 2 ) == 0 )
             {

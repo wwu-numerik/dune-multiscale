@@ -17,7 +17,7 @@
 #define FLUX_SOLVER_VERBOSE false
 
 // VTK output for conservative flux solution
-//! #define VTK_OUTPUT
+//#define VTK_OUTPUT
 
 // dune-subgrid include:
 #include <dune/subgrid/subgrid.hh>
