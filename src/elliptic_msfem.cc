@@ -3,7 +3,6 @@
 # include <config.h>
 #endif
 
-
 // polynomial order of discrete space
 #define POLORDER 1
 
@@ -25,6 +24,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 // for creation of directories
 #include <sys/types.h>
@@ -36,80 +36,28 @@
 //-----------------------------
 
 
-//! do we have a linear elliptic problem?
-// if yes, #define LINEAR_PROBLEM
-// MsFEM currently only works for linear problems
-#define LINEAR_PROBLEM
+#define ADAPTIVE
 
-//! MsFEM in Petrov-Galerkin formulation (PGF) or standard MsFEM formulation?
-#define PGF
+#ifndef ADAPTIVE
+#define UNIFORM
+#endif
 
 
-//! is the homogenized solution available?
+//! is an exact solution available?
 // this information should be provided by the 'problem specification file'
-// there we define or don't define the macro HOMOGENIZEDSOL_AVAILABLE
-// (if HOMOGENIZEDSOL_AVAILABLE == true, it means that it can be computed. It still needs to be determined by using a homogenizer )
-#define HOMOGENIZEDSOL_AVAILABLE
-
-// compute the L2 errors? (might be expensive)
-#define ERROR_COMPUTATION
-
-//! Do we have/want a fine-scale reference solution?
-//#define FINE_SCALE_REFERENCE
-#ifdef FINE_SCALE_REFERENCE
-
-  // load the precomputed fine scale reference from a file
-  // #define FSR_LOAD
-
-  #ifndef FSR_LOAD
-  // compute the fine scale reference (on the fly)
-    #define FSR_COMPUTE
-
-    #ifdef FSR_COMPUTE
-     // Do we write the discrete fine-scale solution to a file? (for later usage)
-      #define WRITE_FINESCALE_SOL_TO_FILE
-    #endif
-
-  #endif
-
-#endif
-
-
-//! Do we have a HMM reference solution? (precomputed detailed HMM simulation)
-// we might use a detailed HMM computation as a reference! (if it is available)
-//#define HMM_REFERENCE
-
-//! Do we write the discrete MsFEM solution to a file? (for later usage)
-#define WRITE_MSFEM_SOL_TO_FILE
-
-//! Do we want to add a stochastic perturbation on the data?
-//#define STOCHASTIC_PERTURBATION
-#ifdef STOCHASTIC_PERTURBATION
- // size of variance:
- #define VARIANCE 0.01
- //! Do we want to force the algorithm to come to an end?
- // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht erreicht etc.)
- #define FORCE
-#endif
-
-
-
-//!NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in problem_specification.hh), which provides us with information about the problem itself.
-// MsFEM Assembler, Error Estimator, ... they all hark back to 'ModelProblemData'. Probably there is a better solution, but for me, it works perfectly.
-
-
-
+// there we define or don't define the macro EXACTSOLUTION_AVAILABLE
+// #define EXACTSOLUTION_AVAILABLE
 
 
 #include <dune/common/mpihelper.hh> // An initializer of MPI
 #include <dune/common/exceptions.hh> // We use exceptions
 
 // for yasp grid
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+// #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 // for ug grid
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
+// #include <dune/grid/io/file/dgfparser/dgfug.hh>
 // for alu grid:
-#include <dune/grid/io/file/dgfparser/dgfalu.hh>
+// #include <dune/grid/io/file/dgfparser/dgfalu.hh>
 // for alberta grid:
 #include <dune/grid/albertagrid/dgfparser.hh>
 
@@ -118,6 +66,7 @@
 #include <dune/grid/io/visual/grapedatadisplay.hh>
 #endif
 
+#define PGF
 
 // to display data with ParaView:
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
@@ -127,55 +76,36 @@
 #include <dune/fem/io/file/datawriter.hh>
 
 
+// dune-fem includes:
 
 #include <dune/fem/gridpart/gridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-
 #include <dune/fem/space/lagrangespace.hh>
+
 #include <dune/fem/function/adaptivefunction.hh>
-
-#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
-
-#if 1
-//!---------
-#include <dune/fem/solver/oemsolver/oemsolver.hh>
-
-
-#include <dune/fem/operator/discreteoperatorimp.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/l2norm.hh>
-//#include <dune/fem/io/visual/grape/datadisp/errordisplay.hh>
-//!-----------
-#endif
-
-#include <dune/fem/solver/inverseoperators.hh>
-
-
+#include <dune/fem/misc/h1norm.hh>
 
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic_problems/model_problem_6/problem_specification.hh>
+//#include <dune/multiscale/problems/elliptic_problems/model_problem_toy/problem_specification.hh>
 //#include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_10/problem_specification.hh>
 
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
+
+#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
+#include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
+#include <dune/multiscale/tools/misc/h1error.hh>
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/deprecated/localproblemsolver.hh>
-
+//! Bei Gelegenheit LOESCHEN:
 #include <dune/multiscale/tools/meanvalue.hh>
 
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/deprecated/elliptic_msfem_matrix_assembler.hh>
-#include <dune/multiscale/tools/misc/h1error.hh>
-
-//! (very restrictive) homogenizer
-#ifdef LINEAR_PROBLEM
-#include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
-#include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
-#endif
+#include <dune/multiscale/tools/errorestimation/MsFEM/elliptic_error_estimator.hh>
 
 using namespace Dune;
 
@@ -196,8 +126,7 @@ using namespace Dune;
     #endif
 #endif
 
-
-//! --------- typedefs for the macro grid and the corresponding discrete space -------------
+//! ----- typedefs for the macro grid and the corresponding discrete space -----
 
 //Dune::InteriorBorder_Partition or Dune::All_Partition >?
 //see: http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
@@ -207,25 +136,17 @@ typedef GridPtr< GridType > GridPointerType;
 
 typedef FunctionSpace < double , double , WORLDDIM , 1 > FunctionSpaceType;
 
-//!-----------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------
 
 
 
-
-
-//! --------- typedefs for the coefficient and data functions ------------------------------
+//! --------- typedefs for the coefficient and data functions ------------------
 
 // type of first source term (right hand side of differential equation or type of 'f')
 typedef Problem::FirstSource< FunctionSpaceType > FirstSourceType;
 
-// type of second source term 'G' (second right hand side of differential equation 'div G')
-typedef Problem::SecondSource< FunctionSpaceType > SecondSourceType;
-
 // type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
 typedef Problem::Diffusion< FunctionSpaceType > DiffusionType;
-
-// type of mass (or reaction) term (i.e. 'm' or 'c')
-typedef Problem::MassTerm< FunctionSpaceType > MassTermType;
 
 // default type for any missing coefficient function (e.g. advection,...)
 typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionType;
@@ -237,12 +158,12 @@ typedef DiscreteFunctionAdapter< ExactSolutionType, GridPartType >
   DiscreteExactSolutionType; //for data output with paraview or grape
 #endif
 
-//!-----------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------
 
 
 
 
-//! ---------  typedefs for the standard discrete function space (macroscopic) -------------
+//! ----  typedefs for the standard discrete function space (macroscopic) -----
 
 typedef FunctionSpaceType::DomainType DomainType; 
 
@@ -251,118 +172,115 @@ typedef FunctionSpaceType::RangeType RangeType;
 
 //! defines the function space to which the numerical solution belongs to 
 //! see dune/fem/lagrangebase.hh
-typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, GridPartType, 1 > //1=POLORDER
+typedef LagrangeDiscreteFunctionSpace < FunctionSpaceType, GridPartType, 1 > // 1 = POLORDER
    DiscreteFunctionSpaceType;
-
-
-typedef DiscreteFunctionSpaceType :: DomainFieldType TimeType;
-
-typedef DiscreteFunctionSpaceType :: JacobianRangeType JacobianRangeType;
-
-typedef GridType :: Codim<0> :: Entity EntityType; 
-typedef GridType :: Codim<0> :: EntityPointer EntityPointerType; 
-typedef GridType :: Codim<0> :: Geometry EntityGeometryType; 
-typedef GridType :: Codim<1> :: Geometry FaceGeometryType; 
-
-typedef DiscreteFunctionSpaceType     :: BaseFunctionSetType      BaseFunctionSetType;
-
-typedef CachingQuadrature < GridPartType , 0 > EntityQuadratureType;
-typedef CachingQuadrature < GridPartType , 1 > FaceQuadratureType;
-
-typedef DiscreteFunctionSpaceType :: DomainFieldType TimeType;
-typedef DiscreteFunctionSpaceType :: RangeFieldType RangeFieldType;
 
 typedef AdaptiveDiscreteFunction < DiscreteFunctionSpaceType > DiscreteFunctionType;
 
-
-typedef DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
-typedef DiscreteFunctionType :: DofIteratorType DofIteratorType;
-
-//!-----------------------------------------------------------------------------------------
-
-
-
-//! ------------ cell problem solver and numbering manager -----------------------------------------
-
-typedef LocalProblemNumberingManager< DiscreteFunctionSpaceType > LocProbNumberingManagerType;
-
-//!-----------------------------------------------------------------------------------------
-
-
-//! --------------------- the standard matrix traits -------------------------------------
-
-struct MatrixTraits
-{
-  typedef DiscreteFunctionSpaceType RowSpaceType;
-  typedef DiscreteFunctionSpaceType ColumnSpaceType;
-  typedef LagrangeMatrixSetup< false > StencilType;
-  typedef ParallelScalarProduct< DiscreteFunctionSpaceType > ParallelScalarProductType;
-
-  template< class M >
-  struct Adapter
-  {
-    typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-  };
-};
-
-//! --------------------------------------------------------------------------------------
-
-
-//! --------------------- type of fem stiffness matrix -----------------------------------
-
-typedef SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, MatrixTraits > FEMMatrix;
-
-//! --------------------------------------------------------------------------------------
-
-
-//! --------------- solver for the linear system of equations ----------------------------
-
-// use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones. GMRES seems to be more stable, but is extremely slow!
-typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
-
-//! --------------------------------------------------------------------------------------
-
-
-//! --------------- the discrete operators (standard FEM and MsFEM) ------------------------
-
-// discrete elliptic operator (corresponds with FEM Matrix)
-typedef DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
-
-// discrete elliptic HMM operator (corresponds with HMM (or HMFEM) Matrix)
-typedef DiscreteEllipticMsFEMOperator< DiscreteFunctionType, DiffusionType, LocProbNumberingManagerType > EllipticMsFEMOperatorType;
-
-//! --------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------
 
 
 
 
+//!------------------------- for adaptive grid refinement ---------------------------------
+
+//! For adaption:
+
+//! type of restrict-prolong operator
+typedef RestrictProlongDefault< DiscreteFunctionType >
+  RestrictProlongOperatorType;
+//! type of the adaption manager
+typedef AdaptationManager< GridType, RestrictProlongOperatorType >
+  AdaptationManagerType;
+
+//!---------------------------------------------------------------------------------------
+
+
+typedef MacroMicroGridSpecifier< DiscreteFunctionSpaceType > MacroMicroGridSpecifierType;
+typedef SubGrid< GridType :: dimension , GridType > SubGridType; 
+typedef SubGridList< DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
+
+
+//! -------------------------- MsFEM error estimator ----------------------------
+typedef MsFEMErrorEstimator< DiscreteFunctionType,
+                             DiffusionType,
+                             FirstSourceType,
+                             MacroMicroGridSpecifierType,
+                             SubGridListType > MsFEMErrorEstimatorType;
+//! -----------------------------------------------------------------------------
 
 
 
-//! -------------------------------- important variables ---------------------------------
+
+//! ---------------------- important variables ---------------------------------
 
 enum { dimension = GridType :: dimension};
 
 //name of the error file in which the data will be saved
 std :: string filename_;
+std :: string path_;
 
-double epsilon_; // 'epsilon' in for instance A^{epsilon}(t,x) = A(t,x/epsilon)
-double epsilon_est_; // estimated epsilon in case epsilon is unknown
-double delta_; //edge length of the cells in the cell proplems,
+int total_refinement_level_;
+int coarse_grid_level_;
 
-int refinement_level_macrogrid_;
-int refinement_level_referenceprob_;
-
-//std :: ofstream data_file_; // file where we save the data
+// only for uniform computations / use the same number of layers for every coarse grid entity
+int number_of_layers_;
 
 //! -----------------------------------------------------------------------------
 
 
 
-//! --------- typedefs and classes for data output -----------------------------------------
+//! ---------------------- local error indicators --------------------------------
+
+// ----- local error indicators (for each coarse grid element T) -------------
+
+int max_loop_number = 10;
+
+bool local_indicators_available_ = false;
+
+// local coarse residual, i.e. H ||f||_{L^2(T)}
+std :: vector < std :: vector < RangeType > > loc_coarse_residual_( max_loop_number );
+
+// local coarse grid jumps (contribute to the total coarse residual)
+std :: vector < std :: vector < RangeType > > loc_coarse_grid_jumps_( max_loop_number );
+
+// local projection error (we project to get a globaly continous approximation)
+std :: vector < std :: vector < RangeType > > loc_projection_error_( max_loop_number );
+
+// local jump in the conservative flux
+std :: vector < std :: vector < RangeType > > loc_conservative_flux_jumps_( max_loop_number );
+
+// local approximation error
+std :: vector < std :: vector < RangeType > > loc_approximation_error_( max_loop_number );
+
+// local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
+std :: vector < std :: vector < RangeType > > loc_fine_grid_jumps_( max_loop_number );
+
+
+std :: vector < RangeType > total_coarse_residual_( max_loop_number );
+std :: vector < RangeType > total_projection_error_( max_loop_number );
+std :: vector < RangeType > total_coarse_grid_jumps_( max_loop_number );
+std :: vector < RangeType > total_conservative_flux_jumps_( max_loop_number );
+std :: vector < RangeType > total_approximation_error_( max_loop_number );
+std :: vector < RangeType > total_fine_grid_jumps_( max_loop_number );
+
+std :: vector < RangeType > total_estimated_H1_error_( max_loop_number );
+
+bool repeat_algorithm_ = true;
+int loop_number_ = 0;
+
+#ifdef ADAPTIVE
+double error_tolerance_;
+#endif
+
+//! -----------------------------------------------------------------------------
+
+
+
+//! ------------------ typedefs and classes for data output ---------------------
 
 typedef Tuple<DiscreteFunctionType*> IOTupleType;
-typedef DataOutput<GridType, IOTupleType> DataOutputType;
+typedef DataOutput< GridType, IOTupleType> DataOutputType;
 
 #ifdef EXACTSOLUTION_AVAILABLE
 // just for the discretized exact solution (in case it is available)
@@ -392,7 +310,7 @@ public:
     }
 
   // base of file name for data file
-  std::string prefix() const 
+  std::string prefix() const
     {
       if (my_prefix_ == "")
         return "solutions";
@@ -404,7 +322,7 @@ public:
   std::string path() const 
     {
       if (my_path_ == "")
-        return "data_output_hmm";
+        return "data_output_msfem";
       else
         return my_path_;
 
@@ -415,7 +333,7 @@ public:
   int outputformat() const
     {
       //return 0; // GRAPE (lossless format)
-      return 1; // VTK
+      return 1;   // VTK
       //return 2; // VTK vertex data
       //return 3; // gnuplot
     }
@@ -427,119 +345,18 @@ public:
 
 
 
-
-
-
-//!------------------------- for adaptive grid refinement ---------------------------------
-
-//! For adaption:
-
-//! type of restrict-prolong operator
-typedef RestrictProlongDefault< DiscreteFunctionType >
-  RestrictProlongOperatorType;
-//! type of the adaption manager
-typedef AdaptationManager< GridType, RestrictProlongOperatorType >
-  AdaptationManagerType;
-
-//!---------------------------------------------------------------------------------------
-
-
-
-//! set the dirichlet points to zero
-template< class EntityType, class DiscreteFunctionType >
-void boundaryTreatment( const EntityType &entity, DiscreteFunctionType &rhs )
-{
-  typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
-    DiscreteFunctionSpaceType;
-
-  typedef typename DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
-
-  typedef typename DiscreteFunctionSpaceType :: LagrangePointSetType
-    LagrangePointSetType;
-
-  typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
-
-  enum { faceCodim = 1 };
-
-  typedef typename GridPartType :: IntersectionIteratorType
-    IntersectionIteratorType;
-
-  typedef typename LagrangePointSetType :: template Codim< faceCodim > 
-                                        :: SubEntityIteratorType
-    FaceDofIteratorType;
-
-  const DiscreteFunctionSpaceType &discreteFunctionSpace = rhs.space();
-
-  const GridPartType &gridPart = discreteFunctionSpace.gridPart();
-
-  IntersectionIteratorType it = gridPart.ibegin( entity );
-  const IntersectionIteratorType endit = gridPart.iend( entity );
-  for( ; it != endit; ++it ) {
-    if( !(*it).boundary() )
-      continue;
-
-    LocalFunctionType rhsLocal = rhs.localFunction( entity );
-    const LagrangePointSetType &lagrangePointSet
-      = discreteFunctionSpace.lagrangePointSet( entity );
-
-    const int face = (*it).indexInInside();
-    FaceDofIteratorType faceIterator
-      = lagrangePointSet.template beginSubEntity< faceCodim >( face );
-    const FaceDofIteratorType faceEndIterator
-      = lagrangePointSet.template endSubEntity< faceCodim >( face );
-    for( ; faceIterator != faceEndIterator; ++faceIterator )
-      rhsLocal[ *faceIterator ] = 0;
-  }
-}
-
-
-template < class Stream, class DiscFunc >
-void oneLinePrint( Stream& stream, const DiscFunc& func )
-{
-    typedef typename DiscFunc::ConstDofIteratorType
-        DofIteratorType;
-    DofIteratorType it = func.dbegin();
-    stream << "\n" << func.name() << ": [ ";
-    for ( ; it != func.dend(); ++it )
-        stream << std::setw(5) << *it << "  ";
-
-    stream << " ] " << std::endl;
-}
-
-
-RangeType get_size_of_domain( DiscreteFunctionSpaceType& discreteFunctionSpace )
+void algorithm ( std :: string& macroGridName,
+                 std :: ofstream& data_file )
 {
 
-   typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-   IteratorType endit = discreteFunctionSpace.end();
-   RangeType size_of_domain = 0.0;
+  std :: cout << "loading dgf: " << macroGridName << std :: endl;
 
-   for(IteratorType it = discreteFunctionSpace.begin(); it != endit ; ++it)
-        {
-          CachingQuadrature <GridPartType , 0 > entityQuadrature (*it, 0 );
+  // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values for the parameters:
 
-          // get geoemetry of entity
-          const  GridType :: Codim< 0 > :: Geometry& geometry = it->geometry();
-
-          const double volumeEntity = entityQuadrature.weight( 0 ) * 
-               geometry.integrationElement(entityQuadrature.point( 0 ));
-
-          size_of_domain += volumeEntity;
-        }
-
-   return size_of_domain;
-
-}
-
-
-void algorithm ( std :: string &RefElementName,
-                 GridPointerType &macro_grid_pointer, // grid pointer that belongs to the macro grid
-                 GridPointerType &fine_macro_grid_pointer, // grid pointer that belongs to the fine macro grid (for reference computations)
-                 GridPointerType &ref_simplex_grid_pointer, // grid pointer that belongs to the grid for the refernce element
-                 int refinement_difference, //refinement difference for the macro grid (problem-to-solve vs. reference problem)
-                 std :: ofstream &data_file )
-{
-
+  // create a grid pointer for the DGF file belongig to the macro grid:
+  GridPointerType macro_grid_pointer( macroGridName );
+  // refine the grid 'starting_refinement_level' times:
+  macro_grid_pointer->globalRefine( coarse_grid_level_ );
 
   //! ---- tools ----
 
@@ -556,33 +373,153 @@ void algorithm ( std :: string &RefElementName,
 
   // grid part for the global function space, required for MsFEM-macro-problem
   GridPartType gridPart( *macro_grid_pointer);
-
-  // grid part for the function space for T_0, required for the local HsFEM-problems
-  GridPartType refSimplexGridPart ( *ref_simplex_grid_pointer );
-
-  // grid part for the global function space, required for the detailed fine-scale computation (very high resolution)
-  GridPartType gridPartFine( *fine_macro_grid_pointer );
-
   GridType &grid = gridPart.grid();
-  GridType &gridFine = gridPartFine.grid();
 
   //! --------------------------------------------------------------------------------------
 
+  // coarse grid
 
+  GridPointerType macro_grid_pointer_coarse( macroGridName );
+  macro_grid_pointer_coarse->globalRefine( coarse_grid_level_ );
+
+  GridPartType gridPart_coarse( *macro_grid_pointer_coarse);
+  GridType &grid_coarse = gridPart_coarse.grid();
+
+
+// strategy for adaptivity:
+#ifdef ADAPTIVE
+
+  typedef GridType :: LeafGridView GridView;
+  typedef GridView :: Codim < 0 >:: Iterator ElementLeafIterator ;
+
+  typedef GridType :: Traits :: LeafIndexSet GridLeafIndexSet;
+
+  if ( local_indicators_available_ == true )
+   {
+
+      bool coarse_scale_error_dominant = false;
+      bool fine_scale_error_dominant = false; // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
+      bool oversampling_error_dominant = false; // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
+
+      // identify the dominant contribution:
+      double average_est_error = total_estimated_H1_error_[ loop_number_ - 1 ] / 6.0; // 6 contributions
+
+
+      if ( (total_approximation_error_[ loop_number_ - 1 ] >= average_est_error ) || 
+           (total_fine_grid_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
+       {
+         fine_scale_error_dominant = true; /* increase fine level resolution by 2 levels */
+         total_refinement_level_ += 2; // 'the fine grid level'
+         data_file << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2." << std :: endl;
+         data_file << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std :: endl;
+         data_file << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
+                   << " refinement levels finer than the coarse grid." << std :: endl;
+      }
+
+
+      if ( (total_projection_error_[ loop_number_ - 1 ] >= average_est_error ) || 
+           (total_conservative_flux_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
+       {
+         oversampling_error_dominant = true; /* increase number of layers by 1 */
+         number_of_layers_ += 1;
+         data_file << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5." << std :: endl;
+         data_file << "NEW: Number of layers = " << number_of_layers_ << std :: endl; 
+       }
+
+
+      if ( (total_coarse_residual_[ loop_number_ - 1 ] >= average_est_error ) || 
+           (total_coarse_grid_jumps_[ loop_number_ - 1 ] >= average_est_error ) )
+       {
+         data_file << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment." << std :: endl;
+         coarse_scale_error_dominant = true; /* mark elementwise for 2 refinments */
+       }
+
+      std :: vector < RangeType > average_coarse_error_indicator( loop_number_ ); //arithmetic average
+      for ( int l = 0; l < loop_number_; ++l )
+        {
+          assert( loc_coarse_residual_[ l ].size() == loc_coarse_grid_jumps_[ l ].size() );
+          average_coarse_error_indicator[ l ] = 0.0;
+          for ( int i = 0; i < loc_coarse_grid_jumps_[ l ].size(); ++i )
+            {
+              average_coarse_error_indicator[ l ] += loc_coarse_residual_[ l ][ i ]  + loc_coarse_grid_jumps_[ l ][ i ];
+            }
+          average_coarse_error_indicator[ l ] = average_coarse_error_indicator[ l ] / loc_coarse_residual_[ l ].size();
+        }
+
+      // allgemeineren Algorithmus vorgestellt, aber noch nicht implementiert
+
+      if ( coarse_scale_error_dominant == true ) {
+
+      int number_of_refinements = 4;
+
+      // allowed varianve from average ( in percent )
+      double variance = 1.1; // = 110 % of the average
+
+      for ( int l = 0; l < loop_number_; ++l )
+        {
+
+          const GridLeafIndexSet& gridLeafIndexSet = grid.leafIndexSet();
+          GridView gridView = grid.leafView();
+
+          int total_number_of_entities = 0;
+          int number_of_marked_entities = 0;
+          for ( ElementLeafIterator it = gridView.begin<0>();
+                it != gridView.end<0>(); ++it )
+            {
+              RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[ l ][ gridLeafIndexSet.index( *it ) ] + loc_coarse_residual_[ l ][ gridLeafIndexSet.index( *it ) ];
+              total_number_of_entities += 1;
+
+              if ( loc_coarse_error_indicator >= variance * average_coarse_error_indicator[ l ] )
+                {
+                  grid.mark( number_of_refinements , *it );
+                  number_of_marked_entities += 1;
+                }
+            }
+
+          if ( l == (loop_number_-1) )
+           {
+             data_file << number_of_marked_entities << " of " << total_number_of_entities << " coarse grid entities marked for mesh refinement." << std :: endl;
+           }
+
+          grid.preAdapt();
+          grid.adapt();
+          grid.postAdapt();
+
+          // coarse grid
+
+          GridView gridView_coarse = grid_coarse.leafView();
+          const GridLeafIndexSet& gridLeafIndexSet_coarse = grid_coarse.leafIndexSet();
+
+          for ( ElementLeafIterator it = gridView_coarse.begin<0>();
+                it != gridView_coarse.end<0>(); ++it )
+            {
+              RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[ l ][ gridLeafIndexSet_coarse.index( *it ) ] + loc_coarse_residual_[ l ][ gridLeafIndexSet_coarse.index( *it ) ];
+
+              if ( loc_coarse_error_indicator >= variance * average_coarse_error_indicator[ l ] )
+               { grid_coarse.mark( number_of_refinements , *it ); }
+            }
+
+          grid_coarse.preAdapt();
+          grid_coarse.adapt();
+          grid_coarse.postAdapt();
+	}
+
+      }
+
+   }
+
+#endif
+
+  grid.globalRefine( total_refinement_level_ - coarse_grid_level_ );
 
   //! ------------------------- discrete function spaces -----------------------------------
 
   // the global-problem function space:
   DiscreteFunctionSpaceType discreteFunctionSpace( gridPart );
 
-  // the global-problem function space for the reference computation:
-  DiscreteFunctionSpaceType finerDiscreteFunctionSpace( gridPartFine );
-
-  // the local-problem function space:
-  DiscreteFunctionSpaceType refSimplexDiscreteFunctionSpace( refSimplexGridPart );
+  DiscreteFunctionSpaceType discreteFunctionSpace_coarse( gridPart_coarse );
 
   //! --------------------------------------------------------------------------------------
-
 
 
 
@@ -594,626 +531,26 @@ void algorithm ( std :: string &RefElementName,
   // define (first) source term:
   FirstSourceType f; // standard source f
 
-  // if we have some additional source term (-div G), define:
-  SecondSourceType G;
-  // - div ( A^{\epsilon} \nabla u^{\epsilon} ) = f - div G
-
-  //! Ueberdenken, ob wir das nicht rausschmeisen und nur im Hintergrund fuer die Zellprobleme verwenden:
-  // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
-  MassTermType mass;
-
-
-  // dummy coefficient (mass, advection, etc.)
-  DefaultDummyFunctionType dummy_coeff;
-
   // exact solution unknown?
 #ifdef EXACTSOLUTION_AVAILABLE
   ExactSolutionType u;
-  DiscreteExactSolutionType discrete_exact_solution( "discrete exact solution ", u, gridPartFine );
+  DiscreteExactSolutionType discrete_exact_solution( "discrete exact solution ", u, gridPart );
 #endif
+
+  //! ---------------------------- general output parameters ------------------------------
+
+  // general output parameters
+  myDataOutputParameters outputparam;
+  outputparam.set_path( path_ );
+
+  // sequence stamp
+  std::stringstream outstring;
 
   //! --------------------------------------------------------------------------------------
 
 
 
-
-  //! define the right hand side assembler tool
-  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler< DiscreteFunctionType > rhsassembler;
-
-
-  //----------------------------------------------------------------------------------------------//
-  //----------------------- THE DISCRETE FEM OPERATOR -----------------------------------//
-  //----------------------------------------------------------------------------------------------//
-
-  //! define the discrete (elliptic) operator that describes our problem
-  // ( effect of the discretized differential operator on a certain discrete function )
-  EllipticOperatorType discrete_elliptic_op( finerDiscreteFunctionSpace, diffusion_op);
-
-  //----------------------------------------------------------------------------------------------//
-  //----------------------------------------------------------------------------------------------//
-  //----------------------------------------------------------------------------------------------//
-
-  RangeType size_of_domain = get_size_of_domain(discreteFunctionSpace);
-
-
-#ifdef HOMOGENIZEDSOL_AVAILABLE
-
- #ifdef LINEAR_PROBLEM
-
-  std :: string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
-  FieldMatrix< RangeType, dimension, dimension > A_hom;
-
-  //analytical homogenizer:
-
-  #if 1
-  AnalyticalHomogenizer< GridType, DiffusionType > ana_homogenizer( unit_cell_location );
-  A_hom = ana_homogenizer.getHomTensor(diffusion_op);
-  #endif
-
-  // descretized homogenizer:
-
-  #if 0
-  Homogenizer< GridType, DiffusionType > disc_homogenizer( unit_cell_location );
-  A_hom = disc_homogenizer.getHomTensor(diffusion_op);
-  #endif
-
-  // if known a-priori
-
-  #if 0
-  A_hom[0][0] = 1.0;
-  A_hom[1][1] = 1.0;
-  A_hom[0][1] = 0.0;
-  A_hom[1][0] = 0.0;
-  #endif
-  //A_hom[0][0] = 0.667207;
-
-
-  typedef FieldMatrix < RangeType, dimension, dimension > FieldMatrixType;
-  Problem::HomDiffusion< FunctionSpaceType, FieldMatrixType > hom_diffusion_op( A_hom);
-
-  typedef DiscreteEllipticOperator< DiscreteFunctionType, Problem::HomDiffusion<FunctionSpaceType, FieldMatrixType>, MassTermType > HomEllipticOperatorType;
-
-  HomEllipticOperatorType hom_discrete_elliptic_op( finerDiscreteFunctionSpace, hom_diffusion_op);
-
-  FEMMatrix hom_stiff_matrix( "homogenized stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace );
-
-  DiscreteFunctionType hom_rhs( "homogenized rhs", finerDiscreteFunctionSpace );
-  hom_rhs.clear();
-
-  DiscreteFunctionType homogenized_solution( filename_ + " Homogenized Solution", finerDiscreteFunctionSpace );
-  homogenized_solution.clear();
-  hom_discrete_elliptic_op.assemble_matrix( hom_stiff_matrix );
-
-  rhsassembler.assemble< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( f , hom_rhs);
-
-  // set Dirichlet Boundary to zero 
-  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-  IteratorType hom_endit = finerDiscreteFunctionSpace.end();
-  for( IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != hom_endit; ++fine_it )
-      boundaryTreatment( *fine_it , hom_rhs );
-
-  InverseFEMMatrix hom_biCGStab( hom_stiff_matrix, 1e-8, 1e-8, 20000, VERBOSE );
-  hom_biCGStab( hom_rhs, homogenized_solution );
-
- #endif
-
-#endif
-
-
-#ifdef FINE_SCALE_REFERENCE
-
- #ifdef FSR_COMPUTE
-//! *******************************************************************
-
-  // starting value for the Newton method
-  DiscreteFunctionType zero_func( filename_ + " constant zero function ", finerDiscreteFunctionSpace );
-  zero_func.clear();
-
-
-  //! *************************** Assembling the reference problem ****************************
-  // ( fine scale reference solution = fem_solution )
-
-  //! (stiffness) matrix
-  FEMMatrix fem_newton_matrix( "FEM Newton stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace );
-
-  //! right hand side vector
-  // right hand side for the finite element method with Newton solver:
-  // ( also right hand side for the finer discrete function space )
-  DiscreteFunctionType fem_newton_rhs( "fem newton rhs", finerDiscreteFunctionSpace );
-  fem_newton_rhs.clear();
-
-  //! solution vector
-  // solution of the finite element method, where we used the Newton method to solve the non-linear system of equations
-  // in general this will be an accurate approximation of the exact solution, that is why we it also called reference solution
-  DiscreteFunctionType fem_solution( filename_ + " Reference (FEM Newton) Solution", finerDiscreteFunctionSpace );
-  fem_solution.clear();
-  // By fem_solution, we denote the "fine scale reference solution" (used for comparison)
-  // ( if the elliptic problem is linear, the 'fem_solution' is determined without the Newton method )
-
-#ifdef LINEAR_PROBLEM
-
-  std :: cout << "Solving linear problem." << std :: endl;
-  if (data_file.is_open())
-    {
-      data_file << "Solving linear problem with standard FEM and resolution level " << problem_info.getRefinementLevelReferenceProblem() << "." << std :: endl;
-      data_file << "------------------------------------------------------------------------------" << std :: endl;
-    }
-
-  // to assemble the computational time
-  Dune::Timer assembleTimer;
-
-  // assemble the stiffness matrix
-  discrete_elliptic_op.assemble_matrix( fem_newton_matrix );
-
-  std::cout << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-  if (data_file.is_open())
-    {
-      data_file << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-    }
-
-  // assemble right hand side
-  rhsassembler.assemble< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( f , fem_newton_rhs);
-
-  // set Dirichlet Boundary to zero 
-  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-  IteratorType fine_endit = finerDiscreteFunctionSpace.end();
-  for( IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it )
-         boundaryTreatment( *fine_it , fem_newton_rhs );
-
-
-  InverseFEMMatrix fem_biCGStab( fem_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE );
-  fem_biCGStab( fem_newton_rhs, fem_solution );
-
-  if (data_file.is_open())
-    {
-      data_file << "---------------------------------------------------------------------------------" << std :: endl;
-      data_file << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
-    }
-
-#endif
-
-  //! ********************** End of assembling the reference problem ***************************
-#endif
-//end FSR_COMPUTE
-
-#ifdef FSR_LOAD
-
-  DiscreteFunctionType fem_solution( filename_ + " Reference (FEM Newton) Solution", finerDiscreteFunctionSpace );
-  fem_solution.clear();
-
-  char modeprob[50];
-  sprintf( modeprob, "/Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
-  std::string modeprob_s(modeprob);
-
-  char reference_solution_directory[50];
-  sprintf( reference_solution_directory, "/reference_solution_ref_%d", refinement_level_referenceprob_ );
-  std::string reference_solution_directory_s(reference_solution_directory);
-
-  char reference_solution_name[50];
-  sprintf( reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
-  std::string reference_solution_name_s(reference_solution_name);
-
-  std :: string location_fine_scale_ref = "data/MsFEM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
-
-  bool reader_is_open = false;
-
-  // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_ref( (location_fine_scale_ref).c_str() );
-  discrete_function_reader_ref.open();
-
-  discrete_function_reader_ref.read( 0, fem_solution );
-  std :: cout << "fine scale reference read." << std :: endl;
-
-#endif
-//end FSR_LOAD
-
-// end: FINE_SCALE_REFERENCE defined or not defined
-#endif 
-
-//noch per Hand die Daten eingetragen:
-#ifdef HMM_REFERENCE
-
-  int gridLevel_refHMM = 10; // Macro_'gridLevel'
-
-  std :: string macroGridName_refHMM;
-  problem_info.getMacroGridFile( macroGridName_refHMM );
-  std :: cout << "loading dgf: " << macroGridName_refHMM << std :: endl;
-
-  // create a grid pointer for the DGF file belongig to the macro grid:
-  GridPointerType macro_grid_pointer_refHMM( macroGridName_refHMM );
-  // refine the grid 'gridLevel_refHMM' times:
-  macro_grid_pointer_refHMM->globalRefine( gridLevel_refHMM );
-
-  GridPartType gridPart_refHMM( *macro_grid_pointer_refHMM);
-  GridType &grid_refHMM = gridPart_refHMM.grid();
-
-  DiscreteFunctionSpaceType discreteFunctionSpace_refHMM( gridPart_refHMM );
-
-  DiscreteFunctionType hmm_reference_solution( filename_ + " Reference (HMM) Solution", discreteFunctionSpace_refHMM );
-  hmm_reference_solution.clear();
-
-#if 0
-  char modeprob_name[50];
-  sprintf( modeprob_name, "/Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
-  std::string modeprob_name_s(modeprob_name);
-
-  char reference_msfem_solution_directory[50];
-  sprintf( reference_msfem_solution_directory, ".......", 10 );
-  std::string reference_solution_directory_s(reference_solution_directory);
-
-  char reference_solution_name[50];
-  sprintf( reference_solution_name, "....", refinement_level_referenceprob_ );
-  std::string reference_solution_name_s(reference_solution_name);
-
-  std :: string location_hmm_ref = "data/MsFEM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
-#endif
-
-  std :: string location_hmm_ref = "data/MsFEM/Model_Problem_1/Macro_10_Micro_8/msfem_solution_discFunc_refLevel_10";
-
-  bool hmm_ref_reader_is_open = false;
-
-  // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_hmm_ref( (location_hmm_ref).c_str() );
-  discrete_function_reader_hmm_ref.open();
-
-  discrete_function_reader_hmm_ref.read( 0, hmm_reference_solution );
-  std :: cout << "HMM reference read." << std :: endl;
-
-#endif
-
-
-  //! ************************* Assembling and solving the MsFEM problem ****************************
-
-#ifdef ADAPTIVE
-// number of the loop cycle of the while-loop
-int loop_cycle = 1;
-double total_hmm_time = 0.0;
-bool repeat = true;
-while ( repeat == true )
-{
-
-  if (data_file.is_open())
-    {
-      data_file << "########################### LOOP CYCLE " << loop_cycle << " ###########################" << std :: endl << std :: endl << std :: endl;
-    }
-#endif
-
-  std::cout << std :: endl << "Solving MsFEM-macro-problem for " << discreteFunctionSpace.size()
-            << " unkowns and polynomial order "
-            << DiscreteFunctionSpaceType :: polynomialOrder << "." 
-            << std :: endl << std :: endl;
-
-  //----------------------------------------------------------------------------------------------//
-  //----------------------- THE DISCRETE HMM OPERATOR -----------------------------------//
-  //----------------------------------------------------------------------------------------------//
-
-  // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain local problem
-  LocProbNumberingManagerType lp_num_manager( discreteFunctionSpace, refSimplexDiscreteFunctionSpace, filename_);
-
-
-  //! define the elliptic hmm operator that describes our 'homogenized' macro problem
-  // ( effect of the elliptic hmm operator on a certain discrete function )
-  EllipticMsFEMOperatorType discrete_elliptic_msfem_op( discreteFunctionSpace, refSimplexDiscreteFunctionSpace, diffusion_op, lp_num_manager, filename_);
-
-  //----------------------------------------------------------------------------------------------//
-  //----------------------------------------------------------------------------------------------//
-  //----------------------------------------------------------------------------------------------//
-
-  //! matrix
-  FEMMatrix msfem_matrix( "MsFEM stiffness matrix", discreteFunctionSpace, discreteFunctionSpace );
-
-  //! right hand side vector
-  // right hand side for the hm finite element method with Newton solver:
-  DiscreteFunctionType msfem_rhs( "MsFEM right hand side", discreteFunctionSpace );
-  msfem_rhs.clear();
-
-  //! solution vector
-  // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the non-linear system of equations
-  DiscreteFunctionType msfem_solution( filename_ + " MsFEM Solution", discreteFunctionSpace );
-  msfem_solution.clear();
-
-  // starting value for the Newton method
-  DiscreteFunctionType zero_func_coarse( filename_ + " constant zero function coarse ", discreteFunctionSpace );
-  zero_func_coarse.clear();
-
-#ifdef LINEAR_PROBLEM
-
-  // solve cell problems in a preprocess
-  //! -------------- solve and save the cell problems for the base function set --------------------------------------
-
-  MsFEMLocalProblemSolver< DiscreteFunctionType, DiffusionType > local_problem_solver(refSimplexDiscreteFunctionSpace, diffusion_op, data_file /*optinal*/);
-
-  int number_of_grid_elements = refSimplexDiscreteFunctionSpace.grid().size(0);
-
-  std :: cout << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std :: endl;
-
-  // generate directory for cell problem data output
-  if (mkdir(("data/MsFEM/" + filename_ + "/local_problems/").c_str() DIRMODUS) == -1)
-   {
-    std::cout << "WARNING! Directory for the solutions of the cell problems already exists!" << std :: endl;
-   }
-  else
-   {
-     mkdir(("data/MsFEM/" + filename_ + "/local_problems/").c_str() DIRMODUS);
-   }
-
-  // -------------- solve cell problems for the macro basefunction set ------------------------------
-  // save the solutions of the cell problems for the set of macroscopic base functions
-
-  local_problem_solver.saveTheSolutions_baseSet< DiscreteFunctionType >( discreteFunctionSpace, lp_num_manager, filename_ + "/local_problems/");
-
-  // ------------- end solving and saving cell problems for the macro basefunction set --------------
-
-  //! --------------- end solving and saving cell problems -----------------------------------------
-
-
-  std :: cout << "Solving linear MsFEM problem." << std :: endl;
-  if (data_file.is_open())
-    {
-      data_file << "Solving linear MsFEM problem." << std :: endl;
-      data_file << "------------------------------------------------------------------------------" << std :: endl;
-    }
-
-  // to assemble the computational time
-  Dune::Timer msfemAssembleTimer;
-
-  // assemble the msfem stiffness matrix
-  discrete_elliptic_msfem_op.assemble_matrix( msfem_matrix );
-  // to print the matrix, use:   msfem_matrix.print();
-
-  std::cout << "Time to assemble MsFEM macro stiffness matrix: " << msfemAssembleTimer.elapsed() << "s" << std::endl;
-  if (data_file.is_open())
-    {
-      data_file << "Time to assemble MsFEM macro stiffness matrix: " << msfemAssembleTimer.elapsed() << "s" << std::endl;
-    }
-
-  // assemble right hand side
-  rhsassembler.assemble_msfem< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( lp_num_manager, f , msfem_rhs);
-
-  // set Dirichlet Boundary to zero 
-  typedef DiscreteFunctionSpaceType :: IteratorType IteratorType;
-  IteratorType endit = discreteFunctionSpace.end();
-  for( IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it )
-     boundaryTreatment( *it , msfem_rhs );
-
-  InverseFEMMatrix msfem_biCGStab( msfem_matrix, 1e-8, 1e-8, 20000, VERBOSE );
-  msfem_biCGStab( msfem_rhs, msfem_solution );
-
-  std :: cout << "Linear MsFEM problem solved in " << msfemAssembleTimer.elapsed() << "s." << std :: endl << std :: endl;
-  if (data_file.is_open())
-    {
-      data_file << "---------------------------------------------------------------------------------" << std :: endl;
-      data_file << "Linear MsFEM problem solved in " << msfemAssembleTimer.elapsed() << "s." << std :: endl << std :: endl << std :: endl;
-    }
-
-#endif
-
-
-
-
-#ifdef WRITE_MSFEM_SOL_TO_FILE
-
-  bool writer_is_open = false;
-
-  char fname[40];
-  sprintf( fname, "/msfem_solution_discFunc_refLevel_%d", refinement_level_macrogrid_ );
-  std :: string fname_s( fname );
-
-  std :: string location = "data/MsFEM/" + filename_ + fname_s;
-  DiscreteFunctionWriter dfw( (location).c_str() );
-  writer_is_open = dfw.open();
-  if ( writer_is_open )
-    dfw.append( msfem_solution );
-
-#endif
-
-
-
-#ifdef HOMOGENIZEDSOL_AVAILABLE
-
-  bool hom_writer_is_open = false;
-
-  char fhom_name[40];
-  sprintf( fhom_name, "/homogenized_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
-  std :: string fhom_name_s( fhom_name );
-
-  std :: string hom_location = "data/MsFEM/" + filename_ + fhom_name_s;
-  DiscreteFunctionWriter hom_dfw( (hom_location).c_str() );
-  hom_writer_is_open = hom_dfw.open();
-  if ( hom_writer_is_open )
-    hom_dfw.append( homogenized_solution );
-
-#endif
-
-
-
-#ifdef FINE_SCALE_REFERENCE
-
- #ifdef WRITE_FINESCALE_SOL_TO_FILE
-
-  bool fine_writer_is_open = false;
-
-  char fine_fname[50];
-  sprintf( fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_ );
-  std :: string fine_fname_s( fine_fname );
-
-  std :: string fine_location = "data/MsFEM/" + filename_ + fine_fname_s;
-  DiscreteFunctionWriter fine_dfw( (fine_location).c_str() );
-  fine_writer_is_open = fine_dfw.open();
-  if ( fine_writer_is_open )
-    fine_dfw.append( fem_solution );
-
- #endif
-
-#endif
-
-  //! ******************** End of assembling and solving the MsFEM problem ***************************
-
-  std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "The L2 errors:" << std :: endl << std :: endl; }
-
-  //! ----------------- compute L2-errors -------------------
-
-
-#ifdef ERROR_COMPUTATION
-
-#ifdef FINE_SCALE_REFERENCE
-  long double timeadapt = clock();
-
-  RangeType msfem_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution, fem_solution);
-
-  std :: cout << "|| u_msfem - u_fine_scale ||_L2 =  " << msfem_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-         { data_file << "|| u_msfem - u_fine_scale ||_L2 =  " << msfem_error << std :: endl; }
-
-  timeadapt = clock() - timeadapt;
-  timeadapt = timeadapt / CLOCKS_PER_SEC;
-
-  // if it took longer then 1 minute to compute the error:
-  if ( timeadapt > 60 )
-   {
-     std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std :: endl << std :: endl;
-
-     if (data_file.is_open())
-         { std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std :: endl << std :: endl; }
-   }
-#endif
-
-//! STILL A TEST:
-#if 0
-
-  RangeType msfem_finescale_error = impL2error.error_L2_with_corrector
-       < LocProbNumberingManagerType , 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(fem_solution, msfem_solution, lp_num_manager);
-
-  std :: cout << "|| u_msfem_finescale - u_fine_scale ||_L2 = " << msfem_finescale_error << std :: endl << std :: endl;
-
-
-#endif
-
-
-
-
-
-#ifdef HMM_REFERENCE
-  long double timeadapthmmref = clock();
-
-  RangeType msfem_vs_hmm_ref_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >(msfem_solution,hmm_reference_solution);
-
-  std :: cout << "|| u_msfem - u_hmm_ref ||_L2 =  " << msfem_vs_hmm_ref_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-         { data_file << "|| u_msfem - u_hmm_ref ||_L2 =  " << msfem_vs_hmm_ref_error << std :: endl; }
-
-  timeadapthmmref = clock() - timeadapthmmref;
-  timeadapthmmref = timeadapthmmref / CLOCKS_PER_SEC;
-
-  // if it took longer then 1 minute to compute the error:
-  if ( timeadapthmmref > 60 )
-   {
-     std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std :: endl << std :: endl;
-
-     if (data_file.is_open())
-         { std :: cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std :: endl << std :: endl; }
-   }
-#endif
-
-
-#ifdef HOMOGENIZEDSOL_AVAILABLE
-// not yet modified according to a generalized L2-error, here, homogenized_solution and fem_solution still need to be defined on the same grid!
-  #ifdef FINE_SCALE_REFERENCE
-  // RangeType hom_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( homogenized_solution, fem_solution );
-  RangeType hom_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( homogenized_solution, fem_solution );
-
-  std :: cout << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std :: endl; }
-  #endif
-
-  //RangeType hom_msfem_error = l2error.norm2<2 * DiscreteFunctionSpaceType :: polynomialOrder + 2>( msfem_solution, homogenized_solution );
-  RangeType hom_msfem_error = impL2error.norm_adaptive_grids_2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( msfem_solution, homogenized_solution );
-
-  std :: cout << "|| u_hom - u_msfem ||_L2 =  " << hom_msfem_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "|| u_hom - u_msfem ||_L2 =  " << hom_msfem_error << std :: endl; }
-#endif
-
-
-#ifdef EXACTSOLUTION_AVAILABLE
-  RangeType exact_msfem_error = l2error.norm< ExactSolutionType >( u, msfem_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
-
-  std :: cout << "|| u_msfem - u_exact ||_L2 =  " << exact_msfem_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "|| u_msfem - u_exact ||_L2 =  " << exact_msfem_error << std :: endl; }
-
-
-  RangeType h1_msfem_error(0.0);
-  h1_msfem_error = h1error.semi_norm< ExactSolutionType >( u, msfem_solution );
-  h1_msfem_error += exact_msfem_error;
-
-  std :: cout << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl; }
-
-
- #ifdef FINE_SCALE_REFERENCE
-  RangeType fem_error = l2error.norm< ExactSolutionType >( u, fem_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
-
-  std :: cout << "|| u_fem - u_exact ||_L2 =  " << fem_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std :: endl; }
- #endif
-
- #ifdef HOMOGENIZEDSOL_AVAILABLE
-  RangeType hom_exact_error = l2error.norm< ExactSolutionType >( u, homogenized_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
-
-  std :: cout << "|| u_hom - u_exact ||_L2 =  " << hom_exact_error << std :: endl << std :: endl;
-  if (data_file.is_open())
-    { data_file << "|| u_hom - u_exact ||_L2 =  " << hom_exact_error << std :: endl; }
- #endif
-
-#endif
-
-// endif for macro ERROR_COMPUTATION
-#endif
-
-
-
-//! -------------------------------------------------------
-
-
-//! --------------- writing data output ---------------------
-
-
-  // general output parameters
-  myDataOutputParameters outputparam;
-  outputparam.set_path( "data/MsFEM/" + filename_ );
-
-  // sequence stamp
-  std::stringstream outstring;
-
-
-  // --------- data output hmm solution --------------
-
-  // create and initialize output class
-  IOTupleType msfem_solution_series( &msfem_solution );
-  #ifdef ADAPTIVE
-  char msfem_prefix[30];
-  sprintf( msfem_prefix, "msfem_solution_%d", loop_cycle );
-  outputparam.set_prefix( msfem_prefix );
-  #else
-  outputparam.set_prefix("msfem_solution");
-  #endif
-  DataOutputType msfemsol_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
-
-  // write data
-  outstring << "msfem-solution";
-  msfemsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str(std::string());
-
-  // -------------------------------------------------------
-
+  //! -------------------------- writing data output Exact Solution ------------------------
 
 #ifdef EXACTSOLUTION_AVAILABLE
   // --------- data output discrete exact solution --------------
@@ -1221,7 +558,7 @@ while ( repeat == true )
   // create and initialize output class
   ExSolIOTupleType exact_solution_series( &discrete_exact_solution );
   outputparam.set_prefix("exact_solution");
-  ExSolDataOutputType exactsol_dataoutput( gridPartFine.grid(), exact_solution_series, outputparam );
+  ExSolDataOutputType exactsol_dataoutput( gridPart.grid(), exact_solution_series, outputparam );
 
   // write data
   outstring << "exact-solution";
@@ -1230,47 +567,517 @@ while ( repeat == true )
   outstring.str(std::string());
   // -------------------------------------------------------
 #endif
+  
+  //! --------------------------------------------------------------------------------------
 
 
-#ifdef WRITE_FINESCALE_SOL_TO_FILE
-  // --------- data output reference solution (fine fem newton computation) --------------
+
+  //! --------------- writing data output for the coarse grid visualization ------------------
+
+  DiscreteFunctionType coarse_grid_visualization( filename_ + " Visualization of the coarse grid", discreteFunctionSpace_coarse );
+  coarse_grid_visualization.clear();
+
+  // -------------------------- data output -------------------------
+
+  // create and initialize output class
+  IOTupleType coarse_grid_series( &coarse_grid_visualization );
+
+
+
+  char coarse_grid_fname[50];
+  sprintf( coarse_grid_fname, "coarse_grid_visualization_%d_", loop_number_ );
+  std :: string coarse_grid_fname_s( coarse_grid_fname );
+  outputparam.set_prefix( coarse_grid_fname_s );
+  DataOutputType coarse_grid_dataoutput( gridPart_coarse.grid(), coarse_grid_series, outputparam );
+  // write data
+  outstring << coarse_grid_fname_s;
+
+  coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+  // -------------------------------------------------------
+
+  //! --------------------------------------------------------------------------------------
+
+
+
+  //! ---------------------- solve MsFEM problem ---------------------------  
+
+  //! solution vector
+  // solution of the standard finite element method
+  DiscreteFunctionType msfem_solution( filename_ + " MsFEM Solution", discreteFunctionSpace );
+  msfem_solution.clear();
+
+  DiscreteFunctionType coarse_part_msfem_solution( filename_ + " Coarse Part MsFEM Solution", discreteFunctionSpace );
+  coarse_part_msfem_solution.clear();
+
+  DiscreteFunctionType fine_part_msfem_solution( filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace );
+  fine_part_msfem_solution.clear();
+
+  int number_of_level_host_entities = grid_coarse.size( 0 /*codim*/ );  
+  int coarse_level_fine_level_difference = grid.maxLevel() - grid_coarse.maxLevel();
+  
+  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
+  MacroMicroGridSpecifierType specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );
+  for ( int i = 0; i < number_of_level_host_entities; i+=1 )
+    { specifier.setLayer( i , number_of_layers_ ); }
+
+  //! create subgrids:
+  bool silence = false;
+  SubGridListType subgrid_list( specifier, silence );
+
+#if 1
+  // just for Dirichlet zero-boundary condition
+  Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver( discreteFunctionSpace, data_file, path_ );
+  msfem_solver.solve_dirichlet_zero( diffusion_op, f, specifier, subgrid_list,
+                                     coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution );
+#endif
+
+
+
+
+  std :: cout << "Data output for MsFEM Solution." << std :: endl;
+
+  //! ----------------- writing data output MsFEM Solution -----------------
+
+  // --------- VTK data output for MsFEM solution --------------------------
+
+  // create and initialize output class
+  IOTupleType msfem_solution_series( &msfem_solution );
+
+#ifdef ADAPTIVE
+  char msfem_fname[50];
+  sprintf( msfem_fname, "msfem_solution_%d_", loop_number_ );
+  std :: string msfem_fname_s( msfem_fname );
+  outputparam.set_prefix( msfem_fname_s );
+  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
+  // write data
+  outstring << msfem_fname_s;
+#else
+  outputparam.set_prefix("msfem_solution");
+  DataOutputType msfem_dataoutput( gridPart.grid(), msfem_solution_series, outputparam );
+  // write data
+  outstring << "msfem_solution";
+#endif
+  
+  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+
+  // create and initialize output class
+  IOTupleType coarse_msfem_solution_series( &coarse_part_msfem_solution );
+  
+#ifdef ADAPTIVE
+  char coarse_msfem_fname[50];
+  sprintf( coarse_msfem_fname, "coarse_part_msfem_solution_%d_", loop_number_ );
+  std :: string coarse_msfem_fname_s( coarse_msfem_fname );
+  outputparam.set_prefix( coarse_msfem_fname_s );
+  DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
+  // write data
+  outstring << coarse_msfem_fname_s;
+#else
+  outputparam.set_prefix("coarse_part_msfem_solution");
+  DataOutputType coarse_msfem_dataoutput( gridPart.grid(), coarse_msfem_solution_series, outputparam );
+  // write data
+  outstring << "coarse_part_msfem_solution";
+#endif
+
+  coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+
+
+  // create and initialize output class
+  IOTupleType fine_msfem_solution_series( &fine_part_msfem_solution );
+  
+#ifdef ADAPTIVE
+  char fine_msfem_fname[50];
+  sprintf( fine_msfem_fname, "fine_part_msfem_solution_%d_", loop_number_ );
+  std :: string fine_msfem_fname_s( fine_msfem_fname );
+  outputparam.set_prefix( fine_msfem_fname_s );
+  DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
+  // write data
+  outstring << fine_msfem_fname_s;
+#else
+  outputparam.set_prefix("fine_part_msfem_solution");
+  DataOutputType fine_msfem_dataoutput( gridPart.grid(), fine_msfem_solution_series, outputparam );
+  // write data
+  outstring << "fine_msfem_solution";
+#endif
+  
+  fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str(std::string());
+
+
+  // ---------------------------------------------------------------------- 
+
+  // ---------------------- write discrete msfem solution to file ---------
+  bool writer_is_open = false;
+
+  char fname[50];
+  sprintf( fname, "/msfem_solution_discFunc_refLevel_%d_%d", total_refinement_level_, coarse_grid_level_);
+  std :: string fname_s( fname );
+
+  std :: string location = path_ + fname_s;
+  DiscreteFunctionWriter dfw( (location).c_str() );
+  writer_is_open = dfw.open();
+  if ( writer_is_open )
+    dfw.append( msfem_solution );
+
+  //! --------------------------------------------------------------------
+
+
+
+
+  //! ------------------------------------------------------------
+
+  std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "The L2 errors:" << std :: endl << std :: endl; }
+
+  //! ----------------- compute L2- and H1- errors -------------------
+
+#ifdef EXACTSOLUTION_AVAILABLE
+
+  RangeType msfem_error = l2error.norm< ExactSolutionType >( u, msfem_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
+
+  std :: cout << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std :: endl; }
+
+  RangeType h1_msfem_error(0.0);
+  h1_msfem_error = h1error.semi_norm< ExactSolutionType >( u, msfem_solution );
+  h1_msfem_error += msfem_error;
+
+  std :: cout << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std :: endl; }
+
+#endif
+
+  //! ----------------------------------------------------------------------
+
+
+
+  //! ----------------------------------------------------------------------
+
+// error estimation
+#if 1
+
+  RangeType total_estimated_H1_error( 0.0 );
+
+  MsFEMErrorEstimatorType estimator( discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_ );
+  total_estimated_H1_error = estimator.adaptive_refinement( grid_coarse, msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, data_file );
+
+  loc_coarse_residual_[ loop_number_ ].clear();
+  loc_coarse_grid_jumps_[ loop_number_ ].clear();
+  loc_projection_error_[ loop_number_ ].clear();
+  loc_conservative_flux_jumps_[ loop_number_ ].clear();
+  loc_approximation_error_[ loop_number_ ].clear();
+  loc_fine_grid_jumps_[ loop_number_ ].clear();
+
+  for ( int m = 0; m < specifier.getNumOfCoarseEntities(); ++m )
+    {
+      loc_coarse_residual_[ loop_number_ ].push_back( 0.0 );
+      loc_coarse_grid_jumps_[ loop_number_ ].push_back( 0.0 );
+      loc_projection_error_[ loop_number_ ].push_back( 0.0 );
+      loc_conservative_flux_jumps_[ loop_number_ ].push_back( 0.0 );
+      loc_approximation_error_[ loop_number_ ].push_back( 0.0 );
+      loc_fine_grid_jumps_[ loop_number_ ].push_back( 0.0 );
+    }
+
+  total_coarse_residual_[ loop_number_ ] = 0.0;
+  total_projection_error_[ loop_number_ ] = 0.0;
+  total_coarse_grid_jumps_[ loop_number_ ] = 0.0;
+  total_conservative_flux_jumps_[ loop_number_ ] = 0.0;
+  total_approximation_error_[ loop_number_ ] = 0.0;
+  total_fine_grid_jumps_[ loop_number_ ] = 0.0;
+
+  for ( int m = 0; m < specifier.getNumOfCoarseEntities(); ++m )
+    {
+      loc_coarse_residual_[ loop_number_ ][ m ] = specifier.get_loc_coarse_residual( m );
+      loc_coarse_grid_jumps_[ loop_number_ ][ m ] = specifier.get_loc_coarse_grid_jumps( m );
+      loc_projection_error_[ loop_number_ ][ m ] = specifier.get_loc_projection_error( m );
+      loc_conservative_flux_jumps_[ loop_number_ ][ m ] = specifier.get_loc_conservative_flux_jumps( m );
+      loc_approximation_error_[ loop_number_ ][ m ] = specifier.get_loc_approximation_error( m );
+      loc_fine_grid_jumps_[ loop_number_ ][ m ] = specifier.get_loc_fine_grid_jumps( m );
+
+      total_coarse_residual_[ loop_number_ ] += pow( loc_coarse_residual_[ loop_number_ ][ m ] , 2.0 );
+      total_projection_error_[ loop_number_ ] += pow( loc_projection_error_[ loop_number_ ][ m ] , 2.0 );
+      total_coarse_grid_jumps_[ loop_number_ ] += pow( loc_coarse_grid_jumps_[ loop_number_ ][ m ] , 2.0 );
+      total_conservative_flux_jumps_[ loop_number_ ] += pow( loc_conservative_flux_jumps_[ loop_number_ ][ m ] , 2.0 );
+      total_approximation_error_[ loop_number_ ] += pow( loc_approximation_error_[ loop_number_ ][ m ] , 2.0 );
+      total_fine_grid_jumps_[ loop_number_ ] += pow( loc_fine_grid_jumps_[ loop_number_ ][ m ] , 2.0 );
+    }
+
+  total_coarse_residual_[ loop_number_ ] = sqrt( total_coarse_residual_[ loop_number_ ] );
+  total_projection_error_[ loop_number_ ] = sqrt( total_projection_error_[ loop_number_ ] );
+  total_coarse_grid_jumps_[ loop_number_ ] = sqrt( total_coarse_grid_jumps_[ loop_number_ ] );
+  total_conservative_flux_jumps_[ loop_number_ ] = sqrt( total_conservative_flux_jumps_[ loop_number_ ] );
+  total_approximation_error_[ loop_number_ ] = sqrt( total_approximation_error_[ loop_number_ ] );
+  total_fine_grid_jumps_[ loop_number_ ] = sqrt( total_fine_grid_jumps_[ loop_number_ ] );
+
+  total_estimated_H1_error_[ loop_number_ ] = total_coarse_residual_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_projection_error_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_coarse_grid_jumps_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_conservative_flux_jumps_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_approximation_error_[ loop_number_ ];
+  total_estimated_H1_error_[ loop_number_ ] += total_fine_grid_jumps_[ loop_number_ ];
+
+  local_indicators_available_ = true;
+
+  #ifdef ADAPTIVE
+  if ( total_estimated_H1_error <= error_tolerance_ )
+    repeat_algorithm_ = false;
+  #endif
+
+  #ifndef ADAPTIVE
+  repeat_algorithm_ = false;
+  #endif
+
+#endif
+
+
+  //! ---------------------- solve FEM problem ---------------------------
+
+  //! solution vector
+  // solution of the standard finite element method
+  DiscreteFunctionType fem_solution( filename_ + " FEM Solution", discreteFunctionSpace );
+  fem_solution.clear();
+
+  // just for Dirichlet zero-boundary condition
+  Elliptic_FEM_Solver< DiscreteFunctionType > fem_solver( discreteFunctionSpace,  data_file );
+  fem_solver.solve_dirichlet_zero( diffusion_op, f, fem_solution );
+
+  //! ----------------------------------------------------------------------
+
+   std :: cout << "Data output for FEM Solution." << std :: endl;
+ 
+  //! -------------------------- writing data output FEM Solution ----------
+
+  // ------------- VTK data output for FEM solution --------------
 
   // create and initialize output class
   IOTupleType fem_solution_series( &fem_solution );
-  outputparam.set_prefix("reference_solution");
-  DataOutputType fem_dataoutput( gridPartFine.grid(), fem_solution_series, outputparam );
+  outputparam.set_prefix("fem_solution");
+  DataOutputType fem_dataoutput( gridPart.grid(), fem_solution_series, outputparam );
 
   // write data
-  outstring << "reference_solution";
+  outstring << "fem_solution";
   fem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
   // clear the std::stringstream:
   outstring.str(std::string());
 
-  // -------------------------------------------------------
+  // -------------------------------------------------------------
+
+
+  // ------------- write discrete fem solution to file -----------
+
+  writer_is_open = false;
+
+  char fem_fname[50];
+  sprintf( fem_fname, "/fem_solution_discFunc_refLevel_%d", total_refinement_level_ );
+  std :: string fem_fname_s( fem_fname );
+
+  std :: string fine_location = path_ + fem_fname_s;
+  DiscreteFunctionWriter fem_dfw( (fine_location).c_str() );
+  writer_is_open = fem_dfw.open();
+  if ( writer_is_open )
+    fem_dfw.append( fem_solution );
+  
+  // -------------------------------------------------------------
+
+  //! ------------------------------------------------------------
+
+  std :: cout << std :: endl << "The L2 errors:" << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "The L2 errors:" << std :: endl << std :: endl; }
+
+  //! ----------------- compute L2- and H1- errors -------------------
+
+#ifdef EXACTSOLUTION_AVAILABLE
+
+  RangeType fem_error = l2error.norm< ExactSolutionType >( u, fem_solution, 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 );
+
+  std :: cout << "|| u_fem - u_exact ||_L2 =  " << fem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std :: endl; }
+
+  RangeType h1_fem_error(0.0);
+  h1_fem_error = h1error.semi_norm< ExactSolutionType >( u, fem_solution );
+  h1_fem_error += fem_error;
+
+  std :: cout << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std :: endl << std :: endl; }
+
 #endif
 
 
-#ifdef HOMOGENIZEDSOL_AVAILABLE
-  // --------- data output homogenized solution --------------
+#ifndef EXACTSOLUTION_AVAILABLE
+
+  std :: cout << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution." << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution." << std :: endl << std :: endl; }
+
+
+  RangeType approx_msfem_error = l2error.norm2< 2 * DiscreteFunctionSpaceType :: polynomialOrder + 2 >( fem_solution, msfem_solution );
+
+  std :: cout << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std :: endl; }
+
+
+  H1Norm< GridPartType > h1norm( gridPart );
+  RangeType h1_approx_msfem_error = h1norm.distance( fem_solution, msfem_solution );
+
+  std :: cout << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std :: endl << std :: endl;
+  if (data_file.is_open())
+    { data_file << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std :: endl; }
+
+#endif
+
+//! -------------------------------------------------------
+
+
+
+
+//! irgendwann loeschen!
+// dirty hack for oversampling error visualization!
+#if 0
+
+     DiscreteFunctionType oversampling_error_visualization( filename_ + " Visualization of the oversampling error", discreteFunctionSpace_coarse );
+     oversampling_error_visualization.clear();
+
+     typedef DiscreteFunctionSpaceType :: IteratorType :: Entity EntityType;
+
+     typedef EntityType :: EntityPointer EntityPointerType;
+     typedef EntityType :: Codim< 2 > :: EntityPointer NodePointerType;
+     
+     typedef DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
+     
+     int number_of_coarse_nodes = gridPart_coarse.grid().size( 2 /*codim*/ );
+     std :: vector< std :: vector < EntityPointerType > > entities_sharing_same_node( number_of_coarse_nodes );
+
+     GridView gridView_coarse_new = grid_coarse.leafView();
+     const GridLeafIndexSet& gridLeafIndexSet_coarse_new = grid_coarse.leafIndexSet();
+
+     for ( ElementLeafIterator it = gridView_coarse_new.begin<0>();
+           it != gridView_coarse_new.end<0>(); ++it )
+        {
+          int number_of_nodes_in_entity = (*it).count<2>();
+          for ( int i = 0; i < number_of_nodes_in_entity; i += 1 )
+	    {
+	      const NodePointerType node = (*it).subEntity<2>(i);
+	      int global_index_node = gridPart_coarse.indexSet().index( *node );
+
+	      entities_sharing_same_node[ global_index_node ].push_back( it );
+	    }
+        }
+
+     RangeType average_conservative_flux_jumps = 0.0;
+
+     std :: cout << "total_conservative_flux_jumps_[ loop_number_ ] = " << total_conservative_flux_jumps_[ loop_number_ ] << std :: endl;
+     std :: cout << "average_conservative_flux_jumps = " << average_conservative_flux_jumps << std :: endl << std :: endl;
+
+
+     double cum = 0;
+     for ( ElementLeafIterator it = gridView_coarse_new.begin<0>();
+           it != gridView_coarse_new.end<0>(); ++it )
+        {
+           average_conservative_flux_jumps += loc_conservative_flux_jumps_[ loop_number_ ][ gridLeafIndexSet_coarse_new.index( *it ) ];
+           cum += 1.0;
+        }
+     average_conservative_flux_jumps /= cum;
+        
+
+     for ( ElementLeafIterator it = gridView_coarse_new.begin<0>();
+           it != gridView_coarse_new.end<0>(); ++it )
+        {
+
+           int number_of_nodes = (*it).count<2>();
+
+           LocalFunctionType loc_func = oversampling_error_visualization.localFunction( *it );
+
+           RangeType loc_oversampling_indicator = loc_conservative_flux_jumps_[ loop_number_ ][ gridLeafIndexSet_coarse_new.index( *it ) ];
+           std :: cout << "loc_oversampling_indicator = " << loc_oversampling_indicator << std :: endl;
+
+           for ( int i = 0; i < number_of_nodes; i += 1 )
+             {
+                const NodePointerType node = (*it).subEntity<2>(i);
+                int global_index_node = gridPart_coarse.indexSet().index( *node );
+
+                if ( loc_oversampling_indicator <= 0.2 * average_conservative_flux_jumps )
+                 { loc_func[ i ] += ( 0.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 0.2 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.4 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 1.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 0.4 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.6 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 2.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 0.6 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 0.8 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 3.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 0.8 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.0 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 4.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.0 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.2 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 5.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.2 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.4 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 6.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.4 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.6 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 7.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.6 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 1.8 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 8.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+              if ( ( loc_oversampling_indicator > 1.8 * average_conservative_flux_jumps) &&
+                   ( loc_oversampling_indicator <= 200.0 * average_conservative_flux_jumps) )
+                 { loc_func[ i ] += ( 9.0 + number_of_layers_ ) / entities_sharing_same_node[ global_index_node ].size(); }
+
+             }
+
+        }
+
+  // -------------------------- data output -------------------------
 
   // create and initialize output class
-  IOTupleType homogenized_solution_series( &homogenized_solution );
-  outputparam.set_prefix("homogenized_solution");
-  DataOutputType homogenized_solution_dataoutput( gridPartFine.grid(), homogenized_solution_series, outputparam );
+  IOTupleType oversampling_coarse_grid_series( &oversampling_error_visualization );
 
+  char oversampling_coarse_grid_fname[50];
+  sprintf( oversampling_coarse_grid_fname, "oversampling_error_visualization_%d_", loop_number_ );
+  std :: string oversampling_coarse_grid_fname_s( oversampling_coarse_grid_fname );
+  outputparam.set_prefix( oversampling_coarse_grid_fname_s );
+  DataOutputType oversampling_coarse_grid_dataoutput( gridPart_coarse.grid(), oversampling_coarse_grid_series, outputparam );
   // write data
-  outstring << "homogenized_solution";
-  homogenized_solution_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  outstring << oversampling_coarse_grid_fname_s;
+
+  oversampling_coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
   // clear the std::stringstream:
   outstring.str(std::string());
 
   // -------------------------------------------------------
+
 #endif
 
-
-//!-------------------------------------------------------------
-
 }
+
+
 
 int main(int argc, char** argv)
 {
@@ -1281,18 +1088,16 @@ int main(int argc, char** argv)
     exit(1);
   }
 
- #ifndef LINEAR_PROBLEM
-  std :: cout << "Nonlinear case not implemented, please define LINEAR_PROBLEM." <<std :: endl;
- #endif
-
   Dune::MPIManager::initialize(argc, argv);
 
   // name of the file in which you want to save the data:
   std :: cout << "Enter name for data directory: ";
   std :: cin >> filename_;
 
+  path_ = "data/MsFEM/" + filename_;
+
   // generate directories for data output
-  if (mkdir(("data/MsFEM/" + filename_).c_str() DIRMODUS) == -1)
+  if (mkdir((path_).c_str() DIRMODUS) == -1)
    {
     std::cout << "Directory already exists! Overwrite? y/n: ";
     char answer;
@@ -1302,119 +1107,84 @@ int main(int argc, char** argv)
    }
   else
    {
-     mkdir(("data/MsFEM/" + filename_).c_str() DIRMODUS);
+     mkdir((path_).c_str() DIRMODUS);
    }
 
-
-  std :: string save_filename = "data/MsFEM/" + filename_ + "/problem-info.txt";
+  std :: string save_filename = path_ + "/problem-info.txt";
   std :: cout << "Data will be saved under: " << save_filename << std :: endl;
+
+  std :: cout << "Enter coarse grid level: ";
+  std :: cin >> coarse_grid_level_;
+  if ( coarse_grid_level_ > atoi( argv[ 1 ] ))
+   {
+     std :: cout << "Coarse grid level must be smaller than the starting refinment level." << std :: endl;
+     abort();
+   }
+
+#ifdef UNIFORM
+  std :: cout << "Enter number of layers for oversampling: ";
+  std :: cin >> number_of_layers_;
+#else
+  std :: cout << "Enter initial number of layers for oversampling: ";
+  std :: cin >> number_of_layers_;  
+#endif
+
+#ifdef ADAPTIVE
+  std :: cout << "Enter error tolerance: ";
+  std :: cin >> error_tolerance_;
+#endif
 
   // data for the model problem; the information manager
   // (see 'problem_specification.hh' for details)
   Problem::ModelProblemData info( filename_ );
 
-  //epsilon is specified in ModelProblemData, which is specified in problem_specification.hh
-  epsilon_ = info.getEpsilon();
-
-  //estimated epsilon (specified in ModelProblemData)
-  epsilon_est_ = info.getEpsilonEstimated();
-
-  //edge length of the cells in the cells, belonging to the cell problems
-  //note that (delta/epsilon_est) needs to be a positive integer!
-  delta_ = info.getDelta();
-
   // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-  refinement_level_macrogrid_ = atoi( argv[ 1 ] );
-
-  // grid refinement level for solving the cell problems, i.e. it describes 'h':
-  int refinement_level_grid_T0;
-  std :: cout << "Enter refinement level for the local problems: ";
-  std :: cin >> refinement_level_grid_T0;
-  std :: cout << std :: endl;
-
-
-  // (starting) grid refinement level for solving the reference problem
-  refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
-  // in general: for the homogenized case = 11 and for the high resolution case = 14
-  // Note that this depends on the model problem!
-#ifndef FINE_SCALE_REFERENCE
-  refinement_level_referenceprob_ = 12;
-#endif
-
-
-  // how many times finer do we solve the reference problem (it is either a homogenized problem or the exact problem with a fine-scale resolution)
-  int refinement_difference_for_referenceproblem = refinement_level_referenceprob_ - refinement_level_macrogrid_;
-
+  total_refinement_level_ = atoi( argv[ 1 ] );
 
   //name of the grid file that describes the macro-grid:
   std :: string macroGridName;
   info.getMacroGridFile( macroGridName );
-  std :: cout << "loading dgf: " << macroGridName << std :: endl;
-
-  // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values for the parameters:
-
-  // create a grid pointer for the DGF file belongig to the macro grid:
-  GridPointerType macro_grid_pointer( macroGridName );
-  // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine( refinement_level_macrogrid_ );
-
-  // create a finer GridPart for either the homogenized or the fine-scale problem.
-  // this shall be used to compute an approximation of the exact solution.
-  GridPointerType fine_macro_grid_pointer( macroGridName );
-  // refine the grid 'starting_refinement_level_reference' times:
-  fine_macro_grid_pointer->globalRefine( refinement_level_referenceprob_ );
-
-
-  // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
-  std :: string RefElementName( "../dune/multiscale/grids/cell_grids/ref_simplex_2d.dgf" ); // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2
- // std :: string RefElementName( "../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf" );
-
-
-  // to solve the local MsFEM problems, we always need a gridPart for T_0.
-  // Here it is always the refernece simplex that needs to be used (after transformation, local problems are always formulated on such a grid )
-  GridPtr< GridType > ref_simplex_grid_pointer( RefElementName );
-  ref_simplex_grid_pointer->globalRefine( refinement_level_grid_T0 );
-
 
   // to save all information in a file
   std :: ofstream data_file( (save_filename).c_str() );
   if (data_file.is_open())
             {
-               data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std :: endl << std :: endl;
-#ifdef LINEAR_PROBLEM
-               data_file << "Problem is declared as being LINEAR." << std :: endl;
-#else
-               data_file << "Problem is declared as being NONLINEAR." << std :: endl;
-#endif
-#ifdef EXACTSOLUTION_AVAILABLE
-               data_file << "Exact solution is available." << std :: endl << std :: endl;
-#else
-               data_file << "Exact solution is not available." << std :: endl << std :: endl;
-#endif
+               data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << " with epsilon = " << info.getEpsilon() << "." << std :: endl << std :: endl;
+#ifdef UNIFORM
+               data_file << "Use MsFEM with an uniform computation, i.e.:" << std :: endl;
+               data_file << "Uniformly refined coarse and fine mesh and" << std :: endl;
+               data_file << "the same number of layers for each (oversampled) local grid computation." << std :: endl << std :: endl;
                data_file << "Computations were made for:" << std :: endl << std :: endl;
-               data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std :: endl;
-               data_file << "Refinement Level for Micro Grid (grid on macro entity) = " << refinement_level_grid_T0 << std :: endl << std :: endl;
-#ifdef PGF
-               data_file << "We use MsFEM in Petrov-Galerkin formulation." << std :: endl;
-#else
-               data_file << "We use MsFEM in its standard formulation." << std :: endl;
-#endif
-               data_file << "Cell problems are solved and saved (in a pre-process)." << std :: endl << std :: endl;
-               data_file << "Epsilon = " << epsilon_ << std :: endl;
-               data_file << "Estimated Epsilon = " << epsilon_est_ << std :: endl;
-               data_file << "Delta (edge length of cell-cube) = " << delta_ << std :: endl;
-#ifdef STOCHASTIC_PERTURBATION
-               data_file << std :: endl << "Stochastic perturbation added. Variance = " << VARIANCE << std :: endl;
-#endif
+               data_file << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std :: endl;
+               data_file << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std :: endl;
+               data_file << "Number of layers for oversampling = " << number_of_layers_ << std :: endl;
                data_file << std :: endl << std :: endl;
+#else
+               data_file << "Use MsFEM with an adaptive computation, i.e.:" << std :: endl;
+               data_file << "Starting with a uniformly refined coarse and fine mesh and" << std :: endl;
+               data_file << "the same number of layers for each (oversampled) local grid computation." << std :: endl << std :: endl;
+               data_file << "Error tolerance = " <<  error_tolerance_ << std :: endl << std :: endl;
+               data_file << "Computations were made for:" << std :: endl << std :: endl;
+               data_file << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std :: endl;
+               data_file << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std :: endl;
+               data_file << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std :: endl;
+               data_file << std :: endl << std :: endl;
+#endif
             }
 
-     algorithm( RefElementName,
-                macro_grid_pointer,
-                fine_macro_grid_pointer,
-                ref_simplex_grid_pointer,
-                refinement_difference_for_referenceproblem,
-                data_file );
+    loop_number_ = 0;
+    while ( repeat_algorithm_ == true )
+     {
+#ifdef ADAPTIVE
+       data_file << "------------------ run " << loop_number_ + 1<< " --------------------" << std :: endl << std :: endl;
+#endif
+       algorithm( macroGridName , data_file );
+#ifdef ADAPTIVE
+       data_file << std :: endl << std :: endl;
+       data_file << "---------------------------------------------" << std :: endl;
+       loop_number_ += 1;
+#endif
+     }
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the normal macro problem
 
 
@@ -1428,6 +1198,7 @@ int main(int argc, char** argv)
     }
 
   data_file.close();
+
 
   return 0;
 
