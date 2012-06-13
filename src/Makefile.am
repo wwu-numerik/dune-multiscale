@@ -3,6 +3,9 @@ SUBDIRS =
 
 noinst_PROGRAMS = elliptic_hmm elliptic_msfem
 
+GRIDTYPE=ALBERTAGRID
+GRIDDIM=2
+
 elliptic_hmm_SOURCES = elliptic_hmm.cc
 
 elliptic_msfem_SOURCES = elliptic_msfem.cc
@@ -12,14 +15,16 @@ elliptic_hmm_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(UG_CPPFLAGS) \
 	$(AMIRAMESH_CPPFLAGS) \
 	$(ALBERTA_CPPFLAGS) \
-	$(ALUGRID_CPPFLAGS)
+	$(ALUGRID_CPPFLAGS) \
+	-DGRIDDIM=$(GRIDDIM) -DGRIDTYPE=$(GRIDTYPE) -DWORLDDIM=$(GRIDDIM)
 
 elliptic_msfem_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
 	$(UG_CPPFLAGS) \
 	$(AMIRAMESH_CPPFLAGS) \
 	$(ALBERTA_CPPFLAGS) \
-	$(ALUGRID_CPPFLAGS)
+	$(ALUGRID_CPPFLAGS) \
+	-DGRIDDIM=$(GRIDDIM) -D$(GRIDTYPE)
 
 # The libraries have to be given in reverse order (most basic libraries
 # last).  Also, due to some misunderstanding, a lot of libraries include the

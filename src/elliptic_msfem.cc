@@ -6,15 +6,6 @@
 // polynomial order of discrete space
 #define POLORDER 1
 
-// grid type
-#define GRIDTYPE ALBERTAGRID
-//#define GRIDTYPE UGGRID
-
-// computational domain is a subset of \R^{GRIDDIM}
-#define GRIDDIM 2
-#define WORLDDIM GRIDDIM
-
-
 #ifndef USE_GRAPE
 #define USE_GRAPE HAVE_GRAPE
 #endif
@@ -108,23 +99,6 @@
 #include <dune/multiscale/tools/errorestimation/MsFEM/elliptic_error_estimator.hh>
 
 using namespace Dune;
-
-//! check for GridType:
-#if GRIDTYPE==ALBERTAGRID
- typedef AlbertaGrid< GRIDDIM, WORLDDIM > GridType;
-#elif GRIDTYPE==UGGRID
- // the Grid Type ( UG-Grid )
- typedef UGGrid< GRIDDIM > GridType;
-#elif GRIDTYPE==YASPGRID
-  // the Grid Type ( Yasp-Grid )
- typedef YaspGrid< GRIDDIM > GridType;
-#elif GRIDTYPE==ALUGRID
-    #ifdef CUBEGRID
-        typedef ALUCubeGrid<GRIDDIM,GRIDDIM> GridType;
-    #else
-        typedef ALUSimplexGrid<GRIDDIM,GRIDDIM> GridType;
-    #endif
-#endif
 
 //! ----- typedefs for the macro grid and the corresponding discrete space -----
 

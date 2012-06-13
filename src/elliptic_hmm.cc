@@ -7,15 +7,6 @@
 // polynomial order of discrete space
 #define POLORDER 1
 
-// grid type
-#define GRIDTYPE ALBERTAGRID
-//#define GRIDTYPE UGGRID
-
-// computational domain is a subset of \R^{GRIDDIM}
-#define GRIDDIM 2
-#define WORLDDIM GRIDDIM
-
-
 #ifndef USE_GRAPE
 #define USE_GRAPE HAVE_GRAPE
 #endif

@@ -1,4 +1,5 @@
-SUBDIRS = grids problems operators space
+#only list sudirs with seperate Makefile.am's here
+SUBDIRS = 
 
 multiscaleincludedir = $(includedir)/dune/multiscale
 
