@@ -30,3 +30,5 @@ missing
 libtool
 ltmain.sh
 am*
+install-sh 
+doc/doxygen/Doxyfile
