@@ -1073,7 +1073,7 @@ public:
 
            for( int i = 0; i < numBaseFunctions; ++i )
              {
-               std::pair<EntityPointerType, int>  idPair( it , i );
+               std::pair<EntityPointerType, int>  idPair( EntityPointerType(*it) , i );
                cell_numbering_map_->insert( std::make_pair( idPair , counter ) );
                counter++;
              }
@@ -1804,6 +1804,8 @@ if ( number_of_entity == 341 )
          LocalFunctionType;
 
       typedef typename GridType :: template Codim< 0 > :: Entity EntityType;
+      typedef typename EntityType::EntityPointer
+                EntityPointerType;
       typedef typename EntityType :: Geometry EntityGeometryType;
 
       typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
@@ -1914,7 +1916,8 @@ if ( number_of_entity == 341 )
              dfw.append( jac_corrector_Phi_i );
 
              // check if we use a correct numeration of the cell problems:
-             if ( !(cp_num_manager.get_number_of_cell_problem( it, i ) == number_of_cell_problem) )
+             EntityPointerType entity_pointer(*it);
+             if ( !(cp_num_manager.get_number_of_cell_problem( entity_pointer, i ) == number_of_cell_problem) )
                { std :: cout << "Numeration of cell problems incorrect." << std :: endl;
                  std :: abort(); }
 
