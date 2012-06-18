@@ -40,13 +40,6 @@
 //!FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
 //The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
-// description see below
-// vorher: 0.13
-#define EPSILON 0.05
-#define EPSILON_EST 0.05
-#define DELTA 0.1
-// NOTE that (delta/epsilon_est) needs to be a positive integer!
-
 // is an exact solution available?
 #define EXACTSOLUTION_AVAILABLE
 
@@ -54,6 +47,12 @@
 namespace Problem
 {
 
+    // description see below
+    // vorher: 0.13
+    static const double EPSILON = 0.05;
+    static const double EPSILON_EST = 0.05;
+    static const double DELTA = 0.1;
+    // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
   // model problem information
   class ModelProblemData

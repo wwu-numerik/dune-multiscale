@@ -55,12 +55,11 @@
 //That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function
 // space ('FuncSpace') that it is part from. (f \in FunctionSpace)
 
-// description see below 0.05
-#define EPSILON 0.05
-
 //Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem
 {
+    // description see below 0.05
+    static const double EPSILON = 0.05;
 
 
   // model problem information
