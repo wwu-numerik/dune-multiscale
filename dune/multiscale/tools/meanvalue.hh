@@ -551,7 +551,7 @@ namespace Dune
     typedef typename GridType::template Codim<0>::Entity            EntityType; 
     typedef typename GridType::template Codim<0>::EntityPointer     EntityPointerType; 
     typedef typename GridType::template Codim<0>::Geometry          EnGeometryType; 
-    typedef typename GridType::template Codim<0>::GlobalIdSet       IdSet;
+    typedef typename GridType::Traits::GlobalIdSet                  IdSet;
 
     typedef typename IdSet::IdType                                  IdType;
 

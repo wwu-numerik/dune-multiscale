@@ -118,7 +118,8 @@ namespace Dune
 
    //! --------------- solver for the linear system of equations ----------------------------
 
-   // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones. GMRES seems to be more stable, but is extremely slow!
+   // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones.
+   // GMRES seems to be more stable, but is extremely slow!
    // typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
    typedef CGInverseOp< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
 

@@ -6,7 +6,8 @@ using namespace std;
 
 //#define EPSILON 0.038776
 //#define EPSILON 0.019355
-#define EPSILON 0.07
+//this conflicted with a local var of the same name in  <dune-istl/dune/istl/solvers.hh>
+const double EPSILON = 0.07;
 
 
 #define NUMBER_OF_STEPS 10
