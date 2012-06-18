@@ -3,7 +3,7 @@
 
 #include <dune/grid/common/grid.hh>
 
-#include <dune/fem/gridpart/gridpart.hh>
+#include <dune/fem/gridpart/common/gridpart.hh>
 #include "periodicindexset.hh"
 
 namespace Dune
@@ -245,6 +245,13 @@ namespace Dune
       // type of the entity (should be wrapped, too)
       typedef typename GridType :: template Codim< codim > :: Entity EntityType;
 
+        typedef typename GridType::template Codim< codim >::Geometry        GeometryType;
+        typedef typename GridType::template Codim< codim >::LocalGeometry   LocalGeometryType;
+
+        typedef typename GridType::template Codim< codim >::EntityPointer  EntityPointerType;
+
+        typedef typename GridType::template Codim< codim >::EntitySeed     EntitySeedType;
+
       template< PartitionIteratorType pitype >
       struct Partition
       {
@@ -312,7 +319,7 @@ namespace Dune
     };
 
     //! Constructor wrapping a grid in the grid partition
-    PeriodicLeafGridPart ( GridType &grid ) DUNE_VERSION_DEPRECATED(1,2,remove)
+    PeriodicLeafGridPart ( GridType &grid )
     : BaseType( grid ),
       indexSet_( grid )
     {}

@@ -39,7 +39,7 @@ namespace Dune
   protected:
     typedef typename GridType::Traits::LeafIndexSet BaseIndexSetType;
 
-    static const ctype tolerance = 1e-10;
+    static const ctype tolerance;
 
   public:
     template< int codim >
@@ -50,7 +50,7 @@ namespace Dune
 
   public:
     //! Create PeriodicIndexSet for a grid
-    explicit PeriodicLeafIndexSet ( const GridType &grid ) DUNE_VERSION_DEPRECATED(1,2,remove);
+    explicit PeriodicLeafIndexSet ( const GridType &grid );
 
     template< class Entity >
     IndexType index ( const Entity &entity ) const
@@ -127,13 +127,14 @@ namespace Dune
     const BaseIndexSetType &baseIndexSet_;
     
     IndexType size_;
-    DynamicArray< int > index_;
+    Fem::DynamicArray< int > index_;
     
     IndexType edgeSize_;
-    DynamicArray< int > edgeIndex_;
+    Fem::DynamicArray< int > edgeIndex_;
   };
 
-
+    template < class T >
+    const typename PeriodicLeafIndexSet<T>::ctype PeriodicLeafIndexSet<T>::tolerance = 1e-10;
     
   template< class Grid >
   inline PeriodicLeafIndexSet< Grid >
@@ -240,7 +241,7 @@ namespace Dune
     index_.assign( -1 );
     size_ = 0;
     
-    DynamicArray< VertexType > vertices( n );
+    Fem::DynamicArray< VertexType > vertices( n );
     
     for( Iterator it = begin; it != end; ++it )
     {
@@ -287,8 +288,8 @@ namespace Dune
     edgeIndex_.assign( -1 );
     edgeSize_ = 0;
 
-    DynamicArray< VertexType > vertices0( n );
-    DynamicArray< VertexType > vertices1( n );
+    Fem::DynamicArray< VertexType > vertices0( n );
+    Fem::DynamicArray< VertexType > vertices1( n );
     
     for( Iterator it = begin; it != end; ++it )
     {
