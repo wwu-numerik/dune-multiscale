@@ -7,4 +7,4 @@ Module: dune-multiscale
 Version: 1
 Maintainer: phenn_01@uni-muenster.de
 #depending on 
-Depends: dune-grid dune-fem dune-common dune-istl dune-localfunctions dune-subgrid
+Depends: dune-grid dune-fem dune-common dune-istl dune-localfunctions dune-subgrid dune-stuff

@@ -9,7 +9,7 @@ AM_CONFIG_HEADER([config.h])
 
 # we need no more than the standard DE-stuff
 # this module depends on dune-grid dune-fem dune-common ag-common dune-istl dune-solvers dune-pdelab dune-localfunctions
-# this implies checking for [dune-common], [dune-grid], [dune-istl], [dune-localfunctions], [dune-fem], [ag-common], [dune-solvers], [dune-pdelab]
+# this implies checking for [dune-common], [dune-grid], [dune-istl], [dune-localfunctions], [dune-fem]
 DUNE_CHECK_ALL
 
 # implicitly set the Dune-flags everywhere
