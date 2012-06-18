@@ -1,0 +1,32 @@
+#ifndef DUNE_NAVIER_STOKES_CONFIG_H
+#define DUNE_NAVIER_STOKES_CONFIG_H
+
+#undef COMMIT
+
+#undef SHARED_PTR_NAMESPACE
+
+/* the git tag / commit we build from */
+#define COMMIT "@COMMIT@"
+
+#define @GRIDTYPE@
+#define GRIDDIM @GRIDDIM@
+#define HAVE_ALUGRID 1
+#cmakedefine @ENABLE_ALUGRID@ 
+
+#define DUNE_ISTL_WITH_CHECKING 1
+
+#include <config.h>
+#define HAVE_BOOST 1
+#define HAVE_BOOST_FUSION 1
+
+#ifdef NDEBUG
+	#define DNDEBUG
+#endif
+
+//compiler quirks workarounds
+#ifdef __clang__
+	class type_info;
+	#define BOOST_HAS_RVALUE_REFS 1
+#endif
+
+#endif	/* DUNE_OSEEN_CONFIG_H */

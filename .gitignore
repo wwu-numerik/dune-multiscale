@@ -32,3 +32,8 @@ ltmain.sh
 am*
 install-sh 
 doc/doxygen/Doxyfile
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
