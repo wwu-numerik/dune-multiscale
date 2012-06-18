@@ -1,9 +1,11 @@
-#ifndef DUNE_NAVIER_STOKES_CONFIG_H
-#define DUNE_NAVIER_STOKES_CONFIG_H
+#ifndef DUNE_MULTISCALE_CONFIG_H
+#define DUNE_MULTISCALE_CONFIG_H
 
 #undef COMMIT
 
 #undef SHARED_PTR_NAMESPACE
+#define HAVE_NULLPTR 1
+#define HAVE_DUNE_GEOMETRY 1
 
 /* the git tag / commit we build from */
 #define COMMIT "@COMMIT@"
@@ -29,4 +31,4 @@
 	#define BOOST_HAS_RVALUE_REFS 1
 #endif
 
-#endif	/* DUNE_OSEEN_CONFIG_H */
+#endif	/* DUNE_MULTISCALE_CONFIG_H */

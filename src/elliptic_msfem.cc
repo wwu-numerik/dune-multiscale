@@ -1,6 +1,7 @@
-
-#ifdef HAVE_CONFIG_H
-# include <config.h>
+#ifdef HAVE_CMAKE_CONFIG
+#  include "cmake_config.h"
+#elif defined(HAVE_CONFIG_H)
+#  include <config.h>
 #endif
 
 // polynomial order of discrete space
@@ -101,7 +102,8 @@
 using namespace Dune;
 
 //! ----- typedefs for the macro grid and the corresponding discrete space -----
-
+typedef GridSelector::GridType
+    GridType;
 //Dune::InteriorBorder_Partition or Dune::All_Partition >?
 //see: http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
 typedef AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;

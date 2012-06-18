@@ -1,7 +1,10 @@
-
-#ifdef HAVE_CONFIG_H
-# include <config.h>
+#ifdef HAVE_CMAKE_CONFIG
+#  include "cmake_config.h"
+#elif defined(HAVE_CONFIG_H)
+#  include <config.h>
 #endif
+
+
 
 
 // polynomial order of discrete space
@@ -171,8 +174,8 @@ namespace Multiscale
 
 
 
-#include <dune/fem/gridpart/gridpart.hh>
-#include <dune/fem/gridpart/periodicgridpart.hh>
+#include <dune/fem/gridpart/common/gridpart.hh>
+#include <dune/multiscale/grids/periodicgridpart/periodicgridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 
 #include <dune/fem/space/lagrangespace.hh>
@@ -246,24 +249,8 @@ namespace Multiscale
 
 using namespace Dune;
 
-//! check for GridType:
-#if GRIDTYPE==ALBERTAGRID
- typedef AlbertaGrid< GRIDDIM, WORLDDIM > GridType;
-#elif GRIDTYPE==UGGRID
- // the Grid Type ( UG-Grid )
- typedef UGGrid< GRIDDIM > GridType;
-#elif GRIDTYPE==YASPGRID
-  // the Grid Type ( Yasp-Grid )
- typedef YaspGrid< GRIDDIM > GridType;
-#elif GRIDTYPE==ALUGRID
-    #ifdef CUBEGRID
-        typedef ALUCubeGrid<GRIDDIM,GRIDDIM> GridType;
-    #else
-        typedef ALUSimplexGrid<GRIDDIM,GRIDDIM> GridType;
-    #endif
-#endif
-
-
+typedef GridSelector::GridType
+    GridType;
 //! --------- typedefs for the macro grid and the corresponding discrete space -------------
 
 //Dune::InteriorBorder_Partition or Dune::All_Partition >?

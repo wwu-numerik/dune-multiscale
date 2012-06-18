@@ -92,7 +92,6 @@ CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURR
 
 ADD_DUNE_MODULES( common istl grid fem geometry localfunctions )
 ADD_MY_MODULES( stuff )
-SET( CUSTOM_FLAGS ${CUSTOM_FLAGS} -std=c++0x )
 ADD_CXX_FLAGS( ${CUSTOM_FLAGS} )
 
 LINK_DIRECTORIES( "/usr/lib" "${ALUGRID_BASE_PATH}/lib" )
@@ -104,6 +103,8 @@ set( COMMON_LIBS "dunefem" "dunegrid" "dunecommon" "dunegeometry" ${BLAS_LIB} ${
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
+ADD_DEFINITIONS( ${MY_CXX_FLAGS} )
+
 ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
 
@@ -111,6 +112,5 @@ ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
 
 # HEADERCHECK( ${header} ${oseen} ${dune} )
-# ADD_DEFINITIONS( ${MY_CXX_FLAGS} )
 # ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${COMMON_HEADER} )
 
