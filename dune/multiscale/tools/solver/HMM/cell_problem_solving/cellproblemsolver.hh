@@ -1063,7 +1063,7 @@ public:
        for(IteratorType it = discreteFunctionSpace.begin(); it != endit ; ++it )
          {
 
-           cell_numbering_map_NL_->insert( std::make_pair( it , number_of_entity ) );
+           cell_numbering_map_NL_->insert( std::make_pair( EntityPointerType(*it), number_of_entity ) );
 
            const BaseFunctionSetType baseSet
               = discreteFunctionSpace.baseFunctionSet( *it );
@@ -1087,6 +1087,7 @@ public:
   inline int get_number_of_cell_problem ( EntityPointerType &ent, const int &numOfBaseFunction ) const
    {
      std::pair<EntityPointerType, int>  idPair( ent , numOfBaseFunction );
+     //!TODO this can create elements
      return (*cell_numbering_map_)[idPair];
    }
 
@@ -1094,6 +1095,7 @@ public:
   // Note: 'get_number_of_cell_problem( it )' is NOT equal to 'get_number_of_cell_problem( it , 0 )'!
   inline int get_number_of_cell_problem ( EntityPointerType &ent ) const
    {
+      //!TODO this can create elements
      return (*cell_numbering_map_NL_)[ent];
    }
 

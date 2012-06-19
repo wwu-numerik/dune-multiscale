@@ -440,12 +440,12 @@ double error_tolerance_;
 
 //! --------- typedefs and classes for data output -----------------------------------------
 
-typedef Tuple<DiscreteFunctionType*> IOTupleType;
+typedef tuple<DiscreteFunctionType*> IOTupleType;
 typedef DataOutput<GridType, IOTupleType> DataOutputType;
 
 #ifdef EXACTSOLUTION_AVAILABLE
 // just for the discretized exact solution (in case it is available)
-typedef Tuple<DiscreteExactSolutionType*> ExSolIOTupleType;
+typedef tuple<DiscreteExactSolutionType*> ExSolIOTupleType;
 // just for the discretized exact solution (in case it is available)
 typedef DataOutput<GridType, ExSolIOTupleType> ExSolDataOutputType;
 #endif

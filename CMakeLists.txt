@@ -90,7 +90,7 @@ ENDIF( ${GRIDTYPE} MATCHES "ALUGRID" )
 
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
 
-ADD_DUNE_MODULES( common istl grid fem geometry localfunctions )
+ADD_DUNE_MODULES( common istl grid fem geometry localfunctions subgrid )
 ADD_MY_MODULES( stuff )
 ADD_CXX_FLAGS( ${CUSTOM_FLAGS} )
 
