@@ -43,6 +43,7 @@
 
 #include <dune/common/mpihelper.hh> // An initializer of MPI
 #include <dune/common/exceptions.hh> // We use exceptions
+#include <dune/common/unused.hh>
 
 // for yasp grid
 // #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
@@ -60,7 +61,7 @@
 
 #define PGF
 
-#include <dune/fem/gridpart/gridpart.hh>
+#include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
@@ -341,10 +342,10 @@ void algorithm ( std :: string& macroGridName,
   Problem::ModelProblemData problem_info;
 
   L2Error< DiscreteFunctionType > l2error;
-  H1Error< DiscreteFunctionType > h1error;
+  H1Error< DiscreteFunctionType > DUNE_UNUSED(h1error);
 
   // expensive hack to deal with discrete functions, defined on different grids
-  ImprovedL2Error< DiscreteFunctionType > impL2error;
+  ImprovedL2Error< DiscreteFunctionType > DUNE_UNUSED(impL2error);
 
   //! ---------------------------- grid parts ----------------------------------------------
 
@@ -416,7 +417,7 @@ void algorithm ( std :: string& macroGridName,
         {
           assert( loc_coarse_residual_[ l ].size() == loc_coarse_grid_jumps_[ l ].size() );
           average_coarse_error_indicator[ l ] = 0.0;
-          for ( int i = 0; i < loc_coarse_grid_jumps_[ l ].size(); ++i )
+          for ( size_t i = 0; i < loc_coarse_grid_jumps_[ l ].size(); ++i )
             {
               average_coarse_error_indicator[ l ] += loc_coarse_residual_[ l ][ i ]  + loc_coarse_grid_jumps_[ l ][ i ];
             }
@@ -593,7 +594,7 @@ void algorithm ( std :: string& macroGridName,
   fine_part_msfem_solution.clear();
 
   int number_of_level_host_entities = grid_coarse.size( 0 /*codim*/ );  
-  int coarse_level_fine_level_difference = grid.maxLevel() - grid_coarse.maxLevel();
+  int DUNE_UNUSED(coarse_level_fine_level_difference) = grid.maxLevel() - grid_coarse.maxLevel();
   
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MacroMicroGridSpecifierType specifier( discreteFunctionSpace_coarse, discreteFunctionSpace );

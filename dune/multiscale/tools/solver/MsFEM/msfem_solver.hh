@@ -185,18 +185,17 @@ namespace Dune
      }
 
   private:
+    DiscreteFunctionSpaceType& coarse_scale_space_;
+    DiscreteFunctionSpaceType& fine_scale_space_;
 
     // level difference bettween coarse grid level and fine grid level
     int coarse_level_fine_level_difference_;
 
-    // nomber of coarse grid entities
+    // number of coarse grid entities
     int number_of_level_host_entities_;
 
     // layers for each coarse grid entity
     std :: vector < int > number_of_layers;
-
-    DiscreteFunctionSpaceType& coarse_scale_space_;
-    DiscreteFunctionSpaceType& fine_scale_space_;
 
     // ----- local error indicators (for each coarse grid element T) -------------
 
@@ -410,7 +409,7 @@ namespace Dune
              SubgridLocalFunction sub_loc_value = sub_func.localFunction( sub_entity );
              LocalFunction host_loc_value = host_func.localFunction( host_entity );
 
-             const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+             const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
              for( unsigned int i = 0; i < numBaseFunctions; ++i )
                {
                  host_loc_value[ i ] = sub_loc_value[ i ];
@@ -477,7 +476,7 @@ namespace Dune
      coarse_msfem_solution.clear();
 
      //! create subgrids:
-     bool silence = false;
+     bool DUNE_UNUSED(silence) = false;
 
      //! define the right hand side assembler tool
      // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
@@ -665,8 +664,8 @@ namespace Dune
 
         LocalFunction host_loc_value = coarse_scale_part.localFunction( *it );
 
-        int number_of_nodes = (*it).template count<2>();
-        if (!( number_of_nodes == host_loc_value.baseFunctionSet().numBaseFunctions() ))
+        const int number_of_nodes = (*it).template count<2>();
+        if (!( number_of_nodes == int(host_loc_value.baseFunctionSet().size()) ))
          { std :: cout << "Error! Inconsistency in 'msfem_solver.hh'." << std :: endl; }
 
         for ( int i = 0; i < number_of_nodes; i += 1 )
@@ -880,7 +879,7 @@ namespace Dune
                  std :: vector < HostEntityPointer > coarse_entities;
 
 		 // count the number of different coarse-grid-entities that share the above node
-		 for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
+         for( size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
                    {
                       HostEntityPointer inner_it = entities_sharing_same_node[ global_index_node ][ j ];
                       for (int lev = 0; lev < specifier.getLevelDifference(); ++lev )
@@ -916,7 +915,7 @@ namespace Dune
 #endif
 
                       bool new_entity_found = true;
-                      for ( int k = 0; k < coarse_entities.size(); k += 1 )
+                      for ( size_t k = 0; k < coarse_entities.size(); k += 1 )
                         {
                           if ( coarse_entities[k] == inner_it )
                            { new_entity_found = false; }

@@ -200,10 +200,8 @@ namespace Dune
     MacroMicroGridSpecifierType& specifier_;
 
     const CoarseDiscreteFunctionSpace &coarseDiscreteFunctionSpace_;
-     
-    const DiffusionModel &diffusion_operator_;
-
     SubGridListType& subgrid_list_;
+    const DiffusionModel &diffusion_operator_;
     
     // data file for saving information
     std :: ofstream *data_file_;
@@ -264,7 +262,7 @@ namespace Dune
   void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, 
                                       MacroMicroGridSpecifierImp,
                                       FineDiscreteFunctionImp, 
-                                      DiffusionImp > :: operator() ( const CoarseDiscreteFunction &u, CoarseDiscreteFunction &w ) const 
+                                      DiffusionImp > :: operator() ( const CoarseDiscreteFunction &/*u*/, CoarseDiscreteFunction &/*w*/ ) const
   {
 
     std :: cout << "the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy." << std :: endl;
@@ -316,7 +314,7 @@ namespace Dune
       LocalMatrix local_matrix = global_matrix.localMatrix( coarse_grid_entity, coarse_grid_entity );
 
       const CoarseBaseFunctionSet &coarse_grid_baseSet = local_matrix.domainBaseFunctionSet();
-      const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.numBaseFunctions();
+      const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.size();
 
 
       #if 0
@@ -391,7 +389,7 @@ namespace Dune
       // the barycenter of the macro_grid_entity
       const typename CoarseQuadrature::CoordinateType &local_coarse_point 
            = one_point_quadrature.point( 0 /*=quadraturePoint*/ );
-      DomainType coarse_entity_barycenter = coarse_grid_geometry.global( local_coarse_point );
+      DomainType DUNE_UNUSED(coarse_entity_barycenter) = coarse_grid_geometry.global( local_coarse_point );
 
       // transposed of the the inverse jacobian
       const FieldMatrix< double, dimension, dimension > &inverse_jac

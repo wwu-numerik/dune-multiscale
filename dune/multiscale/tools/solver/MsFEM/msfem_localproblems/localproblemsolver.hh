@@ -23,7 +23,7 @@
 #include <dune/subgrid/subgrid.hh>
 
 // dune-fem includes:
-#include <dune/fem/gridpart/gridpart.hh>
+#include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
@@ -170,7 +170,7 @@ namespace Dune
   // dummy implementation of "operator()"
   // 'w' = effect of the discrete operator on 'u'
   template< class DiscreteFunctionImp, class DiffusionImp >
-  void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator() ( const DiscreteFunctionImp &u, DiscreteFunctionImp &w ) const 
+  void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator() ( const DiscreteFunctionImp &/*u*/, DiscreteFunctionImp &/*w*/ ) const
   {
 
     std :: cout << "the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy." << std :: endl;
@@ -211,7 +211,7 @@ namespace Dune
       LocalMatrix local_matrix = global_matrix.localMatrix( sub_grid_entity, sub_grid_entity );
 
       const BaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numBaseFunctions = baseSet.size();
 
       // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to use a higher order quadrature:
       Quadrature quadrature( sub_grid_entity, 2*subDiscreteFunctionSpace_.order()+2 );
@@ -390,7 +390,7 @@ namespace Dune
     // gradient of micro scale base function:
     std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
 
-    RangeType rhs_L2_Norm = 0.0; 
+    RangeType DUNE_UNUSED(rhs_L2_Norm) = 0.0;
 
     const Iterator end = discreteFunctionSpace.end();
     for( Iterator it = discreteFunctionSpace.begin(); it != end; ++it )
@@ -403,7 +403,7 @@ namespace Dune
       LocalFunction elementOfRHS = local_problem_RHS.localFunction( local_grid_entity );
 
       const BaseFunctionSet &baseSet = elementOfRHS.baseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numBaseFunctions = baseSet.size();
 
       Quadrature quadrature( local_grid_entity, 2*discreteFunctionSpace.order()+2 );
       const size_t numQuadraturePoints = quadrature.nop();
@@ -659,7 +659,7 @@ namespace Dune
       // ( effect of the discretized differential operator on a certain discrete function )
       LocalProblemOperatorType local_problem_op( subDiscreteFunctionSpace, diffusion_ );
 
-      const SubGridPartType &subgridPart = subDiscreteFunctionSpace.gridPart();
+      const SubGridPartType &DUNE_UNUSED(subgridPart) = subDiscreteFunctionSpace.gridPart();
       const SubGridType &subGrid = subDiscreteFunctionSpace.grid();
 	    
       typedef typename SubDiscreteFunctionSpaceType :: IteratorType SGIteratorType;
@@ -831,7 +831,7 @@ namespace Dune
              SubLocalFunctionType sub_loc_value = sub_func.localFunction( sub_entity );
              HostLocalFunctionType host_loc_value = host_func.localFunction( host_entity );
 
-             const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+             const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
              for( unsigned int i = 0; i < numBaseFunctions; ++i )
                {
                  host_loc_value[ i ] = sub_loc_value[ i ];
@@ -847,7 +847,7 @@ namespace Dune
     //! ---- method: solve and save the whole set of local msfem problems -----
 
     // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
-    void assemble_all( bool silent = true /* state information on subgrids */ )
+    void assemble_all( bool /*silent*/ = true /* state information on subgrids */ )
     {
  
       mkdir((path_).c_str() DIRMODUS);
@@ -865,9 +865,9 @@ namespace Dune
              { e[i][0][j] = 0.0; }
          }
 
-      const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
+      const HostGridPartType& DUNE_UNUSED(hostGridPart) = hostDiscreteFunctionSpace_.gridPart();
 
-      HostGridType& hostGrid = hostDiscreteFunctionSpace_.gridPart().grid();
+      HostGridType& DUNE_UNUSED(hostGrid) = hostDiscreteFunctionSpace_.gridPart().grid();
 
       // number of coarse grid entities (of codim 0).
       int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
@@ -894,7 +894,7 @@ namespace Dune
 
       // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
       double minimum_time_c_p = 1000000;
-      double average_time_c_p = 0;
+      double DUNE_UNUSED(average_time_c_p) = 0;
       double maximum_time_c_p = 0;
 
       HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();

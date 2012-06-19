@@ -103,7 +103,7 @@ namespace Dune
   // dummy implementation of "operator()"
   // 'w' = effect of the discrete operator on 'u'
   template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
-  void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::operator() ( const DiscreteFunction &u, DiscreteFunction &w ) const 
+  void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::operator() ( const DiscreteFunction &/*u*/, DiscreteFunction &/*w*/ ) const
   {
 
     std :: cout << "the ()-operator of the DiscreteEllipticOperator class is not yet implemented and still a dummy." << std :: endl;
@@ -210,7 +210,7 @@ namespace Dune
       LocalMatrix local_matrix = global_matrix.localMatrix( entity, entity );
 
       const BaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numBaseFunctions = baseSet.size();
 
       // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to use a higher order quadrature:
       Quadrature quadrature( entity, 2*discreteFunctionSpace_.order()+2 );

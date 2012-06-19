@@ -196,7 +196,7 @@ namespace Problem
 
   public:
 
-    inline void evaluate( const DomainType &x,
+    inline void evaluate( const DomainType &/*x*/,
                                 RangeType &y ) const
     {
 
@@ -478,8 +478,8 @@ namespace Problem
     }
 
     //dummy implementation
-    inline void evaluate ( const DomainType &x,
-                           RangeType &y ) const
+    inline void evaluate ( const DomainType &/*x*/,
+                           RangeType &/*y*/ ) const
     {
      std :: cout << "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead." << std :: endl; 
      std::abort();

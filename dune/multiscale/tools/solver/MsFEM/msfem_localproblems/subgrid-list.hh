@@ -140,7 +140,7 @@ namespace Dune
            const HostNodePointer node = (*hit).template subEntity<2>(i);
 	   int global_index_node = hostGridPart.indexSet().index( *node );
 
-	   for( int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
+       for( size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1 )
 	     {
 
                if ( !( subGrid.template contains <0>( *entities_sharing_same_node[ global_index_node ][ j ] ) ) )
@@ -333,7 +333,7 @@ namespace Dune
 
            const HostEntityType& host_entity = *host_it;
 
-           int number_of_nodes_in_entity = (*host_it).template count<2>();
+           int DUNE_UNUSED(number_of_nodes_in_entity) = (*host_it).template count<2>();
 
 	   #if 0
            std :: cout << "host_it->geometry().corner(0) = " << host_it->geometry().corner(0) << std :: endl;
@@ -420,7 +420,7 @@ namespace Dune
                   {
                     // check if the neighbor entity is in the subgrid
                    const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-                   const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+                   const HostEntityType& DUNE_UNUSED(neighborHostEntity) = *neighborHostEntityPointer;
 
                    HostEntityPointerType level_father_neighbor_entity = neighborHostEntityPointer;
                    for (int lev = 0; lev < level_difference; ++lev)
@@ -586,9 +586,9 @@ namespace Dune
     //Destruktor (Dynamisch angeforderter Speicher wird wieder freigegeben)
     ~SubGridList()
      {
-        int size = specifier_.getNumOfCoarseEntities();
+        const int size = specifier_.getNumOfCoarseEntities();
         
-        for ( unsigned int i = 0; i < size; ++i )
+        for ( int i = 0; i < size; ++i )
          delete subGrid[i];
         delete[] subGrid;
 

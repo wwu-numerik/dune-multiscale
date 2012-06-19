@@ -113,7 +113,7 @@ public:
         unsigned long bytes = df.size() * sizeof(Field);
 
         assert( file_.is_open() );
-        assert( size_ >= bytes * ( index + 1 ) );
+        assert( size_ >= long(bytes * ( index + 1 )) );
         file_.seekg( bytes * index );
 
         typedef typename DFType::DofIteratorType

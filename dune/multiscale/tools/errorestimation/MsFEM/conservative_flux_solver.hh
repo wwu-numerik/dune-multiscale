@@ -8,7 +8,7 @@
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
-#include <dune/grid/common/quadraturerules.hh>
+#include <dune/geometry/quadraturerules.hh>
 
 #include <dune/fem/operator/common/operator.hh>
 
@@ -23,7 +23,7 @@
 #include <dune/subgrid/subgrid.hh>
 
 // dune-fem includes:
-#include <dune/fem/gridpart/gridpart.hh>
+#include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 /// done
@@ -205,7 +205,7 @@ namespace Dune
   // 'w' = effect of the discrete operator on 'u'
   template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp, class MacroMicroGridSpecifierImp >
   void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp, MacroMicroGridSpecifierImp >
-  :: operator() ( const SubGridDiscreteFunctionImp &u, SubGridDiscreteFunctionImp &w ) const 
+  :: operator() ( const SubGridDiscreteFunctionImp &/*u*/, SubGridDiscreteFunctionImp &/*w*/ ) const
   {
 
     std :: cout << "the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy." << std :: endl;
@@ -288,13 +288,13 @@ namespace Dune
 
       int coarse_index = coarseGridLeafIndexSet.index( *father_of_sub_grid_entity );
       
-      const SubGridGeometry &sub_grid_geometry = sub_grid_entity.geometry();
+      const SubGridGeometry& DUNE_UNUSED(sub_grid_geometry) = sub_grid_entity.geometry();
       assert( sub_grid_entity.partitionType() == InteriorEntity );
 
       LocalMatrix local_matrix = global_matrix.localMatrix( sub_grid_entity, sub_grid_entity );
 
       const SubGridBaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numBaseFunctions = baseSet.size();
 
       const IntersectionIterator iend = discreteFunctionSpace_.gridPart().iend( *host_entity_pointer );
       for( IntersectionIterator iit = discreteFunctionSpace_.gridPart().ibegin( *host_entity_pointer ); iit != iend; ++iit )
@@ -553,7 +553,7 @@ namespace Dune
     // gradient of micro scale base function:
     std::vector< JacobianRangeType > gradient_phi( subDiscreteFunctionSpace.mapper().maxNumDofs() );
 
-    RangeType rhs_L2_Norm = 0.0; 
+    RangeType DUNE_UNUSED(rhs_L2_Norm) = 0.0;
 
     const SubGridIterator end = subDiscreteFunctionSpace.end();
     for( SubGridIterator it = subDiscreteFunctionSpace.begin(); it != end; ++it )
@@ -625,7 +625,7 @@ namespace Dune
       SubGridLocalFunction elementOfRHS = rhs_flux_problem.localFunction( local_grid_entity );
 
       const SubGridBaseFunctionSet &baseSet = elementOfRHS.baseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numBaseFunctions = baseSet.size();
 
       SubGridQuadrature quadrature( local_grid_entity, 2*subDiscreteFunctionSpace.order()+2 );
       const size_t numQuadraturePoints = quadrature.nop();
@@ -812,9 +812,9 @@ namespace Dune
     MacroMicroGridSpecifierType& specifier_;
     
     // path where to save the data output
-    std :: string path_;
+    std::string path_;
     
-    std :: ofstream *data_file_;
+    std::ofstream* data_file_;
     
   public:
 
@@ -877,8 +877,8 @@ namespace Dune
                                         MacroMicroGridSpecifierType > ConservativeFluxOperatorType;
       ConservativeFluxOperatorType cf_problem_operator( localDiscreteFunctionSpace, hostDiscreteFunctionSpace_, diffusion_, specifier_ );
 
-      const SubGridPartType &subGridPart = localDiscreteFunctionSpace.gridPart();
-      const SubGridType &subGrid = localDiscreteFunctionSpace.grid();
+      const SubGridPartType& DUNE_UNUSED(subGridPart) = localDiscreteFunctionSpace.gridPart();
+      const SubGridType& DUNE_UNUSED(subGrid) = localDiscreteFunctionSpace.grid();
 
       //! right hand side vector of the algebraic local MsFEM problem
       SubGridDiscreteFunctionType rhs( "RHS of Conservative Flux Problem", localDiscreteFunctionSpace );
@@ -1140,7 +1140,7 @@ std :: cout << std :: endl;
 
       // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
       double minimum_time_c_p = 1000000;
-      double average_time_c_p = 0;
+      double DUNE_UNUSED(average_time_c_p) = 0;
       double maximum_time_c_p = 0;
 
       HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();

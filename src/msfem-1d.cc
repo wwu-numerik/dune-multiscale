@@ -62,7 +62,7 @@ double error_L2( unsigned int N, double leftB, double rightB, FunctionType1& fun
     
     double error = 0.0;
 
-    for (int i = 0; i < N; i+=1 )
+    for (unsigned int i = 0; i < N; i+=1 )
          {
            double x = leftB + (i*h);
            error += h * ( function1.evaluate(x) - function2.evaluate(x) ) * ( function1.evaluate(x) - function2.evaluate(x) );
@@ -80,7 +80,7 @@ class SourceFunction
 
     public:
     
-    double evaluate( const double x )
+    double evaluate( const double /*x*/ )
     {
         // klappt momentan nur fuer f=const
         return 1.0;
@@ -227,17 +227,17 @@ class ZeroFunction
 
     public:
 
-    double evaluate( const double x )
+    double evaluate( const double /*x*/ )
     {
         return 0.0;
     }
 
-    double evaluate_antiderivative_of_inverse( const double x )
+    double evaluate_antiderivative_of_inverse( const double /*x*/ )
     {
         return 0.0;
     }
 
-    double evaluate_antiderivative_antiderivative_of_inverse( const double x )
+    double evaluate_antiderivative_antiderivative_of_inverse( const double /*x*/ )
     {
         return 0.0;
     }
@@ -354,7 +354,7 @@ public:
 
 
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char** /*argv[]*/)
 {
     
     A a;

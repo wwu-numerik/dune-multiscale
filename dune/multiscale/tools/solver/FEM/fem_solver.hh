@@ -42,7 +42,7 @@ namespace Dune
 
   public:
 
-    inline void evaluate ( const DomainType &x,
+    inline void evaluate ( const DomainType &/*x*/,
                            RangeType &y ) const
     {
       //std :: cout << "Do not use the Dummy-class!!!" << std :: endl;

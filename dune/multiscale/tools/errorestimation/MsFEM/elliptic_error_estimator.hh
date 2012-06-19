@@ -1,7 +1,7 @@
 #ifndef DUNE_MSFEM_ERRORESTIMATOR_HH
 #define DUNE_MSFEM_ERRORESTIMATOR_HH
 
-//#include <dune/common/classname.hh>
+#include <dune/common/unused.hh>
 
 // where the quadratures are defined 
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -206,7 +206,7 @@ namespace Dune
              LocalFunctionType host_loc_value_1 = host_func_1.localFunction( host_entity );
              LocalFunctionType host_loc_value_2 = host_func_2.localFunction( host_entity );
 
-             const unsigned int numBaseFunctions = sub_loc_value_1.baseFunctionSet().numBaseFunctions();
+             const unsigned int numBaseFunctions = sub_loc_value_1.baseFunctionSet().size();
              for( unsigned int i = 0; i < numBaseFunctions; ++i )
                {
                  host_loc_value_1[ i ] = sub_loc_value_1[ i ];
@@ -526,7 +526,7 @@ namespace Dune
        for( SubGridIteratorType sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it )
           {
 
-             const SubGridEntityType &sub_entity = *sub_it;
+             const SubGridEntityType& DUNE_UNUSED(sub_entity) = *sub_it;
 
              EntityPointerType host_entity_pointer = sub_grid_U_T.template getHostEntity<0>( *sub_it );
              const EntityType& host_entity = *host_entity_pointer;
@@ -712,7 +712,7 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
 
 
     // adaptive_refinement
-    RangeType adaptive_refinement( GridType &coarse_grid,
+    RangeType adaptive_refinement( GridType &/*coarse_grid*/,
                                    const DiscreteFunctionType& msfem_solution,
                                    const DiscreteFunctionType& msfem_coarse_part,
                                    const DiscreteFunctionType& msfem_fine_part,
@@ -732,7 +732,7 @@ std :: cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std :: end
        std :: cout << "Starting error estimation..." << std :: endl;
 
        const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
-       const int number_of_fine_grid_entities = msfem_solution.space().gridPart().grid().size( 0 /*codim*/ );
+       const int DUNE_UNUSED(number_of_fine_grid_entities) = msfem_solution.space().gridPart().grid().size( 0 /*codim*/ );
 
        // error contribution of H^2 ||f||_L2(T):
        std :: vector < RangeType > loc_coarse_residual( number_of_coarse_grid_entities );

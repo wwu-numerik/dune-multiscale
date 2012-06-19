@@ -170,9 +170,9 @@ namespace Dune
 
       LocalFunctionType loc_func = disc_func.localFunction( *(*it_) );
 
-      int number_of_nodes = (*(*it_)).template count<2>();
+      const int number_of_nodes = (*(*it_)).template count<2>();
 
-      if (!( number_of_nodes == loc_func.baseFunctionSet().numBaseFunctions() ))
+      if (!( number_of_nodes == int(loc_func.baseFunctionSet().size()) ))
        { std :: cout << "Error! Inconsistency in 'linear-lagrange-interpolation.hh'." << std :: endl; }
 
       for ( int i = 0; i < number_of_nodes; i += 1 )
