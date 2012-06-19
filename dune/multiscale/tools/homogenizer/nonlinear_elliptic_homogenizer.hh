@@ -27,105 +27,105 @@ namespace Dune
 
 
 #if 1
-  // since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} ) for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon} instead of A(x,\cdot) )
-  template< class FunctionSpaceImp, class DiffusionImp >
-  class OnePeriodicDiffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, OnePeriodicDiffusion< FunctionSpaceImp, DiffusionImp > >
-  {
-  public:
-    typedef FunctionSpaceImp FunctionSpaceType;
-    typedef DiffusionImp TensorType;
+// since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} ) for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon} instead of A(x,\cdot) )
+template< class FunctionSpaceImp, class DiffusionImp >
+class OnePeriodicDiffusion
+		: public Dune::Fem::Function< FunctionSpaceImp, OnePeriodicDiffusion< FunctionSpaceImp, DiffusionImp > >
+{
+public:
+	typedef FunctionSpaceImp FunctionSpaceType;
+	typedef DiffusionImp TensorType;
 
-  private:
-    typedef OnePeriodicDiffusion< FunctionSpaceType, DiffusionImp > ThisType;
-    typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+private:
+	typedef OnePeriodicDiffusion< FunctionSpaceType, DiffusionImp > ThisType;
+	typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
-  public:
-    typedef typename FunctionSpaceType :: DomainType DomainType;
-    typedef typename FunctionSpaceType :: RangeType RangeType;
-    typedef typename FunctionSpaceType :: JacobianRangeType JacobianRangeType;
+public:
+	typedef typename FunctionSpaceType :: DomainType DomainType;
+	typedef typename FunctionSpaceType :: RangeType RangeType;
+	typedef typename FunctionSpaceType :: JacobianRangeType JacobianRangeType;
 
-    typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
-    typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
+	typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
+	typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
 
-    typedef DomainFieldType TimeType;
+	typedef DomainFieldType TimeType;
 
-     static const int dimDomain = DomainType::dimension;
+	static const int dimDomain = DomainType::dimension;
 
-  protected:
-    const TensorType &tensor_;
+protected:
+	const TensorType &tensor_;
 
-  public:
-    // Constructor
-    inline explicit OnePeriodicDiffusion ( const TensorType &tensor)
-    : tensor_( tensor )
-    {
-    }
+public:
+	// Constructor
+	inline explicit OnePeriodicDiffusion ( const TensorType &tensor)
+		: tensor_( tensor )
+	{
+	}
 
-    void diffusiveFlux ( const DomainType &y,
-                         const JacobianRangeType &direction,
-                         JacobianRangeType &flux ) const
+	void diffusiveFlux ( const DomainType &y,
+						 const JacobianRangeType &direction,
+						 JacobianRangeType &flux ) const
 
-    {
-      Problem::ModelProblemData model_info;
-      const double epsilon = model_info.getEpsilon();
+	{
+		Problem::ModelProblemData model_info;
+		const double epsilon = model_info.getEpsilon();
 
-      DomainType new_y;
-      for(int i = 0; i < dimDomain; ++i)
-       new_y[ i ] = epsilon * y[ i ];
+		DomainType new_y;
+		for(int i = 0; i < dimDomain; ++i)
+			new_y[ i ] = epsilon * y[ i ];
 
-      tensor_.diffusiveFlux( new_y , direction, flux );
-    }
-
-
-    // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-    void jacobianDiffusiveFlux ( const DomainType &y,
-                                 const JacobianRangeType &position_gradient,
-                                 const JacobianRangeType &direction_gradient,
-                                       JacobianRangeType &flux ) const
-    {
-
-      Problem::ModelProblemData model_info;
-      const double epsilon = model_info.getEpsilon();
-
-      DomainType new_y;
-      for(int i = 0; i < dimDomain; ++i)
-       new_y[ i ] = epsilon * y[ i ];
-
-      tensor_.jacobianDiffusiveFlux( new_y , position_gradient, direction_gradient, flux );
-
-    }
+		tensor_.diffusiveFlux( new_y , direction, flux );
+	}
 
 
-    inline void evaluate ( const int i, const int j,
-                           const DomainType &x,
-                           const TimeType &time,
-                           RangeType &y ) const
-    {
-      std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
-      abort();
-      evaluate( i, j, x, y);
-    }
+	// jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
+	void jacobianDiffusiveFlux ( const DomainType &y,
+								 const JacobianRangeType &position_gradient,
+								 const JacobianRangeType &direction_gradient,
+								 JacobianRangeType &flux ) const
+	{
 
-    inline void evaluate ( const DomainType &x,
-                           RangeType &y ) const
-    {
-      std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
-      abort();
-      y = 0;
-    }
+		Problem::ModelProblemData model_info;
+		const double epsilon = model_info.getEpsilon();
+
+		DomainType new_y;
+		for(int i = 0; i < dimDomain; ++i)
+			new_y[ i ] = epsilon * y[ i ];
+
+		tensor_.jacobianDiffusiveFlux( new_y , position_gradient, direction_gradient, flux );
+
+	}
 
 
-    inline void evaluate ( const DomainType &x,
-                           const TimeType &time,
-                           RangeType &y ) const
-    {
-      std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
-      abort();
-      y = 0;
-    }
+	inline void evaluate ( const int i, const int j,
+						   const DomainType &x,
+						   const TimeType &time,
+						   RangeType &y ) const
+	{
+		std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
+		abort();
+		evaluate( i, j, x, y);
+	}
 
-  };
+	inline void evaluate ( const DomainType &x,
+						   RangeType &y ) const
+	{
+		std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
+		abort();
+		y = 0;
+	}
+
+
+	inline void evaluate ( const DomainType &x,
+						   const TimeType &time,
+						   RangeType &y ) const
+	{
+		std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
+		abort();
+		y = 0;
+	}
+
+};
 #endif
 
 
