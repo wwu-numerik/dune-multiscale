@@ -802,7 +802,7 @@ namespace Dune
     typedef SparseRowMatrixOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType, FluxProbMatrixTraits > FluxProbFEMMatrix;
 
     // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp /*CGInverseOp*/
-    typedef CGInverseOp< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
+    typedef CGInverseOperator< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
 
   private:
 
@@ -1066,7 +1066,7 @@ std :: cout << std :: endl;
 
       // --------------- writing data output ---------------------
       // typedefs and initialization
-      typedef Tuple<HostDiscreteFunctionType*> IOTupleType;
+      typedef tuple<HostDiscreteFunctionType*> IOTupleType;
       typedef DataOutput<HostGridType, IOTupleType> DataOutputType;
 
       // general output parameters

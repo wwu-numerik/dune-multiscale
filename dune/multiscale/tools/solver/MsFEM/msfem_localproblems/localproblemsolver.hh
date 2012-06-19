@@ -570,7 +570,7 @@ namespace Dune
     typedef SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType, LocProbMatrixTraits > LocProbFEMMatrix;
 
 #ifdef SYMMETRIC_DIFFUSION_MATRIX
-    typedef CGInverseOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
+    typedef CGInverseOperator< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
 #else
     // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
     typedef OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;

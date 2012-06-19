@@ -60,6 +60,23 @@
 
 #define PGF
 
+#include <dune/fem/gridpart/gridpart.hh>
+#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
+#include <dune/fem/space/lagrangespace.hh>
+#include <dune/fem/function/adaptivefunction.hh>
+
+//! ----- typedefs for the macro grid and the corresponding discrete space -----
+typedef Dune::GridSelector::GridType
+    GridType;
+//Dune::InteriorBorder_Partition or Dune::All_Partition >?
+//see: http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
+typedef Dune::AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
+
+typedef Dune::GridPtr< GridType > GridPointerType;
+
+typedef Dune::FunctionSpace < double , double , WORLDDIM , 1 > FunctionSpaceType;
+
+
 // to display data with ParaView:
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
@@ -69,12 +86,6 @@
 
 
 // dune-fem includes:
-
-#include <dune/fem/gridpart/gridpart.hh>
-#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-#include <dune/fem/space/lagrangespace.hh>
-
-#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/l2norm.hh>
@@ -101,16 +112,6 @@
 
 using namespace Dune;
 
-//! ----- typedefs for the macro grid and the corresponding discrete space -----
-typedef GridSelector::GridType
-    GridType;
-//Dune::InteriorBorder_Partition or Dune::All_Partition >?
-//see: http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
-typedef AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
-
-typedef GridPtr< GridType > GridPointerType;
-
-typedef FunctionSpace < double , double , WORLDDIM , 1 > FunctionSpaceType;
 
 //!-----------------------------------------------------------------------------
 
@@ -255,7 +256,7 @@ double error_tolerance_;
 
 //! ------------------ typedefs and classes for data output ---------------------
 
-typedef Tuple<DiscreteFunctionType*> IOTupleType;
+typedef tuple<DiscreteFunctionType*> IOTupleType;
 typedef DataOutput< GridType, IOTupleType> DataOutputType;
 
 #ifdef EXACTSOLUTION_AVAILABLE

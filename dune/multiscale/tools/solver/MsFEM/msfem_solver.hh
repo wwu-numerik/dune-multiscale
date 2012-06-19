@@ -598,7 +598,9 @@ namespace Dune
     for( HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it )
       {
 
-        typename HostEntity :: template Codim< 0 > :: EntityPointer coarse_father = it;
+        typedef typename HostEntity :: template Codim< 0 > :: EntityPointer
+                HostEntityPointer;
+        HostEntityPointer coarse_father(*it);
         for (int lev = 0; lev < specifier.getLevelDifference() ; ++lev)
           coarse_father = coarse_father->father();
 
@@ -702,7 +704,7 @@ namespace Dune
 	      const typename HostEntity :: template Codim< 2 > :: EntityPointer node = (*it).template subEntity<2>(i);
 	      int global_index_node = gridPart.indexSet().index( *node );
 
-	      entities_sharing_same_node[ global_index_node ].push_back( it );
+          entities_sharing_same_node[ global_index_node ].push_back( HostEntityPointer(*it) );
 	    }
         }
       

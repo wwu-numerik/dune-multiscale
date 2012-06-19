@@ -985,7 +985,7 @@ std :: cout << "loc_msfem_fine_part 2 = " << loc_sol_e0 * grad_msfem_coarse_part
           EntityType& entity = *fine_grid_it;
 
           // identify coarse grid father entity
-          EntityPointerType coarse_father = fine_grid_it;
+          EntityPointerType coarse_father(*fine_grid_it);
           for (int lev = 0; lev < specifier_.getLevelDifference() ; ++lev)
             coarse_father = coarse_father->father();
 

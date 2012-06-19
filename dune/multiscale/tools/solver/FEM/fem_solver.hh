@@ -121,7 +121,7 @@ namespace Dune
    // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric ones.
    // GMRES seems to be more stable, but is extremely slow!
    // typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
-   typedef CGInverseOp< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
+   typedef CGInverseOperator< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
 
    //! --------------------------------------------------------------------------------------
 

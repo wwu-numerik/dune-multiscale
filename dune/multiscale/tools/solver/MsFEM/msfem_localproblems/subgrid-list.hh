@@ -247,7 +247,7 @@ namespace Dune
 	      const HostNodePointer node = (*it).template subEntity<2>(i);
 	      int global_index_node = hostGridPart.indexSet().index( *node );
 
-	      entities_sharing_same_node[ global_index_node ].push_back( it );
+          entities_sharing_same_node[ global_index_node ].push_back( HostEntityPointerType(*it) );
 	    }
         }
 
@@ -301,7 +301,7 @@ namespace Dune
 	      const HostNodePointer node = (*it).template subEntity<2>(i);
 	      int global_index_node = hostGridPart.indexSet().index( *node );
 
-	      entities_sharing_same_node[ global_index_node ].push_back( it );
+          entities_sharing_same_node[ global_index_node ].push_back( HostEntityPointerType(*it) );
 	    }
         }
    
@@ -339,10 +339,10 @@ namespace Dune
            std :: cout << "host_it->geometry().corner(0) = " << host_it->geometry().corner(0) << std :: endl;
            std :: cout << "host_it->geometry().corner(1) = " << host_it->geometry().corner(1) << std :: endl;
            std :: cout << "host_it->geometry().corner(2) = " << host_it->geometry().corner(2) << std :: endl;
-           #endif
+        #endif
 
            // get the coarse-grid-father of host_entity (which is a maxlevel entity)
-           HostEntityPointerType level_father_entity = host_it;
+           HostEntityPointerType level_father_entity = HostEntityPointerType(*host_it);
 
 
 
@@ -487,7 +487,8 @@ namespace Dune
 	   int layers = specifier_.getLayer( father_index );
 	   if ( layers > 0 )
 	    {
-	       enrichment( host_it, level_father_entity, specifier, father_index,
+           HostEntityPointerType hep(*host_it);
+           enrichment( hep, level_father_entity, specifier, father_index,
 		           hostGridPart, *subGrid[ father_index ], entities_sharing_same_node, layers, enriched );
 	    }
 
