@@ -111,6 +111,9 @@ TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
 
+ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
+
 # HEADERCHECK( ${header} ${oseen} ${dune} )
 # ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${COMMON_HEADER} )
 
