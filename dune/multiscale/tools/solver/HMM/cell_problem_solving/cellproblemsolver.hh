@@ -348,7 +348,7 @@ namespace Dune
       LocalFunction local_fine_function = old_fine_function.localFunction( cell_grid_entity ); 
 
       const BaseFunctionSet &baseSet = local_matrix.domainBaseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numBaseFunctions = baseSet.size();
 
       // for constant diffusion "2*periodicDiscreteFunctionSpace_.order()" is sufficient, for the general case, it is better to use a higher order quadrature:
       Quadrature quadrature( cell_grid_entity, 2*periodicDiscreteFunctionSpace_.order()+2 );
@@ -682,7 +682,7 @@ namespace Dune
       LocalFunction elementOfRHS = cell_problem_RHS.localFunction( cell_grid_entity );
 
       const BaseFunctionSet &baseSet = elementOfRHS.baseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numBaseFunctions = baseSet.size();
 
       Quadrature quadrature( cell_grid_entity, 2*discreteFunctionSpace.order()+2 );
       const size_t numQuadraturePoints = quadrature.nop();
@@ -806,7 +806,7 @@ namespace Dune
       LocalFunction elementOfRHS = jac_corrector_cell_problem_RHS.localFunction( cell_grid_entity );
 
       const BaseFunctionSet &baseSet = elementOfRHS.baseFunctionSet();
-      const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numBaseFunctions = baseSet.size();
 
       Quadrature quadrature( cell_grid_entity, 2*discreteFunctionSpace.order()+2 );
       const size_t numQuadraturePoints = quadrature.nop();
@@ -1069,7 +1069,7 @@ public:
               = discreteFunctionSpace.baseFunctionSet( *it );
 
            // number of base functions on entity
-           const int numBaseFunctions = baseSet.numBaseFunctions();
+           const int numBaseFunctions = baseSet.size();
 
            for( int i = 0; i < numBaseFunctions; ++i )
              {

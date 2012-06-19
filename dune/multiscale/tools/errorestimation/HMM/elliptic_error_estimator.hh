@@ -10,8 +10,6 @@
 
 namespace Dune 
 {
-
-
   template <class PeriodicDiscreteFunctionImp,
             class DiscreteFunctionImp,
             class DiffusionImp > 
@@ -137,7 +135,6 @@ namespace Dune
     template< class SourceType >
     RangeType indicator_f( const SourceType& f , const EntityType &entity )
     {
-
         // create quadrature for given geometry type 
         CachingQuadrature <GridPartType , 0 > entityQuadrature(entity, spacePolOrd ); 
 

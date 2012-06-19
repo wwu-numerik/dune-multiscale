@@ -9,7 +9,7 @@
 
 // where the quadratures are defined 
 #include <dune/fem/quadrature/cachingquadrature.hh>
-
+#include <dune/fem/function/common/function.hh>
 
 //for data output:
 #include <dune/fem/io/file/dataoutput.hh>
@@ -30,7 +30,7 @@ namespace Dune
   // since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} ) for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon} instead of A(x,\cdot) )
   template< class FunctionSpaceImp, class DiffusionImp >
   class OnePeriodicDiffusion
-  : public Function< FunctionSpaceImp, OnePeriodicDiffusion< FunctionSpaceImp, DiffusionImp > >
+  : public Dune::Fem::Function< FunctionSpaceImp, OnePeriodicDiffusion< FunctionSpaceImp, DiffusionImp > >
   {
   public:
     typedef FunctionSpaceImp FunctionSpaceType;
@@ -38,7 +38,7 @@ namespace Dune
 
   private:
     typedef OnePeriodicDiffusion< FunctionSpaceType, DiffusionImp > ThisType;
-    typedef Function< FunctionSpaceType, ThisType > BaseType;
+    typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
   public:
     typedef typename FunctionSpaceType :: DomainType DomainType;

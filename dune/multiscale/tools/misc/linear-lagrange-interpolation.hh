@@ -13,7 +13,7 @@
 #ifndef DUNE_LINEARLAGRANGEINTERPOLATION_HH
 #define DUNE_LINEARLAGRANGEINTERPOLATION_HH
 
-
+#include <dune/fem/function/common/function.hh>
 
 namespace Dune 
 {
@@ -26,14 +26,14 @@ namespace Dune
   // NOTE if you want to use the method with the 'entity-Version' FunctionSpaceImp needs to be a DiscreteFunctionSpaceImp
   template< class FunctionSpaceImp >
   class LinearLagrangeFunction2D
-  : public Function< FunctionSpaceImp, LinearLagrangeFunction2D< FunctionSpaceImp > >
+  : public Dune::Fem::Function< FunctionSpaceImp, LinearLagrangeFunction2D< FunctionSpaceImp > >
   {
   public:
     typedef FunctionSpaceImp FunctionSpaceType;
 
   private:
     typedef LinearLagrangeFunction2D< FunctionSpaceType > ThisType;
-    typedef Function< FunctionSpaceType, ThisType > BaseType;
+    typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
   public:
     typedef typename FunctionSpaceType :: DomainType DomainType;

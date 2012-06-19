@@ -425,7 +425,7 @@ namespace Dune
       LocalFunction local_old_u_H = old_u_H.localFunction( macro_grid_entity ); 
 
       const BaseFunctionSet &macro_grid_baseSet = local_matrix.domainBaseFunctionSet();
-      const unsigned int numMacroBaseFunctions = macro_grid_baseSet.numBaseFunctions();
+      const unsigned int numMacroBaseFunctions = macro_grid_baseSet.size();
 
       // 1 point quadrature!! That is how we compute and save the cell problems.
       // If you want to use a higher order quadrature, you also need to change the computation of the cell problems!
