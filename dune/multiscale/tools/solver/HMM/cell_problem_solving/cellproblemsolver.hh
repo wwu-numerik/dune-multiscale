@@ -1671,7 +1671,7 @@ public:
 
       // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
       double minimum_time_c_p = 1000000;
-      double average_time_c_p = 0;
+      double DUNE_UNUSED(average_time_c_p) = 0;
       double maximum_time_c_p = 0;
 
       const DiscreteFunctionSpaceType &discreteFunctionSpace = macro_discrete_function.space();

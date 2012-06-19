@@ -79,7 +79,7 @@ typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionT
 #ifdef EXACTSOLUTION_AVAILABLE
     // type of exact solution (in general unknown)
     typedef Problem::ExactSolution< FunctionSpaceType > ExactSolutionType;
-    typedef DiscreteFunctionAdapter< ExactSolutionType, GridPartType > DiscreteExactSolutionType; //for data output with paraview or grape
+    typedef GridFunctionAdapter< ExactSolutionType, GridPartType > DiscreteExactSolutionType; //for data output with paraview or grape
 #endif
 typedef FunctionSpaceType::DomainType DomainType; 
 //! define the type of elements of the codomain v(\Omega) (typically a subset of \R)

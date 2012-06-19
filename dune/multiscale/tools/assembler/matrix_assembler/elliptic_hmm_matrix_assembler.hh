@@ -110,10 +110,10 @@ namespace Dune
     const DiscreteFunctionSpace &discreteFunctionSpace_;
     const PeriodicDiscreteFunctionSpace &periodicDiscreteFunctionSpace_;
     DiffusionModel &diffusion_operator_;
+    CellProblemNumberingManager &cp_num_manager_;
 
     // name of data file, e.g. required if we want to use the saved solutions of the cell problems
     std :: string *filename_;
-    CellProblemNumberingManager &cp_num_manager_;
   };
 
 
