@@ -1,6 +1,6 @@
 #include "common.hh"
 
-#define ADAPTIVE
+// #define ADAPTIVE
 
 #ifndef ADAPTIVE
  #define UNIFORM
