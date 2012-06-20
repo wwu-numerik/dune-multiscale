@@ -1,16 +1,16 @@
 /**************************************************************************
-**       Title: L2Error class
-**    $RCSfile$
-**   $Revision: 1723 $$Name$
-**       $Date: 2007-06-20 15:20:54 +0000 (Wed, 20 Jun 2007) $
-**   Copyright: GPL $Author: dune community $
-** Description: L2 error class, which computes the error between a function
-**              and a discrete function. Extracted class from
-**              Roberts poisson-example 
-**
-**************************************************************************/
+  **       Title: L2Error class
+  **    $RCSfile$
+  **   $Revision: 1723 $$Name$
+  **       $Date: 2007-06-20 15:20:54 +0000 (Wed, 20 Jun 2007) $
+  **   Copyright: GPL $Author: dune community $
+  ** Description: L2 error class, which computes the error between a function
+  **              and a discrete function. Extracted class from
+  **              Roberts poisson-example
+  **
+  **************************************************************************/
 
-//das alles klappt (mathematisch) nur in 2-D!!! Für Tensoren, die:
+// das alles klappt (mathematisch) nur in 2-D!!! Für Tensoren, die:
 // 1. irgendwelche Elliptizitätsbedingungen erfüllen
 // 2. A(x,y) = A(y)
 // 3. a_i_j(y) = a_i_j(y_1,y_2) = a_i_j(y_1)
@@ -20,698 +20,650 @@
 #ifndef DUNE_HOMOGENIZER_HH
 #define DUNE_HOMOGENIZER_HH
 
-// where the quadratures are defined 
+// where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
-
 
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
 
 #include <dune/fem/gridpart/periodicgridpart.hh>
 
-//for data output:
+// for data output:
 #include <dune/fem/io/file/dataoutput.hh>
 #include <dune/fem/io/parameter.hh>
 #include <dune/fem/io/file/datawriter.hh>
 
-
-namespace Dune 
-{
-
-
+namespace Dune {
 // define output traits
-struct CellDataOutputParameters : public DataOutputParameters {
-
+struct CellDataOutputParameters
+  : public DataOutputParameters
+{
 public:
+  std::string my_prefix_;
 
-	std::string my_prefix_;
+  // path where the data is stored
+  std::string path() const {
+    return "data_output_hmm";
+  }
 
-	// path where the data is stored
-	std::string path() const
-	{
-		return "data_output_hmm";
-	}
+  void set_prefix(std::string my_prefix) {
+    my_prefix_ = my_prefix;
+    // std :: cout << "Set prefix. my_prefix_ = " << my_prefix_ << std :: endl;
+  }
 
-	void set_prefix( std::string my_prefix )
-	{
-		my_prefix_ = my_prefix;
-		// std :: cout << "Set prefix. my_prefix_ = " << my_prefix_ << std :: endl;
-	}
+  // base of file name for data file
+  std::string prefix() const {
+    if (my_prefix_ == "")
+      return "solutions";
+    else
+      return my_prefix_;
+  }
 
-	// base of file name for data file
-	std::string prefix() const
-	{
-		if (my_prefix_ == "")
-			return "solutions";
-		else
-			return my_prefix_;
-	}
-
-	// format of output:
-	int outputformat() const
-	{
-		//return 0; // GRAPE (lossless format)
-		return 1; // VTK
-		//return 2; // VTK vertex data
-		//return 3; // gnuplot
-	}
-
-
+  // format of output:
+  int outputformat() const {
+    // return 0; // GRAPE (lossless format)
+    return 1; // VTK
+    // return 2; // VTK vertex data
+    // return 3; // gnuplot
+  }
 };
 
 template< class FunctionSpaceImp >
 class ZeroFunction
-		: public Dune::Fem::Function< FunctionSpaceImp, ZeroFunction< FunctionSpaceImp > >
+  : public Dune::Fem::Function< FunctionSpaceImp, ZeroFunction< FunctionSpaceImp > >
 {
 public:
-	typedef FunctionSpaceImp FunctionSpaceType;
+  typedef FunctionSpaceImp FunctionSpaceType;
 
 private:
-	typedef ZeroFunction< FunctionSpaceType > ThisType;
-	typedef Function< FunctionSpaceType, ThisType > BaseType;
+  typedef ZeroFunction< FunctionSpaceType >       ThisType;
+  typedef Function< FunctionSpaceType, ThisType > BaseType;
 
 public:
-	typedef typename FunctionSpaceType :: DomainType DomainType;
-	typedef typename FunctionSpaceType :: RangeType RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
 
-	typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
-	typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
 public:
-
-	inline void evaluate( const DomainType &x,
-						  RangeType &y ) const
-	{
-		y =  0;
-	}
+  inline void evaluate(const DomainType& x,
+                       RangeType& y) const {
+    y = 0;
+  }
 };
-
 
 template< class FunctionSpaceImp >
 class MassWeight
-		: public Dune::Fem::Function< FunctionSpaceImp, MassWeight< FunctionSpaceImp > >
+  : public Dune::Fem::Function< FunctionSpaceImp, MassWeight< FunctionSpaceImp > >
 {
 public:
-	typedef FunctionSpaceImp FunctionSpaceType;
+  typedef FunctionSpaceImp FunctionSpaceType;
 
 private:
-	typedef MassWeight< FunctionSpaceType > ThisType;
-	typedef Function< FunctionSpaceType, ThisType > BaseType;
+  typedef MassWeight< FunctionSpaceType >         ThisType;
+  typedef Function< FunctionSpaceType, ThisType > BaseType;
 
 public:
-	typedef typename FunctionSpaceType :: DomainType DomainType;
-	typedef typename FunctionSpaceType :: RangeType RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
 
-	typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
-	typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
 protected:
-	const RangeFieldType lambda_;
+  const RangeFieldType lambda_;
 
 public:
-	// Constructor
-	inline explicit MassWeight ( const RangeFieldType lambda)
-		: lambda_( lambda )
-		//lambda itself was only valid within ZeroFunction, therefore we needed to save its value in lambda_()
-	{
-	};
+  // Constructor
+  inline explicit MassWeight(const RangeFieldType lambda)
+    : lambda_(lambda)
+      // lambda itself was only valid within ZeroFunction, therefore we needed to save its value in lambda_()
+  {}
 
-	inline void evaluate ( const DomainType &x,
-						   RangeType &y ) const
-	{
-		y[ 0 ] = lambda_;
-	}
+  inline void evaluate(const DomainType& x,
+                       RangeType& y) const {
+    y[0] = lambda_;
+  }
 };
 
 #if 1
-// since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} ) for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon} instead of A(x,\cdot) )
+// since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} )
+// for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving
+// cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon}
+// instead of A(x,\cdot) )
 template< class FunctionSpaceImp, class TensorImp >
 class TransformTensor
-		: public Function< FunctionSpaceImp, TransformTensor< FunctionSpaceImp, TensorImp > >
+  : public Function< FunctionSpaceImp, TransformTensor< FunctionSpaceImp, TensorImp > >
 {
 public:
-	typedef FunctionSpaceImp FunctionSpaceType;
-	typedef TensorImp TensorType;
+  typedef FunctionSpaceImp FunctionSpaceType;
+  typedef TensorImp        TensorType;
 
 private:
-	typedef TransformTensor< FunctionSpaceType, TensorImp > ThisType;
-	typedef Function< FunctionSpaceType, ThisType > BaseType;
+  typedef TransformTensor< FunctionSpaceType, TensorImp > ThisType;
+  typedef Function< FunctionSpaceType, ThisType >         BaseType;
 
 public:
-	typedef typename FunctionSpaceType :: DomainType DomainType;
-	typedef typename FunctionSpaceType :: RangeType RangeType;
-	typedef typename FunctionSpaceType :: JacobianRangeType JacobianRangeType;
+  typedef typename FunctionSpaceType::DomainType        DomainType;
+  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-	typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
-	typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
-	typedef DomainFieldType TimeType;
+  typedef DomainFieldType TimeType;
 
-	static const int dimDomain = DomainType::dimension;
+  static const int dimDomain = DomainType::dimension;
 
 protected:
-	const TensorType &tensor_;
+  const TensorType& tensor_;
 
 public:
-	// Constructor
-	inline explicit TransformTensor ( const TensorType &tensor)
-		: tensor_( tensor )
-	{
-	}
+  // Constructor
+  inline explicit TransformTensor(const TensorType& tensor)
+    : tensor_(tensor)
+  {}
 
-	void diffusiveFlux ( const DomainType &y,
-						 const JacobianRangeType &direction,
-						 JacobianRangeType &flux ) const
+  void diffusiveFlux(const DomainType& y,
+                     const JacobianRangeType& direction,
+                     JacobianRangeType& flux) const {
+    Problem::ModelProblemData model_info;
+    const double epsilon = model_info.getEpsilon();
 
-	{
-		Problem::ModelProblemData model_info;
-		const double epsilon = model_info.getEpsilon();
+    DomainType new_y;
 
-		DomainType new_y;
-		for(int i = 0; i < dimDomain; ++i)
-			new_y[ i ] = epsilon * y[ i ];
+    for (int i = 0; i < dimDomain; ++i)
+      new_y[i] = epsilon * y[i];
 
-		tensor_.diffusiveFlux( new_y , direction, flux );
-	}
+    tensor_.diffusiveFlux(new_y, direction, flux);
+  } // diffusiveFlux
 
+  inline void evaluate(const int i, const int j,
+                       const DomainType& x,
+                       const TimeType& time,
+                       RangeType& y) const {
+    std::cout << "Do not use this evaluate()-method !!" << std::endl;
+    abort();
+    evaluate(i, j, x, y);
+  }
 
-	inline void evaluate ( const int i, const int j,
-						   const DomainType &x,
-						   const TimeType &time,
-						   RangeType &y ) const
-	{
-		std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
-		abort();
-		evaluate( i, j, x, y);
-	}
+  inline void evaluate(const DomainType& x,
+                       RangeType& y) const {
+    std::cout << "Do not use this evaluate()-method !!" << std::endl;
+    abort();
+    y = 0;
+  }
 
-	inline void evaluate ( const DomainType &x,
-						   RangeType &y ) const
-	{
-		std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
-		abort();
-		y = 0;
-	}
-
-
-	inline void evaluate ( const DomainType &x,
-						   const TimeType &time,
-						   RangeType &y ) const
-	{
-		std :: cout << "Do not use this evaluate()-method !!" << std :: endl;
-		abort();
-		y = 0;
-	}
-
+  inline void evaluate(const DomainType& x,
+                       const TimeType& time,
+                       RangeType& y) const {
+    std::cout << "Do not use this evaluate()-method !!" << std::endl;
+    abort();
+    y = 0;
+  }
 };
-#endif
+#endif // if 1
 
 // the following class is comparable to a SecondSource-Class (some kind of -div G )
 template< class FunctionSpaceImp, class TensorImp >
 class CellSource
-		: public Dune::Fem::Function< FunctionSpaceImp, CellSource< FunctionSpaceImp, TensorImp > >
+  : public Dune::Fem::Function< FunctionSpaceImp, CellSource< FunctionSpaceImp, TensorImp > >
 {
 public:
+  typedef TensorImp TensorType;
 
-	typedef TensorImp TensorType;
-
-	typedef FunctionSpaceImp FunctionSpaceType;
+  typedef FunctionSpaceImp FunctionSpaceType;
 
 private:
-	typedef CellSource< FunctionSpaceType, TensorImp > ThisType;
-	typedef Function< FunctionSpaceType, ThisType > BaseType;
+  typedef CellSource< FunctionSpaceType, TensorImp > ThisType;
+  typedef Function< FunctionSpaceType, ThisType >    BaseType;
 
 public:
-	typedef typename FunctionSpaceType :: DomainType DomainType;
-	typedef typename FunctionSpaceType :: RangeType RangeType;
-	typedef typename FunctionSpaceType :: JacobianRangeType JacobianRangeType;
+  typedef typename FunctionSpaceType::DomainType        DomainType;
+  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-	typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
-	typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
 public:
+  const FunctionSpaceType& functionSpace_;
+  const TensorType& tensor_;
+  const int& j_;
 
-	const FunctionSpaceType &functionSpace_;
-	const TensorType &tensor_;
-	const int &j_;
+  inline explicit CellSource(const FunctionSpaceType& functionSpace, const TensorType& tensor, const int& j)
+    : functionSpace_(functionSpace)
+      , tensor_(tensor)
+      , j_(j) // we solve the j'th cell problem
+  {}
 
-	inline explicit CellSource ( const FunctionSpaceType &functionSpace, const TensorType &tensor, const int &j )
-		: functionSpace_( functionSpace ),
-		  tensor_( tensor ),
-		  j_( j ) //we solve the j'th cell problem
-	{
-	}
+  inline void evaluate(const DomainType& x,
+                       RangeType& y) const {
+    y[0] = 0;
+  }
 
-	inline void evaluate( const DomainType &x,
-						  RangeType &y ) const
-	{
-		y[0] = 0;
-	}
+  inline void evaluate(const int i, const DomainType& y,
+                       RangeType& z) const {
+    JacobianRangeType direction;
+    JacobianRangeType flux;
 
-	inline void evaluate( const int i, const DomainType &y,
-						  RangeType &z ) const
-	{
+    if (j_ == 0)
+    {
+      direction[0][0] = 1.0;
+      direction[0][1] = 0.0;
+    } else {
+      direction[0][1] = 1.0;
+      direction[0][0] = 0.0;
+    }
 
-		JacobianRangeType direction;
-		JacobianRangeType flux;
+    tensor_.diffusiveFlux(y, direction, flux);
 
-		if ( j_ == 0 )
-		{
-			direction[0][0] = 1.0;
-			direction[0][1] = 0.0;
-		}
-		else
-		{
-			direction[0][1] = 1.0;
-			direction[0][0] = 0.0;
-		}
-
-		tensor_.diffusiveFlux( y, direction, flux );
-
-		//tensor_.evaluate( i, j_, y, z);
-		z = -flux[0][i];
-	}
-
+    // tensor_.evaluate( i, j_, y, z);
+    z = -flux[0][i];
+  } // evaluate
 };
-
 
 template< class FunctionSpaceImp >
 class DefaultDummyAdvection
-		: public Dune::Fem::Function< FunctionSpaceImp, DefaultDummyAdvection< FunctionSpaceImp > >
+  : public Dune::Fem::Function< FunctionSpaceImp, DefaultDummyAdvection< FunctionSpaceImp > >
 {
 public:
-	typedef FunctionSpaceImp FunctionSpaceType;
+  typedef FunctionSpaceImp FunctionSpaceType;
 
 private:
-	typedef DefaultDummyAdvection< FunctionSpaceType > ThisType;
-	typedef Function< FunctionSpaceType, ThisType > BaseType;
+  typedef DefaultDummyAdvection< FunctionSpaceType > ThisType;
+  typedef Function< FunctionSpaceType, ThisType >    BaseType;
 
 public:
-	typedef typename FunctionSpaceType :: DomainType DomainType;
-	typedef typename FunctionSpaceType :: RangeType RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
 
-	typedef typename FunctionSpaceType :: DomainFieldType DomainFieldType;
-	typedef typename FunctionSpaceType :: RangeFieldType RangeFieldType;
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
-	typedef DomainFieldType TimeType;
+  typedef DomainFieldType TimeType;
 
-	const FunctionSpaceType *functionSpace_;
+  const FunctionSpaceType* functionSpace_;
 
 protected:
-	const double epsilon_;
+  const double epsilon_;
 
 public:
-	// Constructor for Dummy
-	inline explicit DefaultDummyAdvection ( const FunctionSpaceType &functionSpace )
-		: functionSpace_( &functionSpace ),
-		  epsilon_( 0 )
-	{
-	}
+  // Constructor for Dummy
+  inline explicit DefaultDummyAdvection(const FunctionSpaceType& functionSpace)
+    : functionSpace_(&functionSpace)
+      , epsilon_(0)
+  {}
 
-	inline explicit DefaultDummyAdvection ( const FunctionSpaceType &functionSpace, const double &epsilon)
-		: functionSpace_( &functionSpace ),
-		  epsilon_( epsilon )
-	{
-	}
+  inline explicit DefaultDummyAdvection(const FunctionSpaceType& functionSpace, const double& epsilon)
+    : functionSpace_(&functionSpace)
+      , epsilon_(epsilon)
+  {}
 
-	inline void evaluate (const int i,
-						  const int j,
-						  const DomainType &x,
-						  const DomainType &y,
-						  RangeType &z ) const
-	{
-		z = 0;
-	}
+  inline void evaluate(const int i,
+                       const int j,
+                       const DomainType& x,
+                       const DomainType& y,
+                       RangeType& z) const {
+    z = 0;
+  }
 
+  inline void evaluate(const int i,
+                       const DomainType& x,
+                       const DomainType& y,
+                       RangeType& z) const {
+    z = 0;
+  }
 
-	inline void evaluate (const int i,
-						  const DomainType &x,
-						  const DomainType &y,
-						  RangeType &z ) const
-	{
-		z = 0;
-	}
+  inline void evaluate(const int i,
+                       const int j,
+                       const DomainType& x,
+                       RangeType& y) const {
+    y = 0;
+  }
 
-	inline void evaluate ( const int i,
-						   const int j,
-						   const DomainType &x,
-						   RangeType &y ) const
-	{
-		y = 0;
-	}
+  inline void evaluate(const int i,
+                       const DomainType& x,
+                       RangeType& y) const {
+    y = 0;
+  }
 
+  inline void evaluate(const int i,
+                       const DomainType& x,
+                       const TimeType& t,
+                       RangeType& y) const {
+    y = 0;
+  }
 
-	inline void evaluate ( const int i,
-						   const DomainType &x,
-						   RangeType &y ) const
-	{
-		y = 0;
-	}
+  // dummy implementation
+  inline void evaluate(const DomainType& x,
+                       RangeType& y) const {
+    y = 0;
+  }
 
-	inline void evaluate ( const int i,
-						   const DomainType &x,
-						   const TimeType &t,
-						   RangeType &y ) const
-	{
-		y = 0;
-	}
-
-	//dummy implementation
-	inline void evaluate ( const DomainType &x,
-						   RangeType &y ) const
-	{
-		y = 0;
-	}
-
-	//dummy implementation
-	inline void evaluate ( const DomainType &x,
-						   const TimeType time,
-						   RangeType &y ) const
-	{
-		y = 0;
-	}
-
+  // dummy implementation
+  inline void evaluate(const DomainType& x,
+                       const TimeType time,
+                       RangeType& y) const {
+    y = 0;
+  }
 };
 
-
-
-template < class GridImp, class TensorImp >
+template< class GridImp, class TensorImp >
 class Homogenizer
 {
+  typedef GridImp GridType;
+  enum { dimension = GridType::dimension };
 
-	typedef GridImp GridType;
-	enum { dimension = GridType::dimension};
+  typedef TensorImp TensorType;
 
-	typedef TensorImp TensorType;
+  typedef PeriodicLeafGridPart< GridType > PeriodicGridPartType;
 
-	typedef PeriodicLeafGridPart < GridType > PeriodicGridPartType;
+  typedef FunctionSpace< double, double, dimension, 1 > FunctionSpaceType;
 
-	typedef FunctionSpace < double , double , dimension , 1 > FunctionSpaceType;
+  typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, PeriodicGridPartType, 1 >
+  PeriodicDiscreteFunctionSpaceType;
 
-	typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, PeriodicGridPartType, 1 >
-	PeriodicDiscreteFunctionSpaceType;
+  // to avoid confusion:
+  typedef PeriodicDiscreteFunctionSpaceType DummySpaceType;
+  // (sometimes PeriodicDiscreteFunctionSpaceType is only a dummy)
 
-	//to avoid confusion:
-	typedef PeriodicDiscreteFunctionSpaceType DummySpaceType;
-	// (sometimes PeriodicDiscreteFunctionSpaceType is only a dummy)
+  typedef AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
 
-	typedef AdaptiveDiscreteFunction < PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
+  // to avoid confusion:
+  typedef PeriodicDiscreteFunctionType DummyType;
+  // (sometimes PeriodicDiscreteFunctionType is only a dummy)
 
-	//to avoid confusion:
-	typedef PeriodicDiscreteFunctionType DummyType;
-	// (sometimes PeriodicDiscreteFunctionType is only a dummy)
+  typedef MassWeight< FunctionSpaceType > MassWeightType;
 
-	typedef MassWeight < FunctionSpaceType > MassWeightType;
+  typedef ZeroFunction< FunctionSpaceType > ZeroFunctionType;
 
-	typedef ZeroFunction < FunctionSpaceType > ZeroFunctionType;
+  typedef DefaultDummyAdvection< FunctionSpaceType > DefaultDummyAdvectionType;
 
-	typedef DefaultDummyAdvection < FunctionSpaceType > DefaultDummyAdvectionType;
+  typedef TransformTensor< FunctionSpaceType, TensorType > TransformTensorType;
 
-	typedef TransformTensor < FunctionSpaceType, TensorType > TransformTensorType;
+  typedef CellSource< FunctionSpaceType, TransformTensorType > CellSourceType;
 
-	typedef CellSource< FunctionSpaceType, TransformTensorType > CellSourceType;
+  typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType
+  PeriodicJacobianRangeType;
 
-	typedef typename PeriodicDiscreteFunctionSpaceType :: JacobianRangeType
-	PeriodicJacobianRangeType;
+  typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
 
-	typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
+  typedef CachingQuadrature< PeriodicGridPartType, 0 > QuadratureType;
 
-	typedef CachingQuadrature < PeriodicGridPartType , 0 > QuadratureType;
+  typedef typename GridType::template Codim< 0 >::Geometry GeometryType;
 
-	typedef typename GridType :: template Codim<0> :: Geometry GeometryType;
+  typedef typename PeriodicDiscreteFunctionSpaceType::IteratorType IteratorType;
 
-	typedef typename PeriodicDiscreteFunctionSpaceType :: IteratorType IteratorType;
+  typedef typename GridType::template Codim< 0 >::Entity EntityType;
 
-	typedef typename GridType :: template Codim<0> :: Entity EntityType;
+  typedef typename GridType::template Codim< 0 >::EntityPointer
+  EntityPointerType; // !Brauchen wie das? Loeschen? loeschen?
 
-	typedef typename GridType :: template Codim<0> :: EntityPointer
-	EntityPointerType; //!Brauchen wie das? Loeschen? loeschen?
+  struct MatrixTraits
+  {
+    typedef PeriodicDiscreteFunctionSpaceType                          RowSpaceType;
+    typedef PeriodicDiscreteFunctionSpaceType                          ColumnSpaceType;
+    typedef LagrangeMatrixSetup< false >                               StencilType;
+    typedef ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
 
-	struct MatrixTraits
-	{
-		typedef PeriodicDiscreteFunctionSpaceType RowSpaceType;
-		typedef PeriodicDiscreteFunctionSpaceType ColumnSpaceType;
-		typedef LagrangeMatrixSetup< false > StencilType;
-		typedef ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
+    template< class M >
+    struct Adapter
+    {
+      typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
+    };
+  };
 
-		template< class M >
-		struct Adapter
-		{
-			typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-		};
-	};
+  typedef SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, MatrixTraits > FEMMatrix;
 
-	typedef SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, MatrixTraits > FEMMatrix;
+  typedef OEMBICGSTABOp< PeriodicDiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
-	typedef OEMBICGSTABOp< PeriodicDiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
+  // discrete elliptic operator (corresponds with FEM Matrix)
+  typedef DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType,
+                                    MassWeightType > EllipticOperatorType;
 
-	// discrete elliptic operator (corresponds with FEM Matrix)
-	typedef DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType, MassWeightType > EllipticOperatorType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
 
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
-	typedef typename FunctionSpaceType::DomainType DomainType;
+  enum { spacePolOrd = PeriodicDiscreteFunctionSpaceType::polynomialOrder };
 
-	typedef typename FunctionSpaceType::RangeType RangeType;
-
-	enum { spacePolOrd = PeriodicDiscreteFunctionSpaceType :: polynomialOrder };
-
-	// dgf file that describes the perforated domain
-	std :: string &filename_;
+  // dgf file that describes the perforated domain
+  std::string& filename_;
 
 public:
+  Homogenizer(std::string& filename)
+    : filename_(filename)
+  {}
 
-	Homogenizer( std :: string &filename )
-		: filename_( filename )
-	{
-	}
+  double getEntry(TransformTensorType& tensor,
+                  PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
+                  PeriodicDiscreteFunctionType& w_i,
+                  PeriodicDiscreteFunctionType& w_j,
+                  const int& i,
+                  const int& j) {
+    double a_ij_hom = 0;
 
+    DomainType dummy(0.0);
 
-	double getEntry(TransformTensorType &tensor,
-					PeriodicDiscreteFunctionSpaceType &periodicDiscreteFunctionSpace,
-					PeriodicDiscreteFunctionType &w_i,
-					PeriodicDiscreteFunctionType &w_j,
-					const int &i,
-					const int &j)
-	{
-		double a_ij_hom = 0;
+    IteratorType endit = periodicDiscreteFunctionSpace.end();
 
-		DomainType dummy(0.0);
+    for (IteratorType it = periodicDiscreteFunctionSpace.begin(); it != endit; ++it)
+    {
+      // entity
+      const EntityType& entity = *it;
 
-		IteratorType endit = periodicDiscreteFunctionSpace.end();
-		for(IteratorType it = periodicDiscreteFunctionSpace.begin(); it != endit ; ++it)
-		{
+      PeriodicLocalFunctionType localW_i = w_i.localFunction(entity);
+      PeriodicLocalFunctionType localW_j = w_j.localFunction(entity);
 
-			// entity
-			const EntityType& entity = *it;
+      // create quadrature for given geometry type
+      QuadratureType quadrature(entity, 2);
 
-			PeriodicLocalFunctionType localW_i = w_i.localFunction(entity);
-			PeriodicLocalFunctionType localW_j = w_j.localFunction(entity);
+      // get geoemetry of entity
+      const GeometryType& geometry = entity.geometry();
 
-			// create quadrature for given geometry type
-			QuadratureType quadrature(entity, 2 );
+      // integrate
+      const int quadratureNop = quadrature.nop();
+      for (int localQuadPoint = 0; localQuadPoint < quadratureNop; ++localQuadPoint)
+      {
+        RangeType localIntegral = 0;
 
-			// get geoemetry of entity
-			const GeometryType& geometry = entity.geometry();
+        PeriodicJacobianRangeType grad_w_i;
+        localW_i.jacobian(quadrature[localQuadPoint], grad_w_i);
 
-			// integrate
-			const int quadratureNop = quadrature.nop();
-			for(int localQuadPoint = 0; localQuadPoint < quadratureNop; ++localQuadPoint)
-			{
+        PeriodicJacobianRangeType grad_w_j;
+        localW_j.jacobian(quadrature[localQuadPoint], grad_w_j);
 
-				RangeType localIntegral = 0;
+        // local (barycentric) coordinates (with respect to cell grid entity)
+        const typename QuadratureType::CoordinateType& local_point = quadrature.point(localQuadPoint);
 
-				PeriodicJacobianRangeType grad_w_i;
-				localW_i.jacobian( quadrature[localQuadPoint] , grad_w_i );
+        // global point in the unit cell Y
+        const DomainType global_point_in_Y = geometry.global(local_point);
 
-				PeriodicJacobianRangeType grad_w_j;
-				localW_j.jacobian( quadrature[localQuadPoint] , grad_w_j );
+        PeriodicJacobianRangeType direction_i;
+        for (int k = 0; k < dimension; ++k)
+        {
+          direction_i[0][k] = grad_w_i[0][k];
+          if (k == i)
+          { direction_i[0][k] += 1.0; }
+        }
 
-				// local (barycentric) coordinates (with respect to cell grid entity)
-				const typename QuadratureType::CoordinateType &local_point = quadrature.point( localQuadPoint );
+        PeriodicJacobianRangeType direction_j;
+        for (int k = 0; k < dimension; ++k)
+        {
+          direction_j[0][k] = 0.0;
+          if (k == j)
+          { direction_j[0][k] += 1.0; }
+          // redundant (just for tests):
+          #if 0
+          direction_j[0][k] += grad_w_j[0][k];
+          #endif
+        }
 
-				// global point in the unit cell Y
-				const DomainType global_point_in_Y = geometry.global( local_point );
+        PeriodicJacobianRangeType flux_i;
+        tensor.diffusiveFlux(global_point_in_Y, direction_i, flux_i);
 
-				PeriodicJacobianRangeType direction_i;
-				for( int k = 0; k < dimension; ++k )
-				{
-					direction_i[ 0 ][ k ] = grad_w_i[ 0 ][ k ];
-					if ( k == i )
-					{ direction_i[ 0 ][ k ] += 1.0; }
-				}
+        localIntegral = (flux_i[0] * direction_j[0]);
 
+        const double entityVolume = quadrature.weight(localQuadPoint)
+                                    * geometry.integrationElement( quadrature.point(localQuadPoint) );
 
-				PeriodicJacobianRangeType direction_j;
-				for( int k = 0; k < dimension; ++k )
-				{
-					direction_j[ 0 ][ k ] = 0.0;
-					if ( k == j )
-					{ direction_j[ 0 ][ k ] += 1.0; }
-					// redundant (just for tests):
-#if 0
-					direction_j[ 0 ][ k ] += grad_w_j[ 0 ][ k ];
-#endif
-				}
+        a_ij_hom += entityVolume * localIntegral;
+      }
+    }
 
+    return a_ij_hom;
+  } // end of method
 
-				PeriodicJacobianRangeType flux_i;
-				tensor.diffusiveFlux( global_point_in_Y, direction_i, flux_i );
+  FieldMatrix< RangeType, dimension, dimension > getHomTensor(TensorType& tensor) {
+    FieldMatrix< RangeType, dimension, dimension > a_hom;
 
-				localIntegral = (flux_i[ 0 ] * direction_j[ 0 ]);
+    // to solve cell problems, we always need to use a perforated unit cube as domain:
+    GridPtr< GridType > periodicgridptr(filename_);
 
-				const double entityVolume = quadrature.weight(localQuadPoint) *
-						geometry.integrationElement(quadrature.point(localQuadPoint));
+    periodicgridptr->globalRefine(10);
 
-				a_ij_hom += entityVolume * localIntegral;
-			}
+    PeriodicGridPartType periodicGridPart(*periodicgridptr);
 
-		}
+    PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace(periodicGridPart);
 
-		return a_ij_hom;
+    // to avoid confusions:
+    DummySpaceType dummySpace(periodicGridPart);
+    // (sometimes periodicDiscreteFunctionSpace is only a dummy)
 
-	} // end of method
+    // ! define the type of the corresponding solutions ( discrete functions of the type 'DiscreteFunctionType'):
 
+    PeriodicDiscreteFunctionType cellSolution_0("cellSolution 0", periodicDiscreteFunctionSpace);
+    cellSolution_0.clear();
 
-	FieldMatrix< RangeType, dimension, dimension > getHomTensor ( TensorType &tensor )
-	{
+    PeriodicDiscreteFunctionType cellSolution_1("cellSolution 1", periodicDiscreteFunctionSpace);
+    cellSolution_1.clear();
 
-		FieldMatrix< RangeType, dimension, dimension > a_hom;
+    PeriodicDiscreteFunctionType rhs_0("rhs_0", periodicDiscreteFunctionSpace);
+    rhs_0.clear();
 
-		// to solve cell problems, we always need to use a perforated unit cube as domain:
-		GridPtr< GridType > periodicgridptr( filename_ );
+    PeriodicDiscreteFunctionType rhs_1("rhs_1", periodicDiscreteFunctionSpace);
+    rhs_1.clear();
 
-		periodicgridptr->globalRefine( 10 );
+    const RangeType lambda = 1e-07;
+    // we need solve several cell problems with a periodic boundary condition. To fix the solution we need some kind of
+    // additional condition. Therefor we solve
+    // \lambda w - \div A \nabla w = rhs        instead of      - \div A \nabla w = rhs
 
-		PeriodicGridPartType periodicGridPart( *periodicgridptr );
+    // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
+    MassWeightType mass(lambda);
 
-		PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace( periodicGridPart );
+    TransformTensorType tensor_transformed(tensor);
 
-		//to avoid confusions:
-		DummySpaceType dummySpace( periodicGridPart );
-		// (sometimes periodicDiscreteFunctionSpace is only a dummy)
+    // if we have some additional source term (-div G), define:
+    CellSourceType G_0(periodicDiscreteFunctionSpace, tensor_transformed, 0);   // 0'th cell problem
+    CellSourceType G_1(periodicDiscreteFunctionSpace, tensor_transformed, 1);   // 1'th cell problem
+    // - div ( A \nabla u^{\epsilon} ) = f - div G
 
-		//! define the type of the corresponding solutions ( discrete functions of the type 'DiscreteFunctionType'):
+    // quite a dummy. It's always f = 0
+    const ZeroFunctionType zero;
 
-		PeriodicDiscreteFunctionType cellSolution_0( "cellSolution 0", periodicDiscreteFunctionSpace );
-		cellSolution_0.clear();
+    // ! build the left hand side (lhs) of the problem
 
-		PeriodicDiscreteFunctionType cellSolution_1( "cellSolution 1", periodicDiscreteFunctionSpace );
-		cellSolution_1.clear();
+    EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace, tensor_transformed, mass);
 
-		PeriodicDiscreteFunctionType rhs_0( "rhs_0", periodicDiscreteFunctionSpace );
-		rhs_0.clear();
+    FEMMatrix lhsMatrix("Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace, periodicDiscreteFunctionSpace);
+    discrete_cell_elliptic_op.assemble_matrix(lhsMatrix, false /*no boundary treatment*/);
 
-		PeriodicDiscreteFunctionType rhs_1( "rhs_1", periodicDiscreteFunctionSpace );
-		rhs_1.clear();
+    // ! build the right hand side (rhs) of the problem
 
-		const RangeType lambda = 1e-07;
-		// we need solve several cell problems with a periodic boundary condition. To fix the solution we need some kind of additional condition. Therefor we solve
-		//   \lambda w - \div A \nabla w = rhs        instead of      - \div A \nabla w = rhs
+    // the same right hand side for HM and FEM methods:
+    RightHandSideAssembler< PeriodicDiscreteFunctionType > // !, TransformTensorType, CellSourceType >
+    cell_0_assembler;    // !( transTensor, G_0 );
 
-		// define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
-		MassWeightType mass( lambda );
+    RightHandSideAssembler< PeriodicDiscreteFunctionType > // !, TransformTensorType, CellSourceType >
+    cell_1_assembler;    // !( transTensor, G_1 );
 
-		TransformTensorType tensor_transformed( tensor );
+    // Alternativly it is possible to call the RightHandSideAssembler with a second source Term '- div G':
+    // RightHandSideAssembler< DiscreteFunctionType > rhsassembler( tensor , G );
+    cell_0_assembler.template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_0, rhs_0);       //
+                                                                                                                         //
+                                                                                                                         //
+                                                                                                                         //!
+                                                                                                                         //
+                                                                                                                         //
+                                                                                                                         //G_0
+                                                                                                                         //
+                                                                                                                         //
+                                                                                                                         //loeschen!
 
-		// if we have some additional source term (-div G), define:
-		CellSourceType G_0( periodicDiscreteFunctionSpace, tensor_transformed, 0 ); //0'th cell problem
-		CellSourceType G_1( periodicDiscreteFunctionSpace, tensor_transformed, 1 ); //1'th cell problem
-		// - div ( A \nabla u^{\epsilon} ) = f - div G
+    cell_1_assembler.template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_1, rhs_1);       //
+                                                                                                                         //
+                                                                                                                         //
+                                                                                                                         //!
+                                                                                                                         //
+                                                                                                                         //
+                                                                                                                         //G_1
+                                                                                                                         //
+                                                                                                                         //
+                                                                                                                         //loeschen!
 
-		// quite a dummy. It's always f = 0
-		const ZeroFunctionType zero;
+    // solve the linear systems (with Bi-CG):
 
-		//! build the left hand side (lhs) of the problem
+    InverseFEMMatrix fembiCG(lhsMatrix, 1e-8, 1e-8, 20000, VERBOSE);
 
-		EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace, tensor_transformed, mass );
+    fembiCG(rhs_0, cellSolution_0);
+    fembiCG(rhs_1, cellSolution_1);
 
-		FEMMatrix lhsMatrix( "Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace, periodicDiscreteFunctionSpace );
-		discrete_cell_elliptic_op.assemble_matrix( lhsMatrix, false /*no boundary treatment*/ );
+    a_hom[0][0] = getEntry(tensor_transformed, periodicDiscreteFunctionSpace, cellSolution_0, cellSolution_0, 0, 0);
+    a_hom[1][1] = getEntry(tensor_transformed, periodicDiscreteFunctionSpace, cellSolution_1, cellSolution_1, 1, 1);
+    a_hom[0][1] = getEntry(tensor_transformed, periodicDiscreteFunctionSpace, cellSolution_0, cellSolution_1, 0, 1);
+    a_hom[1][0] = a_hom[0][1];
 
-		//! build the right hand side (rhs) of the problem
+    std::cout << "A_homogenized[0][0] = " << a_hom[0][0] << std::endl;
+    std::cout << "A_homogenized[0][1] = " << a_hom[0][1] << std::endl;
+    std::cout << "A_homogenized[1][0] = " << a_hom[1][0] << std::endl;
+    std::cout << "A_homogenized[1][1] = " << a_hom[1][1] << std::endl;
 
-		//  the same right hand side for HM and FEM methods:
-		RightHandSideAssembler< PeriodicDiscreteFunctionType > //!, TransformTensorType, CellSourceType >
-				cell_0_assembler;//!( transTensor, G_0 );
+    // in case you want to save the solutions of the two cell problems:
+    #if 0
+    typedef Tuple< PeriodicDiscreteFunctionType* > IOTupleType;
+    typedef DataOutput< GridType, IOTupleType >    DataOutputType;
 
-		RightHandSideAssembler< PeriodicDiscreteFunctionType > //!, TransformTensorType, CellSourceType >
-				cell_1_assembler;//!( transTensor, G_1 );
+    // general output parameters
+    CellDataOutputParameters outputparam;
 
-		//Alternativly it is possible to call the RightHandSideAssembler with a second source Term '- div G':
-		//RightHandSideAssembler< DiscreteFunctionType > rhsassembler( tensor , G );
-		cell_0_assembler.template assemble< 2 * PeriodicDiscreteFunctionSpaceType :: polynomialOrder >( zero , G_0, rhs_0 ); //! G_0 loeschen!
+    // sequence stamp
+    std::stringstream outstring;
 
-		cell_1_assembler.template assemble< 2 * PeriodicDiscreteFunctionSpaceType :: polynomialOrder >( zero , G_1, rhs_1 ); //! G_1 loeschen!
+    // ------- cell problem 0 -------------
 
-		// solve the linear systems (with Bi-CG):
+    // create and initialize output class
+    IOTupleType cellproblem_0_tuple(&cellSolution_0);
 
-		InverseFEMMatrix fembiCG( lhsMatrix , 1e-8, 1e-8, 20000, VERBOSE );
+    outputparam.set_prefix("cellSolution_0_");
+    DataOutputType cellSolution_0_dataoutput(periodicGridPart.grid(), cellproblem_0_tuple, outputparam);
 
-		fembiCG( rhs_0 , cellSolution_0 );
-		fembiCG( rhs_1 , cellSolution_1 );
+    // write data
+    outstring << "cellSolution_0_";
+    cellSolution_0_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+    // clear the std::stringstream:
+    outstring.str( std::string() );
 
-		a_hom[0][0] = getEntry( tensor_transformed, periodicDiscreteFunctionSpace, cellSolution_0, cellSolution_0, 0, 0);
-		a_hom[1][1] = getEntry( tensor_transformed, periodicDiscreteFunctionSpace, cellSolution_1, cellSolution_1, 1, 1);
-		a_hom[0][1] = getEntry( tensor_transformed, periodicDiscreteFunctionSpace, cellSolution_0, cellSolution_1, 0, 1);
-		a_hom[1][0] = a_hom[0][1];
+    // ------- cell problem 1 -------------
 
-		std :: cout << "A_homogenized[0][0] = " << a_hom[0][0] << std :: endl;
-		std :: cout << "A_homogenized[0][1] = " << a_hom[0][1] << std :: endl;
-		std :: cout << "A_homogenized[1][0] = " << a_hom[1][0] << std :: endl;
-		std :: cout << "A_homogenized[1][1] = " << a_hom[1][1] << std :: endl;
+    // create and initialize output class
+    IOTupleType cellproblem_1_tuple(&cellSolution_1);
 
-		// in case you want to save the solutions of the two cell problems:
-#if 0
-		typedef Tuple<PeriodicDiscreteFunctionType*> IOTupleType;
-		typedef DataOutput<GridType, IOTupleType> DataOutputType;
+    outputparam.set_prefix("cellSolution_1_");
+    DataOutputType cellSolution_1_dataoutput(periodicGridPart.grid(), cellproblem_1_tuple, outputparam);
 
-		// general output parameters
-		CellDataOutputParameters outputparam;
+    // write data
+    outstring << "cellSolution_1_";
+    cellSolution_1_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+    // clear the std::stringstream:
+    outstring.str( std::string() );
 
-		// sequence stamp
-		std::stringstream outstring;
+    // ------------------------------------
+    #endif // if 0
 
-		// ------- cell problem 0 -------------
-
-		// create and initialize output class
-		IOTupleType cellproblem_0_tuple( &cellSolution_0 );
-
-		outputparam.set_prefix("cellSolution_0_");
-		DataOutputType cellSolution_0_dataoutput( periodicGridPart.grid(), cellproblem_0_tuple, outputparam );
-
-		// write data
-		outstring << "cellSolution_0_";
-		cellSolution_0_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-		// clear the std::stringstream:
-		outstring.str(std::string());
-
-
-
-
-		// ------- cell problem 1 -------------
-
-		// create and initialize output class
-		IOTupleType cellproblem_1_tuple( &cellSolution_1 );
-
-		outputparam.set_prefix("cellSolution_1_");
-		DataOutputType cellSolution_1_dataoutput( periodicGridPart.grid(), cellproblem_1_tuple, outputparam );
-
-		// write data
-		outstring << "cellSolution_1_";
-		cellSolution_1_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-		// clear the std::stringstream:
-		outstring.str(std::string());
-
-		// ------------------------------------
-#endif
-
-		return a_hom;
-
-	}
-
-
+    return a_hom;
+  } // getHomTensor
 }; // end of class
-
-
-
-} // end namespace 
-#endif
+} // end namespace
+#endif // ifndef DUNE_HOMOGENIZER_HH
