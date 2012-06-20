@@ -225,39 +225,25 @@ public:
 
 // !------------------------- for adaptive grid refinement ---------------------------------
 // ! type of restrict-prolong operator
-typedef RestrictProlongDefault< DiscreteFunctionType >
-RestrictProlongOperatorType;
+typedef RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOperatorType;
 // ! type of the adaption manager
-typedef AdaptationManager< GridType, RestrictProlongOperatorType >
-AdaptationManagerType;
+typedef AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
 // !---------------------------------------------------------------------------------------
 
 // ! set the dirichlet points to zero
 template< class EntityType, class DiscreteFunctionType >
 void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
-  DiscreteFunctionSpaceType;
-
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
-
-  typedef typename DiscreteFunctionSpaceType::LagrangePointSetType
-  LagrangePointSetType;
-
+  typedef typename DiscreteFunctionSpaceType::LagrangePointSetType LagrangePointSetType;
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
+  typedef typename GridPartType::IntersectionIteratorType IntersectionIteratorType;
+  typedef typename LagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType FaceDofIteratorType;
 
   enum { faceCodim = 1 };
 
-  typedef typename GridPartType::IntersectionIteratorType
-  IntersectionIteratorType;
-
-  typedef typename LagrangePointSetType::template Codim< faceCodim >
-    ::SubEntityIteratorType
-  FaceDofIteratorType;
-
   const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
-
   const GridPartType& gridPart = discreteFunctionSpace.gridPart();
-
   IntersectionIteratorType it = gridPart.ibegin(entity);
   const IntersectionIteratorType endit = gridPart.iend(entity);
   for ( ; it != endit; ++it)
