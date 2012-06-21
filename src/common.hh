@@ -20,11 +20,6 @@
 #include <iostream>
 #include <sstream>
 
-// for creation of directories
-#include <sys/types.h>
-#include <sys/stat.h>
-#define DIRMODUS , 0711
-
 #include <stdio.h>
 #include <stdlib.h>
 // -----------------------------
@@ -51,5 +46,34 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/solver/inverseoperators.hh>
+
+#include <dune/stuff/configcontainer.hh>
+#include <dune/stuff/parametercontainer.hh>
+#include <dune/stuff/debug.hh>
+#include <dune/stuff/misc.hh>
+#include <dune/stuff/logging.hh>
+
+#if ENABLE_MPI
+        typedef Dune::CollectiveCommunication< MPI_Comm > CollectiveCommunication;
+#else
+        typedef Dune::CollectiveCommunication< double > CollectiveCommunication;
+#endif
+
+CollectiveCommunication init( int argc, char** argv )
+{
+    Dune::MPIManager::initialize(argc, argv);
+    Stuff::Config().readCommandLine( argc, argv );
+
+    // LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
+    //--> LOG_ERR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62
+    const bool useLogger = false;
+    Logger().Create( Stuff::Config().get( "loglevel",  62,                             useLogger ),
+                     Stuff::Config().get( "logfile",   std::string(argv[0]) + ".log",  useLogger ),
+                     Stuff::Config().get( "datadir",   "data",                         useLogger ),
+                     Stuff::Config().get( "logdir",    ""/*path below datadir*/,       useLogger )
+                    );
+
+    return CollectiveCommunication();//( Dune::MPIManager::helper().getCommunicator() );
+}
 
 #endif // DUNE_MULTISCALE_SRC_COMMON_HH

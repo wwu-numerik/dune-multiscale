@@ -875,7 +875,7 @@ public:
       std::abort();
     }
 
-    mkdir( (path_ + "/cf_problems").c_str() DIRMODUS );
+    Stuff::testCreateDirectory(path_ + "/cf_problems");
     #ifdef VTK_OUTPUT
     vtk_output(conservative_flux, sub_grid_id, direction_index);
     #endif

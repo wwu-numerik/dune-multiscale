@@ -5,6 +5,7 @@
 
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/common/fmatrix.hh>
+#include <dune/stuff/filesystem.hh>
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
@@ -759,7 +760,7 @@ public:
 
   // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
   void assemble_all(bool /*silent*/ = true /* state information on subgrids */) {
-    mkdir( (path_).c_str() DIRMODUS );
+    Stuff::testCreateDirectory(path_);
 
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };

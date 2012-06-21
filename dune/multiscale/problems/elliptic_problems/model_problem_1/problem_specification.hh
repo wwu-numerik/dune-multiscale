@@ -2,6 +2,7 @@
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
 
 #include <dune/fem/function/common/function.hh>
+#include <dune/multiscale/problems/constants.hh>
 
 // ! For more further details about the implementation of the following classes, see the end of the file
 
@@ -52,10 +53,8 @@
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
-// description see below 0.05
-static const double EPSILON = 0.05;
-static const double EPSILON_EST = 0.05;
-static const double DELTA = 0.05;
+
+CONSTANTSFUNCTION(0.05,0.05,0.05)
 
 // model problem information
 class ModelProblemData
@@ -87,24 +86,18 @@ public:
   // in the periodic setting, epsilon denotes the periode of the fine-scale oscillations
   // in the non-periodic setting, can be seen as a representative size for the fine-scale behaviour
   inline double getEpsilon() const {
-    const double epsilon = EPSILON;
-
-    return epsilon;
+    return constants().epsilon;
   }
 
   // epsilon (the smaller epsilon, the finer the micro-structure)
   inline double getEpsilonEstimated() const {
-    const double epsilon_est = EPSILON_EST;
-
-    return epsilon_est;
+    return constants().epsilon_est;
   }
 
   // edge length of a cell (where we solve the cell problems)
   // we need delta >= epsilon
   inline double getDelta() const {
-    const double delta = DELTA;
-
-    return delta;
+    return constants().delta;
     // NOTE that (delta/epsilon_est) needs to be a positive integer!
   }
 
@@ -320,8 +313,8 @@ public:
 
     #endif // ifdef STOCHASTIC_PERTURBATION
 
-    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / EPSILON) ), 2.0) ) );
-    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / EPSILON) ) ) );
+    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
+    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
     #ifdef STOCHASTIC_PERTURBATION
 
@@ -380,8 +373,8 @@ public:
 
     #endif // ifdef STOCHASTIC_PERTURBATION
 
-    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / EPSILON) ), 2.0) ) );
-    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / EPSILON) ) ) );
+    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
+    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
     #ifdef STOCHASTIC_PERTURBATION
 

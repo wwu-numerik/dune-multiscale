@@ -50,7 +50,7 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 // ! local (dune-multiscale) includes
 // #include <dune/multiscale/problems/elliptic_problems/model_problem_toy/problem_specification.hh>
 // #include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
-#include <dune/multiscale/problems/elliptic_problems/model_problem_10/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_1/problem_specification.hh>
 
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
 
@@ -833,55 +833,23 @@ void algorithm(std::string& macroGridName,
 } // function algorithm
 
 int main(int argc, char** argv) {
-  if (argc != 2)
-  {
-    fprintf(stderr, "usage: %s <starting_level_for_grid_refinement> \n", argv[0]);
-    exit(1);
-  }
 
-  Dune::MPIManager::initialize(argc, argv);
-  // name of the file in which you want to save the data:
-  std::cout << "Enter name for data directory: ";
-  std::cin >> filename_;
-
-  path_ = "data/MsFEM/" + filename_;
+  init( argc, argv );
+  //!TODO include base in config
+  path_ = std::string("data/MsFEM/") + Stuff::Config().get("global.datadir", "data");
 
   // generate directories for data output
-  if (mkdir( (path_).c_str() DIRMODUS ) == -1)
-  {
-    std::cout << "Directory already exists! Overwrite? y/n: ";
-    char answer;
-    std::cin >> answer;
-    if ( !(answer == 'y') )
-    {
-      std::abort();
-    }
-  } else {
-    mkdir( (path_).c_str() DIRMODUS );
-  }
+  Stuff::testCreateDirectory(path_);
 
   std::string save_filename = path_ + "/problem-info.txt";
   std::cout << "Data will be saved under: " << save_filename << std::endl;
 
-  std::cout << "Enter coarse grid level: ";
-  std::cin >> coarse_grid_level_;
-  if ( coarse_grid_level_ > atoi(argv[1]) )
-  {
-    std::cout << "Coarse grid level must be smaller than the starting refinment level." << std::endl;
-    abort();
-  }
-
-  #ifdef UNIFORM
-  std::cout << "Enter number of layers for oversampling: ";
-  std::cin >> number_of_layers_;
-  #else // ifdef UNIFORM
-  std::cout << "Enter initial number of layers for oversampling: ";
-  std::cin >> number_of_layers_;
-  #endif // ifdef UNIFORM
+  const int start_level = Stuff::Config().get("grid.start_level", 4);
+  coarse_grid_level_ = Stuff::Config().get("grid.coarse_level", 4, Stuff::ValidateLess<int>(start_level));
+  number_of_layers_ = Stuff::Config().get("global.oversampling_layers", 4);
 
   #ifdef ADAPTIVE
-  std::cout << "Enter error tolerance: ";
-  std::cin >> error_tolerance_;
+  error_tolerance_ = Stuff::Config().get("global.oversampling_layers", 1e-6);
   #endif // ifdef ADAPTIVE
 
   // data for the model problem; the information manager
