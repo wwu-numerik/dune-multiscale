@@ -10,12 +10,11 @@
   **
   **************************************************************************/
 
-// das alles klappt (mathematisch) nur in 2-D!!! Für Tensoren, die:
-// 1. irgendwelche Elliptizitätsbedingungen erfüllen
+// das alles klappt momentan nur in 2-D!!! Es laesst sich aber sehr einfach verallgemeinern.
+// Implementierung funktioniert unter folgenden Voraussetzungen an den (Diffusions-)Tensor:
+// 1. Elliptizitätsbedingung
 // 2. A(x,y) = A(y)
-// 3. a_i_j(y) = a_i_j(y_1,y_2) = a_i_j(y_1)
-// 4. symmetrisch
-// Vermutlich  eher der Fall A(x,y) = A(y) und der Rest ist egal.
+
 
 #ifndef DUNE_HOMOGENIZER_HH
 #define DUNE_HOMOGENIZER_HH
@@ -53,7 +52,7 @@ public:
   // base of file name for data file
   std::string prefix() const {
     if (my_prefix_ == "")
-      return "solutions";
+      return "solutions_cell_problems";
     else
       return my_prefix_;
   }
@@ -168,6 +167,8 @@ public:
                      const JacobianRangeType& direction,
                      JacobianRangeType& flux) const {
     Problem::ModelProblemData model_info;
+    
+    //! EPSILON BESSER AUS DEM PARAMETER-FILE HOLEN!
     const double epsilon = model_info.getEpsilon();
 
     DomainType new_y;
@@ -246,14 +247,17 @@ public:
                        RangeType& z) const {
     JacobianRangeType direction;
     JacobianRangeType flux;
-
-    if (j_ == 0)
+    
+    for (int i_ = 0; i_ < dimDomain; ++i_)
     {
-      direction[0][0] = 1.0;
-      direction[0][1] = 0.0;
-    } else {
-      direction[0][1] = 1.0;
-      direction[0][0] = 0.0;
+       if (j_ == i_)
+       {
+	 direction[0][i_] = 1.0;
+       }
+       else
+       {
+	 direction[0][i_] = 0.0;
+       }
     }
 
     tensor_.diffusiveFlux(y, direction, flux);
@@ -436,6 +440,7 @@ public:
     : filename_(filename)
   {}
 
+private:
   double getEntry(TransformTensorType& tensor,
                   PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                   PeriodicDiscreteFunctionType& w_i,
@@ -514,6 +519,8 @@ public:
 
     return a_ij_hom;
   } // end of method
+
+public:
 
   FieldMatrix< RangeType, dimension, dimension > getHomTensor(TensorType& tensor) {
     FieldMatrix< RangeType, dimension, dimension > a_hom;
