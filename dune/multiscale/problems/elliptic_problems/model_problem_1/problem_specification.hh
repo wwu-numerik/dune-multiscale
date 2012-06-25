@@ -244,7 +244,7 @@ public:
   // the following method generates arbitrary numbers, with a log-normal distribution
   // the expected value (the value with the highest probability) is:
   // E = exp( m + (s²/2))
-  inline double rand_log_normal(float& m, float& s) const {
+  inline double rand_log_normal(const float m, const float s) const {
     // float m = 0.0;
     // float s = 0.1;
 
@@ -336,9 +336,9 @@ public:
     double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
     double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
-    if (constants().get("linear", true)) {
+    if (constants().get("stochastic_pertubation", true)) {
       float m = 0.0;
-      float s = VARIANCE;
+      float s = 1; //!TODO VARIANCE was not declared;
       // the expected value in case of a log-normal distribution:
       float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
       double arb_num = rand_log_normal(m, s);
