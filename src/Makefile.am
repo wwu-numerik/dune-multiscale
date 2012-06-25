@@ -35,7 +35,7 @@ elliptic_hmm_LDADD = \
 	$(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
 	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
 	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
-	$(UG_LDFLAGS) $(UG_LIBS) \
+	$(UG_LDFLAGS) $(UG_LIBS) -lboost_filesystem -lboost_system \
 	$(DUNEMPILIBS)	\
 	$(LDADD)
 elliptic_hmm_LDFLAGS = $(AM_LDFLAGS) \
@@ -51,7 +51,7 @@ elliptic_msfem_LDADD = \
 	$(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
 	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
 	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
-	$(UG_LDFLAGS) $(UG_LIBS) \
+	$(UG_LDFLAGS) $(UG_LIBS) -lboost_filesystem -lboost_system \
 	$(DUNEMPILIBS)	\
 	$(LDADD)
 elliptic_msfem_LDFLAGS = $(AM_LDFLAGS) \

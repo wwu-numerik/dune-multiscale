@@ -13,7 +13,7 @@
  #include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
 #else // ifdef LINEAR_PROBLEM
       // dummy (does not work, since identical to HMM assembler)
- #include <dune/multiscale/tools/homogenizer/nonlinear_elliptic_homogenizer.hh>
+ // was deleted #include <dune/multiscale/tools/homogenizer/nonlinear_elliptic_homogenizer.hh>
 #endif // ifdef LINEAR_PROBLEM
 
 // ! NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in
@@ -233,6 +233,8 @@ typedef AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationMan
 // ! set the dirichlet points to zero
 template< class EntityType, class DiscreteFunctionType >
 void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
+  static const int faceCodim = 1;
+
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
   typedef typename DiscreteFunctionSpaceType::LagrangePointSetType LagrangePointSetType;
@@ -240,7 +242,6 @@ void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
   typedef typename GridPartType::IntersectionIteratorType IntersectionIteratorType;
   typedef typename LagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType FaceDofIteratorType;
 
-  enum { faceCodim = 1 };
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
   const GridPartType& gridPart = discreteFunctionSpace.gridPart();
@@ -838,12 +839,7 @@ void algorithm(std::string& UnitCubeName,
   std::cout << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
 
   // generate directory for cell problem data output
-  if (mkdir( ("data/HMM/" + filename_ + "/cell_problems/").c_str() DIRMODUS ) == -1)
-  {
-    std::cout << "WARNING! Directory for the solutions of the cell problems already  exists!";
-  } else {
-    mkdir( ("data/HMM/" + filename_ + "/cell_problems/").c_str() DIRMODUS );
-  }
+  Stuff::testCreateDirectory("data/HMM/" + filename_ + "/cell_problems/");
 
   // only for the case with test function reconstruction:
   #ifdef TFR
@@ -1790,18 +1786,8 @@ int main(int argc, char** argv) {
   std::cin >> filename_;
 
   // generate directories for data output
-  if (mkdir( ("data/HMM/" + filename_).c_str() DIRMODUS ) == -1)
-  {
-    std::cout << "Directory already exists! Overwrite? y/n: ";
-    char answer;
-    std::cin >> answer;
-    if ( !(answer == 'y') )
-    {
-      std::abort();
-    }
-  } else {
-    mkdir( ("data/HMM/" + filename_).c_str() DIRMODUS );
-  }
+  Stuff::testCreateDirectory("data/HMM/" + filename_);
+
 
   #ifdef RESUME_TO_BROKEN_COMPUTATION
   // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:

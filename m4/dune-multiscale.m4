@@ -6,7 +6,11 @@ dnl -*- autoconf -*-
 # Additional checks needed to build dune-multiscale
 # This macro should be invoked by every module which depends on dune-multiscale, as
 # well as by dune-multiscale itself
-AC_DEFUN([DUNE_MULTISCALE_CHECKS])
+AC_DEFUN([DUNE_MULTISCALE_CHECKS],
+[
+	DUNE_BOOST_BASE(1.41, [] , [] )
+	AC_REQUIRE(HAVE_DUNE)
+])
 
 # Additional checks needed to find dune-multiscale
 # This macro should be invoked by every module which depends on dune-multiscale, but
