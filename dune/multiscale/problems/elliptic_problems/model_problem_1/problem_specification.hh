@@ -62,7 +62,6 @@ class ModelProblemData
 protected:
   // name of the file where data is saved
   const std::string file_name_;
-
   int current_number_of_cell_problem_;
 
 public:
@@ -104,7 +103,6 @@ public:
   inline void getMacroGridFile(std::string& macroGridName) const {
     // name and location of the grid file that describes the macro-grid:
     std::string macro_grid_location("../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf");
-
     macroGridName = macro_grid_location;
   }
 
@@ -168,15 +166,7 @@ public:
 public:
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    #ifdef LINEAR_PROBLEM
-
-    y = 1.0;
-
-    #else // ifdef LINEAR_PROBLEM
-
-    y = 1.0;
-
-    #endif // ifdef LINEAR_PROBLEM
+    y = constants().get("linear", true) ? 1.0 : 1.0;
   } // evaluate
 
   inline void evaluate(const DomainType& x,
@@ -299,56 +289,39 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-// in case of a stochastic perturbation:
-    #ifdef STOCHASTIC_PERTURBATION
-
-    float m = 0.0;
-    float s = VARIANCE;
-    // the expected value in case of a log-normal distribution:
-    float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
-    double arb_num = rand_log_normal(m, s);
-    // std :: cout << "arb_num = " << arb_num << std :: endl;
-
-    float perturbation = arb_num - expected_value;
-
-    #endif // ifdef STOCHASTIC_PERTURBATION
-
     double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
     double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
-    #ifdef STOCHASTIC_PERTURBATION
+    if (constants().get("stochastic_pertubation", false)) {
+      const float m = 0.0;
+      const float s = 1; //!TODO VARIANCE wasn't defined;
+      // the expected value in case of a log-normal distribution:
+      const float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
+      const double arb_num = rand_log_normal(m, s);
+      // std :: cout << "arb_num = " << arb_num << std :: endl;
 
-    coefficient_0 += perturbation;
-    coefficient_1 += perturbation;
+      const float perturbation = arb_num - expected_value;
+      coefficient_0 += perturbation;
+      coefficient_1 += perturbation;
 
-    if (coefficient_0 < 0.0001)
-    { coefficient_0 = 0.0001; }
+      if (coefficient_0 < 0.0001)
+      { coefficient_0 = 0.0001; }
 
-    if (coefficient_1 < 0.0001)
-    { coefficient_1 = 0.0001; }
+      if (coefficient_1 < 0.0001)
+      { coefficient_1 = 0.0001; }
+    }
 
-    #if 0
-    std::cout << "coefficient_0 = " << coefficient_0 << std::endl;
-    std::cout << "coefficient_0 + perturbation = " << coefficient_0 + perturbation << std::endl;
-    std::cout << "coefficient_1 = " << coefficient_1 << std::endl;
-    std::cout << "coefficient_1 + perturbation = " << coefficient_1 + perturbation << std::endl;
-    #endif // if 0
-
-    #endif // ifdef STOCHASTIC_PERTURBATION
-
-    #ifdef LINEAR_PROBLEM
-
-    flux[0][0] = coefficient_0 * gradient[0][0];
-    flux[0][1] = coefficient_1 * gradient[0][1];
-
-    #else // ifdef LINEAR_PROBLEM
-
+    if (constants().get("linear", true)) {
+      flux[0][0] = coefficient_0 * gradient[0][0];
+      flux[0][1] = coefficient_1 * gradient[0][1];
+    }
+    else {
 // flux[0][0] = coefficient_0 * exp((1.0/3.0)*gradient[0][0]);
 // flux[0][1] = coefficient_1 * exp((1.0/3.0)*gradient[0][1]);
-    flux[0][0] = coefficient_0 * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
-    flux[0][1] = coefficient_1 * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
+      flux[0][0] = coefficient_0 * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
+      flux[0][1] = coefficient_1 * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
+    }
 
-    #endif // ifdef LINEAR_PROBLEM
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -360,42 +333,36 @@ public:
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    #ifdef STOCHASTIC_PERTURBATION
-
-    float m = 0.0;
-    float s = VARIANCE;
-    // the expected value in case of a log-normal distribution:
-    float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
-    double arb_num = rand_log_normal(m, s);
-    // std :: cout << "arb_num = " << arb_num << std :: endl;
-
-    float perturbation = arb_num - expected_value;
-
-    #endif // ifdef STOCHASTIC_PERTURBATION
-
     double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
     double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
-    #ifdef STOCHASTIC_PERTURBATION
+    if (constants().get("linear", true)) {
+      float m = 0.0;
+      float s = VARIANCE;
+      // the expected value in case of a log-normal distribution:
+      float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
+      double arb_num = rand_log_normal(m, s);
+      // std :: cout << "arb_num = " << arb_num << std :: endl;
+      float perturbation = arb_num - expected_value;
 
-    coefficient_0 += perturbation;
-    coefficient_1 += perturbation;
+      coefficient_0 += perturbation;
+      coefficient_1 += perturbation;
 
-    if (coefficient_0 < 0.0001)
-    { coefficient_0 = 0.0001; }
+      if (coefficient_0 < 0.0001)
+      { coefficient_0 = 0.0001; }
 
-    if (coefficient_1 < 0.0001)
-    { coefficient_1 = 0.0001; }
+      if (coefficient_1 < 0.0001)
+      { coefficient_1 = 0.0001; }
 
-// std :: cout << "coefficient_0 = " << coefficient_0 << std :: endl;
-// std :: cout << "coefficient_0 + perturbation = " << coefficient_0 + perturbation << std :: endl;
+  // std :: cout << "coefficient_0 = " << coefficient_0 << std :: endl;
+  // std :: cout << "coefficient_0 + perturbation = " << coefficient_0 + perturbation << std :: endl;
+    }
 
-    #endif // ifdef STOCHASTIC_PERTURBATION
-
-    #ifdef LINEAR_PROBLEM
-    flux[0][0] = coefficient_0 * direction_gradient[0][0];
-    flux[0][1] = coefficient_1 * direction_gradient[0][1];
-    #else // ifdef LINEAR_PROBLEM
+    if (constants().get("linear", true)) {
+      flux[0][0] = coefficient_0 * direction_gradient[0][0];
+      flux[0][1] = coefficient_1 * direction_gradient[0][1];
+    }
+    else {
 // flux[0][0] = (1.0/3.0) * coefficient_0 * direction_gradient[0][0]
 // * exp((1.0/3.0)*position_gradient[0][0]);
 // flux[0][1] = (1.0/3.0) * coefficient_0 * direction_gradient[0][1]
@@ -406,7 +373,7 @@ public:
     flux[0][1] = coefficient_1 * direction_gradient[0][1]
                  * ( 1.0 + pow(position_gradient[0][1], 2.0) );
 
-    #endif // ifdef LINEAR_PROBLEM
+      }
   } // jacobianDiffusiveFlux
 
 // deprecated
@@ -417,11 +384,8 @@ public:
                        const int j,
                        const DomainType& x,
                        RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-
+    std::cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
+              << std::endl;
     std::abort();
   } // evaluate
 
@@ -490,14 +454,10 @@ public:
 public:
   FieldMatrixType* A_hom_;
 
-  #if 1
-
 public:
   inline explicit HomDiffusion(FieldMatrixType& A_hom)
     : A_hom_(&A_hom)
   {}
-
-  #endif // if 1
 
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
@@ -510,15 +470,15 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    #ifdef LINEAR_PROBLEM
-    flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
-    flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
-    #else // ifdef LINEAR_PROBLEM
-    flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
-    flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
-    // std :: cout << "Nonlinear example not yet implemented."  << std :: endl;
-    // std::abort();
-    #endif // ifdef LINEAR_PROBLEM
+    if (constants().get("linear", true)) {
+      flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
+      flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
+    } else {
+      flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
+      flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
+      // std :: cout << "Nonlinear example not yet implemented."  << std :: endl;
+      // std::abort();
+    }
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -530,13 +490,13 @@ public:
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    #ifdef LINEAR_PROBLEM
-    std::cout << "Not yet implemented." << std::endl;
-    std::abort();
-    #else // ifdef LINEAR_PROBLEM
-    std::cout << "Nonlinear example not yet implemented." << std::endl;
-    std::abort();
-    #endif // ifdef LINEAR_PROBLEM
+    if (constants().get("linear", true)) {
+      std::cout << "Not yet implemented." << std::endl;
+      std::abort();
+    } else {
+      std::cout << "Nonlinear example not yet implemented." << std::endl;
+      std::abort();
+    }
   } // jacobianDiffusiveFlux
 
   inline void evaluate(const int i,
@@ -544,13 +504,9 @@ public:
                        const DomainType& x,
                        const DomainType& y,
                        RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-
+    std::cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
+              << std::endl;
     std::abort();
-
     z = 0.0;
   } // evaluate
 
@@ -562,11 +518,8 @@ public:
                        const int j,
                        const DomainType& x,
                        RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-
+    std::cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
+              << std::endl;
     std::abort();
   } // evaluate
 
@@ -575,22 +528,17 @@ public:
                        const DomainType& x,
                        const TimeType& time,
                        RangeType& z) const {
-    std::cout
-    << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation."
-    << std::endl;
-
+    std::cout << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation."
+              << std::endl;
     std::abort();
-
     return evaluate(i, j, x, z);
   } // evaluate
 
   // dummy implementation
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    std::cout
-    <<
-    "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
-    << std::endl;
+    std::cout << "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
+              << std::endl;
     std::abort();
   } // evaluate
 };
