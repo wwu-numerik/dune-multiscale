@@ -13,11 +13,18 @@ namespace Problem {
             , epsilon_est(Stuff::Config().get("problem.epsilon_est", def_epsilon_est))
             , delta(Stuff::Config().get("problem.delta", def_delta))
         {}
+
+        template < typename T, class Validator = Stuff::ValidateAny<T> >
+        T get( const std::string& key, const T& def ,
+               Stuff::ValidatorInterface< T, Validator > validator = Validator() ) const
+        {
+            return Stuff::Config().get( std::string("problem.") + key, def, validator);
+        }
     };
 
-#define CONSTANTSFUNCTION(d,f,e) \
+#define CONSTANTSFUNCTION(d,e,f) \
     static const Constants& constants() {\
-    static Constants c(d,f,e); \
+    static Constants c(d,e,f); \
     return c; }
 }
 
