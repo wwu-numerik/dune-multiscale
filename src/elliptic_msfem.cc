@@ -846,10 +846,10 @@ int main(int argc, char** argv) {
 
   const int start_level = Stuff::Config().get("grid.start_level", 4);
   coarse_grid_level_ = Stuff::Config().get("grid.coarse_level", 4, Stuff::ValidateLess<int>(start_level));
-  number_of_layers_ = Stuff::Config().get("global.oversampling_layers", 4);
+  number_of_layers_ = Stuff::Config().get("grid.oversampling_layers", 4);
 
   #ifdef ADAPTIVE
-  error_tolerance_ = Stuff::Config().get("global.oversampling_layers", 1e-6);
+  error_tolerance_ = Stuff::Config().get("problem.error_tolerance", 1e-6);
   #endif // ifdef ADAPTIVE
 
   // data for the model problem; the information manager
