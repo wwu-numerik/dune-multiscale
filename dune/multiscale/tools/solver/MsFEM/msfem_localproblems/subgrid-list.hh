@@ -2,6 +2,7 @@
 #define SUBGRIDLIST_HH
 
 #include <dune/common/fmatrix.hh>
+#include <dune/common/exceptions.hh>
 #include <dune/subgrid/subgrid.hh>
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -491,7 +492,7 @@ public:
       , specifier_(list.specifier_)
       , silent_(list.silent_) {
     // number of coarse grid entities (of codim 0).
-    int number_of_coarse_grid_entities = this->specifier_.getNumOfCoarseEntities();
+    const int number_of_coarse_grid_entities = this->specifier_.getNumOfCoarseEntities();
 
     this->subGrid = new SubGridType *[number_of_coarse_grid_entities];
 
@@ -504,11 +505,12 @@ public:
   #endif // if 0
 
   SubGridType& getSubGrid(int i) {
-    int size = specifier_.getNumOfCoarseEntities();
-
-    if (i < size)
-    { return *(subGrid[i]); } else
-    { std::cout << "Error. Subgrid-Index too large." << std::endl; }
+    const int size = specifier_.getNumOfCoarseEntities();
+    if (i >= size)
+    {
+      DUNE_THROW(Dune::RangeError, "Error. Subgrid-Index too large.");
+    }
+    return *(subGrid[i]);
   } // getSubGrid
 
 private:

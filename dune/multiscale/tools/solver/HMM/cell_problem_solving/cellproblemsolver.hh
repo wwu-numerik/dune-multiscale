@@ -1754,7 +1754,7 @@ public:
         DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
         // number of base functions on entity
-        const int numBaseFunctions = baseSet.numBaseFunctions();
+        const int numBaseFunctions = baseSet.size();
 
         // calc Jacobian inverse before volume is evaluated
         const FieldMatrix< double, dimension, dimension >& inv

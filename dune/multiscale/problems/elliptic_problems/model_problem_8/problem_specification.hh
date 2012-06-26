@@ -645,7 +645,7 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   inline void evaluate(const DomainType& x,
-                       const TimeType& timedummy,
+                       const TimeType& /*timedummy*/,
                        RangeType& y) const {
     evaluate(x, y);
   }
