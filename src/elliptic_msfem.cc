@@ -857,7 +857,7 @@ int main(int argc, char** argv) {
   Problem::ModelProblemData info(filename_);
 
   // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-  total_refinement_level_ = atoi(argv[1]);
+  total_refinement_level_ = Stuff::Config().get("grid.total_refinement", 4);
 
   // name of the grid file that describes the macro-grid:
   std::string macroGridName;
