@@ -833,88 +833,94 @@ void algorithm(std::string& macroGridName,
 } // function algorithm
 
 int main(int argc, char** argv) {
+  try {
+    init(argc, argv);
+    // !TODO include base in config
+    path_ = std::string("data/MsFEM/") + Stuff::Config().get("global.datadir", "data");
 
-  init( argc, argv );
-  //!TODO include base in config
-  path_ = std::string("data/MsFEM/") + Stuff::Config().get("global.datadir", "data");
+    // generate directories for data output
+    Stuff::testCreateDirectory(path_);
 
-  // generate directories for data output
-  Stuff::testCreateDirectory(path_);
+    std::string save_filename = path_ + "/problem-info.txt";
+    std::cout << "Data will be saved under: " << save_filename << std::endl;
 
-  std::string save_filename = path_ + "/problem-info.txt";
-  std::cout << "Data will be saved under: " << save_filename << std::endl;
+    const int start_level = Stuff::Config().get("grid.start_level", 4);
+    coarse_grid_level_ = Stuff::Config().get( "grid.coarse_level", 4, Stuff::ValidateLess< int >(start_level) );
+    number_of_layers_ = Stuff::Config().get("grid.oversampling_layers", 4);
 
-  const int start_level = Stuff::Config().get("grid.start_level", 4);
-  coarse_grid_level_ = Stuff::Config().get("grid.coarse_level", 4, Stuff::ValidateLess<int>(start_level));
-  number_of_layers_ = Stuff::Config().get("grid.oversampling_layers", 4);
-
-  #ifdef ADAPTIVE
-  error_tolerance_ = Stuff::Config().get("problem.error_tolerance", 1e-6);
-  #endif // ifdef ADAPTIVE
-
-  // data for the model problem; the information manager
-  // (see 'problem_specification.hh' for details)
-  Problem::ModelProblemData info(filename_);
-
-  // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-  total_refinement_level_ = Stuff::Config().get("grid.total_refinement", 4);
-
-  // name of the grid file that describes the macro-grid:
-  std::string macroGridName;
-  info.getMacroGridFile(macroGridName);
-
-  // to save all information in a file
-  std::ofstream data_file( (save_filename).c_str() );
-  if ( data_file.is_open() )
-  {
-    data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem()
-              << " with epsilon = " << info.getEpsilon() << "." << std::endl << std::endl;
-    #ifdef UNIFORM
-    data_file << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
-    data_file << "Uniformly refined coarse and fine mesh and" << std::endl;
-    data_file << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-    data_file << "Computations were made for:" << std::endl << std::endl;
-    data_file << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-    data_file << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-    data_file << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
-    data_file << std::endl << std::endl;
-    #else // ifdef UNIFORM
-    data_file << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
-    data_file << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
-    data_file << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-    data_file << "Error tolerance = " << error_tolerance_ << std::endl << std::endl;
-    data_file << "Computations were made for:" << std::endl << std::endl;
-    data_file << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-    data_file << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-    data_file << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
-    data_file << std::endl << std::endl;
-    #endif // ifdef UNIFORM
-  }
-
-  loop_number_ = 0;
-  while (repeat_algorithm_ == true)
-  {
     #ifdef ADAPTIVE
-    data_file << "------------------ run " << loop_number_ + 1 << " --------------------" << std::endl << std::endl;
-    #endif
-    algorithm(macroGridName, data_file);
-    #ifdef ADAPTIVE
-    data_file << std::endl << std::endl;
-    data_file << "---------------------------------------------" << std::endl;
-    loop_number_ += 1;
-    #endif // ifdef ADAPTIVE
-  }
-  // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the normal
-  // macro problem
+    error_tolerance_ = Stuff::Config().get("problem.error_tolerance", 1e-6);
+    #endif   // ifdef ADAPTIVE
 
-  long double cpu_time = clock();
-  cpu_time = cpu_time / CLOCKS_PER_SEC;
-  std::cout << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+    // data for the model problem; the information manager
+    // (see 'problem_specification.hh' for details)
+    Problem::ModelProblemData info(filename_);
 
-  if ( data_file.is_open() )
-  {
-    data_file << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+    // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
+    total_refinement_level_
+      = Stuff::Config().get( "grid.total_refinement", 4, Stuff::ValidateLess< int >(coarse_grid_level_) );
+
+    // name of the grid file that describes the macro-grid:
+    std::string macroGridName;
+    info.getMacroGridFile(macroGridName);
+
+    // to save all information in a file
+    std::ofstream data_file( (save_filename).c_str() );
+    if ( data_file.is_open() )
+    {
+      data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem()
+                << " with epsilon = " << info.getEpsilon() << "." << std::endl << std::endl;
+      #ifdef UNIFORM
+      data_file << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
+      data_file << "Uniformly refined coarse and fine mesh and" << std::endl;
+      data_file << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      data_file << "Computations were made for:" << std::endl << std::endl;
+      data_file << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      data_file << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      data_file << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      data_file << std::endl << std::endl;
+      #else   // ifdef UNIFORM
+      data_file << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
+      data_file << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
+      data_file << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      data_file << "Error tolerance = " << error_tolerance_ << std::endl << std::endl;
+      data_file << "Computations were made for:" << std::endl << std::endl;
+      data_file << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      data_file << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      data_file << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      data_file << std::endl << std::endl;
+      #endif   // ifdef UNIFORM
+    }
+
+    loop_number_ = 0;
+    while (repeat_algorithm_ == true)
+    {
+      #ifdef ADAPTIVE
+      data_file << "------------------ run " << loop_number_ + 1 << " --------------------" << std::endl << std::endl;
+      #endif
+      algorithm(macroGridName, data_file);
+      #ifdef ADAPTIVE
+      data_file << std::endl << std::endl;
+      data_file << "---------------------------------------------" << std::endl;
+      loop_number_ += 1;
+      #endif   // ifdef ADAPTIVE
+    }
+    // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
+    //normal
+    // macro problem
+
+    long double cpu_time = clock();
+    cpu_time = cpu_time / CLOCKS_PER_SEC;
+    std::cout << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+
+    if ( data_file.is_open() )
+    {
+      data_file << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+    }
+    data_file.close();
+    return 0;
+  } catch (Dune::Exception& e) {
+    std::cerr << e.what() << std::endl;
   }
-  data_file.close();
-  return 0;
+  return 1;
 } // main
