@@ -13,7 +13,7 @@
  #include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
 #else // ifdef LINEAR_PROBLEM
       // dummy (does not work, since identical to HMM assembler)
- // was deleted #include <dune/multiscale/tools/homogenizer/nonlinear_elliptic_homogenizer.hh>
+// was deleted #include <dune/multiscale/tools/homogenizer/nonlinear_elliptic_homogenizer.hh>
 #endif // ifdef LINEAR_PROBLEM
 
 // ! NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in
@@ -134,7 +134,7 @@ typedef SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, Mat
 
 /** \brief --------------- solver for the linear system of equations ----------------------------
    * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
-   ***ones. GMRES seems to be more stable, but is extremely slow!
+   ****ones. GMRES seems to be more stable, but is extremely slow!
    */
 typedef OEMBICGSQOp /*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
@@ -235,13 +235,12 @@ template< class EntityType, class DiscreteFunctionType >
 void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
   static const int faceCodim = 1;
 
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
-  typedef typename DiscreteFunctionSpaceType::LagrangePointSetType LagrangePointSetType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename GridPartType::IntersectionIteratorType IntersectionIteratorType;
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType                          DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::LocalFunctionType                                  LocalFunctionType;
+  typedef typename DiscreteFunctionSpaceType::LagrangePointSetType                          LagrangePointSetType;
+  typedef typename DiscreteFunctionSpaceType::GridPartType                                  GridPartType;
+  typedef typename GridPartType::IntersectionIteratorType                                   IntersectionIteratorType;
   typedef typename LagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType FaceDofIteratorType;
-
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
   const GridPartType& gridPart = discreteFunctionSpace.gridPart();
@@ -309,13 +308,13 @@ void algorithm(std::string& UnitCubeName,
                std::ofstream& data_file) {
   // ! ---- tools ----
   // model problem data
-  Problem::ModelProblemData problem_info;
-  // set of hmm parameters/information
-  Multiscale::HMMParameters method_info;
+// UNUSED  Problem::ModelProblemData problem_info;
+// set of hmm parameters/information
+// UNUSED  Multiscale::HMMParameters method_info;
 
   L2Error< DiscreteFunctionType > l2error;
   // expensive hack to deal with discrete functions, defined on different grids
-  ImprovedL2Error< DiscreteFunctionType > impL2error;
+// UNUSED  ImprovedL2Error< DiscreteFunctionType > impL2error;
 
   // ! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
@@ -329,9 +328,9 @@ void algorithm(std::string& UnitCubeName,
   // grid part for the global function space, required for the detailed fine-scale computation (very high resolution)
   GridPartType gridPartFine(*fine_macro_grid_pointer);
 
-  GridType& grid = gridPart.grid();
-  GridType& gridFine = gridPartFine.grid();
-  // ! --------------------------------------------------------------------------------------
+// UNUSED  GridType& grid = gridPart.grid();
+// UNUSED  GridType& gridFine = gridPartFine.grid();
+// ! --------------------------------------------------------------------------------------
 
   // ! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
@@ -341,10 +340,8 @@ void algorithm(std::string& UnitCubeName,
   // the local-problem function space (containing periodic functions):
   PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace(periodicGridPart);
   // and the corresponding auxiliary one:
-  DiscreteFunctionSpaceType auxiliaryDiscreteFunctionSpace(auxiliaryGridPart);
-  // ! --------------------------------------------------------------------------------------
-
-
+// UNUSED  DiscreteFunctionSpaceType auxiliaryDiscreteFunctionSpace(auxiliaryGridPart);
+// ! --------------------------------------------------------------------------------------
 
   // ! --------------------------- coefficient functions ------------------------------------
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
@@ -375,11 +372,11 @@ void algorithm(std::string& UnitCubeName,
   // ----------------------------------------------------------------------------------------------//
   // ! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
-  EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
-  // ----------------------------------------------------------------------------------------------//
-  // ----------------------------------------------------------------------------------------------//
-  // ----------------------------------------------------------------------------------------------//
-  RangeType size_of_domain = get_size_of_domain(discreteFunctionSpace);
+// UNUSED EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
+// ----------------------------------------------------------------------------------------------//
+// ----------------------------------------------------------------------------------------------//
+// ----------------------------------------------------------------------------------------------//
+// UNUSED  RangeType size_of_domain = get_size_of_domain(discreteFunctionSpace);
 
   #ifdef HOMOGENIZEDSOL_AVAILABLE
   #ifdef LINEAR_PROBLEM
@@ -768,17 +765,13 @@ void algorithm(std::string& UnitCubeName,
   int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
   std::cout << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
   // generate directory for cell problem data output
-  if (mkdir( ("data/HMM/" + filename_ + "/cell_problems/").c_str() DIRMODUS ) == -1)
-  {
-    std::cout << "WARNING! Directory for the solutions of the cell problems already exists!";
-  } else {
-    mkdir( ("data/HMM/" + filename_ + "/cell_problems/").c_str() DIRMODUS );
-  }
+  std::string cell_path = path + "/cell_problems/";
+  Stuff::testCreateDirectory(cell_path)
   // -------------- solve cell problems for the macro basefunction set ------------------------------
   // save the solutions of the cell problems for the set of macroscopic base functions
   cell_problem_solver.saveTheSolutions_baseSet< DiscreteFunctionType >(discreteFunctionSpace,
                                                                        cp_num_manager,
-                                                                       filename_ + "/cell_problems/");
+                                                                       cell_path);
   // ------------- end solving and saving cell problems for the macro basefunction set --------------
   // ! --------------- end solving and saving cell problems -----------------------------------------
   #endif       // AD_HOC_COMPUTATION
@@ -1773,160 +1766,151 @@ void algorithm(std::string& UnitCubeName,
 }
 
 int main(int argc, char** argv) {
-  if (argc != 2)
-  {
-    fprintf(stderr, "usage: %s <starting_level_for_grid_refinement> \n", argv[0]);
-    exit(1);
-  }
+  try {
+    init(argc, argv);
 
-  Dune::MPIManager::initialize(argc, argv);
+    std::string path = std::string("data/HMM/") + Stuff::Config().get("global.datadir", "data");
+    // generate directories for data output
+    Stuff::testCreateDirectory(path);
 
-  // name of the file in which you want to save the data:
-  std::cout << "Enter name for data directory: ";
-  std::cin >> filename_;
+    #ifdef RESUME_TO_BROKEN_COMPUTATION
+    // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
+    // (vorlauefig sollte diese Variante aber reichen)
+    std::string save_filename = path + "/problem-info-resumed-computation.txt";
+    #else // ifdef RESUME_TO_BROKEN_COMPUTATION
+    std::string save_filename = path + "/problem-info.txt";
+    #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
+    std::cout << "Data will be saved under: " << save_filename << std::endl;
+    // data for the model problem; the information manager
+    // (see 'problem_specification.hh' for details)
+    Problem::ModelProblemData info(path);
+    // epsilon is specified in ModelProblemData, which is specified in problem_specification.hh
+    epsilon_ = info.getEpsilon();
+    // estimated epsilon (specified in ModelProblemData)
+    epsilon_est_ = info.getEpsilonEstimated();
+    // edge length of the cells in the cells, belonging to the cell problems
+    // note that (delta/epsilon_est) needs to be a positive integer!
+    delta_ = info.getDelta();
 
-  // generate directories for data output
-  Stuff::testCreateDirectory("data/HMM/" + filename_);
+    // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
+    refinement_level_macrogrid_ = atoi(argv[1]);
 
+    // grid refinement level for solving the cell problems, i.e. it describes 'h':
+    const int refinement_level_cellgrid = Stuff::Config().get("grid.refinement_level_cellgrid", 1);
 
-  #ifdef RESUME_TO_BROKEN_COMPUTATION
-  // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
-  // (vorlauefig sollte diese Variante aber reichen)
-  std::string save_filename = "data/HMM/" + filename_ + "/problem-info-resumed-computation.txt";
-  #else // ifdef RESUME_TO_BROKEN_COMPUTATION
-  std::string save_filename = "data/HMM/" + filename_ + "/problem-info.txt";
-  #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
-  std::cout << "Data will be saved under: " << save_filename << std::endl;
-  // data for the model problem; the information manager
-  // (see 'problem_specification.hh' for details)
-  Problem::ModelProblemData info(filename_);
-  // epsilon is specified in ModelProblemData, which is specified in problem_specification.hh
-  epsilon_ = info.getEpsilon();
-  // estimated epsilon (specified in ModelProblemData)
-  epsilon_est_ = info.getEpsilonEstimated();
-  // edge length of the cells in the cells, belonging to the cell problems
-  // note that (delta/epsilon_est) needs to be a positive integer!
-  delta_ = info.getDelta();
+    #ifdef ADAPTIVE
+    error_tolerance_ = Stuff::Config().get("problem.error_tolerance", 1e-6);
+    #endif // ifdef ADAPTIVE
 
-  // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-  refinement_level_macrogrid_ = atoi(argv[1]);
+    // (starting) grid refinement level for solving the reference problem
+    refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
+    // in general: for the homogenized case = 11 and for the high resolution case = 14
+    // Note that this depends on the model problem!
+    #ifndef FINE_SCALE_REFERENCE
+    refinement_level_referenceprob_ = 8;
+    #endif
 
-  // grid refinement level for solving the cell problems, i.e. it describes 'h':
-  int refinement_level_cellgrid;
-  std::cout << "Enter refinement level for the cell problems: ";
-  std::cin >> refinement_level_cellgrid;
-  std::cout << std::endl;
+    // how many times finer do we solve the reference problem (it is either a homogenized problem or the exact problem
+    // with a fine-scale resolution)
+    int refinement_difference_for_referenceproblem = refinement_level_referenceprob_ - refinement_level_macrogrid_;
+    // name of the grid file that describes the macro-grid:
+    std::string macroGridName;
+    info.getMacroGridFile(macroGridName);
+    std::cout << "loading dgf: " << macroGridName << std::endl;
 
-  #ifdef ADAPTIVE
-  // error tolerance (comparison with upper bound determined by the a-posteriori error estimate)
-  std::cout << "Enter global error tolerance for program abort: ";
-  std::cin >> error_tolerance_;
-  std::cout << std::endl;
-  #endif // ifdef ADAPTIVE
+    // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
+    // for the parameters:
 
-  // (starting) grid refinement level for solving the reference problem
-  refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
-  // in general: for the homogenized case = 11 and for the high resolution case = 14
-  // Note that this depends on the model problem!
-  #ifndef FINE_SCALE_REFERENCE
-  refinement_level_referenceprob_ = 8;
-  #endif
+    // create a grid pointer for the DGF file belongig to the macro grid:
+    GridPointerType macro_grid_pointer(macroGridName);
+    // refine the grid 'starting_refinement_level' times:
+    macro_grid_pointer->globalRefine(refinement_level_macrogrid_);
 
-  // how many times finer do we solve the reference problem (it is either a homogenized problem or the exact problem
-  // with a fine-scale resolution)
-  int refinement_difference_for_referenceproblem = refinement_level_referenceprob_ - refinement_level_macrogrid_;
-  // name of the grid file that describes the macro-grid:
-  std::string macroGridName;
-  info.getMacroGridFile(macroGridName);
-  std::cout << "loading dgf: " << macroGridName << std::endl;
+    // create a finer GridPart for either the homogenized or the fine-scale problem.
+    // this shall be used to compute an approximation of the exact solution.
+    GridPointerType fine_macro_grid_pointer(macroGridName);
+    // refine the grid 'starting_refinement_level_reference' times:
+    fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
 
-  // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
-  // for the parameters:
-
-  // create a grid pointer for the DGF file belongig to the macro grid:
-  GridPointerType macro_grid_pointer(macroGridName);
-  // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine(refinement_level_macrogrid_);
-
-  // create a finer GridPart for either the homogenized or the fine-scale problem.
-  // this shall be used to compute an approximation of the exact solution.
-  GridPointerType fine_macro_grid_pointer(macroGridName);
-  // refine the grid 'starting_refinement_level_reference' times:
-  fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
-
-  // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
-  std::string UnitCubeName("../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf");       // --> the 0-centered
+    // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
+    std::string UnitCubeName("../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf");     // --> the 0-centered
                                                                                                   // unit cube, i.e.
                                                                                                   // [-1/2,1/2]^2
-  // note that the centering is fundamentaly important for the implementation. Do NOT change it to e.g. [0,1]^2!!!
-  // to solve the cell problems, we always need a periodic gridPart.
-  // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated on
-  // such a grid )
-  GridPtr< GridType > periodic_grid_pointer(UnitCubeName);
-  periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
+    // note that the centering is fundamentaly important for the implementation. Do NOT change it to e.g. [0,1]^2!!!
+    // to solve the cell problems, we always need a periodic gridPart.
+    // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated
+    //on
+    // such a grid )
+    GridPtr< GridType > periodic_grid_pointer(UnitCubeName);
+    periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
-  // to save all information in a file
-  std::ofstream data_file( (save_filename).c_str() );
-  if ( data_file.is_open() )
-  {
-    data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std::endl
-              << std::endl;
-    #ifdef LINEAR_PROBLEM
-    data_file << "Problem is declared as being LINEAR." << std::endl;
-    #else
-    data_file << "Problem is declared as being NONLINEAR." << std::endl;
-    #endif // ifdef LINEAR_PROBLEM
-    #ifdef EXACTSOLUTION_AVAILABLE
-    data_file << "Exact solution is available." << std::endl << std::endl;
-    #else
-    data_file << "Exact solution is not available." << std::endl << std::endl;
-    #endif // ifdef EXACTSOLUTION_AVAILABLE
-    data_file << "Computations were made for:" << std::endl << std::endl;
-    data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
-    data_file << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
-    #ifdef TFR
-    data_file << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
-    #else
-    data_file << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
-    #endif // ifdef TFR
-    #ifdef AD_HOC_COMPUTATION
-    data_file << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
-    #else
-    data_file << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
-    #ifdef ERRORESTIMATION
-    data_file << "Error estimation activated!" << std::endl << std::endl;
-    #endif
-    #endif // ifdef AD_HOC_COMPUTATION
-    data_file << "Epsilon = " << epsilon_ << std::endl;
-    data_file << "Estimated Epsilon = " << epsilon_est_ << std::endl;
-    data_file << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
-    #ifdef STOCHASTIC_PERTURBATION
-    data_file << std::endl << "Stochastic perturbation added. Variance = " << VARIANCE << std::endl;
-    #endif
-    #ifdef ADAPTIVE
-    data_file << std::endl << "Adaptive computation. Global error tolerance for program abort = "
-              << error_tolerance_ << std::endl;
-    #endif // ifdef ADAPTIVE
-    data_file << std::endl << std::endl;
+    // to save all information in a file
+    std::ofstream data_file( (save_filename).c_str() );
+    if ( data_file.is_open() )
+    {
+      data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std::endl
+                << std::endl;
+      #ifdef LINEAR_PROBLEM
+      data_file << "Problem is declared as being LINEAR." << std::endl;
+      #else
+      data_file << "Problem is declared as being NONLINEAR." << std::endl;
+      #endif // ifdef LINEAR_PROBLEM
+      #ifdef EXACTSOLUTION_AVAILABLE
+      data_file << "Exact solution is available." << std::endl << std::endl;
+      #else
+      data_file << "Exact solution is not available." << std::endl << std::endl;
+      #endif // ifdef EXACTSOLUTION_AVAILABLE
+      data_file << "Computations were made for:" << std::endl << std::endl;
+      data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
+      data_file << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
+      #ifdef TFR
+      data_file << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
+      #else
+      data_file << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
+      #endif // ifdef TFR
+      #ifdef AD_HOC_COMPUTATION
+      data_file << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
+      #else
+      data_file << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
+      #ifdef ERRORESTIMATION
+      data_file << "Error estimation activated!" << std::endl << std::endl;
+      #endif
+      #endif // ifdef AD_HOC_COMPUTATION
+      data_file << "Epsilon = " << epsilon_ << std::endl;
+      data_file << "Estimated Epsilon = " << epsilon_est_ << std::endl;
+      data_file << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
+      #ifdef STOCHASTIC_PERTURBATION
+      data_file << std::endl << "Stochastic perturbation added. Variance = " << VARIANCE << std::endl;
+      #endif
+      #ifdef ADAPTIVE
+      data_file << std::endl << "Adaptive computation. Global error tolerance for program abort = "
+                << error_tolerance_ << std::endl;
+      #endif // ifdef ADAPTIVE
+      data_file << std::endl << std::endl;
+    }
+
+    algorithm(UnitCubeName,
+              macro_grid_pointer,
+              fine_macro_grid_pointer,
+              periodic_grid_pointer,
+              refinement_difference_for_referenceproblem,
+              data_file);
+    // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
+    //normal
+    // macro problem
+
+    long double cpu_time = clock();
+    cpu_time = cpu_time / CLOCKS_PER_SEC;
+    std::cout << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+
+    if ( data_file.is_open() )
+    {
+      data_file << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+    }
+    data_file.close();
+    return 0;
+  } catch (Dune::Exception& e) {
+    std::cerr << e.what() << std::endl;
   }
-
-  algorithm(UnitCubeName,
-            macro_grid_pointer,
-            fine_macro_grid_pointer,
-            periodic_grid_pointer,
-            refinement_difference_for_referenceproblem,
-            data_file);
-  // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the normal
-  // macro problem
-
-  long double cpu_time = clock();
-  cpu_time = cpu_time / CLOCKS_PER_SEC;
-  std::cout << "Total runtime of the program: " << cpu_time << "s" << std::endl;
-
-  if ( data_file.is_open() )
-  {
-    data_file << "Total runtime of the program: " << cpu_time << "s" << std::endl;
-  }
-  data_file.close();
-  return 0;
+  return 1;
 } // main
