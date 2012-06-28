@@ -54,26 +54,25 @@
 #include <dune/stuff/logging.hh>
 
 #if ENABLE_MPI
-        typedef Dune::CollectiveCommunication< MPI_Comm > CollectiveCommunication;
+typedef Dune::CollectiveCommunication< MPI_Comm > CollectiveCommunication;
 #else
-        typedef Dune::CollectiveCommunication< double > CollectiveCommunication;
-#endif
+typedef Dune::CollectiveCommunication< double > CollectiveCommunication;
+#endif // if ENABLE_MPI
 
-CollectiveCommunication init( int argc, char** argv )
-{
-    Dune::MPIManager::initialize(argc, argv);
-    Stuff::Config().readCommandLine( argc, argv );
+CollectiveCommunication init(int argc, char** argv) {
+  Dune::MPIManager::initialize(argc, argv);
+  Stuff::Config().readCommandLine(argc, argv);
 
-    // LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
-    //--> LOG_ERR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62
-    const bool useLogger = false;
-    Logger().Create( Stuff::Config().get( "logging.level",  62,                             useLogger ),
-                     Stuff::Config().get( "logging.file",   std::string(argv[0]) + ".log",  useLogger ),
-                     Stuff::Config().get( "global.datadir",   "data",                         useLogger ),
-                     Stuff::Config().get( "logging.dir",    ""/*path below datadir*/,       useLogger )
-                    );
+  // LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
+  // --> LOG_ERR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62
+  const bool useLogger = false;
+  Logger().Create(Stuff::Config().get("logging.level", 62, useLogger),
+                  Stuff::Config().get("logging.file", std::string(argv[0]) + ".log", useLogger),
+                  Stuff::Config().get("global.datadir", "data", useLogger),
+                  Stuff::Config().get("logging.dir", "" /*path below datadir*/, useLogger)
+                  );
 
-    return CollectiveCommunication();//( Dune::MPIManager::helper().getCommunicator() );
-}
+  return CollectiveCommunication();  // ( Dune::MPIManager::helper().getCommunicator() );
+} // init
 
 #endif // DUNE_MULTISCALE_SRC_COMMON_HH
