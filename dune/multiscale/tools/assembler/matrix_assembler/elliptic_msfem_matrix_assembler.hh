@@ -131,7 +131,7 @@ public:
   DiscreteEllipticMsFEMOperator(MacroMicroGridSpecifierType& specifier,
                                 const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
                                 // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
-                                //n(T)-layers:
+                                // n(T)-layers:
                                 SubGridListType& subgrid_list,
                                 const DiffusionModel& diffusion_op,
                                 std::ofstream& data_file,

@@ -107,6 +107,6 @@
 // !---------
 #endif // if 0
 
-#include <dune/multiscale/problems/elliptic_problems/model_problem_8/problem_specification.hh>
+#include <dune/multiscale/problems/elliptic_problems/model_problem_1/problem_specification.hh>
 
 #endif // HMM_CONFIG_HH

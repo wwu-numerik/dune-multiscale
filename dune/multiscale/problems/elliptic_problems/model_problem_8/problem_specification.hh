@@ -2,6 +2,8 @@
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
 
 #include <dune/fem/function/common/function.hh>
+#include <dune/multiscale/problems/constants.hh>
+#include <dune/multiscale/problems/base.hh>
 
 // ! For more further details about the implementation of the following classes, see the end of the file
 

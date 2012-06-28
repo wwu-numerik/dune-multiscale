@@ -506,6 +506,7 @@ public:
 
   SubGridType& getSubGrid(int i) {
     const int size = specifier_.getNumOfCoarseEntities();
+
     if (i >= size)
     {
       DUNE_THROW(Dune::RangeError, "Error. Subgrid-Index too large.");

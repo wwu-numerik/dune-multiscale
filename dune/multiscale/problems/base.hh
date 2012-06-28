@@ -5,7 +5,8 @@
 #include <dune/multiscale/problems/constants.hh>
 
 namespace Problem {
-class IModelProblemData {
+class IModelProblemData
+{
 protected:
   // name of the file where data is saved
   const std::string file_name_;
@@ -14,10 +15,10 @@ protected:
 
 public:
   // Constructor for ModelProblemData
-  inline IModelProblemData(const Constants constants,  const std::string file_name = "no_name")
+  inline IModelProblemData(const Constants constants, const std::string file_name = "no_name")
     : file_name_(file_name)
-    , constants_(constants)
-    , current_number_of_cell_problem_(-1)
+      , constants_(constants)
+      , current_number_of_cell_problem_(-1)
   {}
 
   // epsilon (the smaller epsilon, the finer the micro-structure)
@@ -54,9 +55,9 @@ public:
     return current_number_of_cell_problem_;
   }
 
-  virtual int getRefinementLevelReferenceProblem() const = 0;
+  virtual int  getRefinementLevelReferenceProblem() const = 0;
   virtual void getMacroGridFile(std::string& macroGridName) const = 0;
-  virtual int get_Number_of_Model_Problem() const = 0;
+  virtual int  get_Number_of_Model_Problem() const = 0;
 };
 }
 

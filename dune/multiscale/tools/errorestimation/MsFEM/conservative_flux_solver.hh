@@ -934,7 +934,7 @@ public:
 
         DomainType scaledOuterNormal = iit->integrationOuterNormal(faceQuadrature.localPoint(0) /*faceGeometry.local(
                                                                                                    *
-                                                                                                   **faceQuadrature.point(
+                                                                                                   ***faceQuadrature.point(
                                                                                                    *0 ) )*/);
         scaledOuterNormal
           *= ( 1.0 / sqrt(scaledOuterNormal[0] * scaledOuterNormal[0] + scaledOuterNormal[1] * scaledOuterNormal[1]) );

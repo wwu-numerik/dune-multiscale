@@ -123,7 +123,8 @@ public:
   RangeType get_loc_coarse_residual(int& index) {
     if (loc_coarse_residual_.size() == 0)
     {
-      DUNE_THROW(Dune::InvalidStateException,"Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+      DUNE_THROW(Dune::InvalidStateException,
+                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
     }
     return loc_coarse_residual_[index];
   } // get_loc_coarse_residual
@@ -131,7 +132,8 @@ public:
   RangeType get_loc_coarse_grid_jumps(int& index) {
     if (loc_coarse_grid_jumps_.size() == 0)
     {
-      DUNE_THROW(Dune::InvalidStateException,"Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+      DUNE_THROW(Dune::InvalidStateException,
+                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
     }
     return loc_coarse_grid_jumps_[index];
   } // get_loc_coarse_grid_jumps
@@ -139,7 +141,8 @@ public:
   RangeType get_loc_projection_error(int& index) {
     if (loc_projection_error_.size() == 0)
     {
-      DUNE_THROW(Dune::InvalidStateException,"Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+      DUNE_THROW(Dune::InvalidStateException,
+                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
     }
     return loc_projection_error_[index];
   } // get_loc_projection_error
@@ -147,7 +150,8 @@ public:
   RangeType get_loc_conservative_flux_jumps(int& index) {
     if (loc_conservative_flux_jumps_.size() == 0)
     {
-      DUNE_THROW(Dune::InvalidStateException,"Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+      DUNE_THROW(Dune::InvalidStateException,
+                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
     }
     return loc_conservative_flux_jumps_[index];
   } // get_loc_conservative_flux_jumps
@@ -155,7 +159,8 @@ public:
   RangeType get_loc_approximation_error(int& index) {
     if (loc_approximation_error_.size() == 0)
     {
-      DUNE_THROW(Dune::InvalidStateException,"Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+      DUNE_THROW(Dune::InvalidStateException,
+                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
     }
     return loc_approximation_error_[index];
   } // get_loc_approximation_error
@@ -163,7 +168,8 @@ public:
   RangeType get_loc_fine_grid_jumps(int& index) {
     if (loc_fine_grid_jumps_.size() == 0)
     {
-      DUNE_THROW(Dune::InvalidStateException,"Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+      DUNE_THROW(Dune::InvalidStateException,
+                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
     }
     return loc_fine_grid_jumps_[index];
   } // get_loc_fine_grid_jumps

@@ -15,7 +15,6 @@
 // 1. Elliptizitätsbedingung
 // 2. A(x,y) = A(y)
 
-
 #ifndef DUNE_HOMOGENIZER_HH
 #define DUNE_HOMOGENIZER_HH
 
@@ -167,8 +166,8 @@ public:
                      const JacobianRangeType& direction,
                      JacobianRangeType& flux) const {
     Problem::ModelProblemData model_info;
-    
-    //! EPSILON BESSER AUS DEM PARAMETER-FILE HOLEN!
+
+    // ! EPSILON BESSER AUS DEM PARAMETER-FILE HOLEN!
     const double epsilon = model_info.getEpsilon();
 
     DomainType new_y;
@@ -247,17 +246,15 @@ public:
                        RangeType& z) const {
     JacobianRangeType direction;
     JacobianRangeType flux;
-    
+
     for (int i_ = 0; i_ < dimDomain; ++i_)
     {
-       if (j_ == i_)
-       {
-	 direction[0][i_] = 1.0;
-       }
-       else
-       {
-	 direction[0][i_] = 0.0;
-       }
+      if (j_ == i_)
+      {
+        direction[0][i_] = 1.0;
+      } else {
+        direction[0][i_] = 0.0;
+      }
     }
 
     tensor_.diffusiveFlux(y, direction, flux);
@@ -521,7 +518,6 @@ private:
   } // end of method
 
 public:
-
   FieldMatrix< RangeType, dimension, dimension > getHomTensor(TensorType& tensor) {
     FieldMatrix< RangeType, dimension, dimension > a_hom;
 
@@ -591,10 +587,13 @@ public:
     cell_0_assembler.template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_0, rhs_0);       //
                                                                                                                          //
                                                                                                                          //
+                                                                                                                         //
                                                                                                                          //!
                                                                                                                          //
                                                                                                                          //
+                                                                                                                         //
                                                                                                                          //G_0
+                                                                                                                         //
                                                                                                                          //
                                                                                                                          //
                                                                                                                          //loeschen!
@@ -602,10 +601,13 @@ public:
     cell_1_assembler.template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_1, rhs_1);       //
                                                                                                                          //
                                                                                                                          //
+                                                                                                                         //
                                                                                                                          //!
                                                                                                                          //
                                                                                                                          //
+                                                                                                                         //
                                                                                                                          //G_1
+                                                                                                                         //
                                                                                                                          //
                                                                                                                          //
                                                                                                                          //loeschen!

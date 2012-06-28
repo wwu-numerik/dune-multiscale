@@ -2,6 +2,8 @@
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
 
 #include <dune/fem/function/common/function.hh>
+#include <dune/multiscale/problems/constants.hh>
+#include <dune/multiscale/problems/base.hh>
 
 // ! is an exact solution available?
 // this information should be provided by the 'problem specification file'
@@ -678,7 +680,9 @@ public:
     y += 0.5 * EPSILON * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );          //
                                                                                                                               //
                                                                                                                               //
+                                                                                                                              //
                                                                                                                               //fine
+                                                                                                                              //
                                                                                                                               //
                                                                                                                               //
                                                                                                                               //part

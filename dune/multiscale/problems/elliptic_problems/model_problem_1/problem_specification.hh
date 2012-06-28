@@ -54,15 +54,15 @@
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
-
-CONSTANTSFUNCTION(0.05,0.05,0.05)
+CONSTANTSFUNCTION(0.05, 0.05, 0.05)
 
 // model problem information
-struct ModelProblemData : public IModelProblemData
+struct ModelProblemData
+  : public IModelProblemData
 {
-    ModelProblemData(const std::string filename = "no_name")
-        : IModelProblemData(Constants(0.05,0.05,0.05), filename)
-    {}
+  ModelProblemData(const std::string filename = "no_name")
+    : IModelProblemData(Constants(0.05, 0.05, 0.05), filename)
+  {}
 
   inline int get_Number_of_Model_Problem() const {
     return 1;
@@ -71,6 +71,7 @@ struct ModelProblemData : public IModelProblemData
   inline void getMacroGridFile(std::string& macroGridName) const {
     // name and location of the grid file that describes the macro-grid:
     std::string macro_grid_location("../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf");
+
     macroGridName = macro_grid_location;
   }
 
@@ -84,7 +85,6 @@ struct ModelProblemData : public IModelProblemData
     // following refinement level)
     return 18;
   }
-
 };
 
 // !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
@@ -243,9 +243,10 @@ public:
     double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
     double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
-    if (constants().get("stochastic_pertubation", false)) {
+    if ( constants().get("stochastic_pertubation", false) )
+    {
       const float m = 0.0;
-      const float s = 1; //!TODO VARIANCE wasn't defined;
+      const float s = 1; // !TODO VARIANCE wasn't defined;
       // the expected value in case of a log-normal distribution:
       const float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
       const double arb_num = rand_log_normal(m, s);
@@ -262,17 +263,16 @@ public:
       { coefficient_1 = 0.0001; }
     }
 
-    if (constants().get("linear", true)) {
+    if ( constants().get("linear", true) )
+    {
       flux[0][0] = coefficient_0 * gradient[0][0];
       flux[0][1] = coefficient_1 * gradient[0][1];
-    }
-    else {
+    } else {
 // flux[0][0] = coefficient_0 * exp((1.0/3.0)*gradient[0][0]);
 // flux[0][1] = coefficient_1 * exp((1.0/3.0)*gradient[0][1]);
       flux[0][0] = coefficient_0 * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
       flux[0][1] = coefficient_1 * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
     }
-
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -287,9 +287,10 @@ public:
     double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
     double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
-    if (constants().get("stochastic_pertubation", true)) {
+    if ( constants().get("stochastic_pertubation", true) )
+    {
       float m = 0.0;
-      float s = 1; //!TODO VARIANCE was not declared;
+      float s = 1; // !TODO VARIANCE was not declared;
       // the expected value in case of a log-normal distribution:
       float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
       double arb_num = rand_log_normal(m, s);
@@ -305,26 +306,25 @@ public:
       if (coefficient_1 < 0.0001)
       { coefficient_1 = 0.0001; }
 
-  // std :: cout << "coefficient_0 = " << coefficient_0 << std :: endl;
-  // std :: cout << "coefficient_0 + perturbation = " << coefficient_0 + perturbation << std :: endl;
+      // std :: cout << "coefficient_0 = " << coefficient_0 << std :: endl;
+      // std :: cout << "coefficient_0 + perturbation = " << coefficient_0 + perturbation << std :: endl;
     }
 
-    if (constants().get("linear", true)) {
+    if ( constants().get("linear", true) )
+    {
       flux[0][0] = coefficient_0 * direction_gradient[0][0];
       flux[0][1] = coefficient_1 * direction_gradient[0][1];
-    }
-    else {
+    } else {
 // flux[0][0] = (1.0/3.0) * coefficient_0 * direction_gradient[0][0]
 // * exp((1.0/3.0)*position_gradient[0][0]);
 // flux[0][1] = (1.0/3.0) * coefficient_0 * direction_gradient[0][1]
 // * exp((1.0/3.0)*position_gradient[0][1]);
 
-    flux[0][0] = coefficient_0 * direction_gradient[0][0]
-                 * ( 1.0 + pow(position_gradient[0][0], 2.0) );
-    flux[0][1] = coefficient_1 * direction_gradient[0][1]
-                 * ( 1.0 + pow(position_gradient[0][1], 2.0) );
-
-      }
+      flux[0][0] = coefficient_0 * direction_gradient[0][0]
+                   * ( 1.0 + pow(position_gradient[0][0], 2.0) );
+      flux[0][1] = coefficient_1 * direction_gradient[0][1]
+                   * ( 1.0 + pow(position_gradient[0][1], 2.0) );
+    }
   } // jacobianDiffusiveFlux
 
 // deprecated
@@ -335,8 +335,10 @@ public:
                        const int j,
                        const DomainType& x,
                        RangeType& z) const {
-    std::cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-              << std::endl;
+    std::cout
+    <<
+    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
+    << std::endl;
     std::abort();
   } // evaluate
 
@@ -421,7 +423,8 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    if (constants().get("linear", true)) {
+    if ( constants().get("linear", true) )
+    {
       flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
       flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
     } else {
@@ -441,7 +444,8 @@ public:
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    if (constants().get("linear", true)) {
+    if ( constants().get("linear", true) )
+    {
       std::cout << "Not yet implemented." << std::endl;
       std::abort();
     } else {
@@ -455,8 +459,10 @@ public:
                        const DomainType& x,
                        const DomainType& y,
                        RangeType& z) const {
-    std::cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-              << std::endl;
+    std::cout
+    <<
+    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
+    << std::endl;
     std::abort();
     z = 0.0;
   } // evaluate
@@ -469,8 +475,10 @@ public:
                        const int j,
                        const DomainType& x,
                        RangeType& z) const {
-    std::cout << "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-              << std::endl;
+    std::cout
+    <<
+    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
+    << std::endl;
     std::abort();
   } // evaluate
 
@@ -479,8 +487,9 @@ public:
                        const DomainType& x,
                        const TimeType& time,
                        RangeType& z) const {
-    std::cout << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation."
-              << std::endl;
+    std::cout
+    << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation."
+    << std::endl;
     std::abort();
     return evaluate(i, j, x, z);
   } // evaluate
@@ -488,8 +497,10 @@ public:
   // dummy implementation
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    std::cout << "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
-              << std::endl;
+    std::cout
+    <<
+    "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
+    << std::endl;
     std::abort();
   } // evaluate
 };
