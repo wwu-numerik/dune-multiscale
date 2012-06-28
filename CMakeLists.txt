@@ -33,7 +33,7 @@ SET( USE_ISTL
 	"Use fem-wrapped istl matrix" )
 		
 SET( GRIDTYPE
-	"ALUGRID_SIMPLEX" CACHE STRING
+	"ALBERTAGRID" CACHE STRING
 	"GRIDTYPE" )
 
 SET( GRIDDIM
@@ -43,7 +43,9 @@ SET( GRIDDIM
 SET( ALUGRID_BASE_PATH
 	"/opt/dune/modules/alugrid/alugrid-1.50" CACHE STRING
 	"ALUGRID_BASE_PATH" )
-
+SET( ALBERTA_GRID_BASE_PATH
+	"/opt/dune/modules/alberta/alberta-3.0" CACHE STRING
+	"ALUGRID_BASE_PATH" )
 SET( UGGRID_BASE_PATH
 	"/share/dune/Modules/modules_x86_64/ug" CACHE STRING
 	"UGGRID_BASE_PATH" )
@@ -59,15 +61,9 @@ IF( ${GRIDTYPE} STREQUAL "UGGRID" )
 	ADD_CXX_FLAGS( -DENABLE_UG )
 	INCLUDE_SYS_DIR( ${UGGRID_BASE_PATH}/include )
 	LINK_DIRECTORIES( ${UGGRID_BASE_PATH}/lib/ )
-	SET( UGLIBS "ugS3" "ugS2" "devS")
+	SET( GRIDLIBS "ugS3" "ugS2" "devS")
 ENDIF( ${GRIDTYPE} STREQUAL "UGGRID" )
 
-IF( ${ALUGRID_FOUND} )
-	INCLUDE_SYS_DIR( ${ALUGRID_BASE_PATH}/include )
-	INCLUDE_SYS_DIR( ${ALUGRID_BASE_PATH}/include/serial  )
-	INCLUDE_SYS_DIR( ${ALUGRID_BASE_PATH}/include/duneinterface  )
-	SET( ALUGRID_LIBS "alugrid" )
-ENDIF( ${ALUGRID_FOUND} )	
 
 SET( ENABLE_ALUGRID OFF )
 IF( ${GRIDTYPE} MATCHES "ALUGRID" )
@@ -76,10 +72,10 @@ IF( ${GRIDTYPE} MATCHES "ALUGRID" )
 #	ENDIF( ${ALUGRID_FOUND} )	
 	INCLUDE_SYS_DIR( 	${GRAPE_PATH} 
 						${ALUGRID_BASE_PATH}/include 
-						${ALUGRID_BASE_PATH}/include/serial 
+						${ALUGRID_BASE_PATH}/include/serial
 						${ALUGRID_BASE_PATH}/include/duneinterface )
 	LINK_DIRECTORIES( "${ALUGRID_BASE_PATH}/lib"  )
-	SET( ALULIBS "alugrid" )
+	SET( GRIDLIBS "alugrid" )
 	SET( ENABLE_ALUGRID ON )
 	IF ( ENABLE_PARALELL )
 		INCLUDE_SYS_DIR( ${ALUGRID_BASE_PATH}/include/parallel )
@@ -87,19 +83,28 @@ IF( ${GRIDTYPE} MATCHES "ALUGRID" )
 	ADD_CXX_FLAGS( "-DENABLE_ALUGRID" )
 ENDIF( ${GRIDTYPE} MATCHES "ALUGRID" )
 
+SET( ENABLE_ALBERTA OFF )
+IF( ${GRIDTYPE} MATCHES "ALBERTAGRID" )
+	INCLUDE_SYS_DIR( 	${ALBERTA_GRID_BASE_PATH}/include 
+						${ALBERTA_GRID_BASE_PATH}/include/alberta)
+	LINK_DIRECTORIES( "${ALBERTA_GRID_BASE_PATH}/lib"  )
+# 	SET( GRIDLIBS alberta_utilities_debug alberta_2d_debug dunealbertagrid_2d dunegrid)
+	SET( GRIDLIBS alberta_utilities alberta_2d dunealbertagrid_2d dunegrid)
+	SET( ENABLE_ALBERTA ON )
+	ADD_CXX_FLAGS( -DENABLE_ALBERTA=1 -DDEBUG )
+ENDIF( ${GRIDTYPE} MATCHES "ALBERTAGRID" )
 
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
 
-ADD_DUNE_MODULES( common istl grid fem geometry localfunctions subgrid )
-ADD_MY_MODULES( stuff )
-ADD_CXX_FLAGS( ${CUSTOM_FLAGS} )
+ADD_DUNE_MODULES( common istl grid fem geometry localfunctions subgrid stuff )
+ADD_CXX_FLAGS( ${CUSTOM_FLAGS} -DGRIDTYPE=${GRIDTYPE} -DHAVE_CMAKE_CONFIG -DHAVE_CONFIG_H)
 
 LINK_DIRECTORIES( "/usr/lib" "${ALUGRID_BASE_PATH}/lib" )
 
 FILE( GLOB_RECURSE header "src/*.hh" )
 FILE( GLOB_RECURSE dune "dune/*.hh" )
 
-set( COMMON_LIBS "dunefem" "dunegrid" "dunecommon" "dunegeometry" ${BLAS_LIB} ${ALUGRID_LIBS} ${UGLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} "boost_date_time" "boost_filesystem" "boost_system" )
+set( COMMON_LIBS "dunefem" "dunegrid" "dunecommon" "dunegeometry" ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} "boost_date_time" "boost_filesystem" "boost_system" )
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
