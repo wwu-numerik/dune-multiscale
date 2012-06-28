@@ -10,8 +10,8 @@ namespace Problem {
         const double delta;
         Constants( double def_epsilon, double def_epsilon_est, double def_delta )
             : epsilon(Stuff::Config().get("problem.epsilon", def_epsilon))
-            , epsilon_est(Stuff::Config().get("problem.epsilon_est", def_epsilon_est))
-            , delta(Stuff::Config().get("problem.delta", def_delta))
+            , epsilon_est(Stuff::Config().get("hmm.epsilon_guess", def_epsilon_est))
+            , delta(Stuff::Config().get("hmm.delta", def_delta))
         {}
 
         template < typename T, class Validator = Stuff::ValidateAny<T> >
