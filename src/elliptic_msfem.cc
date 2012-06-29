@@ -48,12 +48,8 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 #include <dune/fem/misc/h1norm.hh>
 
 // ! local (dune-multiscale) includes
-// #include <dune/multiscale/problems/elliptic_problems/model_problem_toy/problem_specification.hh>
-// #include <dune/multiscale/problems/elliptic_problems/model_problem_easy/problem_specification.hh>
-#include <dune/multiscale/problems/elliptic_problems/model_problem_1/problem_specification.hh>
-
+#include <dune/multiscale/problems/elliptic_problems/selector.hh>
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
-
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
