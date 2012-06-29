@@ -53,8 +53,8 @@ class IModelProblemData
 protected:
   // name of the file where data is saved
   const std::string file_name_;
-  int current_number_of_cell_problem_;
   const Constants constants_;
+  int current_number_of_cell_problem_;
 
 public:
   // Constructor for ModelProblemData
@@ -64,27 +64,30 @@ public:
       , current_number_of_cell_problem_(-1)
   {}
 
-  // epsilon (the smaller epsilon, the finer the micro-structure)
-  // in the periodic setting, epsilon denotes the periode of the fine-scale oscillations
-  // in the non-periodic setting, can be seen as a representative size for the fine-scale behaviour
+  /** epsilon (the smaller epsilon, the finer the micro-structure)
+   *  in the periodic setting, epsilon denotes the periode of the fine-scale oscillations
+   *  in the non-periodic setting, can be seen as a representative size for the fine-scale behaviour
+   **/
   inline double getEpsilon() const {
     return constants_.epsilon;
   }
 
-  // epsilon (the smaller epsilon, the finer the micro-structure)
+  //! epsilon (the smaller epsilon, the finer the micro-structure)
   inline double getEpsilonEstimated() const {
     return constants_.epsilon_est;
   }
 
-  // edge length of a cell (where we solve the cell problems)
-  // we need delta >= epsilon
+  /** edge length of a cell (where we solve the cell problems)
+   *  we need delta >= epsilon
+   **/
   inline double getDelta() const {
     return constants_.delta;
     // NOTE that (delta/epsilon_est) needs to be a positive integer!
   }
 
-  // get an information on whether we use the solutions of cell problems that are already computed and saved in a file
-  // with the name 'name_'
+  /** get an information on whether we use the solutions of cell problems that are already computed and saved in a file
+   * with the name 'name_'
+   **/
   inline std::string getName_and_getBool(bool& use_saved) const {
     use_saved = (file_name_ != "no_name");
     return file_name_;
@@ -94,12 +97,27 @@ public:
     current_number_of_cell_problem_ = number;
   }
 
-  inline int get_current_number_of_cell_problem() {
+  inline int get_current_number_of_cell_problem() const {
     return current_number_of_cell_problem_;
   }
 
+  /**
+   * get the (starting) grid refinement level for solving the reference problem
+   * in genereal, this is the smallest integer (level), so that solving the reference problem on this level,
+   * yields a higly accurate approximation of the exact solution
+   * ( here we have heterogenious reference problem, therefore we need a high refinement level )
+    * required refinement level for a fine scale reference solution
+    * (a saved/precomputed solution is either already available for this level or it must be computed with the
+    * following refinement level)
+   */
   virtual int  getRefinementLevelReferenceProblem() const = 0;
+  /**
+   * @brief getMacroGridFile returns a path to a Dune::Grid loadable file (dgf)
+   * @param macroGridName is set to said path
+   * \todo paths need to be relative to binary
+   */
   virtual void getMacroGridFile(std::string& macroGridName) const = 0;
+  //! a unique integral identifier for this problem
   virtual int  get_Number_of_Model_Problem() const = 0;
 };
 }

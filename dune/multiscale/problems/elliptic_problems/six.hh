@@ -45,19 +45,12 @@ struct ModelProblemData
     return 6;
   }
 
-  inline void getMacroGridFile(std::string& macroGridName) const {
-    // name and location of the grid file that describes the macro-grid:
-    macroGridName = ("../dune/multiscale/grids/macro_grids/elliptic/cube_one.dgf");
+  //! \copydoc IModelProblemData::getMacroGridFile()
+  inline void getMacroGridFile(std::string& macroGridName) const {    macroGridName = ("../dune/multiscale/grids/macro_grids/elliptic/cube_one.dgf");
   }
 
-  // get the (starting) grid refinement level for solving the reference problem
-  // in genereal, this is the smallest integer (level), so that solving the reference problem on this level,
-  // yields a higly accurate approximation of the exact solution
-  // ( here we have heterogenious reference problem, therefore we need a high refinement level )
+  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
   inline int getRefinementLevelReferenceProblem() const {
-    // required refinement level for a fine scale reference solution
-    // (a saved/precomputed solution is either already available for this level or it must be computed with the
-    // following refinement level)
     return 10;
   }
 };
