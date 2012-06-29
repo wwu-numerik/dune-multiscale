@@ -61,7 +61,7 @@
 // #define STOCHASTIC_PERTURBATION
 #ifdef STOCHASTIC_PERTURBATION
 // size of variance:
- #define VARIANCE 0.01
+ static const double VARIANCE = 0.01;
 // ! Do we want to force the algorithm to come to an end?
 // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht
 // erreicht etc.)
@@ -81,7 +81,6 @@
  #define HMM_NEWTON_ITERATION_STEP 0
 #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
 
-#if 1
 // hmfemmain:
 // !---------
  #include <dune/fem/solver/oemsolver/oemsolver.hh>
@@ -91,21 +90,7 @@
  #include <dune/fem/misc/l2norm.hh>
 // #include <dune/fem/io/visual/grape/datadisp/errordisplay.hh>
 // !-----------
-#endif // if 1
-#if 0
-// poisson
-// !--------
 
- #include <dune/fem/operator/matrix/spmatrix.hh>
- #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-
- #include <dune/fem/misc/l2norm.hh>
- #include <dune/fem/misc/h1norm.hh>
- #include <dune/fem/misc/mpimanager.hh>
- #include <dune/fem/io/parameter.hh>
- #include <dune/fem/io/visual/grape/datadisp/errordisplay.hh>
-// !---------
-#endif // if 0
 
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 

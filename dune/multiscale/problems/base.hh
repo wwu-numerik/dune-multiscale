@@ -21,8 +21,6 @@ namespace Problem {
 
  * Note, that A^{\epsilon} is a monotone operator
 
- * !############################## Elliptic Problem 0 ###################################
-
  * ! we define:
 
  * The entries of the operator A^{\epsilon} by
@@ -51,13 +49,13 @@ namespace Problem {
 class IModelProblemData
 {
 protected:
-  // name of the file where data is saved
+  //! name of the file where data is saved
   const std::string file_name_;
   const Constants constants_;
   int current_number_of_cell_problem_;
 
 public:
-  // Constructor for ModelProblemData
+  //! Constructor for ModelProblemData
   inline IModelProblemData(const Constants constants, const std::string file_name = "no_name")
     : file_name_(file_name)
       , constants_(constants)
