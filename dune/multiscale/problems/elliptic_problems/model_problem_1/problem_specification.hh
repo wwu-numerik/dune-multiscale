@@ -1,5 +1,5 @@
-#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
-#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
+#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ONE
+#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ONE
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
@@ -54,6 +54,7 @@
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
+namespace One {
 CONSTANTSFUNCTION(0.05, 0.05, 0.05)
 
 // model problem information
@@ -656,8 +657,8 @@ public:
     evaluate(x, y);
   }
 };
+} //namespace One {
 }
-
 // we need to know the term 'abstract class'.
 
 // In short: An abstract class is only created to be a 'base class' for a set of other classes (the so called 'derived
@@ -689,4 +690,4 @@ public:
 // orginal base class ('Function'), before the virtual methods! It is responsible for the reversion of base class and
 // derived class.
 
-#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
+#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ONE

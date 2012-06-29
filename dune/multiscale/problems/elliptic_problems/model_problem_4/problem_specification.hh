@@ -1,5 +1,5 @@
-#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
-#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
+#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
+#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
@@ -52,6 +52,7 @@
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
+namespace Four {
 // description see below 0.05
 static const double EPSILON = 0.05;
 static const double EPSILON_EST = 0.05;
@@ -63,7 +64,7 @@ struct ModelProblemData
   : public IModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(0.05, 0.0, 0.0), filename) {
+    : IModelProblemData(Constants(0.05, 0.05, 0.05), filename) {
   }
 
   inline int get_Number_of_Model_Problem() const {
@@ -694,6 +695,7 @@ public:
     evaluate(x, y);
   }
 };
+} // namespace Four {
 }
 
 // we need to know the term 'abstract class'.
@@ -727,4 +729,4 @@ public:
 // orginal base class ('Function'), before the virtual methods! It is responsible for the reversion of base class and
 // derived class.
 
-#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH
+#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
