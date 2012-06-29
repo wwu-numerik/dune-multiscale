@@ -677,35 +677,5 @@ public:
 } // namespace Seven {
 }
 
-// we need to know the term 'abstract class'.
-
-// In short: An abstract class is only created to be a 'base class' for a set of other classes (the so called 'derived
-// classes'). These derived classes typically share a number of methods that can be subsumed by the abstract class.
-// Abstract classes contain at least one virtual method, that means a method of the kind: 'virtual "datatype"
-// methodname() = 0;'.
-// Examples for virtual methods are: 'virtual void evaluate() = 0;' or 'virtual integer sum() = 0;'.
-// Virtual methods can not be used, they will lead to error prompts! Therefor it is impossible to create objects of an
-// abstract class. To use such a method nevertheless, the virtual method must be inherited and overwhrighten by an
-// equally named method of a derived class.
-
-// Example: We construct a class 'FirstSource' that inherits the features/methods of the abstract class 'Function'. In
-// order to fill for instance the virtual method 'evaluate' (of //the abstract class 'Function') with life, we need to
-// define an equally named method 'evaluate' in 'FirstSource'.
-// Unfortunately, if used very often, virtual methods cause long running times. Therefore, to avoid virtual methods for
-// the sake of efficiency, Dune-programmers often make use of the so called Barton-Nackman trick: the derived class
-// 'FirstSource' inherits the (virtual) methods of the class 'Function< FuncSpace, FirstSource >'. But the class
-// template
-// 'Function' recieves the template parameter 'FirstSource', which itself is derived of the class 'Function< FuncSpace,
-// FirstSource >'. The snake seems to bite its tail! But it won't cause any errors. Simplified, the following happens:
-// if
-// the program wants to execute the method 'evaluate(...)' it is normaly searching in 'Function', there it finds out
-// that
-// the method is virtual and it has to search in the derived class 'FirstSource'. Such a process is not very efficient.
-// By using the Barton-Nackman trick this process of 'searching' is reversed, the base class 'turns into' the derived
-// class and the derived class 'turns into' the base class. Since the program always searches at first in the base class
-// (now: 'FirstSource') it will immediately find a non-virtual method 'evaluate()' that can be executed.
-// To realize the Barton-Nackman trick we essentially need the order 'asimp()'. This order must be somewhere in the
-// orginal base class ('Function'), before the virtual methods! It is responsible for the reversion of base class and
-// derived class.
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SEVEN
