@@ -5,47 +5,8 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// ! For more further details about the implementation of the following classes, see the end of the file
-
-// in general we regard problems of the following type:
-
-// - div ( A^{\epsilon} (x,\nabla u^{\epsilon}) ) + m^{\epsilon} u^{\epsilon} = f - div G
-
-// Here we have:
-// u^{\epsilon} = exact solution of the problem
-// A^{\epsilon} = diffusion matrix (or tensor) with the structure A^{\epsilon}(x) = A(x,\frac{x}{\epsilon})
-// m^{\epsilon} = a mass term (or reaction term) with the structure m^{\epsilon}(x) = m(x,\frac{x}{\epsilon})
-// f = first source term with the structure f = f(x) (=> no micro-scale dependency)
-// G = second source term with the structure G = G(x) (=> no micro-scale dependency). Note that 'G' is directly
-// implemented! ( we do not implement '- div G'!)
-
-// Note, that A^{\epsilon} is a monotone operator
-
 // !############################## Elliptic Problem 1 ###################################
 
-// ! we define:
-
-// The entries of the operator A^{\epsilon} by
-// ! a^{\epsilon}_{1}(x_1,x_2) := (**y_1**,**y_2**)
-// ! a^{\epsilon}_{2}(x_1,x_2) := (**y_1**,**y_2**)
-
-// The mass (or reaction) term m^{\epsilon} is given by:
-// ! m^{\epsilon} := \epsilon
-// Since \epsilon tends to zero, we may say that we do not have a real mass term for our problem. It is a simple
-// condition to fix the solution which is only unique up to a constant. In fact we still approximate the solution of the
-// problem without mass.
-
-// The first source term f is given by:
-// ! f(x) := ****
-// since the second source is zero, f will form the right hand side (RHS) of our discrete problem
-
-// The second source term G is constantly zero:
-// ! G(x) := 0
-
-// !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
-// The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y
-// := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
-// is part from. (f \in FunctionSpace)
 
 // is an exact solution available?
 #define EXACTSOLUTION_AVAILABLE
