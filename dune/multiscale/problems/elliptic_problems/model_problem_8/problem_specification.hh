@@ -63,72 +63,21 @@ static const double DELTA = 0.0001;
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information
-class ModelProblemData
+struct ModelProblemData
+  : public IModelProblemData
 {
-protected:
-  // name of the file where data is saved
-  const std::string file_name_;
+  ModelProblemData(const std::string filename = "no_name")
+    : IModelProblemData(Constants(0.05, 0.0, 0.0), filename) {
+  }
 
-  int current_number_of_cell_problem_;
-
-public:
-  // Constructor for ModelProblemData
-  inline explicit ModelProblemData(const std::string& file_name)
-    : file_name_(file_name)
-      , current_number_of_cell_problem_(-1)
-  {}
-
-  inline explicit ModelProblemData()
-    : file_name_("no_name")
-      , current_number_of_cell_problem_(-1)
-  {}
-
-public:
   inline int get_Number_of_Model_Problem() const {
     return 8;
   }
 
-  // epsilon (the smaller epsilon, the finer the micro-structure)
-  // in the periodic setting, epsilon denotes the periode of the fine-scale oscillations
-  // in the non-periodic setting, can be seen as a representative size for the fine-scale behaviour
-  inline double getEpsilon() const {
-    const double epsilon = EPSILON;
-
-    return epsilon;
-  }
-
-  // epsilon (the smaller epsilon, the finer the micro-structure)
-  inline double getEpsilonEstimated() const {
-    const double epsilon_est = EPSILON_EST;
-
-    return epsilon_est;
-  }
-
-  // edge length of a cell (where we solve the cell problems)
-  // we need delta >= epsilon
-  inline double getDelta() const {
-    const double delta = DELTA;
-
-    return delta;
-    // NOTE that (delta/epsilon_est) needs to be a positive integer!
-  }
-
   inline void getMacroGridFile(std::string& macroGridName) const {
     // name and location of the grid file that describes the macro-grid:
-    std::string macro_grid_location("../dune/multiscale/grids/macro_grids/elliptic/unit_cube.dgf");
-
-    macroGridName = macro_grid_location;
+    macroGridName = ("../dune/multiscale/grids/macro_grids/elliptic/unit_cube.dgf");
   }
-
-  // get an information on whether we use the solutions of cell problems that are already computed and saved in a file
-  // with the name 'name_'
-  inline std::string getName_and_getBool(bool& use_saved) const {
-    if (file_name_ == "no_name")
-    { use_saved = false; } else
-    { use_saved = true; }
-
-    return file_name_;
-  } // getName_and_getBool
 
   // get the (starting) grid refinement level for solving the reference problem
   // in genereal, this is the smallest integer (level), so that solving the reference problem on this level,
@@ -136,14 +85,6 @@ public:
   // ( here we have heterogenious reference problem, therefore we need a high refinement level )
   inline int getRefinementLevelReferenceProblem() const {
     return 18;
-  }
-
-  inline void set_current_number_of_cell_problem(int number) {
-    current_number_of_cell_problem_ = number;
-  }
-
-  inline int get_current_number_of_cell_problem() {
-    return current_number_of_cell_problem_;
   }
 };
 
