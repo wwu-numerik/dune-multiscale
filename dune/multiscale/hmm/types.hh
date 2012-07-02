@@ -14,8 +14,10 @@
 
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_hmm_matrix_assembler.hh>
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/space/common/adaptmanager.hh>
 
 namespace HMM {
 // ! --------- typedefs for the macro grid and the corresponding discrete space -------------
@@ -116,26 +118,26 @@ typedef Dune::DiscreteEllipticHMMOperator< DiscreteFunctionType, PeriodicDiscret
 // ! --------------------------------------------------------------------------------------
 
 // ! --------------- ERROR ESTIMATOR NOT YET IMPLEMENTED ------------------------
-typedef ErrorEstimator< PeriodicDiscreteFunctionType,
+typedef Dune::ErrorEstimator< PeriodicDiscreteFunctionType,
                         DiscreteFunctionType,
                         DiffusionType > ErrorEstimatorType;
 
 // ! --------- typedefs and classes for data output -----------------------------------------
-typedef tuple< DiscreteFunctionType* >      IOTupleType;
-typedef DataOutput< GridType, IOTupleType > DataOutputType;
+typedef Dune::tuple< DiscreteFunctionType* >      IOTupleType;
+typedef Dune::DataOutput< GridType, IOTupleType > DataOutputType;
 
 #ifdef EXACTSOLUTION_AVAILABLE
 // just for the discretized exact solution (in case it is available)
-typedef tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
+typedef Dune::tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
 // just for the discretized exact solution (in case it is available)
-typedef DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
+typedef Dune::DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 #endif // ifdef EXACTSOLUTION_AVAILABLE
 
 // !------------------------- for adaptive grid refinement ---------------------------------
 // ! type of restrict-prolong operator
-typedef RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOperatorType;
+typedef Dune::RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOperatorType;
 // ! type of the adaption manager
-typedef AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
+typedef Dune::AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
 // !---------------------------------------------------------------------------------------
 } // namespace HMM
 

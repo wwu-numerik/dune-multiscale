@@ -68,7 +68,7 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y = constants().get("linear", true) ? 1.0 : 1.0;
   } // evaluate
@@ -104,12 +104,12 @@ public:
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0;
   }
 
-  inline void evaluate(const int i, const DomainType& x,
+  inline void evaluate(const int i, const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0;
   }
@@ -325,8 +325,8 @@ public:
   } // evaluate
 
   // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
+  inline void evaluate(const DomainType& /*x*/,
+                       RangeType& /*y*/) const {
     std::cout
     <<
     "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
@@ -480,7 +480,7 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0.00001;
   }
@@ -517,50 +517,50 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const DomainType& y,
+  inline void evaluate(const int /*i*/,
+                       const int /*j*/,
+                       const DomainType& /*x*/,
+                       const DomainType& /*y*/,
                        RangeType& z) const {
     z = 0;
   }
 
-  inline void evaluate(const int i,
-                       const DomainType& x,
-                       const DomainType& y,
+  inline void evaluate(const int /*i*/,
+                       const DomainType& /*x*/,
+                       const DomainType& /*y*/,
                        RangeType& z) const {
     z = 0;
   }
 
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
+  inline void evaluate(const int /*i*/,
+                       const int /*j*/,
+                       const DomainType& /*x*/,
+                       RangeType& y) const {
+    y = 0;
+  }
+
+  inline void evaluate(const int /*i*/,
+                       const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0;
   }
 
   inline void evaluate(const int i,
-                       const DomainType& x,
+                       const DomainType& /*x*/,
+                       const TimeType& /*t*/,
                        RangeType& y) const {
     y = 0;
   }
 
-  inline void evaluate(const int i,
-                       const DomainType& x,
-                       const TimeType& t,
+  // dummy implementation
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0;
   }
 
   // dummy implementation
   inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType time,
+                       const TimeType /*time*/,
                        RangeType& y) const {
     y = 0;
   }
@@ -597,7 +597,7 @@ public:
 
 public:
   // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0.0;
   }
@@ -606,7 +606,7 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   inline void evaluate(const DomainType& x,
-                       const TimeType& timedummy,
+                       const TimeType& /*timedummy*/,
                        RangeType& y) const {
     evaluate(x, y);
   }

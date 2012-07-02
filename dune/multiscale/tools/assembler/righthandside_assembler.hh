@@ -658,7 +658,7 @@ public:
                                       const DiscreteFunctionType& old_u_H, // old_u_H from the last iteration step
                                       // to obtain some information about the periodic discrete function space (space
                                       // for the cell problems)
-                                      CellProblemNumberingManagerType& cp_num_manager,
+                                      CellProblemNumberingManagerType& /*cp_num_manager*/,
                                       const PeriodicDiscreteFunctionType& dummy_func,
                                       DiscreteFunctionType& rhsVector,
                                       std::string filename = "no_file") {
@@ -685,7 +685,7 @@ public:
     cell_solution_location_baseSet = "data/HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
     cell_solution_location_discFunc = "data/HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
 
-    bool reader_is_open = false;
+//    bool reader_is_open = false;
 
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader_baseSet( (cell_solution_location_baseSet).c_str() );

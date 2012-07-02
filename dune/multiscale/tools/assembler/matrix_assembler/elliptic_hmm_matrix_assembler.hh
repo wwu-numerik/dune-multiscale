@@ -79,7 +79,7 @@ public:
                               const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
                               DiffusionModel& diffusion_op,
                               CellProblemNumberingManager& cp_num_manager,
-                              std::string& filename)
+                              const std::string& filename)
     : discreteFunctionSpace_(discreteFunctionSpace)
       , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
       , diffusion_operator_(diffusion_op)
@@ -107,7 +107,7 @@ private:
   CellProblemNumberingManager& cp_num_manager_;
 
   // name of data file, e.g. required if we want to use the saved solutions of the cell problems
-  std::string* filename_;
+  const std::string* filename_;
 };
 
 // dummy implementation of "operator()"
@@ -115,8 +115,8 @@ private:
 template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
           class CellProblemNumberingManagerImp >
 void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
-                                  CellProblemNumberingManagerImp >::operator()(const DiscreteFunction& u,
-                                                                               DiscreteFunction& w) const {
+                                  CellProblemNumberingManagerImp >::operator()(const DiscreteFunction& /*u*/,
+                                                                               DiscreteFunction& /*w*/) const {
   std::cout << "the ()-operator of the DiscreteEllipticHMMOperator class is not yet implemented and still a dummy."
             << std::endl;
   std::abort();

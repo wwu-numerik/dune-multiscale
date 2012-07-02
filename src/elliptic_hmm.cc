@@ -49,7 +49,6 @@ public:
 
 
 // ! -------------------------------- important variables ---------------------------------
-enum { dimension = GridType::dimension };
 
 // name of the error file in which the data will be saved
 std::string filename_;
@@ -91,7 +90,7 @@ int main(int argc, char** argv) {
     delta_ = info.getDelta();
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-    refinement_level_macrogrid_ = atoi(argv[1]);
+    refinement_level_macrogrid_ = Stuff::Config().get("grid.refinement_level_macrogrid", 0);
 
     // grid refinement level for solving the cell problems, i.e. it describes 'h':
     const int refinement_level_cellgrid = Stuff::Config().get("grid.refinement_level_cellgrid", 1);
@@ -120,13 +119,13 @@ int main(int argc, char** argv) {
     // for the parameters:
 
     // create a grid pointer for the DGF file belongig to the macro grid:
-    GridPointerType macro_grid_pointer(macroGridName);
+    HMM::GridPointerType macro_grid_pointer(macroGridName);
     // refine the grid 'starting_refinement_level' times:
     macro_grid_pointer->globalRefine(refinement_level_macrogrid_);
 
     // create a finer GridPart for either the homogenized or the fine-scale problem.
     // this shall be used to compute an approximation of the exact solution.
-    GridPointerType fine_macro_grid_pointer(macroGridName);
+    HMM::GridPointerType fine_macro_grid_pointer(macroGridName);
     // refine the grid 'starting_refinement_level_reference' times:
     fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
 
@@ -139,7 +138,7 @@ int main(int argc, char** argv) {
     // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated
     //on
     // such a grid )
-    GridPtr< GridType > periodic_grid_pointer(UnitCubeName);
+    Dune::GridPtr< HMM::GridType > periodic_grid_pointer(UnitCubeName);
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
     // to save all information in a file
@@ -192,7 +191,8 @@ int main(int argc, char** argv) {
               fine_macro_grid_pointer,
               periodic_grid_pointer,
               refinement_difference_for_referenceproblem,
-              data_file);
+              data_file,
+              filename_);
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
     //normal
     // macro problem

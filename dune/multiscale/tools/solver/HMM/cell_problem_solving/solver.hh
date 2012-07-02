@@ -707,7 +707,7 @@ public:
 
     // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
     double minimum_time_c_p = 1000000;
-    double average_time_c_p = 0;
+//    double average_time_c_p = 0;
     double maximum_time_c_p = 0;
 
     int number_of_cell_problem = 0;

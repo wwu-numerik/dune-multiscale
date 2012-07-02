@@ -1,6 +1,6 @@
 template< class DiscreteFunctionImp, class DiffusionImp >
-void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const DiscreteFunction& u,
-                                                                                  DiscreteFunction& w) const {
+void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const DiscreteFunction&/* u*/,
+                                                                                  DiscreteFunction& /*w*/) const {
   std::cout << "the ()-operator of the DiscreteCellProblemOperator class is not yet implemented and still a dummy."
             << std::endl;
   std::abort();

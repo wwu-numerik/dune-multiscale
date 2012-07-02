@@ -3,9 +3,11 @@
 
 #include <string>
 
+#include <dune/fem/io/file/dataoutput.hh>
+
 // define output traits
 struct myDataOutputParameters
-  : public DataOutputParameters
+  : public Dune::DataOutputParameters
 {
 public:
   std::string my_prefix_;
