@@ -3,6 +3,7 @@
 
 #include <string>
 #include <dune/multiscale/problems/constants.hh>
+#include <dune/stuff/functions.hh>
 
 namespace Problem {
 /**

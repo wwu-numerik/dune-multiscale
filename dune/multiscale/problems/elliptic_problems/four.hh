@@ -81,46 +81,15 @@ public:
   } // evaluate
 
   inline void evaluate(const DomainType& x,
-                       const TimeType& time,
+                       const TimeType& /*time*/,
                        RangeType& y) const {
     evaluate(x, y);
   }
 };
 
-// ! default class for the second source term G.
-
-// Realization: set G(x) = 0:
-template< class FunctionSpaceImp >
-class SecondSource
-  : public Dune::Fem::Function< FunctionSpaceImp, SecondSource< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef SecondSource< FunctionSpaceType >                  ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-public:
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    y[0] = 0;
-  }
-
-  inline void evaluate(const int i, const DomainType& x,
-                       RangeType& y) const {
-    y[0] = 0;
-  }
-};
+  /** \brief default class for the second source term G.
+   * Realization: set G(x) = 0: **/
+  NULLFUNCTION(SecondSource)
 
 // the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
 // A^{\epsilon} : R^d -> R^d
@@ -310,60 +279,12 @@ public:
     #endif // ifdef LINEAR_PROBLEM
   } // jacobianDiffusiveFlux
 
-// deprecated
-// ! defaults (not to be used):
-// z_i = A^{\epsilon}_i(x,vec)
-// instantiate all possible cases of the evaluate-method:
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-
-    std::abort();
-  } // evaluate
-
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const DomainType& y,
-                       RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-
-    std::abort();
-
-    z = 0.0;
-  } // evaluate
-
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const TimeType& time,
-                       RangeType& z) const {
-    std::cout
-    << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation."
-    << std::endl;
-
-    std::abort();
-
-    return evaluate(i, j, x, z);
-  } // evaluate
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    std::cout
-    <<
-    "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
-    << std::endl;
-    std::abort();
-  } // evaluate
+  /** \deprecated throws Dune::NotImplemented exception **/
+  template < class... Args >
+  void evaluate( Args... ) const
+  {
+    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
+  }
 };
 
 template< class FunctionSpaceImp, class FieldMatrixImp >
@@ -408,7 +329,7 @@ public:
   // instantiate all possible cases of the evaluate-method:
 
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& x,
+  void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
     #ifdef LINEAR_PROBLEM
@@ -422,26 +343,20 @@ public:
     #endif // ifdef LINEAR_PROBLEM
   } // diffusiveFlux
 
-  // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
-  // "nabla w", i.e.
-  // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
-
-  // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& x,
-                             const JacobianRangeType& position_gradient,
-                             const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const {
-    #ifdef LINEAR_PROBLEM
-    std::cout << "Not yet implemented." << std::endl;
-    std::abort();
-    #else // ifdef LINEAR_PROBLEM
-    std::cout << "Nonlinear example not yet implemented." << std::endl;
-    std::abort();
-    #endif // ifdef LINEAR_PROBLEM
+  /** the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
+   * "nabla w", i.e.
+   * jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
+   * jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient 
+  **/
+  void jacobianDiffusiveFlux(const DomainType&,
+                             const JacobianRangeType&,
+                             const JacobianRangeType&,
+                             JacobianRangeType&) const {
+    DUNE_THROW(Dune::NotImplemented,"");
   } // jacobianDiffusiveFlux
 
   template < class... Args >
-  void evaluate( Args... )
+  void evaluate( Args... ) const
   {
     DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   }
@@ -469,14 +384,14 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0.00001;
   }
 
   // dummy implementation
   inline void evaluate(const DomainType& x,
-                       const TimeType time,
+                       const TimeType /*time*/,
                        RangeType& y) const {
     std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
               << std::endl;
@@ -484,35 +399,8 @@ public:
   }
 };
 
-// a dummy function class for functions, vectors and matrices
-template< class FunctionSpaceImp >
-class DefaultDummyFunction
-  : public Dune::Fem::Function< FunctionSpaceImp, DefaultDummyFunction< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef DefaultDummyFunction< FunctionSpaceType >          ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-template < class... InputTypes >
-  inline void evaluate(InputTypes... /*a*/,
-                       RangeType& out) const {
-    out = RangeType(0);
-  }
-};
-
+//! a dummy function class for functions, vectors and matrices
+NULLFUNCTION(DefaultDummyFunction)
 // ! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
@@ -540,7 +428,7 @@ public:
 
 public:
   // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0.0;
   }
@@ -549,7 +437,7 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   inline void evaluate(const DomainType& x,
-                       const TimeType& timedummy,
+                       const TimeType& /*timedummy*/,
                        RangeType& y) const {
     evaluate(x, y);
   }

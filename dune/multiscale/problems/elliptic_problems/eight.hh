@@ -92,24 +92,9 @@ public:
   }
 };
 
-// ! default class for the second source term G.
-
-// Realization: set G(x) = 0:
-template< class FunctionSpaceImp >
-class SecondSource
-  : public Dune::Fem::Function< FunctionSpaceImp, SecondSource< FunctionSpaceImp > >
-{
-public:
-  typedef typename FunctionSpaceImp::DomainType DomainType;
-  typedef typename FunctionSpaceImp::RangeType  RangeType;
-
-public:
-  template < class... InputTypes >
-  inline void evaluate(InputTypes... /*a*/,
-                       RangeType& out) const {
-    out = RangeType(0);
-  }
-};
+/** \brief default class for the second source term G.
+ * Realization: set G(x) = 0: **/
+NULLFUNCTION(SecondSource)
 
 // the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
 // A^{\epsilon} : R^d -> R^d
@@ -204,7 +189,7 @@ public:
   } // jacobianDiffusiveFlux
 
   template < class... Args >
-  void evaluate( Args... )
+  void evaluate( Args... ) const
   {
     DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details.");
   }
@@ -260,7 +245,7 @@ public:
   // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
 
   // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& x,
+  void jacobianDiffusiveFlux(const DomainType& /*x*/,
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& /*direction_gradient*/,
                              JacobianRangeType& /*flux*/) const {
@@ -274,7 +259,7 @@ public:
   } // jacobianDiffusiveFlux
 
   template < class... Args >
-  void evaluate( Args... )
+  void evaluate( Args... ) const
   {
     DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details.");
   }
@@ -343,10 +328,6 @@ public:
   void evaluate( InputArgs..., RangeType& out )
   {
     out = RangeType(0);
-  }
-
-  inline void getTimeStepSize(double& time_step_size) const {
-    time_step_size = 0;
   }
 };
 

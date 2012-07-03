@@ -74,7 +74,7 @@ public:
   } // evaluate
 
   inline void evaluate(const DomainType& x,
-                       const TimeType& time,
+                       const TimeType& /*time*/,
                        RangeType& y) const {
     evaluate(x, y);
   }
@@ -109,7 +109,7 @@ public:
     y[0] = 0;
   }
 
-  inline void evaluate(const int i, const DomainType& /*x*/,
+  inline void evaluate(const int /*i*/, const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0;
   }
@@ -280,59 +280,11 @@ public:
     }
   } // jacobianDiffusiveFlux
 
-// deprecated
-// ! defaults (not to be used):
-// z_i = A^{\epsilon}_i(x,vec)
-// instantiate all possible cases of the evaluate-method:
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-    std::abort();
-  } // evaluate
-
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const DomainType& y,
-                       RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-
-    std::abort();
-
-    z = 0.0;
-  } // evaluate
-
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const TimeType& time,
-                       RangeType& z) const {
-    std::cout
-    << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation."
-    << std::endl;
-
-    std::abort();
-
-    return evaluate(i, j, x, z);
-  } // evaluate
-
-  // dummy implementation
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& /*y*/) const {
-    std::cout
-    <<
-    "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
-    << std::endl;
-    std::abort();
-  } // evaluate
+  template < class... Args >
+  void evaluate( Args... ) const
+  {
+    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
+  }
 };
 
 template< class FunctionSpaceImp, class FieldMatrixImp >
@@ -407,55 +359,11 @@ public:
     }
   } // jacobianDiffusiveFlux
 
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const DomainType& y,
-                       RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-    std::abort();
-    z = 0.0;
-  } // evaluate
-
-// deprecated
-// ! defaults (not to be used):
-// z_i = A^{\epsilon}_i(x,vec)
-// instantiate all possible cases of the evaluate-method:
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-    std::abort();
-  } // evaluate
-
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const TimeType& time,
-                       RangeType& z) const {
-    std::cout
-    << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation."
-    << std::endl;
-    std::abort();
-    return evaluate(i, j, x, z);
-  } // evaluate
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    std::cout
-    <<
-    "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
-    << std::endl;
-    std::abort();
-  } // evaluate
+  template < class... Args >
+  void evaluate( Args... ) const
+  {
+    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
+  }
 };
 
 // define the mass term:
@@ -487,7 +395,7 @@ public:
 
   // dummy implementation
   inline void evaluate(const DomainType& x,
-                       const TimeType time,
+                       const TimeType /*time*/,
                        RangeType& y) const {
     std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
               << std::endl;
@@ -495,81 +403,8 @@ public:
   }
 };
 
-// a dummy function class for functions, vectors and matrices
-template< class FunctionSpaceImp >
-class DefaultDummyFunction
-  : public Dune::Fem::Function< FunctionSpaceImp, DefaultDummyFunction< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef DefaultDummyFunction< FunctionSpaceType >          ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  inline void evaluate(const int /*i*/,
-                       const int /*j*/,
-                       const DomainType& /*x*/,
-                       const DomainType& /*y*/,
-                       RangeType& z) const {
-    z = 0;
-  }
-
-  inline void evaluate(const int /*i*/,
-                       const DomainType& /*x*/,
-                       const DomainType& /*y*/,
-                       RangeType& z) const {
-    z = 0;
-  }
-
-  inline void evaluate(const int /*i*/,
-                       const int /*j*/,
-                       const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  inline void evaluate(const int /*i*/,
-                       const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  inline void evaluate(const int i,
-                       const DomainType& /*x*/,
-                       const TimeType& /*t*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType /*time*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  inline void getTimeStepSize(double& time_step_size) const {
-    time_step_size = 0;
-  }
-};
-
+//! a dummy function class for functions, vectors and matrices
+NULLFUNCTION(DefaultDummyFunction)
 // ! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
