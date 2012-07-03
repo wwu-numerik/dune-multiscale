@@ -506,56 +506,10 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const DomainType& y,
-                       RangeType& z) const {
-    z = 0;
-  }
-
-  inline void evaluate(const int i,
-                       const DomainType& x,
-                       const DomainType& y,
-                       RangeType& z) const {
-    z = 0;
-  }
-
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  inline void evaluate(const int i,
-                       const DomainType& x,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  inline void evaluate(const int i,
-                       const DomainType& x,
-                       const TimeType& t,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType time,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  inline void getTimeStepSize(double& time_step_size) const {
-    time_step_size = 0;
+template < class... InputTypes >
+  inline void evaluate(InputTypes... /*a*/,
+                       RangeType& out) const {
+    out = RangeType(0);
   }
 };
 
