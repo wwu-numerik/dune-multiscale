@@ -405,6 +405,7 @@ const {
   global_matrix.clear();
 
   std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_Phi( discreteFunctionSpace_.mapper().maxNumDofs() );
+  std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_Phi_new( discreteFunctionSpace_.mapper().maxNumDofs() );
 
   int number_of_macro_entity = 0;
 
@@ -520,6 +521,9 @@ const {
       #endif // ifdef AD_HOC_COMPUTATION
       #endif // ifdef TFR
     }
+    // the multiplication with jacobian inverse is delegated
+    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_new);
+    assert( gradient_Phi == gradient_Phi_new );
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
     {
