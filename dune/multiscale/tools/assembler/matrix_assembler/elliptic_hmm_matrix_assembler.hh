@@ -72,6 +72,7 @@ public:
     : discreteFunctionSpace_(discreteFunctionSpace)
       , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
       , diffusion_operator_(diffusion_op)
+      , cp_num_manager_(cp_num_manager)
       , filename_(NULL)
   {}
 

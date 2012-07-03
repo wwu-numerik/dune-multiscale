@@ -83,7 +83,7 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y = 1.0;
   }
@@ -219,7 +219,7 @@ public:
 
   // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
   void jacobianDiffusiveFlux(const DomainType& x,
-                             const JacobianRangeType& position_gradient,
+                             const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
     #ifdef STOCHASTIC_PERTURBATION
@@ -274,43 +274,26 @@ public:
     { z = 0.0; }
   }
 
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const DomainType& y,
-                       RangeType& z) const {
-    std::cout
-    <<
-    "WARNING! Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details."
-    << std::endl;
-
-    std::abort();
-
-    z = 0.0;
+  inline void evaluate(const int /*i*/,
+                       const int /*j*/,
+                       const DomainType& /*x*/,
+                       const DomainType& /*y*/,
+                       RangeType& /*z*/) const {
+    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   } // evaluate
 
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const TimeType& time,
-                       RangeType& z) const {
-    std::cout
-    << "WARNING! Call for 'evaluate' method of the Diffusion class with time variable! Skip to standard evaluation."
-    << std::endl;
-
-    std::abort();
-
-    return evaluate(i, j, x, z);
+  inline void evaluate(const int /*i*/,
+                       const int /*j*/,
+                       const DomainType& /*x*/,
+                       const TimeType& /*time*/,
+                       RangeType& /*z*/) const {
+    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   } // evaluate
 
   // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    std::cout
-    <<
-    "WARNING! Wrong call for 'evaluate' method of the Diffusion class (evaluate(x,y)). This is just a dummy method. Use 'diffusiveFlux(...)' instead."
-    << std::endl;
-    std::abort();
+  inline void evaluate(const DomainType& /*x*/,
+                       RangeType& /*y*/) const {
+    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   } // evaluate
 };
 
@@ -339,14 +322,10 @@ public:
 public:
   FieldMatrixType* A_hom_;
 
-  #if 1
-
 public:
   inline explicit HomDiffusion(FieldMatrixType& A_hom)
     : A_hom_(&A_hom)
   {}
-
-  #endif // if 1
 
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
@@ -356,7 +335,7 @@ public:
   // instantiate all possible cases of the evaluate-method:
 
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& x,
+  void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
     flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
@@ -404,14 +383,14 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0.00001;
   }
 
   // dummy implementation
   inline void evaluate(const DomainType& x,
-                       const TimeType time,
+                       const TimeType /*time*/,
                        RangeType& y) const {
     std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
               << std::endl;
@@ -448,7 +427,7 @@ public:
 
 public:
   // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0.0;
   }
@@ -457,7 +436,7 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   inline void evaluate(const DomainType& x,
-                       const TimeType& timedummy,
+                       const TimeType& /*timedummy*/,
                        RangeType& y) const {
     evaluate(x, y);
   }

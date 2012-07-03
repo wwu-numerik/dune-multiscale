@@ -252,7 +252,7 @@ public:
   // instantiate all possible cases of the evaluate-method:
 
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& x,
+  void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
     std::cout << "No homogenization available" << std::endl;
@@ -310,14 +310,14 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0.00001;
   }
 
   // dummy implementation
   inline void evaluate(const DomainType& x,
-                       const TimeType time,
+                       const TimeType /*time*/,
                        RangeType& y) const {
     std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
               << std::endl;
@@ -388,7 +388,7 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   inline void evaluate(const DomainType& x,
-                       const TimeType& timedummy,
+                       const TimeType& /*timedummy*/,
                        RangeType& y) const {
     evaluate(x, y);
   }

@@ -274,7 +274,6 @@ public:
 
     Problem::ModelProblemData model_info;
     const double delta = model_info.getDelta();
-    const double epsilon_estimated = model_info.getEpsilonEstimated();
 
     EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
     // the global quadrature (quadrature on the macro element T)
@@ -519,7 +518,6 @@ public:
 
     Problem::ModelProblemData model_info;
     const double delta = model_info.getDelta();
-    const double epsilon_estimated = model_info.getEpsilonEstimated();
 
     EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
     // the global quadrature (quadrature on the macro element T)
@@ -564,7 +562,7 @@ public:
     }
 
     // number of boundary faces per cube-edge:
-    int num_boundary_faces_per_direction = int( (1 / ref_edge_length) + 0.2 );
+    const int num_boundary_faces_per_direction = int( (1 / ref_edge_length) + 0.2 );
     // (+0.2 to avoid rounding errors)
 
     // generalized jump up/down
@@ -809,7 +807,7 @@ public:
     }
 
     // number of boundary faces per (\epsilon/\delta-scaled) cube edge:
-    int num_boundary_faces_per_direction = int( ( (epsilon_estimated / delta) / ref_edge_length ) + 0.2 );
+    const int num_boundary_faces_per_direction = int( ( (epsilon_estimated / delta) / ref_edge_length ) + 0.2 );
     // (+0.2 to avoid rounding errors)
 
     // generalized jump up/down
@@ -1079,7 +1077,7 @@ public:
     }
 
     // number of boundary faces per (\epsilon/\delta-scaled) cube edge:
-    int num_boundary_faces_per_direction = int( ( (epsilon_estimated / delta) / ref_edge_length ) + 0.2 );
+    const int num_boundary_faces_per_direction = int( ( (epsilon_estimated / delta) / ref_edge_length ) + 0.2 );
     // (+0.2 to avoid rounding errors)
 
     // generalized jump up/down

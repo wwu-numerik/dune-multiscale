@@ -325,7 +325,7 @@ public:
   // instantiate all possible cases of the evaluate-method:
 
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& x,
+  void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
     if ( constants().get("linear", true) )
@@ -345,10 +345,10 @@ public:
   // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
 
   // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& x,
-                             const JacobianRangeType& position_gradient,
-                             const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const {
+  void jacobianDiffusiveFlux(const DomainType& /*x*/,
+                             const JacobianRangeType& /*position_gradient*/,
+                             const JacobianRangeType& /*direction_gradient*/,
+                             JacobianRangeType& /*flux*/) const {
     if ( constants().get("linear", true) )
     {
       std::cout << "Not yet implemented." << std::endl;

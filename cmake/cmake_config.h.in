@@ -14,8 +14,6 @@
 #define GRIDDIM @GRIDDIM@
 #define WORLDDIM GRIDDIM
 #define ALBERTA_DIM WORLDDIM
-#define HAVE_ALUGRID 1
-#define HAVE_ALBERTAGRID 1
 #define ALBERTA_DEBUG 1
 #cmakedefine @ENABLE_ALUGRID@ 
 #cmakedefine @ENABLE_ABERTA@ 
@@ -23,8 +21,6 @@
 #define DUNE_ISTL_WITH_CHECKING 1
 
 #include <config.h>
-#define HAVE_BOOST 1
-#define HAVE_BOOST_FUSION 1
 
 #ifdef NDEBUG
 	#define DNDEBUG

@@ -384,7 +384,7 @@ public:
   // for two discrete functions auf dem gleichen, aber nicht dem selben grid (z.B. identisch angelegt)
   template< int polOrd >
   RangeFieldType norm_L2(const DiscreteFunctionType& f1,
-                         const DiscreteFunctionType& f2, double dummy = 0) {
+                         const DiscreteFunctionType& f2, double /*dummy*/ = 0) {
     const DiscreteFunctionSpaceType& space = f1.space();
 
     const GridPartType& gridPart = space.gridPart();
@@ -455,7 +455,7 @@ public:
   // refinment of the gridPart of 'coarse_disc_func'
   template< int polOrd >
   RangeFieldType norm_uniform_grids(const DiscreteFunctionType& coarse_disc_func,
-                                    const DiscreteFunctionType& fine_disc_func, double dummy = 0) {
+                                    const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) {
     // get function spaces
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
     const DiscreteFunctionSpaceType& fine_discreteFunctionSpace = fine_disc_func.space();
@@ -508,8 +508,6 @@ public:
 
       // create at quadrature with 3 quadrature points:
       CachingQuadrature< GridPartType, 0 > coarse_quad(*fine_father_entity, 2);       // 3 points for linear pol in 2D
-      const int coarse_quadNop = coarse_quad.nop();
-
       // get geoemetry of coarse entity
       const EnGeometryType& coarse_geo = fine_father_entity->geometry();
 
@@ -562,11 +560,10 @@ public:
     return sqrt(l2Norm);
   } // end method
 
-  #if true
   // expensive hack (no more required):
   template< int polOrd >
   RangeFieldType norm_adaptive_grids_2(const DiscreteFunctionType& coarse_disc_func,
-                                       const DiscreteFunctionType& fine_disc_func, double dummy = 0) {
+                                       const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) {
     // check if the discrete functions have valid dofs:
     if ( !coarse_disc_func.dofsValid() || !fine_disc_func.dofsValid() )
     {
@@ -723,8 +720,6 @@ public:
 
           // create at quadrature with 3 quadrature points:
           CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);        // 3 points for linear pol in 2D
-          const int coarse_quadNop = coarse_quad.nop();
-
           for (int qp = 0; qp < 3; ++qp)
           {
             coarse_quad_point[qp] = coarse_geo.global( coarse_quad.point(qp) );
@@ -802,9 +797,7 @@ public:
     return sqrt(l2Norm);
   } // end method
 
-  #endif // if true
 
-  #if 1
   // expensive hack
   // does not yet work:
   // evaluate  disc_func + Q^eps( disc_func ) in x
@@ -813,7 +806,7 @@ public:
                                     const DomainType& x,
                                     const DiscreteFunctionSpaceType& local_discreteFunctionSpace,
                                     LocalProblemNumManagerType& lp_num_manager,
-                                    double dummy = 0) {
+                                    double /*dummy*/ = 0) {
     // f(x) + Q(f)(x)
     RangeType value = 0.0;
 
@@ -934,8 +927,6 @@ public:
 
         // create at quadrature with 3 quadrature points:
         CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);       // 3 points for linear pol in 2D
-        const int coarse_quadNop = coarse_quad.nop();
-
         // for the Lagrange Interpolation on the relevant coarse entity:
         DomainType coarse_quad_point[3];
         RangeType local_value_coarse_func[3];
@@ -1094,8 +1085,6 @@ public:
             // create at quadrature with 3 quadrature points:
             CachingQuadrature< GridPartType, 0 > local_quad(*local_grid_it, 2);          // 3 points for linear pol in
                                                                                          // 2D
-            const int fine_quadNop = local_quad.nop();
-
             // for the Lagrange Interpolation on the relevant coarse entity:
             DomainType fine_quad_point[3];
             RangeType local_value_corrector_func[3];
@@ -1136,9 +1125,6 @@ public:
     return value;
   } // end method
 
-  #endif // if 1
-
-  #if 1
   // expensive hack
   // does not yet work:
   // evaluate gradient( disc_func + Q^eps( disc_func ) ) in x
@@ -1147,8 +1133,8 @@ public:
                                     const DomainType& x,
                                     const DiscreteFunctionSpaceType& local_discreteFunctionSpace,
                                     LocalProblemNumManagerType& lp_num_manager,
-                                    double dummy = 0) {
-    #if 0
+                                    double /*dummy*/ = 0) {
+    DUNE_THROW(Dune::NotImplemented, "jacobian_with_corrector hack not working yet");
     // f(x) + Q(f)(x)
     RangeType value = 0.0;
 
@@ -1240,20 +1226,6 @@ public:
       if ( ( (F_inverse_of_x[0] >= 0.0) && (F_inverse_of_x[0] <= 1.0) )
            && ( (F_inverse_of_x[1] >= 0.0) && ( F_inverse_of_x[1] <= (1.0 - F_inverse_of_x[0]) ) ) )
       {
-        #if 0
-
-        std::cout << "Gefunden!" << std::endl;
-        std::cout << "x = " << x << std::endl;
-        std::cout << "corner_0_of_T = " << corner_0_of_T << std::endl;
-        std::cout << "corner_1_of_T = " << corner_1_of_T << std::endl;
-        std::cout << "corner_2_of_T = " << corner_2_of_T << std::endl << std::endl;
-
-        std::cout << "val_A_T[0][0] = " << val_A_T[0][0] << std::endl;
-        std::cout << "val_A_T[0][1] = " << val_A_T[0][1] << std::endl;
-        std::cout << "val_A_T[1][0] = " << val_A_T[1][0] << std::endl;
-        std::cout << "val_A_T[1][1] = " << val_A_T[1][1] << std::endl;
-
-        #endif // if 0
 
         LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
 
@@ -1265,8 +1237,6 @@ public:
 
         // create at quadrature with 3 quadrature points:
         CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);       // 3 points for linear pol in 2D
-        const int coarse_quadNop = coarse_quad.nop();
-
         // for the Lagrange Interpolation on the relevant coarse entity:
         DomainType coarse_quad_point[3];
         RangeType local_value_coarse_func[3];
@@ -1425,8 +1395,6 @@ public:
             // create at quadrature with 3 quadrature points:
             CachingQuadrature< GridPartType, 0 > local_quad(*local_grid_it, 2);          // 3 points for linear pol in
                                                                                          // 2D
-            const int fine_quadNop = local_quad.nop();
-
             // for the Lagrange Interpolation on the relevant coarse entity:
             DomainType fine_quad_point[3];
             RangeType local_value_corrector_func[3];
@@ -1464,12 +1432,9 @@ public:
       return 0.0;
     }
 
-    #endif // if 0
-
-    return 0.0; // !value;
+    return value;
   } // end method
 
-  #endif // if 1
 
   // for two discrete functions...
   template< typename LocalProblemNumManagerType, int polOrd >
@@ -1797,21 +1762,16 @@ public:
 
   #endif // if 0
 
-  #if 1
-
   // expensive hack:
   template< int polOrd >
   RangeFieldType norm_adaptive_grids(const DiscreteFunctionType& coarse_disc_func,
-                                     const DiscreteFunctionType& fine_disc_func, double dummy = 0) {
+                                     const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) {
     // check if the discrete functions have valid dofs:
     if ( !coarse_disc_func.dofsValid() || !fine_disc_func.dofsValid() )
     {
       std::cout << "Solution of discrete function invalid." << std::endl;
       return 0.0;
     }
-
-    bool error_in_compuation = false;
-
     // get function spaces
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
     const DiscreteFunctionSpaceType& fine_discreteFunctionSpace = fine_disc_func.space();
@@ -1832,9 +1792,6 @@ public:
     RangeFieldType l2Norm = 0.0;
 
     // for product:
-    // int quadOrd = (polOrd*2)*(polOrd*2);
-    int quadOrd = polOrd;
-
     // last entity of fine grid:
     IteratorType fine_end = fine_discreteFunctionSpace.end();
     for (IteratorType fine_it = fine_discreteFunctionSpace.begin(); fine_it != fine_end; ++fine_it)
@@ -1872,7 +1829,6 @@ public:
     return sqrt(l2Norm);
   } // end method
 
-  #endif // if 1
 
   #if 0
   // expensive hack:
@@ -2269,7 +2225,7 @@ public:
   // refinment of the gridPart of 'coarse_disc_func'
   template< int polOrd >
   RangeFieldType norm2(const DiscreteFunctionType& coarse_disc_func,
-                       const DiscreteFunctionType& fine_disc_func, double dummy = 0) {
+                       const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) {
     // get function spaces
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
     const DiscreteFunctionSpaceType& fine_discreteFunctionSpace = fine_disc_func.space();
@@ -2331,7 +2287,6 @@ public:
 
       // create at quadrature with 3 quadrature points:
       CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);    // 3 points for linear pol in 2D
-      const int coarse_quadNop = coarse_quad.nop();
 
       // get geoemetry of coarse entity
       const EnGeometryType& coarse_geo = coarse_it->geometry();

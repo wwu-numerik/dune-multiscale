@@ -302,7 +302,7 @@ public:
   // instantiate all possible cases of the evaluate-method:
 
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& x,
+  void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
     flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
@@ -350,14 +350,14 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0.00001;
   }
 
   // dummy implementation
   inline void evaluate(const DomainType& x,
-                       const TimeType time,
+                       const TimeType /*time*/,
                        RangeType& y) const {
     std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
               << std::endl;
@@ -430,7 +430,7 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   inline void evaluate(const DomainType& x,
-                       const TimeType& timedummy,
+                       const TimeType& /*timedummy*/,
                        RangeType& y) const {
     evaluate(x, y);
   }
@@ -438,17 +438,6 @@ public:
 } // namespace Nine {
 }
 
-// we need to know the term 'abstract class'.
 
-// In short: An abstract class is only created to be a 'base class' for a set of other classes (the so called 'derived
-// classes').
-// These derived classes typically share a number of methods that can be subsumed by the abstract class.
-// Abstract classes contain at least one virtual method, that means a method of the kind: 'virtual "datatype"
-// methodname() = 0;'.
-// Examples for virtual methods are: 'virtual void evaluate() = 0;' or 'virtual integer sum() = 0;'.
-// Virtual methods can not be used, they will lead to error prompts! Therefor it is impossible to create objects of an
-// abstract class.
-// To use such a method nevertheless, the virtual method must be inherited and overwhrighten by an equally named method
-// of a derived class.
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE

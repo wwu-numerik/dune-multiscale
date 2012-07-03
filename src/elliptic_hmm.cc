@@ -39,28 +39,11 @@ public:
 };
 }
 
-
-
 // ! local (dune-multiscale) includes
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/solver/HMM/reconstruction_manager/elliptic/reconstructionintegrator.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
-
-
-// ! -------------------------------- important variables ---------------------------------
-
-// name of the error file in which the data will be saved
-std::string filename_;
-
-double epsilon_; // 'epsilon' in for instance A^{epsilon}(t,x) = A(t,x/epsilon)
-double epsilon_est_; // estimated epsilon in case epsilon is unknown
-double delta_; // edge length of the cells in the cell proplems,
-
-int refinement_level_macrogrid_;
-int refinement_level_referenceprob_;
-
-double error_tolerance_;
 
 int main(int argc, char** argv) {
   try {
@@ -69,6 +52,18 @@ int main(int argc, char** argv) {
     std::string path = std::string("data/HMM/") + Stuff::Config().get("global.datadir", "data");
     // generate directories for data output
     Stuff::testCreateDirectory(path);
+
+    // ! -------------------------------- important variables ---------------------------------
+
+    // name of the error file in which the data will be saved
+    std::string filename_;
+
+    double epsilon_; // 'epsilon' in for instance A^{epsilon}(t,x) = A(t,x/epsilon)
+    double epsilon_est_; // estimated epsilon in case epsilon is unknown
+    double delta_; // edge length of the cells in the cell proplems,
+
+    int refinement_level_macrogrid_;
+    int refinement_level_referenceprob_;
 
     #ifdef RESUME_TO_BROKEN_COMPUTATION
     // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
