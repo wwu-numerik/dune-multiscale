@@ -23,6 +23,7 @@ public:
   typedef PeriodicLeafIndexSet< GridType > IndexSetType;
 
   static const PartitionIteratorType indexSetPartitionType = All_Partition;
+  static const InterfaceType indexSetInterfaceType = All_All_Interface;
 
   // typedef PeriodicLeafIntersectionIterator< GridType > IntersectionIteratorType;
   typedef typename GridType::LeafIntersectionIterator IntersectionIteratorType;

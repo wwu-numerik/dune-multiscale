@@ -155,10 +155,10 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
   const double delta = model_info.getDelta();
   const double epsilon_estimated = model_info.getEpsilonEstimated();
 
-  bool reader_is_open = false;
+
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader( (cell_solution_location).c_str() );
-  reader_is_open = discrete_function_reader.open();
+  const bool reader_is_open = discrete_function_reader.open();
 
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
@@ -382,7 +382,7 @@ const {
   const double delta = model_info.getDelta();
   const double epsilon_estimated = model_info.getEpsilonEstimated();
 
-  bool reader_is_open = false;
+
 
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader_baseSet( (cell_solution_location_baseSet).c_str() );
@@ -394,7 +394,7 @@ const {
 
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader_jac_cor( (jac_cor_cell_solution_location_baseSet_discFunc).c_str() );
-  reader_is_open = discrete_function_reader_jac_cor.open();
+//  const bool reader_is_open = discrete_function_reader_jac_cor.open();
 
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
@@ -437,7 +437,7 @@ const {
     const FieldMatrix< double, dimension, dimension >& inverse_jac
       = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
 
-    int cell_problem_id[numMacroBaseFunctions];
+    std::vector<int> cell_problem_id(numMacroBaseFunctions, -1);
 
     // \nabla_x u_H^{(n-1})(x_T)
     typename BaseFunctionSet::JacobianRangeType grad_old_u_H;
@@ -455,6 +455,7 @@ const {
     #else // ifdef AD_HOC_COMPUTATION
     discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
 
+    {
     #if 0
     // !LOESCHEN:
     if (number_of_macro_entity == 341)
@@ -489,6 +490,7 @@ const {
     }
     // !-------------------------------------
     #endif // if 0
+    }
 
     #endif // ifdef AD_HOC_COMPUTATION
 

@@ -79,15 +79,15 @@ public:
   virtual void operator()(const DiscreteFunction& u, DiscreteFunction& w) const;
 
   template< class MatrixType >
-  void assemble_matrix(MatrixType& global_matrix, bool boundary_treatment) const;
+  void assemble_matrix(MatrixType& global_matrix, bool boundary_treatment = true) const;
 
   // Matrix Assembler for local problems on a Subgrid of the Hostgrid:
   template< class MatrixType, class HostDiscreteFunctionSpaceType >
   void assemble_matrix(MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace,
-                       bool boundary_treatment) const;
+                       bool boundary_treatment = true) const;
 
   template< class MatrixType >
-  void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix, bool boundary_treatment) const;
+  void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix, bool boundary_treatment = true) const;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
@@ -184,7 +184,7 @@ template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
 template< class MatrixType >
 void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::assemble_matrix(
   MatrixType& global_matrix,
-  bool boundary_treatment = true) const {
+  bool boundary_treatment ) const {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
   global_matrix.reserve();
@@ -292,7 +292,7 @@ template< class MatrixType, class HostDiscreteFunctionSpaceType >
 void DiscreteEllipticOperator< DiscreteFunctionImp,
                                DiffusionImp,
                                ReactionImp >::assemble_matrix
-  (MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace, bool boundary_treatment = true) const {
+  (MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace, bool boundary_treatment ) const {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
   global_matrix.reserve();
@@ -424,7 +424,7 @@ template< class MatrixType >
 void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::assemble_jacobian_matrix(
   DiscreteFunction& disc_func,
   MatrixType& global_matrix,
-  bool boundary_treatment = true) const {
+  bool boundary_treatment ) const {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
   typedef typename DiscreteFunction::LocalFunctionType
