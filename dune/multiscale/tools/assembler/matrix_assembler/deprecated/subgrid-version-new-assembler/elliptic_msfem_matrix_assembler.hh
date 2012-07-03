@@ -303,17 +303,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
     const CoarseBaseFunctionSet& coarse_grid_baseSet = local_matrix.domainBaseFunctionSet();
     const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.numBaseFunctions();
 
-    #if 0
-    if (global_index_entity == 0)
-    {
-      std::cout << "Im Assembler." << std::endl;
-      std::cout << "coarse_grid_it->geometry().corner(0) = " << coarse_grid_it->geometry().corner(0) << std::endl;
-      std::cout << "coarse_grid_it->geometry().corner(1) = " << coarse_grid_it->geometry().corner(1) << std::endl;
-      std::cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geometry().corner(2) << std::endl;
-    }
-    #endif // if 0
-
-    #if 1
 
     // the sub grid U(T) that belongs to the coarse_grid_entity T
     SubGridType& sub_grid_U_T = subgrid_list_.getSubGrid(global_index_entity);
@@ -369,8 +358,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
       std::cout << std::setw(5) << *dit << "  ";
     std::cout << " ] " << std::endl;
     #endif // if 0
-
-    #endif // if 1
 
     // 1 point quadrature!! We only need the gradient of the base function,
     // which is constant on the whole entity.

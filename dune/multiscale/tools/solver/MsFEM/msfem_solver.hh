@@ -365,15 +365,6 @@ public:
   // create a hostgrid function from a subgridfunction (projection for global continuity)
   // Note: the maximum gride levels for both underlying grids must be the same
   void subgrid_to_hostrid_projection(const SubgridDiscreteFunction& sub_func, DiscreteFunction& host_func) {
-    #if 0
-    if ( sub_func.space().gridPart().grid().maxLevel() != host_func.space().gridPart().grid().maxLevel() )
-    {
-      std::cout << "Error in method 'subgrid_to_hostrid_function': MaxLevel of SubGrid = "
-                << sub_func.space().gridPart().grid().maxLevel() << " not identical to MaxLevel of FineGrid = "
-                << host_func.space().gridPart().grid().maxLevel() << "." << std::endl;
-    }
-    #endif // if 0
-
     host_func.clear();
 
     const SubgridDiscreteFunctionSpace& subDiscreteFunctionSpace = sub_func.space();
@@ -431,19 +422,6 @@ public:
 
     HostgridIterator coarse_iterator_end = coarse_space.end();
     HostgridIterator coarse_iterator_begin = coarse_space.begin();
-
-    #if 0
-    int i = 0;
-    for (HostgridIterator coarse_it = coarse_iterator_begin; coarse_it != coarse_iterator_end; ++coarse_it)
-    {
-      std::cout << "i = " << i << std::endl;
-      std::cout << "coarse element corner(0) = " << coarse_it->geometry().corner(0) << std::endl;
-      std::cout << "coarse element corner(1) = " << coarse_it->geometry().corner(1) << std::endl;
-      std::cout << "coarse element corner(2) = " << coarse_it->geometry().corner(2) << std::endl << std::endl;
-      i += 1;
-    }
-    #endif // if 0
-
     HostGrid& grid = discreteFunctionSpace_.gridPart().grid();
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
@@ -577,8 +555,6 @@ public:
       for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
         coarse_father = coarse_father->father();
 
-      // ! new version:
-      #if 1
       typename HostEntity::template Codim< 0 >::EntityPointer coarse_father_test = coarse_father;
 
       bool father_found = false;
@@ -593,37 +569,6 @@ public:
         { father_found = true; } else
         { coarse_father_test = coarse_father_test->father(); }
       }
-      #endif // if 1
-
-      // ! old version
-      #if 0
-      bool father_found = false;
-      while (father_found == false)
-      {
-        if (coarseGridLeafIndexSet.contains(*coarse_father) == true)
-        {
-          if (coarse_father->hasFather() == false)
-          { father_found = true; } else {
-            if (coarseGridLeafIndexSet.contains( *( coarse_father->father() ) ) == false)
-            { father_found = true; }
-          }
-        }
-
-        if (father_found == false)
-        { coarse_father = coarse_father->father(); }
-      }
-      #endif // if 0
-
-      #if 0
-      int index_ce = coarseGridLeafIndexSet.index(*coarse_father);
-      std::cout << "index_ce = " << index_ce << std::endl;
-      std::cout << "fine element corner(0) = " << it->geometry().corner(0) << std::endl;
-      std::cout << "fine element corner(1) = " << it->geometry().corner(1) << std::endl;
-      std::cout << "fine element corner(2) = " << it->geometry().corner(2) << std::endl << std::endl;
-      std::cout << "coarse element corner(0) = " << coarse_father->geometry().corner(0) << std::endl;
-      std::cout << "coarse element corner(1) = " << coarse_father->geometry().corner(1) << std::endl;
-      std::cout << "coarse element corner(2) = " << coarse_father->geometry().corner(2) << std::endl << std::endl;
-      #endif // if 0
 
       LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse(coarse_father);
 
@@ -765,8 +710,6 @@ public:
         for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
           father = father->father();
 
-        // ! new version:
-        #if 1
         typename HostEntity::template Codim< 0 >::EntityPointer coarse_father_test = father;
 
         bool father_found = false;
@@ -781,26 +724,6 @@ public:
           { father_found = true; } else
           { coarse_father_test = coarse_father_test->father(); }
         }
-        #endif // if 1
-
-        // ! old version:
-        #if 0
-        bool father_found = false;
-        while (father_found == false)
-        {
-          if (coarseGridLeafIndexSet.contains(*father) == true)
-          {
-            if (father->hasFather() == false)
-            { father_found = true; } else {
-              if (coarseGridLeafIndexSet.contains( *( father->father() ) ) == false)
-              { father_found = true; }
-            }
-          }
-
-          if (father_found == false)
-          { father = father->father(); }
-        }
-        #endif // if 0
 
         bool entities_identical = true;
         int number_of_nodes = (*father).template count< 2 >();
@@ -812,15 +735,6 @@ public:
 
         if (entities_identical == false)
         {
-          // std :: cout << "father->geometry().corner(0) = " << father->geometry().corner(0) << std :: endl;
-          // std :: cout << "father->geometry().corner(1) = " << father->geometry().corner(1) << std :: endl;
-          // std :: cout << "father->geometry().corner(2) = " << father->geometry().corner(2) << std :: endl;
-          // std :: cout << "coarse_host_entity.geometry().corner(0) = " << coarse_host_entity.geometry().corner(0) <<
-          // std :: endl;
-          // std :: cout << "coarse_host_entity.geometry().corner(1) = " << coarse_host_entity.geometry().corner(1) <<
-          // std :: endl;
-          // std :: cout << "coarse_host_entity.geometry().corner(2) = " << coarse_host_entity.geometry().corner(2) <<
-          // std :: endl << std :: endl;
           continue;
         }
 
@@ -845,10 +759,7 @@ public:
             for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
               inner_it = inner_it->father();
 
-            // ! new version:
-            #if 1
             typename HostEntity::template Codim< 0 >::EntityPointer coarse_father_test = inner_it;
-
             bool father_found = false;
             while (father_found == false)
             {
@@ -859,18 +770,6 @@ public:
               { father_found = true; } else
               { coarse_father_test = coarse_father_test->father(); }
             }
-            #endif // if 1
-
-            // ! old version:
-            #if 0
-            bool found = coarseGridLeafIndexSet.contains(*inner_it);
-            while (found == false)
-            {
-              inner_it = inner_it->father();
-              found = coarseGridLeafIndexSet.contains(*inner_it);
-            }
-            #endif // if 0
-
             bool new_entity_found = true;
             for (size_t k = 0; k < coarse_entities.size(); k += 1)
             {

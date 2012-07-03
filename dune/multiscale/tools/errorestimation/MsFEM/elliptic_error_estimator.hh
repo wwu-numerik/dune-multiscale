@@ -97,18 +97,6 @@ class MsFEMErrorEstimator
   enum { spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder };
   enum { maxnumOfBaseFct = 100 };
 
-  #if 0
-
-private:
-  const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_;
-  const DiscreteFunctionSpaceType& discreteFunctionSpace_;
-  const DiscreteFunctionSpaceType& auxiliaryDiscreteFunctionSpace_;
-  // an auxiliaryDiscreteFunctionSpace to get an Intersection Iterator for the periodicDiscreteFunctionSpace
-  // (for the periodic grid partition there is no usable intersection iterator implemented, therefore we use the
-  // intersection iterator for the corresponding non-periodic grid partition (this not efficient and increases the
-  // estimated error, but it works)
-  #endif // if 0
-
   const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace_;
   MacroMicroGridSpecifierType& specifier_;
   SubGridListType& subgrid_list_;
@@ -291,7 +279,6 @@ public:
     { return false; }
   } // is_subface
 
-  #if 1
   // jump in conservative flux
   void getFluxes(const EntityType& coarse_entity,
                  const DiscreteFunctionType& msfem_coarse_part,
@@ -493,11 +480,7 @@ public:
       EntityPointerType father_of_sub_grid_entity = host_entity_pointer;
       for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
         father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-
-      // ! new version:
-      #if 1
       EntityPointerType coarse_father_test = father_of_sub_grid_entity;
-
       bool father_found = false;
       while (father_found == false)
       {
@@ -508,17 +491,6 @@ public:
         { father_found = true; } else
         { coarse_father_test = coarse_father_test->father(); }
       }
-      #endif // if 1
-
-      // ! old version
-      #if 0
-      bool father_found = coarseGridLeafIndexSet.contains(*father_of_sub_grid_entity);
-      while (father_found == false)
-      {
-        father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-        father_found = coarseGridLeafIndexSet.contains(*father_of_sub_grid_entity);
-      }
-      #endif // if 0
 
       int coarse_sub_father_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
       if (coarse_sub_father_index != index_coarse_entity)
@@ -633,17 +605,6 @@ public:
 
           coarse_jump[relevant_face_index] += H_E * integrationFactor * quadratureWeight * pow(cjump, 2.0);
 
-          #if 0
-          std::cout << "index_coarse_entity = " << index_coarse_entity << std::endl;
-          std::cout << "(local_point,quadraturePoint) = (" << local_point << "," << quadraturePoint << ")" << std::endl;
-
-          std::cout << "value_ent_e0 = " << value_ent_e0 << std::endl;
-          std::cout << "value_neighbor_ent_e0 = " << value_neighbor_ent_e0 << std::endl;
-          std::cout << "value_ent_e1 = " << value_ent_e1 << std::endl;
-          std::cout << "value_neighbor_ent_e1 = " << value_neighbor_ent_e1 << std::endl << std::endl;
-
-          // std :: cout << "--------------------------------------------" << std :: endl << std :: endl;
-          #endif // if 0
         } // done loop over all quadrature points
 
         if ( check_sum != faceGeometry.volume() )
@@ -662,8 +623,6 @@ public:
     jump_conservative_flux = ( sqrt(jump[0]) + sqrt(jump[1]) + sqrt(jump[2]) );
     jump_coarse_flux = sqrt(coarse_jump[0]) + sqrt(coarse_jump[1]) + sqrt(coarse_jump[2]);
   } // getFluxes
-
-  #endif // if 1
 
   // adaptive_refinement
   RangeType adaptive_refinement(GridType& /*coarse_grid*/,
@@ -788,10 +747,6 @@ public:
       if (reader_is_open)
       { discrete_function_reader.read(1, local_problem_solution_e1); }
 
-      // ----------------------------------------------------------------------------
-
-      #if 1
-
       // iterator for the local micro grid ('the subgrid corresponding with U(T)')
       const SubGridIteratorType local_grid_it_end = localDiscreteFunctionSpace.end();
       for (SubGridIteratorType local_grid_it = localDiscreteFunctionSpace.begin();
@@ -811,10 +766,7 @@ public:
         for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
           father_of_loc_grid_it = father_of_loc_grid_it->father();
 
-        // ! new version:
-        #if 1
         EntityPointerType coarse_father_test = father_of_loc_grid_it;
-
         bool father_found = false;
         while (father_found == false)
         {
@@ -825,17 +777,6 @@ public:
           { father_found = true; } else
           { coarse_father_test = coarse_father_test->father(); }
         }
-        #endif // if 1
-
-        // ! old version
-        #if 0
-        bool father_found = coarseGridLeafIndexSet.contains(*father_of_loc_grid_it);
-        while (father_found == false)
-        {
-          father_of_loc_grid_it = father_of_loc_grid_it->father();
-          father_found = coarseGridLeafIndexSet.contains(*father_of_loc_grid_it);
-        }
-        #endif // if 0
 
         bool entities_identical = true;
         int number_of_nodes = (*coarse_grid_it).template count< 2 >();
@@ -906,32 +847,13 @@ public:
             value += pow(diffusive_flux_projection[0][k], 2.0);
           }
 
-          #if 0
-          std::cout << "value H1 = " << value << std::endl;
-          #if 1
-          RangeType loc_sol_e0, loc_sol_e1, loc_msfem_fine_part;
-          localized_local_problem_solution_e0.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e0);
-          localized_local_problem_solution_e1.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e1);
-          localized_msfem_fine_part.evaluate(host_grid_quadrature[0], loc_msfem_fine_part);
-          value = 0.0;
-          value
-            += pow(loc_msfem_fine_part
-                   - (loc_sol_e0 * grad_msfem_coarse_part[0][0] + loc_sol_e1 * grad_msfem_coarse_part[0][1]), 2.0);
-          #endif // if 1
-          std::cout << "value L2 = " << value << std::endl;
-          std::cout << "loc_msfem_fine_part 1 = " << loc_msfem_fine_part << std::endl;
-          std::cout << "loc_msfem_fine_part 2 = " << loc_sol_e0 * grad_msfem_coarse_part[0][0] + loc_sol_e1
-          * grad_msfem_coarse_part[0][1] << std::endl;
-          #endif // if 0
           loc_projection_error[global_index_entity] += value * weight_local_quadrature;
           total_projection_error += value * weight_local_quadrature;
         }
       }
-      #endif // if 1
     }
 
     // fine-grid iterator:
-    #if 1
 
     // Coarse Entity Iterator
     const IteratorType fine_grid_end = fineDiscreteFunctionSpace_.end();
@@ -945,7 +867,6 @@ public:
         coarse_father = coarse_father->father();
 
       // ! new version:
-      #if 1
       EntityPointerType coarse_father_test = coarse_father;
 
       bool father_found = false;
@@ -958,17 +879,6 @@ public:
         { father_found = true; } else
         { coarse_father_test = coarse_father_test->father(); }
       }
-      #endif // if 1
-
-      // ! old version
-      #if 0
-      bool father_found = coarseGridLeafIndexSet.contains(*coarse_father);
-      while (father_found == false)
-      {
-        coarse_father = coarse_father->father();
-        father_found = coarseGridLeafIndexSet.contains(*coarse_father);
-      }
-      #endif // if 0
 
       int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
 
@@ -1055,9 +965,6 @@ public:
       specifier_.set_loc_fine_grid_jumps(m, loc_fine_grid_jumps[m]);
       specifier_.set_loc_projection_error(m, loc_projection_error[m]);
     }
-
-    #endif // if 1
-
     total_coarse_residual = sqrt(total_coarse_residual);
     total_projection_error = sqrt(total_projection_error);
     total_coarse_grid_jumps = sqrt(total_coarse_grid_jumps);

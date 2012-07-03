@@ -197,13 +197,6 @@ public:
     if (coefficient_1 < 0.0001)
     { coefficient_1 = 0.0001; }
 
-    #if 0
-    std::cout << "coefficient_0 = " << coefficient_0 << std::endl;
-    std::cout << "coefficient_0 + perturbation = " << coefficient_0 + perturbation << std::endl;
-    std::cout << "coefficient_1 = " << coefficient_1 << std::endl;
-    std::cout << "coefficient_1 + perturbation = " << coefficient_1 + perturbation << std::endl;
-    #endif // if 0
-
     #endif // ifdef STOCHASTIC_PERTURBATION
 
     #ifdef LINEAR_PROBLEM

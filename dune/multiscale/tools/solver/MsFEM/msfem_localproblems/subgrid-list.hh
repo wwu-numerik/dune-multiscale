@@ -139,10 +139,7 @@ public:
           for (int lev = 0; lev < level_difference; ++lev)
             father = father->father();
 
-          // ! new version:
-          #if 1
           HostEntityPointerType coarse_father_test = father;
-
           bool father_found = false;
           while (father_found == false)
           {
@@ -155,26 +152,6 @@ public:
             { father_found = true; } else
             { coarse_father_test = coarse_father_test->father(); }
           }
-          #endif // if 1
-
-          // ! old version
-          #if 0
-          bool father_found = false;
-          while (father_found == false)
-          {
-            if (coarseGridLeafIndexSet.contains(*father) == true)
-            {
-              if (father->hasFather() == false)
-              { father_found = true; } else {
-                if (coarseGridLeafIndexSet.contains( *( father->father() ) ) == false)
-                { father_found = true; }
-              }
-            }
-
-            if (father_found == false)
-            { father = father->father(); }
-          }
-          #endif // if 0
 
           if ( !(father == level_father_it) )
           {
@@ -229,16 +206,6 @@ public:
       if (specifier_.getLayer(i) > max_num_layers)
       { max_num_layers = specifier_.getLayer(i); }
     }
-
-    #if 0
-    for (int i = 0; i < number_of_nodes; i += 1)
-    {
-      std::cout << "Node " << i << " is shared by " << entities_sharing_same_node[i].size() << " entities."
-                << std::endl;
-    }
-    #endif // if 0
-
-    // ----------------------------------------------------------------
 
     // difference in levels between coarse and fine grid
     int level_difference = specifier.getLevelDifference();
@@ -303,12 +270,6 @@ public:
 
       int DUNE_UNUSED(number_of_nodes_in_entity) = (*host_it).template count< 2 >();
 
-      #if 0
-      std::cout << "host_it->geometry().corner(0) = " << host_it->geometry().corner(0) << std::endl;
-      std::cout << "host_it->geometry().corner(1) = " << host_it->geometry().corner(1) << std::endl;
-      std::cout << "host_it->geometry().corner(2) = " << host_it->geometry().corner(2) << std::endl;
-      #endif // if 0
-
       // get the coarse-grid-father of host_entity (which is a maxlevel entity)
       HostEntityPointerType level_father_entity = HostEntityPointerType(*host_it);
 
@@ -318,11 +279,7 @@ public:
       // changed 'contains'-method in 'indexset.hh'
       // we use: "return ( (subIndex >= 0) && (subIndex < size( codim )) );"
       // instead of "return (subIndex >= 0);"
-
-      // ! new version:
-      #if 1
       HostEntityPointerType coarse_father_test = level_father_entity;
-
       bool father_found = false;
       while (father_found == false)
       {
@@ -333,35 +290,6 @@ public:
         { father_found = true; } else
         { coarse_father_test = coarse_father_test->father(); }
       }
-      #endif // if 1
-
-      // ! old version
-      #if 0
-      bool father_found = false;
-      while (father_found == false)
-      {
-        if (coarseGridLeafIndexSet.contains(*level_father_entity) == true)
-        {
-          if (level_father_entity->hasFather() == false)
-          { father_found = true; } else {
-            if (coarseGridLeafIndexSet.contains( *( level_father_entity->father() ) ) == false)
-            { father_found = true; }
-          }
-        }
-
-        if (father_found == false)
-        { level_father_entity = level_father_entity->father(); }
-      }
-      #endif // if 0
-
-      #if 0
-      std::cout << "level_father_entity->geometry().corner(0) = " << level_father_entity->geometry().corner(0)
-                << std::endl;
-      std::cout << "level_father_entity->geometry().corner(1) = " << level_father_entity->geometry().corner(1)
-                << std::endl;
-      std::cout << "level_father_entity->geometry().corner(2) = " << level_father_entity->geometry().corner(2)
-                << std::endl << std::endl;
-      #endif // if 0
 
       int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
 
@@ -385,8 +313,6 @@ public:
           for (int lev = 0; lev < level_difference; ++lev)
             level_father_neighbor_entity = level_father_neighbor_entity->father();
 
-          // ! new version:
-          #if 1
           HostEntityPointerType coarse_father_test = level_father_neighbor_entity;
 
           bool father_found = false;
@@ -399,26 +325,6 @@ public:
             { father_found = true; } else
             { coarse_father_test = coarse_father_test->father(); }
           }
-          #endif // if 1
-
-          // ! old version
-          #if 0
-          father_found = false;
-          while (father_found == false)
-          {
-            if (coarseGridLeafIndexSet.contains(*level_father_neighbor_entity) == true)
-            {
-              if (level_father_neighbor_entity->hasFather() == false)
-              { father_found = true; } else {
-                if (coarseGridLeafIndexSet.contains( *( level_father_neighbor_entity->father() ) ) == false)
-                { father_found = true; }
-              }
-            }
-
-            if (father_found == false)
-            { level_father_neighbor_entity = level_father_neighbor_entity->father(); }
-          }
-          #endif // if 0
 
           if ( !(level_father_neighbor_entity == level_father_entity) )
           {
@@ -444,16 +350,6 @@ public:
     for (int i = 0; i < number_of_coarse_grid_entities; ++i)
     {
       subGrid[i]->createEnd();
-
-      #if 0
-      if (subGrid[i]->size(2) == 0)
-      {
-        subGrid[i]->createBegin();
-        subGrid[i]->insertPartial( *hostSpace_.begin() );
-        subGrid[i]->createEnd();
-      }
-      #endif // if 0
-
       if (!silent_)
       {
         std::cout << "Subgrid " << i << ":" << std::endl;
@@ -485,25 +381,6 @@ public:
     // ! ----------- end create subgrids --------------------
   }
 
-  // Kopierkonstruktor klappt nicht, da SubGrid keinen passenden Kopierkonstruktor besitzt
-  #if 0
-  SubGridList(const SubGridList& list)
-    : hostSpace_(list.hostSpace_)
-      , specifier_(list.specifier_)
-      , silent_(list.silent_) {
-    // number of coarse grid entities (of codim 0).
-    const int number_of_coarse_grid_entities = this->specifier_.getNumOfCoarseEntities();
-
-    this->subGrid = new SubGridType *[number_of_coarse_grid_entities];
-
-    for (int i = 0; i < number_of_coarse_grid_entities; ++i)
-    {
-      subGrid[i] = new SubGridType( *(list.subGrid[i]) );
-    }
-  }
-
-  #endif // if 0
-
   SubGridType& getSubGrid(int i) {
     const int size = specifier_.getNumOfCoarseEntities();
 
@@ -515,6 +392,7 @@ public:
   } // getSubGrid
 
 private:
+  SubGridList(const SubGridList& list);
   const HostDiscreteFunctionSpaceType& hostSpace_;
   MacroMicroGridSpecifierType& specifier_;
 

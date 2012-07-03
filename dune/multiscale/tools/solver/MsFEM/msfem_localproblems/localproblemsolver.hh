@@ -819,12 +819,6 @@ public:
       std::cout << "-------------------------" << std::endl;
       std::cout << "Coarse index " << coarse_index << std::endl;
 
-      #if 0
-      std::cout << "coarse_it->geometry().corner(0) = " << coarse_it->geometry().corner(0) << std::endl;
-      std::cout << "coarse_it->geometry().corner(1) = " << coarse_it->geometry().corner(1) << std::endl;
-      std::cout << "coarse_it->geometry().corner(2) = " << coarse_it->geometry().corner(2) << std::endl;
-      #endif // if 0
-
       bool writer_is_open = false;
 
       char location_lps[50];

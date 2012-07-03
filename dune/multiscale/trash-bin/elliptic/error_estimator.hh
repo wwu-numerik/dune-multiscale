@@ -228,53 +228,6 @@ public:
     return global_key;
   } // get_cell_problem_id
 
-// the old method:
-  #if 0
-  // method that gets the local mesh size H_entity
-  RangeType getH(const EntityType& entity) {
-    const GridPartType& gridPart = discreteFunctionSpace_.gridPart();
-
-    EntityQuadratureType entityQuadrature(entity, 0);  // PolOrd = 0
-
-    const EntityGeometryType& geometry = entity.geometry();
-
-    const RangeType entityVolume = entityQuadrature.weight(0)
-                                   * geometry.integrationElement( entityQuadrature.point(0) );
-
-    RangeType faceVolume(0.0);
-    int numberOfFaces = 0;
-
-    // get the 'volume' of every face of the entity and devide the result by the number of faces to get an averaged
-    // 'faceVolume'
-    IntersectionIteratorType endnit = gridPart.iend(entity);
-
-    for (IntersectionIteratorType nit = gridPart.ibegin(entity); nit != endnit; ++nit)
-    {
-      FaceQuadratureType innerFaceQuadrature(gridPart, nit, 0, FaceQuadratureType::INSIDE);
-
-      DomainType scaledOuterNormal
-        = nit.integrationOuterNormal( innerFaceQuadrature.localPoint(0) );
-
-      // get 'volume' of the visited face (this only works because we do not have curved faces):
-      RangeType visitedFaceVolume(0.0);
-      for (int k = 0; k < dimension; ++k)
-        visitedFaceVolume += scaledOuterNormal[k] * scaledOuterNormal[k];
-      visitedFaceVolume = sqrt(visitedFaceVolume);
-
-      faceVolume += visitedFaceVolume;
-
-      numberOfFaces += 1;
-    }
-
-    faceVolume = faceVolume / numberOfFaces;
-
-    // instead of using h_entity = entityVolume, we set:
-    RangeType h_entity = entityVolume / faceVolume;
-
-    return h_entity;
-  } // getH
-
-  #endif // if 0
 // the new method:
 // ! method to get the local mesh size H_entity (of the macro mesh)
 // works only for our 2D examples!!!!

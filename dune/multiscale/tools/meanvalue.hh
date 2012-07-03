@@ -20,9 +20,7 @@
 #include "misc/linear-lagrange-interpolation.hh"
 
 namespace Dune {
-/*======================================================================*/
-/*!
-   *  \class Meanvalue
+/**  \class Meanvalue
    *  \brief The Meanvalue class provides a method to calculate the meanvalue of a discrete function
    *
    *  Actually only the meanvalue of discrete functions on the unit-cube can be calculated.
@@ -30,12 +28,8 @@ namespace Dune {
    *  Since it's the unit cube for our purpose, the domain-size is 1 and therefore unimportant
    *  for us.
    *
-   */
-/*======================================================================*/
-
-// ! Usage of the meanvalue class:
-// !#####################################################################!//
-/* Example:
+ * Usage of the meanvalue class:
+  * Example:
    *
    *  Meanvalue< DiscreteFunctionType > mymean;
    *  DiscreteFunctionSpaceType :: RangeType theMeanValue;
@@ -45,9 +39,7 @@ namespace Dune {
    * Shift the discrete function to meanvalue zero:
    *
    * mymean.adapt<DiscreteFunctionType>( a_discreteFunction , theMeanValue );
-   */
-// !#####################################################################!//
-
+   **/
 template< class DiscreteFunctionType >
 class Meanvalue
 {
@@ -338,140 +330,7 @@ public:
     return theMeanValue;
   }   // end of method
 
-  #if 0
-  template< class FunctionType >
-  RangeType l2Norm(const FunctionType& f, DiscreteFunctionType& discFunc,
-                   const double time) {
-    return l2Norm(f, discFunc, 2 * discFunc.space().order() + 2, time);
-  }
-
-  template< class FunctionType >
-  RangeType l2Norm(const FunctionType& f,
-                   DiscreteFunctionType& discFunc,
-                   int polOrd = (2 * spacePolOrd + 2),
-                   double time = 0.0) {
-    // get function space
-    const DiscreteFunctionSpaceType& space = discFunc.space();
-
-    const GridPartType& gridPart = space.gridPart();
-
-    typedef typename GridPartType::GridType::Traits::
-      CollectiveCommunication
-    CommunicatorType;
-
-    const CommunicatorType& comm = gridPart.grid().comm();
-
-    Meanvalue< DiscreteFunctionType > mymean;
-    RangeType theMeanValue;
-    theMeanValue = mymean.getMeanvalue(discFunc);
-    // std :: cout << "Mittelwert der numerischen Lösung: " << theMeanValue << std :: endl << std :: endl;
-
-    RangeType y(0.0);
-    RangeType z(0.0);
-
-    RangeType error(0.0);
-
-    IteratorType endit = space.end();
-    for (IteratorType it = space.begin(); it != endit; ++it)
-    {
-      // entity
-      const EntityType& en = *it;
-
-      // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(en, polOrd);
-
-      // get local function
-      LocalFunctionType lf = discFunc.localFunction(en);
-
-      // get geoemetry of entity
-      const EnGeometryType& geo = en.geometry();
-
-      // integrate
-      const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
-
-        if (n == 0)
-        {
-          f.evaluate(geo.global( quadrature.point(quadraturePoint) ), time, y);
-          lf.evaluate(quadrature, quadraturePoint, z);
-          z += -theMeanValue;
-
-          error += det * SQR(y - z);
-        } else if (n == 1) {
-          f.evaluate(geo.global( quadrature.point(quadraturePoint) ), time, y);
-          lf.evaluate(quadrature, quadraturePoint, z);
-          z += -theMeanValue;
-
-          error += det * SQR(y - z);
-        }
-      }
-    }
-
-    error = comm.sum(error);
-    error = sqrt(error);
-
-    return error;
-  }   // end of method
-
-  template< class FunctionType >
-  RangeType adaptFunction(FunctionType& discFunc, FunctionType& adaptDiscFunc) {
-    // get function space
-    int polOrd = (2 * spacePolOrd + 2);
-
-    const DiscreteFunctionSpaceType& space = discFunc.space();
-
-    const GridPartType& gridPart = space.gridPart();
-
-    typedef typename GridPartType::GridType::Traits::
-      CollectiveCommunication
-    CommunicatorType;
-
-    const CommunicatorType& comm = gridPart.grid().comm();
-
-    RangeType y(0.0);    // return value
-
-    RangeType theMeanValue(0.0);
-
-    IteratorType endit = space.end();
-    for (IteratorType it = space.begin(); it != endit; ++it)
-    {
-      // entity
-      const EntityType& entity = *it;
-
-      // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
-
-      // get local function
-      LocalFunctionType localfunc = discFunc.localFunction(entity);
-
-      // get geoemetry of entity
-      const EnGeometryType& geo = entity.geometry();
-
-      // integrate
-      const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
-
-        localfunc.evaluate(quadrature, quadraturePoint, y);
-
-        theMeanValue += det * y;
-      }
-    }
-
-    theMeanValue = comm.sum(theMeanValue);
-
-    return theMeanValue;
-  }   // end of method
-
-  #endif // if 0
-
-  // Subdraktion des Mittelwertes von der DiscreteFunction
-
+  //! Subdraktion des Mittelwertes von der DiscreteFunction
   template< class FunctionType >
   static void adapt(FunctionType& discreteFunction, RangeType& meanvalue) {
     typedef typename FunctionType::DofIteratorType DofIteratorType;
@@ -481,19 +340,6 @@ public:
       *it -= meanvalue[0];
     // Dof Iterator verwenden um Verschiebung um Mittelwert
 
-    #if 0
-    const DiscreteFunctionSpaceType& discreteFunctionSpace
-      = discreteFunction.space();
-
-    const int size = discreteFunctionSpace.size();
-
-    double* function_pointer = discreteFunction.leakPointer();
-
-    for (int i = 0; i < size; ++i)
-    {
-      function_pointer[i] -= meanvalue;
-    }
-    #endif // if 0
   } // adapt
 }; // end of class Meanvalue
 

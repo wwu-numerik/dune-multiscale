@@ -227,8 +227,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
       father_of_sub_grid_entity = father_of_sub_grid_entity->father();
 
-    // ! new version:
-    #if 1
     EntityPointer coarse_father_test = father_of_sub_grid_entity;
 
     bool father_found = false;
@@ -246,32 +244,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
         coarse_father_test = coarse_father_test->father();
       }
     }
-    #endif // if 1
-
-    // ! old version
-    #if 0
-    bool father_found = false;
-    while (father_found == false)
-    {
-      if (coarseGridLeafIndexSet.contains(*father_of_sub_grid_entity) == true)
-      {
-        if (father_of_sub_grid_entity->hasFather() == false)
-        {
-          father_found = true;
-        } else {
-          if (coarseGridLeafIndexSet.contains( *( father_of_sub_grid_entity->father() ) ) == false)
-          {
-            father_found = true;
-          }
-        }
-      }
-
-      if (father_found == false)
-      {
-        father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-      }
-    }
-    #endif // if 0
 
     int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
 
@@ -547,8 +519,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
       father_of_sub_grid_entity = father_of_sub_grid_entity->father();
 
-    // ! new version:
-    #if 1
     EntityPointer coarse_father_test = father_of_sub_grid_entity;
 
     bool father_found = false;
@@ -566,40 +536,12 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
         coarse_father_test = coarse_father_test->father();
       }
     }
-    #endif // if 1
-
-    // ! old version
-    #if 0
-    bool father_found = false;
-    while (father_found == false)
-    {
-      if (coarseGridLeafIndexSet.contains(*father_of_sub_grid_entity) == true)
-      {
-        if (father_of_sub_grid_entity->hasFather() == false)
-        {
-          father_found = true;
-        } else {
-          if (coarseGridLeafIndexSet.contains( *( father_of_sub_grid_entity->father() ) ) == false)
-          {
-            father_found = true;
-          }
-        }
-      }
-
-      if (father_found == false)
-      {
-        father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-      }
-    }
-    #endif // if 0
-
     int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
 
     if (coarse_index != sub_grid_id)
     {
       continue;
     }
-    #endif // if 1
 
     const SubGridGeometry& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
@@ -923,8 +865,6 @@ public:
 
         localized_corrector_e_i.jacobian(faceQuadrature[0], grad_corrector_e_i);
 
-        #if 1
-
         const DomainType global_point = faceGeometry.global( faceGeometry.local( faceQuadrature.point(0) ) );
         JacobianRangeType diffusive_flux;
         diffusion_.diffusiveFlux(global_point, grad_corrector_e_i, diffusive_flux);
@@ -943,8 +883,6 @@ public:
         std::cout << "scaledOuterNormal = " << scaledOuterNormal << std::endl;
         std::cout << "numerical flux = " << (diffusive_flux[0] /*+ diffusion_in_e_i[0]*/) * scaledOuterNormal
                   << std::endl << std::endl;
-
-        #endif // if 1
 
         const SubGridLagrangePointSetType& lagrangePointSet
           = localDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);

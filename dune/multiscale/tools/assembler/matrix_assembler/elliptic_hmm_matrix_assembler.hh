@@ -461,7 +461,6 @@ const {
     if (number_of_macro_entity == 341)
     {
       // in case you want to save the solutions of the two cell problems:
-      #if 1
       typedef Tuple< PeriodicDiscreteFunctionImp* > IOTupleType;
       typedef DataOutput< GridType, IOTupleType >   DataOutputType;
 
@@ -485,8 +484,6 @@ const {
       cellSolution_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
       // clear the std::stringstream:
       outstring.str( std::string() );
-
-      #endif // if 1
     }
     // !-------------------------------------
     #endif // if 0

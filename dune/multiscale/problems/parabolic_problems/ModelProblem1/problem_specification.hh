@@ -506,10 +506,6 @@ public:
       y = 0.0;
     }
 
-    #if 0
-    // print data:
-    std::cout << "tensor[" << i << "][" << j << "](" << x[0] << "," << x[1] << ") = " << y << std::endl;
-    #endif // if 0
   } // evaluate
 
   inline void evaluate(const int i,
@@ -523,13 +519,6 @@ public:
   // dummy implementation
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    #if 0
-    DomainType x_new;
-    x_new[0] = x[0] * epsilon_;
-    x_new[1] = x[1] * epsilon_;
-    evaluate(0, 0, x_new, 0.0, y);
-    #endif // if 0
-
     y = 1.0;
   } // evaluate
 
@@ -832,12 +821,6 @@ public:
     { z = 1.5 * cos( 2.0 * M_PI * (y[0] / epsilon) ) * cos( 2.0 * M_PI * (y[1] / epsilon) ); }
 
     z = (0.01 * z) / epsilon;
-
-    #if 0
-    // print data:
-    std::cout << "advection[" << i << "](" << x[0] << "," << x[1] << ") = " << z << std::endl;
-    #endif // if 0
-
     // z = 0.0; //! LOESCHEN!!!!!!!!!!
   } // evaluate
 
@@ -862,159 +845,6 @@ public:
   }
 };
 
-#if 0
-// ! alternative implementation without diffusion:
-
-// In the following we want to implement the diffusion tensor A (and therefore A^{\epsilon}.
-// Two different kinds of evaluate-methods will be given. One to evaluate A and one to evaluate
-// A^{\epsilon}=A(\frac{\cdot}{\epsilon}).
-template< class FunctionSpaceImp >
-class Advection
-  : public Function< FunctionSpaceImp, Advection< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef Advection< FunctionSpaceType >          ThisType;
-  typedef Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType                TimeType;
-  typedef Diffusion< FunctionSpaceType > DiffusionType;
-
-  const FunctionSpaceType* functionSpace_;
-
-protected:
-  const DomainType average_of_advection_;
-  const double epsilon_;
-  const double epsilon_est_;
-  const double time_step_size_;
-
-public:
-  // Constructor for Advection
-  inline explicit Advection(const FunctionSpaceType& functionSpace, const double& epsilon, const double& time_step_size)
-    : BaseType(functionSpace)
-      , functionSpace_(&functionSpace)
-      , average_of_advection_(0.0)
-      , epsilon_(epsilon)
-      , epsilon_est_(epsilon)
-      , time_step_size_(time_step_size)
-  {}
-
-  // Constructor for Advection
-  inline explicit Advection(const FunctionSpaceType& functionSpace,
-                            const DomainType& average_of_advection,
-                            const double& epsilon, const double& time_step_size)
-    : BaseType(functionSpace)
-      , functionSpace_(&functionSpace)
-      , average_of_advection_(average_of_advection)
-      , epsilon_(epsilon)
-      , epsilon_est_(epsilon)
-      , time_step_size_(time_step_size)
-  {}
-
-  // Constructor for Advection
-  inline explicit Advection(const FunctionSpaceType& functionSpace,
-                            const DomainType& average_of_advection,
-                            const double& epsilon,
-                            const double& epsilon_est, const double& time_step_size)
-    : BaseType(functionSpace)
-      , functionSpace_(&functionSpace)
-      , average_of_advection_(average_of_advection)
-      , epsilon_(epsilon)
-      , epsilon_est_(epsilon_est)
-      , time_step_size_(time_step_size)
-  {}
-
-  inline explicit Advection(const FunctionSpaceType& functionSpace, const double& epsilon)
-    : BaseType(functionSpace)
-      , functionSpace_(&functionSpace)
-      , epsilon_(epsilon)
-      , epsilon_est_(epsilon)
-      , time_step_size_(1.0)
-  {}
-
-  inline void getTimeStepSize(double& time_step_size) const {
-    time_step_size = time_step_size_;
-  }
-
-  inline void getEpsilon(double& epsilon) const {
-    // does not work (Speicherzugriffsfehler):
-    // epsilon = epsilon_;
-    // why? Use the following version instead
-
-    epsilon = 0.01;
-  } // getEpsilon
-
-  inline void getEpsilonEstimated(double& epsilon_est) const {
-    epsilon_est = 0.01;   // ! change?
-  }
-
-  inline void getAverage(DomainType& bar_b) const {
-    // does not work:
-    // bar_b = average_of_advection_;
-    // why? Use the following version instead
-
-    DomainType zero(0.0);
-
-    bar_b = zero;
-
-    // ! Note: restriction: at the moment, only constant b_average works!
-    // for generalization change for instance (in the classes DriftedDiffusion and DriftedAdvection) "bar_b * t" to some
-    // "B(t)"!
-  } // getAverage
-
-  // evaluate b(t,y)=z
-  inline void evaluate(const int i,
-                       const DomainType& y,
-                       const TimeType& t,
-                       RangeType& z) const {
-    double epsilon;
-
-    getEpsilon(epsilon);
-
-    if (i == 0)
-    { z = 1.5 * sin( 2.0 * M_PI * (y[0] / epsilon) ) * sin( 2.0 * M_PI * (y[1] / epsilon) ); } else
-    { z = 1.5 * cos( 2.0 * M_PI * (y[0] / epsilon) ) * cos( 2.0 * M_PI * (y[1] / epsilon) ); }
-
-    z = z / epsilon;
-
-    #if 0
-    // print data:
-    std::cout << "advection[" << i << "](" << x[0] << "," << x[1] << ") = " << z << std::endl;
-    #endif // if 0
-  } // evaluate
-
-  inline void evaluate(const int i,
-                       const DomainType& y,
-                       RangeType& z) const {
-    evaluate(i, y, 0.0, z);
-    std::cout << "WARNING! Call for 'evaluate' method of the Advection class without time! Set t=0." << std::endl;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    y = 1.0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType time,
-                       RangeType& y) const {
-    return evaluate(x, y);
-  }
-};
-#endif // if 0
-
-// !#########################
 
 // In the following we want to implement the diffusion tensor A (and therefore A^{\epsilon}.
 // Two different kinds of evaluate-methods will be given. One to evaluate A and one to evaluate
@@ -1163,11 +993,6 @@ public:
     advection_.evaluate(i, x_new, t, y);
 
     y = y * epsilon;
-
-    #if 0
-    // print data:
-    std::cout << "direct_advection_[" << i << "](" << x[0] << "," << x[1] << ") = " << y << std::endl;
-    #endif // if 0
   } // evaluate
 
   inline void evaluate(const int i,

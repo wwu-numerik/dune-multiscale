@@ -496,10 +496,6 @@ private:
           direction_j[0][k] = 0.0;
           if (k == j)
           { direction_j[0][k] += 1.0; }
-          // redundant (just for tests):
-          #if 0
-          direction_j[0][k] += grad_w_j[0][k];
-          #endif
         }
 
         PeriodicJacobianRangeType flux_i;
@@ -634,48 +630,6 @@ public:
     std::cout << "A_homogenized[0][1] = " << a_hom[0][1] << std::endl;
     std::cout << "A_homogenized[1][0] = " << a_hom[1][0] << std::endl;
     std::cout << "A_homogenized[1][1] = " << a_hom[1][1] << std::endl;
-
-    // in case you want to save the solutions of the two cell problems:
-    #if 0
-    typedef Tuple< PeriodicDiscreteFunctionType* > IOTupleType;
-    typedef DataOutput< GridType, IOTupleType >    DataOutputType;
-
-    // general output parameters
-    CellDataOutputParameters outputparam;
-
-    // sequence stamp
-    std::stringstream outstring;
-
-    // ------- cell problem 0 -------------
-
-    // create and initialize output class
-    IOTupleType cellproblem_0_tuple(&cellSolution_0);
-
-    outputparam.set_prefix("cellSolution_0_");
-    DataOutputType cellSolution_0_dataoutput(periodicGridPart.grid(), cellproblem_0_tuple, outputparam);
-
-    // write data
-    outstring << "cellSolution_0_";
-    cellSolution_0_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-    // clear the std::stringstream:
-    outstring.str( std::string() );
-
-    // ------- cell problem 1 -------------
-
-    // create and initialize output class
-    IOTupleType cellproblem_1_tuple(&cellSolution_1);
-
-    outputparam.set_prefix("cellSolution_1_");
-    DataOutputType cellSolution_1_dataoutput(periodicGridPart.grid(), cellproblem_1_tuple, outputparam);
-
-    // write data
-    outstring << "cellSolution_1_";
-    cellSolution_1_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-    // clear the std::stringstream:
-    outstring.str( std::string() );
-
-    // ------------------------------------
-    #endif // if 0
 
     return a_hom;
   } // getHomTensor
