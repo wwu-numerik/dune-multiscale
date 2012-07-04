@@ -38,7 +38,8 @@ struct ModelProblemData
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
-  inline void getMacroGridFile(std::string& macroGridName) const {    macroGridName = ("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");
+  inline std::string getMacroGridFile() const {
+    return ("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");
   }
 
   // get the (starting) grid refinement level for solving the reference problem

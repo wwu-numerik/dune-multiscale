@@ -116,10 +116,10 @@ public:
   virtual int  getRefinementLevelReferenceProblem() const = 0;
   /**
    * @brief getMacroGridFile returns a path to a Dune::Grid loadable file (dgf)
-   * @param macroGridName is set to said path
+   * @return macroGridName is set to said path
    * \todo paths need to be relative to binary
    */
-  virtual void getMacroGridFile(std::string& macroGridName) const = 0;
+  virtual std::string getMacroGridFile() const = 0;
   //! a unique integral identifier for this problem
   virtual int  get_Number_of_Model_Problem() const = 0;
 };

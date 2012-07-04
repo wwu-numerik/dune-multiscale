@@ -119,7 +119,7 @@ public:
     return max_T;
   }
 
-  inline void getMacroGridFile(std::string& macroGridName) const {
+  inline std::string getMacroGridFile() const {
     // name and location of the grid file that describes the macro-grid:
     macroGridName = ("grids/macro_grids/parabolic/huge_square2D.dgf");
 

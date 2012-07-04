@@ -123,12 +123,12 @@ typedef tuple< DiscreteFunctionType* >      IOTupleType;
 typedef DataOutput< GridType, IOTupleType > DataOutputType;
 #ifdef EXACTSOLUTION_AVAILABLE
 // just for the discretized exact solution (in case it is available)
-typedef Tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
+typedef tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
 // just for the discretized exact solution (in case it is available)
 typedef DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 #endif // ifdef EXACTSOLUTION_AVAILABLE
 
-#include "outputparameter.hh"
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 
 // !---------------------------------------------------------------------------------------
 

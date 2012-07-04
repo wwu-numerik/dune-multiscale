@@ -78,7 +78,8 @@ struct ModelProblemData
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
-  inline void getMacroGridFile(std::string& macroGridName) const {    macroGridName = ("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");      // _strange_grid
+  inline std::string getMacroGridFile() const {
+    return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");      // _strange_grid
   }
 
   //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
