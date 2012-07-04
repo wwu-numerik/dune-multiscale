@@ -54,16 +54,15 @@ int main(int argc, char** argv) {
     // generate directories for data output
     Stuff::testCreateDirectory(path);
 
-
     // name of the error file in which the data will be saved
     std::string filename_;
     const Problem::ModelProblemData info(path);
     #ifdef RESUME_TO_BROKEN_COMPUTATION
     // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
     // (vorlauefig sollte diese Variante aber reichen)
-    std::string save_filename = path + "/problem-info-resumed-computation.txt";
+    const std::string save_filename = path + "/problem-info-resumed-computation.txt";
     #else // ifdef RESUME_TO_BROKEN_COMPUTATION
-    std::string save_filename = path + "/problem-info.txt";
+    const std::string save_filename = path + "/problem-info.txt";
     #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
     std::cout << "Data will be saved under: " << save_filename << std::endl;
 
@@ -82,10 +81,9 @@ int main(int argc, char** argv) {
 
     // how many times finer do we solve the reference problem (it is either a homogenized problem or the exact problem
     // with a fine-scale resolution)
-    int refinement_difference_for_referenceproblem = refinement_level_referenceprob_ - refinement_level_macrogrid_;
+    const int refinement_difference_for_referenceproblem = refinement_level_referenceprob_ - refinement_level_macrogrid_;
     // name of the grid file that describes the macro-grid:
-    std::string macroGridName;
-    info.getMacroGridFile(macroGridName);
+    const std::string macroGridName = info.getMacroGridFile();
     std::cout << "loading dgf: " << macroGridName << std::endl;
 
     // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
@@ -103,7 +101,7 @@ int main(int argc, char** argv) {
     fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
 
     // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
-    std::string UnitCubeName("../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf");     // --> the 0-centered
+    const std::string UnitCubeName("../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf");     // --> the 0-centered
                                                                                                   // unit cube, i.e.
                                                                                                   // [-1/2,1/2]^2
     // note that the centering is fundamentaly important for the implementation. Do NOT change it to e.g. [0,1]^2!!!
@@ -116,8 +114,6 @@ int main(int argc, char** argv) {
 
     // to save all information in a file
     std::ofstream data_file( (save_filename).c_str() );
-
-
 
     algorithm<Problem::ModelProblemData, HMMTraits>
         (info,

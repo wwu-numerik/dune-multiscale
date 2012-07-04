@@ -99,11 +99,11 @@ void print_info(const ProblemDataType& info, std::ofstream& data_file)
     #else
     data_file << "Problem is declared as being NONLINEAR." << std::endl;
     #endif // ifdef LINEAR_PROBLEM
-    #ifdef EXACTSOLUTION_AVAILABLE
-    data_file << "Exact solution is available." << std::endl << std::endl;
-    #else
-    data_file << "Exact solution is not available." << std::endl << std::endl;
-    #endif // ifdef EXACTSOLUTION_AVAILABLE
+    if (ProblemDataType::has_exact_solution) {
+      data_file << "Exact solution is available." << std::endl << std::endl;
+    } else {
+      data_file << "Exact solution is not available." << std::endl << std::endl;
+    }
     data_file << "Computations were made for:" << std::endl << std::endl;
     const int refinement_level_macrogrid_ = Stuff::Config().get("grid.refinement_level_macrogrid", 0);
     data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
@@ -139,8 +139,8 @@ void print_info(const ProblemDataType& info, std::ofstream& data_file)
 }
 
 //! the main hmm computation
-template < class ProblemData, class HMMTraits >
-void algorithm(const ProblemData& problem_data,
+template < class ProblemDataType, class HMMTraits >
+void algorithm(const ProblemDataType& problem_data,
                const std::string& /*UnitCubeName*/,
                typename HMMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
                typename HMMTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
@@ -203,10 +203,7 @@ void algorithm(const ProblemData& problem_data,
   // dummy coefficient (mass, advection, etc.)
   typename HMM::DefaultDummyFunctionType dummy_coeff;
   // exact solution unknown?
-  #ifdef EXACTSOLUTION_AVAILABLE
-  typename HMM::ExactSolutionType u;
-  typename HMM::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
-  #endif // ifdef EXACTSOLUTION_AVAILABLE
+
   // ! --------------------------------------------------------------------------------------
 
   // ! define the right hand side assembler tool
@@ -1291,29 +1288,32 @@ void algorithm(const ProblemData& problem_data,
   }
   #endif // ifdef HOMOGENIZEDSOL_AVAILABLE
 
-  #ifdef EXACTSOLUTION_AVAILABLE
-  typename HMM::RangeType exact_hmm_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
-                                                                hmm_solution,
-                                                                2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
-
-  std::cout << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
-  if ( data_file.is_open() )
+  if (ProblemDataType::has_exact_solution)
   {
-    data_file << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl;
+    typename HMM::ExactSolutionType u;
+    typename HMM::RangeType exact_hmm_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
+                                                                  hmm_solution,
+                                                                  2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
+
+    std::cout << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl;
+    }
+
+    #ifdef FINE_SCALE_REFERENCE
+    typename HMM::RangeType fem_newton_error = l2error.norm< ExactSolutionType >(u,
+                                                                   fem_newton_solution,
+                                                                   2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
+
+    std::cout << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl;
+    }
+    #endif // ifdef FINE_SCALE_REFERENCE
   }
 
-  #ifdef FINE_SCALE_REFERENCE
-  typename HMM::RangeType fem_newton_error = l2error.norm< ExactSolutionType >(u,
-                                                                 fem_newton_solution,
-                                                                 2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
-
-  std::cout << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl << std::endl;
-  if ( data_file.is_open() )
-  {
-    data_file << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl;
-  }
-  #endif // ifdef FINE_SCALE_REFERENCE
-  #endif // ifdef EXACTSOLUTION_AVAILABLE
 
   #ifdef ERRORESTIMATION
   std::cout << "Estimated error = " << estimated_error << "." << std::endl;
@@ -1372,21 +1372,23 @@ void algorithm(const ProblemData& problem_data,
   outstring.str( std::string() );
   // -------------------------------------------------------
 
-  #ifdef EXACTSOLUTION_AVAILABLE
-  // --------- data output discrete exact solution --------------
+  if (ProblemDataType::has_exact_solution) {
+    // --------- data output discrete exact solution --------------
 
-  // create and initialize output class
-  typename HMM::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-  outputparam.set_prefix("exact_solution");
-  typename HMM::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
+    // create and initialize output class
+    typename HMM::ExactSolutionType u;
+    typename HMM::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
+    typename HMM::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+    outputparam.set_prefix("exact_solution");
+    typename HMM::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
 
-  // write data
-  outstring << "exact-solution";
-  exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
-  // -------------------------------------------------------
-  #endif // ifdef EXACTSOLUTION_AVAILABLE
+    // write data
+    outstring << "exact-solution";
+    exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+    // clear the std::stringstream:
+    outstring.str( std::string() );
+    // -------------------------------------------------------
+  }
 
   #ifdef WRITE_FINESCALE_SOL_TO_FILE
   // --------- data output reference solution (fine fem newton computation) --------------
@@ -1464,11 +1466,6 @@ void algorithm(const ProblemData& problem_data,
       number_of_areas = 2;
     }
   }
-
-  #if 0
-  if (loop_cycle == 2)
-    number_of_areas = 2;
-  #endif // if 0
 
   double border[number_of_areas - 1];
   border[0] = 0.5;
