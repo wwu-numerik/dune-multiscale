@@ -1,13 +1,14 @@
 #ifndef DiscreteEllipticHMMOperator_HH
 #define DiscreteEllipticHMMOperator_HH
 
-#include <dune/common/fmatrix.hh>
+#include <boost/noncopyable.hpp>
 
+#include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
 
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 namespace Dune {
 // Imp stands for Implementation
@@ -16,6 +17,7 @@ template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class Di
 class DiscreteEllipticHMMOperator
   : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
                      DiscreteFunctionImp, DiscreteFunctionImp >
+    , boost::noncopyable
 {
   typedef DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
                                        CellProblemNumberingManagerImp > This;
@@ -87,9 +89,6 @@ public:
       , cp_num_manager_(cp_num_manager)
       , filename_(&filename)
   {}
-
-private:
-  DiscreteEllipticHMMOperator(const This&);
 
 public:
   // dummy operator

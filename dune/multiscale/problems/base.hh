@@ -62,6 +62,8 @@ public:
       , constants_(constants)
       , current_number_of_cell_problem_(-1)
   {}
+  virtual ~IModelProblemData()
+  {}
 
   /** epsilon (the smaller epsilon, the finer the micro-structure)
    *  in the periodic setting, epsilon denotes the periode of the fine-scale oscillations
