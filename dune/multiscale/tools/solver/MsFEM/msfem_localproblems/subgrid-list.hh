@@ -1,21 +1,22 @@
 #ifndef SUBGRIDLIST_HH
 #define SUBGRIDLIST_HH
 
+#include <boost/noncopyable.hpp>
+
 #include <dune/common/fmatrix.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/subgrid/subgrid.hh>
-
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
 
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 // / done
 
 namespace Dune {
 template< class HostDiscreteFunctionImp, class SubGridImp, class MacroMicroGridSpecifierImp >
-class SubGridList
+class SubGridList : boost::noncopyable
 {
 public:
   // ! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
@@ -45,18 +46,6 @@ public:
 
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
 
-  // old:
-  #if 0
-  typedef typename HostGridType::template Codim< 0 >::template Partition< All_Partition >::LevelIterator
-  HostgridLevelEntityIteratorType;
-  typedef typename HostGridType::Traits::LevelIndexSet
-  HostGridLevelIndexSet;
-
-  // usage:
-  // const HostGridLevelIndexSet& hostGridLevelIndexSet = hostGrid.levelIndexSet(computational_level_);
-  // int father_index = hostGridLevelIndexSet.index( *level_it );
-  #endif // if 0
-
   typedef typename HostEntityType::template Codim< 2 >::EntityPointer HostNodePointer;
 
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
@@ -73,7 +62,7 @@ public:
   template< typename EntityPointerCollectionType >
   bool entity_patch_in_subgrid(HostEntityPointerType& hit,
                                const HostGridPartType& hostGridPart,
-                               SubGridType& subGrid,
+                               const SubGridType& subGrid,
                                EntityPointerCollectionType& entities_sharing_same_node) {
     bool patch_in_subgrid_ = true;
 
@@ -215,7 +204,7 @@ public:
 
     std::cout << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
-    subGrid = new SubGridType *[number_of_coarse_grid_entities];
+    subGridList_ = new SubGridType *[number_of_coarse_grid_entities];
 
     // ! ----------- create subgrids --------------------
 
@@ -225,8 +214,8 @@ public:
     {
       int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
 
-      subGrid[coarse_index] = new SubGridType(hostGrid);
-      subGrid[coarse_index]->createBegin();
+      subGridList_[coarse_index] = new SubGridType(hostGrid);
+      subGridList_[coarse_index]->createBegin();
     }
 
     for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it)
@@ -293,8 +282,8 @@ public:
 
       int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
 
-      if ( !( subGrid[father_index]->template contains< 0 >(host_entity) ) )
-      { subGrid[father_index]->insertPartial(host_entity); }
+      if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) )
+      { subGridList_[father_index]->insertPartial(host_entity); }
 
       // check the neighbor entities and look if they belong to the same father
       // if yes, continue
@@ -343,20 +332,20 @@ public:
       {
         HostEntityPointerType hep(*host_it);
         enrichment(hep, level_father_entity, specifier, father_index,
-                   hostGridPart, *subGrid[father_index], entities_sharing_same_node, layers, enriched);
+                   hostGridPart, *subGridList_[father_index], entities_sharing_same_node, layers, enriched);
       }
     }
 
     for (int i = 0; i < number_of_coarse_grid_entities; ++i)
     {
-      subGrid[i]->createEnd();
+      subGridList_[i]->createEnd();
       if (!silent_)
       {
         std::cout << "Subgrid " << i << ":" << std::endl;
-        subGrid[i]->report();
+        subGridList_[i]->report();
       }
 
-      if (subGrid[i]->size(2) == 0)
+      if (subGridList_[i]->size(2) == 0)
       {
         std::cout << "Error." << std::endl;
         std::cout << "Error. Created Subgrid with 0 nodes." << std::endl;
@@ -388,17 +377,16 @@ public:
     {
       DUNE_THROW(Dune::RangeError, "Error. Subgrid-Index too large.");
     }
-    return *(subGrid[i]);
+    return *(subGridList_[i]);
   } // getSubGrid
 
 private:
-  SubGridList(const SubGridList& list);
   const HostDiscreteFunctionSpaceType& hostSpace_;
   MacroMicroGridSpecifierType& specifier_;
 
   bool silent_;
 
-  SubGridType** subGrid;
+  SubGridType** subGridList_;
 
 public:
   // Destruktor (Dynamisch angeforderter Speicher wird wieder freigegeben)
@@ -406,8 +394,8 @@ public:
     const int size = specifier_.getNumOfCoarseEntities();
 
     for (int i = 0; i < size; ++i)
-      delete subGrid[i];
-    delete[] subGrid;
+      delete subGridList_[i];
+    delete[] subGridList_;
   }
 };
 }
