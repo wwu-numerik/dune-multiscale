@@ -10,6 +10,7 @@
 #include <vector>
 #include <cassert>
 
+#include <dune/common/deprecated.hh>
 #include <dune/fem/misc/mpimanager.hh> // An initializer of MPI
 
 class DiscreteFunctionWriter
@@ -17,18 +18,19 @@ class DiscreteFunctionWriter
 public:
   DiscreteFunctionWriter(const std::string filename)
     : filename_(filename)
+    , file_(filename_.c_str(), std::fstream::trunc | std::fstream::out | std::fstream::binary)
   {}
 
   ~DiscreteFunctionWriter() {
-    if ( file_.is_open() )
+    if (file_.is_open())
       file_.close();
   }
 
-  bool open() {
-    typedef std::fstream
-    fs;
-    fs::openmode mode = (fs::trunc | fs::out | fs::binary);
-    file_.open(filename_.c_str(), mode);
+  bool is_open() const {
+    return file_.is_open();
+  }
+
+  bool DUNE_DEPRECATED_MSG("filestream is opened in ctor") open() {
     return file_.is_open();
   } // open
 
@@ -69,7 +71,16 @@ public:
   DiscreteFunctionReader(const std::string filename)
     : filename_(filename)
       , size_(-1)
-  {}
+    , file_(filename_.c_str(), std::fstream::in | std::fstream::binary)
+  {
+    if(file_.is_open())
+    {
+      // get size of file
+      file_.seekg(0, std::fstream::end);
+      size_ = file_.tellg();
+      file_.seekg(0);
+    }
+  }
 
   ~DiscreteFunctionReader() {
     if ( file_.is_open() )
@@ -77,19 +88,7 @@ public:
   }
 
   bool open() {
-    typedef std::fstream
-    fs;
-    fs::openmode mode = (fs::in | fs::binary);
-    file_.open(filename_.c_str(), mode);
-    bool ok = file_.is_open();
-    if (ok)
-    {
-      // get size of file
-      file_.seekg(0, fs::end);
-      size_ = file_.tellg();
-      file_.seekg(0);
-    }
-    return ok;
+    return file_.is_open();
   } // open
 
   long size() {

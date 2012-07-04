@@ -397,12 +397,10 @@ public:
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
 
-    bool writer_is_open = false;
-
     std::string cell_solution_location = "data/HMM/" + filename + "_cellSolutions_baseSet";
     DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
 
-    writer_is_open = dfw.open();
+    const bool writer_is_open = dfw.is_open();
 
     long double starting_time = clock();
 
@@ -535,13 +533,8 @@ public:
 
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
-
-    bool writer_is_open = false;
-
     std::string cell_solution_location = "data/HMM/" + filename + "_cellSolutions_discFunc";
     DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
-
-    writer_is_open = dfw.open();
 
     long double starting_time = clock();
 
@@ -552,7 +545,7 @@ public:
 
     const DiscreteFunctionSpaceType& discreteFunctionSpace = macro_discrete_function.space();
 
-    if (writer_is_open)
+    if (dfw.is_open())
     {
       int number_of_entity = 0;
       IteratorType endit = discreteFunctionSpace.end();
@@ -685,14 +678,9 @@ public:
 
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
-
-    bool writer_is_open = false;
-
     // where we save the solutions:
     std::string cell_solution_location = "data/HMM/" + filename + "_JacCorCellSolutions_baseSet_discFunc";
     DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
-    writer_is_open = dfw.open();
-
     // where we saved the solutions for the discrete function
     // NOTE: they already need to be assembled, i.e. we already applied the method saveSolutions_discFunc!
     std::string cell_solution_discFunc_location = "data/HMM/" + filename + "_cellSolutions_discFunc";
@@ -714,7 +702,7 @@ public:
 
     const DiscreteFunctionSpaceType& discreteFunctionSpace = macro_discrete_function.space();
 
-    if (writer_is_open)
+    if (dfw.is_open())
     {
       int number_of_entity = 0;
       IteratorType endit = discreteFunctionSpace.end();

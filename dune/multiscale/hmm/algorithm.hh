@@ -802,8 +802,6 @@ void algorithm(std::string& /*UnitCubeName*/,
       #ifdef WRITE_HMM_SOL_TO_FILE
       // for adaptive computations, the saved solution is not suitable for a later usage
       #ifndef ADAPTIVE
-      bool writer_open = false;
-
       char fname[50];
       sprintf(fname,
               "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d",
@@ -813,8 +811,7 @@ void algorithm(std::string& /*UnitCubeName*/,
 
       std::string location = "data/HMM/" + filename + fname_s;
       DiscreteFunctionWriter dfw( (location).c_str() );
-      writer_open = dfw.open();
-      if (writer_open)
+      if (dfw.is_open())
         dfw.append(hmm_solution);
 
       // if you want an utput for all newton steps, even for an adaptive computation, use:
@@ -1133,14 +1130,12 @@ void algorithm(std::string& /*UnitCubeName*/,
   #ifdef WRITE_HMM_SOL_TO_FILE
   // for adaptive computations, the saved solution is not suitable for a later usage
   #ifndef ADAPTIVE
-  bool writer_is_open = false;
   char fname[40];
   sprintf(fname, "/hmm_solution_discFunc_refLevel_%d", refinement_level_macrogrid_);
   std::string fname_s(fname);
   std::string location = "data/HMM/" + filename + fname_s;
   DiscreteFunctionWriter dfw( (location).c_str() );
-  writer_is_open = dfw.open();
-  if (writer_is_open)
+  if (dfw.is_open())
     dfw.append(hmm_solution);
   #endif // ifndef ADAPTIVE
   #endif   // #ifdef WRITE_HMM_SOL_TO_FILE
