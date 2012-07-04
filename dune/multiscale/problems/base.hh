@@ -56,6 +56,8 @@ protected:
   int current_number_of_cell_problem_;
 
 public:
+
+  static const bool has_exact_solution = false;
   //! Constructor for ModelProblemData
   inline IModelProblemData(const Constants constants, const std::string file_name = "no_name")
     : file_name_(file_name)

@@ -499,8 +499,6 @@ public:
 
       CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
-      #if 1
-
       // transformation F : T_0 -> T
       // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
       // arguments: entity T, point in T_0, point in T.
@@ -539,8 +537,6 @@ public:
 
       // |det(A)|:
       double abs_det_A = fabs(1.0 / c);
-
-      #endif // if 1
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
 

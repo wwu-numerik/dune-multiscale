@@ -19,7 +19,7 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 
-namespace HMM {
+struct HMMTraits {
 // ! --------- typedefs for the macro grid and the corresponding discrete space -------------
 typedef Dune::GridSelector::GridType
     GridType;
@@ -67,7 +67,6 @@ typedef GridType::Codim< 1 >::Geometry                        FaceGeometryType;
 typedef DiscreteFunctionSpaceType::BaseFunctionSetType        BaseFunctionSetType;
 typedef Dune::CachingQuadrature< GridPartType, 0 >                  EntityQuadratureType;
 typedef Dune::CachingQuadrature< GridPartType, 1 >                  FaceQuadratureType;
-typedef DiscreteFunctionSpaceType::DomainFieldType            TimeType;
 typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
 typedef Dune::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
 typedef DiscreteFunctionType::LocalFunctionType               LocalFunctionType;
@@ -139,7 +138,7 @@ typedef Dune::RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOper
 // ! type of the adaption manager
 typedef Dune::AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
 // !---------------------------------------------------------------------------------------
-} // namespace HMM
+}; // struct  HMMTraits
 
 
 #endif // DUNE_MS_HMM_TYPES_HH

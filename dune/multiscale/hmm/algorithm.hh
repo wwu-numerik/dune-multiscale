@@ -7,7 +7,6 @@
  #include <config.h>
 #endif // ifdef HAVE_CMAKE_CONFIG
 
-#include "types.hh"
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
@@ -78,39 +77,102 @@ typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctio
   return size_of_domain;
 } // get_size_of_domain
 
+template < class ProblemDataType >
+void print_info(const ProblemDataType& info, std::ofstream& data_file)
+{
+  // epsilon is specified in ModelProblemData, which is specified in problem_specification.hh
+  // 'epsilon' in for instance A^{epsilon}(t,x) = A(t,x/epsilon)
+  const double epsilon_ = info.getEpsilon();
+  // estimated epsilon (specified in ModelProblemData)
+  // estimated epsilon in case epsilon is unknown
+  const double epsilon_est_ = info.getEpsilonEstimated();
+  // edge length of the cells in the cells, belonging to the cell problems
+  // note that (delta/epsilon_est) needs to be a positive integer!
+  // edge length of the cells in the cell proplems,
+  const double delta_ = info.getDelta();
+  if ( data_file.is_open() )
+  {
+    data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std::endl
+              << std::endl;
+    #ifdef LINEAR_PROBLEM
+    data_file << "Problem is declared as being LINEAR." << std::endl;
+    #else
+    data_file << "Problem is declared as being NONLINEAR." << std::endl;
+    #endif // ifdef LINEAR_PROBLEM
+    #ifdef EXACTSOLUTION_AVAILABLE
+    data_file << "Exact solution is available." << std::endl << std::endl;
+    #else
+    data_file << "Exact solution is not available." << std::endl << std::endl;
+    #endif // ifdef EXACTSOLUTION_AVAILABLE
+    data_file << "Computations were made for:" << std::endl << std::endl;
+    const int refinement_level_macrogrid_ = Stuff::Config().get("grid.refinement_level_macrogrid", 0);
+    data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
+    const int refinement_level_cellgrid = Stuff::Config().get("grid.refinement_level_cellgrid", 1);
+    data_file << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
+    #ifdef TFR
+    data_file << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
+    #else
+    data_file << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
+    #endif // ifdef TFR
+    #ifdef AD_HOC_COMPUTATION
+    data_file << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
+    #else
+    data_file << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
+    #ifdef ERRORESTIMATION
+    data_file << "Error estimation activated!" << std::endl << std::endl;
+    #endif
+    #endif // ifdef AD_HOC_COMPUTATION
+    data_file << "Epsilon = " << epsilon_ << std::endl;
+    data_file << "Estimated Epsilon = " << epsilon_est_ << std::endl;
+    data_file << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
+    #ifdef STOCHASTIC_PERTURBATION
+    data_file << std::endl << "Stochastic perturbation added. Variance = " << VARIANCE << std::endl;
+    #endif
+    #ifdef ADAPTIVE
+    //only used in adaptive config
+    const double error_tolerance_ = Stuff::Config().get("problem.error_tolerance", 1e-6);
+    data_file << std::endl << "Adaptive computation. Global error tolerance for program abort = "
+              << error_tolerance_ << std::endl;
+    #endif // ifdef ADAPTIVE
+    data_file << std::endl << std::endl;
+  }
+}
 
 //! the main hmm computation
-template < class GridPointerType>
-void algorithm(std::string& /*UnitCubeName*/,
-               GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
-               GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
+template < class ProblemData, class HMMTraits >
+void algorithm(const ProblemData& problem_data,
+               const std::string& /*UnitCubeName*/,
+               typename HMMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
+               typename HMMTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
                                                            // reference computations)
-               GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
+               typename HMMTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
                int /*refinement_difference*/,   // refinement difference for the macro grid (problem-to-solve vs. reference
                                             // problem)
                std::ofstream& data_file,
                const std::string filename) {
+  typedef HMMTraits HMM;
+  print_info(problem_data, data_file);
   // ! ---- tools ----
   // model problem data
 // UNUSED  Problem::ModelProblemData problem_info;
 // set of hmm parameters/information
 // UNUSED  Multiscale::HMMParameters method_info;
 
-  Dune::L2Error< HMM::DiscreteFunctionType > l2error;
+  Dune::L2Error< typename HMM::DiscreteFunctionType > l2error;
   // expensive hack to deal with discrete functions, defined on different grids
 // UNUSED  ImprovedL2Error< DiscreteFunctionType > impL2error;
 
   // ! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
-  HMM::GridPartType gridPart(*macro_grid_pointer);
+  typename HMM::GridPartType gridPart(*macro_grid_pointer);
   // grid part for the periodic function space, required for HMM-cell-problems
-  HMM::PeriodicGridPartType periodicGridPart(*periodic_grid_pointer);
+  typename HMM::PeriodicGridPartType periodicGridPart(*periodic_grid_pointer);
   // auxiliary grid part for the periodic function space, required for HMM-cell-problems
-  HMM::GridPartType auxiliaryGridPart(*periodic_grid_pointer);
+  typename HMM::GridPartType auxiliaryGridPart(*periodic_grid_pointer);
   // auxiliaryGridPart for the error estimator (the auxiliaryGridPart yields an intersection iterator, which can not be
   // done by the periodicGridPart)
   // grid part for the global function space, required for the detailed fine-scale computation (very high resolution)
-  HMM::GridPartType gridPartFine(*fine_macro_grid_pointer);
+  typename HMM::GridPartType gridPartFine(*fine_macro_grid_pointer);
 
 // UNUSED  GridType& grid = gridPart.grid();
 // UNUSED  GridType& gridFine = gridPartFine.grid();
@@ -118,38 +180,38 @@ void algorithm(std::string& /*UnitCubeName*/,
 
   // ! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
-  HMM::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  typename HMM::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
   // the global-problem function space for the reference computation:
-  HMM::DiscreteFunctionSpaceType finerDiscreteFunctionSpace(gridPartFine);
+  typename HMM::DiscreteFunctionSpaceType finerDiscreteFunctionSpace(gridPartFine);
   // the local-problem function space (containing periodic functions):
-  HMM::PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace(periodicGridPart);
+  typename HMM::PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace(periodicGridPart);
   // and the corresponding auxiliary one:
 // UNUSED  DiscreteFunctionSpaceType auxiliaryDiscreteFunctionSpace(auxiliaryGridPart);
 // ! --------------------------------------------------------------------------------------
 
   // ! --------------------------- coefficient functions ------------------------------------
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  HMM::DiffusionType diffusion_op;
+  typename HMM::DiffusionType diffusion_op;
   // define (first) source term:
-  HMM::FirstSourceType f;   // standard source f
+  typename HMM::FirstSourceType f;   // standard source f
   // if we have some additional source term (-div G), define:
-  HMM::SecondSourceType G;
+  typename HMM::SecondSourceType G;
   // - div ( A^{\epsilon} \nabla u^{\epsilon} ) = f - div G
   // ! Ueberdenken, ob wir das nicht rausschmeisen und nur im Hintergrund fuer die Zellprobleme verwenden:
   // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
-  HMM::MassTermType mass;
+  typename HMM::MassTermType mass;
   // dummy coefficient (mass, advection, etc.)
-  HMM::DefaultDummyFunctionType dummy_coeff;
+  typename HMM::DefaultDummyFunctionType dummy_coeff;
   // exact solution unknown?
   #ifdef EXACTSOLUTION_AVAILABLE
-  HMM::ExactSolutionType u;
-  HMM::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
+  typename HMM::ExactSolutionType u;
+  typename HMM::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
   #endif // ifdef EXACTSOLUTION_AVAILABLE
   // ! --------------------------------------------------------------------------------------
 
   // ! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  Dune::RightHandSideAssembler< HMM::DiscreteFunctionType > rhsassembler;
+  Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType > rhsassembler;
 
   // ----------------------------------------------------------------------------------------------//
   // ----------------------- THE DISCRETE FEM OPERATOR -----------------------------------//
@@ -450,22 +512,6 @@ void algorithm(std::string& /*UnitCubeName*/,
   DiscreteFunctionType hmm_reference_solution(filename + " Reference (HMM) Solution", discreteFunctionSpace_refHMM);
   hmm_reference_solution.clear();
 
-  #if 0
-  char modeprob_name[50];
-  sprintf( modeprob_name, "/Model_Problem_%d", problem_info.get_Number_of_Model_Problem() );
-  std::string modeprob_name_s(modeprob_name);
-
-  char reference_hmm_solution_directory[50];
-  sprintf(reference_hmm_solution_directory, ".......", 10);
-  std::string reference_solution_directory_s(reference_solution_directory);
-
-  char reference_solution_name[50];
-  sprintf(reference_solution_name, "....", refinement_level_referenceprob_);
-  std::string reference_solution_name_s(reference_solution_name);
-
-  std::string location_hmm_ref = "data/HMM/" + modeprob_s + reference_solution_directory_s + reference_solution_name_s;
-  #endif // if 0
-
   std::string location_hmm_ref = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
   bool hmm_ref_reader_is_open = false;
   // reader for the cell problem data file:
@@ -501,11 +547,11 @@ void algorithm(std::string& /*UnitCubeName*/,
   // ----------------------------------------------------------------------------------------------//
 
   // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
-  HMM::CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
+  typename HMM::CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
 
   // ! define the elliptic hmm operator that describes our 'homogenized' macro problem
   // ( effect of the elliptic hmm operator on a certain discrete function )
-  HMM::EllipticHMMOperatorType discrete_elliptic_hmm_op(discreteFunctionSpace,
+  typename HMM::EllipticHMMOperatorType discrete_elliptic_hmm_op(discreteFunctionSpace,
                                                    periodicDiscreteFunctionSpace,
                                                    diffusion_op,
                                                    cp_num_manager,
@@ -516,17 +562,17 @@ void algorithm(std::string& /*UnitCubeName*/,
   // ----------------------------------------------------------------------------------------------//
 
   // ! matrix
-  HMM::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
+  typename HMM::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
 
   // ! right hand side vector
   // right hand side for the hm finite element method with Newton solver:
-  HMM::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
+  typename HMM::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
   hmm_newton_rhs.clear();
 
   // ! solution vector
   // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the
   // non-linear system of equations
-  HMM::DiscreteFunctionType hmm_solution(filename + " HMM (+Newton) Solution", discreteFunctionSpace);
+  typename HMM::DiscreteFunctionType hmm_solution(filename + " HMM (+Newton) Solution", discreteFunctionSpace);
   hmm_solution.clear();
 
   #ifdef ADAPTIVE
@@ -536,7 +582,7 @@ void algorithm(std::string& /*UnitCubeName*/,
   #endif // ifdef ADAPTIVE
 
   // starting value for the Newton method
-  HMM::DiscreteFunctionType zero_func_coarse(filename + " constant zero function coarse ", discreteFunctionSpace);
+  typename HMM::DiscreteFunctionType zero_func_coarse(filename + " constant zero function coarse ", discreteFunctionSpace);
   zero_func_coarse.clear();
 
   #ifdef LINEAR_PROBLEM
@@ -607,7 +653,7 @@ void algorithm(std::string& /*UnitCubeName*/,
   #ifndef AD_HOC_COMPUTATION
   // ! -------------- solve and save the cell problems for the macroscopic base function set
   // --------------------------------------
-  Dune::CellProblemSolver< HMM::PeriodicDiscreteFunctionType, HMM::DiffusionType > cell_problem_solver(periodicDiscreteFunctionSpace,
+  Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType, typename HMM::DiffusionType > cell_problem_solver(periodicDiscreteFunctionSpace,
                                                                                        diffusion_op,
                                                                                        data_file /*optinal*/);
 
@@ -643,16 +689,16 @@ void algorithm(std::string& /*UnitCubeName*/,
   Dune::Timer hmmAssembleTimer;
 
   // just to provide some information
-  HMM::PeriodicDiscreteFunctionType dummy_periodic_func("a periodic dummy", periodicDiscreteFunctionSpace);
+  typename HMM::PeriodicDiscreteFunctionType dummy_periodic_func("a periodic dummy", periodicDiscreteFunctionSpace);
   dummy_periodic_func.clear();
 
   // ! residual vector
   // current residual
-  HMM::DiscreteFunctionType hmm_newton_residual(filename + "HMM Newton Residual", discreteFunctionSpace);
+  typename HMM::DiscreteFunctionType hmm_newton_residual(filename + "HMM Newton Residual", discreteFunctionSpace);
   hmm_newton_residual.clear();
 
-  HMM::RangeType relative_newton_error = 10000.0;
-  HMM::RangeType hmm_rhs_L2_norm = 10000.0;
+  typename HMM::RangeType relative_newton_error = 10000.0;
+  typename HMM::RangeType hmm_rhs_L2_norm = 10000.0;
 
   // number of HMM Newton step (1 = first step)
   // HMM_NEWTON_ITERATION_STEP' Netwon steps have been already performed,
@@ -672,7 +718,7 @@ void algorithm(std::string& /*UnitCubeName*/,
   bool reader_open = false;
 
   // reader for the cell problem data file:
-  HMM::DiscreteFunctionReader discrete_function_reader_hmm_newton_ref( (location_hmm_newton_step_solution).c_str() );
+  typename HMM::DiscreteFunctionReader discrete_function_reader_hmm_newton_ref( (location_hmm_newton_step_solution).c_str() );
   discrete_function_reader_hmm_newton_ref.open();
 
   discrete_function_reader_hmm_newton_ref.read(0, hmm_solution);
@@ -702,8 +748,8 @@ void algorithm(std::string& /*UnitCubeName*/,
 
     #ifndef AD_HOC_COMPUTATION
     // solve cell problems for the solution of the last iteration step
-    cell_problem_solver.saveTheSolutions_discFunc< HMM::DiscreteFunctionType >(hmm_solution, filename + "/cell_problems/");
-    cell_problem_solver.saveTheJacCorSolutions_baseSet_discFunc< HMM::DiscreteFunctionType >(hmm_solution,
+    cell_problem_solver.template saveTheSolutions_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution, filename + "/cell_problems/");
+    cell_problem_solver.template saveTheJacCorSolutions_baseSet_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution,
                                                                                         cp_num_manager,
                                                                                         filename + "/cell_problems/");
     #endif // ifndef AD_HOC_COMPUTATION
@@ -722,7 +768,8 @@ void algorithm(std::string& /*UnitCubeName*/,
     }
     std::cout << "Assemble right hand side..." << std::endl;
     // assemble right hand side
-    rhsassembler.assemble_for_HMM_Newton_method< 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2 >(
+    const int assembler_order = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
+    rhsassembler.template assemble_for_HMM_Newton_method< assembler_order >(
       f,
       diffusion_op,
       hmm_solution,
@@ -741,8 +788,7 @@ void algorithm(std::string& /*UnitCubeName*/,
       std::cout << "Right hand side valid ";
     }
 
-    hmm_rhs_L2_norm = l2error.norm2< 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2 >(zero_func_coarse,
-                                                                                         hmm_newton_rhs);
+    hmm_rhs_L2_norm = l2error.template norm2< assembler_order >(zero_func_coarse, hmm_newton_rhs);
 
     std::cout << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
     data_file << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
@@ -759,7 +805,7 @@ void algorithm(std::string& /*UnitCubeName*/,
     }
 
     // set Dirichlet Boundary to zero
-    typedef HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
+    typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
     IteratorType endit = discreteFunctionSpace.end();
     for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
       boundaryTreatment(*it, hmm_newton_rhs);
@@ -770,7 +816,7 @@ void algorithm(std::string& /*UnitCubeName*/,
     while (hmm_solution_convenient == false)
     {
       hmm_newton_residual.clear();
-      HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,
+      typename HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,
                                            1e-8, hmm_biCG_tolerance, 20000, VERBOSE);
 
       hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
@@ -827,7 +873,7 @@ void algorithm(std::string& /*UnitCubeName*/,
       std::stringstream outstring;
 
       // create and initialize output class
-      HMM::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
+      typename HMM::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
       #ifdef ADAPTIVE
       char hmm_prefix[50];
       sprintf(hmm_prefix, "hmm_solution_%d_NewtonStep_%d", loop_cycle, hmm_iteration_step);
@@ -836,7 +882,7 @@ void algorithm(std::string& /*UnitCubeName*/,
       sprintf(hmm_prefix, "hmm_solution_NewtonStep_%d", hmm_iteration_step);
       #endif // ifdef ADAPTIVE
       outputparam.set_prefix(hmm_prefix);
-      HMM::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_newton_step_series, outputparam);
+      typename HMM::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_newton_step_series, outputparam);
 
       // write data
       outstring << "hmm-solution-NewtonStep";
@@ -847,10 +893,10 @@ void algorithm(std::string& /*UnitCubeName*/,
       #endif           // WRITE_HMM_SOL_TO_FILE
 
       // || u^(n+1) - u^(n) ||_L2
-      relative_newton_error = l2error.norm2< 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2 >(hmm_newton_residual,
+      relative_newton_error = l2error.template norm2< assembler_order >(hmm_newton_residual,
                                                                                                  zero_func_coarse);
       // || u^(n+1) - u^(n) ||_L2 / || u^(n+1) ||_L2
-      relative_newton_error = relative_newton_error / l2error.norm2< 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2 >(
+      relative_newton_error = relative_newton_error / l2error.template norm2< assembler_order >(
         hmm_solution,
         zero_func_coarse);
 
@@ -1246,7 +1292,7 @@ void algorithm(std::string& /*UnitCubeName*/,
   #endif // ifdef HOMOGENIZEDSOL_AVAILABLE
 
   #ifdef EXACTSOLUTION_AVAILABLE
-  HMM::RangeType exact_hmm_error = l2error.norm< HMM::ExactSolutionType >(u,
+  typename HMM::RangeType exact_hmm_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
                                                                 hmm_solution,
                                                                 2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
@@ -1257,7 +1303,7 @@ void algorithm(std::string& /*UnitCubeName*/,
   }
 
   #ifdef FINE_SCALE_REFERENCE
-  HMM::RangeType fem_newton_error = l2error.norm< ExactSolutionType >(u,
+  typename HMM::RangeType fem_newton_error = l2error.norm< ExactSolutionType >(u,
                                                                  fem_newton_solution,
                                                                  2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
@@ -1309,7 +1355,7 @@ void algorithm(std::string& /*UnitCubeName*/,
   // --------- data output hmm solution --------------
 
   // create and initialize output class
-  HMM::IOTupleType hmm_solution_series(&hmm_solution);
+  typename HMM::IOTupleType hmm_solution_series(&hmm_solution);
   #ifdef ADAPTIVE
   char hmm_prefix[30];
   sprintf(hmm_prefix, "hmm_solution_%d", loop_cycle);
@@ -1317,7 +1363,7 @@ void algorithm(std::string& /*UnitCubeName*/,
   #else // ifdef ADAPTIVE
   outputparam.set_prefix("hmm_solution");
   #endif // ifdef ADAPTIVE
-  HMM::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
+  typename HMM::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
 
   // write data
   outstring << "hmm-solution";
@@ -1330,9 +1376,9 @@ void algorithm(std::string& /*UnitCubeName*/,
   // --------- data output discrete exact solution --------------
 
   // create and initialize output class
-  HMM::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+  typename HMM::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
   outputparam.set_prefix("exact_solution");
-  HMM::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
+  typename HMM::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
 
   // write data
   outstring << "exact-solution";
@@ -1346,9 +1392,9 @@ void algorithm(std::string& /*UnitCubeName*/,
   // --------- data output reference solution (fine fem newton computation) --------------
 
   // create and initialize output class
-  HMM::IOTupleType fem_newton_solution_series(&fem_newton_solution);
+  typename HMM::IOTupleType fem_newton_solution_series(&fem_newton_solution);
   outputparam.set_prefix("reference_solution");
-  HMM::DataOutputType fem_newton_dataoutput(gridPartFine.grid(), fem_newton_solution_series, outputparam);
+  typename HMM::DataOutputType fem_newton_dataoutput(gridPartFine.grid(), fem_newton_solution_series, outputparam);
 
   // write data
   outstring << "reference_solution";

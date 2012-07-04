@@ -22,6 +22,7 @@ CONSTANTSFUNCTION(0.05, 0.05, 0.05)
 struct ModelProblemData
   : public IModelProblemData
 {
+  static const bool has_exact_solution = true;
   ModelProblemData(const std::string filename = "no_name")
     : IModelProblemData(Constants(0.05, 0.05, 0.05), filename)
   {}
