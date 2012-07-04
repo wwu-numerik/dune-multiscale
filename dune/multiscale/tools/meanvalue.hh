@@ -10,8 +10,8 @@
   **
   **************************************************************************/
 
-#ifndef DUNE_MEANVALUE_HH
-#define DUNE_MEANVALUE_HH
+#ifndef DUNE_MS_MEANVALUE_HH
+#define DUNE_MS_MEANVALUE_HH
 
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -2257,8 +2257,6 @@ public:
 
     const IdSet& idset_fine_grid = fine_grid.localIdSet();
 
-    #if true
-
     const IdSet& idset_coarse_grid = coarse_grid.localIdSet();
 
     int ref_number_of_fine_entities = 0;
@@ -2271,8 +2269,6 @@ public:
     }
 
     int number_of_coarse_elements_that_are_fathers = 0;
-
-    #endif // if true
 
     // number of visited coarse grid elements
     int number_of_coarse_grid_elements = 0;
@@ -2623,4 +2619,4 @@ public:
   #endif // if 0
 }; // end of class L2Error
 } // end namespace
-#endif // ifndef DUNE_MEANVALUE_HH
+#endif // ifndef DUNE_MS_MEANVALUE_HH

@@ -196,8 +196,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
   std::abort();
 }
 
-#if 1
-// ! assemble system matrix
+//! assemble system matrix
 template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp >
 template< class MatrixType >
@@ -263,7 +262,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
       const FaceGeometryType& faceGeometry = iit->geometry();
 
-      #if 1
       bool set_zero = false;
       if (coarse_index != sub_grid_id)
       {
@@ -278,10 +276,8 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
         for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
           father_of_neighbor = father_of_neighbor->father();
 
-        // ! new version:
-        #if 1
-        EntityPointer coarse_father_test = father_of_neighbor;
 
+        EntityPointer coarse_father_test = father_of_neighbor;
         bool father_found = false;
         while (father_found == false)
         {
@@ -297,32 +293,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
             coarse_father_test = coarse_father_test->father();
           }
         }
-        #endif // if 1
-
-        // ! old version
-        #if 0
-        father_found = false;
-        while (father_found == false)
-        {
-          if (coarseGridLeafIndexSet.contains(*father_of_neighbor) == true)
-          {
-            if (father_of_neighbor->hasFather() == false)
-            {
-              father_found = true;
-            } else {
-              if (coarseGridLeafIndexSet.contains( *( father_of_neighbor->father() ) ) == false)
-              {
-                father_found = true;
-              }
-            }
-          }
-
-          if (father_found == false)
-          {
-            father_of_neighbor = father_of_neighbor->father();
-          }
-        }
-        #endif // if 0
 
         bool entities_identical = true;
         int number_of_nodes = (*father_of_neighbor).template count< 2 >();
@@ -339,21 +309,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
           set_zero = true;
         }
       }
-
-      // ! old:
-      #if 0
-      bool set_zero = false;
-      if ( iit->neighbor() )
-      {
-        EntityPointer outside_it = iit->outside();
-        if (subDiscreteFunctionSpace_.gridPart().grid().template contains< 0 >(*outside_it) == true)
-        {
-          set_zero = true;
-        } // continue; }
-      }
-      // check if face
-      #endif // if 0
-      #endif // if 1
 
       const size_t numQuadraturePoints = faceQuadrature.nop();
 
@@ -508,7 +463,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
   {
     const SubGridEntity& local_grid_entity = *it;
 
-    #if 1
     EntityPointer host_entity_pointer = subDiscreteFunctionSpace.gridPart().grid().template getHostEntity< 0 >(
       local_grid_entity);
 
@@ -600,16 +554,8 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
   } // end for-loop of 'Iterator'
 } // assemble_RHS
 
-#endif // if 1
 
-// ! ------------------------------------------------------------------------------------------------
-// ! ------------------------------------------------------------------------------------------------
-
-// ! ------------------------------------------------------------------------------------------------
-
-// ! ------------------------------------------------------------------------------------------------
-// ! --------------------- the essential local msfem problem solver class ---------------------------
-
+//! --------------------- the essential local msfem problem solver class ---------------------------
 template< class SubGridDiscreteFunctionType,
           class HostDiscreteFunctionType,
           class DiffusionOperatorType,
@@ -975,20 +921,12 @@ public:
   void file_data_output(const SubGridDiscreteFunctionType& subgrid_disc_func,
                         const int sub_grid_index,
                         const int direction_index) {
-    bool writer_is_open = false;
-
     char location_lps[50];
-
     sprintf(location_lps, "_conservativeFlux_e_%d_sg_%d", direction_index, sub_grid_index);
     std::string location_lps_s(location_lps);
-
     std::string locprob_solution_location = path_ + "/cf_problems/" + location_lps_s;
-
     DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
-
-    writer_is_open = dfw.open();
-
-    if (writer_is_open)
+    if (dfw.is_open())
       dfw.append(subgrid_disc_func);
   } // file_data_output
 

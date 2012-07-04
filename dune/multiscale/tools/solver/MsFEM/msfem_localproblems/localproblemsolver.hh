@@ -819,8 +819,6 @@ public:
       std::cout << "-------------------------" << std::endl;
       std::cout << "Coarse index " << coarse_index << std::endl;
 
-      bool writer_is_open = false;
-
       char location_lps[50];
       sprintf(location_lps, "_localProblemSolutions_%d", coarse_index);
       std::string location_lps_s(location_lps);
@@ -829,12 +827,9 @@ public:
 
       DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
 
-      writer_is_open = dfw.open();
-      if (writer_is_open == false)
-      { std::cout << "Error. Could not open 'Discrete Function Writer." << std::endl; }
-
-      if (writer_is_open)
-      {
+      if (!dfw.is_open()) {
+        DUNE_THROW(Dune::InvalidStateException, "Error. Could not open 'Discrete Function Writer.");
+      } else {
         SubGridType& subGrid = subgrid_list_.getSubGrid(coarse_index);
 
         SubGridPartType subGridPart(subGrid);

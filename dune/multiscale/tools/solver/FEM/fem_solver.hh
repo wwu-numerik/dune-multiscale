@@ -45,7 +45,7 @@ public:
 
   // dummy implementation
   inline void evaluate(const DomainType& x,
-                       const TimeType time,
+                       const TimeType /*time*/,
                        RangeType& y) const {
     std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
               << std::endl;
