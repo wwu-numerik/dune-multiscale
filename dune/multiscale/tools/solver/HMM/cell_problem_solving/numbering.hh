@@ -1,10 +1,13 @@
 #ifndef DUNEMS_HMM_CELL_NUMBERING_HH
 #define DUNEMS_HMM_CELL_NUMBERING_HH
 
+#include <utility>
+#include <map>
+
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
 namespace Dune {
-// comparison class for the CellProblemNumberingManager:
+//! comparison class for the CellProblemNumberingManager:
 template< class GridPartType, class DomainType, class EntityPointerType >
 struct classcomp
 {
@@ -60,7 +63,7 @@ struct classcomp
   } // ()
 };
 
-// comparison class for the CellProblemNumberingManager (just comparison of two entities!)
+//! comparison class for the CellProblemNumberingManager (just comparison of two entities!)
 template< class GridPartType, class DomainType, class EntityPointerType >
 struct entity_compare
 {
@@ -68,7 +71,7 @@ struct entity_compare
                   EntityPointerType right_entity) const {
     // compare the barycenteres of the entities with the lexicographic order
 
-    typedef CachingQuadrature< GridPartType, 0 > Quadrature;
+    typedef Fem::CachingQuadrature< GridPartType, 0 > Quadrature;
 
     // ------ right element
 
@@ -109,7 +112,7 @@ struct entity_compare
   } // ()
 };
 
-// only for the combination entity + number of local base function on entity
+//! only for the combination entity + number of local base function on entity
 template< class DiscreteFunctionSpaceType >
 class CellProblemNumberingManager
 {
@@ -134,24 +137,22 @@ public:
 
   typedef std::map< EntityPointerType, int, CompEntityClass > CellNumMapNLType;
 
-  CellNumMapType* cell_numbering_map_;
-  CellNumMapNLType* cell_numbering_map_NL_;
+  CellNumMapType cell_numbering_map_;
+  CellNumMapNLType cell_numbering_map_NL_;
 
-  // simpliefied: in general we need CellNumMapType for the cell problem numering in the linear setting (entity and
-  // local number of base function) and in the nonlinear case we need CellNumMapNLType (NL stands for nonlinear).
-  // CellNumMapType is also required in the nonlinear case if we use test function reconstruction (TFR)
-
-  inline explicit CellProblemNumberingManager(DiscreteFunctionSpaceType& discreteFunctionSpace) {
-    cell_numbering_map_ = new CellNumMapType;
-    cell_numbering_map_NL_ = new CellNumMapNLType;
-
+  /** simpliefied: in general we need CellNumMapType for the cell problem numering in the linear setting (entity and
+   * local number of base function) and in the nonlinear case we need CellNumMapNLType (NL stands for nonlinear).
+   * CellNumMapType is also required in the nonlinear case if we use test function reconstruction (TFR)
+   **/
+  inline explicit CellProblemNumberingManager(DiscreteFunctionSpaceType& discreteFunctionSpace)
+  {
     int counter = 0;
     int number_of_entity = 0;
 
-    IteratorType endit = discreteFunctionSpace.end();
+    const IteratorType endit = discreteFunctionSpace.end();
     for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
     {
-      cell_numbering_map_NL_->insert( std::make_pair(EntityPointerType(*it), number_of_entity) );
+      cell_numbering_map_NL_.insert( std::make_pair(EntityPointerType(*it), number_of_entity) );
 
       const BaseFunctionSetType baseSet
         = discreteFunctionSpace.baseFunctionSet(*it);
@@ -162,26 +163,32 @@ public:
       for (int i = 0; i < numBaseFunctions; ++i)
       {
         std::pair< EntityPointerType, int > idPair(EntityPointerType(*it), i);
-        cell_numbering_map_->insert( std::make_pair(idPair, counter) );
+        cell_numbering_map_.insert( std::make_pair(idPair, counter) );
         counter++;
       }
-
       number_of_entity++;
     }
   }
 
-  // use 'cp_num_manager.get_number_of_cell_problem( it, i )'
+  //! use 'cp_num_manager.get_number_of_cell_problem( it, i )'
   inline int get_number_of_cell_problem(EntityPointerType& ent, const int& numOfBaseFunction) const {
-    std::pair< EntityPointerType, int > idPair(ent, numOfBaseFunction);
-    // !TODO this can create elements
-    return (*cell_numbering_map_)[idPair];
+    const typename CellNumMapType::key_type idPair(ent, numOfBaseFunction);
+    auto it = cell_numbering_map_.find(idPair);
+    if (it != cell_numbering_map_.end() )
+      return it->second;
+    else
+      DUNE_THROW(Dune::RangeError, "no number for entity");
   }
 
-  // use 'cp_num_manager.get_number_of_cell_problem( it )'
-  // Note: 'get_number_of_cell_problem( it )' is NOT equal to 'get_number_of_cell_problem( it , 0 )'!
+  /** use 'cp_num_manager.get_number_of_cell_problem( it )'
+   * \attention 'get_number_of_cell_problem( it )' is NOT equal to 'get_number_of_cell_problem( it , 0 )'!
+   **/
   inline int get_number_of_cell_problem(EntityPointerType& ent) const {
-    // !TODO this can create elements
-    return (*cell_numbering_map_NL_)[ent];
+    auto it = cell_numbering_map_NL_.find(ent);
+    if (it != cell_numbering_map_NL_.end() )
+      return it->second;
+    else
+      DUNE_THROW(Dune::RangeError, "no number for entity");
   }
 };
 } //namespace Dune {
