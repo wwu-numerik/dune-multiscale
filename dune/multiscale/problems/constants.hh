@@ -28,6 +28,6 @@ struct Constants
     static Constants c(d, e, f); \
     return c; \
   }
-}
+} // namespace Problem
 
 #endif // DUNE_MODEL_PROBLEM_ALL_HH

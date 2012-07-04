@@ -10,6 +10,7 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
+#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 
 //! set the dirichlet points to zero
 template< class EntityType, class DiscreteFunctionType >
@@ -650,7 +651,7 @@ void algorithm(const ProblemDataType& problem_data,
   #ifndef AD_HOC_COMPUTATION
   // ! -------------- solve and save the cell problems for the macroscopic base function set
   // --------------------------------------
-  Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType, typename HMM::DiffusionType > cell_problem_solver(periodicDiscreteFunctionSpace,
+  Dune::CellProblemSolver< HMMTraits > cell_problem_solver(periodicDiscreteFunctionSpace,
                                                                                        diffusion_op,
                                                                                        data_file /*optinal*/);
 

@@ -7,7 +7,7 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 
-// CELLSOLVER_VERBOSE: 0 = false, 1 = true
+// LOCPROBLEMSOLVER_VERBOSE: 0 = false, 1 = true
 #define LOCPROBLEMSOLVER_VERBOSE false
 
 // write solutions of the local problems (vtk)

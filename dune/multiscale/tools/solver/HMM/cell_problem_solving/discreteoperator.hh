@@ -10,9 +10,6 @@
 // (should be as small as possible)
 #define CELL_MASS_WEIGHT 0.0000001
 
-// CELLSOLVER_VERBOSE: 0 = false, 1 = true
-#define CELLSOLVER_VERBOSE false
-
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>

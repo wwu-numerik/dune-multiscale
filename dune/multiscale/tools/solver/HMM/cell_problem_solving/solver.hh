@@ -1,15 +1,20 @@
 #ifndef DUNEMS_HMM_CELL_SOLVER_HH
 #define DUNEMS_HMM_CELL_SOLVER_HH
 
+#include <dune/stuff/configcontainer.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
+#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+
 // ! ------------------------------------------------------------------------------------------------
 // ! --------------------- the essential cell problem solver class ----------------------------------
 namespace Dune {
-template< class PeriodicDiscreteFunctionImp, class DiffusionOperatorImp >
+template< class Traits >
 class CellProblemSolver
 {
 public:
   // ! type of discrete functions
-  typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
+  typedef typename Traits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionType;
 
   // ! type of discrete function space
   typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
@@ -31,19 +36,19 @@ public:
   enum { polynomialOrder = PeriodicDiscreteFunctionSpaceType::polynomialOrder };
 
   // ! type of the (possibly non-linear) diffusion operator
-  typedef DiffusionOperatorImp DiffusionType;
+  typedef typename Traits::DiffusionType DiffusionType;
 
   struct CellMatrixTraits
   {
     typedef PeriodicDiscreteFunctionSpaceType                          RowSpaceType;
     typedef PeriodicDiscreteFunctionSpaceType                          ColumnSpaceType;
-    typedef LagrangeMatrixSetup< false >                               StencilType;
+    typedef LagrangeMatrixSetup< false >     StencilType;
     typedef ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
     {
-      typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
+      typedef typename Traits::template LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
     };
   };
 
@@ -104,6 +109,7 @@ public:
     // (in the non-linear setting it changes for every iteration step)
     PeriodicDiscreteFunctionType cell_problem_rhs("rhs of cell problem", periodicDiscreteFunctionSpace_);
     cell_problem_rhs.clear();
+    const bool CELLSOLVER_VERBOSE = Stuff::Config().get<bool>("problem.cellsolver_verbose", false);
 
     // NOTE:
     // is the right hand side of the cell problem equal to zero or almost identical to zero?
@@ -333,6 +339,7 @@ public:
       jac_cor_cell_problem_solution.clear();
       // std :: cout << "Jacobian Corrector Cell Problem with solution zero." << std :: endl;
     } else {
+      const bool CELLSOLVER_VERBOSE = Stuff::Config().get<bool>("problem.cellsolver_verbose", false);
       InverseCellFEMMatrix jac_cor_cell_fem_biCGStab(jac_cor_cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
       jac_cor_cell_fem_biCGStab(jac_cor_cell_problem_rhs, jac_cor_cell_problem_solution);
     }

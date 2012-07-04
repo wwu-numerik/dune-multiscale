@@ -1,7 +1,6 @@
 #include "common.hh"
 #include "hmm_config.hh"
 
-#include <dune/multiscale/hmm/types.hh>
 #include <dune/multiscale/hmm/algorithm.hh>
 
 // we only use error estimation, if the solutions of the cell problems have been determined in a pre-process. Otherwise
@@ -45,6 +44,7 @@ public:
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/solver/HMM/reconstruction_manager/elliptic/reconstructionintegrator.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
+#include <dune/multiscale/hmm/types.hh>
 
 int main(int argc, char** argv) {
   try {
