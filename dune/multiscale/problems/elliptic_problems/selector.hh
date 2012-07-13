@@ -17,7 +17,11 @@
 
 namespace Problem {
 //this pulls everything from the subnamespace into Problem and should only be done for the "active" problem
-using namespace Problem::One;
+#ifndef PROBLEM_NAME
+  using namespace Problem::Ten;
+#else
+  using namespace Problem::PROBLEM_NAME;
+#endif
 } // namespace Problem
 
 #endif // DUNE_MS_PROBLEMS_SELECTOR_HH

@@ -133,7 +133,7 @@ typedef DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 // !---------------------------------------------------------------------------------------
 
 // ! algorithm
-void algorithm(std::string& macroGridName,
+void algorithm(const std::string& macroGridName,
                std::ofstream& data_file) {
   std::cout << "loading dgf: " << macroGridName << std::endl;
   // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
@@ -683,21 +683,22 @@ void algorithm(std::string& macroGridName,
 int main(int argc, char** argv) {
   try {
     init(argc, argv);
+    namespace DSC = Dune::Stuff::Common;
     // !TODO include base in config
-    path_ = std::string("data/MsFEM/") + Stuff::Config().get("global.datadir", "data");
+    path_ = std::string("data/MsFEM/") + DSC::Parameter::Config().get("global.datadir", "data");
 
     // generate directories for data output
-    Stuff::testCreateDirectory(path_);
+    DSC::Filesystem::testCreateDirectory(path_);
 
     std::string save_filename = path_ + "/problem-info.txt";
     std::cout << "Data will be saved under: " << save_filename << std::endl;
 
-    const int start_level = Stuff::Config().get("grid.start_level", 4);
-    coarse_grid_level_ = Stuff::Config().get( "grid.coarse_level", 4, Stuff::ValidateLess< int >(start_level) );
-    number_of_layers_ = Stuff::Config().get("grid.oversampling_layers", 4);
+    const int start_level = DSC::Parameter::Config().get("grid.start_level", 4);
+    coarse_grid_level_ = DSC::Parameter::Config().get( "grid.coarse_level", 4, DSC::Parameter::ValidateLess< int >(start_level) );
+    number_of_layers_ = DSC::Parameter::Config().get("grid.oversampling_layers", 4);
 
     #ifdef ADAPTIVE
-    error_tolerance_ = Stuff::Config().get("problem.error_tolerance", 1e-6);
+    error_tolerance_ = DSC::Parameter::Config().get("problem.error_tolerance", 1e-6);
     #endif   // ifdef ADAPTIVE
 
     // data for the model problem; the information manager
@@ -706,11 +707,10 @@ int main(int argc, char** argv) {
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
     total_refinement_level_
-      = Stuff::Config().get( "grid.total_refinement", 4, Stuff::ValidateLess< int >(coarse_grid_level_) );
+      = DSC::Parameter::Config().get( "grid.total_refinement", 4, DSC::Parameter::ValidateLess< int >(coarse_grid_level_) );
 
     // name of the grid file that describes the macro-grid:
-    std::string macroGridName;
-    info.getMacroGridFile(macroGridName);
+    const std::string macroGridName = info.getMacroGridFile();
 
     // to save all information in a file
     std::ofstream data_file( (save_filename).c_str() );
@@ -757,8 +757,7 @@ int main(int argc, char** argv) {
     //normal
     // macro problem
 
-    long double cpu_time = clock();
-    cpu_time = cpu_time / CLOCKS_PER_SEC;
+    const long double cpu_time = clock() / double(CLOCKS_PER_SEC);
     std::cout << "Total runtime of the program: " << cpu_time << "s" << std::endl;
 
     if ( data_file.is_open() )

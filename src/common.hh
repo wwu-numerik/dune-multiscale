@@ -47,11 +47,10 @@
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/solver/inverseoperators.hh>
 
-#include <dune/stuff/configcontainer.hh>
-#include <dune/stuff/parametercontainer.hh>
-#include <dune/stuff/debug.hh>
-#include <dune/stuff/misc.hh>
-#include <dune/stuff/logging.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/debug.hh>
+#include <dune/stuff/common/misc.hh>
+#include <dune/stuff/common/logging.hh>
 
 #if ENABLE_MPI
 typedef Dune::CollectiveCommunication< MPI_Comm > CollectiveCommunication;
@@ -60,16 +59,17 @@ typedef Dune::CollectiveCommunication< double > CollectiveCommunication;
 #endif // if ENABLE_MPI
 
 CollectiveCommunication init(int argc, char** argv) {
+  namespace DSC = Dune::Stuff::Common;
   Dune::MPIManager::initialize(argc, argv);
-  Stuff::Config().readCommandLine(argc, argv);
+  DSC::Parameter::Config().readCommandLine(argc, argv);
 
   // LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
   // --> LOG_ERR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62
   const bool useLogger = false;
-  Logger().Create(Stuff::Config().get("logging.level", 62, useLogger),
-                  Stuff::Config().get("logging.file", std::string(argv[0]) + ".log", useLogger),
-                  Stuff::Config().get("global.datadir", "data", useLogger),
-                  Stuff::Config().get("logging.dir", "" /*path below datadir*/, useLogger)
+  DSC::Logger().Create(DSC::Parameter::Config().get("logging.level", 62, useLogger),
+                  DSC::Parameter::Config().get("logging.file", std::string(argv[0]) + ".log", useLogger),
+                  DSC::Parameter::Config().get("global.datadir", "data", useLogger),
+                  DSC::Parameter::Config().get("logging.dir", "" /*path below datadir*/, useLogger)
                   );
 
   return CollectiveCommunication();  // ( Dune::MPIManager::helper().getCommunicator() );

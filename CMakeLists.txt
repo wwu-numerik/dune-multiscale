@@ -50,6 +50,18 @@ SET( UGGRID_BASE_PATH
 	"/share/dune/Modules/modules_x86_64/ug" CACHE STRING
 	"UGGRID_BASE_PATH" )
 
+SET(PROBLEM_NAMES "Easy" "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" INTERNAL )
+
+SET( HMM_PROBLEM
+	"Easy" CACHE STRING
+	"HMM_PROBLEM NAME" )
+
+SET( MSFEM_PROBLEM
+	"Ten" CACHE STRING
+	"MSFEM_PROBLEM NAME" )
+
+
+
 SET_CONFIGHEADER_VARS()
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
 
@@ -112,9 +124,12 @@ ADD_DEFINITIONS( ${MY_CXX_FLAGS} )
 
 ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
+set_target_properties(elliptic_hmm PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${HMM_PROBLEM})
+
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
+set_target_properties(elliptic_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )

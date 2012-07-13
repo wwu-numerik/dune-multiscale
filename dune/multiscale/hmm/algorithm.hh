@@ -106,9 +106,9 @@ void print_info(const ProblemDataType& info, std::ofstream& data_file)
       data_file << "Exact solution is not available." << std::endl << std::endl;
     }
     data_file << "Computations were made for:" << std::endl << std::endl;
-    const int refinement_level_macrogrid_ = Stuff::Config().get("grid.refinement_level_macrogrid", 0);
+    const int refinement_level_macrogrid_ = Dune::Stuff::Common::Parameter::Config().get("grid.refinement_level_macrogrid", 0);
     data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
-    const int refinement_level_cellgrid = Stuff::Config().get("grid.refinement_level_cellgrid", 1);
+    const int refinement_level_cellgrid = Dune::Stuff::Common::Parameter::Config().get("grid.refinement_level_cellgrid", 1);
     data_file << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
     #ifdef TFR
     data_file << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
@@ -131,7 +131,7 @@ void print_info(const ProblemDataType& info, std::ofstream& data_file)
     #endif
     #ifdef ADAPTIVE
     //only used in adaptive config
-    const double error_tolerance_ = Stuff::Config().get("problem.error_tolerance", 1e-6);
+    const double error_tolerance_ = Dune::Stuff::Common::Parameter::Config().get("problem.error_tolerance", 1e-6);
     data_file << std::endl << "Adaptive computation. Global error tolerance for program abort = "
               << error_tolerance_ << std::endl;
     #endif // ifdef ADAPTIVE
@@ -660,7 +660,7 @@ void algorithm(const ProblemDataType& problem_data,
   std::cout << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
 
   // generate directory for cell problem data output
-  Stuff::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
+  Dune::Stuff::Common::Filesystem::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
 
   // only for the case with test function reconstruction:
   #ifdef TFR
@@ -732,7 +732,7 @@ void algorithm(const ProblemDataType& problem_data,
   #else
   double hmm_tolerance = 1e-05;
   #endif // ifdef STOCHASTIC_PERTURBATION
-  const int refinement_level_macrogrid_ = Stuff::Config().get("grid.refinement_level_macrogrid", 0);
+  const int refinement_level_macrogrid_ = Dune::Stuff::Common::Parameter::Config().get("grid.refinement_level_macrogrid", 0);
 
   while (relative_newton_error > hmm_tolerance)
   {

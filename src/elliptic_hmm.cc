@@ -49,10 +49,11 @@ public:
 int main(int argc, char** argv) {
   try {
     init(argc, argv);
+    namespace DSC = Dune::Stuff::Common;
 
-    const std::string path = std::string("data/HMM/") + Stuff::Config().get("global.datadir", "data");
+    const std::string path = std::string("data/HMM/") + DSC::Parameter::Config().get("global.datadir", "data");
     // generate directories for data output
-    Stuff::testCreateDirectory(path);
+    DSC::Filesystem::testCreateDirectory(path);
 
     // name of the error file in which the data will be saved
     std::string filename_;
@@ -67,9 +68,9 @@ int main(int argc, char** argv) {
     std::cout << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-    const int refinement_level_macrogrid_ = Stuff::Config().get("grid.refinement_level_macrogrid", 0);
+    const int refinement_level_macrogrid_ = DSC::Parameter::Config().get("grid.refinement_level_macrogrid", 0);
     // grid refinement level for solving the cell problems, i.e. it describes 'h':
-    const int refinement_level_cellgrid = Stuff::Config().get("grid.refinement_level_cellgrid", 1);
+    const int refinement_level_cellgrid = DSC::Parameter::Config().get("grid.refinement_level_cellgrid", 1);
     // (starting) grid refinement level for solving the reference problem
     int refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
     // in general: for the homogenized case = 11 and for the high resolution case = 14
