@@ -29,16 +29,14 @@
 namespace Problem {
 namespace Six {
 // description see below 0.05
-static const double EPSILON = 0.01;
-static const double EPSILON_EST = 0.01;
-static const double DELTA = 0.01;
+CONSTANTSFUNCTION(0.01, 0.01, 0.01)
 
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(0.01, 0.01, 0.01), filename) {
+    : IModelProblemData(constants(), filename) {
   }
 
   inline int get_Number_of_Model_Problem() const {
@@ -192,10 +190,10 @@ public:
 
     #endif // ifdef STOCHASTIC_PERTURBATION
 
-    double coefficient_0 = 1.01 + cos( 2.0 * M_PI * (x[0] / EPSILON) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
-                                                                           // (x[0] / EPSILON) );
-    double coefficient_1 = 1.01 + cos( 2.0 * M_PI * (x[0] / EPSILON) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
-                                                                           // (x[0] / EPSILON) );
+    double coefficient_0 = 1.01 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
+                                                                           // (x[0] / constants().epsilon) );
+    double coefficient_1 = 1.01 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
+                                                                           // (x[0] / constants().epsilon) );
 
     #ifdef STOCHASTIC_PERTURBATION
 
@@ -236,10 +234,10 @@ public:
 
     #endif // ifdef STOCHASTIC_PERTURBATION
 
-    double coefficient_0 = 1.01 + cos( 2.0 * M_PI * (x[0] / EPSILON) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
-                                                                           // (x[0] / EPSILON) );
-    double coefficient_1 = 1.01 + cos( 2.0 * M_PI * (x[0] / EPSILON) );    // !x[ 0 ] + x[ 1 ]; //!cos( 2.0 * M_PI *
-                                                                           // (x[0] / EPSILON) );
+    double coefficient_0 = 1.01 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
+                                                                           // (x[0] / constants().epsilon) );
+    double coefficient_1 = 1.01 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) );    // !x[ 0 ] + x[ 1 ]; //!cos( 2.0 * M_PI *
+                                                                           // (x[0] / constants().epsilon) );
 
     #ifdef STOCHASTIC_PERTURBATION
 

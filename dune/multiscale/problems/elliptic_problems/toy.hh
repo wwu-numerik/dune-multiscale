@@ -21,16 +21,14 @@
 namespace Problem {
 namespace Toy {
 // description see below 0.05
-static const double EPSILON = 1.0;
-static const double EPSILON_EST = 1.0;
-static const double DELTA = 1.0;
+CONSTANTSFUNCTION(1.0, 1.0, 1.0)
 
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(1.0, 1.0, 1.0), filename) {
+    : IModelProblemData(constants(), filename) {
   }
 
   inline int get_Number_of_Model_Problem() const {

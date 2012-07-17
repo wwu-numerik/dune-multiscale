@@ -18,9 +18,7 @@ namespace Problem {
 namespace Five {
 // description see below
 // vorher: 0.13
-static const double EPSILON = 0.05;
-static const double EPSILON_EST = 0.15;
-static const double DELTA = 0.3;
+CONSTANTSFUNCTION(0.05, 0.15, 0.3)
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information
@@ -28,7 +26,7 @@ struct ModelProblemData
   : public IModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(0.05, 0.15, 0.3), filename) {
+    : IModelProblemData(constants(), filename) {
   }
 
   inline int get_Number_of_Model_Problem() const {
@@ -137,8 +135,8 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / EPSILON) * sin(
-      2.0 * M_PI * pow(1.5 * x[1], 2.0) / EPSILON);
+    double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / constants().epsilon) * sin(
+      2.0 * M_PI * pow(1.5 * x[1], 2.0) / constants().epsilon);
 
     if (x[1] <= 0.3)
     {
@@ -177,8 +175,8 @@ public:
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / EPSILON) * sin(
-      2.0 * M_PI * pow(1.5 * x[1], 2.0) / EPSILON);
+    double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / constants().epsilon) * sin(
+      2.0 * M_PI * pow(1.5 * x[1], 2.0) / constants().epsilon);
 
     if (x[1] <= 0.3)
     {
@@ -362,8 +360,8 @@ public:
     std::abort();
     #endif // if 1
 
-    double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / EPSILON) * sin(
-      2.0 * M_PI * pow(1.5 * x[1], 2.0) / EPSILON);
+    double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / constants().epsilon) * sin(
+      2.0 * M_PI * pow(1.5 * x[1], 2.0) / constants().epsilon);
 
     if (x[1] <= 0.3)
     {

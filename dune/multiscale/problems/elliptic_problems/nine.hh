@@ -76,16 +76,13 @@
 namespace Problem {
 namespace Nine {
 // description see below 0.05
-static const double EPSILON = 0.05;
-static const double EPSILON_EST = 0.1;
-static const double DELTA = 0.1;
-
+CONSTANTSFUNCTION(0.05, 0.1, 0.1)
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(0.05, 0.1, 0.1), filename) {
+    : IModelProblemData(constants(), filename) {
   }
 
   inline int get_Number_of_Model_Problem() const {
@@ -136,39 +133,39 @@ public:
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
     #if 1
-    double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
-    double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
+    double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
+    double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
 
     double d_x0_coefficient_0
-      = pow(2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ), -2.0) * ( 1.0 / (2.0 * M_PI) ) * (1.0 / EPSILON) * sin(
-      2.0 * M_PI * (x[0] / EPSILON) );
+      = pow(2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), -2.0) * ( 1.0 / (2.0 * M_PI) ) * (1.0 / constants().epsilon) * sin(
+      2.0 * M_PI * (x[0] / constants().epsilon) );
 
     JacobianRangeType grad_u;
     grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
 
-    grad_u[0][0] += (-1.0) * EPSILON * M_PI
-                    * ( sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
-    grad_u[0][0] += M_PI * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos( 2.0 * M_PI * (x[0] / EPSILON) ) );
+    grad_u[0][0] += (-1.0) * constants().epsilon * M_PI
+                    * ( sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
+    grad_u[0][0] += M_PI * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
 
-    grad_u[0][1] += EPSILON * M_PI
-                    * ( cos(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
+    grad_u[0][1] += constants().epsilon * M_PI
+                    * ( cos(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
 
     RangeType d_x0_x0_u(0.0);
     d_x0_x0_u -= 4.0 * pow(M_PI, 2.0) * sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     d_x0_x0_u -= 2.0
                  * pow(M_PI,
-                       2.0) * ( EPSILON + (1.0 / EPSILON) ) * cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin(
-      2.0 * M_PI * (x[0] / EPSILON) );
+                       2.0) * ( constants().epsilon + (1.0 / constants().epsilon) ) * cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin(
+      2.0 * M_PI * (x[0] / constants().epsilon) );
     d_x0_x0_u -= 4.0
-                 * pow(M_PI, 2.0) * sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos( 2.0 * M_PI * (x[0] / EPSILON) );
+                 * pow(M_PI, 2.0) * sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos( 2.0 * M_PI * (x[0] / constants().epsilon) );
 
     RangeType d_x1_x1_u(0.0);
     d_x1_x1_u -= 4.0 * pow(M_PI, 2.0) * sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     d_x1_x1_u -= 2.0
                  * pow(M_PI,
-                       2.0) * EPSILON
-                 * cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / EPSILON) );
+                       2.0) * constants().epsilon
+                 * cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) );
 
     y = 0.0;
     y -= d_x0_coefficient_0 * grad_u[0][0];
@@ -226,8 +223,8 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
-    double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
+    double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
+    double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
 
     double stab = 0.0;
 
@@ -244,8 +241,8 @@ public:
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
-    double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) ) );
+    double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
+    double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
 
     flux[0][0] = coefficient_0 * direction_gradient[0][0];
     flux[0][1] = coefficient_1 * direction_gradient[0][1];
@@ -397,7 +394,7 @@ public:
                        RangeType& y) const {
     // approximation obtained by homogenized solution + first corrector
     y = sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);         // coarse part
-    y += 0.5 * EPSILON * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );          //
+    y += 0.5 * constants().epsilon * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );          //
                                                                                                                               //
                                                                                                                               //
                                                                                                                               //
@@ -415,12 +412,12 @@ public:
     grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
 
-    grad_u[0][0] += (-1.0) * EPSILON * M_PI
-                    * ( sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
-    grad_u[0][0] += M_PI * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos( 2.0 * M_PI * (x[0] / EPSILON) ) );
+    grad_u[0][0] += (-1.0) * constants().epsilon * M_PI
+                    * ( sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
+    grad_u[0][0] += M_PI * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
 
-    grad_u[0][1] += EPSILON * M_PI
-                    * ( cos(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / EPSILON) ) );
+    grad_u[0][1] += constants().epsilon * M_PI
+                    * ( cos(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
   } // evaluateJacobian
 
   // in case 'u' HAS a time-dependency use the following method:

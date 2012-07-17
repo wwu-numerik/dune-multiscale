@@ -454,16 +454,13 @@ void algorithm(const std::string& macroGridName,
 
   // ----------------------------------------------------------------------
   // ---------------------- write discrete msfem solution to file ---------
-  bool writer_is_open = false;
-
   char fname[50];
   sprintf(fname, "/msfem_solution_discFunc_refLevel_%d_%d", total_refinement_level_, coarse_grid_level_);
   std::string fname_s(fname);
 
   std::string location = path_ + fname_s;
   DiscreteFunctionWriter dfw( (location).c_str() );
-  writer_is_open = dfw.open();
-  if (writer_is_open)
+  if (dfw.is_open())
     dfw.append(msfem_solution);
   // ! --------------------------------------------------------------------
 
@@ -606,15 +603,13 @@ void algorithm(const std::string& macroGridName,
   // -------------------------------------------------------------
 
   // ------------- write discrete fem solution to file -----------
-  writer_is_open = false;
   char fem_fname[50];
   sprintf(fem_fname, "/fem_solution_discFunc_refLevel_%d", total_refinement_level_);
   std::string fem_fname_s(fem_fname);
 
   std::string fine_location = path_ + fem_fname_s;
   DiscreteFunctionWriter fem_dfw( (fine_location).c_str() );
-  writer_is_open = fem_dfw.open();
-  if (writer_is_open)
+  if (fem_dfw.is_open())
     fem_dfw.append(fem_solution);
 
   // -------------------------------------------------------------

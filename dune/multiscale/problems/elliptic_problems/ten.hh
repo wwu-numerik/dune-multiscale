@@ -61,14 +61,13 @@
 namespace Problem {
 namespace Ten {
 // description see below 0.05
-static const double EPSILON = 0.05;
-
+CONSTANTSFUNCTION(0.05, 0.0, 0.0)
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(0.05, 0.0, 0.0), filename) {
+    : IModelProblemData(constants(), filename) {
     assert(!constants_.epsilon != 0.0);
     assert(!constants_.epsilon_est != 0.0);
   }
@@ -176,7 +175,7 @@ public:
     double coefficient
       = ( 1.0
           / (8.0 * M_PI
-             * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) * sin( 2.0 * M_PI * (x[1] / EPSILON) ) ) );
+             * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
     double constant_val = 0.0005;
 
@@ -242,7 +241,7 @@ public:
     double coefficient
       = ( 1.0
           / (8.0 * M_PI
-             * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / EPSILON) ) * sin( 2.0 * M_PI * (x[1] / EPSILON) ) ) );
+             * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
     double constant_val = 0.0005;
 

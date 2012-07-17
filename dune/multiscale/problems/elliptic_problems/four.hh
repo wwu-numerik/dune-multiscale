@@ -15,9 +15,7 @@
 namespace Problem {
 namespace Four {
 // description see below 0.05
-static const double EPSILON = 0.05;
-static const double EPSILON_EST = 0.05;
-static const double DELTA = 0.05;
+CONSTANTSFUNCTION(0.05, 0.05, 0.05)
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information
@@ -25,7 +23,7 @@ struct ModelProblemData
   : public IModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(0.05, 0.05, 0.05), filename) {
+    : IModelProblemData(constants(), filename) {
   }
 
   inline int get_Number_of_Model_Problem() const {
@@ -184,8 +182,8 @@ public:
 
     #endif // ifdef STOCHASTIC_PERTURBATION
 
-    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / EPSILON) ), 2.0) ) );
-    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / EPSILON) ) ) );
+    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
+    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
     #ifdef STOCHASTIC_PERTURBATION
 
@@ -237,8 +235,8 @@ public:
 
     #endif // ifdef STOCHASTIC_PERTURBATION
 
-    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / EPSILON) ), 2.0) ) );
-    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / EPSILON) ) ) );
+    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
+    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
 
     #ifdef STOCHASTIC_PERTURBATION
 

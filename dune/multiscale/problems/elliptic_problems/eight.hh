@@ -19,9 +19,7 @@ namespace Problem {
 namespace Eight {
 // description see below
 // vorher: 0.13
-static const double EPSILON = 0.0001;
-static const double EPSILON_EST = 0.0001;
-static const double DELTA = 0.0001;
+CONSTANTSFUNCTION(0.0001, 0.0001, 0.0001)
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information
@@ -29,7 +27,7 @@ struct ModelProblemData
   : public IModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(0.0001, 0.0001, 0.0001), filename) {
+    : IModelProblemData(constants(), filename) {
   }
 
   inline int get_Number_of_Model_Problem() const {
@@ -130,24 +128,24 @@ public:
   double additivePart(const DomainType& x, const int i, const int j) const {
     double y = 0.0;
 
-    y -= (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / EPSILON) * sin(2.0 * M_PI * x[j] / EPSILON);
+    y -= (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(2.0 * M_PI * x[j] / constants().epsilon);
 
     double helper1 = 1.0;
-    helper1 *= ( 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / EPSILON) );
+    helper1 *= ( 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon) );
 
     double helper2 = 1.0;
     helper2 *= 3.0;
     helper2 *= ( (2.0 * x[i] - 1.0) * (x[j] * x[j] - x[j]) )
-               + ( (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / EPSILON) * sin(2.0 * M_PI * x[j] / EPSILON) );
-    helper2 *= (2.0 * x[i] - 1.0) * (x[j] * x[j] - x[j]) * (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / EPSILON) * sin(
-      2.0 * M_PI * x[j] / EPSILON);
-    helper2 += pow( (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / EPSILON) * sin(2.0 * M_PI * x[j] / EPSILON), 3.0 );
+               + ( (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(2.0 * M_PI * x[j] / constants().epsilon) );
+    helper2 *= (2.0 * x[i] - 1.0) * (x[j] * x[j] - x[j]) * (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(
+      2.0 * M_PI * x[j] / constants().epsilon);
+    helper2 += pow( (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(2.0 * M_PI * x[j] / constants().epsilon), 3.0 );
 
     helper1 *= helper2;
 
     y -= helper1;
 
-    y -= sin(2.0 * M_PI * (x[0] + x[1]) / EPSILON) * pow( (2.0 * x[i]) - 1.0, 3.0 ) * pow( (x[j] * x[j]) - x[j], 3.0 );
+    y -= sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon) * pow( (2.0 * x[i]) - 1.0, 3.0 ) * pow( (x[j] * x[j]) - x[j], 3.0 );
 
     return y;
   } // additivePart
@@ -158,7 +156,7 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / EPSILON);
+    double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon);
 
     flux[0][0] = gradient[0][0] + ( coefficient * pow(gradient[0][0], 3.0) );
     flux[0][0] -= additivePart(x, 0, 1);
@@ -178,7 +176,7 @@ public:
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / EPSILON);
+    double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon);
 
     flux[0][0] = direction_gradient[0][0]
                  * ( 1.0 + 3.0 * coefficient * pow(position_gradient[0][0], 2.0) );

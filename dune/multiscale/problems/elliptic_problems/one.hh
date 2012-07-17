@@ -24,7 +24,7 @@ struct ModelProblemData
 {
   static const bool has_exact_solution = true;
   ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(Constants(0.05, 0.05, 0.05), filename)
+    : IModelProblemData(constants(), filename)
   {}
 
   inline int get_Number_of_Model_Problem() const {
