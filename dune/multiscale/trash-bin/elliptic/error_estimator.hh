@@ -829,40 +829,6 @@ public:
 
     // to add and multiply discfunctions
     DiscFuncAdapter< PeriodicDiscreteFunctionType > adapter;
-
-// !alternative (testen)! Vergleich mit dem uebergebenen correctorU_H_onEntity!
-    #if 0
-    const BaseFunctionSetType baseSet
-      = discreteFunctionSpace_.baseFunctionSet(entity);
-    const int numBaseFunctions = baseSet.numBaseFunctions();
-
-    // we want to determine correctorU_H:
-    PeriodicDiscreteFunctionType correctorU_H_onEntity("correctorU_H", periodicDiscreteFunctionSpace_);
-    correctorU_H_onEntity.clear();
-
-    // an auxilliary function (reconstruction of a certain base function), that is just used for saving certain values
-    PeriodicDiscreteFunctionType correctorPhi_i_onEntity("corrector Phi_i", periodicDiscreteFunctionSpace_);
-
-    // for-loop to determine correctorU_H (on actual entity)
-    for (int i = 0; i < numBaseFunctions; ++i)
-    {
-      int number_of_cell_prob = get_cell_problem_id(entityPointer, i);
-
-      if (reader_is_open)
-      { dfr.read(number_of_cell_prob, correctorPhi_i_onEntity); }
-
-      int globalNumberOfBaseFunction = discreteFunctionSpace_.mapToGlobal(entity, i);
-
-// ! z.B. coefficient[ globalNumberOfBaseFunction ] -> - coefficient[ globalNumberOfBaseFunction ]
-// ! dann beide Varianten addieren und es muss Null rauskommen!
-
-      // K_h(PHI_i) = u_i * K_h(PHI_i)
-      adapter.multScalar(correctorPhi_i_onEntity, cof[globalNumberOfBaseFunction]);
-      // K_h(u_H) = K_h(u_H) + K_h(PHI_i)
-      adapter.add(correctorU_H_onEntity, correctorPhi_i_onEntity);
-    }       // end for loop
-    #endif // if 0
-
     const GridPartType& gridPart = discreteFunctionSpace_.gridPart();
 
     PeriodicDiscreteFunctionType

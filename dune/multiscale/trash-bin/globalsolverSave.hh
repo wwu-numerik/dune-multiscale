@@ -422,70 +422,15 @@ public:
               }
             }
 
-            // to illustrate what we are doing, see the following (dimension-restricted) alternatives:
-
-            #if 0
-            // 1-D:
-            tensor.evaluate(0, 0, geometry.global( quadrature.point(quadraturePoint) ), a[0][0]);
-
-            // 2-D:
-            tensor.evaluate(0, 0, geometry.global( quadrature.point(quadraturePoint) ), a[0][0]);
-            tensor.evaluate(0, 1, geometry.global( quadrature.point(quadraturePoint) ), a[0][1]);
-            tensor.evaluate(1, 0, geometry.global( quadrature.point(quadraturePoint) ), a[1][0]);
-            tensor.evaluate(1, 1, geometry.global( quadrature.point(quadraturePoint) ), a[1][1]);
-
-            // independent of dimension:
-            for (int k = 0; k < dimension; ++k)
-            {
-              for (int l = 0; l < dimension; ++l)
-              {
-                tensor.evaluate(k, l, geometry.global( quadrature.point(quadraturePoint) ), a[k][l]);
-              }
-            }
-            #endif // if 0
-
             // evaluate the gradient of Phi_H at the current quadrature point and save its value in 'v':
             for (int k = 0; k < dimension; ++k)
             {
               G_->evaluate(k, geometry.global( quadrature.point(quadraturePoint) ), w[k]);
             }
-
-            // illustrating alternatives:
-            #if 0
-            // 1-D:
-            gradPhiH.evaluate(0, geometry.global( quadrature.point(quadraturePoint) ), v[0]);
-
-            // 2-D:
-            gradPhiH.evaluate(0, geometry.global( quadrature.point(quadraturePoint) ), v[0]);
-            gradPhiH.evaluate(1, geometry.global( quadrature.point(quadraturePoint) ), v[1]);
-
-            // independent of dimension:
-            for (int k = 0; k < dimension; ++k)
-            {
-              gradPhiH.evaluate(k, geometry.global( quadrature.point(quadraturePoint) ), v[k]);
-            }
-            #endif // if 0
-
             for (int k = 0; k < dimension; ++k)
             {
               t += w[k] * gradientPhi[0][k];
             }
-
-            // illustrating alternatives:
-            #if 0
-            // 1-D:
-            // t = w[ 0 ] * gradientPhi[ 0 ][ 0 ];
-
-            // 2-D:
-            // t = w[ 0 ] * gradientPhi[ 0 ][ 0 ] + w[ 1 ] * gradientPhi[ 0 ][ 1 ];
-            // t = w[ 0 ] + w[ 1 ];
-
-            // independent of dimension:
-            for (int k = 0; k < dimension; ++k)
-            {
-              t += w[k] * gradientPhi[0][k];
-            }
-            #endif // if 0
           }   // end of if-loop
 
           elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (y * z);
@@ -624,71 +569,16 @@ public:
                 tensor_->evaluate(k, l, geometry.global( quadrature.point(quadraturePoint) ), a[k][l]);
               }
             }
-
-            // to illustrate what we are doing, see the following (dimension-restricted) alternatives:
-
-            #if 0
-            // 1-D:
-            tensor.evaluate(0, 0, geometry.global( quadrature.point(quadraturePoint) ), a[0][0]);
-
-            // 2-D:
-            tensor.evaluate(0, 0, geometry.global( quadrature.point(quadraturePoint) ), a[0][0]);
-            tensor.evaluate(0, 1, geometry.global( quadrature.point(quadraturePoint) ), a[0][1]);
-            tensor.evaluate(1, 0, geometry.global( quadrature.point(quadraturePoint) ), a[1][0]);
-            tensor.evaluate(1, 1, geometry.global( quadrature.point(quadraturePoint) ), a[1][1]);
-
-            // independent of dimension:
-            for (int k = 0; k < dimension; ++k)
-            {
-              for (int l = 0; l < dimension; ++l)
-              {
-                tensor.evaluate(k, l, geometry.global( quadrature.point(quadraturePoint) ), a[k][l]);
-              }
-            }
-            #endif // if 0
-
             // evaluate the gradient of Phi_H at the current quadrature point and save its value in 'v':
             for (int k = 0; k < dimension; ++k)
             {
               G_->evaluate(k, geometry.global( quadrature.point(quadraturePoint) ), w[k]);
             }
 
-            // illustrating alternatives:
-            #if 0
-            // 1-D:
-            gradPhiH.evaluate(0, geometry.global( quadrature.point(quadraturePoint) ), v[0]);
-
-            // 2-D:
-            gradPhiH.evaluate(0, geometry.global( quadrature.point(quadraturePoint) ), v[0]);
-            gradPhiH.evaluate(1, geometry.global( quadrature.point(quadraturePoint) ), v[1]);
-
-            // independent of dimension:
-            for (int k = 0; k < dimension; ++k)
-            {
-              gradPhiH.evaluate(k, geometry.global( quadrature.point(quadraturePoint) ), v[k]);
-            }
-            #endif // if 0
-
             for (int k = 0; k < dimension; ++k)
             {
               t += w[k] * gradientPhi[0][k];
             }
-
-            // illustrating alternatives:
-            #if 0
-            // 1-D:
-            // t = w[ 0 ] * gradientPhi[ 0 ][ 0 ];
-
-            // 2-D:
-            // t = w[ 0 ] * gradientPhi[ 0 ][ 0 ] + w[ 1 ] * gradientPhi[ 0 ][ 1 ];
-            // t = w[ 0 ] + w[ 1 ];
-
-            // independent of dimension:
-            for (int k = 0; k < dimension; ++k)
-            {
-              t += w[k] * gradientPhi[0][k];
-            }
-            #endif // if 0
           }   // end of if-loop
 
           // value of u_H_k:
