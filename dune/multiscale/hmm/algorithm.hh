@@ -226,17 +226,10 @@ void algorithm(const ProblemDataType& problem_data,
   #ifdef LINEAR_PROBLEM
   std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
   Dune::FieldMatrix< RangeType, dimension, dimension > A_hom;
-  // analytical homogenizer:
-  #if 0
-  AnalyticalHomogenizer< GridType, DiffusionType > ana_homogenizer(unit_cell_location);
-  A_hom = ana_homogenizer.getHomTensor(diffusion_op);
-  #endif // if 0
 
   // descretized homogenizer:
-  #if 1
   Homogenizer< GridType, DiffusionType > disc_homogenizer(unit_cell_location);
   A_hom = disc_homogenizer.getHomTensor(diffusion_op);
-  #endif // if 1
 
   typedef FieldMatrix< RangeType, dimension, dimension > FieldMatrixType;
   Problem::HomDiffusion< FunctionSpaceType, FieldMatrixType > hom_diffusion_op(A_hom);
@@ -1485,20 +1478,6 @@ void algorithm(const ProblemDataType& problem_data,
   {
     refinements_in_area[bo] = default_refinement + bo + 1;
   }
-
-  #if 0
-  if (loop_cycle > 1)
-  {
-    refinements_in_area[bo] = 6;
-  }
-  if (loop_cycle == 2)
-  {
-    // go the full way
-    int number_of_uniform_refinements = 2 * int( int( sqrt(estimated_error / error_tolerance_) ) );
-    refinements_in_area[0] = number_of_uniform_refinements + 2.0;
-    refinements_in_area[1] = number_of_uniform_refinements + 2.0;
-  }
-  #endif // if 0
 
   if ( data_file.is_open() )
   {

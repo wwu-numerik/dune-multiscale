@@ -696,20 +696,13 @@ public:
                        const TimeType& t,
                        RangeType& y) const {
     double epsilon;
-
     diffusion_.getEpsilon(epsilon);
-
     DomainType x_new;
     x_new[0] = epsilon * x[0];
     x_new[1] = epsilon * x[1];
 
     // no perturbation ( perturbation = 0.0 )
     diffusion_.evaluate(i, j, x_new, t, y);
-
-    #if 0
-    // print data:
-    std::cout << "direct_diffusion_[" << i << "][" << j << "](" << x[0] << "," << x[1] << ") = " << y << std::endl;
-    #endif // if 0
   } // evaluate
 
   inline void evaluate(const int i,
@@ -786,17 +779,6 @@ public:
   }
 
   inline void getAverage(DomainType& bar_b) const {
-    #if 0
-    // does not work:
-    // bar_b = average_of_advection_;
-    // why? Use the following version instead
-    DomainType average(1.0);
-    average[0] = 0.1;
-    average[1] = -0.1;
-
-    bar_b = average;
-    #endif // if 0
-
     #if true
     DomainType zero(0.0);
     bar_b = zero;
