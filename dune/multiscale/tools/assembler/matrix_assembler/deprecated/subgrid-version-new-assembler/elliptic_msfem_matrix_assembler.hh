@@ -341,24 +341,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
     {
       discrete_function_reader.read(1, local_problem_solution_e1);
     }
-
-    // ! loeschen:
-    #if 0
-    typedef typename LocalDiscreteFunction::ConstDofIteratorType DofIteratorType;
-
-    DofIteratorType dit = local_problem_solution_e0.dbegin();
-    std::cout << "\n" << local_problem_solution_e0.name() << ": [ ";
-    for ( ; dit != local_problem_solution_e0.dend(); ++dit)
-      std::cout << std::setw(5) << *dit << "  ";
-    std::cout << " ] " << std::endl;
-
-    dit = local_problem_solution_e1.dbegin();
-    std::cout << "\n" << local_problem_solution_e1.name() << ": [ ";
-    for ( ; dit != local_problem_solution_e1.dend(); ++dit)
-      std::cout << std::setw(5) << *dit << "  ";
-    std::cout << " ] " << std::endl;
-    #endif // if 0
-
     // 1 point quadrature!! We only need the gradient of the base function,
     // which is constant on the whole entity.
     CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
@@ -479,22 +461,7 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
 
             JacobianRangeType diffusive_flux(0.0);
             diffusion_operator_.diffusiveFlux(global_point_in_U_T, direction_of_diffusion, diffusive_flux);
-
-// ! loeschen:
-            #if 0
-            std::cout << "grad_loc_sol_e0[ 0 ] = " << grad_loc_sol_e0[0] << std::endl;
-            std::cout << "grad_loc_sol_e1[ 0 ] = " << grad_loc_sol_e1[0] << std::endl;
-            std::cout << "direction_of_diffusion = " << direction_of_diffusion[0] << std::endl;
-            std::cout << "gradient_Phi[ i ] = " << gradient_Phi[i][0] << std::endl;
-
-            std::cout << "diffusive_flux = " << diffusive_flux[0] << std::endl;
-// ! loeschen:
-            JacobianRangeType diffusive_flux2(0.0);
-            diffusion_operator_.diffusiveFlux(global_point_in_U_T, direction_of_diffusion, diffusive_flux2);
-            std::cout << "iffusive_flux fuer gradient_Phi[ i ] = " << diffusive_flux2[0] << std::endl << std::endl
-                      << std::endl;
-            #endif // if 0
-                   // if not Petrov-Galerkin:
+            // if not Petrov-Galerkin:
             #ifndef PGF
             JacobianRangeType reconstruction_grad_phi_j(0.0);
             for (int k = 0; k < dimension; ++k)
