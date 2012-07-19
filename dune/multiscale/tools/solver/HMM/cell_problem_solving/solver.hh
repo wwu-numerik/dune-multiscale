@@ -587,42 +587,6 @@ public:
         { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
 
         dfw.append(cell_solution_on_entity);
-
-        #if 0
-        // !LOESCHEN:
-        if (number_of_entity == 341)
-        {
-          // in case you want to save the solutions of the two cell problems:
-          #if 1
-          typedef Tuple< PeriodicDiscreteFunctionImp* > IOTupleType;
-          typedef DataOutput< GridType, IOTupleType >   DataOutputType;
-
-          // general output parameters
-          CellProblemDataOutputParameters outputparam;
-
-          // sequence stamp
-          std::stringstream outstring;
-
-          // ------- cell problem -------------
-
-          // create and initialize output class
-          IOTupleType cellproblem_tuple(&cell_solution_on_entity);
-
-          outputparam.set_prefix("cellSolution_saved_");
-          outputparam.set_path("data/HMM/");
-          DataOutputType cellSolution_dataoutput(periodicDiscreteFunctionSpace_.grid(), cellproblem_tuple, outputparam);
-
-          // write data
-          outstring << "cellSolution_saved_";
-          cellSolution_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-          // clear the std::stringstream:
-          outstring.str( std::string() );
-
-          #endif // if 1
-        }
-        // !-------------------------------------
-        #endif // if 0
-
         number_of_entity += 1;
       } // end: for-loop: IteratorType it
     } // end: 'if ( writer_is_open )'
