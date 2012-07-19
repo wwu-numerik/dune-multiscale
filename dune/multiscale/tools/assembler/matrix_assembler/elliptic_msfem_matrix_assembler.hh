@@ -402,31 +402,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
           }
           #endif // if 1
 
-          // ! old version
-          #if 0
-          bool father_found = false;
-          while (father_found == false)
-          {
-            if (coarseGridLeafIndexSet.contains(*father_of_loc_grid_ent) == true)
-            {
-              if (father_of_loc_grid_ent->hasFather() == false)
-              {
-                father_found = true;
-              } else {
-                if (coarseGridLeafIndexSet.contains( *( father_of_loc_grid_ent->father() ) ) == false)
-                {
-                  father_found = true;
-                }
-              }
-            }
-
-            if (father_found == false)
-            {
-              father_of_loc_grid_ent = father_of_loc_grid_ent->father();
-            }
-          }
-          #endif // if 0
-
           bool entities_identical = true;
           int number_of_nodes = (*coarse_grid_it).template count< 2 >();
           for (int k = 0; k < number_of_nodes; k += 1)
