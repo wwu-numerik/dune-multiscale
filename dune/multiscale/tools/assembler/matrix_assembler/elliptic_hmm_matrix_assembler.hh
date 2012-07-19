@@ -455,40 +455,6 @@ const {
     #else // ifdef AD_HOC_COMPUTATION
     discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
 
-    {
-    #if 0
-    // !LOESCHEN:
-    if (number_of_macro_entity == 341)
-    {
-      // in case you want to save the solutions of the two cell problems:
-      typedef Tuple< PeriodicDiscreteFunctionImp* > IOTupleType;
-      typedef DataOutput< GridType, IOTupleType >   DataOutputType;
-
-      // general output parameters
-      CellProblemDataOutputParameters outputparam;
-
-      // sequence stamp
-      std::stringstream outstring;
-
-      // ------- cell problem -------------
-
-      // create and initialize output class
-      IOTupleType cellproblem_tuple(&corrector_old_u_H);
-
-      outputparam.set_prefix("cellSolution_loaded_");
-      outputparam.set_path("data/");
-      DataOutputType cellSolution_dataoutput(periodicDiscreteFunctionSpace_.grid(), cellproblem_tuple, outputparam);
-
-      // write data
-      outstring << "cellSolution_loaded_";
-      cellSolution_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-      // clear the std::stringstream:
-      outstring.str( std::string() );
-    }
-    // !-------------------------------------
-    #endif // if 0
-    }
-
     #endif // ifdef AD_HOC_COMPUTATION
 
     #ifdef TFR
