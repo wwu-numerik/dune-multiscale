@@ -177,10 +177,10 @@ public:
     tensorHom[1][1] += (tensorHom[1][0] * tensorHom[0][1])
                        / tensorHom[0][0];
 
-    std::cout << "analytical: A_homogenized[0][0] = " << tensorHom[0][0] << std::endl;
-    std::cout << "analytical: A_homogenized[0][1] = " << tensorHom[0][1] << std::endl;
-    std::cout << "analytical: A_homogenized[1][0] = " << tensorHom[1][0] << std::endl;
-    std::cout << "analytical: A_homogenized[1][1] = " << tensorHom[1][1] << std::endl;
+    DSC_LOG_DEBUG << "analytical: A_homogenized[0][0] = " << tensorHom[0][0] << std::endl
+                  << "analytical: A_homogenized[0][1] = " << tensorHom[0][1] << std::endl
+                  << "analytical: A_homogenized[1][0] = " << tensorHom[1][0] << std::endl
+                  << "analytical: A_homogenized[1][1] = " << tensorHom[1][1] << std::endl;
 
     return tensorHom;
   } // end of method

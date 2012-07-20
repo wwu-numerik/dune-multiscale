@@ -396,7 +396,7 @@ public:
     SubgridDiscreteFunction msfem_rhs("MsFEM right hand side", coarseDiscreteFunctionSpace);
     msfem_rhs.clear();
 
-    std::cout << "Solving MsFEM problem." << std::endl;
+    DSC_LOG_INFO << "Solving MsFEM problem." << std::endl;
 
     if (data_file_)
     {
@@ -414,7 +414,7 @@ public:
     // assemble the MsFEM stiffness matrix
     elliptic_msfem_op.assemble_matrix(msfem_matrix);    // einbinden!
 
-    std::cout << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+    DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     if (data_file_)
     {
@@ -427,7 +427,7 @@ public:
     // assemble right hand side
     rhsassembler.template assemble< 2* SubgridDiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs);
 
-    // oneLinePrint( std::cout , fem_rhs );
+    // oneLinePrint( DSC_LOG_DEBUG, fem_rhs );
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
@@ -474,12 +474,12 @@ public:
       }
     }
 
-    // oneLinePrint( std::cout , solution );
+    // oneLinePrint( DSC_LOG_DEBUG, solution );
 
     // copy coarse grid function (defined on the subgrid) into a fine grid function
     solution.clear();
 
-    std::cout << "Indentifying coarse scale part of the MsFEM solution... ";
+    DSC_LOG_INFO << "Indentifying coarse scale part of the MsFEM solution... ";
 
     // ! copy coarse scale part of MsFEM solution into a function defined on the fine grid
     // ------------------------------------------------------------------------------------
@@ -493,7 +493,7 @@ public:
       for (int lev = 0; lev < specifier.getLevelDiffernce(); ++lev)
         coarse_father = coarse_father->father();
       if (subGrid.template contains< 0 >(coarse_father) == false)
-      { std::cout << "Error in msfem_solver.hh: Entity not in Subgrid!" << std::endl; }
+      { DSC_LOG_ERROR << "Error in msfem_solver.hh: Entity not in Subgrid!" << std::endl; }
 
       CoarseGridEntityPointer coarse_it = subGrid.template getSubGridEntity< 0 >(*coarse_father);
 
@@ -504,7 +504,7 @@ public:
 
       int number_of_nodes = (*it).template count< 2 >();
       if ( !( number_of_nodes == host_loc_value.baseFunctionSet().numBaseFunctions() ) )
-      { std::cout << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl; }
+      { DSC_LOG_ERROR << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl; }
 
       for (int i = 0; i < number_of_nodes; i += 1)
       {
@@ -512,7 +512,7 @@ public:
 
         DomainType coordinates_of_node = node->geometry().corner(0);
         if ( !( coordinates_of_node == it->geometry().corner(i) ) )
-        { std::cout << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl; }
+        { DSC_LOG_ERROR << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl; }
 
         RangeType coarse_value(0.0);
         interpolation_coarse.evaluate(coordinates_of_node, coarse_value);
@@ -521,7 +521,7 @@ public:
         host_loc_value[i] = coarse_value;
       }
     }
-    std::cout << " done." << std::endl;
+    DSC_LOG_INFO << " done." << std::endl;
 
     fine_scale_part.clear();
 
@@ -543,7 +543,7 @@ public:
     // ! indentify fine scale part of MsFEM solution (including the projection!)
     // ------------------------------------------------------------------------------------
 
-    std::cout << "Indentifying fine scale part of the MsFEM solution... ";
+    DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
     // iterator ueber coarse space
     for (CoarseGridIterator it = coarseDiscreteFunctionSpace.begin(); it != endit; ++it)
     {
@@ -591,8 +591,8 @@ public:
       if (reader_is_open)
       { discrete_function_reader.read(1, local_problem_solution_e1); }
 
-      // oneLinePrint( std::cout , local_problem_solution_e0 );
-      // oneLinePrint( std::cout , local_problem_solution_e1 );
+      // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e0 );
+      // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e1 );
 
       typedef typename SubgridDiscreteFunction::LocalFunctionType SubgridLocalFunction;
       SubgridLocalFunction local_coarse_part = coarse_msfem_solution.localFunction(*it);
@@ -612,12 +612,12 @@ public:
       local_problem_solution_e1 *= grad_coarse_msfem_on_entity[0][1];
       local_problem_solution_e0 += local_problem_solution_e1;
 
-      // oneLinePrint( std::cout , local_problem_solution_e0 );
+      // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e0 );
 
       subgrid_to_hostrid_projection(local_problem_solution_e0, correction_on_U_T);
       // hol die den Gradient und addiere.
       if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() )
-      { std::cout << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl; }
+      { DSC_LOG_ERROR << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl; }
 
       correction_on_U_T.clear();
 
@@ -695,7 +695,7 @@ public:
       }
       fine_scale_part += correction_on_U_T;
     }
-    std::cout << " done." << std::endl;
+    DSC_LOG_INFO << " done." << std::endl;
     // ------------------------------------------------------------------------------------
 
     // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
@@ -708,12 +708,12 @@ public:
 
   template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType >
   void solve() {
-    std::cout << "No implemented!" << std::endl;
+    DSC_LOG_ERROR << "No implemented!" << std::endl;
   }
 
   template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType, class SecondSourceTermType >
   void solve() {
-    std::cout << "No implemented!" << std::endl;
+    DSC_LOG_ERROR << "No implemented!" << std::endl;
   }
 };
 }

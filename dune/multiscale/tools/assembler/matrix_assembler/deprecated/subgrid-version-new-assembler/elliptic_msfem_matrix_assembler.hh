@@ -263,9 +263,9 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
 
   // if Petrov-Galerkin-MsFEM
   #ifdef PGF
-  std::cout << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
+  DSC_LOG_INFO << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
   #else
-  std::cout << "Assembling MsFEM Matrix." << std::endl;
+  DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
   #endif // ifdef PGF
 
   // ! der braucht einen macro-space (der wird auch als subgrid-space generiert) und den total globalen Feinskalen-Raum

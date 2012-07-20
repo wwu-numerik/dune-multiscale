@@ -311,9 +311,9 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
   double h = (right_border - left_border) / NUMBER_OF_STEPS;
 
-  std::cout << "EPSILON = " << EPSILON << std::endl;
-  std::cout << "H = " << h << std::endl << std::endl;
-  std::cout << "NUMBER_OF_STEPS = " << NUMBER_OF_STEPS << std::endl << std::endl;
+  DSC_LOG_INFO << "EPSILON = " << EPSILON << std::endl;
+  DSC_LOG_INFO << "H = " << h << std::endl << std::endl;
+  DSC_LOG_INFO << "NUMBER_OF_STEPS = " << NUMBER_OF_STEPS << std::endl << std::endl;
 
   Exact_Solution u_eps(left_border, right_border);
   Homogenized_Solution u_0(left_border, right_border);
@@ -327,8 +327,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
   double u_eps_L2_Norm = error_L2(500000, left_border, right_border, u_eps, zero);
   // std :: cout << "|| u_eps ||_L2 = " << u_eps_L2_Norm << std :: endl;
 
-  std::cout << "|| u_eps - u_0 ||_L2 = " << error_u_eps_and_u_0 << std::endl;
-  std::cout << "|| u_eps - u_0 ||_L2 relative = " << error_u_eps_and_u_0 / u_eps_L2_Norm << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_eps - u_0 ||_L2 = " << error_u_eps_and_u_0 << std::endl;
+  DSC_LOG_INFO << "|| u_eps - u_0 ||_L2 relative = " << error_u_eps_and_u_0 / u_eps_L2_Norm << std::endl << std::endl;
 
   A_MsFEM a_msfem(left_border, right_border, NUMBER_OF_STEPS);
 
@@ -439,28 +439,28 @@ int main(int /*argc*/, char** /*argv[]*/) {
   error_u_eps_and_u_MsFEM_0 = sqrt(error_u_eps_and_u_MsFEM_0);
   error_u_0_and_u_MsFEM_0 = sqrt(error_u_0_and_u_MsFEM_0);
 
-  std::cout << "|| u_eps - u_MsFEM_0 ||_L2 = " << error_u_eps_and_u_MsFEM_0 << std::endl;
-  std::cout << "|| u_eps - u_MsFEM_0 ||_L2 relative = " << error_u_eps_and_u_MsFEM_0 / u_eps_L2_Norm << std::endl
+  DSC_LOG_INFO << "|| u_eps - u_MsFEM_0 ||_L2 = " << error_u_eps_and_u_MsFEM_0 << std::endl;
+  DSC_LOG_INFO << "|| u_eps - u_MsFEM_0 ||_L2 relative = " << error_u_eps_and_u_MsFEM_0 / u_eps_L2_Norm << std::endl
             << std::endl;
 
-  std::cout << "|| u_0 - u_MsFEM_0 ||_L2 = " << error_u_0_and_u_MsFEM_0 << std::endl;
-  std::cout << "|| u_0 - u_MsFEM_0 ||_L2 relative = " << error_u_0_and_u_MsFEM_0 / u_0_L2_Norm << std::endl
+  DSC_LOG_INFO << "|| u_0 - u_MsFEM_0 ||_L2 = " << error_u_0_and_u_MsFEM_0 << std::endl;
+  DSC_LOG_INFO << "|| u_0 - u_MsFEM_0 ||_L2 relative = " << error_u_0_and_u_MsFEM_0 / u_0_L2_Norm << std::endl
             << std::endl;
 
   error_u_eps_and_u_MsFEM_eps = sqrt(error_u_eps_and_u_MsFEM_eps);
   error_u_0_and_u_MsFEM_eps = sqrt(error_u_0_and_u_MsFEM_eps);
 
-  std::cout << "|| u_eps - u_MsFEM_eps ||_L2 = " << error_u_eps_and_u_MsFEM_eps << std::endl;
-  std::cout << "|| u_eps - u_MsFEM_eps ||_L2 relative = " << error_u_eps_and_u_MsFEM_eps / u_eps_L2_Norm
+  DSC_LOG_INFO << "|| u_eps - u_MsFEM_eps ||_L2 = " << error_u_eps_and_u_MsFEM_eps << std::endl;
+  DSC_LOG_INFO << "|| u_eps - u_MsFEM_eps ||_L2 relative = " << error_u_eps_and_u_MsFEM_eps / u_eps_L2_Norm
             << std::endl << std::endl;
 
-  std::cout << "|| u_0 - u_MsFEM_eps ||_L2 = " << error_u_0_and_u_MsFEM_eps << std::endl;
-  std::cout << "|| u_0 - u_MsFEM_eps ||_L2 relative = " << error_u_0_and_u_MsFEM_eps / u_0_L2_Norm << std::endl
+  DSC_LOG_INFO << "|| u_0 - u_MsFEM_eps ||_L2 = " << error_u_0_and_u_MsFEM_eps << std::endl;
+  DSC_LOG_INFO << "|| u_0 - u_MsFEM_eps ||_L2 relative = " << error_u_0_and_u_MsFEM_eps / u_0_L2_Norm << std::endl
             << std::endl;
 
   a_0_msfem = NUMBER_OF_STEPS * (1.0 / a_0_msfem);
 
-  std::cout << "A^0 = " << a_0 << std::endl;
+  DSC_LOG_INFO << "A^0 = " << a_0 << std::endl;
   // std :: cout << "A^0_MsFEM = " << a_0_msfem << std :: endl;
 
   return 0;

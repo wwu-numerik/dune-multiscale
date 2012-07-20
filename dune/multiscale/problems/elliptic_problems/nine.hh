@@ -345,7 +345,7 @@ public:
   inline void evaluate(const DomainType& x,
                        const TimeType /*time*/,
                        RangeType& y) const {
-    std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
+    DSC_LOG_ERROR << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
               << std::endl;
     return evaluate(x, y);
   }

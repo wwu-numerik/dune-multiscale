@@ -252,7 +252,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS(Di
     const int numDofs = elementOfRHS.numDofs();
     for (int i = 0; i < numDofs; ++i)
     {
-      std::cout << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
+      DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
     }
   }
 }  // end method
@@ -649,7 +649,7 @@ public:
 
     // assemble right hand side of algebraic local msfem problem
     local_problem_op.assemble_local_RHS(e, local_problem_rhs);
-    // oneLinePrint( std::cout , local_problem_rhs );
+    // oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
 
     // zero boundary condition for 'cell problems':
     // set Dirichlet Boundary to zero
@@ -692,7 +692,7 @@ public:
     }
 
     // After boundary treatment:
-    // oneLinePrint( std::cout , local_problem_rhs );
+    // oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
 
     const double norm_rhs = local_problem_op.normRHS(local_problem_rhs);
 
@@ -704,7 +704,7 @@ public:
     if (norm_rhs < /*1e-06*/ 1e-30)
     {
       local_problem_solution.clear();
-      std::cout << "Local MsFEM problem with solution zero." << std::endl;
+      DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
     } else {
       InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, LOCPROBLEMSOLVER_VERBOSE);
       locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
@@ -715,7 +715,7 @@ public:
       DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
     }
 
-    // oneLinePrint( std::cout , local_problem_solution );
+    // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution );
   } // solvelocalproblem
 
   // ! ----------- end method: solve local MsFEM problem ------------------------------------------
@@ -776,7 +776,7 @@ public:
     // number of coarse grid entities (of codim 0).
     int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
-    std::cout << "in method 'assemble_all': number_of_coarse_grid_entities = " << number_of_coarse_grid_entities
+    DSC_LOG_INFO << "in method 'assemble_all': number_of_coarse_grid_entities = " << number_of_coarse_grid_entities
               << std::endl;
 
     // --------------- writing data output ---------------------
@@ -810,8 +810,8 @@ public:
     {
       int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
 
-      std::cout << "-------------------------" << std::endl;
-      std::cout << "Coarse index " << coarse_index << std::endl;
+      DSC_LOG_INFO << "-------------------------" << std::endl
+                   << "Coarse index " << coarse_index << std::endl;
 
       char location_lps[50];
       sprintf(location_lps, "_localProblemSolutions_%d", coarse_index);
@@ -828,11 +828,11 @@ public:
 
         SubGridPartType subGridPart(subGrid);
 
-        std::cout << std::endl;
-        std::cout << "Number of the local problem: " << dimension * coarse_index << " (of "
-                  << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
-        std::cout << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
-                  << subGrid.size(2) << " nodes." << std::endl;
+        DSC_LOG_INFO  << std::endl
+                      << "Number of the local problem: " << dimension * coarse_index << " (of "
+                      << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
+                      << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
+                      << subGrid.size(2) << " nodes." << std::endl;
 
         SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
 
@@ -890,13 +890,12 @@ public:
         // -------------------------------------------------------
         #endif // ifdef VTK_OUTPUT
 
-        std::cout << std::endl;
-        std::cout << "Number of the local problem: "
-                  << (dimension
-            * coarse_index) + 1 << " (of "
-                  << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
-        std::cout << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
-                  << subGrid.size(2) << " nodes." << std::endl;
+        DSC_LOG_INFO  << std::endl
+                      << "Number of the local problem: "
+                      << (dimension * coarse_index) + 1 << " (of "
+                      << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
+                      << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
+                      << subGrid.size(2) << " nodes." << std::endl;
 
         // take time
         time_now = clock();
@@ -912,8 +911,8 @@ public:
 
         dfw.append(local_problem_solution_1);
 
-        // oneLinePrint( std::cout , local_problem_solution_0 );
-        // oneLinePrint( std::cout , local_problem_solution_1 );
+        // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_0 );
+        // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_1 );
 
         subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
 

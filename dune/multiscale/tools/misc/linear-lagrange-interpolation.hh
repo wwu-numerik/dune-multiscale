@@ -93,23 +93,23 @@ public:
                        RangeType& y) const {
     if (std::isnan(p_a_0_))
     {
-      std::cout << "p_a_0 is nan" << std::endl;
+      DSC_LOG_ERROR << "p_a_0 is nan" << std::endl;
     }
     if (std::isnan(p_a_1_))
     {
-      std::cout << "p_a_1 is nan" << std::endl;
+      DSC_LOG_ERROR << "p_a_1 is nan" << std::endl;
     }
     if (std::isnan(p_a_2_))
     {
-      std::cout << "p_a_2 is nan" << std::endl;
+      DSC_LOG_ERROR << "p_a_2 is nan" << std::endl;
     }
     if (std::isnan(x[0]))
     {
-      std::cout << "x[0] is nan" << std::endl;
+      DSC_LOG_ERROR << "x[0] is nan" << std::endl;
     }
     if (std::isnan(x[1]))
     {
-      std::cout << "x[1] is nan" << std::endl;
+      DSC_LOG_ERROR << "x[1] is nan" << std::endl;
     }
     RangeType lambda_1;
     RangeType lambda_0;
@@ -131,17 +131,17 @@ public:
 
     if (std::isnan(lambda_1))
     {
-      std::cout << "lambda_1 is nan! Details:" << std::endl << std::endl;
-      std::cout << "a_0_ = " << a_0_ << std::endl;
-      std::cout << "a_1_ = " << a_1_ << std::endl;
-      std::cout << "a_2_ = " << a_2_ << std::endl << std::endl;
-      std::cout << "p_a_0_ = " << p_a_0_ << std::endl;
-      std::cout << "p_a_1_ = " << p_a_1_ << std::endl;
-      std::cout << "p_a_2_ = " << p_a_2_ << std::endl << std::endl;
-      std::cout << "a_0_[0] - a_2_[0] = " << a_0_[0] - a_2_[0] << std::endl;
-      std::cout << "ganzer Nenner = "
-                << ( (a_1_[1]
-            - a_2_[1]) - ( (a_0_[1] - a_2_[1]) * ( (a_1_[0] - a_2_[0]) / (a_0_[0] - a_2_[0]) ) ) ) << std::endl;
+      DSC_LOG_ERROR << "lambda_1 is nan! Details:" << std::endl << std::endl
+                    << "a_0_ = " << a_0_ << std::endl
+                    << "a_1_ = " << a_1_ << std::endl
+                    << "a_2_ = " << a_2_ << std::endl << std::endl
+                    << "p_a_0_ = " << p_a_0_ << std::endl
+                    << "p_a_1_ = " << p_a_1_ << std::endl
+                    << "p_a_2_ = " << p_a_2_ << std::endl << std::endl
+                    << "a_0_[0] - a_2_[0] = " << a_0_[0] - a_2_[0] << std::endl
+                    << "ganzer Nenner = "
+                    << ( (a_1_[1]
+                              - a_2_[1]) - ( (a_0_[1] - a_2_[1]) * ( (a_1_[0] - a_2_[0]) / (a_0_[0] - a_2_[0]) ) ) ) << std::endl;
       DUNE_THROW(Dune::InvalidStateException,"NaN");
     }
 
@@ -161,14 +161,14 @@ public:
     const int number_of_nodes = ( *(*it_) ).template count< 2 >();
 
     if ( !( number_of_nodes == int( loc_func.baseFunctionSet().size() ) ) )
-    { std::cout << "Error! Inconsistency in 'linear-lagrange-interpolation.hh'." << std::endl; }
+    { DSC_LOG_ERROR << "Error! Inconsistency in 'linear-lagrange-interpolation.hh'." << std::endl; }
 
     for (int i = 0; i < number_of_nodes; i += 1)
     {
       const NodePointerType node = ( *(*it_) ).template subEntity< 2 >(i);
 
       if ( !( node->geometry().corner(0) == (*it_)->geometry().corner(i) ) )
-      { std::cout << "Error! Inconsistency in 'linear-lagrange-interpolation.hh'." << std::endl; }
+      { DSC_LOG_ERROR << "Error! Inconsistency in 'linear-lagrange-interpolation.hh'." << std::endl; }
 
       if (i == 0)
       { p_a_0_ = loc_func[0]; }

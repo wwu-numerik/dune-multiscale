@@ -513,7 +513,7 @@ public:
                        const DomainType& x,
                        RangeType& y) const {
     evaluate(i, j, x, 0.0, y);
-    std::cout << "WARNING! Call for 'evaluate' method of the Diffusion class without time! Set t=0." << std::endl;
+    DSC_LOG_ERROR << "WARNING! Call for 'evaluate' method of the Diffusion class without time! Set t=0." << std::endl;
   }
 
   // dummy implementation
@@ -617,7 +617,7 @@ public:
                        const DomainType& x,
                        RangeType& y) const {
     evaluate(i, j, x, 0.0, y);
-    std::cout << "WARNING! Call for 'evaluate' method of the Diffusion class without time! Set t=0." << std::endl;
+    DSC_LOG_ERROR << "WARNING! Call for 'evaluate' method of the Diffusion class without time! Set t=0." << std::endl;
   }
 
   // dummy implementation
@@ -710,7 +710,7 @@ public:
                        const DomainType& x,
                        RangeType& y) const {
     evaluate(i, j, x, 0.0, y);
-    std::cout << "WARNING! Call for 'evaluate' method of the DirectDiffusion class without time! Set t=0." << std::endl;
+    DSC_LOG_ERROR << "WARNING! Call for 'evaluate' method of the DirectDiffusion class without time! Set t=0." << std::endl;
   }
 
   // dummy implementation
@@ -807,7 +807,7 @@ public:
                        const DomainType& y,
                        RangeType& z) const {
     evaluate(i, y, 0.0, z);
-    std::cout << "WARNING! Call for 'evaluate' method of the Advection class without time! Set t=0." << std::endl;
+    DSC_LOG_ERROR << "WARNING! Call for 'evaluate' method of the Advection class without time! Set t=0." << std::endl;
   }
 
   // dummy implementation
@@ -904,7 +904,7 @@ public:
                        const DomainType& y,
                        RangeType& z) const {
     evaluate(i, y, 0.0, z);
-    std::cout << "WARNING! Call for 'evaluate' method of the Advection class without time! Set t=0." << std::endl;
+    DSC_LOG_ERROR << "WARNING! Call for 'evaluate' method of the Advection class without time! Set t=0." << std::endl;
   }
 
   // dummy implementation
@@ -978,7 +978,7 @@ public:
                        const DomainType& y,
                        RangeType& z) const {
     evaluate(i, y, 0.0, z);
-    std::cout << "WARNING! Call for 'evaluate' method of the DirectAdvection class without time! Set t=0." << std::endl;
+    DSC_LOG_ERROR << "WARNING! Call for 'evaluate' method of the DirectAdvection class without time! Set t=0." << std::endl;
   }
 
   // dummy implementation

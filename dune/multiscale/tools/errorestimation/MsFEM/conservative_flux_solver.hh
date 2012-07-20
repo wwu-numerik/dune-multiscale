@@ -374,7 +374,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     const int numDofs = elementOfRHS.numDofs();
     for (int i = 0; i < numDofs; ++i)
     {
-      std::cout << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
+      DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
     }
   }
 }  // end method
@@ -735,7 +735,7 @@ public:
     // assemble right hand side of algebraic local msfem problem
     cf_problem_operator.assemble_RHS(e_i, local_corrector_e_i, sub_grid_id, rhs);
 
-    // oneLinePrint( std::cout , rhs );
+    // oneLinePrint( DSC_LOG_DEBUG, rhs );
 
     const double norm_rhs = cf_problem_operator.normRHS(rhs);
 
@@ -747,7 +747,7 @@ public:
     if (norm_rhs < /*1e-06*/ 1e-30)
     {
       conservative_flux.clear();
-      std::cout << "Local Flux Problem with solution zero." << std::endl;
+      DSC_LOG_INFO << "Local Flux Problem with solution zero." << std::endl;
     } else {
       InverseFluxProbFEMMatrix flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000, FLUX_SOLVER_VERBOSE);
       flux_prob_biCGStab(rhs, conservative_flux);
@@ -919,7 +919,7 @@ public:
       SubGridDiscreteFunctionType conservative_flux_e0("Conservative Flux for e_0", localDiscreteFunctionSpace);
       SubGridDiscreteFunctionType conservative_flux_e1("Conservative Flux for e_1", localDiscreteFunctionSpace);
 
-      std::cout << "Number of the 'conservative flux problem': " << dimension * global_index_entity << " (of "
+      DSC_LOG_INFO << "Number of the 'conservative flux problem': " << dimension * global_index_entity << " (of "
                 << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
 
       // take time
@@ -933,7 +933,7 @@ public:
       if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
       { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
 
-      std::cout << "Number of the 'conservative flux problem': "
+      DSC_LOG_INFO << "Number of the 'conservative flux problem': "
                 << (dimension
           * global_index_entity) + 1 << " (of "
                 << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
@@ -949,8 +949,8 @@ public:
       if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
       { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
 
-      // oneLinePrint( std::cout , conservative_flux_e0 );
-      // oneLinePrint( std::cout , conservative_flux_e1 );
+      // oneLinePrint( DSC_LOG_DEBUG, conservative_flux_e0 );
+      // oneLinePrint( DSC_LOG_DEBUG, conservative_flux_e1 );
     }
 
     if (data_file_)

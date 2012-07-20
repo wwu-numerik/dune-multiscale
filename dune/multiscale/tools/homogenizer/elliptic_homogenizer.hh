@@ -618,10 +618,10 @@ public:
     a_hom[0][1] = getEntry(tensor_transformed, periodicDiscreteFunctionSpace, cellSolution_0, cellSolution_1, 0, 1);
     a_hom[1][0] = a_hom[0][1];
 
-    std::cout << "A_homogenized[0][0] = " << a_hom[0][0] << std::endl;
-    std::cout << "A_homogenized[0][1] = " << a_hom[0][1] << std::endl;
-    std::cout << "A_homogenized[1][0] = " << a_hom[1][0] << std::endl;
-    std::cout << "A_homogenized[1][1] = " << a_hom[1][1] << std::endl;
+    DSC_LOG_DEBUG << "A_homogenized[0][0] = " << a_hom[0][0] << std::endl
+                  << "A_homogenized[0][1] = " << a_hom[0][1] << std::endl
+                  << "A_homogenized[1][0] = " << a_hom[1][0] << std::endl
+                  << "A_homogenized[1][1] = " << a_hom[1][1] << std::endl;
 
     return a_hom;
   } // getHomTensor

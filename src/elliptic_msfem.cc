@@ -135,7 +135,7 @@ typedef DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 // ! algorithm
 void algorithm(const std::string& macroGridName,
                std::ofstream& data_file) {
-  std::cout << "loading dgf: " << macroGridName << std::endl;
+  DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
   // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
   // for the parameters:
   // create a grid pointer for the DGF file belongig to the macro grid:
@@ -382,7 +382,7 @@ void algorithm(const std::string& macroGridName,
   msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
                                     coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
 
-  std::cout << "Data output for MsFEM Solution." << std::endl;
+  DSC_LOG_INFO << "Data output for MsFEM Solution." << std::endl;
   // ! ----------------- writing data output MsFEM Solution -----------------
   // --------- VTK data output for MsFEM solution --------------------------
   // create and initialize output class
@@ -464,7 +464,7 @@ void algorithm(const std::string& macroGridName,
 
   // ! ------------------------------------------------------------
 
-  std::cout << std::endl << "The L2 errors:" << std::endl << std::endl;
+  DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "The L2 errors:" << std::endl << std::endl;
@@ -476,7 +476,7 @@ void algorithm(const std::string& macroGridName,
                                                             msfem_solution,
                                                             2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
 
-  std::cout << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
@@ -486,7 +486,7 @@ void algorithm(const std::string& macroGridName,
   h1_msfem_error = h1error.semi_norm< ExactSolutionType >(u, msfem_solution);
   h1_msfem_error += msfem_error;
 
-  std::cout << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl;
@@ -581,7 +581,7 @@ void algorithm(const std::string& macroGridName,
   fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
 
   // ! ----------------------------------------------------------------------
-  std::cout << "Data output for FEM Solution." << std::endl;
+  DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
   // ! -------------------------- writing data output FEM Solution ----------
 
   // ------------- VTK data output for FEM solution --------------
@@ -612,7 +612,7 @@ void algorithm(const std::string& macroGridName,
 
   // ! ------------------------------------------------------------
 
-  std::cout << std::endl << "The L2 errors:" << std::endl << std::endl;
+  DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "The L2 errors:" << std::endl << std::endl;
@@ -625,7 +625,7 @@ void algorithm(const std::string& macroGridName,
                                                           fem_solution,
                                                           2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
 
-  std::cout << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
@@ -635,13 +635,13 @@ void algorithm(const std::string& macroGridName,
   h1_fem_error = h1error.semi_norm< ExactSolutionType >(u, fem_solution);
   h1_fem_error += fem_error;
 
-  std::cout << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
   }
   #else // ifdef EXACTSOLUTION_AVAILABLE
-  std::cout << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
+  DSC_LOG_ERROR << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
             << std::endl << std::endl;
   if ( data_file.is_open() )
   {
@@ -652,7 +652,7 @@ void algorithm(const std::string& macroGridName,
   RangeType approx_msfem_error = l2error.norm2< 2* DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
                                                                                                     msfem_solution);
 
-  std::cout << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
@@ -661,7 +661,7 @@ void algorithm(const std::string& macroGridName,
   H1Norm< GridPartType > h1norm(gridPart);
   RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
 
-  std::cout << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl;
@@ -682,7 +682,7 @@ int main(int argc, char** argv) {
     DSC::Filesystem::testCreateDirectory(path_);
 
     std::string save_filename = path_ + "/problem-info.txt";
-    std::cout << "Data will be saved under: " << save_filename << std::endl;
+    DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     const int start_level = DSC::Parameter::Config().get("grid.start_level", 4);
     coarse_grid_level_ = DSC::Parameter::Config().get( "grid.coarse_level", 4, DSC::Parameter::ValidateLess< int >(start_level) );
@@ -749,7 +749,7 @@ int main(int argc, char** argv) {
     // macro problem
 
     const long double cpu_time = clock() / double(CLOCKS_PER_SEC);
-    std::cout << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+    DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
 
     if ( data_file.is_open() )
     {

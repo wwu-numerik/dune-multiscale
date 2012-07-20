@@ -628,7 +628,7 @@ public:
                                 const DiscreteFunctionType& msfem_coarse_part,
                                 const DiscreteFunctionType& msfem_fine_part,
                                 std::ofstream& data_file) {
-    std::cout << "Start computing conservative fluxes..." << std::endl;
+    DSC_LOG_INFO << "Start computing conservative fluxes..." << std::endl;
 
     ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
                                    MacroMicroGridSpecifierImp >
@@ -636,9 +636,9 @@ public:
 
     flux_problem_solver.solve_all(subgrid_list_);
 
-    std::cout << "Conservative fluxes computed successfully." << std::endl;
+    DSC_LOG_INFO << "Conservative fluxes computed successfully." << std::endl;
 
-    std::cout << "Starting error estimation..." << std::endl;
+    DSC_LOG_INFO << "Starting error estimation..." << std::endl;
 
     const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
     const int DUNE_UNUSED(number_of_fine_grid_entities) = msfem_solution.space().gridPart().grid().size(0 /*codim*/);
@@ -978,28 +978,28 @@ public:
 
     if ( data_file.is_open() )
     {
-      data_file << std::endl;
-      data_file << "Estimated Errors:" << std::endl << std::endl;
-      data_file << "Total estimated error = " << total_estimated_error << "." << std::endl;
-      data_file << "where: " << std::endl;
-      data_file << "total_coarse_residual = " << total_coarse_residual << "." << std::endl;
-      data_file << "total_projection_error = " << total_projection_error << "." << std::endl;
-      data_file << "total_coarse_grid_jumps = " << total_coarse_grid_jumps << "." << std::endl;
-      data_file << "total_conservative_flux_jumps = " << total_conservative_flux_jumps << "." << std::endl;
-      data_file << "total_approximation_error = " << total_approximation_error << "." << std::endl;
-      data_file << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std::endl;
+      data_file << std::endl
+                << "Estimated Errors:" << std::endl << std::endl
+                << "Total estimated error = " << total_estimated_error << "." << std::endl
+                << "where: " << std::endl
+                << "total_coarse_residual = " << total_coarse_residual << "." << std::endl
+                << "total_projection_error = " << total_projection_error << "." << std::endl
+                << "total_coarse_grid_jumps = " << total_coarse_grid_jumps << "." << std::endl
+                << "total_conservative_flux_jumps = " << total_conservative_flux_jumps << "." << std::endl
+                << "total_approximation_error = " << total_approximation_error << "." << std::endl
+                << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std::endl;
     }
 
-    std::cout << std::endl;
-    std::cout << "Estimated Errors:" << std::endl << std::endl;
-    std::cout << "Total estimated error = " << total_estimated_error << "." << std::endl;
-    std::cout << "where: " << std::endl;
-    std::cout << "total_coarse_residual = " << total_coarse_residual << "." << std::endl;
-    std::cout << "total_projection_error = " << total_projection_error << "." << std::endl;
-    std::cout << "total_coarse_grid_jumps = " << total_coarse_grid_jumps << "." << std::endl;
-    std::cout << "total_conservative_flux_jumps = " << total_conservative_flux_jumps << "." << std::endl;
-    std::cout << "total_approximation_error = " << total_approximation_error << "." << std::endl;
-    std::cout << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std::endl;
+    DSC_LOG_INFO  << std::endl
+                  << "Estimated Errors:" << std::endl << std::endl
+                  << "Total estimated error = " << total_estimated_error << "." << std::endl
+                  << "where: " << std::endl
+                  << "total_coarse_residual = " << total_coarse_residual << "." << std::endl
+                  << "total_projection_error = " << total_projection_error << "." << std::endl
+                  << "total_coarse_grid_jumps = " << total_coarse_grid_jumps << "." << std::endl
+                  << "total_conservative_flux_jumps = " << total_conservative_flux_jumps << "." << std::endl
+                  << "total_approximation_error = " << total_approximation_error << "." << std::endl
+                  << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std::endl;
 
     return total_estimated_error;
   } // adaptive_refinement

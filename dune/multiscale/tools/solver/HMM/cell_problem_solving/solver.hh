@@ -208,22 +208,21 @@ public:
 
         if (biCG_tolerance > 1e-4)
         {
-          std::cout << "WARNING! Iteration step " << iteration_step
+          DSC_LOG_ERROR << "WARNING! Iteration step " << iteration_step
                     << ". Invalid dofs in 'cell_problem_residual', but '" << relative_newton_error
                     <<
           " = relative_newton_error > 1e-01' and 'biCG_tolerance > 1e-4'. L^2-Norm of right hand side of cell problem: "
-                    << norm_rhs << ". Therefore possibly inaccurate solution." << std::endl;
-          std::cout << "Information:" << std::endl;
-          std::cout << "x_T = globalQuadPoint = " << globalQuadPoint << "." << std::endl;
-          std::cout << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "." << std::endl;
-          std::cout << "Print right hand side? y/n: ";
+                    << norm_rhs << ". Therefore possibly inaccurate solution." << std::endl
+                    << "Information:" << std::endl
+                    << "x_T = globalQuadPoint = " << globalQuadPoint << "." << std::endl
+                    << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "." << std::endl
+                    << "Print right hand side? y/n: ";
           char answer;
           std::cin >> answer;
           if ( !(answer == 'n') )
           { cell_problem_op.printCellRHS(cell_problem_rhs); }
           DUNE_THROW(Dune::InvalidStateException, "");
         }
-
         biCG_tolerance *= 10.0;
       }
 
@@ -240,9 +239,9 @@ public:
 
       if (iteration_step > 10)
       {
-        std::cout << "Warning! Algorithm already reached Newton-iteration step " << iteration_step
-                  << " for computing the nonlinear cellproblem." << std::endl;
-        std::cout << "relative_newton_error = " << relative_newton_error << std::endl << std::endl;
+        DSC_LOG_ERROR << "Warning! Algorithm already reached Newton-iteration step " << iteration_step
+                      << " for computing the nonlinear cellproblem." << std::endl
+                      << "relative_newton_error = " << relative_newton_error << std::endl << std::endl;
         #ifdef FORCE
         residual_L2_norm = 0.0;
         #endif

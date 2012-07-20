@@ -46,7 +46,7 @@ public:
   inline void evaluate(const DomainType& x,
                        const TimeType /*time*/,
                        RangeType& y) const {
-    std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
+    DSC_LOG_ERROR << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
               << std::endl;
     return evaluate(x, y);
   }
@@ -172,7 +172,7 @@ public:
     DiscreteFunction fem_rhs("fem newton rhs", discreteFunctionSpace_);
     fem_rhs.clear();
 
-    std::cout << "Solving linear problem." << std::endl;
+    DSC_LOG_INFO << "Solving linear problem." << std::endl;
 
     if (data_file_)
     {
@@ -190,7 +190,7 @@ public:
     // assemble the stiffness matrix
     discrete_elliptic_op.assemble_matrix(fem_matrix);
 
-    std::cout << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+    DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     if (data_file_)
     {
@@ -204,7 +204,7 @@ public:
     // assemble right hand side
     rhsassembler.template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, fem_rhs);
 
-    // oneLinePrint( std::cout , fem_rhs );
+    // oneLinePrint( DSC_LOG_DEBUG , fem_rhs );
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
@@ -248,7 +248,7 @@ public:
       }
     }
 
-    // oneLinePrint( std::cout , solution );
+    // oneLinePrint( DSC_LOG_DEBUG , solution );
   } // solve_dirichlet_zero
 
   // ! the following methods are not yet implemented, however note that the required tools are
@@ -256,12 +256,12 @@ public:
 
   template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType >
   void solve() {
-    std::cout << "No implemented!" << std::endl;
+    DSC_LOG_ERROR << "No implemented!" << std::endl;
   }
 
   template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType, class SecondSourceTermType >
   void solve() {
-    std::cout << "No implemented!" << std::endl;
+    DSC_LOG_ERROR << "No implemented!" << std::endl;
   }
 };
 }

@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     #else // ifdef RESUME_TO_BROKEN_COMPUTATION
     const std::string save_filename = path + "/problem-info.txt";
     #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
-    std::cout << "Data will be saved under: " << save_filename << std::endl;
+    DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
     const int refinement_level_macrogrid_ = DSC::Parameter::Config().get("grid.refinement_level_macrogrid", 0);
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     const int refinement_difference_for_referenceproblem = refinement_level_referenceprob_ - refinement_level_macrogrid_;
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
-    std::cout << "loading dgf: " << macroGridName << std::endl;
+    DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
 
     // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
     // for the parameters:
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
 
     long double cpu_time = clock();
     cpu_time = cpu_time / CLOCKS_PER_SEC;
-    std::cout << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+    DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
 
     if ( data_file.is_open() )
     {

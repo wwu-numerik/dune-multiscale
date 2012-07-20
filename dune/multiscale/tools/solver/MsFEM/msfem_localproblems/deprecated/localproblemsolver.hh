@@ -368,7 +368,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS(Di
     const int numDofs = elementOfRHS.numDofs();
     for (int i = 0; i < numDofs; ++i)
     {
-      std::cout << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
+      DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
     }
   }
 }      // end method
@@ -862,7 +862,7 @@ public:
   inline std::string get_location() const {
     if (location_)
     { return *location_; } else
-    { std::cout << "Warning! Location of the solutions of the local problems not specified!" << std::endl; }
+    { DSC_LOG_ERROR << "Warning! Location of the solutions of the local problems not specified!" << std::endl; }
   }
 };
 
@@ -1192,7 +1192,7 @@ public:
 
         for (int i = 0; i < numBaseFunctions; ++i)
         {
-          std::cout << "Number of the local problem: " << number_of_local_problem
+          DSC_LOG_DEBUG << "Number of the local problem: " << number_of_local_problem
                     << " (of " << numBaseFunctions* discreteFunctionSpace.grid().size(0) << " problems in total)"
                     << std::endl;
 

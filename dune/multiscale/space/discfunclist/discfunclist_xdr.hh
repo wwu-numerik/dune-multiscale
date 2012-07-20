@@ -182,12 +182,12 @@ private:
 
     // if header file was empty, give a warning
     if (attributes_.size() == 0)
-      std::cout << "Warning! Headerfile " << headerfile << " is empty!\n";
+      DSC_LOG_ERROR << "Warning! Headerfile " << headerfile << " is empty!\n";
 
     // open header for this list
     header_.open(headerfile, std::ios::out | std::ios::app);
 
-    std::cout << "read discfunclist_xdr from headerfile, size = " << size() << std::endl;
+    DSC_LOG_INFO << "read discfunclist_xdr from headerfile, size = " << size() << std::endl;
   } // readOrCreateHeaderFile
 
 public:
@@ -384,7 +384,7 @@ public:
     // check if this function list has been cleared
     checkCleared();
     if ( i >= filenames_.size() )
-      std::cout << "Error: i=" << i << " !!!\n";
+      DSC_LOG_ERROR << "Error: i=" << i << " !!!\n";
     assert( i < filenames_.size() );
     std::string filename = filenames_[i].second;
 

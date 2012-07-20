@@ -127,9 +127,9 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
                                   CellProblemNumberingManagerImp >::assemble_matrix(MatrixType& global_matrix) const {
   // if test function reconstruction
   #ifdef TFR
-  std::cout << "Assembling TFR-HMM Matrix." << std::endl;
+  DSC_LOG_INFO << "Assembling TFR-HMM Matrix." << std::endl;
   #else
-  std::cout << "Assembling HMM Matrix." << std::endl;
+  DSC_LOG_INFO << "Assembling HMM Matrix." << std::endl;
   #endif // ifdef TFR
 
   std::string cell_solution_location;
@@ -345,9 +345,9 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 const {
   // if test function reconstruction
   #ifdef TFR
-  std::cout << "Assembling TFR-HMM Matrix for Newton Iteration." << std::endl;
+  DSC_LOG_INFO << "Assembling TFR-HMM Matrix for Newton Iteration." << std::endl;
   #else
-  std::cout << "Assembling HMM Matrix for Newton Iteration." << std::endl;
+  DSC_LOG_INFO << "Assembling HMM Matrix for Newton Iteration." << std::endl;
   #endif // ifdef TFR
 
   std::string cell_solution_location_baseSet;

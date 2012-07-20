@@ -565,7 +565,7 @@ public:
     // check if the discrete functions have valid dofs:
     if ( !coarse_disc_func.dofsValid() || !fine_disc_func.dofsValid() )
     {
-      std::cout << "Solution of discrete function invalid." << std::endl;
+      DSC_LOG_ERROR << "Solution of discrete function invalid." << std::endl;
       return 0.0;
     }
 
@@ -731,11 +731,10 @@ public:
 
       if (relevant_coarse_entity_found == false)
       {
-        std::cout << "In class >>ImprovedL2Error<<, in method >>norm_adaptive_grids<< :" << std::endl;
-        std::cout
-        << "No corresponding coarse grid entity found for fine grid entity => Error in computation of L2 error."
-        << std::endl;
-        // std::cout << "Problem with fine-grid center: center_of_fine_it(" << center_of_fine_it[0] << "," <<
+        DSC_LOG_ERROR << "In class >>ImprovedL2Error<<, in method >>norm_adaptive_grids<< :" << std::endl
+                      << "No corresponding coarse grid entity found for fine grid entity => Error in computation of L2 error."
+                      << std::endl;
+        // DSC_LOG_ERROR << "Problem with fine-grid center: center_of_fine_it(" << center_of_fine_it[0] << "," <<
         // center_of_fine_it[1] << ")" << std :: endl;
         // if ( (center_of_fine_it[0]>= 0) || (center_of_fine_it[1]>= 0) )
         error_in_compuation = true;
@@ -1434,7 +1433,7 @@ public:
     // check if the discrete functions have valid dofs:
     if ( !coarse_disc_func.dofsValid() || !fine_disc_func.dofsValid() )
     {
-      std::cout << "Solution of discrete function invalid." << std::endl;
+      DSC_LOG_ERROR << "Solution of discrete function invalid." << std::endl;
       return 0.0;
     }
     // get function spaces
@@ -1634,19 +1633,19 @@ public:
 
       if (has_father == true)
       { number_of_coarse_elements_that_are_fathers += 1; } else
-      { std::cout << "Coarse element number " << number_of_coarse_grid_elements << "is not a father!!!" << std::endl; }
+      { DSC_LOG_DEBUG << "Coarse element number " << number_of_coarse_grid_elements << "is not a father!!!" << std::endl; }
 
       number_of_coarse_grid_elements += 1;
     } // end element iteration
 
-    std::cout << "Number of visited coarse grid elements: " << number_of_coarse_grid_elements << std::endl;
-    std::cout << "number_of_coarse_elements_that_are_fathers: " << number_of_coarse_elements_that_are_fathers
-              << std::endl;
+    DSC_LOG_INFO  << "Number of visited coarse grid elements: " << number_of_coarse_grid_elements << std::endl
+                  << "number_of_coarse_elements_that_are_fathers: " << number_of_coarse_elements_that_are_fathers
+                  << std::endl;
 
     if (ref_number_of_fine_entities != ref_number_of_fine_entities_2)
     {
-      std::cout << "ref_number_of_fine_entities = " << ref_number_of_fine_entities << std::endl;
-      std::cout << "ref_number_of_fine_entities_2 = " << ref_number_of_fine_entities_2 << std::endl;
+      DSC_LOG_ERROR << "ref_number_of_fine_entities = " << ref_number_of_fine_entities << std::endl
+                    << "ref_number_of_fine_entities_2 = " << ref_number_of_fine_entities_2 << std::endl;
       DUNE_THROW(Dune::NotImplemented, "//! TODO huh?");
     }
     l2Norm = fine_comm.sum(l2Norm);

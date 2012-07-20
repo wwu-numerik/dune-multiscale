@@ -458,7 +458,7 @@ public:
       const int numDofs = elementOfRHS.numDofs();
       for (int i = 0; i < numDofs; ++i)
       {
-        std::cout << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
+        DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
       }
     }
   }    // end method

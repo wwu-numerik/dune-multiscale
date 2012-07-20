@@ -163,7 +163,7 @@ public:
     : hostSpace_( specifier.fineSpace() )
       , specifier_(specifier)
       , silent_(silent) {
-    std::cout << "Starting creation of subgrids." << std::endl << std::endl;
+    DSC_LOG_INFO << "Starting creation of subgrids." << std::endl << std::endl;
 
     HostDiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
 
@@ -202,7 +202,7 @@ public:
     // number of coarse grid entities (of codim 0).
     int number_of_coarse_grid_entities = specifier.getNumOfCoarseEntities();
 
-    std::cout << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
+    DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
     subGridList_ = new SubGridType *[number_of_coarse_grid_entities];
 
@@ -341,14 +341,14 @@ public:
       subGridList_[i]->createEnd();
       if (!silent_)
       {
-        std::cout << "Subgrid " << i << ":" << std::endl;
+        DSC_LOG_INFO << "Subgrid " << i << ":" << std::endl;
         subGridList_[i]->report();
       }
 
       if (subGridList_[i]->size(2) == 0)
       {
-        std::cout << "Error." << std::endl;
-        std::cout << "Error. Created Subgrid with 0 nodes." << std::endl;
+        DSC_LOG_ERROR << "Error." << std::endl
+                      << "Error. Created Subgrid with 0 nodes." << std::endl;
 
         for (HostGridEntityIteratorType coarse_it = specifier_.coarseSpace().begin();
              coarse_it != specifier_.coarseSpace().end(); ++coarse_it)
@@ -357,10 +357,10 @@ public:
           int index = coarseGridLeafIndexSet.index(coarse_entity);
           if (i == index)
           {
-            std::cout << "We have a problem with the following coarse-grid element:" << std::endl;
-            std::cout << "coarse element corner(0) = " << coarse_it->geometry().corner(0) << std::endl;
-            std::cout << "coarse element corner(1) = " << coarse_it->geometry().corner(1) << std::endl;
-            std::cout << "coarse element corner(2) = " << coarse_it->geometry().corner(2) << std::endl << std::endl;
+            DSC_LOG_ERROR << "We have a problem with the following coarse-grid element:" << std::endl
+                          << "coarse element corner(0) = " << coarse_it->geometry().corner(0) << std::endl
+                          << "coarse element corner(1) = " << coarse_it->geometry().corner(1) << std::endl
+                          << "coarse element corner(2) = " << coarse_it->geometry().corner(2) << std::endl << std::endl;
           }
         }
         DUNE_THROW(Dune::InvalidStateException, "Created Subgrid with 0 nodes");
