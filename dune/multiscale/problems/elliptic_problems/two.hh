@@ -234,14 +234,10 @@ public:
 public:
   FieldMatrixType* A_hom_;
 
-  #if 1
-
 public:
   inline explicit HomDiffusion(FieldMatrixType& A_hom)
     : A_hom_(&A_hom)
   {}
-
-  #endif // if 1
 
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
@@ -355,12 +351,10 @@ public:
   // in case 'u' has NO time-dependency use the following method:
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    #if 1
     // NOT THE EXACT SOLUTION!!!:
+    //!TODO why is there an imp below then?
     y = 0.0;
-    std::cout << "Exact solution not available" << std::endl;
-    std::abort();
-    #endif // if 1
+    DUNE_THROW(Dune::NotImplemented, "Exact solution not available");
 
     double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / constants().epsilon) * sin(
       2.0 * M_PI * pow(1.5 * x[1], 2.0) / constants().epsilon);

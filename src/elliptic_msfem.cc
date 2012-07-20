@@ -377,12 +377,10 @@ void algorithm(const std::string& macroGridName,
   bool silence = false;
   SubGridListType subgrid_list(specifier, silence);
 
-  #if 1
   // just for Dirichlet zero-boundary condition
   Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver(discreteFunctionSpace, data_file, path_);
   msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
                                     coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
-  #endif // if 1
 
   std::cout << "Data output for MsFEM Solution." << std::endl;
   // ! ----------------- writing data output MsFEM Solution -----------------
@@ -499,7 +497,6 @@ void algorithm(const std::string& macroGridName,
   // ! ----------------------------------------------------------------------
 
   // error estimation
-  #if 1
   RangeType total_estimated_H1_error(0.0);
 
   MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_);
@@ -572,7 +569,6 @@ void algorithm(const std::string& macroGridName,
   #else // ifdef ADAPTIVE
   repeat_algorithm_ = false;
   #endif // ifdef ADAPTIVE
-  #endif // #if 1
 
   // ! ---------------------- solve FEM problem ---------------------------
   // ! solution vector

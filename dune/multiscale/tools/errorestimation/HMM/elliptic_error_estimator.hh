@@ -1016,8 +1016,6 @@ public:
     return local_indicator;
   } // end of method
 
-  #if 1
-
   // NOTE: This method ONLY works for uniformly refined micro-grid and GRIDDIM=2!
   // (even though it might be extended easily to other cases, here we use the cheapest strategy, which just works for
   // the case described above!)
@@ -1285,8 +1283,6 @@ public:
 
     return local_indicator;
   } // end of method
-
-  #endif // if 1
 }; // end of class ErrorEstimater
 } // end namespace
 

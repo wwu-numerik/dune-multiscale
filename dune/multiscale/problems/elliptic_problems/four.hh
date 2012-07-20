@@ -304,14 +304,10 @@ public:
 public:
   FieldMatrixType* A_hom_;
 
-  #if 1
-
 public:
   inline explicit HomDiffusion(FieldMatrixType& A_hom)
     : A_hom_(&A_hom)
   {}
-
-  #endif // if 1
 
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2

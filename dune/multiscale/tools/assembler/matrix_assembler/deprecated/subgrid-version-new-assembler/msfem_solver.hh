@@ -337,7 +337,6 @@ public:
 
     // ----- check index sets --------------------
 
-    #if 1
     bool index_sets_correct = true;
 
     CoarseGridIterator coarse_it_ = coarseDiscreteFunctionSpace.begin();
@@ -367,7 +366,6 @@ public:
       std::cout << "Index Sets not correct" << std::endl;
       abort();
     }
-    #endif // if 1
 
     // -------------------------------------------
 
@@ -484,7 +482,6 @@ public:
     // copy coarse grid function (defined on the subgrid) into a fine grid function
     solution.clear();
 
-    #if 1
     std::cout << "Indentifying coarse scale part of the MsFEM solution... ";
 
     // ! copy coarse scale part of MsFEM solution into a function defined on the fine grid
@@ -528,10 +525,7 @@ public:
       }
     }
     std::cout << " done." << std::endl;
-    #endif // if 1
-    // ------------------------------------------------------------------------------------
 
-    #if 1
     fine_scale_part.clear();
 
     int number_of_nodes = grid.size(2 /*codim*/);
@@ -625,7 +619,6 @@ public:
 
       subgrid_to_hostrid_projection(local_problem_solution_e0, correction_on_U_T);
       // hol die den Gradient und addiere.
-      #if 1
       if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() )
       { std::cout << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl; }
 
@@ -703,20 +696,14 @@ public:
           host_loc_value[i] = ( sub_loc_value[i] / coarse_entities.size() );
         }
       }
-
-      #endif // if 1
-
       fine_scale_part += correction_on_U_T;
     }
     std::cout << " done." << std::endl;
-    #endif // if 1
     // ------------------------------------------------------------------------------------
 
-    #if 1
     // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
     solution += coarse_scale_part;
     solution += fine_scale_part;
-    #endif // if 1
   } // solve_dirichlet_zero
 
   // ! the following methods are not yet implemented, however note that the required tools are

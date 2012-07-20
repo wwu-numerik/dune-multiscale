@@ -132,7 +132,6 @@ public:
 public:
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    #if 1
     double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
     double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
 
@@ -171,9 +170,6 @@ public:
     y -= d_x0_coefficient_0 * grad_u[0][0];
     y -= coefficient_0 * d_x0_x0_u;
     y -= coefficient_1 * d_x1_x1_u;
-    #endif // if 1
-
-    // y = sin( 2.0 * M_PI * x[0] ) * sin( 2.0 * M_PI * x[1] );
   } // evaluate
 
   inline void evaluate(const DomainType& x,

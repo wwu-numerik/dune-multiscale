@@ -169,7 +169,6 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    #if 1
     double diff_coef = 0.0;
 
     double coefficient
@@ -219,10 +218,7 @@ public:
       diff_coef = coefficient;
     }
 
-    #endif // if 1
-
-    double stab = 0.0;
-
+    const double stab = 0.0;
     flux[0][0] = diff_coef * gradient[0][0] + stab * gradient[0][1];
     flux[0][1] = diff_coef * gradient[0][1] + stab * gradient[0][0];
   } // diffusiveFlux
@@ -321,14 +317,10 @@ public:
 public:
   FieldMatrixType* A_hom_;
 
-  #if 1
-
 public:
   inline explicit HomDiffusion(FieldMatrixType& A_hom)
     : A_hom_(&A_hom)
   {}
-
-  #endif // if 1
 
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2

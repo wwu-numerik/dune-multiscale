@@ -610,8 +610,6 @@ public:
     }
   } // saveTheSolutions_discFunc
 
-  #if 1
-
   // compute and save solutions of the jacobian corrector cell problems for the base function set of the
   // 'discreteFunctionSpace' and for a fixed macroscopic discrete function
   // requires cell problem numbering manager
@@ -774,8 +772,6 @@ public:
       }
     }
   } // saveTheJacCorSolutions_baseSet_discFunc
-
-  #endif // if 1
 }; // end class
 } //namespace Dune {
 #endif // DUNEMS_HMM_CELL_SOLVER_HH

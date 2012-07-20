@@ -487,7 +487,6 @@ public:
 
     // oneLinePrint( std::cout , fem_rhs );
 
-    #if 1
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
     HostgridIterator endit = coarse_space.end();
@@ -516,7 +515,6 @@ public:
       }
     }
     // --- end boundary treatment ---
-    #endif // if 1
 
     InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/);
     msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
@@ -538,7 +536,6 @@ public:
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
 
-    #if 1
     std::cout << "Indentifying coarse scale part of the MsFEM solution... ";
 
     // ! copy coarse scale part of MsFEM solution into a function defined on the fine grid
@@ -596,7 +593,6 @@ public:
       }
     }
     std::cout << " done." << std::endl;
-    #endif // if 1
     // ------------------------------------------------------------------------------------
 
     fine_scale_part.clear();
@@ -688,7 +684,6 @@ public:
 
       subgrid_to_hostrid_projection(local_problem_solution_e0, correction_on_U_T);
       // hol die den Gradient und addiere.
-      #if 1
       if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() )
       { std::cout << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl; }
 
@@ -783,9 +778,6 @@ public:
           host_loc_value[i] = ( sub_loc_value[i] / coarse_entities.size() );
         }
       }
-
-      #endif // if 1
-
       fine_scale_part += correction_on_U_T;
     }
     std::cout << " done." << std::endl;

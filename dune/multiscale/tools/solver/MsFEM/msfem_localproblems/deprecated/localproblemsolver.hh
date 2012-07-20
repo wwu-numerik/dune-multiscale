@@ -194,7 +194,6 @@ void LocalProblemOperator< GlobalEntityDiscreteFunctionImp, DiffusionImp >::asse
 const
 // x_T is the barycenter of the macro grid element T
 {
-  #if 1
   // the coarse grid element T:
   const Entity& entity_T = *pointer_on_entity;
   const Geometry& geometry_of_T = entity_T.geometry();
@@ -249,8 +248,6 @@ const
   val_A_inverse_transposed[0][1] = c * (-1.0) * val_A[1][0];
   val_A_inverse_transposed[1][1] = c * val_A[0][0];
 
-  #endif // if 1
-
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
   Problem::ModelProblemData model_info;
@@ -285,8 +282,6 @@ const
     {
       // local (barycentric) coordinates (with respect to local grid entity)
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
-
-      #if 1
       // remember, we are concerned with: \int_{T_0} (A^eps ○ F)(x) (A^{-1})^T ∇( Q^eps(\Phi_H) ○ F )(x) · ∇
       // \phi(x)
 
@@ -306,8 +301,6 @@ const
       // F(x) = Ax + a_0, F : T_0 -> T is given by
       // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
       // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
-
-      #endif // if 1
 
       const double weight = quadrature.weight(quadraturePoint)
                             * local_grid_geometry.integrationElement(local_point);
@@ -360,7 +353,6 @@ const
   }
 } // assemble_matrix
 
-#if 1
 template< class DiscreteFunctionImp, class DiffusionImp >
 void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS(DiscreteFunctionImp& rhs) const {
   typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
@@ -432,9 +424,6 @@ double LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(Discre
   return norm;
 }      // end method
 
-#endif // if 1
-
-#if 1
 // assemble the right hand side of a local problem (reconstruction problem on entity)
 // ----------------------------------------------
 
@@ -464,7 +453,6 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_R
 
   const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
 
-  #if 1
   // the coarse grid element T:
   const Entity& entity_T = *pointer_on_entity;
   const Geometry& geometry_of_T = entity_T.geometry();
@@ -519,8 +507,6 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_R
   val_A_inverse_transposed[0][1] = c * (-1.0) * val_A[1][0];
   val_A_inverse_transposed[1][1] = c * val_A[0][0];
 
-  #endif // if 1
-
   // set entries to zero:
   local_problem_RHS.clear();
 
@@ -549,10 +535,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_R
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
-
-      #if 1
       // remember, we are concerned with: - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi(x)
-
       // global point in the reference element T_0
       DomainType global_point = geometry.global(local_point);
 
@@ -570,10 +553,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_R
       // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
       // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
 
-      #endif // if 1
-
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
-
       // transposed of the the inverse jacobian
       const FieldMatrix< double, dimension, dimension >& inverse_jac
         = geometry.jacobianInverseTransposed(local_point);
@@ -606,7 +586,6 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_R
   }
 } // assemble_local_RHS
 
-#endif // if 1
 
 // ! ------------------------------------------------------------------------------------------------
 // ! ------------------------------------------------------------------------------------------------
@@ -1024,7 +1003,6 @@ public:
     local_problem_op.assemble_matrix(entityPointer, locprob_system_matrix);
 
     // ! boundary treatment:
-    #if 1
     typedef typename LocProbFEMMatrix::LocalMatrixType        LocalMatrix;
     typedef typename GEIntersectionIteratorType::Intersection Intersection;
 
@@ -1052,13 +1030,10 @@ public:
           local_matrix.unitRow(*fdit);
       }
     }
-    #endif // if 1
-
     // assemble right hand side of algebraic local msfem problem
     local_problem_op.assemble_local_RHS(entityPointer, gradient_PHI_H, local_problem_rhs);
 
     // zero boundary condition for 'cell problems':
-    #if 1
     // set Dirichlet Boundary to zero
     for (GEIteratorType it = globalEntityDiscreteFunctionSpace_.begin(); it != ge_endit; ++it)
     {
@@ -1087,10 +1062,8 @@ public:
           rhs_on_entity[*faceIterator] = 0;
       }
     }
-    #endif // if 1
 
     const double norm_rhs = local_problem_op.normRHS(local_problem_rhs);
-
     if ( !( local_problem_rhs.dofsValid() ) )
     {
       std::cout << "Local MsFEM Problem RHS invalid." << std::endl;
@@ -1231,11 +1204,8 @@ public:
 
           // take time
           long double time_now = clock();
-
-          #if 1
           gradientPhi[i][0][0] = 1.0;
           gradientPhi[i][0][1] = 0.0;
-          #endif // if 1
 
           solvelocalproblem< JacobianRangeType, IteratorType >
             (gradientPhi[i], it, correctorPhi_i);

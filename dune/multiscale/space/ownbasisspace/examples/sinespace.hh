@@ -161,12 +161,9 @@ private:
   } // addBaseFunction
 
 public:
-  #if 1
   inline void getBaseFunction(unsigned int i, FEMFunctionType& base_func) const {
     BaseType::baseFunction(i, base_func);
   }
-
-  #endif // if 1
 
   using BaseType::baseFunctionSpace_;
 };

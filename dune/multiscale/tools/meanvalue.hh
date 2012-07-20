@@ -1586,10 +1586,7 @@ public:
 
       IdType id_coarse_it = idset_fine_grid.id(*coarse_it);
 
-      #if true
       bool has_father = false;
-      #endif
-
       // last entity of fine grid:
       IteratorType fine_end = fine_discreteFunctionSpace.end();
       for (IteratorType fine_it = fine_discreteFunctionSpace.begin(); fine_it != fine_end; ++fine_it)
@@ -1607,10 +1604,7 @@ public:
 
         if (id_fine_father_entity == id_coarse_it)
         {
-          #if true
           has_father = true;
-          #endif
-
           CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
           // get local functions on current element

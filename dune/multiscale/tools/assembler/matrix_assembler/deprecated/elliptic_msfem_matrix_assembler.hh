@@ -187,8 +187,6 @@ void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp,
     const Geometry& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
-    #if 1
-
     // transformation F : T_0 -> T
     // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
     // arguments: entity T, point in T_0, point in T.
@@ -237,8 +235,6 @@ void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp,
     val_A_inverse_transposed[1][0] = c * (-1.0) * val_A[0][1];
     val_A_inverse_transposed[0][1] = c * (-1.0) * val_A[1][0];
     val_A_inverse_transposed[1][1] = c * val_A[0][0];
-
-    #endif // if 1
 
     LocalMatrix local_matrix = global_matrix.localMatrix(macro_grid_entity, macro_grid_entity);
 
@@ -336,7 +332,6 @@ void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp,
             localized_corrector_i.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_i);
             localized_corrector_j.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_j);
 
-            #if 1
             // global point in the reference element T_0
             DomainType global_point = micro_grid_geometry.global(local_micro_point);
 
@@ -354,8 +349,7 @@ void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp,
             // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
             // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
 
-            #endif // if 1
-                   // direction of the diffusion: ( ∇\Phi_i(x_T) + (A^{-1})^T ∇( Q^eps(\Phi_i) ○ F )(x))
+            // direction of the diffusion: ( ∇\Phi_i(x_T) + (A^{-1})^T ∇( Q^eps(\Phi_i) ○ F )(x))
             JacobianRangeType direction_of_diffusion(0.0);
             for (int k = 0; k < dimension; ++k)
             {

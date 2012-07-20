@@ -616,8 +616,7 @@ public:
 
     const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
 
-    SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
-    #if 1
+    const SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
     for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
     {
       const SubgridEntityType& subgrid_entity = *sg_it;
@@ -649,7 +648,6 @@ public:
           local_matrix.unitRow(*fdit);
       }
     }
-    #endif // if 1
 
     // assemble right hand side of algebraic local msfem problem
     local_problem_op.assemble_local_RHS(e, local_problem_rhs);

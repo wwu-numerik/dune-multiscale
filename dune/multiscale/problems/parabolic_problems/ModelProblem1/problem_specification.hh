@@ -779,11 +779,8 @@ public:
   }
 
   inline void getAverage(DomainType& bar_b) const {
-    #if true
     DomainType zero(0.0);
     bar_b = zero;
-    #endif // if true
-
     // ! Note: restriction: at the moment, only constant b_average works!
     // for generalization change for instance (in the classes DriftedDiffusion and DriftedAdvection) "bar_b * t" to some
     // "B(t)"!

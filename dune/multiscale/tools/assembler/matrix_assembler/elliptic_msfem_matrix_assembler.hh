@@ -381,8 +381,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
           for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
             father_of_loc_grid_ent = father_of_loc_grid_ent->father();
 
-          // ! new version:
-          #if 1
           FineEntityPointer coarse_father_test = father_of_loc_grid_ent;
 
           bool father_found = false;
@@ -400,7 +398,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
               coarse_father_test = coarse_father_test->father();
             }
           }
-          #endif // if 1
 
           bool entities_identical = true;
           int number_of_nodes = (*coarse_grid_it).template count< 2 >();
@@ -498,8 +495,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
   // discrete_function_reader.close();
 
   // boundary treatment
-  #if 1
-
   const CoarseGridPart& coarseGridPart = coarseDiscreteFunctionSpace_.gridPart();
   for (CoarseIterator it = coarseDiscreteFunctionSpace_.begin(); it != coarseDiscreteFunctionSpace_.end(); ++it)
   {
@@ -524,7 +519,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
         local_matrix.unitRow(*fdit);
     }
   }
-  #endif // if 1
 } // assemble_matrix
 
 // ! ------------------------------------------------------------------------------------------------

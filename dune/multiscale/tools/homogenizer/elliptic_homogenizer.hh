@@ -124,7 +124,6 @@ public:
   }
 };
 
-#if 1
 // since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} )
 // for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving
 // cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon}
@@ -202,7 +201,6 @@ public:
     y = 0;
   }
 };
-#endif // if 1
 
 // the following class is comparable to a SecondSource-Class (some kind of -div G )
 template< class FunctionSpaceImp, class TensorImp >
