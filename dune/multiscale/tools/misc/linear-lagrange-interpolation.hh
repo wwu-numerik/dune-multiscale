@@ -91,34 +91,28 @@ public:
 
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    if (p_a_0_ != p_a_0_)
+    if (std::isnan(p_a_0_))
     {
       std::cout << "p_a_0 is nan" << std::endl;
-    } // !abort();}
-
-    if (p_a_1_ != p_a_1_)
+    }
+    if (std::isnan(p_a_1_))
     {
       std::cout << "p_a_1 is nan" << std::endl;
-    } // !abort();}
-
-    if (p_a_2_ != p_a_2_)
+    }
+    if (std::isnan(p_a_2_))
     {
       std::cout << "p_a_2 is nan" << std::endl;
-    } // !abort();}
-
-    if (x[0] != x[0])
+    }
+    if (std::isnan(x[0]))
     {
       std::cout << "x[0] is nan" << std::endl;
-    } // !abort();}
-
-    if (x[1] != x[1])
+    }
+    if (std::isnan(x[1]))
     {
       std::cout << "x[1] is nan" << std::endl;
-    } // !abort();}
-
+    }
     RangeType lambda_1;
     RangeType lambda_0;
-
     if (a_0_[0] == a_2_[0])
     {
       lambda_1 = (x[0] - a_2_[0]) / (a_1_[0] - a_2_[0]);
@@ -135,7 +129,7 @@ public:
 
     y = (p_a_0_ * lambda_0) + (p_a_1_ * lambda_1) + ( p_a_2_ * (1.0 - lambda_0 - lambda_1) );
 
-    if (lambda_1 != lambda_1)
+    if (std::isnan(lambda_1))
     {
       std::cout << "lambda_1 is nan! Details:" << std::endl << std::endl;
       std::cout << "a_0_ = " << a_0_ << std::endl;
@@ -148,13 +142,12 @@ public:
       std::cout << "ganzer Nenner = "
                 << ( (a_1_[1]
             - a_2_[1]) - ( (a_0_[1] - a_2_[1]) * ( (a_1_[0] - a_2_[0]) / (a_0_[0] - a_2_[0]) ) ) ) << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"NaN");
     }
 
-    if (lambda_0 != lambda_0)
+    if (std::isnan(lambda_0))
     {
-      std::cout << "lambda_0 is nan" << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"lambda_0 is nan");
     }
   } // evaluate
 

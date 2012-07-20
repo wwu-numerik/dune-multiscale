@@ -177,28 +177,22 @@ public:
     tensor_.diffusiveFlux(new_y, direction, flux);
   } // diffusiveFlux
 
-  inline void evaluate(const int i, const int j,
-                       const DomainType& x,
-                       const TimeType& time,
-                       RangeType& y) const {
-    std::cout << "Do not use this evaluate()-method !!" << std::endl;
-    abort();
-    evaluate(i, j, x, y);
+  inline void evaluate(const int i, const int /*j*/,
+                       const DomainType& /*x*/,
+                       const TimeType& /*time*/,
+                       RangeType& /*y*/) const {
+    DUNE_THROW(Dune::InvalidStateException,"Do not use this evaluate()-method !!");
   }
 
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    std::cout << "Do not use this evaluate()-method !!" << std::endl;
-    abort();
-    y = 0;
+  inline void evaluate(const DomainType& /*x*/,
+                       RangeType& /*y*/) const {
+    DUNE_THROW(Dune::InvalidStateException,"Do not use this evaluate()-method !!");
   }
 
-  inline void evaluate(const DomainType& x,
-                       const TimeType& time,
-                       RangeType& y) const {
-    std::cout << "Do not use this evaluate()-method !!" << std::endl;
-    abort();
-    y = 0;
+  inline void evaluate(const DomainType& /*x*/,
+                       const TimeType& /*time*/,
+                       RangeType& /*y*/) const {
+    DUNE_THROW(Dune::InvalidStateException,"Do not use this evaluate()-method !!");
   }
 };
 

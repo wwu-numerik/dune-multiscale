@@ -671,11 +671,7 @@ public:
     std::string cell_solution_location_discFunc;
     if (filename == "no_file")
     {
-      std::cout
-      <<
-      "ERROR! No 'filename' in RHSAssembler method 'assemble_for_HMM_Newton_method', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename'-variable!"
-      << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException,"ERROR! No 'filename' in RHSAssembler method 'assemble_for_HMM_Newton_method', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename'-variable!");
     }
 
     cell_solution_location_baseSet = "data/HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";

@@ -8,9 +8,9 @@
 #endif // ifdef HAVE_CMAKE_CONFIG
 
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/stuff/common/logging.hh>
 
 //! set the dirichlet points to zero
 template< class EntityType, class DiscreteFunctionType >
@@ -295,7 +295,7 @@ void algorithm(const ProblemDataType& problem_data,
 
   #ifdef LINEAR_PROBLEM
 
-  std::cout << "Solving linear problem." << std::endl;
+  DSC_LOG_INFO << "Solving linear problem." << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "Solving linear problem with standard FEM and resolution level "
@@ -309,7 +309,7 @@ void algorithm(const ProblemDataType& problem_data,
   // assemble the stiffness matrix
   discrete_elliptic_op.assemble_matrix(fem_newton_matrix);
 
-  std::cout << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+  DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
@@ -337,7 +337,7 @@ void algorithm(const ProblemDataType& problem_data,
   // if non-linear problem
   #else           // LINEAR_PROBLEM
 
-  std::cout << "Solving non-linear problem." << std::endl;
+  DSC_LOG_INFO << "Solving non-linear problem." << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
@@ -363,7 +363,7 @@ void algorithm(const ProblemDataType& problem_data,
   {
     // (here: fem_newton_solution = solution from the last iteration step)
 
-    std::cout << "Newton iteration " << iteration_step << ":" << std::endl;
+    DSC_LOG_INFO << "Newton iteration " << iteration_step << ":" << std::endl;
     if ( data_file.is_open() )
     {
       data_file << "Newton iteration " << iteration_step << ":" << std::endl;
@@ -374,7 +374,7 @@ void algorithm(const ProblemDataType& problem_data,
     // assemble the stiffness matrix
     discrete_elliptic_op.assemble_jacobian_matrix(fem_newton_solution, fem_newton_matrix);
 
-    std::cout << "Time to assemble FEM Newton stiffness matrix for current iteration: "
+    DSC_LOG_INFO << "Time to assemble FEM Newton stiffness matrix for current iteration: "
               << stepAssembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
@@ -416,7 +416,7 @@ void algorithm(const ProblemDataType& problem_data,
         fem_newton_solution,
         zero_func);
 
-      std::cout << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
+      DSC_LOG_INFO << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
       // residual solution almost identical to zero: break
       if ( data_file.is_open() )
       {
@@ -429,14 +429,14 @@ void algorithm(const ProblemDataType& problem_data,
 
       fem_newton_residual.clear();
     } else {
-      std::cout << "WARNING! Invalid dofs in 'fem_newton_residual'." << std::endl;
+      DSC_LOG_INFO << "WARNING! Invalid dofs in 'fem_newton_residual'." << std::endl;
       break;
     }
 
     iteration_step += 1;
   }
 
-  std::cout << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
+  DSC_LOG_INFO << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
             << std::endl;
   if ( data_file.is_open() )
   {
@@ -477,7 +477,7 @@ void algorithm(const ProblemDataType& problem_data,
   discrete_function_reader_ref.open();
 
   discrete_function_reader_ref.read(0, fem_newton_solution);
-  std::cout << "fine scale reference read." << std::endl;
+  DSC_LOG_INFO << "fine scale reference read." << std::endl;
 
   #endif       // FSR_LOADd
   #endif   // FINE_SCALE_REFERENCE
@@ -488,7 +488,7 @@ void algorithm(const ProblemDataType& problem_data,
 
   std::string macroGridName_refHMM;
   problem_info.getMacroGridFile(macroGridName_refHMM);
-  std::cout << "loading dgf: " << macroGridName_refHMM << std::endl;
+  DSC_LOG_INFO << "loading dgf: " << macroGridName_refHMM << std::endl;
 
   // create a grid pointer for the DGF file belongig to the macro grid:
   GridPointerType macro_grid_pointer_refHMM(macroGridName_refHMM);
@@ -509,7 +509,7 @@ void algorithm(const ProblemDataType& problem_data,
   DiscreteFunctionReader discrete_function_reader_hmm_ref( (location_hmm_ref).c_str() );
   discrete_function_reader_hmm_ref.open();
   discrete_function_reader_hmm_ref.read(0, hmm_reference_solution);
-  std::cout << "HMM reference read." << std::endl;
+  DSC_LOG_INFO << "HMM reference read." << std::endl;
   #endif   // HMM_REFERENCE
 
   // ! ************************* Assembling and solving the HMM problem ****************************
@@ -528,7 +528,7 @@ void algorithm(const ProblemDataType& problem_data,
     }
   #endif   // ADAPTIVE
 
-  std::cout << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
+  DSC_LOG_INFO << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
             << " unkowns and polynomial order "
             << HMM::DiscreteFunctionSpaceType::polynomialOrder << "."
             << std::endl << std::endl;
@@ -584,7 +584,7 @@ void algorithm(const ProblemDataType& problem_data,
                                                                                        diffusion_op,
                                                                                        data_file /*optinal*/);
   int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
-  std::cout << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
+  DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
   // generate directory for cell problem data output
   std::string cell_path = path + "/cell_problems/";
   Stuff::testCreateDirectory(cell_path)
@@ -597,7 +597,7 @@ void algorithm(const ProblemDataType& problem_data,
   // ! --------------- end solving and saving cell problems -----------------------------------------
   #endif       // AD_HOC_COMPUTATION
 
-  std::cout << "Solving linear HMM problem." << std::endl;
+  DSC_LOG_INFO << "Solving linear HMM problem." << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "Solving linear HMM problem." << std::endl;
@@ -611,7 +611,7 @@ void algorithm(const ProblemDataType& problem_data,
   discrete_elliptic_hmm_op.assemble_matrix(hmm_newton_matrix);
   // to print the matrix, use:   hmm_newton_matrix.print();
 
-  std::cout << "Time to assemble HMM macro stiffness matrix: " << hmmAssembleTimer.elapsed() << "s" << std::endl;
+  DSC_LOG_INFO << "Time to assemble HMM macro stiffness matrix: " << hmmAssembleTimer.elapsed() << "s" << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "Time to assemble HMM macro stiffness matrix: " << hmmAssembleTimer.elapsed() << "s" << std::endl;
@@ -629,7 +629,7 @@ void algorithm(const ProblemDataType& problem_data,
   InverseFEMMatrix hmm_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
   hmm_biCGStab(hmm_newton_rhs, hmm_solution);
 
-  std::cout << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl;
+  DSC_LOG_INFO << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "---------------------------------------------------------------------------------" << std::endl;
@@ -650,7 +650,7 @@ void algorithm(const ProblemDataType& problem_data,
 
   int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
 
-  std::cout << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
+  DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
 
   // generate directory for cell problem data output
   Dune::Stuff::Common::Filesystem::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
@@ -664,13 +664,13 @@ void algorithm(const ProblemDataType& problem_data,
                                                                        cp_num_manager,
                                                                        filename + "/cell_problems/");
 
-  std::cout << "Solving the cell problems for the base function set succeeded." << std::endl;
+  DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
   // end solving and saving cell problems
   #endif // ifdef TFR
          // ! --------------- end solving and saving cell problems -----------------------------------------
   #endif       // AD_HOC_COMPUTATION
 
-  std::cout << "Solving nonlinear HMM problem." << std::endl;
+  DSC_LOG_INFO << "Solving nonlinear HMM problem." << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "Solving nonlinear HMM problem with Newton method." << std::endl;
@@ -731,7 +731,7 @@ void algorithm(const ProblemDataType& problem_data,
   {
     // (here: hmm_solution = solution from the last iteration step)
     long double newton_step_time = clock();
-    std::cout << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
+    DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
     if ( data_file.is_open() )
     {
       data_file << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
@@ -750,14 +750,14 @@ void algorithm(const ProblemDataType& problem_data,
     // assemble the stiffness matrix
     discrete_elliptic_hmm_op.assemble_jacobian_matrix(hmm_solution, hmm_newton_matrix);
 
-    std::cout << "Time to assemble HMM stiffness matrix for current Newton iteration: "
+    DSC_LOG_INFO << "Time to assemble HMM stiffness matrix for current Newton iteration: "
               << stepHmmAssembleTimer.elapsed() << "s" << std::endl;
     if ( data_file.is_open() )
     {
       data_file << "Time to assemble HMM stiffness matrix for current Newton iteration: "
                 << stepHmmAssembleTimer.elapsed() << "s" << std::endl;
     }
-    std::cout << "Assemble right hand side..." << std::endl;
+    DSC_LOG_INFO << "Assemble right hand side..." << std::endl;
     // assemble right hand side
     const int assembler_order = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
     rhsassembler.template assemble_for_HMM_Newton_method< assembler_order >(
@@ -768,20 +768,20 @@ void algorithm(const ProblemDataType& problem_data,
       dummy_periodic_func,
       hmm_newton_rhs,
       filename);
-    std::cout << "Right hand side assembled!" << std::endl;
+    DSC_LOG_INFO << "Right hand side assembled!" << std::endl;
 
     if ( !( hmm_newton_rhs.dofsValid() ) )
     {
-      std::cout << "Right hand side invalid!" << std::endl;
+      DSC_LOG_INFO << "Right hand side invalid!" << std::endl;
       data_file << "Right hand side invalid!" << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException, "Right hand side invalid!");
     } else {
-      std::cout << "Right hand side valid ";
+      DSC_LOG_INFO << "Right hand side valid ";
     }
 
     hmm_rhs_L2_norm = l2error.template norm2< assembler_order >(zero_func_coarse, hmm_newton_rhs);
 
-    std::cout << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
+    DSC_LOG_INFO << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
     data_file << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
 
     if (hmm_rhs_L2_norm < 1e-10)
@@ -819,9 +819,9 @@ void algorithm(const ProblemDataType& problem_data,
 
       if (hmm_biCG_tolerance > 1e-4)
       {
-        std::cout << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'."
+        DSC_LOG_INFO << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'."
                   << std::endl;
-        std::abort();
+        DUNE_THROW(Dune::InvalidStateException, "Right hand side invalid!");
       }
       hmm_biCG_tolerance *= 10.0;
     }
@@ -891,7 +891,7 @@ void algorithm(const ProblemDataType& problem_data,
         hmm_solution,
         zero_func_coarse);
 
-      std::cout << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std::endl;
+      DSC_LOG_INFO << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std::endl;
 
       // residual solution almost identical to zero: break
       if ( data_file.is_open() )
@@ -913,7 +913,7 @@ void algorithm(const ProblemDataType& problem_data,
 
       hmm_newton_residual.clear();
     } else {
-      std::cout << "WARNING! Invalid dofs in 'hmm_newton_residual'." << std::endl;
+      DSC_LOG_INFO << "WARNING! Invalid dofs in 'hmm_newton_residual'." << std::endl;
       break;
     }
 
@@ -944,7 +944,7 @@ void algorithm(const ProblemDataType& problem_data,
     }
   }       // while( relative_newton_error > hmm_tolerance )
 
-  std::cout << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl
+  DSC_LOG_INFO << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl
             << std::endl;
   if ( data_file.is_open() )
   {
@@ -1193,7 +1193,7 @@ void algorithm(const ProblemDataType& problem_data,
 
   // ! ******************** End of assembling and solving the HMM problem ***************************
 
-  std::cout << std::endl << "The L2 errors:" << std::endl << std::endl;
+  DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "The L2 errors:" << std::endl << std::endl;
@@ -1208,7 +1208,7 @@ void algorithm(const ProblemDataType& problem_data,
     hmm_solution,
     fem_newton_solution);
 
-  std::cout << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl;
@@ -1220,11 +1220,11 @@ void algorithm(const ProblemDataType& problem_data,
   // if it took longer then 1 minute to compute the error:
   if (timeadapt > 60)
   {
-    std::cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
+    DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
 
     if ( data_file.is_open() )
     {
-      std::cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
+      DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
     }
   }
   #endif // ifdef FINE_SCALE_REFERENCE
@@ -1236,7 +1236,7 @@ void algorithm(const ProblemDataType& problem_data,
     hmm_solution,
     hmm_reference_solution);
 
-  std::cout << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl;
@@ -1248,11 +1248,11 @@ void algorithm(const ProblemDataType& problem_data,
   // if it took longer then 1 minute to compute the error:
   if (timeadapthmmref > 60)
   {
-    std::cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
+    DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
 
     if ( data_file.is_open() )
     {
-      std::cout << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
+      DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
     }
   }
   #endif // ifdef HMM_REFERENCE
@@ -1265,7 +1265,7 @@ void algorithm(const ProblemDataType& problem_data,
   RangeType hom_error = l2error.norm2< 2* DiscreteFunctionSpaceType::polynomialOrder + 2 >(homogenized_solution,
                                                                                            fem_newton_solution);
 
-  std::cout << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl;
@@ -1275,7 +1275,7 @@ void algorithm(const ProblemDataType& problem_data,
   RangeType hom_hmm_error = l2error.norm2< 2* DiscreteFunctionSpaceType::polynomialOrder + 2 >(hmm_solution,
                                                                                                homogenized_solution);
 
-  std::cout << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl << std::endl;
+  DSC_LOG_INFO << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl << std::endl;
   if ( data_file.is_open() )
   {
     data_file << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl;
@@ -1289,7 +1289,7 @@ void algorithm(const ProblemDataType& problem_data,
                                                                   hmm_solution,
                                                                   2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
-    std::cout << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
+    DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
     if ( data_file.is_open() )
     {
       data_file << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl;
@@ -1300,7 +1300,7 @@ void algorithm(const ProblemDataType& problem_data,
                                                                    fem_newton_solution,
                                                                    2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
-    std::cout << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl << std::endl;
+    DSC_LOG_INFO << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl << std::endl;
     if ( data_file.is_open() )
     {
       data_file << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl;
@@ -1310,15 +1310,15 @@ void algorithm(const ProblemDataType& problem_data,
 
 
   #ifdef ERRORESTIMATION
-  std::cout << "Estimated error = " << estimated_error << "." << std::endl;
-  std::cout << "In detail:" << std::endl;
-  std::cout << "   Estimated source error = " << estimated_source_error << "." << std::endl;
-  std::cout << "   Estimated approximation error = " << estimated_approximation_error << "." << std::endl;
-  std::cout << "   Estimated residual error = " << estimated_residual_error << ", where:" << std::endl;
-  std::cout << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std::endl;
-  std::cout << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std::endl;
+  DSC_LOG_INFO << "Estimated error = " << estimated_error << "." << std::endl;
+  DSC_LOG_INFO << "In detail:" << std::endl;
+  DSC_LOG_INFO << "   Estimated source error = " << estimated_source_error << "." << std::endl;
+  DSC_LOG_INFO << "   Estimated approximation error = " << estimated_approximation_error << "." << std::endl;
+  DSC_LOG_INFO << "   Estimated residual error = " << estimated_residual_error << ", where:" << std::endl;
+  DSC_LOG_INFO << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std::endl;
+  DSC_LOG_INFO << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std::endl;
   #ifdef TFR
-  std::cout << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
+  DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
   #endif
   if ( data_file.is_open() )
   {
@@ -1512,7 +1512,7 @@ void algorithm(const ProblemDataType& problem_data,
   if (estimated_error < error_tolerance_)
   {
     repeat = false;
-    std::cout << "Total HMM time = " << total_hmm_time << "s." << std::endl;
+    DSC_LOG_INFO << "Total HMM time = " << total_hmm_time << "s." << std::endl;
     data_file << std::endl << std::endl << "Total HMM time = " << total_hmm_time << "s." << std::endl << std::endl;
   } else {
     element_number = 0;

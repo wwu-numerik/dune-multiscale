@@ -191,9 +191,7 @@ template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
 void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
                                MacroMicroGridSpecifierImp >
   ::operator()(const SubGridDiscreteFunctionImp& /*u*/, SubGridDiscreteFunctionImp& /*w*/) const {
-  std::cout << "the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy."
-            << std::endl;
-  std::abort();
+  DUNE_THROW(Dune::NotImplemented,"the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy.");
 }
 
 //! assemble system matrix
@@ -350,8 +348,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
       if ( check_sum != faceGeometry.volume() )
       {
-        std::cout << "Error in Face Quadrature." << std::endl;
-        abort();
+        DUNE_THROW(Dune::InvalidStateException,"Error in Face Quadrature.");
       }
     }
   }
@@ -744,8 +741,7 @@ public:
 
     if ( !( rhs.dofsValid() ) )
     {
-      std::cout << "Local Flux Problem RHS invalid." << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"Local Flux Problem RHS invalid.");
     }
 
     if (norm_rhs < /*1e-06*/ 1e-30)
@@ -759,8 +755,7 @@ public:
 
     if ( !( conservative_flux.dofsValid() ) )
     {
-      std::cout << "Solution of the Local Flux Problem is invalid!" << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException,"Solution of the Local Flux Problem is invalid!");
     }
 
     Dune::Stuff::Common::Filesystem::testCreateDirectory(path_ + "/cf_problems");
@@ -915,8 +910,7 @@ public:
 
       if (reader_is_open)
       { discrete_function_reader.read(0, local_problem_solution_e0); } else {
-        std::cout << "Error! Could not read data file for the conservative flux problem solutions." << std::endl;
-        abort();
+        DUNE_THROW(Dune::InvalidStateException,"Error! Could not read data file for the conservative flux problem solutions.");
       }
 
       if (reader_is_open)

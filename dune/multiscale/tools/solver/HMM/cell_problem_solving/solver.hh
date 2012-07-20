@@ -128,8 +128,7 @@ public:
 
     if ( !( cell_problem_rhs.dofsValid() ) )
     {
-      std::cout << "Cell Problem RHS invalid." << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"Cell Problem RHS invalid.");
     }
 
     if (norm_rhs < /*1e-06*/ 1e-10)
@@ -185,8 +184,7 @@ public:
 
       if ( !( cell_problem_rhs.dofsValid() ) )
       {
-        std::cout << "Cell Problem RHS invalid." << std::endl;
-        abort();
+        DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
       }
 
       if ( (norm_rhs < /*1e-06*/ 1e-10) /*|| ( (norm_rhs > 1e-06) && (norm_rhs < 1.5e-06) )*/ )
@@ -223,7 +221,7 @@ public:
           std::cin >> answer;
           if ( !(answer == 'n') )
           { cell_problem_op.printCellRHS(cell_problem_rhs); }
-          std::abort();
+          DUNE_THROW(Dune::InvalidStateException, "");
         }
 
         biCG_tolerance *= 10.0;
@@ -258,8 +256,7 @@ public:
 
     if ( !( cell_problem_solution.dofsValid() ) )
     {
-      std::cout << "Current solution of the cell problem invalid!" << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException, "Current solution of the cell problem invalid!");
     }
   } // solvecellproblem
 
@@ -327,8 +324,7 @@ public:
 
     if ( !( jac_cor_cell_problem_rhs.dofsValid() ) )
     {
-      std::cout << "Jacobian Corrector Cell Problem RHS invalid." << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException, "Jacobian Corrector Cell Problem RHS invalid.");
     }
 
     // is the right hand side of the jacobian corrector cell problem equal to zero or almost identical to zero?
@@ -475,8 +471,7 @@ public:
           // check if we use a correct numeration of the cell problems:
           if ( !(cp_num_manager.get_number_of_cell_problem(it, i) == number_of_cell_problem) )
           {
-            std::cout << "Numeration of cell problems incorrect." << std::endl;
-            std::abort();
+            DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
           }
 
           number_of_cell_problem++;
@@ -744,8 +739,7 @@ public:
           EntityPointerType entity_pointer(*it);
           if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
           {
-            std::cout << "Numeration of cell problems incorrect." << std::endl;
-            std::abort();
+            DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
           }
 
           number_of_cell_problem++;

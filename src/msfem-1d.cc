@@ -15,9 +15,9 @@ template< typename FunctionType >
 double integrate(unsigned int N, double leftB, double rightB, FunctionType& function_to_integrate) {
   if (rightB < leftB)
   {
-    std::cout << "Linke Intervallgrenze " << leftB << " kleiner als rechte Intervallgrenze " << rightB
+    std::stringstream msg; msg << "Linke Intervallgrenze " << leftB << " kleiner als rechte Intervallgrenze " << rightB
               << ". Fehler!" << std::endl;
-    abort();
+    DUNE_THROW(Dune::InvalidStateException, msg.str());
   }
 
   if (rightB == leftB)
@@ -47,9 +47,9 @@ template< typename FunctionType1, typename FunctionType2 >
 double error_L2(unsigned int N, double leftB, double rightB, FunctionType1& function1, FunctionType2& function2) {
   if (rightB < leftB)
   {
-    std::cout << "Linke Intervallgrenze " << leftB << " kleiner als rechte Intervallgrenze " << rightB
+    std::stringstream msg; msg << "Linke Intervallgrenze " << leftB << " kleiner als rechte Intervallgrenze " << rightB
               << ". Fehler!" << std::endl;
-    abort();
+    DUNE_THROW(Dune::InvalidStateException, msg.str());
   }
 
   if (rightB == leftB)
@@ -170,8 +170,7 @@ public:
   void set_value(const int i, const double val) {
     if ( (i >= N_) || (i < 0) )
     {
-      std::cout << "Error" << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException, "Error");
     }
 
     value_vector_[i] = val;

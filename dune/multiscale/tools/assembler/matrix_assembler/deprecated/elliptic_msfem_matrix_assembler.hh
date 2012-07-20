@@ -106,10 +106,7 @@ template< class DiscreteFunctionImp, class DiffusionImp, class LocalProblemNumbe
 void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp, LocalProblemNumberingManagerImp >::operator()(
   const DiscreteFunction& u,
   DiscreteFunction& w) const {
-  std::cout
-  << "the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy."
-  << std::endl;
-  std::abort();
+  DUNE_THROW(Dune::NotImplemented,"the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy.");
 }
 
 template< class DiscreteFunctionImp, class DiffusionImp, class LocalProblemNumberingManagerImp >
@@ -155,11 +152,7 @@ void DiscreteEllipticMsFEMOperator< DiscreteFunctionImp, DiffusionImp,
     cell_solution_location = "data/MsFEM/" + (*filename_) + "/local_problems/_localProblemSolutions_baseSet";
   } else {
     #ifndef AD_HOC_COMPUTATION
-    std::cout
-    <<
-    "ERROR! No 'filename_' in class 'DiscreteEllipticMsFEMOperator', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename_'-variable!"
-    << std::endl;
-    std::abort();
+    DUNE_THROW(Dune::InvalidStateException,"ERROR! No 'filename_' in class 'DiscreteEllipticMsFEMOperator', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename_'-variable!");
     #endif // ifndef AD_HOC_COMPUTATION
   }
 

@@ -172,9 +172,7 @@ private:
 template< class DiscreteFunctionImp, class DiffusionImp >
 void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const DiscreteFunction& u,
                                                                            DiscreteFunction& w) const {
-  std::cout << "the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy."
-            << std::endl;
-  std::abort();
+  DUNE_THROW(Dune::NotImplemented,"the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy.");
 }
 
 // ! stiffness matrix for a linear elliptic diffusion operator
@@ -1066,8 +1064,7 @@ public:
     const double norm_rhs = local_problem_op.normRHS(local_problem_rhs);
     if ( !( local_problem_rhs.dofsValid() ) )
     {
-      std::cout << "Local MsFEM Problem RHS invalid." << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"Local MsFEM Problem RHS invalid.");
     }
 
     if (norm_rhs < /*1e-06*/ 1e-10)
@@ -1081,8 +1078,7 @@ public:
 
     if ( !( local_problem_solution.dofsValid() ) )
     {
-      std::cout << "Current solution of the local msfem problem invalid!" << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
     }
   } // solvelocalproblem
 
@@ -1221,8 +1217,7 @@ public:
           // check if we use a correct numeration of the local msfem problems:
           if ( !(lp_num_manager.get_number_of_local_problem(it, i) == number_of_local_problem) )
           {
-            std::cout << "Numeration of local problems incorrect." << std::endl;
-            std::abort();
+            DUNE_THROW(Dune::InvalidStateException, "Numeration of local problems incorrect.");
           }
 
           #ifdef LOCALDATAOUTPUT

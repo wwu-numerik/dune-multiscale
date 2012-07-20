@@ -239,12 +239,8 @@ public:
                              JacobianRangeType& flux) const {
     double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
     double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
-
     flux[0][0] = coefficient_0 * direction_gradient[0][0];
     flux[0][1] = coefficient_1 * direction_gradient[0][1];
-
-    // std :: cout << "Do not use this evaluate method." << std :: endl;
-    // abort();
   } // jacobianDiffusiveFlux
 
   template < class... Args >

@@ -337,8 +337,8 @@ public:
     } else {
       flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
       flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
-      // std :: cout << "Nonlinear example not yet implemented."  << std :: endl;
-      // std::abort();
+      //! TODO one of the the above is in the wrong branch
+      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
     }
   } // diffusiveFlux
 
@@ -353,11 +353,9 @@ public:
                              JacobianRangeType& /*flux*/) const {
     if ( constants().get("linear", true) )
     {
-      std::cout << "Not yet implemented." << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::NotImplemented,"linear example not yet implemented.");
     } else {
-      std::cout << "Nonlinear example not yet implemented." << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
     }
   } // jacobianDiffusiveFlux
 

@@ -363,7 +363,7 @@ public:
             std::cout << "coarse element corner(2) = " << coarse_it->geometry().corner(2) << std::endl << std::endl;
           }
         }
-        abort();
+        DUNE_THROW(Dune::InvalidStateException, "Created Subgrid with 0 nodes");
       }
     }
 

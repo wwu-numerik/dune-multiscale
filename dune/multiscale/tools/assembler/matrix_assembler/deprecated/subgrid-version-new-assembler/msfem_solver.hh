@@ -50,20 +50,18 @@ public:
   }
 
   void setLayer(int i, int number_of_layers_for_entity) {
-    if (i < number_of_level_host_entities_)
-    { number_of_layers[i] = number_of_layers_for_entity; } else {
-      std::cout << "Error. Assertion (i < number_of_level_host_entities_) not filfilled." << std::endl;
-      abort();
+    if (i < number_of_level_host_entities_) {
+      number_of_layers[i] = number_of_layers_for_entity;
+    } else {
+      DUNE_THROW(Dune::InvalidStateException, "Error. Assertion (i < number_of_level_host_entities_) not filfilled.");
     }
   } // setLayer
 
   int getLayer(int i) {
-    if (i < number_of_level_host_entities_)
-    { return number_of_layers[i]; } else {
-      std::cout << "Error. Assertion (i < number_of_level_host_entities_) not filfilled." << std::endl;
-      abort();
+    if (i < number_of_level_host_entities_) {
+      return number_of_layers[i];
     }
-    return 0;
+    DUNE_THROW(Dune::InvalidStateException, "Error. Assertion (i < number_of_level_host_entities_) not filfilled.");
   } // getLayer
 
   // difference between coarse and fine level
@@ -363,8 +361,7 @@ public:
 
     if (index_sets_correct == false)
     {
-      std::cout << "Index Sets not correct" << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"Index Sets not correct");
     }
 
     // -------------------------------------------

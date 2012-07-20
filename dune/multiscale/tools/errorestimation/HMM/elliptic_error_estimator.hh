@@ -1004,11 +1004,7 @@ public:
 
     if (eps_delta_boundary_edge_found == false)
     {
-      std::cout
-      <<
-      "Error! Make sure that the restriction of the Y-triangulation on 'eps/delta Y' is a complete periodic triangulation of 'eps/delta Y' on its own. (for instance: delta = 2 epsilon should work)"
-      << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException,"Error! Make sure that the restriction of the Y-triangulation on 'eps/delta Y' is a complete periodic triangulation of 'eps/delta Y' on its own. (for instance: delta = 2 epsilon should work)");
     }
 
     local_indicator *= entityVolume;
@@ -1272,11 +1268,7 @@ public:
 
     if (eps_delta_boundary_edge_found == false)
     {
-      std::cout
-      <<
-      "Error! Make sure that the restriction of the Y-triangulation on 'eps/delta Y' is a complete periodic triangulation of 'eps/delta Y' on its own. (for instance: delta = 2 epsilon should work)"
-      << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException,"Error! Make sure that the restriction of the Y-triangulation on 'eps/delta Y' is a complete periodic triangulation of 'eps/delta Y' on its own. (for instance: delta = 2 epsilon should work)");
     }
 
     local_indicator *= entityVolume;

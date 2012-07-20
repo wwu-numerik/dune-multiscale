@@ -63,8 +63,8 @@ CollectiveCommunication init(int argc, char** argv) {
   Dune::MPIManager::initialize(argc, argv);
   DSC::Parameter::Config().readCommandLine(argc, argv);
 
-  // LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
-  // --> LOG_ERR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62
+  // LOG_NONE = 1, LOG_ERROR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
+  // --> LOG_ERROR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62
   const bool useLogger = false;
   DSC::Logger().create(DSC::Parameter::Config().get("logging.level", 62, useLogger),
                   DSC::Parameter::Config().get("logging.file", std::string(argv[0]) + ".log", useLogger),

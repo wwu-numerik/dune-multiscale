@@ -252,8 +252,7 @@ public:
   void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    std::cout << "No homogenization available" << std::endl;
-    std::abort();
+    DUNE_THROW(Dune::InvalidStateException, "No homogenization available");
 
     #ifdef LINEAR_PROBLEM
     flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
@@ -261,8 +260,8 @@ public:
     #else // ifdef LINEAR_PROBLEM
     flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
     flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
-    // std :: cout << "Nonlinear example not yet implemented."  << std :: endl;
-    // std::abort();
+    //! TODO one of the the above is in the wrong branch
+    DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
     #endif // ifdef LINEAR_PROBLEM
   } // diffusiveFlux
 

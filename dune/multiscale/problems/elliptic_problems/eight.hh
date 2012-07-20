@@ -235,8 +235,7 @@ public:
   void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& /*gradient*/,
                      JacobianRangeType& /*flux*/) const {
-    std::cout << "No homogenization available" << std::endl;
-    std::abort();
+    DUNE_THROW(Dune::NotImplemented, "No homogenization available");
   }
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -249,11 +248,9 @@ public:
                              const JacobianRangeType& /*direction_gradient*/,
                              JacobianRangeType& /*flux*/) const {
     #ifdef LINEAR_PROBLEM
-    std::cout << "Not yet implemented." << std::endl;
-    std::abort();
+    DUNE_THROW(Dune::NotImplemented, "Not yet implemented.");
     #else // ifdef LINEAR_PROBLEM
-    std::cout << "Nonlinear example not yet implemented." << std::endl;
-    std::abort();
+    DUNE_THROW(Dune::NotImplemented, "Nonlinear example not yet implemented.");
     #endif // ifdef LINEAR_PROBLEM
   } // jacobianDiffusiveFlux
 
@@ -295,8 +292,7 @@ public:
   inline void evaluate(const DomainType& x,
                        const TimeType /*time*/,
                        RangeType& y) const {
-    std::cout << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
-              << std::endl;
+    DUNE_THROW(Dune::InvalidStateException,"WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0.");
     return evaluate(x, y);
   }
 };

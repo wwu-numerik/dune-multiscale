@@ -247,10 +247,7 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
                                     FineDiscreteFunctionImp,
                                     DiffusionImp >::operator()(const CoarseDiscreteFunction& u,
                                                                CoarseDiscreteFunction& w) const {
-  std::cout
-  << "the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy."
-  << std::endl;
-  std::abort();
+  DUNE_THROW(Dune::NotImplemented, "the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy.");
 }
 
 template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp,

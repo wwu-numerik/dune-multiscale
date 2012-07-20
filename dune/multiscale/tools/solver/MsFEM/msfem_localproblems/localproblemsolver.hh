@@ -154,9 +154,7 @@ private:
 template< class DiscreteFunctionImp, class DiffusionImp >
 void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const DiscreteFunctionImp& /*u*/,
                                                                            DiscreteFunctionImp& /*w*/) const {
-  std::cout << "the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy."
-            << std::endl;
-  std::abort();
+  DUNE_THROW(Dune::NotImplemented,"the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy.");
 }
 
 // ! stiffness matrix for a linear elliptic diffusion operator
@@ -700,8 +698,7 @@ public:
 
     if ( !( local_problem_rhs.dofsValid() ) )
     {
-      std::cout << "Local MsFEM Problem RHS invalid." << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
     }
 
     if (norm_rhs < /*1e-06*/ 1e-30)
@@ -715,8 +712,7 @@ public:
 
     if ( !( local_problem_solution.dofsValid() ) )
     {
-      std::cout << "Current solution of the local msfem problem invalid!" << std::endl;
-      std::abort();
+      DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
     }
 
     // oneLinePrint( std::cout , local_problem_solution );

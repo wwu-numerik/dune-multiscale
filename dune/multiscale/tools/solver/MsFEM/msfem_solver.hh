@@ -55,16 +55,14 @@ public:
   void setLayer(int i, int number_of_layers_for_entity) {
     if (i < number_of_level_host_entities_)
     { number_of_layers[i] = number_of_layers_for_entity; } else {
-      std::cout << "Error. Assertion (i < number_of_level_host_entities_) not filfilled." << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not filfilled.");
     }
   } // setLayer
 
   int getLayer(int i) {
     if (i < number_of_level_host_entities_)
     { return number_of_layers[i]; } else {
-      std::cout << "Error. Assertion (i < number_of_level_host_entities_) not filfilled." << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not filfilled.");
     }
     return 0;
   } // getLayer

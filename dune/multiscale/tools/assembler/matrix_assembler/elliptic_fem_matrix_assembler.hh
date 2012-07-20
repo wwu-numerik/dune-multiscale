@@ -101,9 +101,7 @@ template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
 void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::operator()(const DiscreteFunction& /*u*/,
                                                                                             DiscreteFunction& /*w*/)
 const {
-  std::cout << "the ()-operator of the DiscreteEllipticOperator class is not yet implemented and still a dummy."
-            << std::endl;
-  std::abort();
+  DUNE_THROW(Dune::NotImplemented,"the ()-operator of the DiscreteEllipticOperator class is not yet implemented and still a dummy.");
 } // ()
 
 template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >

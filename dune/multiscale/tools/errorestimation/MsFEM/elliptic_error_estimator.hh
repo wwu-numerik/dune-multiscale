@@ -465,8 +465,7 @@ public:
 
     if (local_face_index != 3)
     {
-      std::cout << "Error! Implementation only for triangular mesh in 2d!" << std::endl;
-      abort();
+      DUNE_THROW(Dune::InvalidStateException,"Error! Implementation only for triangular mesh in 2d!");
     }
 
     SubGridIteratorType sub_endit = localDiscreteFunctionSpace.end();
@@ -609,8 +608,7 @@ public:
 
         if ( check_sum != faceGeometry.volume() )
         {
-          std::cout << "Error in Face Quadrature." << std::endl;
-          abort();
+          DUNE_THROW(Dune::InvalidStateException, "Error in Face Quadrature.");
         }
       }
     }
@@ -740,8 +738,7 @@ public:
 
       if (reader_is_open)
       { discrete_function_reader.read(0, local_problem_solution_e0); } else {
-        std::cout << "Error! Could not read data file for the local problem solutions." << std::endl;
-        abort();
+        DUNE_THROW(Dune::InvalidStateException,"Error! Could not read data file for the local problem solutions.");
       }
 
       if (reader_is_open)

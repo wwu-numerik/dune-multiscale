@@ -399,8 +399,7 @@ public:
 
     if (dimRange > 1)
     {
-      std::cout << "L2Error::norm2: only implemented for dimRange = 1! \n";
-      abort();
+      DUNE_THROW(Dune::NotImplemented,"L2Error::norm2: only implemented for dimRange = 1! \n");
     }
 
     // get function space
@@ -484,8 +483,7 @@ public:
 
     if (dimRange > 1)
     {
-      std::cout << "L2Error::norm2: only implemented for dimRange = 1! \n";
-      abort();
+      DUNE_THROW(Dune::NotImplemented,"L2Error::norm2: only implemented for dimRange = 1! \n");
     }
 
     // for product:
@@ -594,8 +592,7 @@ public:
 
     if (dimRange > 1)
     {
-      std::cout << "L2Error::norm2: only implemented for dimRange = 1! \n";
-      abort();
+      DUNE_THROW(Dune::NotImplemented,"L2Error::norm2: only implemented for dimRange = 1! \n");
     }
 
     // das Zentrum des Referenzelements (bei einer Triangulierung mit Dreiecken): (1/3 , 1/3)
@@ -741,9 +738,7 @@ public:
         // std::cout << "Problem with fine-grid center: center_of_fine_it(" << center_of_fine_it[0] << "," <<
         // center_of_fine_it[1] << ")" << std :: endl;
         // if ( (center_of_fine_it[0]>= 0) || (center_of_fine_it[1]>= 0) )
-        // {abort();}
         error_in_compuation = true;
-        // abort();
       }
 
       // ! determine the Lagrange Interpolation of the coarse discrete function on the relevant coarse-grid element
@@ -1377,8 +1372,7 @@ public:
 
     if (dimRange > 1)
     {
-      std::cout << "L2Error::norm2: only implemented for dimRange = 1! \n";
-      abort();
+      DUNE_THROW(Dune::NotImplemented,"L2Error::norm2: only implemented for dimRange = 1! \n");
     }
 
     // get the local discrete function space
@@ -1526,8 +1520,7 @@ public:
 
     if (dimRange > 1)
     {
-      std::cout << "L2Error::norm2: only implemented for dimRange = 1! \n";
-      abort();
+      DUNE_THROW(Dune::NotImplemented,"L2Error::norm2: only implemented for dimRange = 1! \n");
     }
 
     // for product:
@@ -1654,11 +1647,9 @@ public:
     {
       std::cout << "ref_number_of_fine_entities = " << ref_number_of_fine_entities << std::endl;
       std::cout << "ref_number_of_fine_entities_2 = " << ref_number_of_fine_entities_2 << std::endl;
-      abort();
+      DUNE_THROW(Dune::NotImplemented, "//! TODO huh?");
     }
-
     l2Norm = fine_comm.sum(l2Norm);
-
     return sqrt(l2Norm);
   } // end method
 }; // end of class L2Error

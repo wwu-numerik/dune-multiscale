@@ -38,9 +38,8 @@ public:
 public:
   inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
-    // std :: cout << "Do not use the Dummy-class!!!" << std :: endl;
-    // abort();
-    y[0] = 0.0;
+    DUNE_THROW(Dune::InvalidStateException, "Do not use the Dummy-class!!!");
+    y = 0;
   }
 
   // dummy implementation
