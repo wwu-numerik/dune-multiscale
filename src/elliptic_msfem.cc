@@ -505,63 +505,30 @@ void algorithm(const std::string& macroGridName,
                                                            coarse_part_msfem_solution,
                                                            fine_part_msfem_solution,
                                                            data_file);
-
-  loc_coarse_residual_[loop_number_].clear();
-  loc_coarse_grid_jumps_[loop_number_].clear();
-  loc_projection_error_[loop_number_].clear();
-  loc_conservative_flux_jumps_[loop_number_].clear();
-  loc_approximation_error_[loop_number_].clear();
-  loc_fine_grid_jumps_[loop_number_].clear();
-
-  for (int m = 0; m < specifier.getNumOfCoarseEntities(); ++m)
   {
-    loc_coarse_residual_[loop_number_].push_back(0.0);
-    loc_coarse_grid_jumps_[loop_number_].push_back(0.0);
-    loc_projection_error_[loop_number_].push_back(0.0);
-    loc_conservative_flux_jumps_[loop_number_].push_back(0.0);
-    loc_approximation_error_[loop_number_].push_back(0.0);
-    loc_fine_grid_jumps_[loop_number_].push_back(0.0);
+    std::vector<RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_, &loc_projection_error_, &loc_conservative_flux_jumps_, &loc_approximation_error_, &loc_fine_grid_jumps_}};
+    std::vector<RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_, &total_coarse_grid_jumps_, &total_conservative_flux_jumps_, &total_approximation_error_, &total_fine_grid_jumps_ }};
+    assert(locals.size() == totals.size());
+    for(auto loc : locals) (*loc)[loop_number_] = RangeVector(specifier.getNumOfCoarseEntities(),0.0);
+    for(auto total : totals) (*total)[loop_number_] = 0.0;
+
+    for (int m = 0; m < specifier.getNumOfCoarseEntities(); ++m) {
+      loc_coarse_residual_[loop_number_][m] = specifier.get_loc_coarse_residual(m);
+      loc_coarse_grid_jumps_[loop_number_][m] = specifier.get_loc_coarse_grid_jumps(m);
+      loc_projection_error_[loop_number_][m] = specifier.get_loc_projection_error(m);
+      loc_conservative_flux_jumps_[loop_number_][m] = specifier.get_loc_conservative_flux_jumps(m);
+      loc_approximation_error_[loop_number_][m] = specifier.get_loc_approximation_error(m);
+      loc_fine_grid_jumps_[loop_number_][m] = specifier.get_loc_fine_grid_jumps(m);
+
+      for (size_t i = 0; i < totals.size(); ++i) (*totals[i])[loop_number_] += std::pow((*locals[i])[loop_number_][m], 2.0);
+    }
+    total_estimated_H1_error_[loop_number_] = 0.0;
+    for(auto total : totals) {
+      (*total)[loop_number_] = std::sqrt((*total)[loop_number_]);
+      total_estimated_H1_error_[loop_number_] += (*total)[loop_number_];
+    }
+    local_indicators_available_ = true;
   }
-
-  total_coarse_residual_[loop_number_] = 0.0;
-  total_projection_error_[loop_number_] = 0.0;
-  total_coarse_grid_jumps_[loop_number_] = 0.0;
-  total_conservative_flux_jumps_[loop_number_] = 0.0;
-  total_approximation_error_[loop_number_] = 0.0;
-  total_fine_grid_jumps_[loop_number_] = 0.0;
-
-  for (int m = 0; m < specifier.getNumOfCoarseEntities(); ++m)
-  {
-    loc_coarse_residual_[loop_number_][m] = specifier.get_loc_coarse_residual(m);
-    loc_coarse_grid_jumps_[loop_number_][m] = specifier.get_loc_coarse_grid_jumps(m);
-    loc_projection_error_[loop_number_][m] = specifier.get_loc_projection_error(m);
-    loc_conservative_flux_jumps_[loop_number_][m] = specifier.get_loc_conservative_flux_jumps(m);
-    loc_approximation_error_[loop_number_][m] = specifier.get_loc_approximation_error(m);
-    loc_fine_grid_jumps_[loop_number_][m] = specifier.get_loc_fine_grid_jumps(m);
-
-    total_coarse_residual_[loop_number_] += pow(loc_coarse_residual_[loop_number_][m], 2.0);
-    total_projection_error_[loop_number_] += pow(loc_projection_error_[loop_number_][m], 2.0);
-    total_coarse_grid_jumps_[loop_number_] += pow(loc_coarse_grid_jumps_[loop_number_][m], 2.0);
-    total_conservative_flux_jumps_[loop_number_] += pow(loc_conservative_flux_jumps_[loop_number_][m], 2.0);
-    total_approximation_error_[loop_number_] += pow(loc_approximation_error_[loop_number_][m], 2.0);
-    total_fine_grid_jumps_[loop_number_] += pow(loc_fine_grid_jumps_[loop_number_][m], 2.0);
-  }
-
-  total_coarse_residual_[loop_number_] = sqrt(total_coarse_residual_[loop_number_]);
-  total_projection_error_[loop_number_] = sqrt(total_projection_error_[loop_number_]);
-  total_coarse_grid_jumps_[loop_number_] = sqrt(total_coarse_grid_jumps_[loop_number_]);
-  total_conservative_flux_jumps_[loop_number_] = sqrt(total_conservative_flux_jumps_[loop_number_]);
-  total_approximation_error_[loop_number_] = sqrt(total_approximation_error_[loop_number_]);
-  total_fine_grid_jumps_[loop_number_] = sqrt(total_fine_grid_jumps_[loop_number_]);
-
-  total_estimated_H1_error_[loop_number_] = total_coarse_residual_[loop_number_];
-  total_estimated_H1_error_[loop_number_] += total_projection_error_[loop_number_];
-  total_estimated_H1_error_[loop_number_] += total_coarse_grid_jumps_[loop_number_];
-  total_estimated_H1_error_[loop_number_] += total_conservative_flux_jumps_[loop_number_];
-  total_estimated_H1_error_[loop_number_] += total_approximation_error_[loop_number_];
-  total_estimated_H1_error_[loop_number_] += total_fine_grid_jumps_[loop_number_];
-
-  local_indicators_available_ = true;
 
   #ifdef ADAPTIVE
   if (total_estimated_H1_error <= error_tolerance_)
