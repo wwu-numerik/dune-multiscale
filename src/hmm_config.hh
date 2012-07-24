@@ -60,8 +60,6 @@
 // ! Do we want to add a stochastic perturbation on the data?
 // #define STOCHASTIC_PERTURBATION
 #ifdef STOCHASTIC_PERTURBATION
-// size of variance:
- static const double VARIANCE = 0.01;
 // ! Do we want to force the algorithm to come to an end?
 // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht
 // erreicht etc.)

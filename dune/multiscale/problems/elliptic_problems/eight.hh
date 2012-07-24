@@ -11,9 +11,6 @@
 // is an exact solution available?
 #define EXACTSOLUTION_AVAILABLE
 
-// ! This is a nonlinear model problem!
-#ifndef LINEAR_PROBLEM
-
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
 namespace Eight {
@@ -28,6 +25,8 @@ struct ModelProblemData
 {
   ModelProblemData(const std::string filename = "no_name")
     : IModelProblemData(constants(), filename) {
+    if (constants().get("linear", true))
+      DUNE_THROW(Dune::InvalidStateException, "problem eight is entirely nonlinear, but problem.linear was true");
   }
 
   inline int get_Number_of_Model_Problem() const {
@@ -369,8 +368,5 @@ public:
 };
 } // namespace Eight {
 }
-
-#endif // ifndef LINEAR_PROBLEM
-
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EIGHT

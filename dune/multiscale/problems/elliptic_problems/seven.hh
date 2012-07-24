@@ -98,9 +98,6 @@ public:
    * Realization: set G(x) = 0: **/
   NULLFUNCTION(SecondSource)
 
-// the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-// A^{\epsilon} : R^d -> R^d
-
 template< class FunctionSpaceImp >
 class Diffusion
   : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
@@ -128,47 +125,6 @@ public:
   // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
   // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
 
-  // the following method generates arbitrary numbers, with a log-normal distribution
-  // the expected value (the value with the highest probability) is:
-  // E = exp( m + (s²/2))
-  inline double rand_log_normal(float& m, float& s) const {
-    // float m = 0.0;
-    // float s = 0.1;
-
-    // m is a real number
-    // s is a postiv real number. s is a meassure for the variance. The smaller s, the smaller the variance from the
-    // expected value
-
-    // we use the box-muller method to generate the number:
-
-    float x1, x2, w;
-
-    float random_number_1, random_number_2, random_number_3;
-
-    do {
-      do {
-        random_number_1 = std::rand();
-        random_number_2 = std::rand();
-      } while ( (random_number_1 == 0.0) || (random_number_2 == 0.0) );
-
-      if (random_number_1 > random_number_2)
-      { x1 = ( 2.0 * (random_number_2 / random_number_1) ) - 1.0; } else
-      { x1 = ( 2.0 * (random_number_1 / random_number_2) ) - 1.0; }
-
-      random_number_3 = std::rand();
-
-      if (random_number_3 > random_number_2)
-      { x2 = ( 2.0 * (random_number_2 / random_number_3) ) - 1.0; } else
-      { x2 = ( 2.0 * (random_number_3 / random_number_2) ) - 1.0; }
-
-      w = x1 * x1 + x2 * x2;
-    } while (w >= 1.0);
-
-    w = sqrt( ( -2.0 * log(w) ) / w );
-
-    // the log-normal arbitrary number:
-    return exp( m + (x1 * w * s) );
-  }   // end method
 
   // instantiate all possible cases of the evaluate-method:
 
@@ -176,40 +132,9 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-// in case of a stochastic perturbation:
-    #ifdef STOCHASTIC_PERTURBATION
-
-    float m = 0.0;
-    float s = VARIANCE;
-    // the expected value in case of a log-normal distribution:
-    float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
-    double arb_num = rand_log_normal(m, s);
-    // std :: cout << "arb_num = " << arb_num << std :: endl;
-
-    float perturbation = arb_num - expected_value;
-
-    #endif // ifdef STOCHASTIC_PERTURBATION
-
-    double coefficient_0 = 1.01 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
-                                                                           // (x[0] / constants().epsilon) );
-    double coefficient_1 = 1.01 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
-                                                                           // (x[0] / constants().epsilon) );
-
-    #ifdef STOCHASTIC_PERTURBATION
-
-    coefficient_0 += perturbation;
-    coefficient_1 += perturbation;
-
-    if (coefficient_0 < 0.0001)
-    { coefficient_0 = 0.0001; }
-
-    if (coefficient_1 < 0.0001)
-    { coefficient_1 = 0.0001; }
-
-    #endif // ifdef STOCHASTIC_PERTURBATION
-
-    flux[0][0] = coefficient_0 * gradient[0][0];
-    flux[0][1] = coefficient_1 * gradient[0][1];
+    const auto coeff = constants().coefficients(x);
+    flux[0][0] = coeff.first * gradient[0][0];
+    flux[0][1] = coeff.second * gradient[0][1];
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -221,42 +146,9 @@ public:
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    #ifdef STOCHASTIC_PERTURBATION
-
-    float m = 0.0;
-    float s = VARIANCE;
-    // the expected value in case of a log-normal distribution:
-    float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
-    double arb_num = rand_log_normal(m, s);
-    // std :: cout << "arb_num = " << arb_num << std :: endl;
-
-    float perturbation = arb_num - expected_value;
-
-    #endif // ifdef STOCHASTIC_PERTURBATION
-
-    double coefficient_0 = 1.01 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) );    // !x[ 0 ] + x[ 1 ]; //! cos( 2.0 * M_PI *
-                                                                           // (x[0] / constants().epsilon) );
-    double coefficient_1 = 1.01 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) );    // !x[ 0 ] + x[ 1 ]; //!cos( 2.0 * M_PI *
-                                                                           // (x[0] / constants().epsilon) );
-
-    #ifdef STOCHASTIC_PERTURBATION
-
-    coefficient_0 += perturbation;
-    coefficient_1 += perturbation;
-
-    if (coefficient_0 < 0.0001)
-    { coefficient_0 = 0.0001; }
-
-    if (coefficient_1 < 0.0001)
-    { coefficient_1 = 0.0001; }
-
-// std :: cout << "coefficient_0 = " << coefficient_0 << std :: endl;
-// std :: cout << "coefficient_0 + perturbation = " << coefficient_0 + perturbation << std :: endl;
-
-    #endif // ifdef STOCHASTIC_PERTURBATION
-
-    flux[0][0] = coefficient_0 * direction_gradient[0][0];
-    flux[0][1] = coefficient_1 * direction_gradient[0][1];
+    const auto coeff = constants().coefficients(x);
+    flux[0][0] = coeff.first * direction_gradient[0][0];
+    flux[0][1] = coeff.second * direction_gradient[0][1];
   } // jacobianDiffusiveFlux
 
 // deprecated

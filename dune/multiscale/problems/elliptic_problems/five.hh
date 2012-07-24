@@ -74,17 +74,13 @@ public:
 public:
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    #ifdef LINEAR_PROBLEM
-
-    y = 1.0;
-
-    #else // ifdef LINEAR_PROBLEM
-
-    if (x[1] >= 0.1)
-    { y = 1.0; } else
-    { y = 0.1; }
-
-    #endif // ifdef LINEAR_PROBLEM
+    if (constants().get("linear", true)) {
+      y = 1.0;
+    } else {
+      if (x[1] >= 0.1)
+      { y = 1.0; } else
+      { y = 0.1; }
+    }
   } // evaluate
 
   inline void evaluate(const DomainType& x,
@@ -153,17 +149,13 @@ public:
       coefficient *= 1.0;
     }
 
-    #ifdef LINEAR_PROBLEM
-
-    flux[0][0] = coefficient * gradient[0][0];
-    flux[0][1] = coefficient * gradient[0][1];
-
-    #else // ifdef LINEAR_PROBLEM
-
-    flux[0][0] = coefficient * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
-    flux[0][1] = coefficient * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
-
-    #endif // ifdef LINEAR_PROBLEM
+    if (constants().get("linear", true)) {
+      flux[0][0] = coefficient * gradient[0][0];
+      flux[0][1] = coefficient * gradient[0][1];
+    } else {
+      flux[0][0] = coefficient * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
+      flux[0][1] = coefficient * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
+    }
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -193,15 +185,15 @@ public:
       coefficient *= 1.0;
     }
 
-    #ifdef LINEAR_PROBLEM
-    flux[0][0] = coefficient * direction_gradient[0][0];
-    flux[0][1] = coefficient * direction_gradient[0][1];
-    #else // ifdef LINEAR_PROBLEM
-    flux[0][0] = coefficient * direction_gradient[0][0]
-                 * ( 1.0 + pow(position_gradient[0][0], 2.0) );
-    flux[0][1] = coefficient * direction_gradient[0][1]
-                 * ( 1.0 + pow(position_gradient[0][1], 2.0) );
-    #endif // ifdef LINEAR_PROBLEM
+    if (constants().get("linear", true)) {
+      flux[0][0] = coefficient * direction_gradient[0][0];
+      flux[0][1] = coefficient * direction_gradient[0][1];
+    } else {
+      flux[0][0] = coefficient * direction_gradient[0][0]
+                   * ( 1.0 + pow(position_gradient[0][0], 2.0) );
+      flux[0][1] = coefficient * direction_gradient[0][1]
+                   * ( 1.0 + pow(position_gradient[0][1], 2.0) );
+    }
   } // jacobianDiffusiveFlux
 
   template < class... Args >
@@ -254,15 +246,15 @@ public:
                      JacobianRangeType& flux) const {
     DUNE_THROW(Dune::InvalidStateException, "No homogenization available");
 
-    #ifdef LINEAR_PROBLEM
-    flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
-    flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
-    #else // ifdef LINEAR_PROBLEM
-    flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
-    flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
-    //! TODO one of the the above is in the wrong branch
-    DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
-    #endif // ifdef LINEAR_PROBLEM
+    if (constants().get("linear", true)) {
+      flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
+      flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
+    } else {
+      flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
+      flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
+      //! TODO one of the the above is in the wrong branch
+      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
+    }
   } // diffusiveFlux
 
   /** the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
