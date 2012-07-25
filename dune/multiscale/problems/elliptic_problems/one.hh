@@ -195,38 +195,14 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
-    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
-
-    if ( constants().get("stochastic_pertubation", false) )
-    {
-      const float m = 0.0;
-      const float s = 1; // !TODO VARIANCE wasn't defined;
-      // the expected value in case of a log-normal distribution:
-      const float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
-      const double arb_num = rand_log_normal(m, s);
-      // std :: cout << "arb_num = " << arb_num << std :: endl;
-
-      const float perturbation = arb_num - expected_value;
-      coefficient_0 += perturbation;
-      coefficient_1 += perturbation;
-
-      if (coefficient_0 < 0.0001)
-      { coefficient_0 = 0.0001; }
-
-      if (coefficient_1 < 0.0001)
-      { coefficient_1 = 0.0001; }
-    }
-
+    const auto coeff = constants().coefficients_variant_A(x);
     if ( constants().get("linear", true) )
     {
-      flux[0][0] = coefficient_0 * gradient[0][0];
-      flux[0][1] = coefficient_1 * gradient[0][1];
+      flux[0][0] = coeff.first * gradient[0][0];
+      flux[0][1] = coeff.second * gradient[0][1];
     } else {
-// flux[0][0] = coefficient_0 * exp((1.0/3.0)*gradient[0][0]);
-// flux[0][1] = coefficient_1 * exp((1.0/3.0)*gradient[0][1]);
-      flux[0][0] = coefficient_0 * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
-      flux[0][1] = coefficient_1 * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
+      flux[0][0] = coeff.first * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
+      flux[0][1] = coeff.second * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
     }
   } // diffusiveFlux
 
@@ -239,45 +215,15 @@ public:
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    double coefficient_0 = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), 2.0) ) );
-    double coefficient_1 = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
-
-    if ( constants().get("stochastic_pertubation", true) )
-    {
-      float m = 0.0;
-      float s = 1; // !TODO VARIANCE was not declared;
-      // the expected value in case of a log-normal distribution:
-      float expected_value = exp( m + (pow(s, 2.0) / 2.0) );
-      double arb_num = rand_log_normal(m, s);
-      // std :: cout << "arb_num = " << arb_num << std :: endl;
-      float perturbation = arb_num - expected_value;
-
-      coefficient_0 += perturbation;
-      coefficient_1 += perturbation;
-
-      if (coefficient_0 < 0.0001)
-      { coefficient_0 = 0.0001; }
-
-      if (coefficient_1 < 0.0001)
-      { coefficient_1 = 0.0001; }
-
-      // std :: cout << "coefficient_0 = " << coefficient_0 << std :: endl;
-      // std :: cout << "coefficient_0 + perturbation = " << coefficient_0 + perturbation << std :: endl;
-    }
-
+    const auto coeff = constants().coefficients_variant_A(x);
     if ( constants().get("linear", true) )
     {
-      flux[0][0] = coefficient_0 * direction_gradient[0][0];
-      flux[0][1] = coefficient_1 * direction_gradient[0][1];
+      flux[0][0] = coeff.first * direction_gradient[0][0];
+      flux[0][1] = coeff.second * direction_gradient[0][1];
     } else {
-// flux[0][0] = (1.0/3.0) * coefficient_0 * direction_gradient[0][0]
-// * exp((1.0/3.0)*position_gradient[0][0]);
-// flux[0][1] = (1.0/3.0) * coefficient_0 * direction_gradient[0][1]
-// * exp((1.0/3.0)*position_gradient[0][1]);
-
-      flux[0][0] = coefficient_0 * direction_gradient[0][0]
+      flux[0][0] = coeff.first * direction_gradient[0][0]
                    * ( 1.0 + pow(position_gradient[0][0], 2.0) );
-      flux[0][1] = coefficient_1 * direction_gradient[0][1]
+      flux[0][1] = coeff.second * direction_gradient[0][1]
                    * ( 1.0 + pow(position_gradient[0][1], 2.0) );
     }
   } // jacobianDiffusiveFlux

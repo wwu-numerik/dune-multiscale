@@ -109,7 +109,7 @@ public:
     // (in the non-linear setting it changes for every iteration step)
     PeriodicDiscreteFunctionType cell_problem_rhs("rhs of cell problem", periodicDiscreteFunctionSpace_);
     cell_problem_rhs.clear();
-    const bool CELLSOLVER_VERBOSE = Dune::Stuff::Common::Parameter::Config().get<bool>("problem.cellsolver_verbose", false);
+    const bool CELLSOLVER_VERBOSE = DSC_CONFIG.get<bool>("problem.cellsolver_verbose", false);
 
     // NOTE:
     // is the right hand side of the cell problem equal to zero or almost identical to zero?
@@ -334,7 +334,7 @@ public:
       jac_cor_cell_problem_solution.clear();
       // std :: cout << "Jacobian Corrector Cell Problem with solution zero." << std :: endl;
     } else {
-      const bool CELLSOLVER_VERBOSE = Dune::Stuff::Common::Parameter::Config().get<bool>("problem.cellsolver_verbose", false);
+      const bool CELLSOLVER_VERBOSE = DSC_CONFIG.get<bool>("problem.cellsolver_verbose", false);
       InverseCellFEMMatrix jac_cor_cell_fem_biCGStab(jac_cor_cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
       jac_cor_cell_fem_biCGStab(jac_cor_cell_problem_rhs, jac_cor_cell_problem_solution);
     }

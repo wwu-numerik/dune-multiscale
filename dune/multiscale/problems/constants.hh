@@ -11,15 +11,15 @@ struct Constants
   const double epsilon_est;
   const double delta;
   Constants(double def_epsilon, double def_epsilon_est, double def_delta)
-    : epsilon( Dune::Stuff::Common::Parameter::Config().get("problem.epsilon", def_epsilon) )
-      , epsilon_est( Dune::Stuff::Common::Parameter::Config().get("hmm.epsilon_guess", def_epsilon_est) )
-      , delta( Dune::Stuff::Common::Parameter::Config().get("hmm.delta", def_delta) )
+    : epsilon( DSC_CONFIG.get("problem.epsilon", def_epsilon) )
+      , epsilon_est( DSC_CONFIG.get("hmm.epsilon_guess", def_epsilon_est) )
+      , delta( DSC_CONFIG.get("hmm.delta", def_delta) )
   {}
 
   template< typename T, class Validator = Dune::Stuff::Common::Parameter::ValidateAny< T > >
   T get( const std::string& key, const T& def,
          Dune::Stuff::Common::Parameter::ValidatorInterface< T, Validator > validator = Validator() ) const {
-    return Dune::Stuff::Common::Parameter::Config().get(std::string("problem.") + key, def, validator);
+    return DSC_CONFIG.get(std::string("problem.") + key, def, validator);
   }
 
   /** the following method generates arbitrary numbers, with a log-normal distribution
