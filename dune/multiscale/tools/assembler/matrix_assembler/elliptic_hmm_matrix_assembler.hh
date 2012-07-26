@@ -171,7 +171,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
     LocalMatrix local_matrix = global_matrix.localMatrix(macro_grid_entity, macro_grid_entity);
 
     const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numMacroBaseFunctions = macro_grid_baseSet.numBaseFunctions();
+    const unsigned int numMacroBaseFunctions = macro_grid_baseSet.size();
 
     // 1 point quadrature!! That is how we compute and save the cell problems.
     // If you want to use a higher order quadrature, you also need to change the computation of the cell problems!
@@ -188,9 +188,9 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
     const FieldMatrix< double, dimension, dimension >& inverse_jac
       = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
 
-    int cell_problem_id[numMacroBaseFunctions];
+    std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
 
-    PeriodicDiscreteFunction* corrector_Phi[discreteFunctionSpace_.mapper().maxNumDofs()];
+    std::vector<PeriodicDiscreteFunction*> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs(), nullptr);
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
     {

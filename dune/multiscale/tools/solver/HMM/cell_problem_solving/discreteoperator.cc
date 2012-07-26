@@ -39,7 +39,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
     LocalMatrix local_matrix = global_matrix.localMatrix(cell_grid_entity, cell_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+    const unsigned int numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
@@ -306,7 +306,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
 
-  RangeType rhs_L2_Norm = 0.0;
+//  RangeType rhs_L2_Norm = 0.0;
 
   const Iterator end = discreteFunctionSpace.end();
   for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
@@ -318,7 +318,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
     LocalFunction elementOfRHS = cell_problem_RHS.localFunction(cell_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+    const unsigned int numBaseFunctions = baseSet.size();
 
     Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();

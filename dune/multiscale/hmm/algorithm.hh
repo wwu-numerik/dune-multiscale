@@ -704,11 +704,9 @@ void algorithm(const ProblemDataType& problem_data,
 
     // the Newton step for the nonlinear HMM problem:
     // L2-Norm of residual < tolerance ?
-    #ifdef STOCHASTIC_PERTURBATION
-    double hmm_tolerance = 1e-01 * VARIANCE;
-    #else
-    double hmm_tolerance = 1e-05;
-    #endif // ifdef STOCHASTIC_PERTURBATION
+    const double hmm_tolerance = DSC_CONFIG.get("problem.stochastic_pertubation", false)
+                                  ? 1e-01 * DSC_CONFIG.get("problem.stochastic_variance",  0.01)
+                                  : 1e-05;
     const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
 
     while (relative_newton_error > hmm_tolerance)

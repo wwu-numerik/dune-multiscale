@@ -57,15 +57,6 @@
  #endif // ifdef ERRORESTIMATION
 #endif // ifndef AD_HOC_COMPUTATION
 
-// ! Do we want to add a stochastic perturbation on the data?
-// #define STOCHASTIC_PERTURBATION
-#ifdef STOCHASTIC_PERTURBATION
-// ! Do we want to force the algorithm to come to an end?
-// (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht
-// erreicht etc.)
- #define FORCE
-#endif // ifdef STOCHASTIC_PERTURBATION
-
 // ! if a computation was broken (after a certain HMM Newton step), we might want to resume to this computation,
 // ! loading the solution of the last step that was succesfully carried out (it has to be saved somewhere!)
 // (this only works for non-adaptive computations!)

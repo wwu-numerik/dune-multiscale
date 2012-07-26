@@ -23,7 +23,7 @@
 
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
 
-#include <dune/fem/gridpart/periodicgridpart.hh>
+#include <dune/multiscale/grids/periodicgridpart/periodicgridpart.hh>
 
 // for data output:
 #include <dune/fem/io/file/dataoutput.hh>
@@ -84,7 +84,7 @@ public:
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
 public:
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0;
   }
@@ -118,7 +118,7 @@ public:
       // lambda itself was only valid within ZeroFunction, therefore we needed to save its value in lambda_()
   {}
 
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = lambda_;
   }
@@ -177,7 +177,7 @@ public:
     tensor_.diffusiveFlux(new_y, direction, flux);
   } // diffusiveFlux
 
-  inline void evaluate(const int i, const int /*j*/,
+  inline void evaluate(const int /*i*/, const int /*j*/,
                        const DomainType& /*x*/,
                        const TimeType& /*time*/,
                        RangeType& /*y*/) const {
@@ -229,7 +229,7 @@ public:
       , j_(j) // we solve the j'th cell problem
   {}
 
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0;
   }
@@ -239,7 +239,7 @@ public:
     JacobianRangeType direction;
     JacobianRangeType flux;
 
-    for (int i_ = 0; i_ < dimDomain; ++i_)
+    for (int i_ = 0; i_ < DomainType::dimension; ++i_)
     {
       if (j_ == i_)
       {
@@ -293,50 +293,50 @@ public:
       , epsilon_(epsilon)
   {}
 
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
-                       const DomainType& y,
+  inline void evaluate(const int /*i*/,
+                       const int /*j*/,
+                       const DomainType& /*x*/,
+                       const DomainType& /*y*/,
                        RangeType& z) const {
     z = 0;
   }
 
-  inline void evaluate(const int i,
-                       const DomainType& x,
-                       const DomainType& y,
+  inline void evaluate(const int /*i*/,
+                       const DomainType& /*x*/,
+                       const DomainType& /*y*/,
                        RangeType& z) const {
     z = 0;
   }
 
-  inline void evaluate(const int i,
-                       const int j,
-                       const DomainType& x,
+  inline void evaluate(const int /*i*/,
+                       const int /*j*/,
+                       const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0;
   }
 
-  inline void evaluate(const int i,
-                       const DomainType& x,
+  inline void evaluate(const int /*i*/,
+                       const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0;
   }
 
-  inline void evaluate(const int i,
-                       const DomainType& x,
-                       const TimeType& t,
+  inline void evaluate(const int /*i*/,
+                       const DomainType& /*x*/,
+                       const TimeType& /*t*/,
                        RangeType& y) const {
     y = 0;
   }
 
   // dummy implementation
-  inline void evaluate(const DomainType& x,
+  inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y = 0;
   }
 
   // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType time,
+  inline void evaluate(const DomainType& /*x*/,
+                       const TimeType /*time*/,
                        RangeType& y) const {
     y = 0;
   }

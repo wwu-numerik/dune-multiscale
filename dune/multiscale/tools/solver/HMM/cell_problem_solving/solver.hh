@@ -152,7 +152,9 @@ public:
 
       // the Newton step for for solving the current cell problem (solved with Newton Method):
       // L2-Norm of residual < tolerance ?
-      const double tolerance = DSC_CONFIG.get("problem.stochastic_pertubation", false) ? 1e-01 * VARIANCE : 1e-06;
+      const double tolerance = DSC_CONFIG.get("problem.stochastic_pertubation", false)
+                               ? 1e-01 * DSC_CONFIG.get("problem.stochastic_variance",  0.01)
+                               : 1e-06;
 
       while (relative_newton_error > tolerance)
       {
@@ -415,7 +417,7 @@ public:
         DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
         // number of base functions on entity
-        const int numBaseFunctions = baseSet.numBaseFunctions();
+        const int numBaseFunctions = baseSet.size();
 
         // calc Jacobian inverse before volume is evaluated
         const FieldMatrix< double, dimension, dimension >& inv

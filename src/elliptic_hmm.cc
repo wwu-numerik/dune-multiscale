@@ -49,6 +49,12 @@ int main(int argc, char** argv) {
     const std::string path = std::string("data/HMM/") + DSC::Parameter::Config().get("global.datadir", "data");
     // generate directories for data output
     DSC::Filesystem::testCreateDirectory(path);
+    if ( DSC_CONFIG.get("problem.stochastic_pertubation", false)) {
+      // ! Do we want to force the algorithm to come to an end?
+      // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht
+      // erreicht etc.)
+      DSC_CONFIG.set("problem.force_end", true);
+    }
 
     // name of the error file in which the data will be saved
     std::string filename_;
