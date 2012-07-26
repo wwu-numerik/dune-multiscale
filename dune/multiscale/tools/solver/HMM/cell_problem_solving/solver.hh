@@ -116,141 +116,122 @@ public:
     // if yes, the solution of the cell problem is also identical to zero. The solver is getting a problem with this
     // situation, which is why we do not solve cell problems for zero-right-hand-side, since we already know the result.
 
-    #ifdef LINEAR_PROBLEM
-
-    // assemble the stiffness matrix
-    cell_problem_op.assemble_matrix(globalQuadPoint, cell_system_matrix);
-
-    // assemble right hand side of algebraic cell problem
-    cell_problem_op.assembleCellRHS_linear(globalQuadPoint, gradient_PHI_H, cell_problem_rhs);
-
-    const double norm_rhs = cell_problem_op.normRHS(cell_problem_rhs);
-
-    if ( !( cell_problem_rhs.dofsValid() ) )
-    {
-      DUNE_THROW(Dune::InvalidStateException,"Cell Problem RHS invalid.");
-    }
-
-    if (norm_rhs < /*1e-06*/ 1e-10)
-    {
-      cell_problem_solution.clear();
-      // std :: cout << "Cell problem with solution zero." << std :: endl;
-    } else {
-      InverseCellFEMMatrix cell_fem_biCGStab(cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
-      cell_fem_biCGStab(cell_problem_rhs, cell_problem_solution);
-    }
-
-    // end linear case.
-    #else // ifdef LINEAR_PROBLEM
-    // nonlinear case:
-
-    // starting value for the Newton method
-    PeriodicDiscreteFunctionType zero_func(" constant zero function ", periodicDiscreteFunctionSpace_);
-    zero_func.clear();
-
-    // residual vector (current residual)
-    PeriodicDiscreteFunctionType cell_problem_residual("Cell Problem Residual", periodicDiscreteFunctionSpace_);
-    cell_problem_residual.clear();
-
-    L2Error< PeriodicDiscreteFunctionType > l2error;
-    RangeType relative_newton_error = 10000.0;
-
-    int iteration_step = 0;
-
-    // the Newton step for for solving the current cell problem (solved with Newton Method):
-    // L2-Norm of residual < tolerance ?
-    #ifdef STOCHASTIC_PERTURBATION
-    double tolerance = 1e-01 * VARIANCE;
-    #else
-    double tolerance = 1e-06;
-    #endif // ifdef STOCHASTIC_PERTURBATION
-    while (relative_newton_error > tolerance)
-    {
-      // (here: cellproblem_solution = solution from the last iteration step)
-
+    if (DSC_CONFIG.get("problem.linear", true)) {
       // assemble the stiffness matrix
-      cell_problem_op.assemble_jacobian_matrix(globalQuadPoint,
-                                               gradient_PHI_H,
-                                               cell_problem_solution,
-                                               cell_system_matrix);
-
-      // assemble right hand side of algebraic cell problem (for the current iteration step)
-      cell_problem_op.assembleCellRHS_nonlinear(globalQuadPoint,
-                                                gradient_PHI_H,
-                                                cell_problem_solution,
-                                                cell_problem_rhs);
-
+      cell_problem_op.assemble_matrix(globalQuadPoint, cell_system_matrix);
+      // assemble right hand side of algebraic cell problem
+      cell_problem_op.assembleCellRHS_linear(globalQuadPoint, gradient_PHI_H, cell_problem_rhs);
       const double norm_rhs = cell_problem_op.normRHS(cell_problem_rhs);
-
       if ( !( cell_problem_rhs.dofsValid() ) )
       {
-        DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
+        DUNE_THROW(Dune::InvalidStateException,"Cell Problem RHS invalid.");
       }
 
-      if ( (norm_rhs < /*1e-06*/ 1e-10) /*|| ( (norm_rhs > 1e-06) && (norm_rhs < 1.5e-06) )*/ )
+      if (norm_rhs < /*1e-06*/ 1e-10)
       {
-        // residual solution almost identical to zero: break
-        break;
+        cell_problem_solution.clear();
+        // std :: cout << "Cell problem with solution zero." << std :: endl;
+      } else {
+        InverseCellFEMMatrix cell_fem_biCGStab(cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
+        cell_fem_biCGStab(cell_problem_rhs, cell_problem_solution);
       }
+    } else {
+      // nonlinear case:
+      // starting value for the Newton method
+      PeriodicDiscreteFunctionType zero_func(" constant zero function ", periodicDiscreteFunctionSpace_);
+      zero_func.clear();
 
-      double biCG_tolerance = 1e-8;
-      bool cell_solution_convenient = false;
-      while (cell_solution_convenient == false)
-      {
-        cell_problem_residual.clear();
-        InverseCellFEMMatrix cell_fem_newton_biCGStab(cell_system_matrix,
-                                                      1e-8, biCG_tolerance, 20000, CELLSOLVER_VERBOSE);
-
-        cell_fem_newton_biCGStab(cell_problem_rhs, cell_problem_residual);
-
-        if ( cell_problem_residual.dofsValid() )
-        { cell_solution_convenient = true; }
-
-        if (biCG_tolerance > 1e-4)
-        {
-          DSC_LOG_ERROR << "WARNING! Iteration step " << iteration_step
-                    << ". Invalid dofs in 'cell_problem_residual', but '" << relative_newton_error
-                    <<
-          " = relative_newton_error > 1e-01' and 'biCG_tolerance > 1e-4'. L^2-Norm of right hand side of cell problem: "
-                    << norm_rhs << ". Therefore possibly inaccurate solution." << std::endl
-                    << "Information:" << std::endl
-                    << "x_T = globalQuadPoint = " << globalQuadPoint << "." << std::endl
-                    << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "." << std::endl
-                    << "Print right hand side? y/n: ";
-          char answer;
-          std::cin >> answer;
-          if ( !(answer == 'n') )
-          { cell_problem_op.printCellRHS(cell_problem_rhs); }
-          DUNE_THROW(Dune::InvalidStateException, "");
-        }
-        biCG_tolerance *= 10.0;
-      }
-
-      cell_problem_solution += cell_problem_residual;
-
-      relative_newton_error = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_residual, zero_func);
-      RangeType norm_cell_solution = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_solution,
-                                                                                        zero_func);
-      relative_newton_error = relative_newton_error / norm_cell_solution;
-
-      // std :: cout << "L2-Norm of cell problem residual = " << residual_L2_norm << std :: endl;
-
+      // residual vector (current residual)
+      PeriodicDiscreteFunctionType cell_problem_residual("Cell Problem Residual", periodicDiscreteFunctionSpace_);
       cell_problem_residual.clear();
 
-      if (iteration_step > 10)
+      L2Error< PeriodicDiscreteFunctionType > l2error;
+      RangeType relative_newton_error = 10000.0;
+
+      int iteration_step = 0;
+
+      // the Newton step for for solving the current cell problem (solved with Newton Method):
+      // L2-Norm of residual < tolerance ?
+      const double tolerance = DSC_CONFIG.get("problem.stochastic_pertubation", false) ? 1e-01 * VARIANCE : 1e-06;
+
+      while (relative_newton_error > tolerance)
       {
-        DSC_LOG_ERROR << "Warning! Algorithm already reached Newton-iteration step " << iteration_step
-                      << " for computing the nonlinear cellproblem." << std::endl
-                      << "relative_newton_error = " << relative_newton_error << std::endl << std::endl;
-        #ifdef FORCE
-        residual_L2_norm = 0.0;
-        #endif
+        // (here: cellproblem_solution = solution from the last iteration step)
+
+        // assemble the stiffness matrix
+        cell_problem_op.assemble_jacobian_matrix(globalQuadPoint,
+                                                 gradient_PHI_H,
+                                                 cell_problem_solution,
+                                                 cell_system_matrix);
+
+        // assemble right hand side of algebraic cell problem (for the current iteration step)
+        cell_problem_op.assembleCellRHS_nonlinear(globalQuadPoint,
+                                                  gradient_PHI_H,
+                                                  cell_problem_solution,
+                                                  cell_problem_rhs);
+
+        const double norm_rhs = cell_problem_op.normRHS(cell_problem_rhs);
+        if ( !( cell_problem_rhs.dofsValid() ) )
+        {
+          DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
+        }
+        if ((norm_rhs < DSC_CONFIG.get("max_norm_rhs", 1e-10)))
+        {
+          break;
+        }
+        double biCG_tolerance = 1e-8;
+        bool cell_solution_convenient = false;
+        while (cell_solution_convenient == false)
+        {
+          cell_problem_residual.clear();
+          InverseCellFEMMatrix cell_fem_newton_biCGStab(cell_system_matrix,
+                                                        1e-8, biCG_tolerance, 20000, CELLSOLVER_VERBOSE);
+
+          cell_fem_newton_biCGStab(cell_problem_rhs, cell_problem_residual);
+
+          if ( cell_problem_residual.dofsValid() )
+          { cell_solution_convenient = true; }
+
+          if (biCG_tolerance > 1e-4)
+          {
+            DSC_LOG_ERROR << "WARNING! Iteration step " << iteration_step
+                      << ". Invalid dofs in 'cell_problem_residual', but '" << relative_newton_error
+                      <<
+            " = relative_newton_error > 1e-01' and 'biCG_tolerance > 1e-4'. L^2-Norm of right hand side of cell problem: "
+                      << norm_rhs << ". Therefore possibly inaccurate solution." << std::endl
+                      << "Information:" << std::endl
+                      << "x_T = globalQuadPoint = " << globalQuadPoint << "." << std::endl
+                      << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "." << std::endl
+                      << "Print right hand side? y/n: ";
+            char answer;
+            std::cin >> answer;
+            if ( !(answer == 'n') )
+            { cell_problem_op.printCellRHS(cell_problem_rhs); }
+            DUNE_THROW(Dune::InvalidStateException, "");
+          }
+          biCG_tolerance *= 10.0;
+        }
+
+        cell_problem_solution += cell_problem_residual;
+
+        relative_newton_error = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_residual, zero_func);
+        RangeType norm_cell_solution = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_solution,
+                                                                                          zero_func);
+        relative_newton_error = relative_newton_error / norm_cell_solution;
+        cell_problem_residual.clear();
+        if (iteration_step > 10)
+        {
+          DSC_LOG_ERROR << "Warning! Algorithm already reached Newton-iteration step " << iteration_step
+                        << " for computing the nonlinear cellproblem." << std::endl
+                        << "relative_newton_error = " << relative_newton_error << std::endl << std::endl;
+          #ifdef FORCE
+          residual_L2_norm = 0.0;
+          #endif
+        }
+
+        iteration_step += 1;
       }
-
-      iteration_step += 1;
     }
-
-    #endif // ifdef LINEAR_PROBLEM
     // end nonlinear case.
 
     if ( !( cell_problem_solution.dofsValid() ) )
@@ -468,11 +449,11 @@ public:
           dfw.append(correctorPhi_i);
 
           // check if we use a correct numeration of the cell problems:
-          if ( !(cp_num_manager.get_number_of_cell_problem(it, i) == number_of_cell_problem) )
+          typename EntityType::EntityPointer entity_pointer(*it);
+          if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
           {
             DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
           }
-
           number_of_cell_problem++;
         }
       } // end: for-loop: IteratorType it

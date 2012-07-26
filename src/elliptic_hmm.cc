@@ -10,13 +10,8 @@
 #endif
 
 // ! (very restrictive) homogenizer
-#ifdef LINEAR_PROBLEM
- #include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
- #include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
-#else // ifdef LINEAR_PROBLEM
-      // dummy (does not work, since identical to HMM assembler)
-// was deleted #include <dune/multiscale/tools/homogenizer/nonlinear_elliptic_homogenizer.hh>
-#endif // ifdef LINEAR_PROBLEM
+#include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
+#include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
 
 // ! NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in
 // problem_specification.hh), which provides us with information about epsilon, delta, etc.

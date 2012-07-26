@@ -246,11 +246,10 @@ public:
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& /*direction_gradient*/,
                              JacobianRangeType& /*flux*/) const {
-    #ifdef LINEAR_PROBLEM
-    DUNE_THROW(Dune::NotImplemented, "Not yet implemented.");
-    #else // ifdef LINEAR_PROBLEM
-    DUNE_THROW(Dune::NotImplemented, "Nonlinear example not yet implemented.");
-    #endif // ifdef LINEAR_PROBLEM
+    if (DSC_CONFIG.get("problem.linear", true))
+      DUNE_THROW(Dune::NotImplemented, "Not yet implemented.");
+    else
+      DUNE_THROW(Dune::NotImplemented, "Nonlinear example not yet implemented.");
   } // jacobianDiffusiveFlux
 
   template < class... Args >

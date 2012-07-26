@@ -195,7 +195,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
     {
       // get number of cell problem from entity and number of base function
-      cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_grid_it, i);
+      typename Entity::EntityPointer macro_entity_pointer(*macro_grid_it);
+      cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
 
       // jacobian of the base functions, with respect to the reference element
       typename BaseFunctionSet::JacobianRangeType gradient_Phi_ref_element;
