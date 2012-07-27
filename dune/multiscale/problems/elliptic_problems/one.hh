@@ -42,87 +42,8 @@ struct ModelProblemData
   }
 };
 
-// !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
-// The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y
-// := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
-// is part from. (f \in FunctionSpace)
-
-template< class FunctionSpaceImp >
-class FirstSource
-  : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef FirstSource< FunctionSpaceType >                   ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  FirstSource(){}
-
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = constants().get("linear", true) ? 1.0 : 1.0;
-  } // evaluate
-
-  inline void evaluate(const DomainType& x,
-                       const TimeType& /*time*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
-};
-
-// ! default class for the second source term G.
-
-// Realization: set G(x) = 0:
-template< class FunctionSpaceImp >
-class SecondSource
-  : public Dune::Fem::Function< FunctionSpaceImp, SecondSource< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef SecondSource< FunctionSpaceType >                  ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-public:
-  SecondSource(){}
-
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y[0] = 0;
-  }
-
-  inline void evaluate(const int /*i*/, const DomainType& /*x*/,
-                       RangeType& y) const {
-    y[0] = 0;
-  }
-};
-
-// the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-// A^{\epsilon} : R^d -> R^d
+CONSTANTFUNCTION(FirstSource, 1.0)
+NULLFUNCTION(SecondSource)
 
 template< class FunctionSpaceImp >
 class Diffusion
@@ -318,90 +239,12 @@ public:
   }
 };
 
-// define the mass term:
-template< class FunctionSpaceImp >
-class MassTerm
-  : public Dune::Fem::Function< FunctionSpaceImp, MassTerm< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef MassTerm< FunctionSpaceType >                      ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  MassTerm(){}
-
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y[0] = 0.00001;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType /*time*/,
-                       RangeType& y) const {
-    DSC_LOG_ERROR << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
-              << std::endl;
-    return evaluate(x, y);
-  }
-};
+CONSTANTFUNCTION(MassTerm,  0.00001)
 
 //! a dummy function class for functions, vectors and matrices
 NULLFUNCTION(DefaultDummyFunction)
-// ! Exact solution (typically it is unknown)
-template< class FunctionSpaceImp >
-class ExactSolution
-  : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
+NULLFUNCTION(ExactSolution)
 
-private:
-  typedef ExactSolution< FunctionSpaceType >                 ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-  // essentially: 'DomainFieldType' is the type of an entry of a domain-element.
-  // But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  // This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
-  // entry of a domain-element.
-
-public:
-  ExactSolution(){}
-
-  // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = 0.0;
-  }
-
-  // in case 'u' HAS a time-dependency use the following method:
-  // unfortunately GRAPE requires both cases of the method 'evaluate' to be
-  // instantiated
-  inline void evaluate(const DomainType& x,
-                       const TimeType& /*timedummy*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
-};
 } //namespace One {
 }
 

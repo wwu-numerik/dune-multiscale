@@ -42,11 +42,6 @@ struct ModelProblemData
   }
 };
 
-// !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
-// The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y
-// := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
-// is part from. (f \in FunctionSpace)
-
 template< class FunctionSpaceImp >
 class FirstSource
   : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
@@ -90,12 +85,7 @@ public:
   }
 };
 
-  /** \brief default class for the second source term G.
-   * Realization: set G(x) = 0: **/
-  NULLFUNCTION(SecondSource)
-
-// the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-// A^{\epsilon} : R^d -> R^d
+NULLFUNCTION(SecondSource)
 
 template< class FunctionSpaceImp >
 class Diffusion
@@ -267,47 +257,9 @@ public:
   }
 };
 
-// define the mass term:
-template< class FunctionSpaceImp >
-class MassTerm
-  : public Dune::Fem::Function< FunctionSpaceImp, MassTerm< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef MassTerm< FunctionSpaceType >                      ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  MassTerm(){}
-
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y[0] = 0.00001;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType /*time*/,
-                       RangeType& y) const {
-    DSC_LOG_ERROR << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
-              << std::endl;
-    return evaluate(x, y);
-  }
-};
-
-//! a dummy function class for functions, vectors and matrices
+CONSTANTFUNCTION(MassTerm,  0.00001)
 NULLFUNCTION(DefaultDummyFunction)
+
 // ! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution

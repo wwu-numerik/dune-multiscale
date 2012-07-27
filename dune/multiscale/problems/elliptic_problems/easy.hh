@@ -1,6 +1,7 @@
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EASY
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EASY
 
+#include <dune/stuff/fem/functions.hh>
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
@@ -39,22 +40,12 @@ struct ModelProblemData
     return ("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");
   }
 
-  // get the (starting) grid refinement level for solving the reference problem
-  // in genereal, this is the smallest integer (level), so that solving the reference problem on this level,
-  // yields a higly accurate approximation of the exact solution
-  // ( here we have heterogenious reference problem, therefore we need a high refinement level )
+  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
   inline int getRefinementLevelReferenceProblem() const {
-    // required refinement level for a fine scale reference solution
-    // (a saved/precomputed solution is either already available for this level or it must be computed with the
-    // following refinement level)
     return 10;
   }
 };
 
-// !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
-// The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y
-// := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
-// is part from. (f \in FunctionSpace)
 
 template< class FunctionSpaceImp >
 class FirstSource
@@ -103,9 +94,9 @@ public:
   }
 };
 
-  /** \brief default class for the second source term G.
-   * Realization: set G(x) = 0: **/
-  NULLFUNCTION(SecondSource)
+/** \brief default class for the second source term G.
+ * Realization: set G(x) = 0: **/
+NULLFUNCTION(SecondSource)
 
 // the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
 // A^{\epsilon} : R^d -> R^d
@@ -212,44 +203,7 @@ public:
   }
 };
 
-// define the mass term:
-template< class FunctionSpaceImp >
-class MassTerm
-  : public Dune::Fem::Function< FunctionSpaceImp, MassTerm< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef MassTerm< FunctionSpaceType >                      ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  MassTerm(){}
-
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y[0] = 0.00001;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType /*time*/,
-                       RangeType& y) const {
-    DSC_LOG_ERROR << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
-              << std::endl;
-    return evaluate(x, y);
-  }
-};
+CONSTANTFUNCTION(MassTerm,  0.00001)
 
 //! a dummy function class for functions, vectors and matrices
 NULLFUNCTION(DefaultDummyFunction)

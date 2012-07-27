@@ -44,10 +44,6 @@ struct ModelProblemData
   }
 };
 
-// !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
-// The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y
-// := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
-// is part from. (f \in FunctionSpace)
 
 template< class FunctionSpaceImp >
 class FirstSource
@@ -77,11 +73,8 @@ public:
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
     y = 0.0;
-
     y += 2.0 * ( x[0] + x[1] - pow(x[0], 2.0) - pow(x[1], 2.0) );
-
     y -= 12.0 * pow( (2.0 * x[0]) - 1.0, 2.0 ) * pow( (x[1] * x[1]) - x[1], 3.0 );
-
     y -= 12.0 * pow( (2.0 * x[1]) - 1.0, 2.0 ) * pow( (x[0] * x[0]) - x[0], 3.0 );
   } // evaluate
 
@@ -145,11 +138,8 @@ public:
     helper2 += pow( (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(2.0 * M_PI * x[j] / constants().epsilon), 3.0 );
 
     helper1 *= helper2;
-
     y -= helper1;
-
     y -= sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon) * pow( (2.0 * x[i]) - 1.0, 3.0 ) * pow( (x[j] * x[j]) - x[j], 3.0 );
-
     return y;
   } // additivePart
 
@@ -263,72 +253,8 @@ public:
   }
 };
 
-// define the mass term:
-template< class FunctionSpaceImp >
-class MassTerm
-  : public Dune::Fem::Function< FunctionSpaceImp, MassTerm< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef MassTerm< FunctionSpaceType >                      ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  MassTerm(){}
-
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y[0] = 0.00001;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x,
-                       const TimeType /*time*/,
-                       RangeType& y) const {
-    DUNE_THROW(Dune::InvalidStateException,"WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0.");
-    return evaluate(x, y);
-  }
-};
-
-// a dummy function class for functions, vectors and matrices
-template< class FunctionSpaceImp >
-class DefaultDummyFunction
-  : public Dune::Fem::Function< FunctionSpaceImp, DefaultDummyFunction< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef DefaultDummyFunction< FunctionSpaceType >          ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  template < class... InputArgs >
-  void evaluate( InputArgs..., RangeType& out )
-  {
-    out = RangeType(0);
-  }
-};
+CONSTANTFUNCTION(MassTerm,  0.00001)
+NULLFUNCTION(DefaultDummyFunction)
 
 // ! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >

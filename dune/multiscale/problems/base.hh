@@ -46,7 +46,8 @@ namespace Problem {
  * := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
  * is part from. (f \in FunctionSpace)
  *
- */
+ *
+**/
 class IModelProblemData
 {
 protected:
