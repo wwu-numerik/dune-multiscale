@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     // in general: for the homogenized case = 11 and for the high resolution case = 14
     // Note that this depends on the model problem!
     #ifndef FINE_SCALE_REFERENCE
-    //!TODO völliig widersprüchlich
+    //!TODO völliig widersprüchlich zu oben
     refinement_level_referenceprob_ = 8;
     #endif
 

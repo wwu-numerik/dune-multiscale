@@ -42,15 +42,18 @@ typedef Problem::Diffusion< FunctionSpaceType > DiffusionType;
 typedef Problem::MassTerm< FunctionSpaceType > MassTermType;
 // default type for any missing coefficient function (e.g. advection,...)
 typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionType;
+typedef Dune::Homogenizer< GridType, DiffusionType > HomogenizerType;
+typedef Problem::HomDiffusion< FunctionSpaceType, HomogenizerType::HomTensorType >
+    HomDiffusionType;
 // !-----------------------------------------------------------------------------------------
 
 // ! ---------  typedefs for the standard discrete function space (macroscopic) -------------
-#ifdef EXACTSOLUTION_AVAILABLE
+
 // type of exact solution (in general unknown)
 typedef Problem::ExactSolution< FunctionSpaceType >            ExactSolutionType;
 typedef Dune::GridFunctionAdapter< ExactSolutionType, GridPartType > DiscreteExactSolutionType;     // for data output with
                                                                                               // paraview or grape
-#endif // ifdef EXACTSOLUTION_AVAILABLE
+
 typedef FunctionSpaceType::DomainType DomainType;
 // ! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
 typedef FunctionSpaceType::RangeType RangeType;
@@ -125,12 +128,10 @@ typedef Dune::ErrorEstimator< PeriodicDiscreteFunctionType,
 typedef Dune::tuple< DiscreteFunctionType* >      IOTupleType;
 typedef Dune::DataOutput< GridType, IOTupleType > DataOutputType;
 
-#ifdef EXACTSOLUTION_AVAILABLE
 // just for the discretized exact solution (in case it is available)
 typedef Dune::tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
 // just for the discretized exact solution (in case it is available)
 typedef Dune::DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
-#endif // ifdef EXACTSOLUTION_AVAILABLE
 
 // !------------------------- for adaptive grid refinement ---------------------------------
 // ! type of restrict-prolong operator

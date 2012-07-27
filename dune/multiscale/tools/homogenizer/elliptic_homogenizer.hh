@@ -18,18 +18,16 @@
 #ifndef DUNE_HOMOGENIZER_HH
 #define DUNE_HOMOGENIZER_HH
 
-// where the quadratures are defined
-#include <dune/fem/quadrature/cachingquadrature.hh>
-
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-
 #include <dune/multiscale/grids/periodicgridpart/periodicgridpart.hh>
 
 // for data output:
 #include <dune/fem/io/file/dataoutput.hh>
 #include <dune/fem/io/parameter.hh>
 #include <dune/fem/io/file/datawriter.hh>
+#include <dune/fem/quadrature/cachingquadrature.hh>
 
+#include <dune/stuff/fem/functions.hh>
 namespace Dune {
 // define output traits
 struct CellDataOutputParameters
@@ -65,63 +63,19 @@ public:
   }
 };
 
-template< class FunctionSpaceImp >
-class ZeroFunction
-  : public Dune::Fem::Function< FunctionSpaceImp, ZeroFunction< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
 
-private:
-  typedef ZeroFunction< FunctionSpaceType >       ThisType;
-  typedef Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-public:
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-};
+NULLFUNCTION(ZeroFunction)
 
 template< class FunctionSpaceImp >
 class MassWeight
-  : public Dune::Fem::Function< FunctionSpaceImp, MassWeight< FunctionSpaceImp > >
+  : public Dune::Stuff::Fem::ConstantFunction< FunctionSpaceImp >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef MassWeight< FunctionSpaceType >         ThisType;
-  typedef Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-protected:
-  const RangeFieldType lambda_;
-
-public:
   // Constructor
-  inline explicit MassWeight(const RangeFieldType lambda)
-    : lambda_(lambda)
-      // lambda itself was only valid within ZeroFunction, therefore we needed to save its value in lambda_()
+  inline explicit MassWeight(const typename FunctionSpaceImp::RangeType& lambda)
+    : Dune::Stuff::Fem::ConstantFunction< FunctionSpaceImp >(lambda)
   {}
 
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y[0] = lambda_;
-  }
 };
 
 // since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} )
@@ -429,6 +383,7 @@ public:
     : filename_(filename)
   {}
 
+  typedef FieldMatrix< RangeType, dimension, dimension > HomTensorType;
 private:
   double getEntry(TransformTensorType& tensor,
                   PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
@@ -506,8 +461,8 @@ private:
   } // end of method
 
 public:
-  FieldMatrix< RangeType, dimension, dimension > getHomTensor(TensorType& tensor) {
-    FieldMatrix< RangeType, dimension, dimension > a_hom;
+  HomTensorType getHomTensor(TensorType& tensor) {
+    HomTensorType a_hom;
 
     // to solve cell problems, we always need to use a perforated unit cube as domain:
     GridPtr< GridType > periodicgridptr(filename_);
