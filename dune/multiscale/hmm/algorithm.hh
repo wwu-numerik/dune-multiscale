@@ -14,40 +14,6 @@
 #include <dune/stuff/common/logging.hh>
 #include "algorithm_step.hh"
 
-//! set the dirichlet points to zero
-template< class EntityType, class DiscreteFunctionType >
-void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
-  static const int faceCodim = 1;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType                          DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionType::LocalFunctionType                                  LocalFunctionType;
-  typedef typename DiscreteFunctionSpaceType::LagrangePointSetType                          LagrangePointSetType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType                                  GridPartType;
-  typedef typename GridPartType::IntersectionIteratorType                                   IntersectionIteratorType;
-  typedef typename LagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType FaceDofIteratorType;
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
-  const GridPartType& gridPart = discreteFunctionSpace.gridPart();
-  IntersectionIteratorType it = gridPart.ibegin(entity);
-  const IntersectionIteratorType endit = gridPart.iend(entity);
-  for ( ; it != endit; ++it)
-  {
-    if ( !(*it).boundary() )
-      continue;
-
-    LocalFunctionType rhsLocal = rhs.localFunction(entity);
-    const LagrangePointSetType& lagrangePointSet
-      = discreteFunctionSpace.lagrangePointSet(entity);
-
-    const int face = (*it).indexInInside();
-    FaceDofIteratorType faceIterator
-      = lagrangePointSet.template beginSubEntity< faceCodim >(face);
-    const FaceDofIteratorType faceEndIterator
-      = lagrangePointSet.template endSubEntity< faceCodim >(face);
-    for ( ; faceIterator != faceEndIterator; ++faceIterator)
-      rhsLocal[*faceIterator] = 0;
-  }
-} // boundaryTreatment
-
 //! \todo DOCME
 template< class Stream, class DiscFunc >
 void oneLinePrint(Stream& stream, const DiscFunc& func) {

@@ -108,6 +108,8 @@ public:
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
 public:
+  SecondSource(){}
+
   inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0;

@@ -171,7 +171,7 @@ public:
   }
 
   //! use 'cp_num_manager.get_number_of_cell_problem( it, i )'
-  inline int get_number_of_cell_problem(EntityPointerType& ent, const int& numOfBaseFunction) const {
+  inline int get_number_of_cell_problem(const EntityPointerType& ent, const int& numOfBaseFunction) const {
     const typename CellNumMapType::key_type idPair(ent, numOfBaseFunction);
     auto it = cell_numbering_map_.find(idPair);
     if (it != cell_numbering_map_.end() )
@@ -183,7 +183,7 @@ public:
   /** use 'cp_num_manager.get_number_of_cell_problem( it )'
    * \attention 'get_number_of_cell_problem( it )' is NOT equal to 'get_number_of_cell_problem( it , 0 )'!
    **/
-  inline int get_number_of_cell_problem(EntityPointerType& ent) const {
+  inline int get_number_of_cell_problem(const EntityPointerType& ent) const {
     auto it = cell_numbering_map_NL_.find(ent);
     if (it != cell_numbering_map_NL_.end() )
       return it->second;

@@ -402,7 +402,7 @@ public:
         JacobianRangeType diffusive_flux_in_grad_old_u_H;
 
         // to save: A \nabla PHI_H * \nabla phi_h;
-        RangeType t = 0;
+//        RangeType t = 0;
 
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)

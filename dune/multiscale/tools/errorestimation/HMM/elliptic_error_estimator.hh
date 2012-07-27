@@ -94,7 +94,7 @@ public:
   // the new method:
   // ! method to get the local mesh size H_entity (of the macro mesh)
   // works only for our 2D examples!!!!
-  RangeType getH(const EntityType& entity) {
+  RangeType getH(const EntityType& entity) const {
     // entity_H means H (the diameter of the entity)
     RangeType entity_H = 0.0;
 
@@ -125,7 +125,7 @@ public:
 
   // return:  H_T^4 ||f||_{L^2(T)}^2
   template< class SourceType >
-  RangeType indicator_f(const SourceType& f, const EntityType& entity) {
+  RangeType indicator_f(const SourceType& f, const EntityType& entity) const {
     // create quadrature for given geometry type
     CachingQuadrature< GridPartType, 0 > entityQuadrature(entity, spacePolOrd);
 
@@ -156,8 +156,8 @@ public:
 
   // \eta_T^{app}
   RangeType indicator_app_1(const EntityType& entity,
-                            DiscreteFunctionType& u_H,
-                            const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) {
+                            const DiscreteFunctionType& u_H,
+                            const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
     Problem::ModelProblemData model_info;
@@ -268,8 +268,8 @@ public:
 
   // \bar{\eta}_T^{app}
   RangeType indicator_app_2(const EntityType& entity,
-                            DiscreteFunctionType& u_H,
-                            const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) {
+                            const DiscreteFunctionType& u_H,
+                            const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
     Problem::ModelProblemData model_info;
@@ -371,9 +371,9 @@ public:
   // (1/2) since we visit every entity twice (inner and outer)
   template< class IntersectionType >
   RangeType indicator_res_E(const IntersectionType& intersection,
-                            DiscreteFunctionType& u_H,
+                            const DiscreteFunctionType& u_H,
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_inner_entity,
-                            const PeriodicDiscreteFunctionType& corrector_u_H_on_outer_entity) {
+                            const PeriodicDiscreteFunctionType& corrector_u_H_on_outer_entity) const {
     RangeType local_indicator(0.0);
 
     Problem::ModelProblemData model_info;
@@ -512,8 +512,8 @@ public:
   // here, uniform also means that we have the same number of elements in every direction!)
   // \bar{\eta}_T^{res}
   RangeType indicator_res_T(const EntityType& entity,
-                            DiscreteFunctionType& u_H,
-                            const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) {
+                            const DiscreteFunctionType& u_H,
+                            const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
     Problem::ModelProblemData model_info;
@@ -566,10 +566,10 @@ public:
     // (+0.2 to avoid rounding errors)
 
     // generalized jump up/down
-    RangeType jump_up_down[num_boundary_faces_per_direction];
+    std::vector<RangeType> jump_up_down(num_boundary_faces_per_direction);
 
     // generalized jump left/right
-    RangeType jump_left_right[num_boundary_faces_per_direction];
+    std::vector<RangeType> jump_left_right(num_boundary_faces_per_direction);
 
     for (int id = 0; id < num_boundary_faces_per_direction; ++id)
     {
@@ -756,8 +756,8 @@ public:
   // here, uniform also means that we have the same number of elements in every direction!)
   // \eta_T^{tfr}
   RangeType indicator_tfr_1(const EntityType& entity,
-                            DiscreteFunctionType& u_H,
-                            const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) {
+                            const DiscreteFunctionType& u_H,
+                            const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
     Problem::ModelProblemData model_info;
@@ -1020,8 +1020,8 @@ public:
   // convergence. In this setting it is more suitable for a comparison to capture the effect of boundary jumps in the
   // case of a wrong boundary condition
   RangeType indicator_effective_tfr(const EntityType& entity,
-                                    DiscreteFunctionType& u_H,
-                                    const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) {
+                                    const DiscreteFunctionType& u_H,
+                                    const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
     Problem::ModelProblemData model_info;
