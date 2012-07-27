@@ -69,6 +69,8 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
+  FirstSource(){}
+
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
     // Krei um einspringende Ecke (Kreis um (0.5,0.5) )
@@ -115,6 +117,8 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
+    Diffusion(){}
+
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
   // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
@@ -261,6 +265,8 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
+  MassTerm(){}
+
   inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
     y[0] = 0.00001;
@@ -304,6 +310,8 @@ public:
   // entry of a domain-element.
 
 public:
+  ExactSolution(){}
+
   // in case 'u' has NO time-dependency use the following method:
   inline void evaluate(const DomainType& /*x*/,
                        RangeType& y) const {
