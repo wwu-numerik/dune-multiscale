@@ -409,11 +409,6 @@ public:
     const DomainType& x_T_inner = globalInnerEntityGeometry.global( innerEntityQuadrature.point(0) );
     const DomainType& x_T_outer = globalOuterEntityGeometry.global( outerEntityQuadrature.point(0) );
 
-    const RangeType innerEntityVolume = innerEntityQuadrature.weight(0)
-                                        * globalInnerEntityGeometry.integrationElement( innerEntityQuadrature.point(0) );
-    const RangeType outerEntityVolume = outerEntityQuadrature.weight(0)
-                                        * globalOuterEntityGeometry.integrationElement( outerEntityQuadrature.point(0) );
-
     // \nabla u_H(x_T) (on the inner element T)
     LocalFunctionType inner_u_H_local = u_H.localFunction(inner_entity);
     JacobianRangeType gradient_inner_u_H(0.);

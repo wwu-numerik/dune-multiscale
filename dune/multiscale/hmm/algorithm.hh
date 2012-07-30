@@ -157,14 +157,14 @@ void algorithm(const ProblemDataType& problem_data,
 // ! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  typename HMM::DiffusionType diffusion_op;
+  const typename HMM::DiffusionType diffusion_op;
   // ! --------------------------- coefficient functions ------------------------------------
 
 
   // ! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType > rhsassembler;
-  typename HMM::FirstSourceType f;   // standard source f
+  const typename HMM::FirstSourceType f;   // standard source f
 
   // ----------------------------------------------------------------------------------------------//
   // ----------------------- THE DISCRETE FEM OPERATOR -----------------------------------//
@@ -185,15 +185,15 @@ void algorithm(const ProblemDataType& problem_data,
       std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
       // descretized homogenizer:
 
-      typename HMM::HomogenizerType disc_homogenizer(unit_cell_location);
-      typename HMM::HomogenizerType::HomTensorType A_hom = disc_homogenizer.getHomTensor(diffusion_op);
-      typename HMM::HomDiffusionType hom_diffusion_op(A_hom);
+      const typename HMM::HomogenizerType disc_homogenizer(unit_cell_location);
+      const typename HMM::HomogenizerType::HomTensorType A_hom = disc_homogenizer.getHomTensor(diffusion_op);
+      const typename HMM::HomDiffusionType hom_diffusion_op(A_hom);
 
       //!TODO check: hatte nur 2 tmp parameter, Masse hinzugefUGT
       typedef DiscreteEllipticOperator< typename HMM::DiscreteFunctionType,
                                         typename HMM::HomDiffusionType, typename HMM::MassTermType > HomEllipticOperatorType;
 
-      HomEllipticOperatorType hom_discrete_elliptic_op(finerDiscreteFunctionSpace, hom_diffusion_op);
+      const HomEllipticOperatorType hom_discrete_elliptic_op(finerDiscreteFunctionSpace, hom_diffusion_op);
 
       typename HMM::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
 
@@ -208,11 +208,11 @@ void algorithm(const ProblemDataType& problem_data,
 
       // set Dirichlet Boundary to zero
       typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-      IteratorType hom_endit = finerDiscreteFunctionSpace.end();
+      const IteratorType hom_endit = finerDiscreteFunctionSpace.end();
       for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != hom_endit; ++fine_it)
         boundaryTreatment(*fine_it, hom_rhs);
 
-      typename HMM::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, VERBOSE);
+      const typename HMM::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, VERBOSE);
       hom_biCGStab(hom_rhs, homogenized_solution);
     } else {
 
@@ -275,11 +275,11 @@ void algorithm(const ProblemDataType& problem_data,
 
     // set Dirichlet Boundary to zero
     typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-    IteratorType fine_endit = finerDiscreteFunctionSpace.end();
+    const IteratorType fine_endit = finerDiscreteFunctionSpace.end();
     for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it)
       boundaryTreatment(*fine_it, fem_newton_rhs);
 
-    typename HMM::InverseFEMMatrix fem_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
+    const typename HMM::InverseFEMMatrix fem_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
     fem_biCGStab(fem_newton_rhs, fem_newton_solution);
 
     if ( data_file.is_open() )
@@ -345,11 +345,11 @@ void algorithm(const ProblemDataType& problem_data,
       }
       // set Dirichlet Boundary to zero
       typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-      IteratorType fine_endit = finerDiscreteFunctionSpace.end();
+      const IteratorType fine_endit = finerDiscreteFunctionSpace.end();
       for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it)
         boundaryTreatment(*fine_it, fem_newton_rhs);
 
-      typename HMM::InverseFEMMatrix fem_newton_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, true);
+      const typename HMM::InverseFEMMatrix fem_newton_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, true);
       fem_newton_biCGStab(fem_newton_rhs, fem_newton_residual);
 
       if ( fem_newton_residual.dofsValid() )
@@ -398,18 +398,18 @@ void algorithm(const ProblemDataType& problem_data,
 
   char modeprob[50];
   sprintf( modeprob, "/Model_Problem_%d", problem_data.get_Number_of_Model_Problem() );
-  std::string modeprob_s(modeprob);
+  const std::string modeprob_s(modeprob);
 
   const int refinement_level_referenceprob_ = problem_data.getRefinementLevelReferenceProblem();
   char reference_solution_directory[50];
   sprintf(reference_solution_directory, "/reference_solution_ref_%d", refinement_level_referenceprob_);
-  std::string reference_solution_directory_s(reference_solution_directory);
+  const std::string reference_solution_directory_s(reference_solution_directory);
 
   char reference_solution_name[50];
   sprintf(reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
-  std::string reference_solution_name_s(reference_solution_name);
+  const std::string reference_solution_name_s(reference_solution_name);
 
-  std::string location_fine_scale_ref = "data/HMM/" + modeprob_s + reference_solution_directory_s
+  const std::string location_fine_scale_ref = "data/HMM/" + modeprob_s + reference_solution_directory_s
                                         + reference_solution_name_s;
 
   // reader for the cell problem data file:
@@ -426,7 +426,7 @@ void algorithm(const ProblemDataType& problem_data,
 //  #ifdef HMM_REFERENCE
   const int gridLevel_refHMM = 10;       // Macro_'gridLevel'
 
-  std::string macroGridName_refHMM = problem_data.getMacroGridFile();
+  const std::string macroGridName_refHMM = problem_data.getMacroGridFile();
   DSC_LOG_INFO << "loading dgf: " << macroGridName_refHMM << std::endl;
 
   // create a grid pointer for the DGF file belongig to the macro grid:
@@ -442,7 +442,7 @@ void algorithm(const ProblemDataType& problem_data,
   typename HMM::DiscreteFunctionType hmm_reference_solution(filename + " Reference (HMM) Solution", discreteFunctionSpace_refHMM);
   hmm_reference_solution.clear();
 
-  std::string location_hmm_ref = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+  const std::string location_hmm_ref = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
 
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader_hmm_ref( (location_hmm_ref).c_str() );
@@ -566,7 +566,7 @@ void algorithm(const ProblemDataType& problem_data,
 
       int element_number = 0;
       typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-      IteratorType endit_test = discreteFunctionSpace.end();
+      const IteratorType endit_test = discreteFunctionSpace.end();
       for (IteratorType it = discreteFunctionSpace.begin(); it != endit_test; ++it)
       {
         int additional_refinement;

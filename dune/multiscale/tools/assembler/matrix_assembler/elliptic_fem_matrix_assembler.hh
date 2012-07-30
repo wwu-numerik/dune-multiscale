@@ -61,11 +61,12 @@ public:
   DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionModel& diffusion_op)
     : discreteFunctionSpace_(discreteFunctionSpace)
       , diffusion_operator_(diffusion_op)
+      , reaction_coefficient_(nullptr)
   {}
 
   DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                            const DiffusionModel& diffusion_op,
-                           Reaction& reaction_coefficient)
+                           const Reaction& reaction_coefficient)
     : discreteFunctionSpace_(discreteFunctionSpace)
       , diffusion_operator_(diffusion_op)
       , reaction_coefficient_(&reaction_coefficient)
@@ -92,7 +93,7 @@ public:
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
-  Reaction* reaction_coefficient_;
+  const Reaction* const  reaction_coefficient_;
 };
 
 // dummy implementation of "operator()"
@@ -133,14 +134,14 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
+    const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       // local (barycentric) coordinates (with respect to entity)
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
-      DomainType global_point = geometry.global(local_point);
+      const DomainType global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
@@ -241,14 +242,14 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
+    const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       // local (barycentric) coordinates (with respect to entity)
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
-      DomainType global_point = geometry.global(local_point);
+      const DomainType global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
@@ -308,7 +309,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
     {
       const Entity& entity = *it;
 
-      HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(entity);
+      const HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(entity);
       const HostEntityType& host_entity = *host_entity_pointer;
 
       LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
@@ -377,14 +378,14 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
+    const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       // local (barycentric) coordinates (with respect to entity)
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
-      DomainType global_point = geometry.global(local_point);
+      const DomainType global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 

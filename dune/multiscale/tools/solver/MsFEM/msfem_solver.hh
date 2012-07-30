@@ -36,19 +36,12 @@ public:
       , fine_scale_space_(fine_scale_space)
       , coarse_level_fine_level_difference_( fine_scale_space.gridPart().grid().maxLevel()
                                              - coarse_scale_space.gridPart().grid().maxLevel() )
-      , // number of coarse space entities:
-      number_of_level_host_entities_( coarse_scale_space.gridPart().grid().size(0 /*codim*/) ) {
-    int number_of_coarse_entities = coarse_scale_space.gridPart().grid().size(0 /*codim*/);
-
-    for (int i = 0; i < number_of_coarse_entities; i += 1)
-    {
-      // initialize with 0 layers:
-      number_of_layers.push_back(0);
-    }
-  }
+      , number_of_level_host_entities_( coarse_scale_space.gridPart().grid().size(0 /*codim*/) )
+      , number_of_layers(number_of_level_host_entities_, 0)
+  {}
 
   // get number of coarse grid entities
-  int getNumOfCoarseEntities() {
+  int getNumOfCoarseEntities() const {
     return number_of_level_host_entities_;
   }
 
@@ -59,7 +52,7 @@ public:
     }
   } // setLayer
 
-  int getLayer(int i) {
+  int getLayer(int i) const {
     if (i < number_of_level_host_entities_)
     { return number_of_layers[i]; } else {
       DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not filfilled.");
@@ -68,16 +61,24 @@ public:
   } // getLayer
 
   // difference between coarse and fine level
-  int getLevelDifference() {
+  int getLevelDifference() const {
     return coarse_level_fine_level_difference_;
   }
 
-  // the coarse space
+  //! the coarse space
+  const DiscreteFunctionSpaceType& coarseSpace() const {
+    return coarse_scale_space_;
+  }
+  //! the coarse space
   DiscreteFunctionSpaceType& coarseSpace() {
     return coarse_scale_space_;
   }
 
-  // the coarse space
+  //! the fine space
+  const DiscreteFunctionSpaceType& fineSpace() const {
+    return fine_scale_space_;
+  }
+  //! the fine space
   DiscreteFunctionSpaceType& fineSpace() {
     return fine_scale_space_;
   }
@@ -94,31 +95,31 @@ public:
     }
   } // initialize_local_error_manager
 
-  void set_loc_coarse_residual(int& index, RangeType& loc_coarse_residual) {
+  void set_loc_coarse_residual(int index, const RangeType& loc_coarse_residual) {
     loc_coarse_residual_[index] = loc_coarse_residual;
   }
 
-  void set_loc_coarse_grid_jumps(int& index, RangeType& loc_coarse_grid_jumps) {
+  void set_loc_coarse_grid_jumps(int index, const RangeType& loc_coarse_grid_jumps) {
     loc_coarse_grid_jumps_[index] = loc_coarse_grid_jumps;
   }
 
-  void set_loc_projection_error(int& index, RangeType& loc_projection_error) {
+  void set_loc_projection_error(int index, const RangeType& loc_projection_error) {
     loc_projection_error_[index] = loc_projection_error;
   }
 
-  void set_loc_conservative_flux_jumps(int& index, RangeType& loc_conservative_flux_jumps) {
+  void set_loc_conservative_flux_jumps(int index, const RangeType& loc_conservative_flux_jumps) {
     loc_conservative_flux_jumps_[index] = loc_conservative_flux_jumps;
   }
 
-  void set_loc_approximation_error(int& index, RangeType& loc_approximation_error) {
+  void set_loc_approximation_error(int index, const RangeType& loc_approximation_error) {
     loc_approximation_error_[index] = loc_approximation_error;
   }
 
-  void set_loc_fine_grid_jumps(int& index, RangeType& loc_fine_grid_jumps) {
+  void set_loc_fine_grid_jumps(int index, const RangeType& loc_fine_grid_jumps) {
     loc_fine_grid_jumps_[index] = loc_fine_grid_jumps;
   }
 
-  RangeType get_loc_coarse_residual(int& index) {
+  RangeType get_loc_coarse_residual(int index) const {
     if (loc_coarse_residual_.size() == 0)
     {
       DUNE_THROW(Dune::InvalidStateException,
@@ -127,7 +128,7 @@ public:
     return loc_coarse_residual_[index];
   } // get_loc_coarse_residual
 
-  RangeType get_loc_coarse_grid_jumps(int& index) {
+  RangeType get_loc_coarse_grid_jumps(int index) const {
     if (loc_coarse_grid_jumps_.size() == 0)
     {
       DUNE_THROW(Dune::InvalidStateException,
@@ -136,7 +137,7 @@ public:
     return loc_coarse_grid_jumps_[index];
   } // get_loc_coarse_grid_jumps
 
-  RangeType get_loc_projection_error(int& index) {
+  RangeType get_loc_projection_error(int index) const {
     if (loc_projection_error_.size() == 0)
     {
       DUNE_THROW(Dune::InvalidStateException,
@@ -145,7 +146,7 @@ public:
     return loc_projection_error_[index];
   } // get_loc_projection_error
 
-  RangeType get_loc_conservative_flux_jumps(int& index) {
+  RangeType get_loc_conservative_flux_jumps(int index) const {
     if (loc_conservative_flux_jumps_.size() == 0)
     {
       DUNE_THROW(Dune::InvalidStateException,
@@ -154,7 +155,7 @@ public:
     return loc_conservative_flux_jumps_[index];
   } // get_loc_conservative_flux_jumps
 
-  RangeType get_loc_approximation_error(int& index) {
+  RangeType get_loc_approximation_error(int index) const {
     if (loc_approximation_error_.size() == 0)
     {
       DUNE_THROW(Dune::InvalidStateException,
@@ -163,7 +164,7 @@ public:
     return loc_approximation_error_[index];
   } // get_loc_approximation_error
 
-  RangeType get_loc_fine_grid_jumps(int& index) {
+  RangeType get_loc_fine_grid_jumps(int index) const {
     if (loc_fine_grid_jumps_.size() == 0)
     {
       DUNE_THROW(Dune::InvalidStateException,
@@ -177,10 +178,10 @@ private:
   DiscreteFunctionSpaceType& fine_scale_space_;
 
   // level difference bettween coarse grid level and fine grid level
-  int coarse_level_fine_level_difference_;
+  const int coarse_level_fine_level_difference_;
 
   // number of coarse grid entities
-  int number_of_level_host_entities_;
+  const int number_of_level_host_entities_;
 
   // layers for each coarse grid entity
   std::vector< int > number_of_layers;

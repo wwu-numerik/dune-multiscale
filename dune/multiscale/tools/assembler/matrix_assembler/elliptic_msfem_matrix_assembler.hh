@@ -150,7 +150,7 @@ public:
     std::string local_path = path_ + "/local_problems/";
 
     MsFEMLocalProblemSolverType loc_prob_solver(
-      specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, data_file, local_path);
+      specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, &data_file, local_path);
 
     loc_prob_solver.assemble_all(silence);
   }

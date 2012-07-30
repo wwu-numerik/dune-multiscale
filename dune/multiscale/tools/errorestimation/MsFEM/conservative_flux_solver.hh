@@ -674,11 +674,11 @@ public:
                                 MacroMicroGridSpecifierType& specifier,
                                 std::ofstream& data_file,
                                 std::string path = "")
-    : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
-      , diffusion_(diffusion_operator)
+    : diffusion_(diffusion_operator)
+      , hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
       , specifier_(specifier)
-      , data_file_(&data_file)
       , path_(path)
+      , data_file_(&data_file)
   {}
 
   template< class Stream >

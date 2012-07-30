@@ -86,7 +86,7 @@ public:
   // discreteFunction is an output parameter (kind of return value)
   template< int polOrd, class FirstSourceType >
   void assemble(const FirstSourceType& f,
-                DiscreteFunctionType& rhsVector) {
+                DiscreteFunctionType& rhsVector) const {
     // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
     // gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace
@@ -114,7 +114,7 @@ public:
                                                           // statt
                                                           // functionSpace
 
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
@@ -150,7 +150,7 @@ public:
   template< int polOrd, class FirstSourceType, class SecondSourceType >
   void assemble(const FirstSourceType& f,
                 const SecondSourceType& G,
-                DiscreteFunctionType& rhsVector) {
+                DiscreteFunctionType& rhsVector) const {
     // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
     // gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace
@@ -251,7 +251,7 @@ public:
   void assemble(const FirstSourceType& f,
                 const SecondSourceType& G,
                 const TimeType& t,
-                DiscreteFunctionType& rhsVector) {
+                DiscreteFunctionType& rhsVector) const {
     // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
     // gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace
@@ -353,7 +353,7 @@ public:
   void assemble_for_Newton_method(const FirstSourceType& f,
                                   const DiffusionOperatorType& A,
                                   const DiscreteFunctionType& old_u_H, // old_u_H from the last iteration step
-                                  DiscreteFunctionType& rhsVector) {
+                                  DiscreteFunctionType& rhsVector) const {
     // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
     // gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace
@@ -454,10 +454,10 @@ public:
   // if there is only one source (f) (there is no second source):
   // discreteFunction is an output parameter (kind of return value)
   template< int polOrd, class FirstSourceType, class LocalProblemNumberingManagerType >
-  void assemble_msfem(LocalProblemNumberingManagerType& lp_num_manager,  // get number of local problem to determine the
+  void assemble_msfem(const LocalProblemNumberingManagerType& lp_num_manager,  // get number of local problem to determine the
                                                                          // reconstruction
                       const FirstSourceType& f,
-                      DiscreteFunctionType& rhsVector) {
+                      DiscreteFunctionType& rhsVector) const {
     // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
     // gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace
@@ -490,7 +490,7 @@ public:
       // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
       // discreteFunction(aktuelleEntity)
 
-      const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
+      const BaseFunctionSetType& baseSet // BaseFunctions leben immer auf Refernzelement!!!
         = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
                                                           // ersten Klasse war das Element fest, deshalb konnte man sich
                                                           // dort Pointer sparen. //loeschen: discreteFunctionSpace
@@ -521,9 +521,9 @@ public:
       ref_corner_2[1] = 1.0;
 
       // corner of the global element:
-      DomainType corner_0_of_T = geometry.global(ref_corner_0);
-      DomainType corner_1_of_T = geometry.global(ref_corner_1);
-      DomainType corner_2_of_T = geometry.global(ref_corner_2);
+      const DomainType corner_0_of_T = geometry.global(ref_corner_0);
+      const DomainType corner_1_of_T = geometry.global(ref_corner_1);
+      const DomainType corner_2_of_T = geometry.global(ref_corner_2);
 
       // value of the matrix A (in F(x) = Ax + a_0)
       double val_A[dimension][dimension];
@@ -533,10 +533,10 @@ public:
       val_A[1][1] = corner_2_of_T[1] - corner_0_of_T[1];
 
       // define 'c := (a_1(1) - a_0(1))·(a_2(2) - a_0(2)) - (a_1(2) - a_0(2))·(a_2(1) - a_0(1))
-      double c = 1.0 / ( (val_A[0][0] * val_A[1][1]) - (val_A[0][1] * val_A[1][0]) );
+      const double c = 1.0 / ( (val_A[0][0] * val_A[1][1]) - (val_A[0][1] * val_A[1][0]) );
 
       // |det(A)|:
-      double abs_det_A = fabs(1.0 / c);
+      const double abs_det_A = fabs(1.0 / c);
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
 
@@ -650,14 +650,14 @@ public:
   template< int polOrd, class FirstSourceType, class DiffusionOperatorType, class PeriodicDiscreteFunctionType,
             class CellProblemNumberingManagerType >
   void assemble_for_HMM_Newton_method(const FirstSourceType& f,
-                                      DiffusionOperatorType& A,
+                                      const DiffusionOperatorType& A,
                                       const DiscreteFunctionType& old_u_H, // old_u_H from the last iteration step
                                       // to obtain some information about the periodic discrete function space (space
                                       // for the cell problems)
-                                      CellProblemNumberingManagerType& /*cp_num_manager*/,
+                                      const CellProblemNumberingManagerType& /*cp_num_manager*/,
                                       const PeriodicDiscreteFunctionType& dummy_func,
                                       DiscreteFunctionType& rhsVector,
-                                      std::string filename = "no_file") {
+                                      const std::string filename = "no_file") const {
     typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
     PeriodicDiscreteFunctionSpaceType;
 
@@ -910,7 +910,7 @@ public:
   void assembleParabolic(const FirstSourceTypeType& f,
                          const RangeType& time_step_size,
                          const DiscreteFunctionType& u_H_k,
-                         DiscreteFunctionType& rhsVector) {
+                         DiscreteFunctionType& rhsVector) const {
     // rhsVector is the vector that occurs on the right hand side of the linear system of equations that is to solve
     const DiscreteFunctionSpaceType& discreteFunctionSpace
       = rhsVector.space();
@@ -989,7 +989,7 @@ public:
                          const TimeType& t,
                          const RangeType& time_step_size,
                          const DiscreteFunctionType& u_H_k,
-                         DiscreteFunctionType& rhsVector) {
+                         DiscreteFunctionType& rhsVector) const {
     // rhsVector is the vector that occurs on the right hand side of the linear system of equations that is to solve
     // rhs ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace
@@ -1069,7 +1069,7 @@ public:
                          const SecondSourceType& G,
                          const RangeType& time_step_size,
                          const DiscreteFunctionType& u_H_k,
-                         DiscreteFunctionType& rhsVector) {
+                         DiscreteFunctionType& rhsVector) const {
     // rhsVector is the vector that occurs on the right hand side of the linear system of equations that is to solve
     // rhs ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace
@@ -1180,7 +1180,7 @@ public:
                          const TimeType& t,
                          const RangeType& time_step_size,
                          const DiscreteFunctionType& u_H_k,
-                         DiscreteFunctionType& rhsVector) {
+                         DiscreteFunctionType& rhsVector) const {
     // rhsVector is the vector that occurs on the right hand side of the linear system of equations that is to solve
     // rhs ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace
@@ -1289,7 +1289,7 @@ public:
   void assembleParabolic(const FirstSourceType& f,
                          const RangeType& time_step_size,
                          const InitialValueType& v_0,
-                         DiscreteFunctionType& rhsVector) {
+                         DiscreteFunctionType& rhsVector) const {
     // rhsVector is the vector that occurs on the right hand side of the linear system of equations that is to solve
     // rhs ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite gespeichert
     const DiscreteFunctionSpaceType& discreteFunctionSpace

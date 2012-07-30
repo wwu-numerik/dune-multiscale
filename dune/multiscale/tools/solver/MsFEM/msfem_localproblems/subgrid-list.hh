@@ -15,6 +15,7 @@
 // / done
 
 namespace Dune {
+//! container for cell problem subgrids
 template< class HostDiscreteFunctionImp, class SubGridImp, class MacroMicroGridSpecifierImp >
 class SubGridList : boost::noncopyable
 {
@@ -63,7 +64,7 @@ public:
   bool entity_patch_in_subgrid(HostEntityPointerType& hit,
                                const HostGridPartType& hostGridPart,
                                const SubGridType& subGrid,
-                               EntityPointerCollectionType& entities_sharing_same_node) {
+                               EntityPointerCollectionType& entities_sharing_same_node) const {
     bool patch_in_subgrid_ = true;
 
     // loop over the nodes of the enity
@@ -71,7 +72,7 @@ public:
     {
       const HostNodePointer node = (*hit).template subEntity< 2 >(i);
 
-      int global_index_node = hostGridPart.indexSet().index(*node);
+      const int global_index_node = hostGridPart.indexSet().index(*node);
 
       for (int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1)
       {
@@ -84,10 +85,13 @@ public:
     return patch_in_subgrid_;
   } // entity_patch_in_subgrid
 
+  /**
+   * \todo caller???
+   */
   template< typename EntityPointerCollectionType >
   void enrichment(HostEntityPointerType& hit,
                   HostEntityPointerType& level_father_it,
-                  MacroMicroGridSpecifierType& specifier,
+//                  MacroMicroGridSpecifierType& specifier,
                   int& father_index,
                   const HostGridPartType& hostGridPart,
                   SubGridType& subGrid,
@@ -95,8 +99,8 @@ public:
                   int& layer,
                   bool***& enriched) {
     // difference in levels between coarse and fine grid
-    int level_difference = specifier.getLevelDifference();
-    HostDiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
+    int level_difference = specifier_.getLevelDifference();
+    HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
@@ -148,7 +152,7 @@ public:
                   layer] == false)
             {
               enrichment(entities_sharing_same_node[global_index_node][j], level_father_it,
-                         specifier, father_index,
+                         /*specifier,*/ father_index,
                          hostGridPart, subGrid, entities_sharing_same_node, layer, enriched);
 
               layer += 1;
@@ -165,7 +169,7 @@ public:
       , silent_(silent) {
     DSC_LOG_INFO << "Starting creation of subgrids." << std::endl << std::endl;
 
-    HostDiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
+    const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
 
     const HostGridPartType& hostGridPart = hostSpace_.gridPart();
 
@@ -197,10 +201,10 @@ public:
     }
 
     // difference in levels between coarse and fine grid
-    int level_difference = specifier.getLevelDifference();
+    int level_difference = specifier_.getLevelDifference();
 
     // number of coarse grid entities (of codim 0).
-    int number_of_coarse_grid_entities = specifier.getNumOfCoarseEntities();
+    int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
@@ -331,7 +335,7 @@ public:
       if (layers > 0)
       {
         HostEntityPointerType hep(*host_it);
-        enrichment(hep, level_father_entity, specifier, father_index,
+        enrichment(hep, level_father_entity,/* specifier,*/ father_index,
                    hostGridPart, *subGridList_[father_index], entities_sharing_same_node, layers, enriched);
       }
     }
@@ -371,6 +375,15 @@ public:
   }
 
   SubGridType& getSubGrid(int i) {
+    const int size = specifier_.getNumOfCoarseEntities();
+
+    if (i >= size)
+    {
+      DUNE_THROW(Dune::RangeError, "Error. Subgrid-Index too large.");
+    }
+    return *(subGridList_[i]);
+  } // getSubGrid
+  const SubGridType& getSubGrid(int i) const {
     const int size = specifier_.getNumOfCoarseEntities();
 
     if (i >= size)

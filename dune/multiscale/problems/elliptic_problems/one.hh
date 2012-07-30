@@ -185,11 +185,11 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FieldMatrixType* A_hom_;
+  const FieldMatrixType& A_hom_;
 
 public:
-  inline explicit HomDiffusion(FieldMatrixType& A_hom)
-    : A_hom_(&A_hom)
+  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
+    : A_hom_(A_hom)
   {}
 
   // in the linear setting, use the structure
@@ -205,11 +205,11 @@ public:
                      JacobianRangeType& flux) const {
     if ( constants().get("linear", true) )
     {
-      flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
-      flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
+      flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
+      flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
     } else {
-      flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
-      flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
+      flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
+      flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
       //! TODO one of the the above is in the wrong branch
       DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
     }

@@ -140,9 +140,9 @@ public:
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
 
-  void printLocalRHS(DiscreteFunction& rhs) const;
+  void printLocalRHS(const DiscreteFunction& rhs) const;
 
-  double normRHS(DiscreteFunction& rhs) const;
+  double normRHS(const DiscreteFunction& rhs) const;
 
 private:
   const DiscreteFunctionSpace& subDiscreteFunctionSpace_;
@@ -191,13 +191,13 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    Quadrature quadrature(sub_grid_entity, 2 * subDiscreteFunctionSpace_.order() + 2);
+    const Quadrature quadrature(sub_grid_entity, 2 * subDiscreteFunctionSpace_.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       // local (barycentric) coordinates (with respect to local grid entity)
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
-      DomainType global_point = sub_grid_geometry.global(local_point);
+      const DomainType global_point = sub_grid_geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint)
                             * sub_grid_geometry.integrationElement(local_point);
@@ -236,7 +236,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
 } // assemble_matrix
 
 template< class DiscreteFunctionImp, class DiffusionImp >
-void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS(DiscreteFunctionImp& rhs) const {
+void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS(const DiscreteFunctionImp& rhs) const {
   typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
   typedef typename DiscreteFunctionImp::LocalFunctionType         LocalFunctionType;
@@ -258,7 +258,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS(Di
 }  // end method
 
 template< class DiscreteFunctionImp, class DiffusionImp >
-double LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(DiscreteFunctionImp& rhs) const {
+double LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(const DiscreteFunctionImp& rhs) const {
   double norm = 0.0;
 
   typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
@@ -280,12 +280,12 @@ double LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(Discre
     const EntityType& entity = *it;
 
     // create quadrature for given geometry type
-    CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    const CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
 
     // get geoemetry of entity
     const EnGeometryType& geo = entity.geometry();
 
-    LocalFunctionType localRHS = rhs.localFunction(*it);
+    const LocalFunctionType localRHS = rhs.localFunction(*it);
 
     // integrate
     const int quadratureNop = quadrature.nop();
@@ -313,11 +313,10 @@ double LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(Discre
 // - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
 template< class DiscreteFunctionImp, class DiffusionImp >
 // template< class MatrixType >
-void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_RHS
-  ( // direction 'e'
-  JacobianRangeType& e,
-  // rhs local msfem problem:
-  DiscreteFunction& local_problem_RHS) const {
+void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
+      ::assemble_local_RHS( JacobianRangeType& e,// direction 'e'
+                            // rhs local msfem problem:
+                            DiscreteFunction& local_problem_RHS) const {
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
@@ -335,12 +334,12 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_R
   local_problem_RHS.clear();
 
   // model problem data:
-  Problem::ModelProblemData problem_info;
+  const Problem::ModelProblemData problem_info;
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
 
-  RangeType DUNE_UNUSED(rhs_L2_Norm) = 0.0;
+  const RangeType DUNE_UNUSED(rhs_L2_Norm) = 0.0;
 
   const Iterator end = discreteFunctionSpace.end();
   for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
@@ -354,7 +353,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_R
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
 
-    Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
@@ -363,7 +362,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_local_R
       // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
 
       // global point in the subgrid
-      DomainType global_point = geometry.global(local_point);
+      const DomainType global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
@@ -517,46 +516,36 @@ private:
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
 
-  MacroMicroGridSpecifierType& specifier_;
+  const MacroMicroGridSpecifierType& specifier_;
 
-  /*const*/ SubGridListType& subgrid_list_;
+  SubGridListType& subgrid_list_;
 
   std::ofstream* data_file_;
 
   // path where to save the data output
-  std::string path_;
+  const std::string path_;
 
 public:
-  // ! constructor - with diffusion operator A^{\epsilon}(x)
+  /** \brief constructor - with diffusion operator A^{\epsilon}(x)
+   * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
+   * \param data_file does not take ownership
+   **/
   MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
-                          MacroMicroGridSpecifierType& specifier,
-                          SubGridListType& subgrid_list,
-                          // MacroMicroGridSpecifier<DiscreteFunctionSpace>& specifier,
-                          const DiffusionOperatorType& diffusion_operator,
-                          std::string path = "")
-    : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
-      , specifier_(specifier)
-      , subgrid_list_(subgrid_list)
-      , diffusion_(diffusion_operator)
-      , data_file_(NULL)
-  { path_ = path; }
-
-  // ! constructor - with diffusion operator A^{\epsilon}(x)
-  MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
-                          MacroMicroGridSpecifierType& specifier,
+                          const MacroMicroGridSpecifierType& specifier,
                           SubGridListType& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator,
-                          std::ofstream& data_file,
+                          std::ofstream* data_file = nullptr,
                           std::string path = "")
     : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
+      , diffusion_(diffusion_operator)
       , specifier_(specifier)
       , subgrid_list_(subgrid_list)
-      , diffusion_(diffusion_operator)
-      , data_file_(&data_file)
-  { path_ = path; }
+      , data_file_(data_file)
+      , path_(path)
+  {}
 
   template< class Stream >
-  void oneLinePrint(Stream& stream, const SubDiscreteFunctionType& func) {
+  void oneLinePrint(Stream& stream, const SubDiscreteFunctionType& func) const {
     typedef typename SubDiscreteFunctionType::ConstDofIteratorType
     DofIteratorType;
     DofIteratorType it = func.dbegin();
@@ -570,7 +559,7 @@ public:
   // ! ----------- method: solve the local MsFEM problem ------------------------------------------
 
   void solvelocalproblem(JacobianRangeType& e,
-                         SubDiscreteFunctionType& local_problem_solution) {
+                         SubDiscreteFunctionType& local_problem_solution) const {
     // set solution equal to zero:
     local_problem_solution.clear();
 
@@ -802,7 +791,7 @@ public:
     double DUNE_UNUSED(average_time_c_p) = 0;
     double maximum_time_c_p = 0;
 
-    HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
+    const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
@@ -834,11 +823,11 @@ public:
                       << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
                       << subGrid.size(2) << " nodes." << std::endl;
 
-        SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
+        const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
 
         char name_loc_sol[50];
         sprintf(name_loc_sol, "Local Problem Solution %d", coarse_index);
-        std::string name_local_solution(name_loc_sol);
+        const std::string name_local_solution(name_loc_sol);
 
         // ! only for dimension 2!
         SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);

@@ -69,8 +69,8 @@ protected:
 public:
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                               const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
-                              DiffusionModel& diffusion_op,
-                              CellProblemNumberingManager& cp_num_manager)
+                              const DiffusionModel& diffusion_op,
+                              const CellProblemNumberingManager& cp_num_manager)
     : discreteFunctionSpace_(discreteFunctionSpace)
       , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
       , diffusion_operator_(diffusion_op)
@@ -80,8 +80,8 @@ public:
 
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                               const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
-                              DiffusionModel& diffusion_op,
-                              CellProblemNumberingManager& cp_num_manager,
+                              const DiffusionModel& diffusion_op,
+                              const CellProblemNumberingManager& cp_num_manager,
                               const std::string& filename)
     : discreteFunctionSpace_(discreteFunctionSpace)
       , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
@@ -103,8 +103,8 @@ public:
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace_;
-  DiffusionModel& diffusion_operator_;
-  CellProblemNumberingManager& cp_num_manager_;
+  const DiffusionModel& diffusion_operator_;
+  const CellProblemNumberingManager& cp_num_manager_;
 
   // name of data file, e.g. required if we want to use the saved solutions of the cell problems
   const std::string* filename_;
@@ -145,7 +145,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
     #endif // ifndef AD_HOC_COMPUTATION
   }
 
-  Problem::ModelProblemData model_info;
+  const Problem::ModelProblemData model_info;
   const double delta = model_info.getDelta();
   const double epsilon_estimated = model_info.getEpsilonEstimated();
 
@@ -175,11 +175,11 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
     // 1 point quadrature!! That is how we compute and save the cell problems.
     // If you want to use a higher order quadrature, you also need to change the computation of the cell problems!
-    Quadrature one_point_quadrature(macro_grid_entity, 0);
+    const Quadrature one_point_quadrature(macro_grid_entity, 0);
 
     // the barycenter of the macro_grid_entity
     const typename Quadrature::CoordinateType& local_macro_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
-    DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
+    const DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
 
     const double macro_entity_volume = one_point_quadrature.weight(0 /*=quadraturePoint*/)
                                        * macro_grid_geometry.integrationElement(local_macro_point);
@@ -190,6 +190,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
     std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
 
+    //!TODO automatic memory
     std::vector<PeriodicDiscreteFunction*> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs(), nullptr);
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -243,7 +244,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
             micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
-          Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
+          const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
           const size_t numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint)
@@ -252,7 +253,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
             const typename Quadrature::CoordinateType& local_micro_point = micro_grid_quadrature.point(
               microQuadraturePoint);
 
-            DomainType global_point_in_Y = micro_grid_geometry.global(local_micro_point);
+            const DomainType global_point_in_Y = micro_grid_geometry.global(local_micro_point);
 
             const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint)
                                                    * micro_grid_geometry.integrationElement(local_micro_point);
@@ -304,9 +305,6 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
                          pow(delta / epsilon_estimated, dimension) * macro_entity_volume * fine_scale_average);
       }
     }
-
-    // delete?
-    // delete[] corrector_Phi;
   }
 
   // boundary treatment
@@ -369,7 +367,7 @@ const {
     #endif // ifndef AD_HOC_COMPUTATION
   }
 
-  Problem::ModelProblemData model_info;
+  const Problem::ModelProblemData model_info;
   const double delta = model_info.getDelta();
   const double epsilon_estimated = model_info.getEpsilonEstimated();
 
@@ -413,11 +411,11 @@ const {
 
     // 1 point quadrature!! That is how we compute and save the cell problems.
     // If you want to use a higher order quadrature, you also need to change the computation of the cell problems!
-    Quadrature one_point_quadrature(macro_grid_entity, 0);
+    const Quadrature one_point_quadrature(macro_grid_entity, 0);
 
     // the barycenter of the macro_grid_entity
     const typename Quadrature::CoordinateType& local_macro_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
-    DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
+    const DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
 
     const double macro_entity_volume = one_point_quadrature.weight(0 /*=quadraturePoint*/)
                                        * macro_grid_geometry.integrationElement(local_macro_point);
@@ -447,6 +445,7 @@ const {
     #endif // ifdef AD_HOC_COMPUTATION
 
     #ifdef TFR
+    //!TODO automatic memory
     PeriodicDiscreteFunction* corrector_Phi[discreteFunctionSpace_.mapper().maxNumDofs()];
     #endif
 
@@ -597,12 +596,6 @@ const {
                          pow(delta / epsilon_estimated, dimension) * macro_entity_volume * fine_scale_average);
       }
     }
-
-    // delete?
-    // #ifdef TFR
-    // delete[] corrector_Phi;
-    // #endif
-
     number_of_macro_entity += 1;
   }
 

@@ -42,12 +42,12 @@ struct HMMResult {
 template < class ProblemDataType, class HMMTraits >
 HMMResult<HMMTraits>  estimate_error(
         const typename HMMTraits::GridPartType& gridPart,
-        const typename HMMTraits::GridPartType& gridPartFine,
+        const typename HMMTraits::GridPartType& /*gridPartFine*/,
         const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename HMMTraits::DiffusionType& diffusion_op,
-        Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& rhsassembler,
-        std::ofstream& data_file,
+        const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& /*rhsassembler*/,
+        const std::ofstream& /*data_file*/,
         const std::string filename,
         const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
         const typename HMMTraits::DiscreteFunctionType& hmm_solution
@@ -102,7 +102,7 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
       corrector_of_base_func.clear();
       typename HMM::DiscreteFunctionType::LocalFunctionType local_hmm_solution = hmm_solution.localFunction(entity);
       const typename HMM::BaseFunctionSetType& baseSet = discreteFunctionSpace.baseFunctionSet(entity);
-      const unsigned int numMacroBaseFunctions = baseSet.numBaseFunctions();
+      const unsigned int numMacroBaseFunctions = baseSet.size();
       int cell_problem_id[numMacroBaseFunctions];
       for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
       {

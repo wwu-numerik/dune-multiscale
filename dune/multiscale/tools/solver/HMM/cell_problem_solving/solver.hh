@@ -63,14 +63,14 @@ public:
 
 private:
   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_; // Referenz &, wenn & verwendet, dann unten:
-  DiffusionType& diffusion_;
+  const DiffusionType& diffusion_;
 
   std::ofstream* data_file_;
 
 public:
   // ! constructor - with diffusion operator A^{\epsilon}(x)
   CellProblemSolver(const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                    DiffusionType& diffusion_operator)
+                    const DiffusionType& diffusion_operator)
     : periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
       , diffusion_(diffusion_operator)
       , data_file_(NULL)
@@ -78,7 +78,7 @@ public:
 
   // ! constructor - with diffusion operator A^{\epsilon}(x)
   CellProblemSolver(const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                    DiffusionType& diffusion_operator,
+                    const DiffusionType& diffusion_operator,
                     std::ofstream& data_file)
     : periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
       , diffusion_(diffusion_operator)

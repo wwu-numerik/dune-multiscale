@@ -385,17 +385,17 @@ public:
 
   typedef FieldMatrix< RangeType, dimension, dimension > HomTensorType;
 private:
-  double getEntry(TransformTensorType& tensor,
-                  PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                  PeriodicDiscreteFunctionType& w_i,
-                  PeriodicDiscreteFunctionType& w_j,
+  double getEntry(const TransformTensorType& tensor,
+                  const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
+                  const PeriodicDiscreteFunctionType& w_i,
+                  const PeriodicDiscreteFunctionType& w_j,
                   const int& i,
-                  const int& j) {
+                  const int& j) const {
     double a_ij_hom = 0;
 
     DomainType dummy(0.0);
 
-    IteratorType endit = periodicDiscreteFunctionSpace.end();
+    const IteratorType endit = periodicDiscreteFunctionSpace.end();
 
     for (IteratorType it = periodicDiscreteFunctionSpace.begin(); it != endit; ++it)
     {
@@ -406,7 +406,7 @@ private:
       PeriodicLocalFunctionType localW_j = w_j.localFunction(entity);
 
       // create quadrature for given geometry type
-      QuadratureType quadrature(entity, 2);
+      const QuadratureType quadrature(entity, 2);
 
       // get geoemetry of entity
       const GeometryType& geometry = entity.geometry();
@@ -461,7 +461,7 @@ private:
   } // end of method
 
 public:
-  HomTensorType getHomTensor(TensorType& tensor) {
+  HomTensorType getHomTensor(const TensorType& tensor) const {
     HomTensorType a_hom;
 
     // to solve cell problems, we always need to use a perforated unit cube as domain:
@@ -474,7 +474,7 @@ public:
     PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace(periodicGridPart);
 
     // to avoid confusions:
-    DummySpaceType dummySpace(periodicGridPart);
+    const DummySpaceType dummySpace(periodicGridPart);
     // (sometimes periodicDiscreteFunctionSpace is only a dummy)
 
     // ! define the type of the corresponding solutions ( discrete functions of the type 'DiscreteFunctionType'):
@@ -497,13 +497,13 @@ public:
     // \lambda w - \div A \nabla w = rhs        instead of      - \div A \nabla w = rhs
 
     // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
-    MassWeightType mass(lambda);
+    const MassWeightType mass(lambda);
 
-    TransformTensorType tensor_transformed(tensor);
+    const TransformTensorType tensor_transformed(tensor);
 
     // if we have some additional source term (-div G), define:
-    CellSourceType G_0(periodicDiscreteFunctionSpace, tensor_transformed, 0);   // 0'th cell problem
-    CellSourceType G_1(periodicDiscreteFunctionSpace, tensor_transformed, 1);   // 1'th cell problem
+    const CellSourceType G_0(periodicDiscreteFunctionSpace, tensor_transformed, 0);   // 0'th cell problem
+    const CellSourceType G_1(periodicDiscreteFunctionSpace, tensor_transformed, 1);   // 1'th cell problem
     // - div ( A \nabla u^{\epsilon} ) = f - div G
 
     // quite a dummy. It's always f = 0
@@ -511,7 +511,7 @@ public:
 
     // ! build the left hand side (lhs) of the problem
 
-    EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace, tensor_transformed, mass);
+    const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace, tensor_transformed, mass);
 
     FEMMatrix lhsMatrix("Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace, periodicDiscreteFunctionSpace);
     discrete_cell_elliptic_op.assemble_matrix(lhsMatrix, false /*no boundary treatment*/);
@@ -519,10 +519,10 @@ public:
     // ! build the right hand side (rhs) of the problem
 
     // the same right hand side for HM and FEM methods:
-    RightHandSideAssembler< PeriodicDiscreteFunctionType > // !, TransformTensorType, CellSourceType >
+    const RightHandSideAssembler< PeriodicDiscreteFunctionType > // !, TransformTensorType, CellSourceType >
     cell_0_assembler;    // !( transTensor, G_0 );
 
-    RightHandSideAssembler< PeriodicDiscreteFunctionType > // !, TransformTensorType, CellSourceType >
+    const RightHandSideAssembler< PeriodicDiscreteFunctionType > // !, TransformTensorType, CellSourceType >
     cell_1_assembler;    // !( transTensor, G_1 );
 
     // Alternativly it is possible to call the RightHandSideAssembler with a second source Term '- div G':
@@ -563,7 +563,7 @@ public:
 
     // solve the linear systems (with Bi-CG):
 
-    InverseFEMMatrix fembiCG(lhsMatrix, 1e-8, 1e-8, 20000, VERBOSE);
+    const InverseFEMMatrix fembiCG(lhsMatrix, 1e-8, 1e-8, 20000, VERBOSE);
 
     fembiCG(rhs_0, cellSolution_0);
     fembiCG(rhs_1, cellSolution_1);
