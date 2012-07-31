@@ -43,24 +43,23 @@ public:
   template< class FunctionType >
   RangeType semi_norm(const FunctionType& function,
                       const DiscreteFunctionType& disc_function) const {
-    int polOrd = (2 * spacePolOrd + 2);
+    const int polOrd = (2 * spacePolOrd + 2);
 
     RangeType y(0.0); // return value
 
-    IteratorType endit = disc_function.space().end();
-
+    const IteratorType endit = disc_function.space().end();
     for (IteratorType it = disc_function.space().begin(); it != endit; ++it)
     {
       // entity
       const EntityType& entity = *it;
 
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geo = entity.geometry();
 
-      LocalFunctionType local_disc_func = disc_function.localFunction(entity);
+      const LocalFunctionType local_disc_func = disc_function.localFunction(entity);
 
       // integrate
       const int quadratureNop = quadrature.nop();

@@ -150,7 +150,7 @@ public:
   template< class DiffusionOperator, class SourceTerm >
   void solve_dirichlet_zero(const DiffusionOperator& diffusion_op,
                             const SourceTerm& f,
-                            DiscreteFunction& solution) {
+                            DiscreteFunction& solution) const {
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
     // ! define the right hand side assembler tool

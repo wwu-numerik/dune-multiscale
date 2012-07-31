@@ -84,15 +84,13 @@ public:
   }
 
   void initialize_local_error_manager() {
-    for (int i = 0; i < number_of_level_host_entities_; ++i)
-    {
-      loc_coarse_residual_.push_back(0.0);
-      loc_projection_error_.push_back(0.0);
-      loc_coarse_grid_jumps_.push_back(0.0);
-      loc_conservative_flux_jumps_.push_back(0.0);
-      loc_approximation_error_.push_back(0.0);
-      loc_fine_grid_jumps_.push_back(0.0);
-    }
+    //!TODO previous imp would append number_of_level_host_entities_ many zeroes every time it was called
+    loc_coarse_residual_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+    loc_projection_error_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+    loc_coarse_grid_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+    loc_conservative_flux_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+    loc_approximation_error_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+    loc_fine_grid_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
   } // initialize_local_error_manager
 
   void set_loc_coarse_residual(int index, const RangeType& loc_coarse_residual) {
@@ -189,22 +187,23 @@ private:
   // ----- local error indicators (for each coarse grid element T) -------------
 
   // local coarse residual, i.e. H ||f||_{L^2(T)}
-  std::vector< RangeType > loc_coarse_residual_;
+  typedef std::vector< RangeType > RangeTypeVector;
+  RangeTypeVector loc_coarse_residual_;
 
   // local coarse grid jumps (contribute to the total coarse residual)
-  std::vector< RangeType > loc_coarse_grid_jumps_;
+  RangeTypeVector loc_coarse_grid_jumps_;
 
   // local projection error (we project to get a globaly continous approximation)
-  std::vector< RangeType > loc_projection_error_;
+  RangeTypeVector loc_projection_error_;
 
   // local jump in the conservative flux
-  std::vector< RangeType > loc_conservative_flux_jumps_;
+  RangeTypeVector loc_conservative_flux_jumps_;
 
   // local approximation error
-  std::vector< RangeType > loc_approximation_error_;
+  RangeTypeVector loc_approximation_error_;
 
   // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
-  std::vector< RangeType > loc_fine_grid_jumps_;
+  RangeTypeVector loc_fine_grid_jumps_;
 };
 
 template< class DiscreteFunctionType >
@@ -363,7 +362,7 @@ public:
 
   // create a hostgrid function from a subgridfunction (projection for global continuity)
   // Note: the maximum gride levels for both underlying grids must be the same
-  void subgrid_to_hostrid_projection(const SubgridDiscreteFunction& sub_func, DiscreteFunction& host_func) {
+  void subgrid_to_hostrid_projection(const SubgridDiscreteFunction& sub_func, DiscreteFunction& host_func) const {
     host_func.clear();
 
     const SubgridDiscreteFunctionSpace& subDiscreteFunctionSpace = sub_func.space();
@@ -373,15 +372,15 @@ public:
     typedef typename SubgridIterator::Entity                    SubgridEntity;
     typedef typename SubgridDiscreteFunction::LocalFunctionType SubgridLocalFunction;
 
-    SubgridIterator sub_endit = subDiscreteFunctionSpace.end();
+    const SubgridIterator sub_endit = subDiscreteFunctionSpace.end();
     for (SubgridIterator sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it)
     {
       const SubgridEntity& sub_entity = *sub_it;
 
-      HostEntityPointer host_entity_pointer = subGrid.template getHostEntity< 0 >(*sub_it);
+      const HostEntityPointer host_entity_pointer = subGrid.template getHostEntity< 0 >(*sub_it);
       const HostEntity& host_entity = *host_entity_pointer;
 
-      SubgridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
+      const SubgridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
       LocalFunction host_loc_value = host_func.localFunction(host_entity);
 
       const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
@@ -410,7 +409,7 @@ public:
                             SubGridListType& subgrid_list,
                             DiscreteFunction& coarse_scale_part,
                             DiscreteFunction& fine_scale_part,
-                            DiscreteFunction& solution) {
+                            DiscreteFunction& solution) const {
     // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
     typedef DiscreteEllipticMsFEMOperator< DiscreteFunction /*type of coarse space*/,
                                            MacroMicroGridSpecifier< DiscreteFunctionSpace >,
@@ -419,9 +418,9 @@ public:
 
     DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
 
-    HostgridIterator coarse_iterator_end = coarse_space.end();
-    HostgridIterator coarse_iterator_begin = coarse_space.begin();
-    HostGrid& grid = discreteFunctionSpace_.gridPart().grid();
+    const HostgridIterator coarse_iterator_end = coarse_space.end();
+    const HostgridIterator coarse_iterator_begin = coarse_space.begin();
+    const HostGrid& grid = discreteFunctionSpace_.gridPart().grid();
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
     // ------------------------------------------------------------
@@ -434,11 +433,11 @@ public:
 
     // ! define the right hand side assembler tool
     // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-    RightHandSideAssembler< DiscreteFunction > rhsassembler;
+    const RightHandSideAssembler< DiscreteFunction > rhsassembler;
 
     // ! define the discrete (elliptic) operator that describes our problem
     // ( effect of the discretized differential operator on a certain discrete function )
-    EllipticMsFEMOperatorType elliptic_msfem_op(specifier,
+    const EllipticMsFEMOperatorType elliptic_msfem_op(specifier,
                                                 coarse_space,
                                                 subgrid_list,
                                                 diffusion_op, *data_file_, path_);
@@ -488,7 +487,7 @@ public:
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
-    HostgridIterator endit = coarse_space.end();
+    const HostgridIterator endit = coarse_space.end();
     for (HostgridIterator it = coarse_space.begin(); it != endit; ++it)
     {
       IntersectionIterator iit = coarse_space.gridPart().ibegin(*it);
@@ -515,7 +514,7 @@ public:
     }
     // --- end boundary treatment ---
 
-    InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/);
+    const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/);
     msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
 
     if (data_file_)
@@ -580,7 +579,7 @@ public:
       {
         const HostNodePointer node = (*it).template subEntity< 2 >(i);
 
-        DomainType coordinates_of_node = node->geometry().corner(0);
+        const DomainType coordinates_of_node = node->geometry().corner(0);
         if ( !( coordinates_of_node == it->geometry().corner(i) ) )
         { DSC_LOG_ERROR << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl; }
 
@@ -596,16 +595,16 @@ public:
 
     fine_scale_part.clear();
 
-    int number_of_nodes = grid.size(2 /*codim*/);
+    const int number_of_nodes = grid.size(2 /*codim*/);
     std::vector< std::vector< HostEntityPointer > > entities_sharing_same_node(number_of_nodes);
 
     for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
     {
-      int number_of_nodes_in_entity = (*it).template count< 2 >();
+      const int number_of_nodes_in_entity = (*it).template count< 2 >();
       for (int i = 0; i < number_of_nodes_in_entity; i += 1)
       {
         const typename HostEntity::template Codim< 2 >::EntityPointer node = (*it).template subEntity< 2 >(i);
-        int global_index_node = gridPart.indexSet().index(*node);
+        const int global_index_node = gridPart.indexSet().index(*node);
 
         entities_sharing_same_node[global_index_node].push_back( HostEntityPointer(*it) );
       }
@@ -623,13 +622,13 @@ public:
       DiscreteFunction correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
       correction_on_U_T.clear();
 
-      int index = coarseGridLeafIndexSet.index(*coarse_it);
+      const int index = coarseGridLeafIndexSet.index(*coarse_it);
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       SubGridType& sub_grid_U_T = subgrid_list.getSubGrid(index);
       SubGridPart subGridPart(sub_grid_U_T);
 
-      SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
+      const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
 
       SubgridDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
       local_problem_solution_e0.clear();
@@ -692,12 +691,12 @@ public:
       typedef typename SubgridIterator::Entity                    SubgridEntity;
       typedef typename SubgridDiscreteFunction::LocalFunctionType SubgridLocalFunction;
 
-      SubgridIterator sub_endit = localDiscreteFunctionSpace.end();
+      const SubgridIterator sub_endit = localDiscreteFunctionSpace.end();
       for (SubgridIterator sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it)
       {
         const SubgridEntity& sub_entity = *sub_it;
 
-        HostEntityPointer fine_host_entity_pointer = sub_grid_U_T.template getHostEntity< 0 >(*sub_it);
+        const HostEntityPointer fine_host_entity_pointer = sub_grid_U_T.template getHostEntity< 0 >(*sub_it);
         const HostEntity& fine_host_entity = *fine_host_entity_pointer;
 
         HostEntityPointer father = fine_host_entity_pointer;
@@ -720,7 +719,7 @@ public:
         }
 
         bool entities_identical = true;
-        int number_of_nodes = (*father).template count< 2 >();
+        const int number_of_nodes = (*father).template count< 2 >();
         for (int k = 0; k < number_of_nodes; k += 1)
         {
           if ( !( father->geometry().corner(k) == (*coarse_it).geometry().corner(k) ) )
@@ -732,7 +731,7 @@ public:
           continue;
         }
 
-        SubgridLocalFunction sub_loc_value = local_problem_solution_e0.localFunction(sub_entity);
+        const SubgridLocalFunction sub_loc_value = local_problem_solution_e0.localFunction(sub_entity);
         LocalFunction host_loc_value = correction_on_U_T.localFunction(fine_host_entity);
 
         int number_of_nodes_entity = (*sub_it).template count< 2 >();
@@ -741,7 +740,7 @@ public:
           const typename HostEntity::template Codim< 2 >::EntityPointer node = fine_host_entity.template subEntity< 2 >(
             i);
 
-          int global_index_node = gridPart.indexSet().index(*node);
+          const int global_index_node = gridPart.indexSet().index(*node);
 
           // vector of coarse entities that share the above node
           std::vector< HostEntityPointer > coarse_entities;

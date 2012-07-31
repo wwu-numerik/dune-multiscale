@@ -88,10 +88,10 @@ public:
   // ! ----------- method: solve cell problem ------------------------------------------
 
   template< class JacobianRangeImp >
-  void solvecellproblem(JacobianRangeImp& gradient_PHI_H,
+  void solvecellproblem(const JacobianRangeImp& gradient_PHI_H,
                         // the barycenter x_T of a macro grid element 'T'
                         const DomainType& globalQuadPoint,
-                        PeriodicDiscreteFunctionType& cell_problem_solution) {
+                        PeriodicDiscreteFunctionType& cell_problem_solution) const {
     // set solution equal to zero:
     cell_problem_solution.clear();
 
@@ -103,7 +103,7 @@ public:
 
     // ! define the discrete (elliptic) cell problem operator
     // ( effect of the discretized differential operator on a certain discrete function )
-    CellProblemOperatorType cell_problem_op(periodicDiscreteFunctionSpace_, diffusion_);
+    const CellProblemOperatorType cell_problem_op(periodicDiscreteFunctionSpace_, diffusion_);
 
     // ! right hand side vector of the algebraic cell problem
     // (in the non-linear setting it changes for every iteration step)
@@ -132,7 +132,7 @@ public:
         cell_problem_solution.clear();
         // std :: cout << "Cell problem with solution zero." << std :: endl;
       } else {
-        InverseCellFEMMatrix cell_fem_biCGStab(cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
+        const InverseCellFEMMatrix cell_fem_biCGStab(cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
         cell_fem_biCGStab(cell_problem_rhs, cell_problem_solution);
       }
     } else {
@@ -145,7 +145,7 @@ public:
       PeriodicDiscreteFunctionType cell_problem_residual("Cell Problem Residual", periodicDiscreteFunctionSpace_);
       cell_problem_residual.clear();
 
-      L2Error< PeriodicDiscreteFunctionType > l2error;
+      const L2Error< PeriodicDiscreteFunctionType > l2error;
       RangeType relative_newton_error = 10000.0;
 
       int iteration_step = 0;
@@ -186,7 +186,7 @@ public:
         while (cell_solution_convenient == false)
         {
           cell_problem_residual.clear();
-          InverseCellFEMMatrix cell_fem_newton_biCGStab(cell_system_matrix,
+          const InverseCellFEMMatrix cell_fem_newton_biCGStab(cell_system_matrix,
                                                         1e-8, biCG_tolerance, 20000, CELLSOLVER_VERBOSE);
 
           cell_fem_newton_biCGStab(cell_problem_rhs, cell_problem_residual);
@@ -217,7 +217,7 @@ public:
         cell_problem_solution += cell_problem_residual;
 
         relative_newton_error = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_residual, zero_func);
-        RangeType norm_cell_solution = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_solution,
+        const RangeType norm_cell_solution = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_solution,
                                                                                           zero_func);
         relative_newton_error = relative_newton_error / norm_cell_solution;
         cell_problem_residual.clear();
@@ -230,7 +230,6 @@ public:
           residual_L2_norm = 0.0;
           #endif
         }
-
         iteration_step += 1;
       }
     }
@@ -251,14 +250,14 @@ public:
   template< class JacobianRangeImp >
   void solve_jacobiancorrector_cellproblem(
     // gradient of macroscopic base function
-    JacobianRangeImp& gradient_PHI_H,
+    const JacobianRangeImp& gradient_PHI_H,
     // gradient of the macroscopic function from the last iteration step
-    JacobianRangeImp& grad_old_coarse_function,
+    const JacobianRangeImp& grad_old_coarse_function,
     // gradient_y of the corrector of the macroscopic function from the last iteration step
-    PeriodicDiscreteFunctionType& corrector_of_old_coarse_function,
+    const PeriodicDiscreteFunctionType& corrector_of_old_coarse_function,
     // the barycenter x_T of a macro grid element 'T'
     const DomainType& globalQuadPoint,
-    PeriodicDiscreteFunctionType& jac_cor_cell_problem_solution) {
+    PeriodicDiscreteFunctionType& jac_cor_cell_problem_solution) const {
     // set solution equal to zero:
     jac_cor_cell_problem_solution.clear();
 

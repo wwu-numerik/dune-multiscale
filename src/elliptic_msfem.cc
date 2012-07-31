@@ -76,7 +76,7 @@ typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionT
 #ifdef EXACTSOLUTION_AVAILABLE
 // type of exact solution (in general unknown)
 typedef Problem::ExactSolution< FunctionSpaceType > ExactSolutionType;
-typedef DiscreteFunctionAdapter< ExactSolutionType, GridPartType >
+typedef GridFunctionAdapter< ExactSolutionType, GridPartType >
 DiscreteExactSolutionType;     // for data output with paraview or grape
 #endif // ifdef EXACTSOLUTION_AVAILABLE
 // !-----------------------------------------------------------------------------
@@ -123,7 +123,7 @@ typedef tuple< DiscreteFunctionType* >      IOTupleType;
 typedef DataOutput< GridType, IOTupleType > DataOutputType;
 #ifdef EXACTSOLUTION_AVAILABLE
 // just for the discretized exact solution (in case it is available)
-typedef tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
+typedef tuple< const DiscreteExactSolutionType* > ExSolIOTupleType;
 // just for the discretized exact solution (in case it is available)
 typedef DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 #endif // ifdef EXACTSOLUTION_AVAILABLE
@@ -170,11 +170,11 @@ void algorithm(const std::string& macroGridName,
 
   if (local_indicators_available_ == true)
   {
-    bool coarse_scale_error_dominant = false;
-    bool fine_scale_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
-    bool oversampling_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
+    const bool coarse_scale_error_dominant = false;
+    const bool fine_scale_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
+    const bool oversampling_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
     // identify the dominant contribution:
-    double average_est_error = total_estimated_H1_error_[loop_number_ - 1] / 6.0;     // 6 contributions
+    const double average_est_error = total_estimated_H1_error_[loop_number_ - 1] / 6.0;     // 6 contributions
 
     if ( (total_approximation_error_[loop_number_ - 1] >= average_est_error)
          || (total_fine_grid_jumps_[loop_number_ - 1] >= average_est_error) )
@@ -301,8 +301,8 @@ void algorithm(const std::string& macroGridName,
 
   // exact solution unknown?
   #ifdef EXACTSOLUTION_AVAILABLE
-  ExactSolutionType u;
-  DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
+  const ExactSolutionType u;
+  const DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
   #endif // ifdef EXACTSOLUTION_AVAILABLE
 
   // ! ---------------------------- general output parameters ------------------------------
@@ -340,7 +340,7 @@ void algorithm(const std::string& macroGridName,
   IOTupleType coarse_grid_series(&coarse_grid_visualization);
   char coarse_grid_fname[50];
   sprintf(coarse_grid_fname, "coarse_grid_visualization_%d_", loop_number_);
-  std::string coarse_grid_fname_s(coarse_grid_fname);
+  const std::string coarse_grid_fname_s(coarse_grid_fname);
   outputparam.set_prefix(coarse_grid_fname_s);
   DataOutputType coarse_grid_dataoutput(gridPart_coarse.grid(), coarse_grid_series, outputparam);
   // write data
@@ -363,8 +363,8 @@ void algorithm(const std::string& macroGridName,
   DiscreteFunctionType fine_part_msfem_solution(filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
-  int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
-  int DUNE_UNUSED(coarse_level_fine_level_difference) = grid.maxLevel() - grid_coarse.maxLevel();
+  const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
+  const int DUNE_UNUSED(coarse_level_fine_level_difference) = grid.maxLevel() - grid_coarse.maxLevel();
 
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
@@ -374,7 +374,7 @@ void algorithm(const std::string& macroGridName,
   }
 
   // ! create subgrids:
-  bool silence = false;
+  const bool silence = false;
   SubGridListType subgrid_list(specifier, silence);
 
   // just for Dirichlet zero-boundary condition
@@ -412,7 +412,7 @@ void algorithm(const std::string& macroGridName,
   #ifdef ADAPTIVE
   char coarse_msfem_fname[50];
   sprintf(coarse_msfem_fname, "coarse_part_msfem_solution_%d_", loop_number_);
-  std::string coarse_msfem_fname_s(coarse_msfem_fname);
+  const std::string coarse_msfem_fname_s(coarse_msfem_fname);
   outputparam.set_prefix(coarse_msfem_fname_s);
   DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
   // write data

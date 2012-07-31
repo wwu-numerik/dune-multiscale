@@ -17,20 +17,15 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
 namespace Dune {
-/*======================================================================*/
-/*!
-   *  \class RecInt
-   *  \brief The RecInt class provides methods to calculate the meanvalues of local reconstructions of base functions
-   */
-/*======================================================================*/
 
-// !method adapt doesn't work with ALBERTAGRID, because leakpointer produceses errors!!!
-
+/**
+ *  \class RecInt
+ *  \brief The RecInt class provides methods to calculate the meanvalues of local reconstructions of base functions
+ * \attention method adapt doesn't work with ALBERTAGRID, because leakpointer produceses errors!!!
+ */
 template< class PeriodicDiscreteFunctionImp, class TensorType >
 class RecInt // Reconstruction Integrator
 {
-  // !method adapt doesn't work with ALBERTAGRID, because leakpointer produceses errors!!!
-
   // ! type of discrete functions
   typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
 
@@ -84,9 +79,9 @@ public:
   RangeType integrateGlobalBaseFunctions( const TensorType& tensor,
                                           const DomainType& globalPoint,
                                           const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                                          JacobianRangeImp& grad_PHI_i,
-                                          JacobianRangeImp& grad_PHI_j,
-                                          int polOrd = (2 * spacePolOrd + 2) ) const {
+                                          const JacobianRangeImp& grad_PHI_i,
+                                          const JacobianRangeImp& grad_PHI_j,
+                                          const int polOrd = (2 * spacePolOrd + 2) ) const {
     // Note that this method does not work for perforated structures!
     // (but the old version of the code also works for the case:
     // 1. A^{eps}(x) = A(x,x/eps) with A(x,.) Y-periodic AND
@@ -94,40 +89,29 @@ public:
     // (if required, ask Patrick Henning for the old version of the code)
 
     // model problem data
-    Problem::ModelProblemData problem_info;
-
-    double epsilon_est;
-
-    epsilon_est = problem_info.getEpsilonEstimated();
-
+    const Problem::ModelProblemData problem_info;
+    const double epsilon_est = problem_info.getEpsilonEstimated();
     const PeriodicGridPartType& gridPart = periodicDiscreteFunctionSpace.gridPart();
-
-    typedef typename PeriodicGridPartType::GridType::Traits::
-      CollectiveCommunication
+    typedef typename PeriodicGridPartType::GridType::Traits::CollectiveCommunication
     CommunicatorType;
 
     const CommunicatorType& comm = gridPart.grid().comm();
-
     RangeType result(0.0);
 
-    PeriodicIteratorType endit = periodicDiscreteFunctionSpace.end();
+    const PeriodicIteratorType endit = periodicDiscreteFunctionSpace.end();
     for (PeriodicIteratorType it = periodicDiscreteFunctionSpace.begin(); it != endit; ++it)
     {
       // entity
       const PeriodicEntityType& entity = *it;
-
       // create quadrature for given geometry type
-      PeriodicEntityQuadratureType quadrature(entity, polOrd);
-
+      const PeriodicEntityQuadratureType quadrature(entity, polOrd);
       // get geoemetry of entity
       const PeriodicEntityGeometryType& geometry = entity.geometry();
-
       // integrate
       const int quadratureNop = quadrature.nop();
       for (int localQuadPoint = 0; localQuadPoint < quadratureNop; ++localQuadPoint)
       {
         RangeType localIntegral = 0;
-
         RangeType a[dimension][dimension];
 
         DomainType y_eps; // x_j + \eps_{est} * y
@@ -172,9 +156,9 @@ public:
     const DomainType& globalPoint,
     const PeriodicDiscreteFunctionSpaceType
     & periodicDiscreteFunctionSpace,
-    PeriodicDiscreteFunctionType& corrector_PHI_i,
-    JacobianRangeImp& grad_PHI_j,
-    int polOrd = (2 * spacePolOrd + 2) ) const {
+    const PeriodicDiscreteFunctionType& corrector_PHI_i,
+    const JacobianRangeImp& grad_PHI_j,
+    const int polOrd = (2 * spacePolOrd + 2) ) const {
     // Note that this method does not work for perforated structures!
     // (but the old version of the code also works for the case:
     // 1. A^{eps}(x) = A(x,x/eps) with A(x,.) Y-periodic AND
@@ -182,12 +166,8 @@ public:
     // (if required, ask Patrick Henning for the old version of the code)
 
     // model problem data
-    Problem::ModelProblemData problem_info;
-
-    double epsilon_est;
-
-    epsilon_est = problem_info.getEpsilonEstimated();
-
+    const Problem::ModelProblemData problem_info;
+    const double epsilon_est = problem_info.getEpsilonEstimated();
     const PeriodicGridPartType& gridPart = periodicDiscreteFunctionSpace.gridPart();
 
     typedef typename PeriodicGridPartType::GridType::Traits::
@@ -195,16 +175,15 @@ public:
     CommunicatorType;
 
     const CommunicatorType& comm = gridPart.grid().comm();
-
     RangeType result(0.0);
 
-    PeriodicIteratorType endit = periodicDiscreteFunctionSpace.end();
+    const PeriodicIteratorType endit = periodicDiscreteFunctionSpace.end();
     for (PeriodicIteratorType it = periodicDiscreteFunctionSpace.begin(); it != endit; ++it)
     {
       // entity
       const PeriodicEntityType& entity = *it;
 
-      PeriodicLocalFunctionType localfunc = corrector_PHI_i.localFunction(entity);
+      const PeriodicLocalFunctionType localfunc = corrector_PHI_i.localFunction(entity);
 
       // create quadrature for given geometry type
       PeriodicEntityQuadratureType quadrature(entity, polOrd);

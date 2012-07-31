@@ -384,7 +384,7 @@ public:
   // for two discrete functions auf dem gleichen, aber nicht dem selben grid (z.B. identisch angelegt)
   template< int polOrd >
   RangeFieldType norm_L2(const DiscreteFunctionType& f1,
-                         const DiscreteFunctionType& f2, double /*dummy*/ = 0) {
+                         const DiscreteFunctionType& f2, double /*dummy*/ = 0) const {
     const DiscreteFunctionSpaceType& space = f1.space();
 
     const GridPartType& gridPart = space.gridPart();
@@ -459,18 +459,14 @@ public:
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
     const DiscreteFunctionSpaceType& fine_discreteFunctionSpace = fine_disc_func.space();
 
-    const GridPartType& coarse_gridPart = coarse_discreteFunctionSpace.gridPart();
     const GridPartType& fine_gridPart = fine_discreteFunctionSpace.gridPart();
-
-    const GridType& coarse_grid = coarse_gridPart.grid();
-    const GridType& fine_grid = fine_gridPart.grid();
 
     IteratorType fine_element_reference = fine_discreteFunctionSpace.begin();
     IteratorType coarse_element_reference = coarse_discreteFunctionSpace.begin();
 
-    int coarse_grid_level = coarse_element_reference->level();
-    int fine_grid_level = fine_element_reference->level();
-    int level_difference = fine_grid_level - coarse_grid_level;
+    const int coarse_grid_level = coarse_element_reference->level();
+    const int fine_grid_level = fine_element_reference->level();
+    const int level_difference = fine_grid_level - coarse_grid_level;
 
     typedef typename GridPartType::GridType::Traits::
       CollectiveCommunication
@@ -494,18 +490,18 @@ public:
     IteratorType fine_end = fine_discreteFunctionSpace.end();
     for (IteratorType fine_it = fine_discreteFunctionSpace.begin(); fine_it != fine_end; ++fine_it)
     {
-      EntityPointerType fine_father_entity = fine_it;
+      const EntityPointerType fine_father_entity = fine_it;
       for (int lev = 0; lev < level_difference; ++lev)
         fine_father_entity = fine_father_entity->father();
 
-      CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
+      const CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
       // get local functions on current element
-      LocalFunctionType local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
-      LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*fine_father_entity);
+      const LocalFunctionType local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
+      const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*fine_father_entity);
 
       // create at quadrature with 3 quadrature points:
-      CachingQuadrature< GridPartType, 0 > coarse_quad(*fine_father_entity, 2);       // 3 points for linear pol in 2D
+      const CachingQuadrature< GridPartType, 0 > coarse_quad(*fine_father_entity, 2);       // 3 points for linear pol in 2D
       // get geoemetry of coarse entity
       const EnGeometryType& coarse_geo = fine_father_entity->geometry();
 
@@ -519,7 +515,7 @@ public:
         local_coarse_disc_func.evaluate(coarse_quad[qp], local_value_coarse_func[qp]);
       }
 
-      LinearLagrangeFunction2D< DiscreteFunctionSpaceType >
+      const LinearLagrangeFunction2D< DiscreteFunctionSpaceType >
       coarse_disc_func_entity(coarse_quad_point[0],
                               local_value_coarse_func[0],
                               coarse_quad_point[1],
@@ -537,7 +533,7 @@ public:
           = fine_geo.integrationElement( fine_quad.point(qp) );
 
         // find best quadrature point in the coarse grid quadrature:
-        DomainType fine_quad_point = fine_geo.global( fine_quad.point(qp) );
+        const DomainType fine_quad_point = fine_geo.global( fine_quad.point(qp) );
 
         RangeType coarse_value;
         coarse_disc_func_entity.evaluate(fine_quad_point, coarse_value);
@@ -561,7 +557,7 @@ public:
   // expensive hack (no more required):
   template< int polOrd >
   RangeFieldType norm_adaptive_grids_2(const DiscreteFunctionType& coarse_disc_func,
-                                       const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) {
+                                       const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) const {
     // check if the discrete functions have valid dofs:
     if ( !coarse_disc_func.dofsValid() || !fine_disc_func.dofsValid() )
     {
@@ -799,8 +795,8 @@ public:
   RangeType evaluate_with_corrector(const DiscreteFunctionType& coarse_disc_func,
                                     const DomainType& x,
                                     const DiscreteFunctionSpaceType& local_discreteFunctionSpace,
-                                    LocalProblemNumManagerType& lp_num_manager,
-                                    double /*dummy*/ = 0) {
+                                    const LocalProblemNumManagerType& lp_num_manager,
+                                    double /*dummy*/ = 0) const {
     // f(x) + Q(f)(x)
     RangeType value = 0.0;
 
@@ -1079,8 +1075,8 @@ public:
   RangeType jacobian_with_corrector(const DiscreteFunctionType& coarse_disc_func,
                                     const DomainType& x,
                                     const DiscreteFunctionSpaceType& local_discreteFunctionSpace,
-                                    LocalProblemNumManagerType& lp_num_manager,
-                                    double /*dummy*/ = 0) {
+                                    const LocalProblemNumManagerType& lp_num_manager,
+                                    double /*dummy*/ = 0) const {
     DUNE_THROW(Dune::NotImplemented, "jacobian_with_corrector hack not working yet");
     // f(x) + Q(f)(x)
     RangeType value = 0.0;
@@ -1356,7 +1352,7 @@ public:
   RangeFieldType error_L2_with_corrector(const DiscreteFunctionType& fine_discrete_function,
                                          const DiscreteFunctionType& coarse_discrete_function /* that can be
                                                                                                  *reconstructed */,
-                                         LocalProblemNumManagerType& lp_num_manager) {
+                                         const LocalProblemNumManagerType& lp_num_manager) const {
     const DiscreteFunctionSpaceType& fine_space = fine_discrete_function.space();
 
     const GridPartType& fineGridPart = fine_space.gridPart();
@@ -1429,7 +1425,7 @@ public:
   // expensive hack:
   template< int polOrd >
   RangeFieldType norm_adaptive_grids(const DiscreteFunctionType& coarse_disc_func,
-                                     const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) {
+                                     const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) const {
     // check if the discrete functions have valid dofs:
     if ( !coarse_disc_func.dofsValid() || !fine_disc_func.dofsValid() )
     {
@@ -1497,7 +1493,7 @@ public:
   // refinment of the gridPart of 'coarse_disc_func'
   template< int polOrd >
   RangeFieldType norm2(const DiscreteFunctionType& coarse_disc_func,
-                       const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) {
+                       const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) const {
     // get function spaces
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
     const DiscreteFunctionSpaceType& fine_discreteFunctionSpace = fine_disc_func.space();

@@ -136,7 +136,7 @@ public:
 
   // the right hand side assembler methods
   void assemble_local_RHS(  // direction 'e'
-    JacobianRangeType& e,
+    const JacobianRangeType& e,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
 
@@ -314,7 +314,7 @@ double LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(const 
 template< class DiscreteFunctionImp, class DiffusionImp >
 // template< class MatrixType >
 void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
-      ::assemble_local_RHS( JacobianRangeType& e,// direction 'e'
+      ::assemble_local_RHS(const JacobianRangeType &e, // direction 'e'
                             // rhs local msfem problem:
                             DiscreteFunction& local_problem_RHS) const {
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;

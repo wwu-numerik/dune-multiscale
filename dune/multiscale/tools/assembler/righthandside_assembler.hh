@@ -497,7 +497,7 @@ public:
                                                           // statt
                                                           // functionSpace
 
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
       // transformation F : T_0 -> T
       // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
@@ -595,7 +595,7 @@ public:
             micro_grid_entity);
 
           // higher order quadrature
-          Quadrature micro_grid_quadrature(micro_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
+          const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
           const size_t locNumQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < locNumQuadraturePoints; ++microQuadraturePoint)
@@ -604,19 +604,14 @@ public:
             const typename Quadrature::CoordinateType& local_micro_point = micro_grid_quadrature.point(
               microQuadraturePoint);
 
-            DomainType global_point_in_T_0 = micro_grid_geometry.global(local_micro_point);
+            const DomainType global_point_in_T_0 = micro_grid_geometry.global(local_micro_point);
 
-            double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint)
-                                             * micro_grid_geometry.integrationElement(local_micro_point);
-
-            // new weight = old weight * |det A|
-            weight_micro_quadrature *= abs_det_A;
+            const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint)
+                                             * micro_grid_geometry.integrationElement(local_micro_point)
+                                                   * abs_det_A;
 
             // Q^eps(\phi) ○ F :
             localized_corrector.evaluate(micro_grid_quadrature[microQuadraturePoint], Q_phi_transformed);
-
-            // global point in the reference element T_0
-            DomainType global_point = micro_grid_geometry.global(local_micro_point);
 
             // 'F(x)', i.e. F ( global point in the reference element T_0 )
             // (the transformation of the global point in T_0 to its position in T)
@@ -713,13 +708,13 @@ public:
       const BaseFunctionSetType macro_grid_baseSet
         = discreteFunctionSpace.baseFunctionSet(*macro_grid_it);
 
-      LocalFunctionType old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
+      const LocalFunctionType old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
 
       // for \int_{\Omega} f \Phi
-      Quadrature macro_quadrature(*macro_grid_it, polOrd);
+      const Quadrature macro_quadrature(*macro_grid_it, polOrd);
 
       // for - \int_{\Omega} \in_Y A^{\epsilon}( gradient reconstruction ) \nabla \Phi
-      Quadrature one_point_macro_quadrature(*macro_grid_it, 0);
+      const Quadrature one_point_macro_quadrature(*macro_grid_it, 0);
       // the fine scale reconstructions are only available for the barycenter of the macro grid entity (=> only
       // available for the canonical one point quadrature on this element)
 
@@ -737,7 +732,7 @@ public:
           // local (barycentric) coordinates (with respect to entity)
           const typename Quadrature::CoordinateType& local_point = macro_quadrature.point(quadraturePoint);
 
-          DomainType global_point = macro_grid_geometry.global(local_point);
+          const DomainType global_point = macro_grid_geometry.global(local_point);
 
           const double quad_weight
             = macro_grid_geometry.integrationElement(local_point) * macro_quadrature.weight(quadraturePoint);
@@ -759,7 +754,7 @@ public:
         const typename Quadrature::CoordinateType& local_macro_point = one_point_macro_quadrature.point(0 /*=quadraturePoint*/);
 
         // barycenter of macro grid entity
-        DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
+        const DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
 
         const double macro_entity_volume = one_point_macro_quadrature.weight(0 /*=quadraturePoint*/)
                                            * macro_grid_geometry.integrationElement(local_macro_point);
@@ -826,7 +821,7 @@ public:
           #endif // ifdef TFR
 
           // higher order quadrature, since A^{\epsilon} is highly variable
-          Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace.order() + 2);
+          const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace.order() + 2);
           const size_t numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint)
@@ -835,7 +830,7 @@ public:
             const typename Quadrature::CoordinateType& local_micro_point = micro_grid_quadrature.point(
               microQuadraturePoint);
 
-            DomainType global_point_in_Y = micro_grid_geometry.global(local_micro_point);
+            const DomainType global_point_in_Y = micro_grid_geometry.global(local_micro_point);
 
             const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint)
                                                    * micro_grid_geometry.integrationElement(local_micro_point);
@@ -937,7 +932,7 @@ public:
                                                           // statt
                                                           // functionSpace
 
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
@@ -1008,7 +1003,7 @@ public:
                                                                        // entity
       // hier wird sozusagen ein Pointer von localFunction auf rhs erzeugt. Befinden wir uns auf einer bestimmten
       // entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in rhs(aktuelleEntity)
-      LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
+      const LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
 
       const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
         = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
@@ -1017,7 +1012,7 @@ public:
                                                           // statt
                                                           // functionSpace
 
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
@@ -1088,7 +1083,7 @@ public:
                                                                        // entity
       // hier wird sozusagen ein Pointer von localFunction auf rhs erzeugt. Befinden wir uns auf einer bestimmten
       // entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in rhs(aktuelleEntity)
-      LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
+      const LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
 
       const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
         = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
@@ -1097,7 +1092,7 @@ public:
                                                           // statt
                                                           // functionSpace
 
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
@@ -1199,7 +1194,7 @@ public:
                                                                        // entity
       // hier wird sozusagen ein Pointer von localFunction auf rhs erzeugt. Befinden wir uns auf einer bestimmten
       // entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in rhs(aktuelleEntity)
-      LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
+      const LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
 
       const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
         = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
@@ -1208,7 +1203,7 @@ public:
                                                           // statt
                                                           // functionSpace
 
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
@@ -1316,7 +1311,7 @@ public:
                                                           // statt
                                                           // functionSpace
 
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden

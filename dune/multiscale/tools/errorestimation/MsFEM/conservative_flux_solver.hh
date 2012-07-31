@@ -146,7 +146,7 @@ public:
   ConservativeFluxOperator(const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace,
                            const DiscreteFunctionSpace& discreteFunctionSpace,
                            const DiffusionModel& diffusion_op,
-                           MacroMicroGridSpecifierType& specifier)
+                           const MacroMicroGridSpecifierType& specifier)
     : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
       , discreteFunctionSpace_(discreteFunctionSpace)
       , diffusion_operator_(diffusion_op)
@@ -181,7 +181,7 @@ private:
   const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace_;
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
-  MacroMicroGridSpecifierType& specifier_;
+  const MacroMicroGridSpecifierType& specifier_;
 };
 
 // dummy implementation of "operator()"
@@ -660,7 +660,7 @@ private:
   const DiffusionOperatorType& diffusion_;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
 
-  MacroMicroGridSpecifierType& specifier_;
+  const MacroMicroGridSpecifierType& specifier_;
 
   // path where to save the data output
   std::string path_;
@@ -671,7 +671,7 @@ public:
   // ! constructor - with diffusion operator A^{\epsilon}(x)
   ConservativeFluxProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                                 const DiffusionOperatorType& diffusion_operator,
-                                MacroMicroGridSpecifierType& specifier,
+                                const MacroMicroGridSpecifierType& specifier,
                                 std::ofstream& data_file,
                                 std::string path = "")
     : diffusion_(diffusion_operator)
@@ -682,7 +682,7 @@ public:
   {}
 
   template< class Stream >
-  void oneLinePrint(Stream& stream, const SubGridDiscreteFunctionType& func) {
+  void oneLinePrint(Stream& stream, const SubGridDiscreteFunctionType& func) const {
     typedef typename SubGridDiscreteFunctionType::ConstDofIteratorType
     DofIteratorType;
     DofIteratorType it = func.dbegin();
@@ -699,7 +699,7 @@ public:
              const SubGridDiscreteFunctionType& local_corrector_e_i,
              const int sub_grid_id,
              const int direction_index,
-             SubGridDiscreteFunctionType& conservative_flux) {
+             SubGridDiscreteFunctionType& conservative_flux) const {
     // set solution equal to zero:
     conservative_flux.clear();
 
@@ -836,7 +836,7 @@ public:
 
   void file_data_output(const SubGridDiscreteFunctionType& subgrid_disc_func,
                         const int sub_grid_index,
-                        const int direction_index) {
+                        const int direction_index) const {
     char location_lps[50];
     sprintf(location_lps, "_conservativeFlux_e_%d_sg_%d", direction_index, sub_grid_index);
     std::string location_lps_s(location_lps);
@@ -847,7 +847,7 @@ public:
   } // file_data_output
 
   template< typename SubGridListType >
-  void solve_all(SubGridListType& subgrid_list) {
+  void solve_all(SubGridListType& subgrid_list) const {
     JacobianRangeType e[dimension];
 
     for (int i = 0; i < dimension; ++i)
@@ -860,7 +860,7 @@ public:
 
 
     // number of coarse grid entities (of codim 0).
-    int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+    const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
     long double starting_time = clock();
 
@@ -869,7 +869,7 @@ public:
     double DUNE_UNUSED(average_time_c_p) = 0;
     double maximum_time_c_p = 0;
 
-    HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
+    const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
     const LeafIndexSetType& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
     // Coarse Entity Iterator

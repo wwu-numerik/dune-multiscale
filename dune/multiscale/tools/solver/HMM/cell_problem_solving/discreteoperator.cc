@@ -43,7 +43,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    Quadrature quadrature(cell_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
+    const Quadrature quadrature(cell_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
@@ -102,8 +102,8 @@ template< class PeriodicDiscreteFunctionImp, class DiffusionImp >
 template< class MatrixType >
 void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::assemble_jacobian_matrix(
   const DomainType& x_T,
-  JacobianRangeType& grad_coarse_function,
-  PeriodicDiscreteFunctionImp& old_fine_function,
+  const JacobianRangeType& grad_coarse_function,
+  const PeriodicDiscreteFunctionImp& old_fine_function,
   MatrixType& global_matrix) const {
   Problem::ModelProblemData model_info;
   const double delta = model_info.getDelta();
@@ -137,7 +137,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
 
     // for constant diffusion "2*periodicDiscreteFunctionSpace_.order()" is sufficient, for the general case, it is
     // better to use a higher order quadrature:
-    Quadrature quadrature(cell_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
+    const Quadrature quadrature(cell_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
@@ -145,7 +145,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
       // global point in the unit cell Y
-      DomainType global_point = cell_grid_geometry.global(local_point);
+      const DomainType global_point = cell_grid_geometry.global(local_point);
 
       // x_T + (delta * global_point)
       DomainType x_T_delta_global_point;
@@ -208,7 +208,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
 } // assemble_jacobian_matrix
 
 template< class DiscreteFunctionImp, class DiffusionImp >
-void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::printCellRHS(DiscreteFunctionImp& rhs) const {
+void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::printCellRHS(const DiscreteFunctionImp& rhs) const {
   typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
   typedef typename DiscreteFunctionImp::LocalFunctionType         LocalFunctionType;
@@ -219,7 +219,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::printCell
   const IteratorType endit = discreteFunctionSpace.end();
   for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
   {
-    LocalFunctionType elementOfRHS = rhs.localFunction(*it);
+    const LocalFunctionType elementOfRHS = rhs.localFunction(*it);
 
     const int numDofs = elementOfRHS.numDofs();
     for (int i = 0; i < numDofs; ++i)
@@ -230,7 +230,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::printCell
 }  // end method
 
 template< class DiscreteFunctionImp, class DiffusionImp >
-double DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(DiscreteFunctionImp& rhs) const {
+double DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(const DiscreteFunctionImp& rhs) const {
   double norm = 0.0;
 
   typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
@@ -252,12 +252,12 @@ double DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS
     const EntityType& entity = *it;
 
     // create quadrature for given geometry type
-    CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    const CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
 
     // get geoemetry of entity
     const EnGeometryType& geo = entity.geometry();
 
-    LocalFunctionType localRHS = rhs.localFunction(*it);
+    const LocalFunctionType localRHS = rhs.localFunction(*it);
 
     // integrate
     const int quadratureNop = quadrature.nop();
@@ -272,14 +272,13 @@ double DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS
       norm += weight * value * value;
     }
   }
-
   return norm;
 }  // end method
 
 template< class DiscreteFunctionImp, class DiffusionImp >
 // template< class MatrixType >
 void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleCellRHS_linear(const DomainType& x_T,
-  JacobianRangeType& gradient_PHI_H,
+  const JacobianRangeType& gradient_PHI_H,
   DiscreteFunctionImp& cell_problem_RHS) const {
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
@@ -320,14 +319,14 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
 
-    Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
       // global point in the unit cell Y:
-      DomainType global_point = geometry.global(local_point);
+      const DomainType global_point = geometry.global(local_point);
 
       // x_T + (delta * global_point)
       DomainType x_T_delta_global_point;
@@ -367,8 +366,8 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
 
 template< class DiscreteFunctionImp, class DiffusionImp >
 void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleCellRHS_nonlinear(const DomainType& x_T,
-  JacobianRangeType& grad_coarse_function,
-  DiscreteFunctionImp& old_fine_function,
+  const JacobianRangeType& grad_coarse_function,
+  const DiscreteFunctionImp& old_fine_function,
   DiscreteFunctionImp& cell_problem_RHS) const {
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
@@ -468,11 +467,11 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_
   ( // the global quadrature point in the macro grid element T
   const DomainType& x_T, // barycenter of macro entity T
   // gradient of the old coarse function (old means last iteration step)
-  JacobianRangeType& grad_old_coarse_function, // \nabla_x u_H^{(n-1)}(x_T)
+  const JacobianRangeType& grad_old_coarse_function, // \nabla_x u_H^{(n-1)}(x_T)
   // gradient of the corrector of the old coarse function
-  DiscreteFunctionImp& corrector_of_old_coarse_function, /*Q_h(u_H^{(n-1)})*/
+  const DiscreteFunctionImp& corrector_of_old_coarse_function, /*Q_h(u_H^{(n-1)})*/
   // gradient of the current macroscopic base function
-  JacobianRangeType& grad_coarse_base_function, // \nabla_x \Phi_H(x_T)
+  const JacobianRangeType& grad_coarse_base_function, // \nabla_x \Phi_H(x_T)
   // rhs cell problem:
   DiscreteFunctionImp& jac_corrector_cell_problem_RHS) const {
   // ! typedefs for the (discrete) periodic micro space:
@@ -495,7 +494,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_
   jac_corrector_cell_problem_RHS.clear();
 
   // model problem data:
-  Problem::ModelProblemData problem_info;
+  const Problem::ModelProblemData problem_info;
 
   // get edge length of cell:
   const double delta = problem_info.getDelta();
@@ -512,20 +511,20 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
     // local Q_h(u_H^{(n-1)}):
-    LocalFunction local_Q_old_u_H = corrector_of_old_coarse_function.localFunction(cell_grid_entity);
+    const LocalFunction local_Q_old_u_H = corrector_of_old_coarse_function.localFunction(cell_grid_entity);
     LocalFunction elementOfRHS = jac_corrector_cell_problem_RHS.localFunction(cell_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
 
-    Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
       // global point in the unit cell Y:
-      DomainType global_point_in_Y = geometry.global(local_point);
+      const DomainType global_point_in_Y = geometry.global(local_point);
 
       // x_T + (delta * global_point_in_Y)
       DomainType x_T_plus_delta_y;

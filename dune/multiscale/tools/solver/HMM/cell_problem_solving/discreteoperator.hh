@@ -112,8 +112,8 @@ public:
    */
   template< class MatrixType >
   void assemble_jacobian_matrix(const DomainType& x_T,
-                                JacobianRangeType& grad_coarse_function,
-                                DiscreteFunction& old_fine_function,
+                                const JacobianRangeType& grad_coarse_function,
+                                const DiscreteFunction& old_fine_function,
                                 MatrixType& global_matrix) const;
 
   // begin group the "right hand side assembler methods"
@@ -130,7 +130,7 @@ public:
    * @param cell_problem_RHS rhs cell problem
    */
   void assembleCellRHS_linear( const DomainType& x_T,
-    JacobianRangeType& grad_coarse_function,
+    const JacobianRangeType& grad_coarse_function,
     DiscreteFunction& cell_problem_RHS) const;
 
   /**
@@ -150,8 +150,8 @@ public:
    * @param cell_problem_RHS rhs cell problem
    */
   void assembleCellRHS_nonlinear( const DomainType& x_T,
-    JacobianRangeType& grad_coarse_function,
-    DiscreteFunction& old_fine_function,
+    const JacobianRangeType& grad_coarse_function,
+    const DiscreteFunction& old_fine_function,
     DiscreteFunction& cell_problem_RHS) const;
 
   /**
@@ -163,14 +163,14 @@ public:
    * @param jac_corrector_cell_problem_RHS rhs cell problem
    */
   void assemble_jacobian_corrector_cell_prob_RHS( const DomainType& x_T,
-    JacobianRangeType& grad_old_coarse_function,
-    DiscreteFunction& corrector_of_old_coarse_function,
-    JacobianRangeType& grad_coarse_base_function,
+    const JacobianRangeType& grad_old_coarse_function,
+    const DiscreteFunction& corrector_of_old_coarse_function,
+    const JacobianRangeType& grad_coarse_base_function,
     DiscreteFunction& jac_corrector_cell_problem_RHS) const;
 
-  void printCellRHS(DiscreteFunction& rhs) const;
+  void printCellRHS(const DiscreteFunction& rhs) const;
 
-  double normRHS(DiscreteFunction& rhs) const;
+  double normRHS(const DiscreteFunction& rhs) const;
 
 private:
   const DiscreteFunctionSpace& periodicDiscreteFunctionSpace_;

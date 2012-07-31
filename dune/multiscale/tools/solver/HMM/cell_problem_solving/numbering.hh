@@ -70,42 +70,33 @@ struct entity_compare
   bool operator()(EntityPointerType left_entity,
                   EntityPointerType right_entity) const {
     // compare the barycenteres of the entities with the lexicographic order
-
     typedef Fem::CachingQuadrature< GridPartType, 0 > Quadrature;
 
     // ------ right element
-
     const typename EntityPointerType::Entity::Geometry& geometry_right = (*right_entity).geometry();
-
-    Quadrature quadrature_right(*right_entity, 0);
+    const Quadrature quadrature_right(*right_entity, 0);
 
     // local barycenter (with respect to entity)
     const typename Quadrature::CoordinateType& local_point_right = quadrature_right.point(0);
-
-    DomainType barycenter_right_entity = geometry_right.global(local_point_right);
+    const DomainType barycenter_right_entity = geometry_right.global(local_point_right);
 
     // ------ left element
-
     const typename EntityPointerType::Entity::Geometry& geometry_left = (*left_entity).geometry();
-
-    Quadrature quadrature_left(*left_entity, 0);
+    const Quadrature quadrature_left(*left_entity, 0);
 
     // local barycenter (with respect to entity)
     const typename Quadrature::CoordinateType& local_point_left = quadrature_left.point(0);
+    const DomainType barycenter_left_entity = geometry_left.global(local_point_left);
 
-    DomainType barycenter_left_entity = geometry_left.global(local_point_left);
-
-    enum { dimension = GridPartType::GridType::dimension };
-
-    int current_axis = dimension - 1;
-
+    int current_axis = GridPartType::GridType::dimension - 1;
     while (current_axis >= 0)
     {
-      if (barycenter_left_entity[current_axis] < barycenter_right_entity[current_axis])
-      { return true; } else if (barycenter_left_entity[current_axis] > barycenter_right_entity[current_axis])
-      { return false; }
-
-      current_axis -= 1;
+      if (barycenter_left_entity[current_axis] < barycenter_right_entity[current_axis]) {
+        return true;
+      } else if (barycenter_left_entity[current_axis] > barycenter_right_entity[current_axis]) {
+        return false;
+      }
+      current_axis--;
     }
 
     return false;
@@ -162,7 +153,7 @@ public:
 
       for (int i = 0; i < numBaseFunctions; ++i)
       {
-        std::pair< EntityPointerType, int > idPair(EntityPointerType(*it), i);
+        const std::pair< EntityPointerType, int > idPair(EntityPointerType(*it), i);
         cell_numbering_map_.insert( std::make_pair(idPair, counter) );
         counter++;
       }
@@ -173,7 +164,7 @@ public:
   //! use 'cp_num_manager.get_number_of_cell_problem( it, i )'
   inline int get_number_of_cell_problem(const EntityPointerType& ent, const int& numOfBaseFunction) const {
     const typename CellNumMapType::key_type idPair(ent, numOfBaseFunction);
-    auto it = cell_numbering_map_.find(idPair);
+    const auto it = cell_numbering_map_.find(idPair);
     if (it != cell_numbering_map_.end() )
       return it->second;
     else
@@ -184,7 +175,7 @@ public:
    * \attention 'get_number_of_cell_problem( it )' is NOT equal to 'get_number_of_cell_problem( it , 0 )'!
    **/
   inline int get_number_of_cell_problem(const EntityPointerType& ent) const {
-    auto it = cell_numbering_map_NL_.find(ent);
+    const auto it = cell_numbering_map_NL_.find(ent);
     if (it != cell_numbering_map_NL_.end() )
       return it->second;
     else

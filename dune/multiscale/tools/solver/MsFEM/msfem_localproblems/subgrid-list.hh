@@ -60,11 +60,12 @@ public:
   // ! type of grid part
   typedef LeafGridPart< SubGridType > SubGridPartType;
 
+private:
   template< typename EntityPointerCollectionType >
-  bool entity_patch_in_subgrid(HostEntityPointerType& hit,
+  bool entity_patch_in_subgrid(const HostEntityPointerType& hit,
                                const HostGridPartType& hostGridPart,
                                const SubGridType& subGrid,
-                               EntityPointerCollectionType& entities_sharing_same_node) const {
+                               const EntityPointerCollectionType& entities_sharing_same_node) const {
     bool patch_in_subgrid_ = true;
 
     // loop over the nodes of the enity
@@ -86,12 +87,11 @@ public:
   } // entity_patch_in_subgrid
 
   /**
-   * \todo caller???
+   * \note called in SubGridList constructor only
    */
   template< typename EntityPointerCollectionType >
-  void enrichment(HostEntityPointerType& hit,
-                  HostEntityPointerType& level_father_it,
-//                  MacroMicroGridSpecifierType& specifier,
+  void enrichment(const HostEntityPointerType& hit,
+                  const HostEntityPointerType& level_father_it,
                   int& father_index,
                   const HostGridPartType& hostGridPart,
                   SubGridType& subGrid,
@@ -99,7 +99,7 @@ public:
                   int& layer,
                   bool***& enriched) {
     // difference in levels between coarse and fine grid
-    int level_difference = specifier_.getLevelDifference();
+    const int level_difference = specifier_.getLevelDifference();
     HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
@@ -163,6 +163,7 @@ public:
     }
   } // enrichment
 
+public:
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true)
     : hostSpace_( specifier.fineSpace() )
       , specifier_(specifier)
@@ -175,7 +176,7 @@ public:
 
     HostGridType& hostGrid = hostSpace_.gridPart().grid();
 
-    int number_of_nodes = hostGrid.size(2 /*codim*/);
+    const int number_of_nodes = hostGrid.size(2 /*codim*/);
 
     // -------- identify the entities that share a certain node -------
 
@@ -201,10 +202,10 @@ public:
     }
 
     // difference in levels between coarse and fine grid
-    int level_difference = specifier_.getLevelDifference();
+    const int level_difference = specifier_.getLevelDifference();
 
     // number of coarse grid entities (of codim 0).
-    int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+    const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
@@ -216,7 +217,7 @@ public:
 
     for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
     {
-      int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
+      const int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
 
       subGridList_[coarse_index] = new SubGridType(hostGrid);
       subGridList_[coarse_index]->createBegin();
@@ -224,11 +225,11 @@ public:
 
     for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it)
     {
-      int number_of_nodes_in_entity = (*it).template count< 2 >();
+      const int number_of_nodes_in_entity = (*it).template count< 2 >();
       for (int i = 0; i < number_of_nodes_in_entity; i += 1)
       {
         const HostNodePointer node = (*it).template subEntity< 2 >(i);
-        int global_index_node = hostGridPart.indexSet().index(*node);
+        const int global_index_node = hostGridPart.indexSet().index(*node);
 
         entities_sharing_same_node[global_index_node].push_back( HostEntityPointerType(*it) );
       }
@@ -254,14 +255,14 @@ public:
     }
 
     // a fine grid iterator for the codim 0 hostgrid entities:
-    HostGridEntityIteratorType host_endit = hostSpace_.end();
+    const HostGridEntityIteratorType host_endit = hostSpace_.end();
     for (HostGridEntityIteratorType host_it = hostSpace_.begin();
          host_it != host_endit;
          ++host_it)
     {
       const HostEntityType& host_entity = *host_it;
 
-      int DUNE_UNUSED(number_of_nodes_in_entity) = (*host_it).template count< 2 >();
+      const int DUNE_UNUSED(number_of_nodes_in_entity) = (*host_it).template count< 2 >();
 
       // get the coarse-grid-father of host_entity (which is a maxlevel entity)
       HostEntityPointerType level_father_entity = HostEntityPointerType(*host_it);
@@ -335,8 +336,8 @@ public:
       if (layers > 0)
       {
         HostEntityPointerType hep(*host_it);
-        enrichment(hep, level_father_entity,/* specifier,*/ father_index,
-                   hostGridPart, *subGridList_[father_index], entities_sharing_same_node, layers, enriched);
+        enrichment(hep, level_father_entity, father_index, hostGridPart,
+                   *subGridList_[father_index], entities_sharing_same_node, layers, enriched);
       }
     }
 
@@ -358,7 +359,7 @@ public:
              coarse_it != specifier_.coarseSpace().end(); ++coarse_it)
         {
           const HostEntityType& coarse_entity = *coarse_it;
-          int index = coarseGridLeafIndexSet.index(coarse_entity);
+          const int index = coarseGridLeafIndexSet.index(coarse_entity);
           if (i == index)
           {
             DSC_LOG_ERROR << "We have a problem with the following coarse-grid element:" << std::endl
