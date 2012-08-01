@@ -5,7 +5,6 @@ cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../dune-stuff/cmake )
 include(DuneUtils)
-include(UseDoxygen)
 
 #----------------------------------------------------------------------------------------------------
 # General Settings
@@ -135,5 +134,6 @@ ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
 # HEADERCHECK( ${header} ${oseen} ${dune} )
-# ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${COMMON_HEADER} )
+ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${COMMON_HEADER} )
 
+add_subdirectory(doc)
