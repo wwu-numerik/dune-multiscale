@@ -103,7 +103,7 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
       typename HMM::DiscreteFunctionType::LocalFunctionType local_hmm_solution = hmm_solution.localFunction(entity);
       const typename HMM::BaseFunctionSetType& baseSet = discreteFunctionSpace.baseFunctionSet(entity);
       const unsigned int numMacroBaseFunctions = baseSet.size();
-      int cell_problem_id[numMacroBaseFunctions];
+      std::vector<int> cell_problem_id(numMacroBaseFunctions);
       for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
       {
         const typename HMM::EntityType::EntityPointer p(*it);

@@ -509,7 +509,7 @@ void algorithm(const ProblemDataType& problem_data,
 
     const int number_of_areas = (loop_cycle == 1) ? 1 : 2;
 
-    double border[number_of_areas - 1];
+    std::vector<double> border(number_of_areas - 1);
     border[0] = 0.5;
     for (int bo = 1; bo < (number_of_areas - 1); ++bo)
     {
@@ -521,7 +521,7 @@ void algorithm(const ProblemDataType& problem_data,
     // border[1] = 0.8;
     // border[2] = 0.95;
 
-    int refinements_in_area[number_of_areas];
+    std::vector<int> refinements_in_area(number_of_areas);
     for (int bo = 0; bo < number_of_areas; ++bo)
     {
       refinements_in_area[bo] = default_refinement + bo + 1;
