@@ -137,3 +137,4 @@ TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
 
 add_subdirectory(doc)
+add_subdirectory(dune)
