@@ -149,6 +149,11 @@ public:
   {
     DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   }
+  template < class... Args >
+  void jacobianDiffusiveFlux( Args... ) const
+  {
+    DUNE_THROW(Dune::NotImplemented, "Dummy for hmm code'");
+  }
 };
 
 template< class FunctionSpaceImp, class FieldMatrixImp >
@@ -177,7 +182,7 @@ public:
   const FieldMatrixType& A_hom_;
 
 public:
-  inline explicit HomDiffusion(FieldMatrixType& A_hom)
+  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
     : A_hom_(A_hom)
   {}
 
@@ -192,8 +197,8 @@ public:
   void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    flux[0][0] = (*A_hom_)[0][0] * gradient[0][0] + (*A_hom_)[0][1] * gradient[0][1];
-    flux[0][1] = (*A_hom_)[1][0] * gradient[0][0] + (*A_hom_)[1][1] * gradient[0][1];
+    flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
+    flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
   }
 
   template < class... Args >

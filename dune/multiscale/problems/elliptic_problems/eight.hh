@@ -213,7 +213,7 @@ public:
   const FieldMatrixType& A_hom_;
 
 public:
-  inline explicit HomDiffusion(FieldMatrixType& A_hom)
+  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
     : A_hom_(A_hom)
   {}
 
@@ -297,6 +297,10 @@ public:
                        const TimeType& /*timedummy*/,
                        RangeType& y) const {
     evaluate(x, y);
+  }
+
+  inline void evaluateJacobian(const DomainType& , typename BaseType::JacobianRangeType& ) const {
+    DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
   }
 };
 } // namespace Eight {
