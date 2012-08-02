@@ -10,6 +10,7 @@ AC_DEFUN([DUNE_MULTISCALE_CHECKS],
 [
 	DUNE_BOOST_BASE(1.41, [] , [] )
 	AC_REQUIRE(HAVE_DUNE)
+	AC_REQUIRE([GXX0X])
 ])
 
 # Additional checks needed to find dune-multiscale
@@ -17,5 +18,5 @@ AC_DEFUN([DUNE_MULTISCALE_CHECKS],
 # not by dune-multiscale itself
 AC_DEFUN([DUNE_MULTISCALE_CHECK_MODULE],
 [
-  DUNE_CHECK_MODULES([dune-multiscale],[multiscale/multiscale.hh])
+  DUNE_CHECK_MODULES([dune-multiscale],[multiscale/problems/base.hh])
 ])
