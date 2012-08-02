@@ -210,11 +210,11 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FieldMatrixType* A_hom_;
+  const FieldMatrixType& A_hom_;
 
 public:
   inline explicit HomDiffusion(FieldMatrixType& A_hom)
-    : A_hom_(&A_hom)
+    : A_hom_(A_hom)
   {}
 
   // in the linear setting, use the structure

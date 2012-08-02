@@ -112,8 +112,8 @@ ADD_CXX_FLAGS( ${CUSTOM_FLAGS} -DGRIDTYPE=${GRIDTYPE} -DHAVE_CMAKE_CONFIG -DHAVE
 
 LINK_DIRECTORIES( "/usr/lib" "${ALUGRID_BASE_PATH}/lib" )
 
-FILE( GLOB_RECURSE header "src/*.hh" )
-FILE( GLOB_RECURSE dune "dune/*.hh" )
+FILE( GLOB_RECURSE header "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh" )
+FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 
 set( COMMON_LIBS "dunefem" "dunegrid" "dunecommon" "dunegeometry" ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} "boost_date_time" "boost_filesystem" "boost_system" )
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
@@ -134,6 +134,6 @@ ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
 # HEADERCHECK( ${header} ${oseen} ${dune} )
-ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${COMMON_HEADER} )
+ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
 
 add_subdirectory(doc)

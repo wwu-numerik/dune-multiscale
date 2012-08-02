@@ -624,11 +624,11 @@ public:
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
     // where we save the solutions:
-    std::string cell_solution_location = "data/HMM/" + filename + "_JacCorCellSolutions_baseSet_discFunc";
+    const std::string cell_solution_location = "data/HMM/" + filename + "_JacCorCellSolutions_baseSet_discFunc";
     DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
     // where we saved the solutions for the discrete function
     // NOTE: they already need to be assembled, i.e. we already applied the method saveSolutions_discFunc!
-    std::string cell_solution_discFunc_location = "data/HMM/" + filename + "_cellSolutions_discFunc";
+    const std::string cell_solution_discFunc_location = "data/HMM/" + filename + "_cellSolutions_discFunc";
 
     bool reader_is_open = false;
 
@@ -650,7 +650,7 @@ public:
     if (dfw.is_open())
     {
       int number_of_entity = 0;
-      IteratorType endit = discreteFunctionSpace.end();
+      const IteratorType endit = discreteFunctionSpace.end();
       for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
       {
         // gradients of the macroscopic base functions
@@ -664,9 +664,9 @@ public:
 
         const EntityGeometryType& geometry = entity.geometry();
 
-        EntityQuadratureType quadrature(entity, 0);
+        const EntityQuadratureType quadrature(entity, 0);
 
-        DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+        const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
         // number of base functions on entity
         const int numBaseFunctions = baseSet.size();
@@ -717,7 +717,7 @@ public:
           dfw.append(jac_corrector_Phi_i);
 
           // check if we use a correct numeration of the cell problems:
-          EntityPointerType entity_pointer(*it);
+          const EntityPointerType entity_pointer(*it);
           if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
           {
             DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
