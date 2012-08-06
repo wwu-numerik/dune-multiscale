@@ -10,9 +10,6 @@
 // !############################## Elliptic Problem 1 ###################################
 
 
-// is an exact solution available?
-// #define EXACTSOLUTION_AVAILABLE
-
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
 namespace Five {

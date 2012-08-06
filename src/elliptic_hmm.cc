@@ -41,9 +41,12 @@ public:
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/hmm/types.hh>
 
+void check_config();
+
 int main(int argc, char** argv) {
   try {
     init(argc, argv);
+    check_config();
     namespace DSC = Dune::Stuff::Common;
 
     const std::string path = std::string("data/HMM/") + DSC::Parameter::Config().get("global.datadir", "data");
@@ -144,3 +147,30 @@ int main(int argc, char** argv) {
   }
   return 1;
 } // main
+
+void check_config()
+{
+  // ! Do we have/want a fine-scale reference solution?
+  // #define FINE_SCALE_REFERENCE
+  #ifdef FINE_SCALE_REFERENCE
+  // load the precomputed fine scale reference from a file
+   #define FSR_LOAD
+   #ifndef FSR_LOAD
+  // compute the fine scale reference (on the fly)
+    #define FSR_COMPUTE
+    #ifdef FSR_COMPUTE
+  // Do we write the discrete fine-scale solution to a file? (for later usage)
+     #define WRITE_FINESCALE_SOL_TO_FILE
+    #endif       // FSR_COMPUTE
+   #endif    // FSR_LOAD
+  #endif // FINE_SCALE_REFERENCE
+
+#ifdef RESUME_TO_BROKEN_COMPUTATION
+// last HMM Newton step that was succesfully carried out, saving the iterate afterwards
+ #define HMM_NEWTON_ITERATION_STEP 2
+#else // ifdef RESUME_TO_BROKEN_COMPUTATION
+      // default: we need a full computation. start with step 1:
+ #define HMM_NEWTON_ITERATION_STEP 0
+#endif // ifdef RESUME_TO_BROKEN_COMPUTATION
+
+}

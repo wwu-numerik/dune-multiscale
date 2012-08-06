@@ -1,6 +1,12 @@
+#include "common.hh"
+
 #include <iostream>
 #include <math.h>
 #include <fstream>
+#include <sstream>
+
+#include <dune/common/exceptions.hh>
+
 
 using namespace std;
 

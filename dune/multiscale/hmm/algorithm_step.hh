@@ -9,6 +9,7 @@
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
 
 //! set the dirichlet points to zero
 template< class EntityType, class DiscreteFunctionType >
@@ -227,7 +228,7 @@ HMMResult<HMMTraits>
       // number of HMM Newton step (1 = first step)
       // HMM_NEWTON_ITERATION_STEP' Netwon steps have been already performed,
       // the next one is 'HMM_NEWTON_ITERATION_STEP+1' = hmm_iteration_step
-      int hmm_iteration_step = HMM_NEWTON_ITERATION_STEP + 1;
+      int hmm_iteration_step = DSC_CONFIG.get("HMM_NEWTON_ITERATION_STEP", 0) + 1;
 
       #ifdef RESUME_TO_BROKEN_COMPUTATION
       // std :: string location_hmm_newton_step_solution = "data/HMM/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";

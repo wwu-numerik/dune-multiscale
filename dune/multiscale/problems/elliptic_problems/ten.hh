@@ -5,11 +5,6 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// ! is an exact solution available?
-// this information should be provided by the 'problem specification file'
-// there we define or don't define the macro EXACTSOLUTION_AVAILABLE
-// #define EXACTSOLUTION_AVAILABLE
-
 // if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
 #define SYMMETRIC_DIFFUSION_MATRIX
 

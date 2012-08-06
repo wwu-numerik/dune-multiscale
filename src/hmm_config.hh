@@ -8,9 +8,6 @@
 // ! TFR-HMM or simple HMM?
 // #define TFR
 
-// ! is an exact solution available?
-// this information should be provided by the 'problem specification file'
-// there we define or don't define the macro EXACTSOLUTION_AVAILABLE
 
 // ! is the homogenized solution available?
 // this information should be provided by the 'problem specification file'
@@ -23,20 +20,6 @@
 // the second possibility requires a data file where the solutions are saved (file becomes large)
 // #define AD_HOC_COMPUTATION
 
-// ! Do we have/want a fine-scale reference solution?
-// #define FINE_SCALE_REFERENCE
-#ifdef FINE_SCALE_REFERENCE
-// load the precomputed fine scale reference from a file
- #define FSR_LOAD
- #ifndef FSR_LOAD
-// compute the fine scale reference (on the fly)
-  #define FSR_COMPUTE
-  #ifdef FSR_COMPUTE
-// Do we write the discrete fine-scale solution to a file? (for later usage)
-   #define WRITE_FINESCALE_SOL_TO_FILE
-  #endif       // FSR_COMPUTE
- #endif    // FSR_LOAD
-#endif // FINE_SCALE_REFERENCE
 
 // ! Do we have a HMM reference solution? (precomputed detailed HMM simulation)
 // we might use a detailed HMM computation as a reference! (if it is available)
@@ -62,13 +45,7 @@
 // (this only works for non-adaptive computations!)
 // #define RESUME_TO_BROKEN_COMPUTATION
 
-#ifdef RESUME_TO_BROKEN_COMPUTATION
-// last HMM Newton step that was succesfully carried out, saving the iterate afterwards
- #define HMM_NEWTON_ITERATION_STEP 2
-#else // ifdef RESUME_TO_BROKEN_COMPUTATION
-      // default: we need a full computation. start with step 1:
- #define HMM_NEWTON_ITERATION_STEP 0
-#endif // ifdef RESUME_TO_BROKEN_COMPUTATION
+
 
 // hmfemmain:
 // !---------

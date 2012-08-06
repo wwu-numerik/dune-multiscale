@@ -5,10 +5,6 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// ! is an exact solution available?
-// this information should be provided by the 'problem specification file'
-// there we define or don't define the macro EXACTSOLUTION_AVAILABLE
-#define EXACTSOLUTION_AVAILABLE
 
 // if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
 #define SYMMETRIC_DIFFUSION_MATRIX
@@ -69,8 +65,6 @@
 
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
-// is an exact solution available?
-// #define EXACTSOLUTION_AVAILABLE
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
@@ -81,6 +75,8 @@ CONSTANTSFUNCTION(0.05, 0.1, 0.1)
 struct ModelProblemData
   : public IModelProblemData
 {
+  static const bool has_exact_solution = true;
+
   ModelProblemData(const std::string filename = "no_name")
     : IModelProblemData(constants(), filename) {
   }

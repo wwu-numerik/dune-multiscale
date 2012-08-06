@@ -6,10 +6,6 @@
  #define UNIFORM
 #endif
 
-// ! is an exact solution available?
-// this information should be provided by the 'problem specification file'
-// there we define or don't define the macro EXACTSOLUTION_AVAILABLE
-// #define EXACTSOLUTION_AVAILABLE
 
 #if HAVE_GRAPE
  #include <dune/grid/io/visual/grapedatadisplay.hh>
@@ -70,13 +66,11 @@ typedef Problem::Diffusion< FunctionSpaceType > DiffusionType;
 // default type for any missing coefficient function (e.g. advection,...)
 typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionType;
 
-#ifdef EXACTSOLUTION_AVAILABLE
 // type of exact solution (in general unknown)
 typedef Problem::ExactSolution< FunctionSpaceType > ExactSolutionType;
 typedef GridFunctionAdapter< ExactSolutionType, GridPartType >
 DiscreteExactSolutionType;     // for data output with paraview or grape
-#endif // ifdef EXACTSOLUTION_AVAILABLE
-// !-----------------------------------------------------------------------------
+
 
 // ! ----  typedefs for the standard discrete function space (macroscopic) -----
 typedef FunctionSpaceType::DomainType DomainType;
@@ -118,12 +112,10 @@ MsFEMErrorEstimatorType;
 // ! ------------------ typedefs and classes for data output ---------------------
 typedef tuple< DiscreteFunctionType* >      IOTupleType;
 typedef DataOutput< GridType, IOTupleType > DataOutputType;
-#ifdef EXACTSOLUTION_AVAILABLE
 // just for the discretized exact solution (in case it is available)
 typedef tuple< const DiscreteExactSolutionType* > ExSolIOTupleType;
 // just for the discretized exact solution (in case it is available)
 typedef DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
-#endif // ifdef EXACTSOLUTION_AVAILABLE
 
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
@@ -296,11 +288,6 @@ void algorithm(const std::string& macroGridName,
   // define (first) source term:
   FirstSourceType f; // standard source f
 
-  // exact solution unknown?
-  #ifdef EXACTSOLUTION_AVAILABLE
-  const ExactSolutionType u;
-  const DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
-  #endif // ifdef EXACTSOLUTION_AVAILABLE
 
   // ! ---------------------------- general output parameters ------------------------------
   // general output parameters
@@ -311,21 +298,23 @@ void algorithm(const std::string& macroGridName,
   // ! --------------------------------------------------------------------------------------
 
   // ! -------------------------- writing data output Exact Solution ------------------------
-  #ifdef EXACTSOLUTION_AVAILABLE
-  // --------- data output discrete exact solution --------------
+  if (Problem::ModelProblemData::has_exact_solution)
+  {
+    const ExactSolutionType u;
+    const DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
 
-  // create and initialize output class
-  ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-  outputparam.set_prefix("exact_solution");
-  ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
+    // create and initialize output class
+    ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+    outputparam.set_prefix("exact_solution");
+    ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
 
-  // write data
-  outstring << "exact-solution";
-  exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
-  // -------------------------------------------------------
-  #endif // ifdef EXACTSOLUTION_AVAILABLE
+    // write data
+    outstring << "exact-solution";
+    exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+    // clear the std::stringstream:
+    outstring.str( std::string() );
+    // -------------------------------------------------------
+  }
   // ! --------------------------------------------------------------------------------------
 
   // ! --------------- writing data output for the coarse grid visualization ------------------
@@ -468,27 +457,29 @@ void algorithm(const std::string& macroGridName,
   }
 
   // ! ----------------- compute L2- and H1- errors -------------------
-  #ifdef EXACTSOLUTION_AVAILABLE
-  RangeType msfem_error = l2error.norm< ExactSolutionType >(u,
-                                                            msfem_solution,
-                                                            2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
-
-  DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
-  if ( data_file.is_open() )
+  if (Problem::ModelProblemData::has_exact_solution)
   {
-    data_file << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
-  }
+    const ExactSolutionType u;
+    RangeType msfem_error = l2error.norm< ExactSolutionType >(u,
+                                                              msfem_solution,
+                                                              2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
 
-  RangeType h1_msfem_error(0.0);
-  h1_msfem_error = h1error.semi_norm< ExactSolutionType >(u, msfem_solution);
-  h1_msfem_error += msfem_error;
+    DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
+    }
 
-  DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
-  if ( data_file.is_open() )
-  {
-    data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl;
+    RangeType h1_msfem_error(0.0);
+    h1_msfem_error = h1error.semi_norm< ExactSolutionType >(u, msfem_solution);
+    h1_msfem_error += msfem_error;
+
+    DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl;
+    }
   }
-  #endif // ifdef EXACTSOLUTION_AVAILABLE
   // ! ----------------------------------------------------------------------
 
   // ! ----------------------------------------------------------------------
@@ -584,53 +575,55 @@ void algorithm(const std::string& macroGridName,
 
   // ! ----------------- compute L2- and H1- errors -------------------
 
-  #ifdef EXACTSOLUTION_AVAILABLE
-  RangeType fem_error = l2error.norm< ExactSolutionType >(u,
-                                                          fem_solution,
-                                                          2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
-
-  DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
-  if ( data_file.is_open() )
+  if (Problem::ModelProblemData::has_exact_solution)
   {
-    data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
-  }
+    const ExactSolutionType u;
+    RangeType fem_error = l2error.norm< ExactSolutionType >(u,
+                                                            fem_solution,
+                                                            2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
 
-  RangeType h1_fem_error(0.0);
-  h1_fem_error = h1error.semi_norm< ExactSolutionType >(u, fem_solution);
-  h1_fem_error += fem_error;
+    DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
+    }
 
-  DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
-  if ( data_file.is_open() )
-  {
-    data_file << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
-  }
-  #else // ifdef EXACTSOLUTION_AVAILABLE
-  DSC_LOG_ERROR << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
-            << std::endl << std::endl;
-  if ( data_file.is_open() )
-  {
-    data_file << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
+    RangeType h1_fem_error(0.0);
+    h1_fem_error = h1error.semi_norm< ExactSolutionType >(u, fem_solution);
+    h1_fem_error += fem_error;
+
+    DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
+    }
+  } else {
+    DSC_LOG_ERROR << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
               << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
+                << std::endl << std::endl;
+    }
+
+    RangeType approx_msfem_error = l2error.norm2< 2* DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
+                                                                                                      msfem_solution);
+
+    DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
+    }
+
+    H1Norm< GridPartType > h1norm(gridPart);
+    RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
+
+    DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl;
+    }
   }
-
-  RangeType approx_msfem_error = l2error.norm2< 2* DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
-                                                                                                    msfem_solution);
-
-  DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
-  if ( data_file.is_open() )
-  {
-    data_file << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
-  }
-
-  H1Norm< GridPartType > h1norm(gridPart);
-  RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
-
-  DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
-  if ( data_file.is_open() )
-  {
-    data_file << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl;
-  }
-  #endif // ifdef EXACTSOLUTION_AVAILABLE
   // ! -------------------------------------------------------
 
 } // function algorithm

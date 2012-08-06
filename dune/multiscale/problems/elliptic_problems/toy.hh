@@ -14,9 +14,6 @@
 
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
-// is an exact solution available?
-// #define EXACTSOLUTION_AVAILABLE
-
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
 namespace Toy {

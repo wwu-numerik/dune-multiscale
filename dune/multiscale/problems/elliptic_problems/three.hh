@@ -7,10 +7,6 @@
 
 // !############################## Elliptic Problem 1 ###################################
 
-
-// is an exact solution available?
-#define EXACTSOLUTION_AVAILABLE
-
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
 namespace Three {
@@ -23,6 +19,8 @@ CONSTANTSFUNCTION(0.05, 0.05, 0.1)
 struct ModelProblemData
   : public IModelProblemData
 {
+  static const bool has_exact_solution = true;
+
   ModelProblemData(const std::string filename = "no_name")
     : IModelProblemData(constants(), filename) {
   }
