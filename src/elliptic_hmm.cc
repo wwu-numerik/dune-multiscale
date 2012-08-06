@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
     // to save all information in a file
     std::ofstream data_file( (save_filename).c_str() );
 
-    algorithm<Problem::ModelProblemData, HMMTraits>
+    algorithm<HMMTraits>
         (info,
           UnitCubeName,
               macro_grid_pointer,

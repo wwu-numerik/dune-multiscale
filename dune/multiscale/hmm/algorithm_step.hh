@@ -44,7 +44,7 @@ void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
   }
 } // boundaryTreatment
 
-template < class ProblemDataType, class HMMTraits >
+template < class HMMTraits >
 HMMResult<HMMTraits>
     single_step(
         typename HMMTraits::GridPartType& gridPart,
@@ -487,7 +487,7 @@ HMMResult<HMMTraits>
       #endif
     } //if not problem.linear
 
-    const auto retval = estimate_error<ProblemDataType,HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
+    const auto retval = estimate_error<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                    diffusion_op, rhsassembler, data_file, filename, cp_num_manager, hmm_solution);
 
     const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
@@ -609,7 +609,7 @@ HMMResult<HMMTraits>
     }
     #endif // ifdef HOMOGENIZEDSOL_AVAILABLE
 
-    if (ProblemDataType::has_exact_solution)
+    if (HMM::ModelProblemDataType::has_exact_solution)
     {
       const typename HMM::ExactSolutionType u;
       const typename HMM::RangeType exact_hmm_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
@@ -693,7 +693,7 @@ HMMResult<HMMTraits>
     outstring.str( std::string() );
     // -------------------------------------------------------
 
-    if (ProblemDataType::has_exact_solution) {
+    if (HMM::ModelProblemDataType::has_exact_solution) {
       // --------- data output discrete exact solution --------------
 
       // create and initialize output class

@@ -27,6 +27,181 @@ void oneLinePrint(Stream& stream, const DiscFunc& func) {
   stream << " ] " << std::endl;
 } // oneLinePrint
 
+template <class HMM>
+void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
+                 std::ofstream& data_file,
+                 const typename HMM::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
+                 const typename HMM::EllipticOperatorType& discrete_elliptic_op,
+                 const std::string& filename,
+                 const typename HMM::ModelProblemDataType& problem_data,
+                 const Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType >& rhsassembler)
+{
+  static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
+  const Dune::L2Error< typename HMM::DiscreteFunctionType > l2error;
+
+  // starting value for the Newton method
+  typename HMM::DiscreteFunctionType zero_func(filename + " constant zero function ", finerDiscreteFunctionSpace);
+  zero_func.clear();
+
+  // ! *************************** Assembling the reference problem ****************************
+  // ( fine scale reference solution = fem_newton_solution )
+
+  // ! (stiffness) matrix
+  typename HMM::FEMMatrix fem_newton_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
+
+  // ! right hand side vector
+  // right hand side for the finite element method with Newton solver:
+  // ( also right hand side for the finer discrete function space )
+  typename HMM::DiscreteFunctionType fem_newton_rhs("fem newton rhs", finerDiscreteFunctionSpace);
+  fem_newton_rhs.clear();
+
+  const typename HMM::FirstSourceType f;   // standard source f
+
+  if (DSC_CONFIG.get("problem.linear", true))
+  {
+    DSC_LOG_INFO << "Solving linear problem." << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "Solving linear problem with standard FEM and resolution level "
+                << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
+      data_file << "------------------------------------------------------------------------------" << std::endl;
+    }
+
+    // to assemble the computational time
+    Dune::Timer assembleTimer;
+
+    // assemble the stiffness matrix
+    discrete_elliptic_op.assemble_matrix(fem_newton_matrix);
+
+    DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+    }
+
+    // assemble right hand side
+    rhsassembler.template assemble< hmm_polorder >(f, fem_newton_rhs);
+
+    // set Dirichlet Boundary to zero
+    typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
+    const IteratorType fine_endit = finerDiscreteFunctionSpace.end();
+    for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it)
+      boundaryTreatment(*fine_it, fem_newton_rhs);
+
+    const typename HMM::InverseFEMMatrix fem_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
+    fem_biCGStab(fem_newton_rhs, fem_newton_solution);
+
+    if ( data_file.is_open() )
+    {
+      data_file << "---------------------------------------------------------------------------------" << std::endl;
+      data_file << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
+                << std::endl;
+    }
+  } else {
+    DSC_LOG_INFO << "Solving non-linear problem." << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
+                << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
+      data_file << "---------------------------------------------------------------------------------" << std::endl;
+    }
+
+    Dune::Timer assembleTimer;
+
+    // ! residual vector
+    // current residual
+    typename HMM::DiscreteFunctionType fem_newton_residual(filename + "FEM Newton Residual", finerDiscreteFunctionSpace);
+    fem_newton_residual.clear();
+
+    typename HMM::RangeType relative_newton_error_finescale = 10000.0;
+    typename HMM::RangeType rhs_L2_norm = 10000.0;
+
+    int iteration_step = 1;
+    // the Newton step for the FEM reference problem (solved with Newton Method):
+    // L2-Norm of residual < tolerance ?
+    double tolerance = 1e-06;
+    while (relative_newton_error_finescale > tolerance)
+    {
+      // (here: fem_newton_solution = solution from the last iteration step)
+      DSC_LOG_INFO << "Newton iteration " << iteration_step << ":" << std::endl;
+      if ( data_file.is_open() )
+      {
+        data_file << "Newton iteration " << iteration_step << ":" << std::endl;
+      }
+      Dune::Timer stepAssembleTimer;
+      // assemble the stiffness matrix
+      discrete_elliptic_op.assemble_jacobian_matrix(fem_newton_solution, fem_newton_matrix);
+
+      DSC_LOG_INFO << "Time to assemble FEM Newton stiffness matrix for current iteration: "
+                   << stepAssembleTimer.elapsed() << "s" << std::endl;
+
+      // assemble right hand side
+      const typename HMM::DiffusionType diffusion_op;
+      rhsassembler.template assemble_for_Newton_method< hmm_polorder >(f,
+                                                                       diffusion_op,
+                                                                       fem_newton_solution,
+                                                                       fem_newton_rhs);
+
+      rhs_L2_norm = l2error.template norm2< hmm_polorder >(fem_newton_rhs, zero_func);
+      if (rhs_L2_norm < 1e-10)
+      {
+        // residual solution almost identical to zero: break
+        if ( data_file.is_open() )
+        {
+          data_file << "Residual solution almost identical to zero. Therefore: break loop." << std::endl;
+          data_file << "(L^2-Norm of current right hand side = " << rhs_L2_norm << " < 1e-10)" << std::endl;
+        }
+        break;
+      }
+      // set Dirichlet Boundary to zero
+      typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
+      const IteratorType fine_endit = finerDiscreteFunctionSpace.end();
+      for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it)
+        boundaryTreatment(*fine_it, fem_newton_rhs);
+
+      const typename HMM::InverseFEMMatrix fem_newton_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, true);
+      fem_newton_biCGStab(fem_newton_rhs, fem_newton_residual);
+
+      if ( fem_newton_residual.dofsValid() )
+      {
+        fem_newton_solution += fem_newton_residual;
+        relative_newton_error_finescale = l2error.template norm2< hmm_polorder >(
+                                            fem_newton_residual,
+                                            zero_func);
+        relative_newton_error_finescale /= l2error.template norm2< hmm_polorder >(
+                                             fem_newton_solution,
+                                             zero_func);
+
+        DSC_LOG_INFO << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
+        // residual solution almost identical to zero: break
+        if ( data_file.is_open() )
+        {
+          data_file << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
+          if (relative_newton_error_finescale <= tolerance)
+          {
+            data_file << "Since tolerance = " << tolerance << ": break loop." << std::endl;
+          }
+        }
+        fem_newton_residual.clear();
+      } else {
+        DSC_LOG_INFO << "WARNING! Invalid dofs in 'fem_newton_residual'." << std::endl;
+        break;
+      }
+      iteration_step += 1;
+    }
+    DSC_LOG_INFO << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
+                 << std::endl;
+    if ( data_file.is_open() )
+    {
+      data_file << "---------------------------------------------------------------------------------" << std::endl;
+      data_file << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
+                << std::endl << std::endl;
+    }
+  }// end 'problem.linear <-> else'
+
+  // ! ********************** End of assembling the reference problem ***************************
+}
+
 //! \todo replace me with Stuff::something
 template < class DiscreteFunctionSpaceType >
 typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctionSpaceType& discreteFunctionSpace) {
@@ -107,8 +282,8 @@ void print_info(const ProblemDataType& info, std::ofstream& data_file)
 }
 
 //! the main hmm computation
-template < class ProblemDataType, class HMMTraits >
-void algorithm(const ProblemDataType& problem_data,
+template < class HMMTraits >
+void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
                const std::string& /*UnitCubeName*/,
                typename HMMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
                typename HMMTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
@@ -219,26 +394,6 @@ void algorithm(const ProblemDataType& problem_data,
     }
   }
 
-//  #ifdef FINE_SCALE_REFERENCE
-//  #ifdef FSR_COMPUTE
-  // ! *******************************************************************
-
-  // starting value for the Newton method
-  typename HMM::DiscreteFunctionType zero_func(filename + " constant zero function ", finerDiscreteFunctionSpace);
-  zero_func.clear();
-
-  // ! *************************** Assembling the reference problem ****************************
-  // ( fine scale reference solution = fem_newton_solution )
-
-  // ! (stiffness) matrix
-  typename HMM::FEMMatrix fem_newton_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
-
-  // ! right hand side vector
-  // right hand side for the finite element method with Newton solver:
-  // ( also right hand side for the finer discrete function space )
-  typename HMM::DiscreteFunctionType fem_newton_rhs("fem newton rhs", finerDiscreteFunctionSpace);
-  fem_newton_rhs.clear();
-
   // ! solution vector
   // solution of the finite element method, where we used the Newton method to solve the non-linear system of equations
   // in general this will be an accurate approximation of the exact solution, that is why we it also called reference
@@ -248,149 +403,12 @@ void algorithm(const ProblemDataType& problem_data,
   // By fem_newton_solution, we denote the "fine scale reference solution" (used for comparison)
   // ( if the elliptic problem is linear, the 'fem_newton_solution' is determined without the Newton method )
 
-  if (DSC_CONFIG.get("problem.linear", true))
+//  #ifdef FINE_SCALE_REFERENCE
+  if (true)
   {
-    DSC_LOG_INFO << "Solving linear problem." << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "Solving linear problem with standard FEM and resolution level "
-                << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
-      data_file << "------------------------------------------------------------------------------" << std::endl;
-    }
-
-    // to assemble the computational time
-    Dune::Timer assembleTimer;
-
-    // assemble the stiffness matrix
-    discrete_elliptic_op.assemble_matrix(fem_newton_matrix);
-
-    DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-    }
-
-    // assemble right hand side
-    rhsassembler.template assemble< hmm_polorder >(f, fem_newton_rhs);
-
-    // set Dirichlet Boundary to zero
-    typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-    const IteratorType fine_endit = finerDiscreteFunctionSpace.end();
-    for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it)
-      boundaryTreatment(*fine_it, fem_newton_rhs);
-
-    const typename HMM::InverseFEMMatrix fem_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
-    fem_biCGStab(fem_newton_rhs, fem_newton_solution);
-
-    if ( data_file.is_open() )
-    {
-      data_file << "---------------------------------------------------------------------------------" << std::endl;
-      data_file << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
-                << std::endl;
-    }
-  } else {
-    DSC_LOG_INFO << "Solving non-linear problem." << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
-                << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
-      data_file << "---------------------------------------------------------------------------------" << std::endl;
-    }
-
-    Dune::Timer assembleTimer;
-
-    // ! residual vector
-    // current residual
-    typename HMM::DiscreteFunctionType fem_newton_residual(filename + "FEM Newton Residual", finerDiscreteFunctionSpace);
-    fem_newton_residual.clear();
-
-    typename HMM::RangeType relative_newton_error_finescale = 10000.0;
-    typename HMM::RangeType rhs_L2_norm = 10000.0;
-
-    int iteration_step = 1;
-    // the Newton step for the FEM reference problem (solved with Newton Method):
-    // L2-Norm of residual < tolerance ?
-    double tolerance = 1e-06;
-    while (relative_newton_error_finescale > tolerance)
-    {
-      // (here: fem_newton_solution = solution from the last iteration step)
-      DSC_LOG_INFO << "Newton iteration " << iteration_step << ":" << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "Newton iteration " << iteration_step << ":" << std::endl;
-      }
-      Dune::Timer stepAssembleTimer;
-      // assemble the stiffness matrix
-      discrete_elliptic_op.assemble_jacobian_matrix(fem_newton_solution, fem_newton_matrix);
-
-      DSC_LOG_INFO << "Time to assemble FEM Newton stiffness matrix for current iteration: "
-                << stepAssembleTimer.elapsed() << "s" << std::endl;
-
-      // assemble right hand side
-      rhsassembler.template assemble_for_Newton_method< hmm_polorder >(f,
-                                                                              diffusion_op,
-                                                                              fem_newton_solution,
-                                                                              fem_newton_rhs);
-
-      rhs_L2_norm = l2error.template norm2< hmm_polorder >(fem_newton_rhs, zero_func);
-      if (rhs_L2_norm < 1e-10)
-      {
-        // residual solution almost identical to zero: break
-        if ( data_file.is_open() )
-        {
-          data_file << "Residual solution almost identical to zero. Therefore: break loop." << std::endl;
-          data_file << "(L^2-Norm of current right hand side = " << rhs_L2_norm << " < 1e-10)" << std::endl;
-        }
-        break;
-      }
-      // set Dirichlet Boundary to zero
-      typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-      const IteratorType fine_endit = finerDiscreteFunctionSpace.end();
-      for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it)
-        boundaryTreatment(*fine_it, fem_newton_rhs);
-
-      const typename HMM::InverseFEMMatrix fem_newton_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, true);
-      fem_newton_biCGStab(fem_newton_rhs, fem_newton_residual);
-
-      if ( fem_newton_residual.dofsValid() )
-      {
-        fem_newton_solution += fem_newton_residual;
-        relative_newton_error_finescale = l2error.template norm2< hmm_polorder >(
-          fem_newton_residual,
-          zero_func);
-        relative_newton_error_finescale /= l2error.template norm2< hmm_polorder >(
-          fem_newton_solution,
-          zero_func);
-
-        DSC_LOG_INFO << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
-        // residual solution almost identical to zero: break
-        if ( data_file.is_open() )
-        {
-          data_file << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
-          if (relative_newton_error_finescale <= tolerance)
-          {
-            data_file << "Since tolerance = " << tolerance << ": break loop." << std::endl;
-          }
-        }
-        fem_newton_residual.clear();
-      } else {
-        DSC_LOG_INFO << "WARNING! Invalid dofs in 'fem_newton_residual'." << std::endl;
-        break;
-      }
-      iteration_step += 1;
-    }
-    DSC_LOG_INFO << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
-              << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "---------------------------------------------------------------------------------" << std::endl;
-      data_file << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
-                << std::endl << std::endl;
-    }
-  }// end 'problem.linear <-> else'
-
-  // ! ********************** End of assembling the reference problem ***************************
-//  #endif       // FSR_COMPUTE
+    fsr_compute<HMM>(fem_newton_solution, data_file, finerDiscreteFunctionSpace, discrete_elliptic_op,
+                     filename, problem_data, rhsassembler);
+  }
 
 //  #ifdef FSR_LOAD
 
@@ -475,7 +493,7 @@ void algorithm(const ProblemDataType& problem_data,
 
     typename HMM::RestrictProlongOperatorType rp(hmm_solution);
     typename HMM::AdaptationManagerType adaptationManager(grid, rp);
-    const auto result = single_step<ProblemDataType,HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
+    const auto result = single_step<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                 diffusion_op, rhsassembler, data_file, filename, hmm_solution);
 
     if (!DSC_CONFIG.get("hmm.adaptive", true))

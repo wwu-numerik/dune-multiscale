@@ -39,7 +39,7 @@ struct HMMResult {
 
 
 //! ---------- Error Estimation ----------
-template < class ProblemDataType, class HMMTraits >
+template < class HMMTraits >
 HMMResult<HMMTraits>  estimate_error(
         const typename HMMTraits::GridPartType& gridPart,
         const typename HMMTraits::GridPartType& /*gridPartFine*/,

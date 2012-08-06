@@ -32,6 +32,7 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 >              Function
 // !-----------------------------------------------------------------------------------------
 
 // ! --------- typedefs for the coefficient and data functions ------------------------------
+typedef Problem::ModelProblemData ModelProblemDataType;
 // type of first source term (right hand side of differential equation or type of 'f')
 typedef Problem::FirstSource< FunctionSpaceType > FirstSourceType;
 // type of second source term 'G' (second right hand side of differential equation 'div G')
