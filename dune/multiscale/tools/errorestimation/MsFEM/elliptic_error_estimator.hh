@@ -626,13 +626,12 @@ public:
   RangeType adaptive_refinement(GridType& /*coarse_grid*/,
                                 const DiscreteFunctionType& msfem_solution,
                                 const DiscreteFunctionType& msfem_coarse_part,
-                                const DiscreteFunctionType& msfem_fine_part,
-                                std::ofstream& DSC_LOG_INFO) {
+                                const DiscreteFunctionType& msfem_fine_part)
+  {
     DSC_LOG_INFO << "Start computing conservative fluxes..." << std::endl;
-
     ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
                                    MacroMicroGridSpecifierImp >
-    flux_problem_solver(fineDiscreteFunctionSpace_, diffusion_, specifier_, DSC_LOG_INFO, path_);
+    flux_problem_solver(fineDiscreteFunctionSpace_, diffusion_, specifier_, path_);
 
     flux_problem_solver.solve_all(subgrid_list_);
 
@@ -975,20 +974,6 @@ public:
     total_estimated_error += total_conservative_flux_jumps;
     total_estimated_error += total_approximation_error;
     total_estimated_error += total_fine_grid_jumps;
-
-    if ( DSC_LOG_INFO.is_open() )
-    {
-      DSC_LOG_INFO << std::endl
-                << "Estimated Errors:" << std::endl << std::endl
-                << "Total estimated error = " << total_estimated_error << "." << std::endl
-                << "where: " << std::endl
-                << "total_coarse_residual = " << total_coarse_residual << "." << std::endl
-                << "total_projection_error = " << total_projection_error << "." << std::endl
-                << "total_coarse_grid_jumps = " << total_coarse_grid_jumps << "." << std::endl
-                << "total_conservative_flux_jumps = " << total_conservative_flux_jumps << "." << std::endl
-                << "total_approximation_error = " << total_approximation_error << "." << std::endl
-                << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std::endl;
-    }
 
     DSC_LOG_INFO  << std::endl
                   << "Estimated Errors:" << std::endl << std::endl

@@ -663,22 +663,18 @@ private:
   const MacroMicroGridSpecifierType& specifier_;
 
   // path where to save the data output
-  std::string path_;
-
-  std::ofstream* DSC_LOG_INFO;
+  const std::string path_;
 
 public:
   //! constructor - with diffusion operator A^{\epsilon}(x)
   ConservativeFluxProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                                 const DiffusionOperatorType& diffusion_operator,
                                 const MacroMicroGridSpecifierType& specifier,
-                                std::ofstream& DSC_LOG_INFO,
                                 std::string path = "")
     : diffusion_(diffusion_operator)
       , hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
       , specifier_(specifier)
       , path_(path)
-      , DSC_LOG_INFO(&DSC_LOG_INFO)
   {}
 
   template< class Stream >
@@ -952,28 +948,22 @@ public:
       // oneLinePrint( DSC_LOG_DEBUG, conservative_flux_e0 );
       // oneLinePrint( DSC_LOG_DEBUG, conservative_flux_e1 );
     }
+    DSC_LOG_INFO << std::endl;
+    DSC_LOG_INFO << "In: 'assemble all conservatice fluxes'." << std::endl << std::endl;
+    DSC_LOG_INFO << "Conservative Flux determined for " << number_of_coarse_grid_entities
+                  << " coarse grid entities." << std::endl;
+    DSC_LOG_INFO << dimension * number_of_coarse_grid_entities
+                  << " conservative flux problems solved in total." << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a conservative flux problem = " << minimum_time_c_p << "s."
+                  << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a conservative flux problem = " << maximum_time_c_p << "s."
+                  << std::endl;
+    DSC_LOG_INFO << "Average time for solving a conservative flux problem = "
+                  << ( (clock()
+          - starting_time) / CLOCKS_PER_SEC ) / (dimension * number_of_coarse_grid_entities) << "s." << std::endl;
+    DSC_LOG_INFO << "Total time for computing and saving the conservative flux problems = "
+                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
 
-    if (DSC_LOG_INFO)
-    {
-      if ( DSC_LOG_INFO->is_open() )
-      {
-        (*DSC_LOG_INFO) << std::endl;
-        (*DSC_LOG_INFO) << "In: 'assemble all conservatice fluxes'." << std::endl << std::endl;
-        (*DSC_LOG_INFO) << "Conservative Flux determined for " << number_of_coarse_grid_entities
-                      << " coarse grid entities." << std::endl;
-        (*DSC_LOG_INFO) << dimension * number_of_coarse_grid_entities
-                      << " conservative flux problems solved in total." << std::endl;
-        (*DSC_LOG_INFO) << "Minimum time for solving a conservative flux problem = " << minimum_time_c_p << "s."
-                      << std::endl;
-        (*DSC_LOG_INFO) << "Maximum time for solving a conservative flux problem = " << maximum_time_c_p << "s."
-                      << std::endl;
-        (*DSC_LOG_INFO) << "Average time for solving a conservative flux problem = "
-                      << ( (clock()
-              - starting_time) / CLOCKS_PER_SEC ) / (dimension * number_of_coarse_grid_entities) << "s." << std::endl;
-        (*DSC_LOG_INFO) << "Total time for computing and saving the conservative flux problems = "
-                      << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
-      }
-    }
   } // solve_all
 }; // end class
 } // end namespace Dune

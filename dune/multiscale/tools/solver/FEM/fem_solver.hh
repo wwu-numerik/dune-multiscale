@@ -164,34 +164,16 @@ public:
     DiscreteFunction fem_rhs("fem newton rhs", discreteFunctionSpace_);
     fem_rhs.clear();
 
-    DSC_LOG_INFO << "Solving linear problem." << std::endl;
-
-    if (DSC_LOG_INFO)
-    {
-      if ( DSC_LOG_INFO->is_open() )
-      {
-        DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
-                    << discreteFunctionSpace_.grid().maxLevel() << "." << std::endl;
-        DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
-      }
-    }
+    DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
+                << discreteFunctionSpace_.grid().maxLevel() << "." << std::endl;
+    DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     // to assemble the computational time
     Dune::Timer assembleTimer;
-
     // assemble the stiffness matrix
     discrete_elliptic_op.assemble_matrix(fem_matrix);
 
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-
-    if (DSC_LOG_INFO)
-    {
-      if ( DSC_LOG_INFO->is_open() )
-      {
-        DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s"
-                    << std::endl;
-      }
-    }
 
     // assemble right hand side
     rhsassembler.template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, fem_rhs);

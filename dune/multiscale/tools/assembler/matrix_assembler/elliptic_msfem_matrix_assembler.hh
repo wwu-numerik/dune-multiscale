@@ -56,21 +56,16 @@ protected:
   static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
 
   typedef typename FineDiscreteFunction::LocalFunctionType FineLocalFunction;
-
   typedef typename FineDiscreteFunctionSpace::BaseFunctionSetType                   FineBaseFunctionSet;
   typedef typename FineDiscreteFunctionSpace::LagrangePointSetType                  FineLagrangePointSet;
   typedef typename FineLagrangePointSet::template Codim< 1 >::SubEntityIteratorType FineFaceDofIterator;
-
   typedef typename FineGrid::Traits::LeafIndexSet FineGridLeafIndexSet;
-
   typedef typename FineDiscreteFunctionSpace::IteratorType FineIterator;
   typedef typename FineIterator::Entity                    FineEntity;
   typedef typename FineEntity::EntityPointer               FineEntityPointer;
   typedef typename FineEntity::Geometry                    FineGeometry;
-
   typedef typename FineGridPart::IntersectionIteratorType FineIntersectionIterator;
   typedef typename FineIntersectionIterator::Intersection FineIntersection;
-
   typedef CachingQuadrature< FineGridPart, 0 > FineQuadrature;
 
 public:
@@ -79,20 +74,15 @@ public:
 
 protected:
   typedef typename CoarseDiscreteFunction::LocalFunctionType CoarseLocalFunction;
-
   typedef typename CoarseDiscreteFunctionSpace::BaseFunctionSetType                   CoarseBaseFunctionSet;
   typedef typename CoarseDiscreteFunctionSpace::LagrangePointSetType                  CoarseLagrangePointSet;
   typedef typename CoarseLagrangePointSet::template Codim< 1 >::SubEntityIteratorType CoarseFaceDofIterator;
-
   typedef typename CoarseDiscreteFunctionSpace::IteratorType CoarseIterator;
   typedef typename CoarseGrid::Traits::LeafIndexSet          CoarseGridLeafIndexSet;
-
   typedef typename CoarseIterator::Entity CoarseEntity;
   typedef typename CoarseEntity::Geometry CoarseGeometry;
-
   typedef typename CoarseGridPart::IntersectionIteratorType CoarseIntersectionIterator;
   typedef typename CoarseIntersectionIterator::Intersection CoarseIntersection;
-
   typedef CachingQuadrature< CoarseGridPart, 0 > CoarseQuadrature;
 
 public:
@@ -108,21 +98,13 @@ public:
 
   //! type of subgrid discrete function
   typedef AdaptiveDiscreteFunction< LocalDiscreteFunctionSpace > LocalDiscreteFunction;
-
   typedef typename LocalDiscreteFunctionSpace::IteratorType LocalGridIterator;
-
   typedef typename LocalGridIterator::Entity LocalGridEntity;
-
   typedef typename LocalGridEntity::EntityPointer LocalGridEntityPointer;
-
   typedef typename LocalDiscreteFunction::LocalFunctionType LocalGridLocalFunction;
-
   typedef typename LocalDiscreteFunctionSpace::LagrangePointSetType LGLagrangePointSet;
-
   typedef typename LocalDiscreteFunctionSpace::BaseFunctionSetType LocalGridBaseFunctionSet;
-
   typedef typename LocalGridEntity::Geometry LocalGridGeometry;
-
   typedef CachingQuadrature< SubGridPart, 0 > LocalGridQuadrature;
 
   //!-----------------------------------------------------------------------------------------
@@ -134,13 +116,11 @@ public:
                                 // n(T)-layers:
                                 SubGridListType& subgrid_list,
                                 const DiffusionModel& diffusion_op,
-                                std::ofstream& DSC_LOG_INFO,
                                 std::string path = "")
     : specifier_(specifier)
       , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
       , subgrid_list_(subgrid_list)
       , diffusion_operator_(diffusion_op)
-      , DSC_LOG_INFO(&DSC_LOG_INFO)
       , path_(path) {
     bool silence = false;
 
@@ -150,7 +130,7 @@ public:
     std::string local_path = path_ + "/local_problems/";
 
     MsFEMLocalProblemSolverType loc_prob_solver(
-      specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, &DSC_LOG_INFO, local_path);
+      specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, local_path);
 
     loc_prob_solver.assemble_all(silence);
   }
@@ -189,11 +169,7 @@ private:
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
   SubGridListType& subgrid_list_;
   const DiffusionModel& diffusion_operator_;
-
-  // data file for saving information
-  std::ofstream* DSC_LOG_INFO;
-
-  // path where to save the data output
+  //! path where to save the data output
   std::string path_;
 };
 

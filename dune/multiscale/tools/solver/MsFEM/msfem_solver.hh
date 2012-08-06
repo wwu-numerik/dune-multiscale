@@ -317,24 +317,14 @@ public:
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
-
-  std::ofstream* DSC_LOG_INFO;
-
   // path where to save the data output
-  std::string path_;
+  const std::string path_;
 
 public:
   Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace, std::string path = "")
     : discreteFunctionSpace_(discreteFunctionSpace)
-      , DSC_LOG_INFO(NULL)
-  { path_ = path; }
-
-  Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace,
-                        std::ofstream& DSC_LOG_INFO,
-                        std::string path = "")
-    : discreteFunctionSpace_(discreteFunctionSpace)
-      , DSC_LOG_INFO(&DSC_LOG_INFO)
-  { path_ = path; }
+      , path_(path)
+  {}
 
   template< class Stream >
   void oneLinePrint(Stream& stream, const DiscreteFunction& func) {
@@ -440,7 +430,7 @@ public:
     const EllipticMsFEMOperatorType elliptic_msfem_op(specifier,
                                                 coarse_space,
                                                 subgrid_list,
-                                                diffusion_op, *DSC_LOG_INFO, path_);
+                                                diffusion_op, path_);
     // discrete elliptic operator (corresponds with FEM Matrix)
 
     //! (stiffness) matrix
@@ -451,34 +441,17 @@ public:
     DiscreteFunction msfem_rhs("MsFEM right hand side", coarse_space);
     msfem_rhs.clear();
 
-    DSC_LOG_INFO  << std::endl
-                  << "Solving MsFEM problem." << std::endl;
-
-    if (DSC_LOG_INFO)
-    {
-      if ( DSC_LOG_INFO->is_open() )
-      {
-        *DSC_LOG_INFO << "Solving linear problem with MsFEM and maximum coarse grid level "
-                    << coarse_space.gridPart().grid().maxLevel() << "." << std::endl;
-        *DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
-      }
-    }
+    DSC_LOG_INFO  << std::endl << "Solving MsFEM problem." << std::endl;
+    DSC_LOG_INFO << "Solving linear problem with MsFEM and maximum coarse grid level "
+                << coarse_space.gridPart().grid().maxLevel() << "." << std::endl;
+    DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     // to assemble the computational time
     Dune::Timer assembleTimer;
 
     // assemble the MsFEM stiffness matrix
     elliptic_msfem_op.assemble_matrix(msfem_matrix);   // einbinden!
-
     DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-
-    if (DSC_LOG_INFO)
-    {
-      if ( DSC_LOG_INFO->is_open() )
-      {
-        *DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-      }
-    }
 
     // assemble right hand side
     rhsassembler.template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs);
@@ -517,18 +490,11 @@ public:
     const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/);
     msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
 
-    if (DSC_LOG_INFO)
-    {
-      if ( DSC_LOG_INFO->is_open() )
-      {
-        *DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
-        *DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
-                    << std::endl;
-      }
-    }
+    DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
+    DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
+                << std::endl;
 
     // oneLinePrint( DSC_LOG_DEBUG, solution );
-
     // copy coarse grid function (defined on the subgrid) into a fine grid function
     solution.clear();
 

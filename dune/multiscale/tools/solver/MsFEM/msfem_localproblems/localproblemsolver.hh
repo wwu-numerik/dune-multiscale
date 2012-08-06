@@ -515,14 +515,9 @@ public:
 private:
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
-
   const MacroMicroGridSpecifierType& specifier_;
-
   SubGridListType& subgrid_list_;
-
-  std::ofstream* DSC_LOG_INFO;
-
-  // path where to save the data output
+  //! path where to save the data output
   const std::string path_;
 
 public:
@@ -534,13 +529,11 @@ public:
                           const MacroMicroGridSpecifierType& specifier,
                           SubGridListType& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator,
-                          std::ofstream* DSC_LOG_INFO = nullptr,
                           std::string path = "")
     : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
       , diffusion_(diffusion_operator)
       , specifier_(specifier)
       , subgrid_list_(subgrid_list)
-      , DSC_LOG_INFO(DSC_LOG_INFO)
       , path_(path)
   {}
 
@@ -933,25 +926,19 @@ public:
       }
     } // end: 'if ( writer_is_open )'
 
-    if (DSC_LOG_INFO)
-    {
-      if ( DSC_LOG_INFO->is_open() )
-      {
-        (*DSC_LOG_INFO) << std::endl;
-        (*DSC_LOG_INFO) << "In method: assemble_all." << std::endl << std::endl;
-        (*DSC_LOG_INFO) << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."
-                      << std::endl;
-        (*DSC_LOG_INFO) << dimension * number_of_coarse_grid_entities << " local MsFEM problems solved in total."
-                      << std::endl;
-        (*DSC_LOG_INFO) << "Minimum time for solving a local problem = " << minimum_time_c_p << "s." << std::endl;
-        (*DSC_LOG_INFO) << "Maximum time for solving a localproblem = " << maximum_time_c_p << "s." << std::endl;
-        (*DSC_LOG_INFO) << "Average time for solving a localproblem = "
-                      << ( (clock()
-              - starting_time) / CLOCKS_PER_SEC ) / (dimension * number_of_coarse_grid_entities) << "s." << std::endl;
-        (*DSC_LOG_INFO) << "Total time for computing and saving the localproblems = "
-                      << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
-      }
-    }
+    DSC_LOG_INFO << std::endl;
+    DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
+    DSC_LOG_INFO << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."
+                  << std::endl;
+    DSC_LOG_INFO << dimension * number_of_coarse_grid_entities << " local MsFEM problems solved in total."
+                  << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a local problem = " << minimum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a localproblem = " << maximum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Average time for solving a localproblem = "
+                  << ( (clock()
+          - starting_time) / CLOCKS_PER_SEC ) / (dimension * number_of_coarse_grid_entities) << "s." << std::endl;
+    DSC_LOG_INFO << "Total time for computing and saving the localproblems = "
+                    << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
   } // assemble_all
 }; // end class
 } // end namespace Dune
