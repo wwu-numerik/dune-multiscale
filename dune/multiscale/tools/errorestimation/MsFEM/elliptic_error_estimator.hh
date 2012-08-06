@@ -21,7 +21,7 @@ class MsFEMErrorEstimator
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
   typedef SubGridListImp             SubGridListType;
 
-  // ! Necessary typedefs for the DiscreteFunctionImp:
+  //! Necessary typedefs for the DiscreteFunctionImp:
 
   typedef DiscreteFunctionImp                              DiscreteFunctionType;
   typedef typename DiscreteFunctionType::FunctionSpaceType FunctionSpaceType;
@@ -91,7 +91,7 @@ class MsFEMErrorEstimator
 
   typedef CachingQuadrature< SubGridPart, 0 > LocalGridEntityQuadratureType;
 
-  // !-----------------------------------------------------------------------------------------
+  //!-----------------------------------------------------------------------------------------
 
   enum { dimension = GridType::dimension };
   enum { spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder };
@@ -179,7 +179,7 @@ public:
     }
   } // subgrid_to_hostrid_function
 
-  // ! method to get the local mesh size H of a coarse grid entity 'T'
+  //! method to get the local mesh size H of a coarse grid entity 'T'
   // works only for our 2D examples!!!!
   RangeType get_coarse_grid_H(const EntityType& entity) {
     // entity_H means H (the diameter of the entity)
@@ -303,7 +303,7 @@ public:
 
     int index_coarse_entity = coarseGridLeafIndexSet.index(coarse_entity);
 
-    // ! ---- get sub grid that for coarse entity
+    //! ---- get sub grid that for coarse entity
 
     // the sub grid U(T) that belongs to the coarse_grid_entity T
     SubGridType& sub_grid_U_T = subgrid_list_.getSubGrid(index_coarse_entity);
@@ -627,12 +627,12 @@ public:
                                 const DiscreteFunctionType& msfem_solution,
                                 const DiscreteFunctionType& msfem_coarse_part,
                                 const DiscreteFunctionType& msfem_fine_part,
-                                std::ofstream& data_file) {
+                                std::ofstream& DSC_LOG_INFO) {
     DSC_LOG_INFO << "Start computing conservative fluxes..." << std::endl;
 
     ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
                                    MacroMicroGridSpecifierImp >
-    flux_problem_solver(fineDiscreteFunctionSpace_, diffusion_, specifier_, data_file, path_);
+    flux_problem_solver(fineDiscreteFunctionSpace_, diffusion_, specifier_, DSC_LOG_INFO, path_);
 
     flux_problem_solver.solve_all(subgrid_list_);
 
@@ -863,7 +863,7 @@ public:
       for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
         coarse_father = coarse_father->father();
 
-      // ! new version:
+      //! new version:
       EntityPointerType coarse_father_test = coarse_father;
 
       bool father_found = false;
@@ -976,9 +976,9 @@ public:
     total_estimated_error += total_approximation_error;
     total_estimated_error += total_fine_grid_jumps;
 
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << std::endl
+      DSC_LOG_INFO << std::endl
                 << "Estimated Errors:" << std::endl << std::endl
                 << "Total estimated error = " << total_estimated_error << "." << std::endl
                 << "where: " << std::endl

@@ -20,23 +20,23 @@ template< class HostDiscreteFunctionImp, class SubGridImp, class MacroMicroGridS
 class SubGridList : boost::noncopyable
 {
 public:
-  // ! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
+  //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
 
   typedef HostDiscreteFunctionImp HostDiscreteFunctionType;
 
-  // ! type of discrete function space
+  //! type of discrete function space
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType
   HostDiscreteFunctionSpaceType;
 
-  // ! type of (non-discrete )function space
+  //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
 
-  // ! type of grid partition
+  //! type of grid partition
   typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
 
-  // ! type of grid
+  //! type of grid
   typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
 
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
@@ -51,13 +51,13 @@ public:
 
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
-  // ! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
+  //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
-  // ! type of grid
+  //! type of grid
   typedef SubGridImp SubGridType;
 
-  // ! type of grid part
+  //! type of grid part
   typedef LeafGridPart< SubGridType > SubGridPartType;
 
 private:
@@ -211,7 +211,7 @@ public:
 
     subGridList_ = new SubGridType *[number_of_coarse_grid_entities];
 
-    // ! ----------- create subgrids --------------------
+    //! ----------- create subgrids --------------------
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
@@ -372,7 +372,7 @@ public:
       }
     }
 
-    // ! ----------- end create subgrids --------------------
+    //! ----------- end create subgrids --------------------
   }
 
   SubGridType& getSubGrid(int i) {

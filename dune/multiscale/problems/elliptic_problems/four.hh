@@ -5,7 +5,7 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// !############################## Elliptic Problem 4 ###################################
+//!############################## Elliptic Problem 4 ###################################
 
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'

@@ -4,10 +4,10 @@
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
-// !NOTE: 'ErrorEstimator' requires an access to the 'ModelProblemData' class (typically defined in
+//!NOTE: 'ErrorEstimator' requires an access to the 'ModelProblemData' class (typically defined in
 // problem_specification.hh), which provides us with infomration about epsilon, delta, etc.
 
-// ! ------------------------- nonlinear elliptic ------------------------------------------
+//! ------------------------- nonlinear elliptic ------------------------------------------
 
 namespace Dune {
 template< class PeriodicDiscreteFunctionImp,
@@ -21,7 +21,7 @@ class ErrorEstimator
 {
   typedef DiffusionImp DiffusionOperatorType;
 
-  // ! Necessary typedefs for the PeriodicDiscreteFunctionImp:
+  //! Necessary typedefs for the PeriodicDiscreteFunctionImp:
 
   typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
 
@@ -43,7 +43,7 @@ class ErrorEstimator
 
   typedef CachingQuadrature< PeriodicGridPartType, 0 > PeriodicEntityQuadratureType;
   typedef CachingQuadrature< PeriodicGridPartType, 1 > PeriodicFaceQuadratureType;
-  // ! Necessary typedefs for the DiscreteFunctionImp:
+  //! Necessary typedefs for the DiscreteFunctionImp:
 
   typedef DiscreteFunctionImp DiscreteFunctionType;
 
@@ -92,7 +92,7 @@ public:
   {}
 
   // the new method:
-  // ! method to get the local mesh size H_entity (of the macro mesh)
+  //! method to get the local mesh size H_entity (of the macro mesh)
   // works only for our 2D examples!!!!
   RangeType getH(const EntityType& entity) const {
     // entity_H means H (the diameter of the entity)

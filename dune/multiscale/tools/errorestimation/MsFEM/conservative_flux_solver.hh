@@ -562,19 +562,19 @@ class ConservativeFluxProblemSolver
 public:
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
 
-  // ! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
+  //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
-  // ! type of discrete function space
+  //! type of discrete function space
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType
   HostDiscreteFunctionSpaceType;
 
-  // ! type of (non-discrete )function space
+  //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
 
-  // ! type of grid partition
+  //! type of grid partition
   typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
 
-  // ! type of grid
+  //! type of grid
   typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
 
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
@@ -595,10 +595,10 @@ public:
 
   static const int dimension = HostGridType::dimension;
 
-  // ! ---------------- typedefs for the SubGridDiscreteFunctionSpace -----------------------
+  //! ---------------- typedefs for the SubGridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
-  // ! type of discrete function space
+  //! type of discrete function space
   typedef typename SubGridDiscreteFunctionType::DiscreteFunctionSpaceType
   SubGridDiscreteFunctionSpaceType;
 
@@ -608,10 +608,10 @@ public:
   typedef typename SubGridDiscreteFunctionSpaceType::JacobianRangeType
   JacobianRangeType;
 
-  // ! type of grid partition
+  //! type of grid partition
   typedef typename SubGridDiscreteFunctionSpaceType::GridPartType SubGridPartType;
 
-  // ! type of grid
+  //! type of grid
   typedef typename SubGridDiscreteFunctionSpaceType::GridType SubGridType;
 
   typedef typename SubGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
@@ -624,15 +624,15 @@ public:
 
   typedef typename SubGridDiscreteFunctionSpaceType::LagrangePointSetType SubGridLagrangePointSetType;
 
-  // !-----------------------------------------------------------------------------------------
+  //!-----------------------------------------------------------------------------------------
 
-  // ! ------------------ Matrix Traits for the local Problems ---------------------
+  //! ------------------ Matrix Traits for the local Problems ---------------------
 
   enum { faceCodim = 1 };
   typedef typename SubGridLagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType
   SubGridFaceDofIteratorType;
 
-  // ! polynomial order of base functions
+  //! polynomial order of base functions
   enum { polynomialOrder = SubGridDiscreteFunctionSpaceType::polynomialOrder };
 
   // flux problem matrix traits
@@ -665,20 +665,20 @@ private:
   // path where to save the data output
   std::string path_;
 
-  std::ofstream* data_file_;
+  std::ofstream* DSC_LOG_INFO;
 
 public:
-  // ! constructor - with diffusion operator A^{\epsilon}(x)
+  //! constructor - with diffusion operator A^{\epsilon}(x)
   ConservativeFluxProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                                 const DiffusionOperatorType& diffusion_operator,
                                 const MacroMicroGridSpecifierType& specifier,
-                                std::ofstream& data_file,
+                                std::ofstream& DSC_LOG_INFO,
                                 std::string path = "")
     : diffusion_(diffusion_operator)
       , hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
       , specifier_(specifier)
       , path_(path)
-      , data_file_(&data_file)
+      , DSC_LOG_INFO(&DSC_LOG_INFO)
   {}
 
   template< class Stream >
@@ -693,7 +693,7 @@ public:
     stream << " ] " << std::endl;
   } // oneLinePrint
 
-  // ! ----------- method: solve the local MsFEM problem ------------------------------------------
+  //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
   void solve(JacobianRangeType& e_i,  // direction 'e_i'
              const SubGridDiscreteFunctionType& local_corrector_e_i,
@@ -705,12 +705,12 @@ public:
 
     const SubGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace = local_corrector_e_i.space();
 
-    // ! the matrix in our linear system of equations
+    //! the matrix in our linear system of equations
     FluxProbFEMMatrix flux_prob_system_matrix("Conservative Flux Problem System Matrix",
                                               localDiscreteFunctionSpace,
                                               localDiscreteFunctionSpace);
 
-    // ! define the discrete (elliptic) local MsFEM problem operator
+    //! define the discrete (elliptic) local MsFEM problem operator
     // ( effect of the discretized differential operator on a certain discrete function )
     // discrete elliptic operator describing the elliptic local msfem problems
     typedef ConservativeFluxOperator< SubGridDiscreteFunctionType,
@@ -725,7 +725,7 @@ public:
     const SubGridPartType& DUNE_UNUSED(subGridPart) = localDiscreteFunctionSpace.gridPart();
     const SubGridType& DUNE_UNUSED(subGrid) = localDiscreteFunctionSpace.grid();
 
-    // ! right hand side vector of the algebraic local MsFEM problem
+    //! right hand side vector of the algebraic local MsFEM problem
     SubGridDiscreteFunctionType rhs("RHS of Conservative Flux Problem", localDiscreteFunctionSpace);
     rhs.clear();
 
@@ -765,7 +765,7 @@ public:
     file_data_output(conservative_flux, sub_grid_id, direction_index);
   } // solve
 
-  // ! ----------- end method: solve local MsFEM problem ------------------------------------------
+  //! ----------- end method: solve local MsFEM problem ------------------------------------------
 
   // create a hostgrid function from a subgridfunction
   void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func,
@@ -953,24 +953,24 @@ public:
       // oneLinePrint( DSC_LOG_DEBUG, conservative_flux_e1 );
     }
 
-    if (data_file_)
+    if (DSC_LOG_INFO)
     {
-      if ( data_file_->is_open() )
+      if ( DSC_LOG_INFO->is_open() )
       {
-        (*data_file_) << std::endl;
-        (*data_file_) << "In: 'assemble all conservatice fluxes'." << std::endl << std::endl;
-        (*data_file_) << "Conservative Flux determined for " << number_of_coarse_grid_entities
+        (*DSC_LOG_INFO) << std::endl;
+        (*DSC_LOG_INFO) << "In: 'assemble all conservatice fluxes'." << std::endl << std::endl;
+        (*DSC_LOG_INFO) << "Conservative Flux determined for " << number_of_coarse_grid_entities
                       << " coarse grid entities." << std::endl;
-        (*data_file_) << dimension * number_of_coarse_grid_entities
+        (*DSC_LOG_INFO) << dimension * number_of_coarse_grid_entities
                       << " conservative flux problems solved in total." << std::endl;
-        (*data_file_) << "Minimum time for solving a conservative flux problem = " << minimum_time_c_p << "s."
+        (*DSC_LOG_INFO) << "Minimum time for solving a conservative flux problem = " << minimum_time_c_p << "s."
                       << std::endl;
-        (*data_file_) << "Maximum time for solving a conservative flux problem = " << maximum_time_c_p << "s."
+        (*DSC_LOG_INFO) << "Maximum time for solving a conservative flux problem = " << maximum_time_c_p << "s."
                       << std::endl;
-        (*data_file_) << "Average time for solving a conservative flux problem = "
+        (*DSC_LOG_INFO) << "Average time for solving a conservative flux problem = "
                       << ( (clock()
               - starting_time) / CLOCKS_PER_SEC ) / (dimension * number_of_coarse_grid_entities) << "s." << std::endl;
-        (*data_file_) << "Total time for computing and saving the conservative flux problems = "
+        (*DSC_LOG_INFO) << "Total time for computing and saving the conservative flux problems = "
                       << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
       }
     }

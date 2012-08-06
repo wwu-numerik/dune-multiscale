@@ -84,7 +84,7 @@ inline const typename ReducedBasisSpace< BaseFunction >::BaseFunctionSpaceType& 
 
 template< class BaseFunction >
 inline void ReducedBasisSpace< BaseFunction >::clear() {
-  // ! \todo (s_kaul01#7#): implement me!!!
+  //! \todo (s_kaul01#7#): implement me!!!
   // crop( 0 );
   // std :: cout << "Implement me!!" << std :: endl;
   runPipeline();
@@ -269,7 +269,7 @@ inline void ReducedBasisSpace< BaseFunction >
   {
     phi.clear();
     baseFunctionList_.getFunc(i, phi);
-    // ! \todo we can evaluate the operator opOffline inside the l2ScalarProduct locally only (saves one grid iteration)
+    //! \todo we can evaluate the operator opOffline inside the l2ScalarProduct locally only (saves one grid iteration)
     opOffline(phi, op_of_phi);
 
     for (unsigned int j = 0; j < size; ++j)
@@ -434,7 +434,7 @@ inline void ReducedBasisSpace< BaseFunction >
   {
     phi.clear();
     baseFunctionList_.getFunc(i, phi);
-    // ! \todo we can evaluate the operator opOffline1 inside the l2ScalarProduct locally only (saves one grid
+    //! \todo we can evaluate the operator opOffline1 inside the l2ScalarProduct locally only (saves one grid
     // iteration)
     opOffline1(phi, op1_of_phi);
 
@@ -442,7 +442,7 @@ inline void ReducedBasisSpace< BaseFunction >
     {
       psi.clear();
       baseFunctionList_.getFunc(j, psi);
-      // ! \todo we can evaluate the operator opOffline2 inside the l2ScalarProduct locally only (saves one grid
+      //! \todo we can evaluate the operator opOffline2 inside the l2ScalarProduct locally only (saves one grid
       // iteration)
       opOffline2(psi, op2_of_psi);
 

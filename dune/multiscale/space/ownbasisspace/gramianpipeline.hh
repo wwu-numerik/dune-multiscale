@@ -85,30 +85,30 @@ template< class DiscFuncList, class MatrixImp >
 class GramianPipeline
 {
 public:
-  // ! discrete function list
+  //! discrete function list
   typedef DiscFuncList DiscreteFunctionListType;
-  // ! underlying discrete function
+  //! underlying discrete function
   typedef typename DiscreteFunctionListType
     ::DiscreteFunctionType DiscreteFunctionType;
-  // ! the matrix type for the gramian matrices (c.f. MXMatrixWrapper or CMatrixWrapper)
+  //! the matrix type for the gramian matrices (c.f. MXMatrixWrapper or CMatrixWrapper)
   typedef MatrixImp MatrixType;
-  // ! discrete function space
+  //! discrete function space
   typedef typename DiscreteFunctionType
     ::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  // ! field type for gramian entries
+  //! field type for gramian entries
   typedef typename DiscreteFunctionSpaceType::RangeFieldType FieldType;
-  // ! grid part type
+  //! grid part type
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  // ! entity type for local function evaluations
+  //! entity type for local function evaluations
   typedef typename GridPartType::GridType
     ::template Codim< 0 >::Entity EntityType;
-  // ! iterator type for grid walks
+  //! iterator type for grid walks
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-  // ! domain type of DiscreteFunctionType
+  //! domain type of DiscreteFunctionType
   typedef typename DiscreteFunctionSpaceType::DomainType DomainType;
-  // ! range type of DiscreteFunctionType
+  //! range type of DiscreteFunctionType
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
-  // ! type of func list block
+  //! type of func list block
   typedef FuncListBlock< DiscreteFunctionListType > FuncListBlockType;
 
 private:
@@ -117,8 +117,8 @@ private:
   typedef void             EvaluateLocalFuncType (DiscFuncBaseType * &, const EntityType &,
                                                   const DomainType &, RangeType &);
 
-  // ! stores a local evaluation method from a LocalFuncWrapper (c.f. there for
-  // ! more details)
+  //! stores a local evaluation method from a LocalFuncWrapper (c.f. there for
+  //! more details)
   struct EvaluateLocalFuncBase
   {
     DiscFuncBaseType* discFunc;
@@ -129,19 +129,19 @@ private:
       : discFunc(func)
         , evaluateLocalFunc(evLocal) {}
 
-    // ! evaluates the underlying discrete function locally.
-    // ! @param en       Entity for which we want to evaluate the local function
-    // ! @param arg      domain coordinate
-    // ! @param dest     result of the evaluation
+    //! evaluates the underlying discrete function locally.
+    //! @param en       Entity for which we want to evaluate the local function
+    //! @param arg      domain coordinate
+    //! @param dest     result of the evaluation
     void evaluateLocal(const EntityType& en, const DomainType& arg, RangeType& dest) {
       (*evaluateLocalFunc)(discFunc, en, arg, dest);
     }
   };
 
-  // ! wrapper around a discrete functions that has local functions.
-  // ! With the static method addInternalFunc, a local function can be
-  // ! stored in a std::vector of EvaluateLocalFuncBase objects, which
-  // ! provide a direct evaluation of the localFunction method.
+  //! wrapper around a discrete functions that has local functions.
+  //! With the static method addInternalFunc, a local function can be
+  //! stored in a std::vector of EvaluateLocalFuncBase objects, which
+  //! provide a direct evaluation of the localFunction method.
   template< class FuncType >
   struct LocalFuncWrapper
   {
@@ -154,13 +154,13 @@ private:
       lf.evaluate(localX, ret);
     }
 
-    // ! adds a wrapper around a discrete function func, and stores the result
-    // ! at the back of the given vector evLocFuncArray
-    // !
-    // ! @param func             function to be wrapped
-    // ! @param evLocFuncArray   vector of wrapped functions
-    // !
-    // ! @return new size of vector structure
+    //! adds a wrapper around a discrete function func, and stores the result
+    //! at the back of the given vector evLocFuncArray
+    //!
+    //! @param func             function to be wrapped
+    //! @param evLocFuncArray   vector of wrapped functions
+    //!
+    //! @return new size of vector structure
     static int addInternalFunc(const FuncType* func, std::vector< EvaluateLocalFuncBase >& evLocFuncArray) {
       FuncType* func_mutable = const_cast< FuncType* >(func);
       EvaluateLocalFuncBase base(func_mutable, evaluateLocalWrapper);
@@ -174,8 +174,8 @@ private:
                    DiscreteFunctionType > OperatorBaseType;
 
 public:
-  // ! handle to an operator that is registered inside a GramianPipeline via
-  // ! registerDiscreteOperator
+  //! handle to an operator that is registered inside a GramianPipeline via
+  //! registerDiscreteOperator
   class OpHandle
   {
 public:
@@ -187,17 +187,17 @@ public:
       : opindex_(op.opindex_)
         , dfListSize_(op.dfListSize_) {}
 
-    // ! returns first index of precomputed operator evaluations
+    //! returns first index of precomputed operator evaluations
     unsigned int index_begin() const {
       return opindex_ * dfListSize_;
     }
 
-    // ! returns index behind the of precomputed operator evaluations
+    //! returns index behind the of precomputed operator evaluations
     unsigned int index_end() const {
       return (opindex_ + 1) * dfListSize_;
     }
 
-    // ! returns the internal operator index.
+    //! returns the internal operator index.
     int op() const {
       return opindex_;
     }
@@ -207,15 +207,15 @@ private:
     int dfListSize_;
   };
 
-  // ! handle to an operator that is registered inside a GramianPipeline via
-  // ! registerDiscreteFunction
+  //! handle to an operator that is registered inside a GramianPipeline via
+  //! registerDiscreteFunction
   class FuncHandle
   {
 public:
     FuncHandle(const int funcIndex)
       : funcIndex_(funcIndex) {}
 
-    // ! returns the internal function index
+    //! returns the internal function index
     unsigned int index()  const {
       return funcIndex_;
     }
@@ -242,7 +242,7 @@ private:
         , slot1(s1)
         , slot2(s2) {}
 
-    // ! returns the computation
+    //! returns the computation
     ComputationType& c() {
       return *comp_;
     }
@@ -259,7 +259,7 @@ public:
     unsigned int slot2;
   };
 
-  // ! class for gram matrix computations where the resulting matrix is symmetric.
+  //! class for gram matrix computations where the resulting matrix is symmetric.
   class SymmetricGramMatrixComputation
   {
 public:
@@ -268,7 +268,7 @@ public:
         , hOp2_(hOp2)
         , matrix_(matrix) {}
 
-    // ! computes the matrix entries i, j for the entity en
+    //! computes the matrix entries i, j for the entity en
     template< class LocalFunction1, class LocalFunction2, class Entity >
     void compute(const LocalFunction1& lf1, const LocalFunction2& lf2, const Entity& en, int i, int j) {
       typedef typename Entity::Geometry          GeometryType;
@@ -301,8 +301,8 @@ public:
       return hOp2_;
     }
 
-    // ! checks wether the computation depends on the operators with internal
-    // ! indices i and j
+    //! checks wether the computation depends on the operators with internal
+    //! indices i and j
     bool depends(int i, int j) {
       return i == hOp1_.op() && j == hOp2_.op();
     }
@@ -313,7 +313,7 @@ private:
     MatrixType matrix_;
   };
 
-  // ! class for gram matrix computations
+  //! class for gram matrix computations
   class GramMatrixComputation
   {
 public:
@@ -322,7 +322,7 @@ public:
         , hOp2_(hOp2)
         , matrix_(matrix) {}
 
-    // ! computes the matrix entries i, j for the entity en
+    //! computes the matrix entries i, j for the entity en
     template< class LocalFunction1, class LocalFunction2, class Entity >
     void compute(const LocalFunction1& lf1, const LocalFunction2& lf2, const Entity& en, int i, int j) {
       typedef typename Entity::Geometry GeometryType;
@@ -345,8 +345,8 @@ public:
       matrix_.add(i, j, entityIntegral);
     } // compute
 
-    // ! checks wether the computation depends on the operators with internal
-    // ! indices i and j
+    //! checks wether the computation depends on the operators with internal
+    //! indices i and j
     bool depends(int i, int j) {
       return i == hOp1_.op() && j == hOp2_.op();
     }
@@ -365,7 +365,7 @@ private:
     MatrixType matrix_;
   };
 
-  // ! class for "gram vector" computations
+  //! class for "gram vector" computations
   class VectorComputation
   {
 public:
@@ -376,7 +376,7 @@ public:
         , vector_(vector)
         , fixCol_(fixCol) {}
 
-    // ! computes the matrix entries i, fixCol_ for the entity en
+    //! computes the matrix entries i, fixCol_ for the entity en
     template< class LocalFunction1, class Entity >
     void compute(const LocalFunction1& lf, const Entity& en, int i) {
       typedef typename LocalFunction1::RangeType RangeType;
@@ -402,8 +402,8 @@ public:
       return hOp_;
     }
 
-    // ! checks wether the computation depends on the operator with internal
-    // ! index i
+    //! checks wether the computation depends on the operator with internal
+    //! index i
     bool depends(int i) {
       return i == hOp_.op();
     }
@@ -415,8 +415,8 @@ private:
     int fixCol_;
   };
 
-  // ! class for the computation of a single scalar product between two discrete
-  // ! functions.
+  //! class for the computation of a single scalar product between two discrete
+  //! functions.
   class ScalarComputation
   {
 public:
@@ -431,7 +431,7 @@ public:
         , fixRow_(fixRow)
         , fixCol_(fixCol) {}
 
-    // ! computes the matrix entries fixRow_, fixCol_ on entity en
+    //! computes the matrix entries fixRow_, fixCol_ on entity en
     template< class Entity >
     void compute(const Entity& en) {
       double entityIntegral = 0.0;
@@ -613,7 +613,7 @@ public:
     std::vector< RealComputation< SymmetricGramMatrixComputation > > rsGC;
     std::vector< RealComputation< VectorComputation > > rVC;
 
-    // ! \todo overthink this
+    //! \todo overthink this
     IdOpEvals< FuncListBlockType, DiscreteFunctionType >* idOp
       = new IdOpEvals< FuncListBlockType, DiscreteFunctionType >(2 * num_slots_, block1_, block2_);
 
@@ -670,7 +670,7 @@ public:
         else {
           block1Moved = false;
           // compute inner elements of second block
-          // ! \todo maybe these computations can be done above already
+          //! \todo maybe these computations can be done above already
           computeBlockContributionsGram(block2_, block2_, rGC, true);
           computeBlockContributionsGramSym(block2_, block2_, rsGC);
           computeBlockContributionsVector(block2_, rVC);
@@ -701,7 +701,7 @@ public:
         computeOpEvals();
         gridWalk(rGC, rsGC, rVC, include_autarkic_comps);
       }
-      // ! \todo this has to be closed after the gridwalk itself
+      //! \todo this has to be closed after the gridwalk itself
     } while (block1Moved);
 
     #ifdef GRIDWALK_TEST
@@ -1060,31 +1060,31 @@ private:
   } // gridWalk
 
 private:
-  // ! reference to discrete function list
+  //! reference to discrete function list
   DiscreteFunctionListType& dfList_;
-  // ! maxmimum number of slots
+  //! maxmimum number of slots
   unsigned int num_slots_;
-  // ! size of discrete function list
+  //! size of discrete function list
   const unsigned int dfListSize_;
-  // ! vector of registered discrete functions
+  //! vector of registered discrete functions
   std::vector< EvaluateLocalFuncBase > localFuncArray_;
-  // ! vector of registered discrete operators
+  //! vector of registered discrete operators
   std::vector< OperatorBaseType > localOpArray_;
-  // ! set of internal function indices that are in slots
+  //! set of internal function indices that are in slots
   std::set< unsigned int > slot_indices_;
-  // ! map that maps an internal function index to it's slot number
+  //! map that maps an internal function index to it's slot number
   std::map< unsigned int, unsigned int > map_index_to_slot_;
-  // ! vector of symmetric gram matrix computations
+  //! vector of symmetric gram matrix computations
   std::vector< SymmetricGramMatrixComputation > symGramComputations_;
-  // ! vector of gram matrix computations
+  //! vector of gram matrix computations
   std::vector< GramMatrixComputation > gramComputations_;
-  // ! vector of gram vector computations
+  //! vector of gram vector computations
   std::vector< VectorComputation > vectorComputations_;
-  // ! vector of scalar computations
+  //! vector of scalar computations
   std::vector< ScalarComputation > scalarComputations_;
-  // ! vector of operator evaluations
+  //! vector of operator evaluations
   std::vector< OpEvalsBase< DiscreteFunctionType >* > opEvals_;
-  // ! Func List Blocks for the underlying func list
+  //! Func List Blocks for the underlying func list
   FuncListBlockType block1_;
   FuncListBlockType block2_;
 };

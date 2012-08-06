@@ -42,7 +42,7 @@ private:
   < DiscreteFunctionListTraits > BaseType;
 
 public:
-  // ! constructor taking discFuncSpace as argument
+  //! constructor taking discFuncSpace as argument
   DiscreteFunctionList_mem(const DiscreteFunctionSpaceType& discFuncSpace)
     : current_index_(-1)
       , discFuncSpace_(discFuncSpace) {}
@@ -63,7 +63,7 @@ public:
     current_index_ = -1;
   }
 
-  // !destructor, free all memory allocated by the list
+  //!destructor, free all memory allocated by the list
   ~DiscreteFunctionList_mem() {
     typedef typename vector< std::pair< DiscreteFunctionType*, AttributeType > >::iterator IteratorType;
     for (IteratorType it = functions_.begin(); it != functions_.end(); ++it)
@@ -237,7 +237,7 @@ public:
     return false;
   } // deleteFunc
 
-  // !return underlying space
+  //!return underlying space
   const DiscreteFunctionSpaceType& space() const {
     return discFuncSpace_;
   }

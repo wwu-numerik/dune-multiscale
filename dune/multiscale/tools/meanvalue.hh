@@ -343,7 +343,7 @@ public:
   } // adapt
 }; // end of class Meanvalue
 
-// ! KLASSE IST NUR FUER DEN 2D FALL UND DIE VERWENDUNG VON EINER SIMPLIZIALEN TRIANGULIERUNG, SONST FUNKTIONIERT DAS
+//! KLASSE IST NUR FUER DEN 2D FALL UND DIE VERWENDUNG VON EINER SIMPLIZIALEN TRIANGULIERUNG, SONST FUNKTIONIERT DAS
 // ALLES NICHT!!!!!
 template< class DiscreteFunctionType, int n = 0 >
 class ImprovedL2Error
@@ -736,7 +736,7 @@ public:
         error_in_compuation = true;
       }
 
-      // ! determine the Lagrange Interpolation of the coarse discrete function on the relevant coarse-grid element
+      //! determine the Lagrange Interpolation of the coarse discrete function on the relevant coarse-grid element
       // (determined in the previous loop):
 
       LinearLagrangeFunction2D< DiscreteFunctionSpaceType >
@@ -747,7 +747,7 @@ public:
                               coarse_quad_point[2],
                               local_value_coarse_func[2]);
 
-      // ! the fine grid quadrature:
+      //! the fine grid quadrature:
 
       CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
@@ -804,7 +804,7 @@ public:
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader( ( lp_num_manager.get_location() ).c_str() );
 
-    // !loeschen:
+    //!loeschen:
     // std :: cout << "Bin Hier" << std :: endl;
 
     reader_is_open = discrete_function_reader.open();
@@ -897,7 +897,7 @@ public:
         // beschreibe das Dreieck mit Hilfe seiner Eckpunkt-Koordinaten (Konvexkombination) und schaue ob das Zentrum
         // des Fine-Grid elements in dieser Konvexkombination liegt.
 
-        // ! determine the Lagrange Interpolation of the coarse discrete function on the relevant coarse-grid element
+        //! determine the Lagrange Interpolation of the coarse discrete function on the relevant coarse-grid element
         // (determined in the previous loop):
 
         // create at quadrature with 3 quadrature points:
@@ -1175,7 +1175,7 @@ public:
         // beschreibe das Dreieck mit Hilfe seiner Eckpunkt-Koordinaten (Konvexkombination) und schaue ob das Zentrum
         // des Fine-Grid elements in dieser Konvexkombination liegt.
 
-        // ! determine the Lagrange Interpolation of the coarse discrete function on the relevant coarse-grid element
+        //! determine the Lagrange Interpolation of the coarse discrete function on the relevant coarse-grid element
         // (determined in the previous loop):
 
         // create at quadrature with 3 quadrature points:
@@ -1618,12 +1618,12 @@ public:
             // evaluate fine local function
             local_fine_disc_func.evaluate(fine_quad[qp], fine_value);
 
-            fine_value = 1.0;        // ! -= coarse_value;
+            fine_value = 1.0;        //! -= coarse_value;
 
             l2Norm += det * fine_quad.weight(qp) * (fine_value * fine_value);
           }        // end qp iteration
 
-          ref_number_of_fine_entities_2 += 1;      // !loeschen!!!!!!!11
+          ref_number_of_fine_entities_2 += 1;      //!loeschen!!!!!!!11
         }
       }
 

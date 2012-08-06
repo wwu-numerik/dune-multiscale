@@ -120,7 +120,7 @@ public:
                      JacobianRangeType& flux) const {
     Problem::ModelProblemData model_info;
 
-    // ! EPSILON BESSER AUS DEM PARAMETER-FILE HOLEN!
+    //! EPSILON BESSER AUS DEM PARAMETER-FILE HOLEN!
     const double epsilon = model_info.getEpsilon();
 
     DomainType new_y;
@@ -345,7 +345,7 @@ class Homogenizer
   typedef typename GridType::template Codim< 0 >::Entity EntityType;
 
   typedef typename GridType::template Codim< 0 >::EntityPointer
-  EntityPointerType; // !Brauchen wie das? Loeschen? loeschen?
+  EntityPointerType; //!Brauchen wie das? Loeschen? loeschen?
 
   struct MatrixTraits
   {
@@ -477,7 +477,7 @@ public:
     const DummySpaceType dummySpace(periodicGridPart);
     // (sometimes periodicDiscreteFunctionSpace is only a dummy)
 
-    // ! define the type of the corresponding solutions ( discrete functions of the type 'DiscreteFunctionType'):
+    //! define the type of the corresponding solutions ( discrete functions of the type 'DiscreteFunctionType'):
 
     PeriodicDiscreteFunctionType cellSolution_0("cellSolution 0", periodicDiscreteFunctionSpace);
     cellSolution_0.clear();
@@ -509,21 +509,21 @@ public:
     // quite a dummy. It's always f = 0
     const ZeroFunctionType zero;
 
-    // ! build the left hand side (lhs) of the problem
+    //! build the left hand side (lhs) of the problem
 
     const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace, tensor_transformed, mass);
 
     FEMMatrix lhsMatrix("Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace, periodicDiscreteFunctionSpace);
     discrete_cell_elliptic_op.assemble_matrix(lhsMatrix, false /*no boundary treatment*/);
 
-    // ! build the right hand side (rhs) of the problem
+    //! build the right hand side (rhs) of the problem
 
     // the same right hand side for HM and FEM methods:
-    const RightHandSideAssembler< PeriodicDiscreteFunctionType > // !, TransformTensorType, CellSourceType >
-    cell_0_assembler;    // !( transTensor, G_0 );
+    const RightHandSideAssembler< PeriodicDiscreteFunctionType > //!, TransformTensorType, CellSourceType >
+    cell_0_assembler;    //!( transTensor, G_0 );
 
-    const RightHandSideAssembler< PeriodicDiscreteFunctionType > // !, TransformTensorType, CellSourceType >
-    cell_1_assembler;    // !( transTensor, G_1 );
+    const RightHandSideAssembler< PeriodicDiscreteFunctionType > //!, TransformTensorType, CellSourceType >
+    cell_1_assembler;    //!( transTensor, G_1 );
 
     // Alternativly it is possible to call the RightHandSideAssembler with a second source Term '- div G':
     // RightHandSideAssembler< DiscreteFunctionType > rhsassembler( tensor , G );

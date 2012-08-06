@@ -18,7 +18,7 @@
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
 
-// ! ----- typedefs for the macro grid and the corresponding discrete space -----
+//! ----- typedefs for the macro grid and the corresponding discrete space -----
 typedef Dune::GridSelector::GridType
 GridType;
 // Dune::InteriorBorder_Partition or Dune::All_Partition >?
@@ -43,7 +43,7 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/h1norm.hh>
 
-// ! local (dune-multiscale) includes
+//! local (dune-multiscale) includes
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
@@ -53,9 +53,9 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/tools/errorestimation/MsFEM/elliptic_error_estimator.hh>
 
-// !-----------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------
 
-// ! --------- typedefs for the coefficient and data functions ------------------
+//! --------- typedefs for the coefficient and data functions ------------------
 using namespace Dune;
 // type of first source term (right hand side of differential equation or type of 'f')
 typedef Problem::FirstSource< FunctionSpaceType > FirstSourceType;
@@ -72,44 +72,44 @@ typedef GridFunctionAdapter< ExactSolutionType, GridPartType >
 DiscreteExactSolutionType;     // for data output with paraview or grape
 
 
-// ! ----  typedefs for the standard discrete function space (macroscopic) -----
+//! ----  typedefs for the standard discrete function space (macroscopic) -----
 typedef FunctionSpaceType::DomainType DomainType;
-// ! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
+//! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
 typedef FunctionSpaceType::RangeType RangeType;
-// ! defines the function space to which the numerical solution belongs to
-// ! see dune/fem/lagrangebase.hh
+//! defines the function space to which the numerical solution belongs to
+//! see dune/fem/lagrangebase.hh
 typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >  // 1 = POLORDER
 DiscreteFunctionSpaceType;
 
 typedef AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
-// !-----------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------
 
-// !------------------------- for adaptive grid refinement ---------------------------------
-// ! For adaption:
-// ! type of restrict-prolong operator
+//!------------------------- for adaptive grid refinement ---------------------------------
+//! For adaption:
+//! type of restrict-prolong operator
 typedef RestrictProlongDefault< DiscreteFunctionType >
 RestrictProlongOperatorType;
-// ! type of the adaption manager
+//! type of the adaption manager
 typedef AdaptationManager< GridType, RestrictProlongOperatorType >
 AdaptationManagerType;
-// !---------------------------------------------------------------------------------------
+//!---------------------------------------------------------------------------------------
 
 typedef MacroMicroGridSpecifier< DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
 typedef SubGrid< GridType::dimension, GridType >                                      SubGridType;
 typedef SubGridList< DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
 
-// ! -------------------------- MsFEM error estimator ----------------------------
+//! -------------------------- MsFEM error estimator ----------------------------
 typedef MsFEMErrorEstimator< DiscreteFunctionType,
                              DiffusionType,
                              FirstSourceType,
                              MacroMicroGridSpecifierType,
                              SubGridListType >
 MsFEMErrorEstimatorType;
-// ! -----------------------------------------------------------------------------
+//! -----------------------------------------------------------------------------
 
 #include "msfem_globals.hh"
 
-// ! ------------------ typedefs and classes for data output ---------------------
+//! ------------------ typedefs and classes for data output ---------------------
 typedef tuple< DiscreteFunctionType* >      IOTupleType;
 typedef DataOutput< GridType, IOTupleType > DataOutputType;
 // just for the discretized exact solution (in case it is available)
@@ -119,11 +119,11 @@ typedef DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
-// !---------------------------------------------------------------------------------------
+//!---------------------------------------------------------------------------------------
 
-// ! algorithm
+//! algorithm
 void algorithm(const std::string& macroGridName,
-               std::ofstream& data_file) {
+               std::ofstream& DSC_LOG_INFO) {
   DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
   // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
   // for the parameters:
@@ -131,7 +131,7 @@ void algorithm(const std::string& macroGridName,
   GridPointerType macro_grid_pointer(macroGridName);
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine(coarse_grid_level_);
-  // ! ---- tools ----
+  //! ---- tools ----
   // model problem data
   Problem::ModelProblemData problem_info;
   L2Error< DiscreteFunctionType > l2error;
@@ -139,11 +139,11 @@ void algorithm(const std::string& macroGridName,
   // expensive hack to deal with discrete functions, defined on different grids
   ImprovedL2Error< DiscreteFunctionType > DUNE_UNUSED(impL2error);
 
-  // ! ---------------------------- grid parts ----------------------------------------------
+  //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for MsFEM-macro-problem
   GridPartType gridPart(*macro_grid_pointer);
   GridType& grid = gridPart.grid();
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
   // coarse grid
   GridPointerType macro_grid_pointer_coarse(macroGridName);
@@ -170,10 +170,10 @@ void algorithm(const std::string& macroGridName,
     {
       fine_scale_error_dominant = true;   /* increase fine level resolution by 2 levels */
       total_refinement_level_ += 2;   // 'the fine grid level'
-      data_file << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2."
+      DSC_LOG_INFO << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2."
                 << std::endl;
-      data_file << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-      data_file << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
+      DSC_LOG_INFO << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
                 << " refinement levels finer than the coarse grid." << std::endl;
     }
 
@@ -182,16 +182,16 @@ void algorithm(const std::string& macroGridName,
     {
       oversampling_error_dominant = true;   /* increase number of layers by 1 */
       number_of_layers_ += 1;
-      data_file
+      DSC_LOG_INFO
       << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5."
       << std::endl;
-      data_file << "NEW: Number of layers = " << number_of_layers_ << std::endl;
+      DSC_LOG_INFO << "NEW: Number of layers = " << number_of_layers_ << std::endl;
     }
 
     if ( (total_coarse_residual_[loop_number_ - 1] >= average_est_error)
          || (total_coarse_grid_jumps_[loop_number_ - 1] >= average_est_error) )
     {
-      data_file << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment."
+      DSC_LOG_INFO << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment."
                 << std::endl;
       coarse_scale_error_dominant = true;   /* mark elementwise for 2 refinments */
     }
@@ -238,7 +238,7 @@ void algorithm(const std::string& macroGridName,
 
         if ( l == (loop_number_ - 1) )
         {
-          data_file << number_of_marked_entities << " of " << total_number_of_entities
+          DSC_LOG_INFO << number_of_marked_entities << " of " << total_number_of_entities
                     << " coarse grid entities marked for mesh refinement." << std::endl;
         }
 
@@ -272,16 +272,16 @@ void algorithm(const std::string& macroGridName,
 
   grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
 
-  // ! ------------------------- discrete function spaces -----------------------------------
+  //! ------------------------- discrete function spaces -----------------------------------
 
   // the global-problem function space:
   DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
 
   DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
 
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
-  // ! --------------------------- coefficient functions ------------------------------------
+  //! --------------------------- coefficient functions ------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   DiffusionType diffusion_op;
@@ -289,15 +289,15 @@ void algorithm(const std::string& macroGridName,
   FirstSourceType f; // standard source f
 
 
-  // ! ---------------------------- general output parameters ------------------------------
+  //! ---------------------------- general output parameters ------------------------------
   // general output parameters
   myDataOutputParameters outputparam;
   outputparam.set_path(path_);
   // sequence stamp
   std::stringstream outstring;
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
-  // ! -------------------------- writing data output Exact Solution ------------------------
+  //! -------------------------- writing data output Exact Solution ------------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
     const ExactSolutionType u;
@@ -315,9 +315,9 @@ void algorithm(const std::string& macroGridName,
     outstring.str( std::string() );
     // -------------------------------------------------------
   }
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
-  // ! --------------- writing data output for the coarse grid visualization ------------------
+  //! --------------- writing data output for the coarse grid visualization ------------------
   DiscreteFunctionType coarse_grid_visualization(filename_ + " Visualization of the coarse grid",
                                                  discreteFunctionSpace_coarse);
   coarse_grid_visualization.clear();
@@ -335,10 +335,10 @@ void algorithm(const std::string& macroGridName,
   // clear the std::stringstream:
   outstring.str( std::string() );
   // -------------------------------------------------------
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
-  // ! ---------------------- solve MsFEM problem ---------------------------
-  // ! solution vector
+  //! ---------------------- solve MsFEM problem ---------------------------
+  //! solution vector
   // solution of the standard finite element method
   DiscreteFunctionType msfem_solution(filename_ + " MsFEM Solution", discreteFunctionSpace);
   msfem_solution.clear();
@@ -359,17 +359,17 @@ void algorithm(const std::string& macroGridName,
     specifier.setLayer(i, number_of_layers_);
   }
 
-  // ! create subgrids:
+  //! create subgrids:
   const bool silence = false;
   SubGridListType subgrid_list(specifier, silence);
 
   // just for Dirichlet zero-boundary condition
-  Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver(discreteFunctionSpace, data_file, path_);
+  Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver(discreteFunctionSpace, DSC_LOG_INFO, path_);
   msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
                                     coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
 
   DSC_LOG_INFO << "Data output for MsFEM Solution." << std::endl;
-  // ! ----------------- writing data output MsFEM Solution -----------------
+  //! ----------------- writing data output MsFEM Solution -----------------
   // --------- VTK data output for MsFEM solution --------------------------
   // create and initialize output class
   IOTupleType msfem_solution_series(&msfem_solution);
@@ -446,17 +446,17 @@ void algorithm(const std::string& macroGridName,
   DiscreteFunctionWriter dfw( (location).c_str() );
   if (dfw.is_open())
     dfw.append(msfem_solution);
-  // ! --------------------------------------------------------------------
+  //! --------------------------------------------------------------------
 
-  // ! ------------------------------------------------------------
+  //! ------------------------------------------------------------
 
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
-  if ( data_file.is_open() )
+  if ( DSC_LOG_INFO.is_open() )
   {
-    data_file << "The L2 errors:" << std::endl << std::endl;
+    DSC_LOG_INFO << "The L2 errors:" << std::endl << std::endl;
   }
 
-  // ! ----------------- compute L2- and H1- errors -------------------
+  //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
     const ExactSolutionType u;
@@ -465,9 +465,9 @@ void algorithm(const std::string& macroGridName,
                                                               2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
 
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
+      DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
     }
 
     RangeType h1_msfem_error(0.0);
@@ -475,14 +475,14 @@ void algorithm(const std::string& macroGridName,
     h1_msfem_error += msfem_error;
 
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl;
+      DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl;
     }
   }
-  // ! ----------------------------------------------------------------------
+  //! ----------------------------------------------------------------------
 
-  // ! ----------------------------------------------------------------------
+  //! ----------------------------------------------------------------------
 
   // error estimation
   RangeType total_estimated_H1_error(0.0);
@@ -492,7 +492,7 @@ void algorithm(const std::string& macroGridName,
                                                            msfem_solution,
                                                            coarse_part_msfem_solution,
                                                            fine_part_msfem_solution,
-                                                           data_file);
+                                                           DSC_LOG_INFO);
   {
     std::vector<RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_, &loc_projection_error_, &loc_conservative_flux_jumps_, &loc_approximation_error_, &loc_fine_grid_jumps_}};
     std::vector<RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_, &total_coarse_grid_jumps_, &total_conservative_flux_jumps_, &total_approximation_error_, &total_fine_grid_jumps_ }};
@@ -525,19 +525,19 @@ void algorithm(const std::string& macroGridName,
   repeat_algorithm_ = false;
   #endif // ifdef ADAPTIVE
 
-  // ! ---------------------- solve FEM problem ---------------------------
-  // ! solution vector
+  //! ---------------------- solve FEM problem ---------------------------
+  //! solution vector
   // solution of the standard finite element method
   DiscreteFunctionType fem_solution(filename_ + " FEM Solution", discreteFunctionSpace);
   fem_solution.clear();
 
   // just for Dirichlet zero-boundary condition
-  Elliptic_FEM_Solver< DiscreteFunctionType > fem_solver(discreteFunctionSpace, data_file);
+  Elliptic_FEM_Solver< DiscreteFunctionType > fem_solver(discreteFunctionSpace, DSC_LOG_INFO);
   fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
 
-  // ! ----------------------------------------------------------------------
+  //! ----------------------------------------------------------------------
   DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
-  // ! -------------------------- writing data output FEM Solution ----------
+  //! -------------------------- writing data output FEM Solution ----------
 
   // ------------- VTK data output for FEM solution --------------
   // create and initialize output class
@@ -565,15 +565,15 @@ void algorithm(const std::string& macroGridName,
 
   // -------------------------------------------------------------
 
-  // ! ------------------------------------------------------------
+  //! ------------------------------------------------------------
 
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
-  if ( data_file.is_open() )
+  if ( DSC_LOG_INFO.is_open() )
   {
-    data_file << "The L2 errors:" << std::endl << std::endl;
+    DSC_LOG_INFO << "The L2 errors:" << std::endl << std::endl;
   }
 
-  // ! ----------------- compute L2- and H1- errors -------------------
+  //! ----------------- compute L2- and H1- errors -------------------
 
   if (Problem::ModelProblemData::has_exact_solution)
   {
@@ -583,9 +583,9 @@ void algorithm(const std::string& macroGridName,
                                                             2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
 
     DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
+      DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
     }
 
     RangeType h1_fem_error(0.0);
@@ -593,16 +593,16 @@ void algorithm(const std::string& macroGridName,
     h1_fem_error += fem_error;
 
     DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
+      DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
     }
   } else {
     DSC_LOG_ERROR << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
               << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
+      DSC_LOG_INFO << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
                 << std::endl << std::endl;
     }
 
@@ -610,21 +610,21 @@ void algorithm(const std::string& macroGridName,
                                                                                                       msfem_solution);
 
     DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
+      DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
     }
 
     H1Norm< GridPartType > h1norm(gridPart);
     RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
 
     DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl;
+      DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl;
     }
   }
-  // ! -------------------------------------------------------
+  //! -------------------------------------------------------
 
 } // function algorithm
 
@@ -632,7 +632,7 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
     namespace DSC = Dune::Stuff::Common;
-    // !TODO include base in config
+    //!TODO include base in config
     path_ = std::string("data/MsFEM/") + DSC::Parameter::Config().get("global.datadir", "data");
 
     // generate directories for data output
@@ -661,30 +661,30 @@ int main(int argc, char** argv) {
     const std::string macroGridName = info.getMacroGridFile();
 
     // to save all information in a file
-    std::ofstream data_file( (save_filename).c_str() );
-    if ( data_file.is_open() )
+    std::ofstream DSC_LOG_INFO( (save_filename).c_str() );
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem()
+      DSC_LOG_INFO << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem()
                 << " with epsilon = " << info.getEpsilon() << "." << std::endl << std::endl;
       #ifdef UNIFORM
-      data_file << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
-      data_file << "Uniformly refined coarse and fine mesh and" << std::endl;
-      data_file << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-      data_file << "Computations were made for:" << std::endl << std::endl;
-      data_file << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-      data_file << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-      data_file << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
-      data_file << std::endl << std::endl;
+      DSC_LOG_INFO << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
+      DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
+      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
+      DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      DSC_LOG_INFO << std::endl << std::endl;
       #else   // ifdef UNIFORM
-      data_file << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
-      data_file << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
-      data_file << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-      data_file << "Error tolerance = " << error_tolerance_ << std::endl << std::endl;
-      data_file << "Computations were made for:" << std::endl << std::endl;
-      data_file << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-      data_file << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-      data_file << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
-      data_file << std::endl << std::endl;
+      DSC_LOG_INFO << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
+      DSC_LOG_INFO << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
+      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      DSC_LOG_INFO << "Error tolerance = " << error_tolerance_ << std::endl << std::endl;
+      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
+      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      DSC_LOG_INFO << std::endl << std::endl;
       #endif   // ifdef UNIFORM
     }
 
@@ -692,12 +692,12 @@ int main(int argc, char** argv) {
     while (repeat_algorithm_ == true)
     {
       #ifdef ADAPTIVE
-      data_file << "------------------ run " << loop_number_ + 1 << " --------------------" << std::endl << std::endl;
+      DSC_LOG_INFO << "------------------ run " << loop_number_ + 1 << " --------------------" << std::endl << std::endl;
       #endif
-      algorithm(macroGridName, data_file);
+      algorithm(macroGridName, DSC_LOG_INFO);
       #ifdef ADAPTIVE
-      data_file << std::endl << std::endl;
-      data_file << "---------------------------------------------" << std::endl;
+      DSC_LOG_INFO << std::endl << std::endl;
+      DSC_LOG_INFO << "---------------------------------------------" << std::endl;
       loop_number_ += 1;
       #endif   // ifdef ADAPTIVE
     }
@@ -708,11 +708,11 @@ int main(int argc, char** argv) {
     const long double cpu_time = clock() / double(CLOCKS_PER_SEC);
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
 
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+      DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
     }
-    data_file.close();
+    DSC_LOG_INFO.close();
     return 0;
   } catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;

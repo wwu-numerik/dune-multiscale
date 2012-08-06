@@ -26,19 +26,19 @@ namespace Dune {
 template< class PeriodicDiscreteFunctionImp, class TensorType >
 class RecInt // Reconstruction Integrator
 {
-  // ! type of discrete functions
+  //! type of discrete functions
   typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
 
   typedef typename PeriodicDiscreteFunctionImp::LocalFunctionType PeriodicLocalFunctionType;
 
-  // ! type of discrete function space
+  //! type of discrete function space
   typedef typename PeriodicDiscreteFunctionImp::DiscreteFunctionSpaceType
   PeriodicDiscreteFunctionSpaceType;
 
-  // ! type of grid partition
+  //! type of grid partition
   typedef typename PeriodicDiscreteFunctionSpaceType::GridPartType PeriodicGridPartType;
 
-  // ! type of grid
+  //! type of grid
   typedef typename PeriodicDiscreteFunctionSpaceType::GridType PeriodicGridType;
 
   typedef typename PeriodicDiscreteFunctionType::RangeType

@@ -184,7 +184,7 @@ private:
   virtual bool getFunc(const unsigned int i, DiscreteFunctionType& dest) const = 0;
 
 public:
-  // !return underlying space
+  //!return underlying space
   virtual const DiscreteFunctionSpaceType& space() const = 0;
 };
 } // end of namespace Dune::RB

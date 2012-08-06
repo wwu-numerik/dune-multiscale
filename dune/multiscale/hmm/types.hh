@@ -20,7 +20,7 @@
 #include <dune/fem/space/common/adaptmanager.hh>
 
 struct HMMTraits {
-// ! --------- typedefs for the macro grid and the corresponding discrete space -------------
+//! --------- typedefs for the macro grid and the corresponding discrete space -------------
 typedef Dune::GridSelector::GridType
     GridType;
 // Dune::InteriorBorder_Partition or Dune::All_Partition >?
@@ -29,9 +29,9 @@ typedef Dune::GridSelector::GridType
 typedef Dune::AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
 typedef Dune::GridPtr< GridType >                                       GridPointerType;
 typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 >              FunctionSpaceType;
-// !-----------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------------------
 
-// ! --------- typedefs for the coefficient and data functions ------------------------------
+//! --------- typedefs for the coefficient and data functions ------------------------------
 typedef Problem::ModelProblemData ModelProblemDataType;
 // type of first source term (right hand side of differential equation or type of 'f')
 typedef Problem::FirstSource< FunctionSpaceType > FirstSourceType;
@@ -46,9 +46,9 @@ typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionT
 typedef Dune::Homogenizer< GridType, DiffusionType > HomogenizerType;
 typedef Problem::HomDiffusion< FunctionSpaceType, HomogenizerType::HomTensorType >
     HomDiffusionType;
-// !-----------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------------------
 
-// ! ---------  typedefs for the standard discrete function space (macroscopic) -------------
+//! ---------  typedefs for the standard discrete function space (macroscopic) -------------
 
 // type of exact solution (in general unknown)
 typedef Problem::ExactSolution< FunctionSpaceType >            ExactSolutionType;
@@ -56,10 +56,10 @@ typedef Dune::GridFunctionAdapter< ExactSolutionType, GridPartType > DiscreteExa
                                                                                               // paraview or grape
 
 typedef FunctionSpaceType::DomainType DomainType;
-// ! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
+//! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
 typedef FunctionSpaceType::RangeType RangeType;
-// ! defines the function space to which the numerical solution belongs to
-// ! see dune/fem/lagrangebase.hh
+//! defines the function space to which the numerical solution belongs to
+//! see dune/fem/lagrangebase.hh
 typedef Dune::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >  // 1=POLORDER
     DiscreteFunctionSpaceType;
 typedef DiscreteFunctionSpaceType::DomainFieldType            TimeType;
@@ -75,20 +75,20 @@ typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
 typedef Dune::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
 typedef DiscreteFunctionType::LocalFunctionType               LocalFunctionType;
 typedef DiscreteFunctionType::DofIteratorType                 DofIteratorType;
-// !-----------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------------------
 
-// ! --------- typedefs for the periodic micro grid and the corresponding discrete space ----
+//! --------- typedefs for the periodic micro grid and the corresponding discrete space ----
 typedef Dune::PeriodicLeafGridPart< GridType > PeriodicGridPartType;
 typedef Dune::LagrangeDiscreteFunctionSpace< FunctionSpaceType, PeriodicGridPartType, 1 > // 1 =POLORDER
 PeriodicDiscreteFunctionSpaceType;
 typedef Dune::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
-// !-----------------------------------------------------------------------------------------
+//!-----------------------------------------------------------------------------------------
 
-// ! ------------ cell problem solver and numbering manager -----------------------------------------
+//! ------------ cell problem solver and numbering manager -----------------------------------------
 typedef Dune::CellProblemNumberingManager< DiscreteFunctionSpaceType > CellProblemNumberingManagerType;
 
 
-// ! --------------------- the standard matrix traits -------------------------------------
+//! --------------------- the standard matrix traits -------------------------------------
 struct MatrixTraits
 {
   typedef DiscreteFunctionSpaceType                          RowSpaceType;
@@ -103,7 +103,7 @@ struct MatrixTraits
   };
 };
 
-// ! --------------------- type of fem stiffness matrix -----------------------------------
+//! --------------------- type of fem stiffness matrix -----------------------------------
 typedef Dune::SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, MatrixTraits > FEMMatrix;
 
 /** \brief --------------- solver for the linear system of equations ----------------------------
@@ -112,20 +112,20 @@ typedef Dune::SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionTyp
    */
 typedef Dune::OEMBICGSQOp /*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
-// ! --------------- the discrete operators (standard FEM and HMM) ------------------------
-// ! discrete elliptic operator (corresponds with FEM Matrix)
+//! --------------- the discrete operators (standard FEM and HMM) ------------------------
+//! discrete elliptic operator (corresponds with FEM Matrix)
 typedef Dune::DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
 // discrete elliptic HMM operator (corresponds with HMM (or HMFEM) Matrix)
 typedef Dune::DiscreteEllipticHMMOperator< DiscreteFunctionType, PeriodicDiscreteFunctionType, DiffusionType,
                                      CellProblemNumberingManagerType > EllipticHMMOperatorType;
-// ! --------------------------------------------------------------------------------------
+//! --------------------------------------------------------------------------------------
 
-// ! --------------- ERROR ESTIMATOR NOT YET IMPLEMENTED ------------------------
+//! --------------- ERROR ESTIMATOR NOT YET IMPLEMENTED ------------------------
 typedef Dune::ErrorEstimator< PeriodicDiscreteFunctionType,
                         DiscreteFunctionType,
                         DiffusionType > ErrorEstimatorType;
 
-// ! --------- typedefs and classes for data output -----------------------------------------
+//! --------- typedefs and classes for data output -----------------------------------------
 typedef Dune::tuple< DiscreteFunctionType* >      IOTupleType;
 typedef Dune::DataOutput< GridType, IOTupleType > DataOutputType;
 
@@ -134,12 +134,12 @@ typedef Dune::tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
 // just for the discretized exact solution (in case it is available)
 typedef Dune::DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 
-// !------------------------- for adaptive grid refinement ---------------------------------
-// ! type of restrict-prolong operator
+//!------------------------- for adaptive grid refinement ---------------------------------
+//! type of restrict-prolong operator
 typedef Dune::RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOperatorType;
-// ! type of the adaption manager
+//! type of the adaption manager
 typedef Dune::AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
-// !---------------------------------------------------------------------------------------
+//!---------------------------------------------------------------------------------------
 }; // struct  HMMTraits
 
 

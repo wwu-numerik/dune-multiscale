@@ -41,14 +41,14 @@ namespace Multiscale {
                                ::Yes, Class >::Type Type; \
   };
 
-// ! helper function for template meta programs.
-// !
-// ! During compile time, the compiler see the return value as an object of type
-// ! T. However, there is never code generated for this object, because there is
-// ! no implementation for this function.
-// !
-// ! \tparam T type of object to be created for compiler.
-// ! \return object of type T, that is never initialized.
+//! helper function for template meta programs.
+//!
+//! During compile time, the compiler see the return value as an object of type
+//! T. However, there is never code generated for this object, because there is
+//! no implementation for this function.
+//!
+//! \tparam T type of object to be created for compiler.
+//! \return object of type T, that is never initialized.
 template< typename T >
 static T makeT();
 template< typename T >

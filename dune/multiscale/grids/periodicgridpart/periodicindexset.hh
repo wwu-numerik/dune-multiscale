@@ -11,7 +11,7 @@
 #include <dune/fem/gridpart/dunefemindexsets.hh>
 
 namespace Dune {
-// ! This index set supports only codimensions 0 and dimension!
+//! This index set supports only codimensions 0 and dimension!
 template< class Grid >
 class PeriodicLeafIndexSet
   : public DuneGridIndexSetAdapter< Grid, PeriodicLeafIndexSet< Grid > >
@@ -22,16 +22,16 @@ class PeriodicLeafIndexSet
   friend class DuneGridIndexSetAdapter< Grid, ThisType >;
 
 public:
-  // ! type of the grid
+  //! type of the grid
   typedef Grid GridType;
 
-  // ! type of indices
+  //! type of indices
   typedef typename BaseType::IndexType IndexType;
 
-  // ! coordinate type of the grid
+  //! coordinate type of the grid
   typedef typename GridType::ctype ctype;
 
-  // ! dimension of the grid
+  //! dimension of the grid
   static const int dimension = GridType::dimension;
 
 protected:
@@ -47,7 +47,7 @@ public:
   };
 
 public:
-  // ! Create PeriodicIndexSet for a grid
+  //! Create PeriodicIndexSet for a grid
   explicit PeriodicLeafIndexSet(const GridType& grid);
 
   template< class Entity >
@@ -69,15 +69,15 @@ public:
     return map( codim, baseIndexSet_.subIndex(entity, i, codim) );
   }
 
-  // ! Return true, if this set provides an index for an entity
+  //! Return true, if this set provides an index for an entity
   template< class Entity >
   bool contains(const Entity& entity) const;
 
-  // ! Return the size of the index set for a codimension
+  //! Return the size of the index set for a codimension
   IndexType size(int codim) const;
 
-  // ! Return the size of the index set for a codimension
-  // ! Marked for revision in grid/common/defaultindexsets.hh
+  //! Return the size of the index set for a codimension
+  //! Marked for revision in grid/common/defaultindexsets.hh
   IndexType size(GeometryType type) const {
     if ( geometryTypeValid(type) )
       return size( dimension - type.dim() );
@@ -85,7 +85,7 @@ public:
     return 0;
   }
 
-  // ! Deliver all geometry types used in this grid
+  //! Deliver all geometry types used in this grid
   const std::vector< GeometryType >& geomTypes(int codim) const {
     return baseIndexSet_.geomTypes(codim);
   }

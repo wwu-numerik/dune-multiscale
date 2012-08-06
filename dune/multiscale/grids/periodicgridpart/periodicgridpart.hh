@@ -50,7 +50,7 @@ public:
     };
   };
 
-  // ! is the grid partition conforming?
+  //! is the grid partition conforming?
   static const bool conforming = Capabilities::isLeafwiseConforming< GridType >::v;
 };
 
@@ -86,18 +86,18 @@ class PeriodicLeafGridPart
   typedef GridPartDefault< PeriodicLeafGridPartTraits< Grid > > BaseType;
 
 public:
-  // ! type of traits
+  //! type of traits
   typedef typename BaseType::Traits Traits;
 
-  // ! type of the underlying grid
+  //! type of the underlying grid
   typedef typename Traits::GridType GridType;
 
     typedef typename GridType :: template Partition < All_Partition > :: LeafGridView LeafGridView;
 
-  // ! type of the index set
+  //! type of the index set
   typedef typename Traits::IndexSetType IndexSetType;
 
-  // ! type of intersection iterators
+  //! type of intersection iterators
   typedef typename Traits::IntersectionIteratorType IntersectionIteratorType;
 
   template< int codim >
@@ -107,36 +107,36 @@ public:
     typedef typename Traits::template Codim< codim >::EntityType EntityType;
   };
 
-  // ! Constructor wrapping a grid in the grid partition
+  //! Constructor wrapping a grid in the grid partition
   PeriodicLeafGridPart(GridType& grid)
     : BaseType(grid)
       , indexSet_(grid)
   {}
 
-  // ! Returns reference to index set of the underlying grid
+  //! Returns reference to index set of the underlying grid
   const IndexSetType& indexSet() const {
     return indexSet_;
   }
 
-  // ! Begin iterator on the leaf level
+  //! Begin iterator on the leaf level
   template< int codim >
   typename Codim< codim >::IteratorType begin() const {
     return begin< codim, InteriorBorder_Partition >();
   }
 
-  // ! Begin iterator on the leaf level
+  //! Begin iterator on the leaf level
   template< int codim, PartitionIteratorType pitype >
   typename Codim< codim >::template Partition< pitype >::IteratorType begin() const {
     return (*this).grid().template leafbegin< codim, pitype >();
   }
 
-  // ! Begin iterator on the leaf level
+  //! Begin iterator on the leaf level
   template< int codim >
   typename Codim< codim >::IteratorType end() const {
     return end< codim, InteriorBorder_Partition >();
   }
 
-  // ! End iterator on the leaf level
+  //! End iterator on the leaf level
   template< int codim, PartitionIteratorType pitype >
   typename Codim< codim >::template Partition< pitype >::IteratorType end() const {
     return (*this).grid().template leafend< codim, pitype >();
@@ -168,12 +168,12 @@ public:
     return IntersectionIteratorType( entity.ileafend() );
   }
 
-  // ! Deliver maximum level of grid
+  //! Deliver maximum level of grid
   int level() const {
     return this->grid().maxLevel();
   }
 
-  // ! Communication Method for this grid partition
+  //! Communication Method for this grid partition
   template< class DataHandleImp, class DataType >
   void communicate(CommDataHandleIF< DataHandleImp, DataType >& data,
                    InterfaceType iftype,

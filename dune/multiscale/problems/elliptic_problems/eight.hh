@@ -5,7 +5,7 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// !############################## Elliptic Problem 1 ###################################
+//!############################## Elliptic Problem 1 ###################################
 
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
@@ -255,7 +255,7 @@ public:
 CONSTANTFUNCTION(MassTerm,  0.00001)
 NULLFUNCTION(DefaultDummyFunction)
 
-// ! Exact solution (typically it is unknown)
+//! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
   : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >

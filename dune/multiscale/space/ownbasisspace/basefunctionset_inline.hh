@@ -37,7 +37,7 @@ inline void ReducedBasisBaseFunctionSet< BaseFunctionImp >
   }
 } // evaluate
 
-// !NEW
+//!NEW
 /* \copydoc Dune::RB::BaseFunctionSetInterface::evaluate(const int,const FieldVector<deriType,diffOrd> &,const PointType
    *&,RangeType &)const */
 template< class BaseFunctionImp >

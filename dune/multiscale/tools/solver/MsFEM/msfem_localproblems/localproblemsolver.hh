@@ -157,7 +157,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const
   DUNE_THROW(Dune::NotImplemented,"the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy.");
 }
 
-// ! stiffness matrix for a linear elliptic diffusion operator
+//! stiffness matrix for a linear elliptic diffusion operator
 template< class SubDiscreteFunctionImp, class DiffusionImp >
 template< class MatrixType >
 void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matrix(MatrixType& global_matrix) const
@@ -393,13 +393,13 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
   }
 } // assemble_local_RHS
 
-// ! ------------------------------------------------------------------------------------------------
-// ! ------------------------------------------------------------------------------------------------
+//! ------------------------------------------------------------------------------------------------
+//! ------------------------------------------------------------------------------------------------
 
-// ! ------------------------------------------------------------------------------------------------
+//! ------------------------------------------------------------------------------------------------
 
-// ! ------------------------------------------------------------------------------------------------
-// ! --------------------- the essential local msfem problem solver class ---------------------------
+//! ------------------------------------------------------------------------------------------------
+//! --------------------- the essential local msfem problem solver class ---------------------------
 
 template< class HostDiscreteFunctionType,
           class SubGridListType,
@@ -408,28 +408,28 @@ template< class HostDiscreteFunctionType,
 class MsFEMLocalProblemSolver
 {
 public:
-  // ! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
+  //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
-  // ! type of discrete function space
+  //! type of discrete function space
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType
   HostDiscreteFunctionSpaceType;
 
-  // ! type of (non-discrete )function space
+  //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
 
-  // ! type of grid partition
+  //! type of grid partition
   typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
 
-  // ! type of grid
+  //! type of grid
   typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
 
-  // ! type of range vectors
+  //! type of range vectors
   typedef typename HostDiscreteFunctionSpaceType::RangeType RangeType;
 
-  // ! type of value of a gradient of a function
+  //! type of value of a gradient of a function
   typedef typename HostDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-  // ! type of range vectors
+  //! type of range vectors
   typedef typename HostDiscreteFunctionSpaceType::DomainType DomainType;
 
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
@@ -446,20 +446,20 @@ public:
 
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
-  // ! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
+  //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
-  // ! type of grid
+  //! type of grid
   typedef typename SubGridListType::SubGridType SubGridType;
 
-  // ! type of grid part
+  //! type of grid part
   typedef LeafGridPart< SubGridType > SubGridPartType;
 
-  // ! type of subgrid discrete function space
+  //! type of subgrid discrete function space
   typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1 >  // 1=POLORDER
   SubDiscreteFunctionSpaceType;
 
-  // ! type of subgrid discrete function
+  //! type of subgrid discrete function
   typedef AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
 
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
@@ -472,9 +472,9 @@ public:
 
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SGLagrangePointSetType;
 
-  // !-----------------------------------------------------------------------------------------
+  //!-----------------------------------------------------------------------------------------
 
-  // ! ------------------ Matrix Traits for the local Problems ---------------------
+  //! ------------------ Matrix Traits for the local Problems ---------------------
 
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
 
@@ -482,7 +482,7 @@ public:
   typedef typename SubgridLagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType
   SubgridFaceDofIteratorType;
 
-  // ! polynomial order of base functions
+  //! polynomial order of base functions
   enum { polynomialOrder = SubDiscreteFunctionSpaceType::polynomialOrder };
 
   struct LocProbMatrixTraits
@@ -520,7 +520,7 @@ private:
 
   SubGridListType& subgrid_list_;
 
-  std::ofstream* data_file_;
+  std::ofstream* DSC_LOG_INFO;
 
   // path where to save the data output
   const std::string path_;
@@ -528,19 +528,19 @@ private:
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
-   * \param data_file does not take ownership
+   * \param DSC_LOG_INFO does not take ownership
    **/
   MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                           const MacroMicroGridSpecifierType& specifier,
                           SubGridListType& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator,
-                          std::ofstream* data_file = nullptr,
+                          std::ofstream* DSC_LOG_INFO = nullptr,
                           std::string path = "")
     : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
       , diffusion_(diffusion_operator)
       , specifier_(specifier)
       , subgrid_list_(subgrid_list)
-      , data_file_(data_file)
+      , DSC_LOG_INFO(DSC_LOG_INFO)
       , path_(path)
   {}
 
@@ -556,7 +556,7 @@ public:
     stream << " ] " << std::endl;
   } // oneLinePrint
 
-  // ! ----------- method: solve the local MsFEM problem ------------------------------------------
+  //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
   void solvelocalproblem(JacobianRangeType& e,
                          SubDiscreteFunctionType& local_problem_solution) const {
@@ -565,13 +565,13 @@ public:
 
     const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = local_problem_solution.space();
 
-    // ! the matrix in our linear system of equations
+    //! the matrix in our linear system of equations
     // in the non-linear case, it is the matrix for each iteration step
     LocProbFEMMatrix locprob_system_matrix("Local Problem System Matrix",
                                            subDiscreteFunctionSpace,
                                            subDiscreteFunctionSpace);
 
-    // ! define the discrete (elliptic) local MsFEM problem operator
+    //! define the discrete (elliptic) local MsFEM problem operator
     // ( effect of the discretized differential operator on a certain discrete function )
     LocalProblemOperatorType local_problem_op(subDiscreteFunctionSpace, diffusion_);
 
@@ -582,7 +582,7 @@ public:
     typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
     SGIteratorType sg_endit = subDiscreteFunctionSpace.end();
 
-    // ! right hand side vector of the algebraic local MsFEM problem
+    //! right hand side vector of the algebraic local MsFEM problem
     SubDiscreteFunctionType local_problem_rhs("rhs of local MsFEM problem", subDiscreteFunctionSpace);
     local_problem_rhs.clear();
 
@@ -595,7 +595,7 @@ public:
     // assemble the stiffness matrix
     local_problem_op.assemble_matrix(locprob_system_matrix);
 
-    // ! boundary treatment:
+    //! boundary treatment:
     typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
 
     typedef typename SGLagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType
@@ -707,7 +707,7 @@ public:
     // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution );
   } // solvelocalproblem
 
-  // ! ----------- end method: solve local MsFEM problem ------------------------------------------
+  //! ----------- end method: solve local MsFEM problem ------------------------------------------
 
   // create a hostgrid function from a subgridfunction
   void subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func,
@@ -739,7 +739,7 @@ public:
   // method for solving and saving the solutions of the local msfem problems
   // for the whole set of macro-entities and for every unit vector e_i
 
-  // ! ---- method: solve and save the whole set of local msfem problems -----
+  //! ---- method: solve and save the whole set of local msfem problems -----
 
   // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
   void assemble_all(bool /*silent*/ = true /* state information on subgrids */) {
@@ -829,7 +829,7 @@ public:
         sprintf(name_loc_sol, "Local Problem Solution %d", coarse_index);
         const std::string name_local_solution(name_loc_sol);
 
-        // ! only for dimension 2!
+        //! only for dimension 2!
         SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
         local_problem_solution_0.clear();
 
@@ -933,22 +933,22 @@ public:
       }
     } // end: 'if ( writer_is_open )'
 
-    if (data_file_)
+    if (DSC_LOG_INFO)
     {
-      if ( data_file_->is_open() )
+      if ( DSC_LOG_INFO->is_open() )
       {
-        (*data_file_) << std::endl;
-        (*data_file_) << "In method: assemble_all." << std::endl << std::endl;
-        (*data_file_) << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."
+        (*DSC_LOG_INFO) << std::endl;
+        (*DSC_LOG_INFO) << "In method: assemble_all." << std::endl << std::endl;
+        (*DSC_LOG_INFO) << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."
                       << std::endl;
-        (*data_file_) << dimension * number_of_coarse_grid_entities << " local MsFEM problems solved in total."
+        (*DSC_LOG_INFO) << dimension * number_of_coarse_grid_entities << " local MsFEM problems solved in total."
                       << std::endl;
-        (*data_file_) << "Minimum time for solving a local problem = " << minimum_time_c_p << "s." << std::endl;
-        (*data_file_) << "Maximum time for solving a localproblem = " << maximum_time_c_p << "s." << std::endl;
-        (*data_file_) << "Average time for solving a localproblem = "
+        (*DSC_LOG_INFO) << "Minimum time for solving a local problem = " << minimum_time_c_p << "s." << std::endl;
+        (*DSC_LOG_INFO) << "Maximum time for solving a localproblem = " << maximum_time_c_p << "s." << std::endl;
+        (*DSC_LOG_INFO) << "Average time for solving a localproblem = "
                       << ( (clock()
               - starting_time) / CLOCKS_PER_SEC ) / (dimension * number_of_coarse_grid_entities) << "s." << std::endl;
-        (*data_file_) << "Total time for computing and saving the localproblems = "
+        (*DSC_LOG_INFO) << "Total time for computing and saving the localproblems = "
                       << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
       }
     }

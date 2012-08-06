@@ -5,9 +5,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// ! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
+//! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
 
-// !############################## Elliptic Problem 6 ###################################
+//!############################## Elliptic Problem 6 ###################################
 
 
 // eps = 0.001 => H Ref = 16
@@ -109,7 +109,7 @@ public:
   } // jacobianDiffusiveFlux
 
 // deprecated
-// ! defaults (not to be used):
+//! defaults (not to be used):
 // z_i = A^{\epsilon}_i(x,vec)
 // instantiate all possible cases of the evaluate-method:
   inline void evaluate(const int i,
@@ -117,7 +117,7 @@ public:
                        const DomainType& x,
                        RangeType& z) const {
     if (i == j)
-    { z = 1.01 + cos(2.0 * M_PI * x[0]); }       // !x[ 0 ] + x[ 1 ];} //!cos( 2.0 * M_PI * x[0] ); }
+    { z = 1.01 + cos(2.0 * M_PI * x[0]); }       //!x[ 0 ] + x[ 1 ];} //!cos( 2.0 * M_PI * x[0] ); }
     else
     { z = 0.0; }
   }

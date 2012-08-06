@@ -47,7 +47,6 @@ HMMResult<HMMTraits>  estimate_error(
         const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename HMMTraits::DiffusionType& diffusion_op,
         const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& /*rhsassembler*/,
-        const std::ofstream& /*data_file*/,
         const std::string filename,
         const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
         const typename HMMTraits::DiscreteFunctionType& hmm_solution
@@ -236,7 +235,7 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
   result.min_variation = result.average_loc_indicator / result.minimal_loc_indicator;
   #endif // ifdef ADAPTIVE
   return result;
-}// ! -------- End Error Estimation --------
+}//! -------- End Error Estimation --------
 
 
 #endif // ALGORITHM_ERROR_HH

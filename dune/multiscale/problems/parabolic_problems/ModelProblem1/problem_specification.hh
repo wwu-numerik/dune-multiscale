@@ -4,16 +4,16 @@
 #include <dune/fem/function/common/function.hh>
 #include <vector>
 
-// ! This is a heterogeneous test problem. (heterogeneous diffusion matrix)
+//! This is a heterogeneous test problem. (heterogeneous diffusion matrix)
 // No heterogenity in the advective part so that we can use that b is divergence-free and with zero meanvalue. This
 // means that we can make a very fine scale
 // calculation to see what happens. The heterogenity will be in the diffusive part.
 
-// !#####################################################################################################
-// !######################### HM-FEM Parabolic Problem 6 - DIM = 2 ######################################
-// !#####################################################################################################
+//!#####################################################################################################
+//!######################### HM-FEM Parabolic Problem 6 - DIM = 2 ######################################
+//!#####################################################################################################
 
-// ! For more further details about the implementation of the following classes, see the end of the file
+//! For more further details about the implementation of the following classes, see the end of the file
 
 // in general we regard problems of the following type:
 
@@ -31,36 +31,36 @@
 
 // in all of the model problems, we ignore the reaction and all the sources, i.e.: c = f = G_i = 0
 
-// ! we define:
+//! we define:
 
 // exact solution:
-// ! Unknown! An approximation is determined by homogenizing the problem.
+//! Unknown! An approximation is determined by homogenizing the problem.
 
 // The entries of the matrix A^{\epsilon}(x) are given by
-// ! a_{1,1}(t,y_1,y_2) :=
-// ! a_{2,2}(t,y_1,y_2) :=
-// ! a_{1,2}(t,y_1,y_2) := a_{2,1}(y_1,y_2) = 0
+//! a_{1,1}(t,y_1,y_2) :=
+//! a_{2,2}(t,y_1,y_2) :=
+//! a_{1,2}(t,y_1,y_2) := a_{2,1}(y_1,y_2) = 0
 
 // The mass term m^{\epsilon} ist given by:
-// ! m^{\epsilon}(t,y_1,y_2) := 0
+//! m^{\epsilon}(t,y_1,y_2) := 0
 // Since \epsilon tends to zero, we may say that we do not have a real mass term for our problem. It is a simple
 // condition to fix the solution which is only unique up to a constant. In fact we still approximate the solution of the
 // problem without mass.
 
 // The first source term f is given by:
-// ! f(t,x) := 0
+//! f(t,x) := 0
 // since the second source is zero, f will form the right hand side (RHS) of our discrete problem
 
 // The second source term G is constantly zero:
-// ! G(t,x) := 0
+//! G(t,x) := 0
 
 // The advection term b ( where b^{\epsilon}(t,x)= \frac{1}{\epsilon} b(t,\frac{x}{\epsilon}) ) is given by:
-// ! b_1(t,y_1,y_2) :=
-// ! b_1(t,y_1,y_2) :=
+//! b_1(t,y_1,y_2) :=
+//! b_1(t,y_1,y_2) :=
 // Note that b is divergence-free and that it has zero average. This implies that that there is no drift occuring.
 
 // The initial value v_0 is given by:
-// ! v_0(x_1,x_2) =
+//! v_0(x_1,x_2) =
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 
@@ -210,12 +210,12 @@ public:
   } // jacobian
 };
 
-// !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
+//!FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
 // The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y
 // := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
 // is part from. (f \in FunctionSpace)
 
-// ! default class for the second source term. Set f(x) = 0:
+//! default class for the second source term. Set f(x) = 0:
 template< class FunctionSpaceImp >
 class FirstSource
   : public Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
@@ -276,7 +276,7 @@ public:
   }
 };
 
-// ! default class for the second source term. Set G(x) = 0:
+//! default class for the second source term. Set G(x) = 0:
 template< class FunctionSpaceImp >
 class SecondSource
   : public Function< FunctionSpaceImp, SecondSource< FunctionSpaceImp > >
@@ -311,13 +311,13 @@ public:
   }
 };
 
-// ! The next class could be used to define the exact solution of the problem above. But since it very problematic to
+//! The next class could be used to define the exact solution of the problem above. But since it very problematic to
 // find this exact solution, the following problem is only a dummy. To compare (later on) the numerical solution with
 // the
 // exact solution in order to calculate the EOC (Estimated Order of Convergence), we will need to homogenize the problem
 // to get a numerical approximation of the exact solution.
 
-// ! Exact solution unknown
+//! Exact solution unknown
 template< class FunctionSpaceImp >
 class ExactSolution
   : public Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
@@ -781,7 +781,7 @@ public:
   inline void getAverage(DomainType& bar_b) const {
     DomainType zero(0.0);
     bar_b = zero;
-    // ! Note: restriction: at the moment, only constant b_average works!
+    //! Note: restriction: at the moment, only constant b_average works!
     // for generalization change for instance (in the classes DriftedDiffusion and DriftedAdvection) "bar_b * t" to some
     // "B(t)"!
   } // getAverage
@@ -1063,7 +1063,7 @@ public:
   }
 };
 
-// ! Implementation of a simple tensor that can be filled with constant entries.
+//! Implementation of a simple tensor that can be filled with constant entries.
 // This implementation is required to construct a tensor with the values that have been determined by the homogenizer
 template< class FunctionSpaceImp >
 class FillTensor2D

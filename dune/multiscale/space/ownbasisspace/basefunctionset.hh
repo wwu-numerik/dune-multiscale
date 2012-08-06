@@ -149,7 +149,7 @@ public:
                        const PointType& x,
                        RangeType& phi) const;
 
-// !NEW
+//!NEW
 
   /* \copydoc Dune::RB::BaseFunctionSetInterface::evaluate(const int,const FieldVector<deriType,diffOrd> &,const
      *PointType &,RangeType &)const */

@@ -5,7 +5,7 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// !############################## Elliptic Problem 1 ###################################
+//!############################## Elliptic Problem 1 ###################################
 
 
 // NOTE that (delta/epsilon_est) needs to be a positive integer!

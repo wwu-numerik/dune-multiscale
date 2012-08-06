@@ -88,10 +88,10 @@ class ReducedBasisSpace
   : public DiscreteFunctionSpaceDefault< ReducedBasisSpaceTraits< BaseFunction > >
 {
 public:
-  // ! discrete function type of the base functions
+  //! discrete function type of the base functions
   typedef BaseFunction BaseFunctionType;
 
-  // ! type of the traits
+  //! type of the traits
   typedef ReducedBasisSpaceTraits< BaseFunctionType > Traits;
 
 private:
@@ -99,29 +99,29 @@ private:
   typedef DiscreteFunctionSpaceDefault< Traits > BaseType;
 
 public:
-  // ! discrete function space, the base functions belong to
+  //! discrete function space, the base functions belong to
   typedef typename Traits::BaseFunctionSpaceType BaseFunctionSpaceType;
-  // ! function space, the base functions belong to
+  //! function space, the base functions belong to
   typedef typename Traits::FunctionSpaceType FunctionSpaceType;
 
   typedef typename Traits::GridPartType GridPartType;
   typedef typename Traits::GridType     GridType;
   typedef typename Traits::IndexSetType IndexSetType;
 
-  // ! type of the space's iterator
+  //! type of the space's iterator
   typedef typename Traits::IteratorType IteratorType;
 
   typedef typename Traits::BaseFunctionSetType  BaseFunctionSetType;
   typedef typename Traits::BaseFunctionListType BaseFunctionListType;
 
-  // ! gramian pipeline type
+  //! gramian pipeline type
   typedef typename Traits::GramianPipelineType GramianPipelineType;
 
-  // ! type of the DoF mapper
+  //! type of the DoF mapper
   typedef typename Traits::MapperType MapperType;
 
   enum { localBlockSize = Traits::localBlockSize };
-  // ! type of the block mapper
+  //! type of the block mapper
   typedef typename Traits::BlockMapperType BlockMapperType;
 
   enum { polynomialOrder = BaseFunctionSpaceType::polynomialOrder };
@@ -132,10 +132,10 @@ protected:
   mutable MapperType mapper_;
 
 public:
-  // ! default communication interface
+  //! default communication interface
   static const InterfaceType defaultInterface = InteriorBorder_All_Interface;
 
-  // ! default communication direction
+  //! default communication direction
   static const CommunicationDirection defaultDirection = ForwardCommunication;
 
   /** \brief constructor
@@ -198,7 +198,7 @@ public:
     return BaseFunctionSetType(baseFunctionList_, entity);
   }
 
-  // ! get dimension of value
+  //! get dimension of value
   inline int dimensionOfValue() const {
     return baseFunctionSpace_.dimensionOfValue;
   }
@@ -360,7 +360,7 @@ public:
       std::cerr << "warning: last pipeline has not been executed yet!\n"
                 << "This will result in memory leaks." << std::endl;
     }
-    // ! \todo change to reasonable value
+    //! \todo change to reasonable value
     const unsigned int blocksize = Parameter::getValue< int >("gramianpipeline.blocksize", 8);
     pipeline_ = new GramianPipelineType(baseFunctionList_, blocksize);
     return *pipeline_;

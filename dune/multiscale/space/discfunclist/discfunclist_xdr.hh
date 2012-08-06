@@ -532,7 +532,7 @@ private:
   } // nextIndex
 
 public:
-  // !return underlying space
+  //!return underlying space
   const DiscreteFunctionSpaceType& space() const {
     // check if this function list has been cleared
     checkCleared();

@@ -71,7 +71,7 @@ public:
 // buffer_[i] = std::pair<int, DiscreteFunctionType>(0, DiscreteFunctionType("noName", BaseType::discFuncSpace_));
   }
 
-  // !destructor, free all memory allocated by the list
+  //!destructor, free all memory allocated by the list
   ~DiscreteFunctionList_Wrapper() {
     typedef typename std::map< int, DiscreteFunctionType* >::iterator IteratorType;
     for (IteratorType it = buffer_.begin(); it != buffer_.end(); ++it)

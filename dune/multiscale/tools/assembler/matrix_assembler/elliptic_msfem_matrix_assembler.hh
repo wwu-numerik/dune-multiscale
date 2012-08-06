@@ -96,17 +96,17 @@ protected:
   typedef CachingQuadrature< CoarseGridPart, 0 > CoarseQuadrature;
 
 public:
-  // ! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
+  //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
-  // ! type of grid part
+  //! type of grid part
   typedef LeafGridPart< SubGridType > SubGridPart;
 
-  // ! type of subgrid discrete function space
+  //! type of subgrid discrete function space
   typedef LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
   LocalDiscreteFunctionSpace;
 
-  // ! type of subgrid discrete function
+  //! type of subgrid discrete function
   typedef AdaptiveDiscreteFunction< LocalDiscreteFunctionSpace > LocalDiscreteFunction;
 
   typedef typename LocalDiscreteFunctionSpace::IteratorType LocalGridIterator;
@@ -125,7 +125,7 @@ public:
 
   typedef CachingQuadrature< SubGridPart, 0 > LocalGridQuadrature;
 
-  // !-----------------------------------------------------------------------------------------
+  //!-----------------------------------------------------------------------------------------
 
 public:
   DiscreteEllipticMsFEMOperator(MacroMicroGridSpecifierType& specifier,
@@ -134,13 +134,13 @@ public:
                                 // n(T)-layers:
                                 SubGridListType& subgrid_list,
                                 const DiffusionModel& diffusion_op,
-                                std::ofstream& data_file,
+                                std::ofstream& DSC_LOG_INFO,
                                 std::string path = "")
     : specifier_(specifier)
       , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
       , subgrid_list_(subgrid_list)
       , diffusion_operator_(diffusion_op)
-      , data_file_(&data_file)
+      , DSC_LOG_INFO(&DSC_LOG_INFO)
       , path_(path) {
     bool silence = false;
 
@@ -150,7 +150,7 @@ public:
     std::string local_path = path_ + "/local_problems/";
 
     MsFEMLocalProblemSolverType loc_prob_solver(
-      specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, &data_file, local_path);
+      specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, &DSC_LOG_INFO, local_path);
 
     loc_prob_solver.assemble_all(silence);
   }
@@ -191,7 +191,7 @@ private:
   const DiffusionModel& diffusion_operator_;
 
   // data file for saving information
-  std::ofstream* data_file_;
+  std::ofstream* DSC_LOG_INFO;
 
   // path where to save the data output
   std::string path_;
@@ -518,8 +518,8 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
   }
 } // assemble_matrix
 
-// ! ------------------------------------------------------------------------------------------------
-// ! ------------------------------------------------------------------------------------------------
+//! ------------------------------------------------------------------------------------------------
+//! ------------------------------------------------------------------------------------------------
 }
 
 #endif // #ifndef DiscreteElliptic_HH

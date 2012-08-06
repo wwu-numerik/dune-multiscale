@@ -29,7 +29,6 @@ void oneLinePrint(Stream& stream, const DiscFunc& func) {
 
 template <class HMM>
 void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
-                 std::ofstream& data_file,
                  const typename HMM::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
                  const typename HMM::EllipticOperatorType& discrete_elliptic_op,
                  const std::string& filename,
@@ -43,13 +42,13 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
   typename HMM::DiscreteFunctionType zero_func(filename + " constant zero function ", finerDiscreteFunctionSpace);
   zero_func.clear();
 
-  // ! *************************** Assembling the reference problem ****************************
+  //! *************************** Assembling the reference problem ****************************
   // ( fine scale reference solution = fem_newton_solution )
 
-  // ! (stiffness) matrix
+  //! (stiffness) matrix
   typename HMM::FEMMatrix fem_newton_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
 
-  // ! right hand side vector
+  //! right hand side vector
   // right hand side for the finite element method with Newton solver:
   // ( also right hand side for the finer discrete function space )
   typename HMM::DiscreteFunctionType fem_newton_rhs("fem newton rhs", finerDiscreteFunctionSpace);
@@ -60,12 +59,9 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
   if (DSC_CONFIG.get("problem.linear", true))
   {
     DSC_LOG_INFO << "Solving linear problem." << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "Solving linear problem with standard FEM and resolution level "
-                << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
-      data_file << "------------------------------------------------------------------------------" << std::endl;
-    }
+    DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
+              << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
+    DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     // to assemble the computational time
     Dune::Timer assembleTimer;
@@ -74,10 +70,6 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
     discrete_elliptic_op.assemble_matrix(fem_newton_matrix);
 
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-    }
 
     // assemble right hand side
     rhsassembler.template assemble< hmm_polorder >(f, fem_newton_rhs);
@@ -91,24 +83,17 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
     const typename HMM::InverseFEMMatrix fem_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
     fem_biCGStab(fem_newton_rhs, fem_newton_solution);
 
-    if ( data_file.is_open() )
-    {
-      data_file << "---------------------------------------------------------------------------------" << std::endl;
-      data_file << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
-                << std::endl;
-    }
+    DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
+    DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
+              << std::endl;
   } else {
     DSC_LOG_INFO << "Solving non-linear problem." << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
-                << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
-      data_file << "---------------------------------------------------------------------------------" << std::endl;
-    }
+    DSC_LOG_INFO << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
+              << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
+    DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
 
     Dune::Timer assembleTimer;
-
-    // ! residual vector
+    //! residual vector
     // current residual
     typename HMM::DiscreteFunctionType fem_newton_residual(filename + "FEM Newton Residual", finerDiscreteFunctionSpace);
     fem_newton_residual.clear();
@@ -124,10 +109,6 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
     {
       // (here: fem_newton_solution = solution from the last iteration step)
       DSC_LOG_INFO << "Newton iteration " << iteration_step << ":" << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "Newton iteration " << iteration_step << ":" << std::endl;
-      }
       Dune::Timer stepAssembleTimer;
       // assemble the stiffness matrix
       discrete_elliptic_op.assemble_jacobian_matrix(fem_newton_solution, fem_newton_matrix);
@@ -146,11 +127,8 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
       if (rhs_L2_norm < 1e-10)
       {
         // residual solution almost identical to zero: break
-        if ( data_file.is_open() )
-        {
-          data_file << "Residual solution almost identical to zero. Therefore: break loop." << std::endl;
-          data_file << "(L^2-Norm of current right hand side = " << rhs_L2_norm << " < 1e-10)" << std::endl;
-        }
+        DSC_LOG_INFO << "Residual solution almost identical to zero. Therefore: break loop." << std::endl;
+        DSC_LOG_INFO << "(L^2-Norm of current right hand side = " << rhs_L2_norm << " < 1e-10)" << std::endl;
         break;
       }
       // set Dirichlet Boundary to zero
@@ -174,13 +152,10 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
 
         DSC_LOG_INFO << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
         // residual solution almost identical to zero: break
-        if ( data_file.is_open() )
+        DSC_LOG_INFO << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
+        if (relative_newton_error_finescale <= tolerance)
         {
-          data_file << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
-          if (relative_newton_error_finescale <= tolerance)
-          {
-            data_file << "Since tolerance = " << tolerance << ": break loop." << std::endl;
-          }
+          DSC_LOG_INFO << "Since tolerance = " << tolerance << ": break loop." << std::endl;
         }
         fem_newton_residual.clear();
       } else {
@@ -191,15 +166,12 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
     }
     DSC_LOG_INFO << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
                  << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "---------------------------------------------------------------------------------" << std::endl;
-      data_file << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
-                << std::endl << std::endl;
-    }
+    DSC_LOG_INFO << seperator_line;
+    DSC_LOG_INFO << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
+              << std::endl << std::endl;
   }// end 'problem.linear <-> else'
 
-  // ! ********************** End of assembling the reference problem ***************************
+  //! ********************** End of assembling the reference problem ***************************
 }
 
 template < class HMM >
@@ -253,7 +225,7 @@ typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctio
 } // get_size_of_domain
 
 template < class ProblemDataType >
-void print_info(const ProblemDataType& info, std::ofstream& data_file)
+void print_info(const ProblemDataType& info, std::ostream& out)
 {
   // epsilon is specified in ModelProblemData, which is specified in problem_specification.hh
   // 'epsilon' in for instance A^{epsilon}(t,x) = A(t,x/epsilon)
@@ -266,50 +238,47 @@ void print_info(const ProblemDataType& info, std::ofstream& data_file)
   // edge length of the cells in the cell proplems,
   const double delta_ = info.getDelta();
   const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
-  if ( data_file.is_open() )
-  {
-    data_file << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std::endl
-              << std::endl;
-    if (DSC_CONFIG.get("problem.linear", true))
-      data_file << "Problem is declared as being LINEAR." << std::endl;
-    else
-      data_file << "Problem is declared as being NONLINEAR." << std::endl;
+  out << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std::endl
+            << std::endl;
+  if (DSC_CONFIG.get("problem.linear", true))
+    out << "Problem is declared as being LINEAR." << std::endl;
+  else
+    out << "Problem is declared as being NONLINEAR." << std::endl;
 
-    if (ProblemDataType::has_exact_solution) {
-      data_file << "Exact solution is available." << std::endl << std::endl;
-    } else {
-      data_file << "Exact solution is not available." << std::endl << std::endl;
-    }
-    data_file << "Computations were made for:" << std::endl << std::endl;
-    data_file << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
-    const int refinement_level_cellgrid = DSC_CONFIG.get("grid.refinement_level_cellgrid", 1);
-    data_file << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
-    #ifdef TFR
-    data_file << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
-    #else
-    data_file << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
-    #endif // ifdef TFR
-    #ifdef AD_HOC_COMPUTATION
-    data_file << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
-    #else
-    data_file << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
-    #ifdef ERRORESTIMATION
-    data_file << "Error estimation activated!" << std::endl << std::endl;
-    #endif
-    #endif // ifdef AD_HOC_COMPUTATION
-    data_file << "Epsilon = " << epsilon_ << std::endl;
-    data_file << "Estimated Epsilon = " << epsilon_est_ << std::endl;
-    data_file << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
-    if (DSC_CONFIG.get("problem.stochastic_pertubation", false))
-      data_file << std::endl << "Stochastic perturbation added. Variance = " << DSC_CONFIG.get("problem.stochastic_variance", 0.01) << std::endl;
-    if (DSC_CONFIG.get("hmm.adaptive", true)) {
-      //only used in adaptive config
-      const double error_tolerance_ = DSC_CONFIG.get("problem.error_tolerance", 1e-6);
-      data_file << std::endl << "Adaptive computation. Global error tolerance for program abort = "
-                << error_tolerance_ << std::endl;
-    }
-    data_file << std::endl << std::endl;
+  if (ProblemDataType::has_exact_solution) {
+    out << "Exact solution is available." << std::endl << std::endl;
+  } else {
+    out << "Exact solution is not available." << std::endl << std::endl;
   }
+  out << "Computations were made for:" << std::endl << std::endl;
+  out << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
+  const int refinement_level_cellgrid = DSC_CONFIG.get("grid.refinement_level_cellgrid", 1);
+  out << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
+  #ifdef TFR
+  out << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
+  #else
+  out << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
+  #endif // ifdef TFR
+  if (DSC_CONFIG.get("AD_HOC_COMPUTATION", false)) {
+    out << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
+  } else {
+    out << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
+    #ifdef ERRORESTIMATION
+    out << "Error estimation activated!" << std::endl << std::endl;
+    #endif
+  }
+  out << "Epsilon = " << epsilon_ << std::endl;
+  out << "Estimated Epsilon = " << epsilon_est_ << std::endl;
+  out << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
+  if (DSC_CONFIG.get("problem.stochastic_pertubation", false))
+    out << std::endl << "Stochastic perturbation added. Variance = " << DSC_CONFIG.get("problem.stochastic_variance", 0.01) << std::endl;
+  if (DSC_CONFIG.get("hmm.adaptive", true)) {
+    //only used in adaptive config
+    const double error_tolerance_ = DSC_CONFIG.get("problem.error_tolerance", 1e-6);
+    out << std::endl << "Adaptive computation. Global error tolerance for program abort = "
+              << error_tolerance_ << std::endl;
+  }
+  out << std::endl << std::endl;
 }
 
 //! the main hmm computation
@@ -322,19 +291,18 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
                typename HMMTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
                int /*refinement_difference*/,   // refinement difference for the macro grid (problem-to-solve vs. reference
                                             // problem)
-               std::ofstream& data_file,
                const std::string filename) {
   typedef HMMTraits HMM;
   using namespace Dune;
 
-  print_info(problem_data, data_file);
-  // ! ---- tools ----
+  print_info(problem_data, DSC_LOG_INFO);
+  //! ---- tools ----
   // model problem data
 // UNUSED  Problem::ModelProblemData problem_data;
 // set of hmm parameters/information
 // UNUSED  Multiscale::HMMParameters method_info;
 
-  // ! ---------------------------- grid parts ----------------------------------------------
+  //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
   typename HMM::GridPartType gridPart(*macro_grid_pointer);
   // grid part for the periodic function space, required for HMM-cell-problems
@@ -346,9 +314,9 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   typename HMM::GridType& gridFine = gridPartFine.grid();
 
 
-// ! --------------------------------------------------------------------------------------
+//! --------------------------------------------------------------------------------------
 
-  // ! ------------------------- discrete function spaces -----------------------------------
+  //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
   typename HMM::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
   // the global-problem function space for the reference computation:
@@ -356,14 +324,14 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   // the local-problem function space (containing periodic functions):
   typename HMM::PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace(periodicGridPart);
 
-// ! --------------------------------------------------------------------------------------
+//! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const typename HMM::DiffusionType diffusion_op;
-  // ! --------------------------- coefficient functions ------------------------------------
+  //! --------------------------- coefficient functions ------------------------------------
 
 
-  // ! define the right hand side assembler tool
+  //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType > rhsassembler;
   const typename HMM::FirstSourceType f;   // standard source f
@@ -371,7 +339,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   // ----------------------------------------------------------------------------------------------//
   // ----------------------- THE DISCRETE FEM OPERATOR -----------------------------------//
   // ----------------------------------------------------------------------------------------------//
-  // ! define the discrete (elliptic) operator that describes our problem
+  //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
  typename HMM::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
 // ----------------------------------------------------------------------------------------------//
@@ -421,7 +389,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
     }
   }
 
-  // ! solution vector
+  //! solution vector
   // solution of the finite element method, where we used the Newton method to solve the non-linear system of equations
   // in general this will be an accurate approximation of the exact solution, that is why we it also called reference
   // solution
@@ -434,7 +402,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   {
     if (DSC_CONFIG.get("fsr_compute", true))
     {
-      fsr_compute<HMM>(fem_newton_solution, data_file, finerDiscreteFunctionSpace, discrete_elliptic_op,
+      fsr_compute<HMM>(fem_newton_solution, finerDiscreteFunctionSpace, discrete_elliptic_op,
                        filename, problem_data, rhsassembler);
     }
     //! load und compute sollten sich ausschliessen??
@@ -465,7 +433,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
     DSC_LOG_INFO << "HMM reference read." << std::endl;
   }
 
-  // ! ************************* Assembling and solving the HMM problem ****************************
+  //! ************************* Assembling and solving the HMM problem ****************************
   // number of the loop cycle of the while-loop
   int loop_cycle = 1;
   double total_hmm_time = 0.0;
@@ -473,13 +441,9 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   bool repeat = true;
   while (repeat == true)
   {
-    if ( data_file.is_open() )
-    {
-      data_file << "########################### LOOP CYCLE " << loop_cycle << " ###########################"
+    DSC_LOG_INFO << "########################### LOOP CYCLE " << loop_cycle << " ###########################"
                 << std::endl << std::endl << std::endl;
-    }
-
-    // ! solution vector
+    //! solution vector
     // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the
     // non-linear system of equations
     typename HMM::DiscreteFunctionType hmm_solution(filename + " HMM (+Newton) Solution", discreteFunctionSpace);
@@ -488,7 +452,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
     typename HMM::RestrictProlongOperatorType rp(hmm_solution);
     typename HMM::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                diffusion_op, rhsassembler, data_file, filename, hmm_solution, fem_newton_solution);
+                diffusion_op, rhsassembler, filename, hmm_solution, fem_newton_solution);
 
     if (!DSC_CONFIG.get("hmm.adaptive", true))
       break;
@@ -506,15 +470,11 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
     {
       // "divided by 2.0" we go half the way with a uniform computation
       const int number_of_uniform_refinements = 2 * int(int( sqrt(result.estimated_error / error_tolerance_) ) / 2.0);
-
-      if ( data_file.is_open() )
-      {
-        data_file << std::endl << "Uniform default refinement:" << std::endl << std::endl;
-        data_file << "sqrt( estimated_error / error_tolerance_ ) = "
-                  << sqrt(result.estimated_error / error_tolerance_) << std::endl;
-        data_file << "number_of_uniform_refinements = " << number_of_uniform_refinements << std::endl;
-        data_file << "***************" << std::endl << std::endl;
-      }
+      DSC_LOG_INFO << std::endl << "Uniform default refinement:" << std::endl << std::endl;
+      DSC_LOG_INFO << "sqrt( estimated_error / error_tolerance_ ) = "
+                << sqrt(result.estimated_error / error_tolerance_) << std::endl;
+      DSC_LOG_INFO << "number_of_uniform_refinements = " << number_of_uniform_refinements << std::endl;
+      DSC_LOG_INFO << "***************" << std::endl << std::endl;
 
       default_refinement = number_of_uniform_refinements;
     }
@@ -539,41 +499,38 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
       refinements_in_area[bo] = default_refinement + bo + 1;
     }
 
-    if ( data_file.is_open() )
+    DSC_LOG_INFO << "Adaption strategy:" << std::endl << std::endl;
+    DSC_LOG_INFO << "Define 'variation = (indicator_on_element - average_indicator) / (maximum_indicator - average_indicator)'"
+                 << std::endl;
+    DSC_LOG_INFO << "Subdivide the region [average_indicator,maximum_indicator] into " << number_of_areas << " areas."
+                 << std::endl;
+    if (number_of_areas == 1)
     {
-      data_file << "Adaption strategy:" << std::endl << std::endl;
-      data_file
-      << "Define 'variation = (indicator_on_element - average_indicator) / (maximum_indicator - average_indicator)'"
-      << std::endl;
-      data_file << "Subdivide the region [average_indicator,maximum_indicator] into " << number_of_areas << " areas."
-                << std::endl;
-      if (number_of_areas == 1)
-      {
-        data_file << "1.: [average_indicator,maximum_indicator]. Mark elements for " << refinements_in_area[0]
-                  << " refinements." << std::endl;
-      } else {
-        data_file << "1.: [average_indicator," << border[0]
-                  << "*maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[0]
-                  << " refinements." << std::endl;
-        for (int bo = 1; bo < (number_of_areas - 1); ++bo)
-          data_file << bo + 1 << ".: ["
-                    << border[bo
-                    - 1] << "*average_indicator," << border[bo]
-                    << "*maximum_indicator]. If 'variance' in area: mark elements for "
-                    << refinements_in_area[bo] << " refinements." << std::endl;
-        data_file << number_of_areas << ".: ["
-                  << border[number_of_areas
-                  - 2] << "*average_indicator,maximum_indicator]. If 'variance' in area: mark elements for "
-                  << refinements_in_area[number_of_areas - 1] << " refinements." << std::endl;
-      }
-      data_file << "Default refinement for elements with 'variance <= 0 ': " << default_refinement << std::endl;
+      DSC_LOG_INFO << "1.: [average_indicator,maximum_indicator]. Mark elements for " << refinements_in_area[0]
+                << " refinements." << std::endl;
+    } else {
+      DSC_LOG_INFO << "1.: [average_indicator," << border[0]
+                << "*maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[0]
+                << " refinements." << std::endl;
+      for (int bo = 1; bo < (number_of_areas - 1); ++bo)
+        DSC_LOG_INFO << bo + 1 << ".: ["
+                  << border[bo
+                  - 1] << "*average_indicator," << border[bo]
+                  << "*maximum_indicator]. If 'variance' in area: mark elements for "
+                  << refinements_in_area[bo] << " refinements." << std::endl;
+      DSC_LOG_INFO << number_of_areas << ".: ["
+                << border[number_of_areas
+                - 2] << "*average_indicator,maximum_indicator]. If 'variance' in area: mark elements for "
+                << refinements_in_area[number_of_areas - 1] << " refinements." << std::endl;
     }
+    DSC_LOG_INFO << "Default refinement for elements with 'variance <= 0 ': " << default_refinement << std::endl;
+
 
     if (result.estimated_error < error_tolerance_)
     {
       repeat = false;
       DSC_LOG_INFO << "Total HMM time = " << total_hmm_time << "s." << std::endl;
-      data_file << std::endl << std::endl << "Total HMM time = " << total_hmm_time << "s." << std::endl << std::endl;
+      DSC_LOG_INFO << std::endl << std::endl << "Total HMM time = " << total_hmm_time << "s." << std::endl << std::endl;
     } else {
 
       int element_number = 0;
@@ -617,11 +574,8 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
       }
       adaptationManager.adapt();
     }
-    if ( data_file.is_open() )
-    {
-      data_file << std::endl << "#########################################################################"
-                << std::endl << std::endl << std::endl;
-    }
+    DSC_LOG_INFO << std::endl << "#########################################################################"
+              << std::endl << std::endl << std::endl;
     loop_cycle += 1;
   } // end while (repeat) of repeat loop (for the adaptive cicles)
 }

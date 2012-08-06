@@ -6,11 +6,11 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// ! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
+//! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
 
-// ! NOTE: MODEL PROBLEM 0!!!!!
+//! NOTE: MODEL PROBLEM 0!!!!!
 
-// !############################## Elliptic Problem 0 ###################################
+//!############################## Elliptic Problem 0 ###################################
 
 
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
@@ -210,7 +210,7 @@ CONSTANTFUNCTION(MassTerm,  0.00001)
 
 //! a dummy function class for functions, vectors and matrices
 NULLFUNCTION(DefaultDummyFunction)
-// ! Exact solution (typically it is unknown)
+//! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
   : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >

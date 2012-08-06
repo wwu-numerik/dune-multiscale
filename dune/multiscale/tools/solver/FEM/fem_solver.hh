@@ -76,7 +76,7 @@ public:
 
   typedef DummyMass< DiscreteFunctionSpace > DummyMassType;
 
-  // ! --------------------- the standard matrix traits -------------------------------------
+  //! --------------------- the standard matrix traits -------------------------------------
 
   struct MatrixTraits
   {
@@ -92,15 +92,15 @@ public:
     };
   };
 
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
-  // ! --------------------- type of fem stiffness matrix -----------------------------------
+  //! --------------------- type of fem stiffness matrix -----------------------------------
 
   typedef SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > FEMMatrix;
 
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
-  // ! --------------- solver for the linear system of equations ----------------------------
+  //! --------------- solver for the linear system of equations ----------------------------
 
   // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
   // ones.
@@ -108,22 +108,14 @@ public:
   // typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
   typedef CGInverseOperator< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
 
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
 
-  std::ofstream* data_file_;
-
 public:
   Elliptic_FEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace)
     : discreteFunctionSpace_(discreteFunctionSpace)
-      , data_file_(NULL)
-  {}
-
-  Elliptic_FEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace, std::ofstream& data_file)
-    : discreteFunctionSpace_(discreteFunctionSpace)
-      , data_file_(&data_file)
   {}
 
   template< class Stream >
@@ -153,34 +145,34 @@ public:
                             DiscreteFunction& solution) const {
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
-    // ! define the right hand side assembler tool
+    //! define the right hand side assembler tool
     // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
     RightHandSideAssembler< DiscreteFunctionType > rhsassembler;
 
-    // ! define the discrete (elliptic) operator that describes our problem
+    //! define the discrete (elliptic) operator that describes our problem
     // ( effect of the discretized differential operator on a certain discrete function )
     DiscreteEllipticOperator< DiscreteFunction, DiffusionOperator, DummyMassType > discrete_elliptic_op(
       discreteFunctionSpace_,
       diffusion_op);
     // discrete elliptic operator (corresponds with FEM Matrix)
 
-    // ! (stiffness) matrix
+    //! (stiffness) matrix
     FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
-    // ! right hand side vector
+    //! right hand side vector
     // right hand side for the finite element method:
     DiscreteFunction fem_rhs("fem newton rhs", discreteFunctionSpace_);
     fem_rhs.clear();
 
     DSC_LOG_INFO << "Solving linear problem." << std::endl;
 
-    if (data_file_)
+    if (DSC_LOG_INFO)
     {
-      if ( data_file_->is_open() )
+      if ( DSC_LOG_INFO->is_open() )
       {
-        *data_file_ << "Solving linear problem with standard FEM and resolution level "
+        DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
                     << discreteFunctionSpace_.grid().maxLevel() << "." << std::endl;
-        *data_file_ << "------------------------------------------------------------------------------" << std::endl;
+        DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
       }
     }
 
@@ -192,11 +184,11 @@ public:
 
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
-    if (data_file_)
+    if (DSC_LOG_INFO)
     {
-      if ( data_file_->is_open() )
+      if ( DSC_LOG_INFO->is_open() )
       {
-        *data_file_ << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s"
+        DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s"
                     << std::endl;
       }
     }
@@ -238,21 +230,15 @@ public:
     InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/);
     fem_biCGStab(fem_rhs, solution);
 
-    if (data_file_)
-    {
-      if ( data_file_->is_open() )
-      {
-        *data_file_ << "---------------------------------------------------------------------------------" << std::endl;
-        *data_file_ << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl
-                    << std::endl << std::endl;
-      }
-    }
+    DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
+    DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl
+                << std::endl << std::endl;
 
     // oneLinePrint( DSC_LOG_DEBUG , solution );
   } // solve_dirichlet_zero
 
-  // ! the following methods are not yet implemented, however note that the required tools are
-  // ! already available via 'righthandside_assembler.hh' and 'elliptic_fem_matrix_assembler.hh'!
+  //! the following methods are not yet implemented, however note that the required tools are
+  //! already available via 'righthandside_assembler.hh' and 'elliptic_fem_matrix_assembler.hh'!
 
   template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType >
   void solve() {

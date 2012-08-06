@@ -6,36 +6,36 @@
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-// ! ------------------------------------------------------------------------------------------------
-// ! --------------------- the essential cell problem solver class ----------------------------------
+
+//! --------------------- the essential cell problem solver class ----------------------------------
 namespace Dune {
 template< class Traits >
 class CellProblemSolver
 {
 public:
-  // ! type of discrete functions
+  //! type of discrete functions
   typedef typename Traits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionType;
 
-  // ! type of discrete function space
+  //! type of discrete function space
   typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
   PeriodicDiscreteFunctionSpaceType;
 
-  // ! type of grid partition
+  //! type of grid partition
   typedef typename PeriodicDiscreteFunctionSpaceType::GridPartType PeriodicGridPartType;
 
-  // ! type of grid
+  //! type of grid
   typedef typename PeriodicDiscreteFunctionSpaceType::GridType PeriodicGridType;
 
-  // ! type of range vectors
+  //! type of range vectors
   typedef typename PeriodicDiscreteFunctionSpaceType::RangeType RangeType;
 
-  // ! type of range vectors
+  //! type of range vectors
   typedef typename PeriodicDiscreteFunctionSpaceType::DomainType DomainType;
 
-  // ! polynomial order of base functions
+  //! polynomial order of base functions
   enum { polynomialOrder = PeriodicDiscreteFunctionSpaceType::polynomialOrder };
 
-  // ! type of the (possibly non-linear) diffusion operator
+  //! type of the (possibly non-linear) diffusion operator
   typedef typename Traits::DiffusionType DiffusionType;
 
   struct CellMatrixTraits
@@ -55,38 +55,25 @@ public:
   typedef SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType,
                                    CellMatrixTraits > CellFEMMatrix;
 
-  // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
+  //! OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
   typedef OEMBICGSTABOp< PeriodicDiscreteFunctionType, CellFEMMatrix > InverseCellFEMMatrix;
 
-  // discrete elliptic operator describing the elliptic cell problems
+  //! discrete elliptic operator describing the elliptic cell problems
   typedef DiscreteCellProblemOperator< PeriodicDiscreteFunctionType, DiffusionType > CellProblemOperatorType;
 
 private:
   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_; // Referenz &, wenn & verwendet, dann unten:
   const DiffusionType& diffusion_;
 
-  std::ofstream* data_file_;
-
 public:
-  // ! constructor - with diffusion operator A^{\epsilon}(x)
+  //! constructor - with diffusion operator A^{\epsilon}(x)
   CellProblemSolver(const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                     const DiffusionType& diffusion_operator)
     : periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
       , diffusion_(diffusion_operator)
-      , data_file_(NULL)
   {}
 
-  // ! constructor - with diffusion operator A^{\epsilon}(x)
-  CellProblemSolver(const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                    const DiffusionType& diffusion_operator,
-                    std::ofstream& data_file)
-    : periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
-      , diffusion_(diffusion_operator)
-      , data_file_(&data_file)
-  {}
-
-  // ! ----------- method: solve cell problem ------------------------------------------
-
+  //! ----------- method: solve cell problem ------------------------------------------
   template< class JacobianRangeImp >
   void solvecellproblem(const JacobianRangeImp& gradient_PHI_H,
                         // the barycenter x_T of a macro grid element 'T'
@@ -95,17 +82,17 @@ public:
     // set solution equal to zero:
     cell_problem_solution.clear();
 
-    // ! the matrix in our linear system of equations
+    //! the matrix in our linear system of equations
     // in the non-linear case, it is the matrix for each iteration step
     CellFEMMatrix cell_system_matrix("Cell Problem System Matrix",
                                      periodicDiscreteFunctionSpace_,
                                      periodicDiscreteFunctionSpace_);
 
-    // ! define the discrete (elliptic) cell problem operator
+    //! define the discrete (elliptic) cell problem operator
     // ( effect of the discretized differential operator on a certain discrete function )
     const CellProblemOperatorType cell_problem_op(periodicDiscreteFunctionSpace_, diffusion_);
 
-    // ! right hand side vector of the algebraic cell problem
+    //! right hand side vector of the algebraic cell problem
     // (in the non-linear setting it changes for every iteration step)
     PeriodicDiscreteFunctionType cell_problem_rhs("rhs of cell problem", periodicDiscreteFunctionSpace_);
     cell_problem_rhs.clear();
@@ -241,12 +228,12 @@ public:
     }
   } // solvecellproblem
 
-  // ! ----------- end method: solve cell problem ------------------------------------------
 
-  // ! -------- method: solve the jacobian corrector cell problem ----------------------------
-  // Problem to determine the Jacobian operator of the correction operator
-  // ( the correction operator Q is defined via cell problems, here we determine the corresponding derivative DQ )
-  // (see paper what it means and where it comes from. Note that it is only required for the nonlinear case)
+  /** -------- method: solve the jacobian corrector cell problem ----------------------------
+   * Problem to determine the Jacobian operator of the correction operator
+   * ( the correction operator Q is defined via cell problems, here we determine the corresponding derivative DQ )
+   * (see paper what it means and where it comes from. Note that it is only required for the nonlinear case)
+   **/
   template< class JacobianRangeImp >
   void solve_jacobiancorrector_cellproblem(
     // gradient of macroscopic base function
@@ -261,7 +248,7 @@ public:
     // set solution equal to zero:
     jac_cor_cell_problem_solution.clear();
 
-    // ! the matrix in our linear system of equations
+    //! the matrix in our linear system of equations
     // system matrix for the jacobian corrector cell problem to solve:
     // entries:
     // - int_Y DA^{\eps}( x_T + \delta y, \nabla_x u_H^{(n-1)})(x_T) + \nabla_y Q_h( u_H^{(n-1)})(y) ) \nablay_y
@@ -271,13 +258,13 @@ public:
                                              periodicDiscreteFunctionSpace_,
                                              periodicDiscreteFunctionSpace_);
 
-    // ! define the discrete (elliptic) cell problem operator
+    //! define the discrete (elliptic) cell problem operator
     // ( effect of the discretized differential operator on a certain discrete function )
     CellProblemOperatorType cell_problem_op(periodicDiscreteFunctionSpace_, diffusion_);
     // we are looking for the derivative of the operator in \nabla_x u_H^{(n-1)})(x_T) + \nabla_y Q_h( u_H^{(n-1)})(y)
     // and in direction of the macroscopic base function
 
-    // ! right hand side vector of the algebraic jacobian corrector cell problem
+    //! right hand side vector of the algebraic jacobian corrector cell problem
     // entries of the right hand side vector:
     // - int_Y DA^{\eps}( x_T + \delta y, \nabla_x u_H^{(n-1)})(x_T) + \nabla_y Q_h( u_H^{(n-1)})(y) )( \nabla_x
     // \Phi_H(x_T) ) \nablay_y \phi_h(y) dy
@@ -322,37 +309,34 @@ public:
     }
   } // solve_jacobiancorrector_cellproblem
 
-  // ! ---------- method: solve the jacobian corrector cell problem -------------------------
+  /** two methods for solving and saving the solutions of the cell problems.
+   * 1. save solutions for the whole set of macroscopic base function
+   * (in general for the case of a linear diffusion operator)
+   * 2. save the solutions for a fixed discrete function
+   * (in general for the case of a nonlinear diffusion operator)
+   *! ---- method: solve and save the cell problems for the set of macroscopic base functions -----
+   * here we need a 'cell problem numbering manager' to determine the number of the cell problem
+   * (a combination of number of entity and number of local base function)
+   * Structure:
+   * Struktur der Indizierung fuer das Abspeichern der Loesungen der Zellprobleme:
+   * wir loesen Zellprobleme fuer jede Entity des Makro-Grids und jede Basisfunktion, die einen nichtleeren support auf
+   * dieser Entity besitzt, also schematisch:
+   * Sei n=0,...,N einer Durchnumerierung der Entitys und i=0,...I_n eine zu einer festen Entity gehoerende Nummerierung
+   * der Basisfunktionen mit nicht-leeren support.
+   * Die Durchnummerierung der Loesungen der Zellprobleme k=0,...,K ist dann gegeben durch: k(n,i_n) = ( sum_(l=0)^(n-1)
+   * ( I_l + 1) ) + i_n
+   * NOTE: es verhaelt sich NICHT wie die vorhandene Methode mapToGlobal(entity,i) ! (die gibt die globale Nummer der
+   * Basisfunktion zurueck, es gibt aber  deutlich mehr Zellprobleme zum Loesen!
+   * (das wird aber alles im Hintergrund vom 'cell problem numbering manager')
 
-  // two methods for solving and saving the solutions of the cell problems.
-  // 1. save solutions for the whole set of macroscopic base function
-  // (in general for the case of a linear diffusion operator)
-  // 2. save the solutions for a fixed discrete function
-  // (in general for the case of a nonlinear diffusion operator)
-
-  // ! ---- method: solve and save the cell problems for the set of macroscopic base functions -----
-
-  // here we need a 'cell problem numbering manager' to determine the number of the cell problem
-  // (a combination of number of entity and number of local base function)
-  // Structure:
-  // Struktur der Indizierung fuer das Abspeichern der Loesungen der Zellprobleme:
-  // wir loesen Zellprobleme fuer jede Entity des Makro-Grids und jede Basisfunktion, die einen nichtleeren support auf
-  // dieser Entity besitzt, also schematisch:
-  // Sei n=0,...,N einer Durchnumerierung der Entitys und i=0,...I_n eine zu einer festen Entity gehoerende Nummerierung
-  // der Basisfunktionen mit nicht-leeren support.
-  // Die Durchnummerierung der Loesungen der Zellprobleme k=0,...,K ist dann gegeben durch: k(n,i_n) = ( sum_(l=0)^(n-1)
-  // ( I_l + 1) ) + i_n
-  // NOTE: es verhaelt sich NICHT wie die vorhandene Methode mapToGlobal(entity,i) ! (die gibt die globale Nummer der
-  // Basisfunktion zurueck, es gibt aber  deutlich mehr Zellprobleme zum Loesen!
-  // (das wird aber alles im Hintergrund vom 'cell problem numbering manager')
-
-  // compute and save solutions of the cell problems for the base function set of the 'discreteFunctionSpace'
-  // requires cell problem numbering manager
+   * compute and save solutions of the cell problems for the base function set of the 'discreteFunctionSpace'
+   * requires cell problem numbering manager
+   **/
   template< class DiscreteFunctionImp, class CellProblemNumberingManagerImp >
   void saveTheSolutions_baseSet(
     const typename DiscreteFunctionImp::DiscreteFunctionSpaceType& discreteFunctionSpace,
     const CellProblemNumberingManagerImp& cp_num_manager,   // just to check, if we use the correct numeration
-    const std::string& filename) {
+    const std::string& filename) const {
     typedef DiscreteFunctionImp DiscreteFunctionType;
 
     typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
@@ -460,35 +444,29 @@ public:
       } // end: for-loop: IteratorType it
     } // end: 'if ( writer_is_open )'
 
-    if (data_file_)
-    {
-      if ( data_file_->is_open() )
-      {
-        (*data_file_) << std::endl;
-        (*data_file_) << "In method: saveTheSolutions_baseSet." << std::endl << std::endl;
-        (*data_file_) << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
-                      << std::endl;
-        (*data_file_) << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
-        (*data_file_) << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
-        (*data_file_) << "Average time for solving a cell problem = "
-                      << ( (clock() - starting_time) / CLOCKS_PER_SEC ) / number_of_cell_problem << "s." << std::endl;
-        (*data_file_) << "Total time for computing and saving the cell problems = "
-                      << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
-      }
-    }
+
+    DSC_LOG_INFO << std::endl;
+    DSC_LOG_INFO << "In method: saveTheSolutions_baseSet." << std::endl << std::endl;
+    DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
+                  << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Average time for solving a cell problem = "
+                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) / number_of_cell_problem << "s." << std::endl;
+    DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
+                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
   } // saveTheSolutions_baseSet
 
-  // ! ---- method: solve and save the cell problems for a fixed macroscopic discrete function -----
 
-  // this method does not require a cell problem numbering manager
-  // (it uses the standard counter for entities, provided by the corrsponding iterator)
-
-  // compute and save solutions of the cell problems for a fixed macroscopic discrete function
-  // (in gerneral it is the macro solution from the last iteration step)
+  /** this method does not require a cell problem numbering manager
+   * (it uses the standard counter for entities, provided by the corrsponding iterator)
+   * compute and save solutions of the cell problems for a fixed macroscopic discrete function
+   * (in gerneral it is the macro solution from the last iteration step)
+   **/
   template< class DiscreteFunctionImp >
   void saveTheSolutions_discFunc(
     const DiscreteFunctionImp& macro_discrete_function,
-    const std::string& filename) {
+    const std::string& filename) const {
     typedef DiscreteFunctionImp DiscreteFunctionType;
 
     typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
@@ -567,23 +545,17 @@ public:
       } // end: for-loop: IteratorType it
     } // end: 'if ( writer_is_open )'
 
-    if (data_file_)
-    {
-      if ( data_file_->is_open() )
-      {
-        (*data_file_) << std::endl;
-        (*data_file_) << "In method: saveTheSolutions_discFunc." << std::endl << std::endl;
-        (*data_file_) << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
-                      << std::endl;
-        (*data_file_) << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
-        (*data_file_) << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
-        (*data_file_) << "Average time for solving a cell problem = "
-                      << ( (clock()
-              - starting_time) / CLOCKS_PER_SEC ) / discreteFunctionSpace.grid().size(0) << "s." << std::endl;
-        (*data_file_) << "Total time for computing and saving the cell problems = "
-                      << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
-      }
-    }
+    DSC_LOG_INFO << std::endl;
+    DSC_LOG_INFO << "In method: saveTheSolutions_discFunc." << std::endl << std::endl;
+    DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
+                  << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Average time for solving a cell problem = "
+                  << ( (clock()
+          - starting_time) / CLOCKS_PER_SEC ) / discreteFunctionSpace.grid().size(0) << "s." << std::endl;
+    DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
+                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
   } // saveTheSolutions_discFunc
 
   // compute and save solutions of the jacobian corrector cell problems for the base function set of the
@@ -593,7 +565,7 @@ public:
   void saveTheJacCorSolutions_baseSet_discFunc(
     const DiscreteFunctionImp& macro_discrete_function,
     const CellProblemNumberingManagerImp& cp_num_manager,   // just to check, if we use the correct numeration
-    const std::string& filename) {
+    const std::string& filename) const {
     typedef DiscreteFunctionImp DiscreteFunctionType;
 
     typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
@@ -730,22 +702,16 @@ public:
       } // end: for-loop: IteratorType it
     } // end: 'if ( writer_is_open )'
 
-    if (data_file_)
-    {
-      if ( data_file_->is_open() )
-      {
-        (*data_file_) << std::endl;
-        (*data_file_) << "In method: saveTheJacCorSolutions_baseSet_discFunc." << std::endl << std::endl;
-        (*data_file_) << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
-                      << std::endl;
-        (*data_file_) << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
-        (*data_file_) << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
-        (*data_file_) << "Average time for solving a cell problem = "
-                      << ( (clock() - starting_time) / CLOCKS_PER_SEC ) / number_of_cell_problem << "s." << std::endl;
-        (*data_file_) << "Total time for computing and saving the cell problems = "
-                      << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
-      }
-    }
+    DSC_LOG_INFO << std::endl;
+    DSC_LOG_INFO << "In method: saveTheJacCorSolutions_baseSet_discFunc." << std::endl << std::endl;
+    DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
+                  << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Average time for solving a cell problem = "
+                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) / number_of_cell_problem << "s." << std::endl;
+    DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
+                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
   } // saveTheJacCorSolutions_baseSet_discFunc
 }; // end class
 } //namespace Dune {

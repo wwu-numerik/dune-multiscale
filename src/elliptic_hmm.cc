@@ -9,13 +9,13 @@
  #include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
 #endif
 
-// ! (very restrictive) homogenizer
+//! (very restrictive) homogenizer
 #include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
 #include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
 
-// ! NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in
+//! NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in
 // problem_specification.hh), which provides us with information about epsilon, delta, etc.
-// ! HMM Assembler, Error Estimator, ... they all hark back to 'ModelProblemData'. Probably there is a better solution,
+//! HMM Assembler, Error Estimator, ... they all hark back to 'ModelProblemData'. Probably there is a better solution,
 // but for me, it works perfectly.
 namespace Multiscale {
 // parameters for the current realization of the HMM
@@ -34,7 +34,7 @@ public:
 };
 }
 
-// ! local (dune-multiscale) includes
+//! local (dune-multiscale) includes
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/solver/HMM/reconstruction_manager/elliptic/reconstructionintegrator.hh>
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     // generate directories for data output
     DSC::Filesystem::testCreateDirectory(path);
     if ( DSC_CONFIG.get("problem.stochastic_pertubation", false)) {
-      // ! Do we want to force the algorithm to come to an end?
+      //! Do we want to force the algorithm to come to an end?
       // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht
       // erreicht etc.)
       DSC_CONFIG.set("problem.force_end", true);
@@ -116,9 +116,6 @@ int main(int argc, char** argv) {
     Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(UnitCubeName);
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
-    // to save all information in a file
-    std::ofstream data_file( (save_filename).c_str() );
-
     algorithm<HMMTraits>
         (info,
           UnitCubeName,
@@ -126,7 +123,6 @@ int main(int argc, char** argv) {
               fine_macro_grid_pointer,
               periodic_grid_pointer,
               refinement_difference_for_referenceproblem,
-              data_file,
               filename_);
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
     //normal
@@ -135,12 +131,6 @@ int main(int argc, char** argv) {
     long double cpu_time = clock();
     cpu_time = cpu_time / CLOCKS_PER_SEC;
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
-
-    if ( data_file.is_open() )
-    {
-      data_file << "Total runtime of the program: " << cpu_time << "s" << std::endl;
-    }
-    data_file.close();
     return 0;
   } catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;
@@ -153,7 +143,7 @@ int main(int argc, char** argv) {
  **/
 void check_config()
 {
-  // ! Do we have/want a fine-scale reference solution?
+  //! Do we have/want a fine-scale reference solution?
   // #define FINE_SCALE_REFERENCE
   #ifdef FINE_SCALE_REFERENCE
   // load the precomputed fine scale reference from a file
@@ -176,7 +166,7 @@ void check_config()
  #define HMM_NEWTON_ITERATION_STEP 0
 #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
 
-  // ! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
+  //! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
   // Not possible for ad-hoc computations! (in this case, error estimation is far too expensive)
   #ifndef AD_HOC_COMPUTATION
   //

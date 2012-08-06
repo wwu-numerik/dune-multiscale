@@ -1,13 +1,13 @@
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FIVE
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FIVE
 
-// ! IDENTICAL TO MODEL PROBLEM 2!!!!
+//! IDENTICAL TO MODEL PROBLEM 2!!!!
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-// !############################## Elliptic Problem 1 ###################################
+//!############################## Elliptic Problem 1 ###################################
 
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
@@ -271,7 +271,7 @@ public:
 CONSTANTFUNCTION(MassTerm,  0.00001)
 NULLFUNCTION(DefaultDummyFunction)
 
-// ! Exact solution (typically it is unknown)
+//! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
   : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >

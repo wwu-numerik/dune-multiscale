@@ -9,9 +9,9 @@
 // if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
 #define SYMMETRIC_DIFFUSION_MATRIX
 
-// ! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
+//! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
 
-// ! For more further details about the implementation of the following classes, see the end of the file
+//! For more further details about the implementation of the following classes, see the end of the file
 
 // in general we regard problems of the following type:
 
@@ -27,28 +27,28 @@
 
 // Note, that A^{\epsilon} is a monotone operator
 
-// !############################## Elliptic Problem 9 ###################################
+//!############################## Elliptic Problem 9 ###################################
 
-// ! we define:
+//! we define:
 
 // The entries of the operator A^{\epsilon} by
-// ! a^{\epsilon}_{1}(x_1,x_2) := (**y_1**,**y_2**)
-// ! a^{\epsilon}_{2}(x_1,x_2) := (**y_1**,**y_2**)
+//! a^{\epsilon}_{1}(x_1,x_2) := (**y_1**,**y_2**)
+//! a^{\epsilon}_{2}(x_1,x_2) := (**y_1**,**y_2**)
 
 // The mass (or reaction) term m^{\epsilon} is given by:
-// ! m^{\epsilon} := \epsilon
+//! m^{\epsilon} := \epsilon
 // Since \epsilon tends to zero, we may say that we do not have a real mass term for our
 // problem. It is a simple condition to fix the solution which is only unique up to a constant.
 // In fact we still approximate the solution of the problem without mass.
 
 // The first source term f is given by:
-// ! f(x) := ****
+//! f(x) := ****
 // since the second source is zero, f will form the right hand side (RHS) of our discrete problem
 
 // The second source term G is constantly zero:
-// ! G(x) := 0
+//! G(x) := 0
 
-// !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
+//!FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
 // The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'.
 // That means 'y := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function
 // space ('FuncSpace') that it is part from. (f \in FunctionSpace)
@@ -312,7 +312,7 @@ public:
 CONSTANTFUNCTION(MassTerm,  0.00001)
 NULLFUNCTION(DefaultDummyFunction)
 
-// ! Exact solution (typically it is unknown)
+//! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
   : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >

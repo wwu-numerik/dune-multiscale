@@ -281,9 +281,9 @@ public:
     ::SubEntityIteratorType
   CoarseGridFaceDofIterator;
 
-  // !-----------------------------------------------------------------------------------------
+  //!-----------------------------------------------------------------------------------------
 
-  // ! --------------------- the standard matrix traits -------------------------------------
+  //! --------------------- the standard matrix traits -------------------------------------
 
   struct MatrixTraits
   {
@@ -299,26 +299,26 @@ public:
     };
   };
 
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
-  // ! --------------------- type of fem stiffness matrix -----------------------------------
+  //! --------------------- type of fem stiffness matrix -----------------------------------
 
   typedef SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > MsFEMMatrix;
 
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
-  // ! --------------- solver for the linear system of equations ----------------------------
+  //! --------------- solver for the linear system of equations ----------------------------
 
   // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
   // ones. GMRES seems to be more stable, but is extremely slow!
   typedef /*OEMBICGSQOp*//*CGInverseOp*/ OEMBICGSTABOp< DiscreteFunction, MsFEMMatrix > InverseMsFEMMatrix;
 
-  // ! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
 
-  std::ofstream* data_file_;
+  std::ofstream* DSC_LOG_INFO;
 
   // path where to save the data output
   std::string path_;
@@ -326,14 +326,14 @@ private:
 public:
   Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace, std::string path = "")
     : discreteFunctionSpace_(discreteFunctionSpace)
-      , data_file_(NULL)
+      , DSC_LOG_INFO(NULL)
   { path_ = path; }
 
   Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace,
-                        std::ofstream& data_file,
+                        std::ofstream& DSC_LOG_INFO,
                         std::string path = "")
     : discreteFunctionSpace_(discreteFunctionSpace)
-      , data_file_(&data_file)
+      , DSC_LOG_INFO(&DSC_LOG_INFO)
   { path_ = path; }
 
   template< class Stream >
@@ -428,25 +428,25 @@ public:
     DiscreteFunction coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
     coarse_msfem_solution.clear();
 
-    // ! create subgrids:
+    //! create subgrids:
     bool DUNE_UNUSED(silence) = false;
 
-    // ! define the right hand side assembler tool
+    //! define the right hand side assembler tool
     // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
     const RightHandSideAssembler< DiscreteFunction > rhsassembler;
 
-    // ! define the discrete (elliptic) operator that describes our problem
+    //! define the discrete (elliptic) operator that describes our problem
     // ( effect of the discretized differential operator on a certain discrete function )
     const EllipticMsFEMOperatorType elliptic_msfem_op(specifier,
                                                 coarse_space,
                                                 subgrid_list,
-                                                diffusion_op, *data_file_, path_);
+                                                diffusion_op, *DSC_LOG_INFO, path_);
     // discrete elliptic operator (corresponds with FEM Matrix)
 
-    // ! (stiffness) matrix
+    //! (stiffness) matrix
     MsFEMMatrix msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
 
-    // ! right hand side vector
+    //! right hand side vector
     // right hand side for the finite element method:
     DiscreteFunction msfem_rhs("MsFEM right hand side", coarse_space);
     msfem_rhs.clear();
@@ -454,13 +454,13 @@ public:
     DSC_LOG_INFO  << std::endl
                   << "Solving MsFEM problem." << std::endl;
 
-    if (data_file_)
+    if (DSC_LOG_INFO)
     {
-      if ( data_file_->is_open() )
+      if ( DSC_LOG_INFO->is_open() )
       {
-        *data_file_ << "Solving linear problem with MsFEM and maximum coarse grid level "
+        *DSC_LOG_INFO << "Solving linear problem with MsFEM and maximum coarse grid level "
                     << coarse_space.gridPart().grid().maxLevel() << "." << std::endl;
-        *data_file_ << "------------------------------------------------------------------------------" << std::endl;
+        *DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
       }
     }
 
@@ -472,11 +472,11 @@ public:
 
     DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
-    if (data_file_)
+    if (DSC_LOG_INFO)
     {
-      if ( data_file_->is_open() )
+      if ( DSC_LOG_INFO->is_open() )
       {
-        *data_file_ << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+        *DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
       }
     }
 
@@ -517,12 +517,12 @@ public:
     const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/);
     msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
 
-    if (data_file_)
+    if (DSC_LOG_INFO)
     {
-      if ( data_file_->is_open() )
+      if ( DSC_LOG_INFO->is_open() )
       {
-        *data_file_ << "---------------------------------------------------------------------------------" << std::endl;
-        *data_file_ << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
+        *DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
+        *DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
                     << std::endl;
       }
     }
@@ -536,7 +536,7 @@ public:
 
     DSC_LOG_INFO << "Indentifying coarse scale part of the MsFEM solution... ";
 
-    // ! copy coarse scale part of MsFEM solution into a function defined on the fine grid
+    //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
     // ------------------------------------------------------------------------------------
     typedef typename HostEntity::template Codim< 2 >::EntityPointer HostNodePointer;
 
@@ -610,7 +610,7 @@ public:
       }
     }
 
-    // ! indentify fine scale part of MsFEM solution (including the projection!)
+    //! indentify fine scale part of MsFEM solution (including the projection!)
     // ------------------------------------------------------------------------------------
 
     DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
@@ -669,7 +669,7 @@ public:
       JacobianRangeType grad_coarse_msfem_on_entity;
       local_coarse_part.jacobian(one_point_quadrature[0], grad_coarse_msfem_on_entity);
 
-      // !
+      //!
       // std :: cout << "grad_coarse_msfem_on_entity[ 0 ][ 1 ] = " << grad_coarse_msfem_on_entity[ 0 ][ 1 ] << std ::
       // endl;
       // std :: cout << "grad_coarse_msfem_on_entity[ 0 ][ 0 ] = " << grad_coarse_msfem_on_entity[ 0 ][ 0 ] << std ::
@@ -787,8 +787,8 @@ public:
     solution += fine_scale_part;
   } // solve_dirichlet_zero
 
-  // ! the following methods are not yet implemented, however note that the required tools are
-  // ! already available via 'righthandside_assembler.hh' and 'elliptic_fem_matrix_assembler.hh'!
+  //! the following methods are not yet implemented, however note that the required tools are
+  //! already available via 'righthandside_assembler.hh' and 'elliptic_fem_matrix_assembler.hh'!
 
   template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType >
   void solve() {

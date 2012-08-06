@@ -890,7 +890,7 @@ public:
 
   // /############################ The parabolic assemble()-methods #########################################
 
-  // ! build the right hand side for a discrete parabolic problem that is solved with backward Euler:
+  //! build the right hand side for a discrete parabolic problem that is solved with backward Euler:
   // Note that in comparison to the elliptic case:
   // 1. f needs to be muliplied with the time step size and
   // 2. the solution u_H^{(k)} of the preceeding time step needs to be added to the right hand side

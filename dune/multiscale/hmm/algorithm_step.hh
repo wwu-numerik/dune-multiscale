@@ -12,6 +12,9 @@
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
+namespace {
+  const std::string seperator_line = "---------------------------------------------------------------------------------\n";
+}
 //! set the dirichlet points to zero
 template< class EntityType, class DiscreteFunctionType >
 void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
@@ -55,7 +58,6 @@ HMMResult<HMMTraits>
         typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename HMMTraits::DiffusionType& diffusion_op,
         const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& rhsassembler,
-        std::ofstream& data_file,
         const std::string filename,
         typename HMMTraits::DiscreteFunctionType& hmm_solution,
         const typename HMMTraits::DiscreteFunctionType& fem_newton_solution
@@ -70,7 +72,7 @@ HMMResult<HMMTraits>
     // if we have some additional source term (-div G), define:
     const typename HMM::SecondSourceType G;
     // - div ( A^{\epsilon} \nabla u^{\epsilon} ) = f - div G
-    // ! Ueberdenken, ob wir das nicht rausschmeisen und nur im Hintergrund fuer die Zellprobleme verwenden:
+    //! Ueberdenken, ob wir das nicht rausschmeisen und nur im Hintergrund fuer die Zellprobleme verwenden:
     // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
     const typename HMM::MassTermType mass;
     // dummy coefficient (mass, advection, etc.)
@@ -87,7 +89,7 @@ HMMResult<HMMTraits>
     // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
     typename HMM::CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
 
-    // ! define the elliptic hmm operator that describes our 'homogenized' macro problem
+    //! define the elliptic hmm operator that describes our 'homogenized' macro problem
     // ( effect of the elliptic hmm operator on a certain discrete function )
     const typename HMM::EllipticHMMOperatorType discrete_elliptic_hmm_op(discreteFunctionSpace,
                                                      periodicDiscreteFunctionSpace,
@@ -99,10 +101,10 @@ HMMResult<HMMTraits>
     // ----------------------------------------------------------------------------------------------//
     // ----------------------------------------------------------------------------------------------//
 
-    // ! matrix
+    //! matrix
     typename HMM::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
 
-    // ! right hand side vector
+    //! right hand side vector
     // right hand side for the hm finite element method with Newton solver:
     typename HMM::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
     hmm_newton_rhs.clear();
@@ -115,8 +117,8 @@ HMMResult<HMMTraits>
     if (DSC_CONFIG.get("problem.linear", true)) {
       // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
       if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false)) {
-        // ! -------------- solve and save the cell problems for the base function set --------------------------------------
-        const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file );
+        //! -------------- solve and save the cell problems for the base function set --------------------------------------
+        const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
         const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
         DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
         // generate directory for cell problem data output
@@ -128,15 +130,10 @@ HMMResult<HMMTraits>
                                                                              cp_num_manager,
                                                                              cell_path);
         // ------------- end solving and saving cell problems for the macro basefunction set --------------
-        // ! --------------- end solving and saving cell problems -----------------------------------------
+        //! --------------- end solving and saving cell problems -----------------------------------------
       }
-
       DSC_LOG_INFO << "Solving linear HMM problem." << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "Solving linear HMM problem." << std::endl;
-        data_file << "------------------------------------------------------------------------------" << std::endl;
-      }
+      DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
       // to assemble the computational time
       Dune::Timer hmmAssembleTimer;
@@ -146,10 +143,6 @@ HMMResult<HMMTraits>
       // to print the matrix, use:   hmm_newton_matrix.print();
 
       DSC_LOG_INFO << "Time to assemble HMM macro stiffness matrix: " << hmmAssembleTimer.elapsed() << "s" << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "Time to assemble HMM macro stiffness matrix: " << hmmAssembleTimer.elapsed() << "s" << std::endl;
-      }
 
       // assemble right hand side
       rhsassembler.template assemble< 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2 >(f, hmm_newton_rhs);
@@ -162,22 +155,14 @@ HMMResult<HMMTraits>
 
       typename HMM::InverseFEMMatrix hmm_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
       hmm_biCGStab(hmm_newton_rhs, hmm_solution);
-
-      DSC_LOG_INFO << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "---------------------------------------------------------------------------------" << std::endl;
-        data_file << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl
-                  << std::endl;
-      }
-
+      DSC_LOG_INFO << seperator_line << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl;
       } else {
       // the nonlinear case
       // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
       if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false))
       {
-        // ! -------------- solve and save the cell problems for the macroscopic base function set
-        Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file );
+        //! -------------- solve and save the cell problems for the macroscopic base function set
+        Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
         const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
         DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
           // generate directory for cell problem data output
@@ -194,15 +179,11 @@ HMMResult<HMMTraits>
         DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
         // end solving and saving cell problems
         #endif // ifdef TFR
-               // ! --------------- end solving and saving cell problems -----------------------------------------
+               //! --------------- end solving and saving cell problems -----------------------------------------
       }
 
-      DSC_LOG_INFO << "Solving nonlinear HMM problem." << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "Solving nonlinear HMM problem with Newton method." << std::endl;
-        data_file << "---------------------------------------------------------------------------------" << std::endl;
-      }
+      DSC_LOG_INFO << "Solving nonlinear HMM problem with Newton method." << std::endl;
+      DSC_LOG_INFO << seperator_line << std::endl;
 
       Dune::Timer hmmAssembleTimer;
 
@@ -210,7 +191,7 @@ HMMResult<HMMTraits>
       typename HMM::PeriodicDiscreteFunctionType dummy_periodic_func("a periodic dummy", periodicDiscreteFunctionSpace);
       dummy_periodic_func.clear();
 
-      // ! residual vector
+      //! residual vector
       // current residual
       typename HMM::DiscreteFunctionType hmm_newton_residual(filename + "HMM Newton Residual", discreteFunctionSpace);
       hmm_newton_residual.clear();
@@ -257,15 +238,11 @@ HMMResult<HMMTraits>
         // (here: hmm_solution = solution from the last iteration step)
         long double newton_step_time = clock();
         DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
-        if ( data_file.is_open() )
-        {
-          data_file << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
-        }
 
         if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false))
         {
           // solve cell problems for the solution of the last iteration step
-          const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file );
+          const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
           cell_problem_solver.template saveTheSolutions_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution, filename + "/cell_problems/");
           cell_problem_solver.template saveTheJacCorSolutions_baseSet_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution,
                                                                                               cp_num_manager,
@@ -279,11 +256,7 @@ HMMResult<HMMTraits>
 
         DSC_LOG_INFO << "Time to assemble HMM stiffness matrix for current Newton iteration: "
                   << stepHmmAssembleTimer.elapsed() << "s" << std::endl;
-        if ( data_file.is_open() )
-        {
-          data_file << "Time to assemble HMM stiffness matrix for current Newton iteration: "
-                    << stepHmmAssembleTimer.elapsed() << "s" << std::endl;
-        }
+
         DSC_LOG_INFO << "Assemble right hand side..." << std::endl;
         // assemble right hand side
         const int assembler_order = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
@@ -300,7 +273,7 @@ HMMResult<HMMTraits>
         if ( !( hmm_newton_rhs.dofsValid() ) )
         {
           DSC_LOG_INFO << "Right hand side invalid!" << std::endl;
-          data_file << "Right hand side invalid!" << std::endl;
+          DSC_LOG_INFO << "Right hand side invalid!" << std::endl;
           DUNE_THROW(Dune::InvalidStateException, "Right hand side invalid!");
         } else {
           DSC_LOG_INFO << "Right hand side valid ";
@@ -309,16 +282,13 @@ HMMResult<HMMTraits>
         hmm_rhs_L2_norm = l2error.template norm2< assembler_order >(zero_func_coarse, hmm_newton_rhs);
 
         DSC_LOG_INFO << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
-        data_file << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
+        DSC_LOG_INFO << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
 
         if (hmm_rhs_L2_norm < 1e-10)
         {
           // residual solution almost identical to zero: break
-          if ( data_file.is_open() )
-          {
-            data_file << "HMM residual solution almost identical to zero. Therefore: break loop." << std::endl;
-            data_file << "(L^2-Norm of current right hand side = " << hmm_rhs_L2_norm << " < 1e-10)" << std::endl;
-          }
+          DSC_LOG_INFO << "HMM residual solution almost identical to zero. Therefore: break loop." << std::endl;
+          DSC_LOG_INFO << "(L^2-Norm of current right hand side = " << hmm_rhs_L2_norm << " < 1e-10)" << std::endl;
           break;
         }
 
@@ -421,21 +391,14 @@ HMMResult<HMMTraits>
           DSC_LOG_INFO << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std::endl;
 
           // residual solution almost identical to zero: break
-          if ( data_file.is_open() )
+          if (relative_newton_error <= hmm_tolerance)
           {
-            data_file << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std::endl;
-            if (relative_newton_error <= hmm_tolerance)
-            {
-              newton_step_time = clock() - newton_step_time;
-              newton_step_time = newton_step_time / CLOCKS_PER_SEC;
-              if ( data_file.is_open() )
-              {
-                data_file << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
-                          << std::endl << std::endl;
-              }
-              data_file << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
-              data_file << "....................................................." << std::endl << std::endl;
-            }
+            newton_step_time = clock() - newton_step_time;
+            newton_step_time = newton_step_time / CLOCKS_PER_SEC;
+            DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
+                      << std::endl << std::endl;
+            DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
+            DSC_LOG_INFO << "....................................................." << std::endl << std::endl;
           }
 
           hmm_newton_residual.clear();
@@ -450,42 +413,34 @@ HMMResult<HMMTraits>
         {
           newton_step_time = clock() - newton_step_time;
           newton_step_time = newton_step_time / CLOCKS_PER_SEC;
-          if ( data_file.is_open() )
-          {
-            data_file << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
+          DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
                       << std::endl << std::endl;
 
-            error_decay = relative_newton_error / old_error;
-            old_error = relative_newton_error;
-            // maximum number of Newton iterations
-            if ( (hmm_iteration_step >= 20) || (error_decay >= 0.95) )
-            {
-              data_file << std::endl
-                        << "Reached constant or inceasing error decay or maximum number of Newton iterations:  break loop."
-                        << std::endl;
-              data_file << "....................................................." << std::endl << std::endl;
-              break;
-            }
-            data_file << "....................................................." << std::endl << std::endl;
+          error_decay = relative_newton_error / old_error;
+          old_error = relative_newton_error;
+          // maximum number of Newton iterations
+          if ( (hmm_iteration_step >= 20) || (error_decay >= 0.95) )
+          {
+            DSC_LOG_INFO << std::endl
+                      << "Reached constant or inceasing error decay or maximum number of Newton iterations:  break loop."
+                      << std::endl;
+            DSC_LOG_INFO << "....................................................." << std::endl << std::endl;
+            break;
           }
+          DSC_LOG_INFO << "....................................................." << std::endl << std::endl;
         }
       }       // while( relative_newton_error > hmm_tolerance )
 
-      DSC_LOG_INFO << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl
+      DSC_LOG_INFO << seperator_line << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl
                 << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "---------------------------------------------------------------------------------" << std::endl;
-        data_file << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl
-                  << std::endl << std::endl;
-      }
+
       #ifdef ADAPTIVE
       total_hmm_time += hmmAssembleTimer.elapsed();
       #endif
     } //if not problem.linear
 
     const auto retval = estimate_error<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                   diffusion_op, rhsassembler, data_file, filename, cp_num_manager, hmm_solution);
+                   diffusion_op, rhsassembler, filename, cp_num_manager, hmm_solution);
 
     const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
     #ifdef WRITE_HMM_SOL_TO_FILE
@@ -515,16 +470,9 @@ HMMResult<HMMTraits>
         DUNE_THROW(Dune::InvalidStateException, "cannot write finescale solution to file");
     }
 
-    // ! ******************** End of assembling and solving the HMM problem ***************************
-
+    //! ******************** End of assembling and solving the HMM problem ***************************
     DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
-    if ( data_file.is_open() )
-    {
-      data_file << "The L2 errors:" << std::endl << std::endl;
-    }
-
-    // ! ----------------- compute L2-errors -------------------
-
+    //! ----------------- compute L2-errors -------------------
     if (DSC_CONFIG.get("fsr", true))
     {
       long double timeadapt = clock();
@@ -536,10 +484,6 @@ HMMResult<HMMTraits>
         fem_newton_solution);
 
       DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl;
-      }
 
       timeadapt = clock() - timeadapt;
       timeadapt = timeadapt / CLOCKS_PER_SEC;
@@ -548,11 +492,6 @@ HMMResult<HMMTraits>
       if (timeadapt > 60)
       {
         DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
-
-        if ( data_file.is_open() )
-        {
-          DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
-        }
       }
     }
 
@@ -564,9 +503,9 @@ HMMResult<HMMTraits>
       hmm_reference_solution);
 
     DSC_LOG_INFO << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl;
+      DSC_LOG_INFO << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl;
     }
 
     timeadapthmmref = clock() - timeadapthmmref;
@@ -577,7 +516,7 @@ HMMResult<HMMTraits>
     {
       DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
 
-      if ( data_file.is_open() )
+      if ( DSC_LOG_INFO.is_open() )
       {
         DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
       }
@@ -592,9 +531,9 @@ HMMResult<HMMTraits>
       // to be defined on the same grid!
       RangeType hom_error = l2error.norm2< hmm_polorder >(homogenized_solution, fem_newton_solution);
       DSC_LOG_INFO << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl << std::endl;
-      if ( data_file.is_open() )
+      if ( DSC_LOG_INFO.is_open() )
       {
-        data_file << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl;
+        DSC_LOG_INFO << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl;
       }
     }
 
@@ -602,9 +541,9 @@ HMMResult<HMMTraits>
                                                                                                  homogenized_solution);
 
     DSC_LOG_INFO << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl;
+      DSC_LOG_INFO << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl;
     }
     #endif // ifdef HOMOGENIZEDSOL_AVAILABLE
 
@@ -616,11 +555,6 @@ HMMResult<HMMTraits>
                                                                     2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
       DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
-      if ( data_file.is_open() )
-      {
-        data_file << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl;
-      }
-
       if (DSC_CONFIG.get("fsr", true))
       {
         typename HMM::RangeType fem_newton_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
@@ -628,10 +562,6 @@ HMMResult<HMMTraits>
                                                                        2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
         DSC_LOG_INFO << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl << std::endl;
-        if ( data_file.is_open() )
-        {
-          data_file << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl;
-        }
       }
     }
 
@@ -647,25 +577,25 @@ HMMResult<HMMTraits>
     #ifdef TFR
     DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
     #endif
-    if ( data_file.is_open() )
+    if ( DSC_LOG_INFO.is_open() )
     {
-      data_file << "Estimated error = " << estimated_error << "." << std::endl;
-      data_file << "In detail:" << std::endl;
-      data_file << "   Estimated source error = " << estimated_source_error << "." << std::endl;
-      data_file << "   Estimated approximation error = " << estimated_approximation_error << "." << std::endl;
-      data_file << "   Estimated residual error = " << estimated_residual_error << ", where:" << std::endl;
-      data_file << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and "
+      DSC_LOG_INFO << "Estimated error = " << estimated_error << "." << std::endl;
+      DSC_LOG_INFO << "In detail:" << std::endl;
+      DSC_LOG_INFO << "   Estimated source error = " << estimated_source_error << "." << std::endl;
+      DSC_LOG_INFO << "   Estimated approximation error = " << estimated_approximation_error << "." << std::endl;
+      DSC_LOG_INFO << "   Estimated residual error = " << estimated_residual_error << ", where:" << std::endl;
+      DSC_LOG_INFO << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and "
                 << std::endl;
-      data_file << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and "
+      DSC_LOG_INFO << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and "
                 << std::endl;
       #ifdef TFR
-      data_file << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
+      DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
       #endif
     }
     #endif // ifdef ERRORESTIMATION
-    // ! -------------------------------------------------------
+    //! -------------------------------------------------------
 
-    // ! --------------- writing data output ---------------------
+    //! --------------- writing data output ---------------------
     // general output parameters
     myDataOutputParameters outputparam;
     outputparam.set_path("data/HMM/" + filename);
@@ -744,7 +674,7 @@ HMMResult<HMMTraits>
 
     // -------------------------------------------------------
     #endif // ifdef HOMOGENIZEDSOL_AVAILABLE
-    // !-------------------------------------------------------------
+    //!-------------------------------------------------------------
     return retval;
 }
 
