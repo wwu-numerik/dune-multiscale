@@ -28,23 +28,11 @@
 // ! Do we write the discrete HMM solution to a file? (for later usage)
 #define WRITE_HMM_SOL_TO_FILE
 
-// ! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
-// Not possible for ad-hoc computations! (in this case, error estimation is far too expensive)
-#ifndef AD_HOC_COMPUTATION
-//
-// #define ERRORESTIMATION
-// only possible if we use error estimation:
- #ifdef ERRORESTIMATION
-// Do you want to allow adaptive mesh refinement?
-// #define ADAPTIVE
- #endif // ifdef ERRORESTIMATION
-#endif // ifndef AD_HOC_COMPUTATION
 
 // ! if a computation was broken (after a certain HMM Newton step), we might want to resume to this computation,
 // ! loading the solution of the last step that was succesfully carried out (it has to be saved somewhere!)
 // (this only works for non-adaptive computations!)
 // #define RESUME_TO_BROKEN_COMPUTATION
-
 
 
 // hmfemmain:

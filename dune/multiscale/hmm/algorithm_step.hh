@@ -9,6 +9,7 @@
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
+#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
 //! set the dirichlet points to zero
@@ -113,24 +114,22 @@ HMMResult<HMMTraits>
 
     if (DSC_CONFIG.get("problem.linear", true)) {
       // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
-      #ifndef AD_HOC_COMPUTATION
-      // ! -------------- solve and save the cell problems for the base function set --------------------------------------
-      Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace,
-                                                                                           diffusion_op,
-                                                                                           data_file /*optinal*/);
-      int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
-      DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
-      // generate directory for cell problem data output
-      std::string cell_path = "path";// + "/cell_problems/";assert(false);//path was not in scope
-      Dune::Stuff::Common::Filesystem::testCreateDirectory(cell_path);
-      // -------------- solve cell problems for the macro basefunction set ------------------------------
-      // save the solutions of the cell problems for the set of macroscopic base functions
-      cell_problem_solver.template saveTheSolutions_baseSet< typename HMM::DiscreteFunctionType >(discreteFunctionSpace,
-                                                                           cp_num_manager,
-                                                                           cell_path);
-      // ------------- end solving and saving cell problems for the macro basefunction set --------------
-      // ! --------------- end solving and saving cell problems -----------------------------------------
-      #endif       // AD_HOC_COMPUTATION
+      if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false)) {
+        // ! -------------- solve and save the cell problems for the base function set --------------------------------------
+        const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file );
+        const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
+        DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
+        // generate directory for cell problem data output
+        const std::string cell_path = "path";// + "/cell_problems/";assert(false);//path was not in scope
+        Dune::Stuff::Common::Filesystem::testCreateDirectory(cell_path);
+        // -------------- solve cell problems for the macro basefunction set ------------------------------
+        // save the solutions of the cell problems for the set of macroscopic base functions
+        cell_problem_solver.template saveTheSolutions_baseSet< typename HMM::DiscreteFunctionType >(discreteFunctionSpace,
+                                                                             cp_num_manager,
+                                                                             cell_path);
+        // ------------- end solving and saving cell problems for the macro basefunction set --------------
+        // ! --------------- end solving and saving cell problems -----------------------------------------
+      }
 
       DSC_LOG_INFO << "Solving linear HMM problem." << std::endl;
       if ( data_file.is_open() )
@@ -175,34 +174,28 @@ HMMResult<HMMTraits>
       } else {
       // the nonlinear case
       // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
-      #ifndef AD_HOC_COMPUTATION
-      // ! -------------- solve and save the cell problems for the macroscopic base function set
-      // --------------------------------------
-      Dune::CellProblemSolver< HMMTraits > cell_problem_solver(periodicDiscreteFunctionSpace,
-                                                                                           diffusion_op,
-                                                                                           data_file /*optinal*/);
+      if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false))
+      {
+        // ! -------------- solve and save the cell problems for the macroscopic base function set
+        Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file );
+        const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
+        DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
+          // generate directory for cell problem data output
+        Dune::Stuff::Common::Filesystem::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
+        // only for the case with test function reconstruction:
+        #ifdef TFR
+        // -------------- solve cell problems for the macro basefunction set ------------------------------
+        // save the solutions of the cell problems for the set of macroscopic base functions
 
-      int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
+        cell_problem_solver.template saveTheSolutions_baseSet< typename HMM::DiscreteFunctionType >(discreteFunctionSpace,
+                                                                             cp_num_manager,
+                                                                             filename + "/cell_problems/");
 
-      DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
-
-      // generate directory for cell problem data output
-      Dune::Stuff::Common::Filesystem::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
-
-      // only for the case with test function reconstruction:
-      #ifdef TFR
-      // -------------- solve cell problems for the macro basefunction set ------------------------------
-      // save the solutions of the cell problems for the set of macroscopic base functions
-
-      cell_problem_solver.saveTheSolutions_baseSet< DiscreteFunctionType >(discreteFunctionSpace,
-                                                                           cp_num_manager,
-                                                                           filename + "/cell_problems/");
-
-      DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
-      // end solving and saving cell problems
-      #endif // ifdef TFR
-             // ! --------------- end solving and saving cell problems -----------------------------------------
-      #endif       // AD_HOC_COMPUTATION
+        DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
+        // end solving and saving cell problems
+        #endif // ifdef TFR
+               // ! --------------- end solving and saving cell problems -----------------------------------------
+      }
 
       DSC_LOG_INFO << "Solving nonlinear HMM problem." << std::endl;
       if ( data_file.is_open() )
@@ -269,13 +262,15 @@ HMMResult<HMMTraits>
           data_file << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
         }
 
-        #ifndef AD_HOC_COMPUTATION
-        // solve cell problems for the solution of the last iteration step
-        cell_problem_solver.template saveTheSolutions_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution, filename + "/cell_problems/");
-        cell_problem_solver.template saveTheJacCorSolutions_baseSet_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution,
-                                                                                            cp_num_manager,
-                                                                                            filename + "/cell_problems/");
-        #endif // ifndef AD_HOC_COMPUTATION
+        if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false))
+        {
+          // solve cell problems for the solution of the last iteration step
+          const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op, data_file );
+          cell_problem_solver.template saveTheSolutions_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution, filename + "/cell_problems/");
+          cell_problem_solver.template saveTheJacCorSolutions_baseSet_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution,
+                                                                                              cp_num_manager,
+                                                                                              filename + "/cell_problems/");
+        }
 
         // to assemble the computational time
         Dune::Timer stepHmmAssembleTimer;

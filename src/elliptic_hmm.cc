@@ -148,6 +148,9 @@ int main(int argc, char** argv) {
   return 1;
 } // main
 
+/** \brief constains non-transformed macro stuff that might contain logic
+ * \todo use config instead
+ **/
 void check_config()
 {
   // ! Do we have/want a fine-scale reference solution?
@@ -173,4 +176,15 @@ void check_config()
  #define HMM_NEWTON_ITERATION_STEP 0
 #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
 
+  // ! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
+  // Not possible for ad-hoc computations! (in this case, error estimation is far too expensive)
+  #ifndef AD_HOC_COMPUTATION
+  //
+  // #define ERRORESTIMATION
+  // only possible if we use error estimation:
+   #ifdef ERRORESTIMATION
+  // Do you want to allow adaptive mesh refinement?
+  // #define ADAPTIVE
+   #endif // ifdef ERRORESTIMATION
+  #endif // ifndef AD_HOC_COMPUTATION
 }
