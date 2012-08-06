@@ -76,10 +76,9 @@ int main(int argc, char** argv) {
     int refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
     // in general: for the homogenized case = 11 and for the high resolution case = 14
     // Note that this depends on the model problem!
-    #ifndef FINE_SCALE_REFERENCE
+    if (!DSC_CONFIG.get("fsr", true))
     //!TODO völliig widersprüchlich zu oben
-    refinement_level_referenceprob_ = 8;
-    #endif
+      refinement_level_referenceprob_ = 8;
 
     // how many times finer do we solve the reference problem (it is either a homogenized problem or the exact problem
     // with a fine-scale resolution)

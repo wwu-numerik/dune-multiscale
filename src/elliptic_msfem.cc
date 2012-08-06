@@ -53,13 +53,10 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
-
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-
-// ! Bei Gelegenheit LOESCHEN:
 #include <dune/multiscale/tools/meanvalue.hh>
-
 #include <dune/multiscale/tools/errorestimation/MsFEM/elliptic_error_estimator.hh>
+
 // !-----------------------------------------------------------------------------
 
 // ! --------- typedefs for the coefficient and data functions ------------------

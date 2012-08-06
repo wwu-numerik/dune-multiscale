@@ -8,7 +8,7 @@
 #include <fstream>
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
-
+#include <dune/multiscale/tools/meanvalue.hh>
 
 //! set the dirichlet points to zero
 template< class EntityType, class DiscreteFunctionType >
@@ -55,7 +55,8 @@ HMMResult<HMMTraits>
         const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& rhsassembler,
         std::ofstream& data_file,
         const std::string filename,
-        typename HMMTraits::DiscreteFunctionType& hmm_solution
+        typename HMMTraits::DiscreteFunctionType& hmm_solution,
+        const typename HMMTraits::DiscreteFunctionType& fem_newton_solution
         )
 {
     typedef HMMTraits HMM;
@@ -504,19 +505,19 @@ HMMResult<HMMTraits>
     #endif // ifndef ADAPTIVE
     #endif   // #ifdef WRITE_HMM_SOL_TO_FILE
 
-    #ifdef FINE_SCALE_REFERENCE
-    #ifdef WRITE_FINESCALE_SOL_TO_FILE
-    bool fine_writer_is_open = false;
-    char fine_fname[50];
-    sprintf(fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
-    std::string fine_fname_s(fine_fname);
-    std::string fine_location = "data/HMM/" + filename + fine_fname_s;
-    DiscreteFunctionWriter fine_dfw( (fine_location).c_str() );
-    fine_writer_is_open = fine_dfw.open();
-    if (fine_writer_is_open)
-      fine_dfw.append(fem_newton_solution);
-    #endif // ifdef WRITE_FINESCALE_SOL_TO_FILE
-    #endif // ifdef FINE_SCALE_REFERENCE
+    if (DSC_CONFIG.get("fsr", true) && DSC_CONFIG.get("WRITE_FINESCALE_SOL_TO_FILE", true))
+    {
+      const int refinement_level_referenceprob_ = typename HMM::ModelProblemDataType().getRefinementLevelReferenceProblem();
+      char fine_fname[50];
+      sprintf(fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
+      std::string fine_fname_s(fine_fname);
+      std::string fine_location = "data/HMM/" + filename + fine_fname_s;
+      DiscreteFunctionWriter fine_dfw( (fine_location).c_str() );
+      if (fine_dfw.is_open())
+        fine_dfw.append(fem_newton_solution);
+      else
+        DUNE_THROW(Dune::InvalidStateException, "cannot write finescale solution to file");
+    }
 
     // ! ******************** End of assembling and solving the HMM problem ***************************
 
@@ -528,33 +529,36 @@ HMMResult<HMMTraits>
 
     // ! ----------------- compute L2-errors -------------------
 
-    #ifdef FINE_SCALE_REFERENCE
-    long double timeadapt = clock();
-
-    RangeType hmm_error = impL2error.norm_adaptive_grids_2< hmm_polorder >(
-      hmm_solution,
-      fem_newton_solution);
-
-    DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if (DSC_CONFIG.get("fsr", true))
     {
-      data_file << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl;
-    }
+      long double timeadapt = clock();
 
-    timeadapt = clock() - timeadapt;
-    timeadapt = timeadapt / CLOCKS_PER_SEC;
+      // expensive hack to deal with discrete functions, defined on different grids
+      Dune::ImprovedL2Error< typename HMM::DiscreteFunctionType > impL2error;
+      typename HMM::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
+        hmm_solution,
+        fem_newton_solution);
 
-    // if it took longer then 1 minute to compute the error:
-    if (timeadapt > 60)
-    {
-      DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
-
+      DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
       if ( data_file.is_open() )
       {
+        data_file << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl;
+      }
+
+      timeadapt = clock() - timeadapt;
+      timeadapt = timeadapt / CLOCKS_PER_SEC;
+
+      // if it took longer then 1 minute to compute the error:
+      if (timeadapt > 60)
+      {
         DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
+
+        if ( data_file.is_open() )
+        {
+          DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
+        }
       }
     }
-    #endif // ifdef FINE_SCALE_REFERENCE
 
     #ifdef HMM_REFERENCE
     long double timeadapthmmref = clock();
@@ -586,18 +590,17 @@ HMMResult<HMMTraits>
 
     #ifdef HOMOGENIZEDSOL_AVAILABLE
 
-    #ifdef FINE_SCALE_REFERENCE
-    // not yet modified according to a generalized L2-error, here, homogenized_solution and fem_newton_solution still need
-    // to be defined on the same grid!
-    RangeType hom_error = l2error.norm2< hmm_polorder >(homogenized_solution,
-                                                                                             fem_newton_solution);
-
-    DSC_LOG_INFO << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl << std::endl;
-    if ( data_file.is_open() )
+    if (DSC_CONFIG.get("fsr", true))
     {
-      data_file << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl;
+      // not yet modified according to a generalized L2-error, here, homogenized_solution and fem_newton_solution still need
+      // to be defined on the same grid!
+      RangeType hom_error = l2error.norm2< hmm_polorder >(homogenized_solution, fem_newton_solution);
+      DSC_LOG_INFO << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl << std::endl;
+      if ( data_file.is_open() )
+      {
+        data_file << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl;
+      }
     }
-    #endif // ifdef FINE_SCALE_REFERENCE
 
     RangeType hom_hmm_error = l2error.norm2< hmm_polorder >(hmm_solution,
                                                                                                  homogenized_solution);
@@ -622,17 +625,18 @@ HMMResult<HMMTraits>
         data_file << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl;
       }
 
-      #ifdef FINE_SCALE_REFERENCE
-      typename HMM::RangeType fem_newton_error = l2error.norm< ExactSolutionType >(u,
-                                                                     fem_newton_solution,
-                                                                     2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
-
-      DSC_LOG_INFO << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl << std::endl;
-      if ( data_file.is_open() )
+      if (DSC_CONFIG.get("fsr", true))
       {
-        data_file << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl;
+        typename HMM::RangeType fem_newton_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
+                                                                       fem_newton_solution,
+                                                                       2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
+
+        DSC_LOG_INFO << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl << std::endl;
+        if ( data_file.is_open() )
+        {
+          data_file << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl;
+        }
       }
-      #endif // ifdef FINE_SCALE_REFERENCE
     }
 
 

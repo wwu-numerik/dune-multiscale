@@ -202,6 +202,37 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
   // ! ********************** End of assembling the reference problem ***************************
 }
 
+template < class HMM >
+void fsr_load(typename HMM::DiscreteFunctionType& fem_newton_solution,
+              const typename HMM::ModelProblemDataType& problem_data )
+{
+  fem_newton_solution.clear();
+
+  char modeprob[50];
+  sprintf( modeprob, "/Model_Problem_%d", problem_data.get_Number_of_Model_Problem() );
+  const std::string modeprob_s(modeprob);
+
+  const int refinement_level_referenceprob_ = problem_data.getRefinementLevelReferenceProblem();
+  char reference_solution_directory[50];
+  sprintf(reference_solution_directory, "/reference_solution_ref_%d", refinement_level_referenceprob_);
+  const std::string reference_solution_directory_s(reference_solution_directory);
+
+  char reference_solution_name[50];
+  sprintf(reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
+  const std::string reference_solution_name_s(reference_solution_name);
+
+  const std::string location_fine_scale_ref = "data/HMM/" + modeprob_s + reference_solution_directory_s
+                                        + reference_solution_name_s;
+
+  // reader for the cell problem data file:
+  DiscreteFunctionReader discrete_function_reader_ref( (location_fine_scale_ref).c_str() );
+  discrete_function_reader_ref.open();
+
+  discrete_function_reader_ref.read(0, fem_newton_solution);
+  DSC_LOG_INFO << "fine scale reference read." << std::endl;
+}
+
+
 //! \todo replace me with Stuff::something
 template < class DiscreteFunctionSpaceType >
 typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctionSpaceType& discreteFunctionSpace) {
@@ -303,10 +334,6 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
 // set of hmm parameters/information
 // UNUSED  Multiscale::HMMParameters method_info;
 
-
-  // expensive hack to deal with discrete functions, defined on different grids
-// UNUSED  ImprovedL2Error< DiscreteFunctionType > impL2error;
-
   // ! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
   typename HMM::GridPartType gridPart(*macro_grid_pointer);
@@ -403,75 +430,42 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   // By fem_newton_solution, we denote the "fine scale reference solution" (used for comparison)
   // ( if the elliptic problem is linear, the 'fem_newton_solution' is determined without the Newton method )
 
-//  #ifdef FINE_SCALE_REFERENCE
-  if (true)
+  if (DSC_CONFIG.get("fsr", true))
   {
-    fsr_compute<HMM>(fem_newton_solution, data_file, finerDiscreteFunctionSpace, discrete_elliptic_op,
-                     filename, problem_data, rhsassembler);
+    if (DSC_CONFIG.get("fsr_compute", true))
+    {
+      fsr_compute<HMM>(fem_newton_solution, data_file, finerDiscreteFunctionSpace, discrete_elliptic_op,
+                       filename, problem_data, rhsassembler);
+    }
+    //! load und compute sollten sich ausschliessen??
+    if (DSC_CONFIG.get("fsr_load", false))
+    {
+      fsr_load<HMM>(fem_newton_solution, problem_data);
+    }
   }
 
-//  #ifdef FSR_LOAD
-
-  fem_newton_solution.clear();
-
-  char modeprob[50];
-  sprintf( modeprob, "/Model_Problem_%d", problem_data.get_Number_of_Model_Problem() );
-  const std::string modeprob_s(modeprob);
-
-  const int refinement_level_referenceprob_ = problem_data.getRefinementLevelReferenceProblem();
-  char reference_solution_directory[50];
-  sprintf(reference_solution_directory, "/reference_solution_ref_%d", refinement_level_referenceprob_);
-  const std::string reference_solution_directory_s(reference_solution_directory);
-
-  char reference_solution_name[50];
-  sprintf(reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
-  const std::string reference_solution_name_s(reference_solution_name);
-
-  const std::string location_fine_scale_ref = "data/HMM/" + modeprob_s + reference_solution_directory_s
-                                        + reference_solution_name_s;
-
-  // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_ref( (location_fine_scale_ref).c_str() );
-  discrete_function_reader_ref.open();
-
-  discrete_function_reader_ref.read(0, fem_newton_solution);
-  DSC_LOG_INFO << "fine scale reference read." << std::endl;
-
-//  #endif       // FSR_LOADd
-//  #endif   // FINE_SCALE_REFERENCE
-
   // noch per Hand die Daten eingetragen:
-//  #ifdef HMM_REFERENCE
-  const int gridLevel_refHMM = 10;       // Macro_'gridLevel'
-
   const std::string macroGridName_refHMM = problem_data.getMacroGridFile();
   DSC_LOG_INFO << "loading dgf: " << macroGridName_refHMM << std::endl;
-
-  // create a grid pointer for the DGF file belongig to the macro grid:
   typename HMM::GridPointerType macro_grid_pointer_refHMM(macroGridName_refHMM);
-  // refine the grid 'gridLevel_refHMM' times:
-  macro_grid_pointer_refHMM->globalRefine(gridLevel_refHMM);
-
   typename HMM::GridPartType gridPart_refHMM(*macro_grid_pointer_refHMM);
-  typename HMM::GridType& grid_refHMM = gridPart_refHMM.grid();
-
   typename HMM::DiscreteFunctionSpaceType discreteFunctionSpace_refHMM(gridPart_refHMM);
-
   typename HMM::DiscreteFunctionType hmm_reference_solution(filename + " Reference (HMM) Solution", discreteFunctionSpace_refHMM);
-  hmm_reference_solution.clear();
-
-  const std::string location_hmm_ref = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
-
-  // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_hmm_ref( (location_hmm_ref).c_str() );
-  discrete_function_reader_hmm_ref.open();
-  discrete_function_reader_hmm_ref.read(0, hmm_reference_solution);
-  DSC_LOG_INFO << "HMM reference read." << std::endl;
-//  #endif   // HMM_REFERENCE
+  if (DSC_CONFIG.get("hmm_reference", false))
+  {
+    //! Macro_'gridLevel'
+    const int gridLevel_refHMM = DSC_CONFIG.get("grid.ref_hmm", 10);
+    macro_grid_pointer_refHMM->globalRefine(gridLevel_refHMM);
+    hmm_reference_solution.clear();
+    const std::string location_hmm_ref = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+    // reader for the cell problem data file:
+    DiscreteFunctionReader discrete_function_reader_hmm_ref( (location_hmm_ref).c_str() );
+    discrete_function_reader_hmm_ref.open();
+    discrete_function_reader_hmm_ref.read(0, hmm_reference_solution);
+    DSC_LOG_INFO << "HMM reference read." << std::endl;
+  }
 
   // ! ************************* Assembling and solving the HMM problem ****************************
-
-
   // number of the loop cycle of the while-loop
   int loop_cycle = 1;
   double total_hmm_time = 0.0;
@@ -494,7 +488,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
     typename HMM::RestrictProlongOperatorType rp(hmm_solution);
     typename HMM::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                diffusion_op, rhsassembler, data_file, filename, hmm_solution);
+                diffusion_op, rhsassembler, data_file, filename, hmm_solution, fem_newton_solution);
 
     if (!DSC_CONFIG.get("hmm.adaptive", true))
       break;
