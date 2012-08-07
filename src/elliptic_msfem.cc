@@ -51,6 +51,7 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 #include <dune/multiscale/tools/misc/h1error.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
+#include <dune/multiscale/tools/improved_l2error.hh>
 #include <dune/multiscale/tools/errorestimation/MsFEM/elliptic_error_estimator.hh>
 
 //!-----------------------------------------------------------------------------
@@ -136,7 +137,7 @@ void algorithm(const std::string& macroGridName) {
   L2Error< DiscreteFunctionType > l2error;
   H1Error< DiscreteFunctionType > DUNE_UNUSED(h1error);
   // expensive hack to deal with discrete functions, defined on different grids
-  ImprovedL2Error< DiscreteFunctionType > DUNE_UNUSED(impL2error);
+  Dune::ImprovedL2Error< DiscreteFunctionType > DUNE_UNUSED(impL2error);
 
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for MsFEM-macro-problem
