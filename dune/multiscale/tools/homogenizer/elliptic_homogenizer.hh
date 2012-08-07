@@ -376,10 +376,10 @@ class Homogenizer
   enum { spacePolOrd = PeriodicDiscreteFunctionSpaceType::polynomialOrder };
 
   // dgf file that describes the perforated domain
-  std::string& filename_;
+  const std::string& filename_;
 
 public:
-  Homogenizer(std::string& filename)
+  Homogenizer(const std::string& filename)
     : filename_(filename)
   {}
 
