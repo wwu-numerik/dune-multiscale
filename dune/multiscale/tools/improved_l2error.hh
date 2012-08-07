@@ -41,22 +41,15 @@ class ImprovedL2Error
   enum { dimRange = RangeType::dimension };
 
 public:
-  // for two discrete functions auf dem gleichen, aber nicht dem selben grid (z.B. identisch angelegt)
+  //! for two discrete functions auf dem gleichen, aber nicht dem selben grid (z.B. identisch angelegt)
   template< int polOrd >
   RangeFieldType norm_L2(const DiscreteFunctionType& f1,
                          const DiscreteFunctionType& f2, double /*dummy*/ = 0) const {
     const DiscreteFunctionSpaceType& space = f1.space();
-
     const GridPartType& gridPart = space.gridPart();
-
-    typedef typename GridPartType::GridType::Traits::
-      CollectiveCommunication
-    CommunicatorType;
-
-    const CommunicatorType& comm = gridPart.grid().comm();
+    const auto& comm = gridPart.grid().comm();
 
     RangeFieldType ret = 0;
-
     if (dimRange > 1)
     {
       DUNE_THROW(Dune::NotImplemented,"L2Error::norm2: only implemented for dimRange = 1! \n");
@@ -65,25 +58,25 @@ public:
     // get function space
     const DiscreteFunctionSpaceType& dfsp = f1.space();
     const DiscreteFunctionSpaceType& dfsp_2 = f2.space();
+    assert( dfsp.size() == dfsp_2.size() );
 
     RangeType lv1, lv2;
-
     // for product:
     // int quadOrd = (polOrd*dim)*(polOrd*dim);
-    int quadOrd = polOrd;
+    const int quadOrd = polOrd;
 
     // iterate over all elements defining the function
-    IteratorType eit = dfsp.end();
+    const IteratorType eit = dfsp.end();
     IteratorType it_2 = dfsp_2.begin();
-    for (IteratorType it = dfsp.begin(); it != eit; ++it)
+    for (IteratorType it = dfsp.begin(); it != eit; ++it, ++it_2)
     {
       const EntityType& en = *it;
       const EntityType& en_2 = *it_2;
 
-      CachingQuadrature< GridPartType, 0 > quad(en, quadOrd);
+      const CachingQuadrature< GridPartType, 0 > quad(en, quadOrd);
       // get local functions on current element
-      LocalFunctionType lf1 = f1.localFunction(en);
-      LocalFunctionType lf2 = f2.localFunction(en_2);
+      const LocalFunctionType lf1 = f1.localFunction(en);
+      const LocalFunctionType lf2 = f2.localFunction(en_2);
 
       // get geoemetry of entity
       const EnGeometryType& geo = en.geometry();
@@ -93,7 +86,6 @@ public:
       {
         const double det
           = geo.integrationElement( quad.point(qp) );
-
         // evaluate local functions
         lf1.evaluate(quad[qp], lv1);
         lf2.evaluate(quad[qp], lv2);
@@ -102,8 +94,6 @@ public:
 
         ret += det * quad.weight(qp) * (lv1 * lv1);
       } // end qp iteration
-
-      ++it_2;
     } // end element iteration
 
     ret = comm.sum(ret);
@@ -114,25 +104,20 @@ public:
   // refinment of the gridPart of 'coarse_disc_func'
   template< int polOrd >
   RangeFieldType norm_uniform_grids(const DiscreteFunctionType& coarse_disc_func,
-                                    const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) {
+                                    const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) const {
     // get function spaces
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
     const DiscreteFunctionSpaceType& fine_discreteFunctionSpace = fine_disc_func.space();
 
     const GridPartType& fine_gridPart = fine_discreteFunctionSpace.gridPart();
 
-    IteratorType fine_element_reference = fine_discreteFunctionSpace.begin();
-    IteratorType coarse_element_reference = coarse_discreteFunctionSpace.begin();
+    const IteratorType fine_element_reference = fine_discreteFunctionSpace.begin();
+    const IteratorType coarse_element_reference = coarse_discreteFunctionSpace.begin();
 
     const int coarse_grid_level = coarse_element_reference->level();
     const int fine_grid_level = fine_element_reference->level();
     const int level_difference = fine_grid_level - coarse_grid_level;
-
-    typedef typename GridPartType::GridType::Traits::
-      CollectiveCommunication
-    CommunicatorType;
-
-    const CommunicatorType& fine_comm = fine_gridPart.grid().comm();
+    const auto& fine_comm = fine_gridPart.grid().comm();
 
     // to return the L2 Norm:
     RangeFieldType l2Norm = 0.0;
@@ -147,7 +132,7 @@ public:
     int quadOrd = polOrd;
 
     // last entity of fine grid:
-    IteratorType fine_end = fine_discreteFunctionSpace.end();
+    const IteratorType fine_end = fine_discreteFunctionSpace.end();
     for (IteratorType fine_it = fine_discreteFunctionSpace.begin(); fine_it != fine_end; ++fine_it)
     {
       const EntityPointerType fine_father_entity = fine_it;
@@ -199,10 +184,8 @@ public:
         coarse_disc_func_entity.evaluate(fine_quad_point, coarse_value);
 
         RangeType fine_value = 0.0;
-
         // evaluate fine local function
         local_fine_disc_func.evaluate(fine_quad[qp], fine_value);
-
         fine_value -= coarse_value;
 
         l2Norm += det * fine_quad.weight(qp) * (fine_value * fine_value);
@@ -231,7 +214,6 @@ public:
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
     const DiscreteFunctionSpaceType& fine_discreteFunctionSpace = fine_disc_func.space();
     const GridPartType& fine_gridPart = fine_discreteFunctionSpace.gridPart();
-
     const auto& fine_comm = fine_gridPart.grid().comm();
 
     // to return the L2 Norm:
@@ -420,21 +402,19 @@ public:
         coarse_disc_func_entity.evaluate(fine_quad_point, coarse_value);
 
         RangeType fine_value = 0.0;
-
         // evaluate fine local function
         local_fine_disc_func.evaluate(fine_quad[qp], fine_value);
         fine_value -= coarse_value;
+
         l2Norm += det * fine_quad.weight(qp) * (fine_value * fine_value);
       }       // end qp iteration
     }   // end fine grid element iteration
-
     l2Norm = fine_comm.sum(l2Norm);
 
     if (error_in_compuation == true)
     {
       return 0.0;
     }
-
     return sqrt(l2Norm);
   } // end method
 
@@ -455,6 +435,7 @@ public:
     DiscreteFunctionReader discrete_function_reader( ( lp_num_manager.get_location() ).c_str() );
 
     const bool reader_is_open = discrete_function_reader.open();
+    assert(reader_is_open);
     bool error_in_compuation = false;
     // get function spaces
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
@@ -477,7 +458,7 @@ public:
     reference_corner_2[1] = 1.0;
 
     // last entity of coarse grid:
-    IteratorType coarse_end = coarse_discreteFunctionSpace.end();
+    const IteratorType coarse_end = coarse_discreteFunctionSpace.end();
     for (IteratorType coarse_it = coarse_discreteFunctionSpace.begin(); coarse_it != coarse_end; ++coarse_it)
     {
       // T = coarse_it
