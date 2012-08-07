@@ -75,10 +75,7 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
     rhsassembler.template assemble< hmm_polorder >(f, fem_newton_rhs);
 
     // set Dirichlet Boundary to zero
-    typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-    const IteratorType fine_endit = finerDiscreteFunctionSpace.end();
-    for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it)
-      boundaryTreatment(*fine_it, fem_newton_rhs);
+    boundaryTreatment(fem_newton_rhs);
 
     const typename HMM::InverseFEMMatrix fem_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
     fem_biCGStab(fem_newton_rhs, fem_newton_solution);
@@ -132,10 +129,7 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
         break;
       }
       // set Dirichlet Boundary to zero
-      typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-      const IteratorType fine_endit = finerDiscreteFunctionSpace.end();
-      for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != fine_endit; ++fine_it)
-        boundaryTreatment(*fine_it, fem_newton_rhs);
+      boundaryTreatment(fem_newton_rhs);
 
       const typename HMM::InverseFEMMatrix fem_newton_biCGStab(fem_newton_matrix, 1e-8, 1e-8, 20000, true);
       fem_newton_biCGStab(fem_newton_rhs, fem_newton_residual);
@@ -377,10 +371,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
       rhsassembler.template assemble < hmm_polorder >(f, hom_rhs);
 
       // set Dirichlet Boundary to zero
-      typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-      const IteratorType hom_endit = finerDiscreteFunctionSpace.end();
-      for (IteratorType fine_it = finerDiscreteFunctionSpace.begin(); fine_it != hom_endit; ++fine_it)
-        boundaryTreatment(*fine_it, hom_rhs);
+      boundaryTreatment(hom_rhs);
 
       const typename HMM::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, VERBOSE);
       hom_biCGStab(hom_rhs, homogenized_solution);

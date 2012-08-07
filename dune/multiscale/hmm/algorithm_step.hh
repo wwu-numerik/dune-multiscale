@@ -18,36 +18,34 @@ namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
 }
 //! set the dirichlet points to zero
-template< class EntityType, class DiscreteFunctionType >
-void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
+template< class DiscreteFunctionType >
+void boundaryTreatment(DiscreteFunctionType& rhs) {
   static const int faceCodim = 1;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType                          DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionType::LocalFunctionType                                  LocalFunctionType;
-  typedef typename DiscreteFunctionSpaceType::LagrangePointSetType                          LagrangePointSetType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType                                  GridPartType;
-  typedef typename GridPartType::IntersectionIteratorType                                   IntersectionIteratorType;
-  typedef typename LagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType FaceDofIteratorType;
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
-  const GridPartType& gridPart = discreteFunctionSpace.gridPart();
-  IntersectionIteratorType it = gridPart.ibegin(entity);
-  const IntersectionIteratorType endit = gridPart.iend(entity);
-  for ( ; it != endit; ++it)
+  const auto& discreteFunctionSpace = rhs.space();
+  const auto& gridPart = discreteFunctionSpace.gridPart();
+  const auto space_end = discreteFunctionSpace.end();
+  for (auto entity_it = discreteFunctionSpace.begin(); entity_it != space_end; ++entity_it)
   {
-    if ( !(*it).boundary() )
-      continue;
+    const auto& entity = *entity_it;
+    auto it = gridPart.ibegin(entity);
+    const auto endit = gridPart.iend(entity);
+    for ( ; it != endit; ++it)
+    {
+      if ( !(*it).boundary() )
+        continue;
 
-    LocalFunctionType rhsLocal = rhs.localFunction(entity);
-    const LagrangePointSetType& lagrangePointSet
-      = discreteFunctionSpace.lagrangePointSet(entity);
+      auto rhsLocal = rhs.localFunction(entity);
+      const auto& lagrangePointSet
+        = discreteFunctionSpace.lagrangePointSet(entity);
 
-    const int face = (*it).indexInInside();
-    FaceDofIteratorType faceIterator
-      = lagrangePointSet.template beginSubEntity< faceCodim >(face);
-    const FaceDofIteratorType faceEndIterator
-      = lagrangePointSet.template endSubEntity< faceCodim >(face);
-    for ( ; faceIterator != faceEndIterator; ++faceIterator)
-      rhsLocal[*faceIterator] = 0;
+      const int face = (*it).indexInInside();
+      auto faceIterator
+        = lagrangePointSet.template beginSubEntity< faceCodim >(face);
+      const auto faceEndIterator
+        = lagrangePointSet.template endSubEntity< faceCodim >(face);
+      for ( ; faceIterator != faceEndIterator; ++faceIterator)
+        rhsLocal[*faceIterator] = 0;
+    }
   }
 } // boundaryTreatment
 
@@ -272,10 +270,7 @@ HMMResult<HMMTraits>
       rhsassembler.template assemble< 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2 >(f, hmm_newton_rhs);
 
       // set Dirichlet Boundary to zero
-      typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-      IteratorType endit = discreteFunctionSpace.end();
-      for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-        boundaryTreatment(*it, hmm_newton_rhs);
+      boundaryTreatment(hmm_newton_rhs);
 
       typename HMM::InverseFEMMatrix hmm_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
       hmm_biCGStab(hmm_newton_rhs, hmm_solution);
@@ -286,7 +281,7 @@ HMMResult<HMMTraits>
       if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false))
       {
         //! -------------- solve and save the cell problems for the macroscopic base function set
-        Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+        const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
         const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
         DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
           // generate directory for cell problem data output
@@ -414,10 +409,7 @@ HMMResult<HMMTraits>
         }
 
         // set Dirichlet Boundary to zero
-        typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-        IteratorType endit = discreteFunctionSpace.end();
-        for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-          boundaryTreatment(*it, hmm_newton_rhs);
+        boundaryTreatment(hmm_newton_rhs);
 
         if (!process_hmm_newton_residual<HMM>(relative_newton_error, hmm_solution, hmm_newton_matrix, hmm_newton_rhs,
                                     hmm_iteration_step, filename, hmm_tolerance)) {
