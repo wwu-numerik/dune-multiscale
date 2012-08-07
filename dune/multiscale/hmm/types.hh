@@ -140,6 +140,8 @@ typedef Dune::RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOper
 //! type of the adaption manager
 typedef Dune::AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
 //!---------------------------------------------------------------------------------------
+
+static const int assembler_order = 2* DiscreteFunctionSpaceType::polynomialOrder + 2;
 }; // struct  HMMTraits
 
 

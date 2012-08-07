@@ -11,6 +11,8 @@
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/fem/misc/l2norm.hh>
+#include <dune/fem/misc/l2error.hh>
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
@@ -48,6 +50,128 @@ void boundaryTreatment(const EntityType& entity, DiscreteFunctionType& rhs) {
       rhsLocal[*faceIterator] = 0;
   }
 } // boundaryTreatment
+
+template < class HMM >
+bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
+                                 typename HMM::DiscreteFunctionType& hmm_solution,
+                                 const typename HMM::FEMMatrix& hmm_newton_matrix,
+                                 const typename HMM::DiscreteFunctionType& hmm_newton_rhs,
+                                 const int hmm_iteration_step,
+                                 const std::string& filename,
+                                 const double hmm_tolerance
+                                 )
+{
+  //! residual vector
+  // current residual
+  typename HMM::DiscreteFunctionType hmm_newton_residual(filename + "HMM Newton Residual", hmm_solution.space());
+  hmm_newton_residual.clear();
+  const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
+  #ifndef AD_HOC_COMPUTATION
+  double hmm_biCG_tolerance = 1e-8;
+  bool hmm_solution_convenient = false;
+  while (hmm_solution_convenient == false)
+  {
+    hmm_newton_residual.clear();
+    const typename HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,
+                                         1e-8, hmm_biCG_tolerance, 20000, VERBOSE);
+
+    hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
+
+    if ( hmm_newton_residual.dofsValid() )
+    {
+      hmm_solution_convenient = true;
+    }
+
+    if (hmm_biCG_tolerance > 1e-4)
+    {
+      DSC_LOG_INFO << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'."
+                << std::endl;
+      DUNE_THROW(Dune::InvalidStateException, "Right hand side invalid!");
+    }
+    hmm_biCG_tolerance *= 10.0;
+  }
+  #else         // AD_HOC_COMPUTATION
+  InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
+  hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
+  #endif         // AD_HOC_COMPUTATION
+
+
+  if ( !hmm_newton_residual.dofsValid() ) {
+    DSC_LOG_ERROR << "WARNING! Invalid dofs in 'hmm_newton_residual'." << std::endl;
+    return false;
+  }
+  hmm_solution += hmm_newton_residual;
+
+  // write the solution after the current HMM Newton step to a file
+  #ifdef WRITE_HMM_SOL_TO_FILE
+  // for adaptive computations, the saved solution is not suitable for a later usage
+  #ifndef ADAPTIVE
+  char fname[50];
+  sprintf(fname,
+          "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d",
+          refinement_level_macrogrid_,
+          hmm_iteration_step);
+  std::string fname_s(fname);
+
+  std::string location = "data/HMM/" + filename + fname_s;
+  DiscreteFunctionWriter dfw( (location).c_str() );
+  if (dfw.is_open())
+    dfw.append(hmm_solution);
+
+  // if you want an utput for all newton steps, even for an adaptive computation, use:
+  // #endif
+
+  // writing paraview data output
+
+  // general output parameters
+  myDataOutputParameters outputparam;
+  outputparam.set_path("data/HMM/" + filename);
+
+  // sequence stamp
+  std::stringstream outstring;
+
+  // create and initialize output class
+  typename HMM::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
+  #ifdef ADAPTIVE
+  char hmm_prefix[50];
+  sprintf(hmm_prefix, "hmm_solution_%d_NewtonStep_%d", loop_cycle, hmm_iteration_step);
+  #else // ifdef ADAPTIVE
+  char hmm_prefix[50];
+  sprintf(hmm_prefix, "hmm_solution_NewtonStep_%d", hmm_iteration_step);
+  #endif // ifdef ADAPTIVE
+  outputparam.set_prefix(hmm_prefix);
+  typename HMM::DataOutputType hmmsol_dataoutput(hmm_solution.space().gridPart().grid(),
+                                                 hmm_solution_newton_step_series, outputparam);
+
+  // write data
+  outstring << "hmm-solution-NewtonStep";
+  hmmsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str( std::string() );
+  #endif               // ADAPTIVE
+  #endif           // WRITE_HMM_SOL_TO_FILE
+
+  // || u^(n+1) - u^(n) ||_L2
+  const Dune::L2Norm< typename HMM::DiscreteFunctionType::GridPartType > l2norm(hmm_newton_residual.gridPart());
+  relative_newton_error = l2norm.norm(hmm_newton_residual);
+  // || u^(n+1) - u^(n) ||_L2 / || u^(n+1) ||_L2
+  relative_newton_error = relative_newton_error / l2norm.norm(hmm_solution);
+
+  DSC_LOG_INFO << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std::endl;
+
+  // residual solution almost identical to zero: break
+  if (relative_newton_error <= hmm_tolerance)
+  {
+    //!TODO replace with profiler
+//      newton_step_time = clock() - newton_step_time;
+//      newton_step_time = newton_step_time / CLOCKS_PER_SEC;
+//      DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
+//                << std::endl << std::endl;
+//      DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
+//      DSC_LOG_INFO << "....................................................." << std::endl << std::endl;
+  }
+  return true;
+}
 
 template < class HMMTraits >
 HMMResult<HMMTraits>
@@ -191,10 +315,6 @@ HMMResult<HMMTraits>
       typename HMM::PeriodicDiscreteFunctionType dummy_periodic_func("a periodic dummy", periodicDiscreteFunctionSpace);
       dummy_periodic_func.clear();
 
-      //! residual vector
-      // current residual
-      typename HMM::DiscreteFunctionType hmm_newton_residual(filename + "HMM Newton Residual", discreteFunctionSpace);
-      hmm_newton_residual.clear();
 
       typename HMM::RangeType relative_newton_error = 10000.0;
       typename HMM::RangeType hmm_rhs_L2_norm = 10000.0;
@@ -204,6 +324,7 @@ HMMResult<HMMTraits>
       // the next one is 'HMM_NEWTON_ITERATION_STEP+1' = hmm_iteration_step
       int hmm_iteration_step = DSC_CONFIG.get("HMM_NEWTON_ITERATION_STEP", 0) + 1;
 
+      const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
       #ifdef RESUME_TO_BROKEN_COMPUTATION
       // std :: string location_hmm_newton_step_solution = "data/HMM/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
       char fnewtonname[50];
@@ -231,7 +352,7 @@ HMMResult<HMMTraits>
       const double hmm_tolerance = DSC_CONFIG.get("problem.stochastic_pertubation", false)
                                     ? 1e-01 * DSC_CONFIG.get("problem.stochastic_variance",  0.01)
                                     : 1e-05;
-      const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
+
 
       while (relative_newton_error > hmm_tolerance)
       {
@@ -259,8 +380,8 @@ HMMResult<HMMTraits>
 
         DSC_LOG_INFO << "Assemble right hand side..." << std::endl;
         // assemble right hand side
-        const int assembler_order = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
-        rhsassembler.template assemble_for_HMM_Newton_method< assembler_order >(
+
+        rhsassembler.template assemble_for_HMM_Newton_method< HMM::assembler_order >(
           f,
           diffusion_op,
           hmm_solution,
@@ -279,7 +400,7 @@ HMMResult<HMMTraits>
           DSC_LOG_INFO << "Right hand side valid ";
         }
 
-        hmm_rhs_L2_norm = l2error.template norm2< assembler_order >(zero_func_coarse, hmm_newton_rhs);
+        hmm_rhs_L2_norm = l2error.template norm2< HMM::assembler_order >(zero_func_coarse, hmm_newton_rhs);
 
         DSC_LOG_INFO << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
         DSC_LOG_INFO << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
@@ -298,113 +419,9 @@ HMMResult<HMMTraits>
         for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
           boundaryTreatment(*it, hmm_newton_rhs);
 
-        #ifndef AD_HOC_COMPUTATION
-        double hmm_biCG_tolerance = 1e-8;
-        bool hmm_solution_convenient = false;
-        while (hmm_solution_convenient == false)
-        {
-          hmm_newton_residual.clear();
-          typename HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,
-                                               1e-8, hmm_biCG_tolerance, 20000, VERBOSE);
-
-          hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
-
-          if ( hmm_newton_residual.dofsValid() )
-          {
-            hmm_solution_convenient = true;
-          }
-
-          if (hmm_biCG_tolerance > 1e-4)
-          {
-            DSC_LOG_INFO << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'."
-                      << std::endl;
-            DUNE_THROW(Dune::InvalidStateException, "Right hand side invalid!");
-          }
-          hmm_biCG_tolerance *= 10.0;
-        }
-        #else         // AD_HOC_COMPUTATION
-        InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
-        hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
-        #endif         // AD_HOC_COMPUTATION
-
-
-        if ( hmm_newton_residual.dofsValid() )
-        {
-          hmm_solution += hmm_newton_residual;
-
-          // write the solution after the current HMM Newton step to a file
-          #ifdef WRITE_HMM_SOL_TO_FILE
-          // for adaptive computations, the saved solution is not suitable for a later usage
-          #ifndef ADAPTIVE
-          char fname[50];
-          sprintf(fname,
-                  "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d",
-                  refinement_level_macrogrid_,
-                  hmm_iteration_step);
-          std::string fname_s(fname);
-
-          std::string location = "data/HMM/" + filename + fname_s;
-          DiscreteFunctionWriter dfw( (location).c_str() );
-          if (dfw.is_open())
-            dfw.append(hmm_solution);
-
-          // if you want an utput for all newton steps, even for an adaptive computation, use:
-          // #endif
-
-          // writing paraview data output
-
-          // general output parameters
-          myDataOutputParameters outputparam;
-          outputparam.set_path("data/HMM/" + filename);
-
-          // sequence stamp
-          std::stringstream outstring;
-
-          // create and initialize output class
-          typename HMM::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
-          #ifdef ADAPTIVE
-          char hmm_prefix[50];
-          sprintf(hmm_prefix, "hmm_solution_%d_NewtonStep_%d", loop_cycle, hmm_iteration_step);
-          #else // ifdef ADAPTIVE
-          char hmm_prefix[50];
-          sprintf(hmm_prefix, "hmm_solution_NewtonStep_%d", hmm_iteration_step);
-          #endif // ifdef ADAPTIVE
-          outputparam.set_prefix(hmm_prefix);
-          typename HMM::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_newton_step_series, outputparam);
-
-          // write data
-          outstring << "hmm-solution-NewtonStep";
-          hmmsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-          // clear the std::stringstream:
-          outstring.str( std::string() );
-          #endif               // ADAPTIVE
-          #endif           // WRITE_HMM_SOL_TO_FILE
-
-          // || u^(n+1) - u^(n) ||_L2
-          relative_newton_error = l2error.template norm2< assembler_order >(hmm_newton_residual,
-                                                                                                     zero_func_coarse);
-          // || u^(n+1) - u^(n) ||_L2 / || u^(n+1) ||_L2
-          relative_newton_error = relative_newton_error / l2error.template norm2< assembler_order >(
-            hmm_solution,
-            zero_func_coarse);
-
-          DSC_LOG_INFO << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std::endl;
-
-          // residual solution almost identical to zero: break
-          if (relative_newton_error <= hmm_tolerance)
-          {
-            newton_step_time = clock() - newton_step_time;
-            newton_step_time = newton_step_time / CLOCKS_PER_SEC;
-            DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
-                      << std::endl << std::endl;
-            DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
-            DSC_LOG_INFO << "....................................................." << std::endl << std::endl;
-          }
-
-          hmm_newton_residual.clear();
-        } else {
-          DSC_LOG_INFO << "WARNING! Invalid dofs in 'hmm_newton_residual'." << std::endl;
-          break;
+        if (!process_hmm_newton_residual<HMM>(relative_newton_error, hmm_solution, hmm_newton_matrix, hmm_newton_rhs,
+                                    hmm_iteration_step, filename, hmm_tolerance)) {
+          break;//invalid dofs in residual
         }
 
         hmm_iteration_step += 1;
@@ -577,21 +594,6 @@ HMMResult<HMMTraits>
     #ifdef TFR
     DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
     #endif
-    if ( DSC_LOG_INFO.is_open() )
-    {
-      DSC_LOG_INFO << "Estimated error = " << estimated_error << "." << std::endl;
-      DSC_LOG_INFO << "In detail:" << std::endl;
-      DSC_LOG_INFO << "   Estimated source error = " << estimated_source_error << "." << std::endl;
-      DSC_LOG_INFO << "   Estimated approximation error = " << estimated_approximation_error << "." << std::endl;
-      DSC_LOG_INFO << "   Estimated residual error = " << estimated_residual_error << ", where:" << std::endl;
-      DSC_LOG_INFO << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and "
-                << std::endl;
-      DSC_LOG_INFO << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and "
-                << std::endl;
-      #ifdef TFR
-      DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
-      #endif
-    }
     #endif // ifdef ERRORESTIMATION
     //! -------------------------------------------------------
 

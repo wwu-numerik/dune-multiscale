@@ -596,7 +596,7 @@ int main(int argc, char** argv) {
 
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
-    Problem::ModelProblemData info(filename_);
+    const Problem::ModelProblemData info(filename_);
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
     total_refinement_level_
