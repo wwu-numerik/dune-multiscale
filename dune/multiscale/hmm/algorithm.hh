@@ -36,7 +36,6 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
                  const Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType >& rhsassembler)
 {
   static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
-  const Dune::L2Error< typename HMM::DiscreteFunctionType > l2error;
 
   //! *************************** Assembling the reference problem ****************************
   // ( fine scale reference solution = fem_newton_solution )
@@ -299,9 +298,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
 
   typename HMM::GridType& grid = gridPart.grid();
   typename HMM::GridType& gridFine = gridPartFine.grid();
-
-
-//! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
   //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
@@ -310,36 +307,25 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   typename HMM::DiscreteFunctionSpaceType finerDiscreteFunctionSpace(gridPartFine);
   // the local-problem function space (containing periodic functions):
   typename HMM::PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace(periodicGridPart);
-
-//! --------------------------------------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const typename HMM::DiffusionType diffusion_op;
-  //! --------------------------- coefficient functions ------------------------------------
-
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType > rhsassembler;
   const typename HMM::FirstSourceType f;   // standard source f
 
-  // ----------------------------------------------------------------------------------------------//
-  // ----------------------- THE DISCRETE FEM OPERATOR -----------------------------------//
-  // ----------------------------------------------------------------------------------------------//
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
- typename HMM::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
-// ----------------------------------------------------------------------------------------------//
-// ----------------------------------------------------------------------------------------------//
-// ----------------------------------------------------------------------------------------------//
+ const typename HMM::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
+
 // UNUSED  RangeType size_of_domain = get_size_of_domain(discreteFunctionSpace);
-
   static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
-  const Dune::L2Error< typename HMM::DiscreteFunctionType > l2error;
-
   if (DSC_CONFIG.get("HOMOGENIZEDSOL_AVAILABLE", false)) {
     if (DSC_CONFIG.get("problem.linear", true)) {
-      std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
+      const std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
       // descretized homogenizer:
 
       const typename HMM::HomogenizerType disc_homogenizer(unit_cell_location);
@@ -352,7 +338,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
 
       const HomEllipticOperatorType hom_discrete_elliptic_op(finerDiscreteFunctionSpace, hom_diffusion_op);
 
-      typename HMM::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
+      const typename HMM::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
 
       typename HMM::DiscreteFunctionType hom_rhs("homogenized rhs", finerDiscreteFunctionSpace);
       hom_rhs.clear();
@@ -369,18 +355,17 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
       const typename HMM::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, VERBOSE);
       hom_biCGStab(hom_rhs, homogenized_solution);
     } else {
-
+      //!TODO nonlinear Homogenizer??
     }
   }
 
   //! solution vector
-  // solution of the finite element method, where we used the Newton method to solve the non-linear system of equations
-  // in general this will be an accurate approximation of the exact solution, that is why we it also called reference
-  // solution
+  // - By fem_newton_solution, we denote the "fine scale reference solution" (used for comparison)
+  //    ( if the elliptic problem is linear, the 'fem_newton_solution' is determined without the Newton method )
+  // - solution of the finite element method, where we used the Newton method to solve the non-linear system of equations
+  //   in general this will be an accurate approximation of the exact solution, that is why we it also called reference solution
   typename HMM::DiscreteFunctionType fem_newton_solution(filename + " Reference (FEM Newton) Solution", finerDiscreteFunctionSpace);
   fem_newton_solution.clear();
-  // By fem_newton_solution, we denote the "fine scale reference solution" (used for comparison)
-  // ( if the elliptic problem is linear, the 'fem_newton_solution' is determined without the Newton method )
 
   if (DSC_CONFIG.get("fsr", true))
   {
@@ -427,6 +412,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   {
     DSC_LOG_INFO << "########################### LOOP CYCLE " << loop_cycle << " ###########################"
                 << std::endl << std::endl << std::endl;
+
     //! solution vector
     // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the
     // non-linear system of equations
