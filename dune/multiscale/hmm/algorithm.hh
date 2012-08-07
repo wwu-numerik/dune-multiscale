@@ -38,10 +38,6 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
   static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
   const Dune::L2Error< typename HMM::DiscreteFunctionType > l2error;
 
-  // starting value for the Newton method
-  typename HMM::DiscreteFunctionType zero_func(filename + " constant zero function ", finerDiscreteFunctionSpace);
-  zero_func.clear();
-
   //! *************************** Assembling the reference problem ****************************
   // ( fine scale reference solution = fem_newton_solution )
 
@@ -120,7 +116,8 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
                                                                        fem_newton_solution,
                                                                        fem_newton_rhs);
 
-      rhs_L2_norm = l2error.template norm2< hmm_polorder >(fem_newton_rhs, zero_func);
+      const Dune::L2Norm< typename HMM::DiscreteFunctionType::GridPartType > l2norm(fem_newton_rhs.gridPart());
+      rhs_L2_norm = l2norm.norm(fem_newton_rhs);
       if (rhs_L2_norm < 1e-10)
       {
         // residual solution almost identical to zero: break
@@ -137,12 +134,8 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
       if ( fem_newton_residual.dofsValid() )
       {
         fem_newton_solution += fem_newton_residual;
-        relative_newton_error_finescale = l2error.template norm2< hmm_polorder >(
-                                            fem_newton_residual,
-                                            zero_func);
-        relative_newton_error_finescale /= l2error.template norm2< hmm_polorder >(
-                                             fem_newton_solution,
-                                             zero_func);
+        relative_newton_error_finescale = l2norm.norm(fem_newton_residual);
+        relative_newton_error_finescale /= l2norm.norm(fem_newton_solution);
 
         DSC_LOG_INFO << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
         // residual solution almost identical to zero: break

@@ -18,6 +18,7 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
+#include <dune/fem/io/file/dataoutput.hh>
 
 struct HMMTraits {
 //! --------- typedefs for the macro grid and the corresponding discrete space -------------
@@ -110,7 +111,11 @@ typedef Dune::SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionTyp
    * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
    ****ones. GMRES seems to be more stable, but is extremely slow!
    */
-typedef Dune::OEMBICGSQOp /*OEMBICGSTABOp*/< DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
+typedef Dune::
+  OEMBICGSQOp
+//  OEMBICGSTABOp
+//    OEMGMRESOp
+  < DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
 //! --------------- the discrete operators (standard FEM and HMM) ------------------------
 //! discrete elliptic operator (corresponds with FEM Matrix)
