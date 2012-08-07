@@ -82,27 +82,16 @@ public:
 
     // get function space
     const DiscreteFunctionSpaceType& space = discFunc.space();
-
     const GridPartType& gridPart = space.gridPart();
-
-    typedef typename GridPartType::GridType::Traits::
-      CollectiveCommunication
-    CommunicatorType;
-
-    const CommunicatorType& comm = gridPart.grid().comm();
+    const auto& comm = gridPart.grid().comm();
 
     RangeType y(0.0);    // return value
-
     RangeType theMeanValue(0.0);
 
-    IteratorType endit = space.end();
-    for (IteratorType it = space.begin(); it != endit; ++it)
+    for (const auto& entity : space)
     {
-      // entity
-      const EntityType& entity = *it;
-
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get local function
       LocalFunctionType localfunc = discFunc.localFunction(entity);
@@ -134,18 +123,12 @@ public:
     int polOrd = (2 * spacePolOrd + 2);
 
     RangeType y(0.0);    // return value
-
     RangeType theMeanValue(0.0);
 
-    IteratorType endit = space.end();
-
-    for (IteratorType it = space.begin(); it != endit; ++it)
+    for (const auto& entity : space)
     {
-      // entity
-      const EntityType& entity = *it;
-
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geo = entity.geometry();
@@ -174,18 +157,12 @@ public:
     int polOrd = (2 * spacePolOrd + 2);
 
     RangeType y(0.0);    // return value
-
     RangeType theMeanValue(0.0);
 
-    IteratorType endit = space.end();
-
-    for (IteratorType it = space.begin(); it != endit; ++it)
+    for (const auto& entity : space)
     {
-      // entity
-      const EntityType& entity = *it;
-
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geo = entity.geometry();
@@ -215,18 +192,12 @@ public:
     int polOrd = (2 * spacePolOrd + 2);
 
     RangeType y(0.0);    // return value
-
     RangeType theMeanValue(0.0);
 
-    IteratorType endit = space.end();
-
-    for (IteratorType it = space.begin(); it != endit; ++it)
+    for (const auto& entity : space)
     {
-      // entity
-      const EntityType& entity = *it;
-
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geo = entity.geometry();
@@ -256,18 +227,12 @@ public:
     int polOrd = (2 * spacePolOrd + 2);
 
     RangeType y(0.0);    // return value
-
     RangeType theMeanValue(0.0);
 
-    IteratorType endit = space.end();
-
-    for (IteratorType it = space.begin(); it != endit; ++it)
+    for (const auto& entity : space)
     {
-      // entity
-      const EntityType& entity = *it;
-
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geo = entity.geometry();
@@ -298,18 +263,12 @@ public:
     int polOrd = (2 * spacePolOrd + 2);
 
     RangeType y(0.0);    // return value
-
     RangeType theMeanValue(0.0);
 
-    IteratorType endit = space.end();
-
-    for (IteratorType it = space.begin(); it != endit; ++it)
+    for (const auto& entity : space)
     {
-      // entity
-      const EntityType& entity = *it;
-
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geo = entity.geometry();
