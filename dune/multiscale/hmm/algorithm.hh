@@ -267,6 +267,135 @@ void print_info(const ProblemDataType& info, std::ostream& out)
   out << std::endl << std::endl;
 }
 
+template < class HMM >
+bool adapt(const HMMResult<HMM>& result,
+           const int loop_cycle,
+           const double error_tolerance_,
+           const typename HMM::DiscreteFunctionSpaceType& discreteFunctionSpace,
+           typename HMM::AdaptationManagerType& adaptationManager
+           )
+{
+  bool repeat = true;
+  int default_refinement = 0;
+  // double error_tolerance_ = 0.2;
+  // int(...) rundet ab zum naechsten Integer
+  // assuming we had a quadratic order of convergence of the error estimator and
+  // that we have a certain estimated error for the current uniform grid, than we can compute how many additional
+  // uniform refinements are required to get under the error (estimator) tolerance:
+  // number_of_uniform_refinments = int( sqrt( (\eta_have) / (\eta_want) ) )
+  // (obtained from the EOC formula)
+  // uniform contribution only for the first loop cycle
+  if (loop_cycle == 1)
+  {
+    // "divided by 2.0" we go half the way with a uniform computation
+    const int number_of_uniform_refinements = 2 * int(int( sqrt(result.estimated_error / error_tolerance_) ) / 2.0);
+    DSC_LOG_INFO << std::endl << "Uniform default refinement:" << std::endl << std::endl;
+    DSC_LOG_INFO << "sqrt( estimated_error / error_tolerance_ ) = "
+              << sqrt(result.estimated_error / error_tolerance_) << std::endl;
+    DSC_LOG_INFO << "number_of_uniform_refinements = " << number_of_uniform_refinements << std::endl;
+    DSC_LOG_INFO << "***************" << std::endl << std::endl;
+
+    default_refinement = number_of_uniform_refinements;
+  }
+
+  const int number_of_areas = (loop_cycle == 1) ? 1 : 2;
+
+  std::vector<double> border(number_of_areas - 1);
+  border[0] = 0.5;
+  for (int bo = 1; bo < (number_of_areas - 1); ++bo)
+  {
+    border[bo] = border[bo - 1] + ( (1.0 - border[bo - 1]) / 2.0 );
+  }
+
+  // 3 areas: 1: |0-30%| 2: |30-80%| 3: |80-100%|
+  // border[0] = 0.3;
+  // border[1] = 0.8;
+  // border[2] = 0.95;
+
+  std::vector<int> refinements_in_area(number_of_areas);
+  for (int bo = 0; bo < number_of_areas; ++bo)
+  {
+    refinements_in_area[bo] = default_refinement + bo + 1;
+  }
+
+  DSC_LOG_INFO << "Adaption strategy:" << std::endl << std::endl;
+  DSC_LOG_INFO << "Define 'variation = (indicator_on_element - average_indicator) / (maximum_indicator - average_indicator)'"
+               << std::endl;
+  DSC_LOG_INFO << "Subdivide the region [average_indicator,maximum_indicator] into " << number_of_areas << " areas."
+               << std::endl;
+  if (number_of_areas == 1)
+  {
+    DSC_LOG_INFO << "1.: [average_indicator,maximum_indicator]. Mark elements for " << refinements_in_area[0]
+              << " refinements." << std::endl;
+  } else {
+    DSC_LOG_INFO << "1.: [average_indicator," << border[0]
+              << "*maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[0]
+              << " refinements." << std::endl;
+    for (int bo = 1; bo < (number_of_areas - 1); ++bo)
+      DSC_LOG_INFO << bo + 1 << ".: ["
+                << border[bo
+                - 1] << "*average_indicator," << border[bo]
+                << "*maximum_indicator]. If 'variance' in area: mark elements for "
+                << refinements_in_area[bo] << " refinements." << std::endl;
+    DSC_LOG_INFO << number_of_areas << ".: ["
+              << border[number_of_areas
+              - 2] << "*average_indicator,maximum_indicator]. If 'variance' in area: mark elements for "
+              << refinements_in_area[number_of_areas - 1] << " refinements." << std::endl;
+  }
+  DSC_LOG_INFO << "Default refinement for elements with 'variance <= 0 ': " << default_refinement << std::endl;
+
+
+  if (result.estimated_error < error_tolerance_)
+  {
+    repeat = false;
+    //!TODO profiler
+//    DSC_LOG_INFO << "Total HMM time = " << total_hmm_time << "s." << std::endl;
+//    DSC_LOG_INFO << std::endl << std::endl << "Total HMM time = " << total_hmm_time << "s." << std::endl << std::endl;
+  } else {
+
+    int element_number = 0;
+    typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
+    const IteratorType endit_test = discreteFunctionSpace.end();
+    for (IteratorType it = discreteFunctionSpace.begin(); it != endit_test; ++it)
+    {
+      int additional_refinement;
+      if (result.local_error_indicator[element_number] <= result.average_loc_indicator)
+      {
+        additional_refinement = default_refinement;
+      } else
+      {
+        const double variation = (result.local_error_indicator[element_number] - result.average_loc_indicator)
+                           / (result.maximal_loc_indicator - result.average_loc_indicator);
+
+        if (number_of_areas == 1)
+        {
+          additional_refinement = refinements_in_area[0];
+        } else
+        {
+          if (variation <= border[0])
+          {
+            additional_refinement = refinements_in_area[0];
+          }
+          for (int bo = 1; bo <= (number_of_areas - 2); ++bo) {
+            if ( (variation > border[bo - 1]) && (variation <= border[bo]) )
+            {
+              additional_refinement = refinements_in_area[bo];
+            }
+          }
+          if (variation > border[number_of_areas - 2])
+          {
+            additional_refinement = refinements_in_area[number_of_areas - 1];
+          }
+        }
+      }
+      discreteFunctionSpace.gridPart().grid().mark(additional_refinement, *it);
+      element_number += 1;
+    }
+    adaptationManager.adapt();
+  }
+  return repeat;
+}
+
 //! the main hmm computation
 template < class HMMTraits >
 void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
@@ -336,9 +465,9 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
       typedef DiscreteEllipticOperator< typename HMM::DiscreteFunctionType,
                                         typename HMM::HomDiffusionType, typename HMM::MassTermType > HomEllipticOperatorType;
 
-      const HomEllipticOperatorType hom_discrete_elliptic_op(finerDiscreteFunctionSpace, hom_diffusion_op);
+      HomEllipticOperatorType hom_discrete_elliptic_op(finerDiscreteFunctionSpace, hom_diffusion_op);
 
-      const typename HMM::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
+      typename HMM::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
 
       typename HMM::DiscreteFunctionType hom_rhs("homogenized rhs", finerDiscreteFunctionSpace);
       hom_rhs.clear();
@@ -427,123 +556,9 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
     if (!DSC_CONFIG.get("hmm.adaptive", true))
       break;
 
-    int default_refinement = 0;
-    // double error_tolerance_ = 0.2;
-    // int(...) rundet ab zum naechsten Integer
-    // assuming we had a quadratic order of convergence of the error estimator and
-    // that we have a certain estimated error for the current uniform grid, than we can compute how many additional
-    // uniform refinements are required to get under the error (estimator) tolerance:
-    // number_of_uniform_refinments = int( sqrt( (\eta_have) / (\eta_want) ) )
-    // (obtained from the EOC formula)
-    // uniform contribution only for the first loop cycle
-    if (loop_cycle == 1)
-    {
-      // "divided by 2.0" we go half the way with a uniform computation
-      const int number_of_uniform_refinements = 2 * int(int( sqrt(result.estimated_error / error_tolerance_) ) / 2.0);
-      DSC_LOG_INFO << std::endl << "Uniform default refinement:" << std::endl << std::endl;
-      DSC_LOG_INFO << "sqrt( estimated_error / error_tolerance_ ) = "
-                << sqrt(result.estimated_error / error_tolerance_) << std::endl;
-      DSC_LOG_INFO << "number_of_uniform_refinements = " << number_of_uniform_refinements << std::endl;
-      DSC_LOG_INFO << "***************" << std::endl << std::endl;
+    if (!adapt<HMM>(result, loop_cycle, error_tolerance_, discreteFunctionSpace, adaptationManager))
+      break;
 
-      default_refinement = number_of_uniform_refinements;
-    }
-
-    const int number_of_areas = (loop_cycle == 1) ? 1 : 2;
-
-    std::vector<double> border(number_of_areas - 1);
-    border[0] = 0.5;
-    for (int bo = 1; bo < (number_of_areas - 1); ++bo)
-    {
-      border[bo] = border[bo - 1] + ( (1.0 - border[bo - 1]) / 2.0 );
-    }
-
-    // 3 areas: 1: |0-30%| 2: |30-80%| 3: |80-100%|
-    // border[0] = 0.3;
-    // border[1] = 0.8;
-    // border[2] = 0.95;
-
-    std::vector<int> refinements_in_area(number_of_areas);
-    for (int bo = 0; bo < number_of_areas; ++bo)
-    {
-      refinements_in_area[bo] = default_refinement + bo + 1;
-    }
-
-    DSC_LOG_INFO << "Adaption strategy:" << std::endl << std::endl;
-    DSC_LOG_INFO << "Define 'variation = (indicator_on_element - average_indicator) / (maximum_indicator - average_indicator)'"
-                 << std::endl;
-    DSC_LOG_INFO << "Subdivide the region [average_indicator,maximum_indicator] into " << number_of_areas << " areas."
-                 << std::endl;
-    if (number_of_areas == 1)
-    {
-      DSC_LOG_INFO << "1.: [average_indicator,maximum_indicator]. Mark elements for " << refinements_in_area[0]
-                << " refinements." << std::endl;
-    } else {
-      DSC_LOG_INFO << "1.: [average_indicator," << border[0]
-                << "*maximum_indicator]. If 'variance' in area: mark elements for " << refinements_in_area[0]
-                << " refinements." << std::endl;
-      for (int bo = 1; bo < (number_of_areas - 1); ++bo)
-        DSC_LOG_INFO << bo + 1 << ".: ["
-                  << border[bo
-                  - 1] << "*average_indicator," << border[bo]
-                  << "*maximum_indicator]. If 'variance' in area: mark elements for "
-                  << refinements_in_area[bo] << " refinements." << std::endl;
-      DSC_LOG_INFO << number_of_areas << ".: ["
-                << border[number_of_areas
-                - 2] << "*average_indicator,maximum_indicator]. If 'variance' in area: mark elements for "
-                << refinements_in_area[number_of_areas - 1] << " refinements." << std::endl;
-    }
-    DSC_LOG_INFO << "Default refinement for elements with 'variance <= 0 ': " << default_refinement << std::endl;
-
-
-    if (result.estimated_error < error_tolerance_)
-    {
-      repeat = false;
-      DSC_LOG_INFO << "Total HMM time = " << total_hmm_time << "s." << std::endl;
-      DSC_LOG_INFO << std::endl << std::endl << "Total HMM time = " << total_hmm_time << "s." << std::endl << std::endl;
-    } else {
-
-      int element_number = 0;
-      typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-      const IteratorType endit_test = discreteFunctionSpace.end();
-      for (IteratorType it = discreteFunctionSpace.begin(); it != endit_test; ++it)
-      {
-        int additional_refinement;
-        if (result.local_error_indicator[element_number] <= result.average_loc_indicator)
-        {
-          additional_refinement = default_refinement;
-        } else {
-          double variation = (result.local_error_indicator[element_number] - result.average_loc_indicator)
-                             / (result.maximal_loc_indicator - result.average_loc_indicator);
-
-          if (number_of_areas == 1)
-          {
-            additional_refinement = refinements_in_area[0];
-          } else {
-            if (variation <= border[0])
-            {
-              additional_refinement = refinements_in_area[0];
-            }
-
-            for (int bo = 1; bo <= (number_of_areas - 2); ++bo)
-              if ( (variation > border[bo - 1]) && (variation <= border[bo]) )
-              {
-                additional_refinement = refinements_in_area[bo];
-              }
-
-
-            if (variation > border[number_of_areas - 2])
-            {
-              additional_refinement = refinements_in_area[number_of_areas - 1];
-            }
-          }
-        }
-
-        grid.mark(additional_refinement, *it);
-        element_number += 1;
-      }
-      adaptationManager.adapt();
-    }
     DSC_LOG_INFO << std::endl << "#########################################################################"
               << std::endl << std::endl << std::endl;
     loop_cycle += 1;
