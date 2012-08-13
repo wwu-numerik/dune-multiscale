@@ -64,7 +64,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   // current residual
   typename HMM::DiscreteFunctionType hmm_newton_residual(filename + "HMM Newton Residual", hmm_solution.space());
   hmm_newton_residual.clear();
-  const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
+  const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
   #ifndef AD_HOC_COMPUTATION
   double hmm_biCG_tolerance = 1e-8;
   bool hmm_solution_convenient = false;
@@ -237,9 +237,9 @@ HMMResult<HMMTraits>
     typename HMM::DiscreteFunctionType zero_func_coarse(filename + " constant zero function coarse ", discreteFunctionSpace);
     zero_func_coarse.clear();
 
-    if (DSC_CONFIG.get("problem.linear", true)) {
+    if (DSC_CONFIG_GET("problem.linear", true)) {
       // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
-      if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false)) {
+      if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
         //! -------------- solve and save the cell problems for the base function set --------------------------------------
         const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
         const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
@@ -279,7 +279,7 @@ HMMResult<HMMTraits>
       } else {
       // the nonlinear case
       // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
-      if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false))
+      if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false))
       {
         //! -------------- solve and save the cell problems for the macroscopic base function set
         const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
@@ -318,9 +318,9 @@ HMMResult<HMMTraits>
       // number of HMM Newton step (1 = first step)
       // HMM_NEWTON_ITERATION_STEP' Netwon steps have been already performed,
       // the next one is 'HMM_NEWTON_ITERATION_STEP+1' = hmm_iteration_step
-      int hmm_iteration_step = DSC_CONFIG.get("HMM_NEWTON_ITERATION_STEP", 0) + 1;
+      int hmm_iteration_step = DSC_CONFIG_GET("HMM_NEWTON_ITERATION_STEP", 0) + 1;
 
-      const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
+      const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
       #ifdef RESUME_TO_BROKEN_COMPUTATION
       // std :: string location_hmm_newton_step_solution = "data/HMM/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
       char fnewtonname[50];
@@ -345,8 +345,8 @@ HMMResult<HMMTraits>
 
       // the Newton step for the nonlinear HMM problem:
       // L2-Norm of residual < tolerance ?
-      const double hmm_tolerance = DSC_CONFIG.get("problem.stochastic_pertubation", false)
-                                    ? 1e-01 * DSC_CONFIG.get("problem.stochastic_variance",  0.01)
+      const double hmm_tolerance = DSC_CONFIG_GET("problem.stochastic_pertubation", false)
+                                    ? 1e-01 * DSC_CONFIG_GET("problem.stochastic_variance",  0.01)
                                     : 1e-05;
 
 
@@ -356,7 +356,7 @@ HMMResult<HMMTraits>
         long double newton_step_time = clock();
         DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
 
-        if (!DSC_CONFIG.get("AD_HOC_COMPUTATION", false))
+        if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false))
         {
           // solve cell problems for the solution of the last iteration step
           const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
@@ -452,7 +452,7 @@ HMMResult<HMMTraits>
     const auto retval = estimate_error<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                    diffusion_op, rhsassembler, filename, cp_num_manager, hmm_solution);
 
-    const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
+    const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
     #ifdef WRITE_HMM_SOL_TO_FILE
     // for adaptive computations, the saved solution is not suitable for a later usage
     #ifndef ADAPTIVE
@@ -466,7 +466,7 @@ HMMResult<HMMTraits>
     #endif // ifndef ADAPTIVE
     #endif   // #ifdef WRITE_HMM_SOL_TO_FILE
 
-    if (DSC_CONFIG.get("fsr", true) && DSC_CONFIG.get("WRITE_FINESCALE_SOL_TO_FILE", true))
+    if (DSC_CONFIG_GET("fsr", true) && DSC_CONFIG_GET("WRITE_FINESCALE_SOL_TO_FILE", true))
     {
       const int refinement_level_referenceprob_ = typename HMM::ModelProblemDataType().getRefinementLevelReferenceProblem();
       char fine_fname[50];
@@ -483,7 +483,7 @@ HMMResult<HMMTraits>
     //! ******************** End of assembling and solving the HMM problem ***************************
     DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
     //! ----------------- compute L2-errors -------------------
-    if (DSC_CONFIG.get("fsr", true))
+    if (DSC_CONFIG_GET("fsr", true))
     {
       long double timeadapt = clock();
 
@@ -535,7 +535,7 @@ HMMResult<HMMTraits>
 
     #ifdef HOMOGENIZEDSOL_AVAILABLE
 
-    if (DSC_CONFIG.get("fsr", true))
+    if (DSC_CONFIG_GET("fsr", true))
     {
       // not yet modified according to a generalized L2-error, here, homogenized_solution and fem_newton_solution still need
       // to be defined on the same grid!
@@ -565,7 +565,7 @@ HMMResult<HMMTraits>
                                                                     2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
       DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
-      if (DSC_CONFIG.get("fsr", true))
+      if (DSC_CONFIG_GET("fsr", true))
       {
         typename HMM::RangeType fem_newton_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
                                                                        fem_newton_solution,

@@ -579,7 +579,7 @@ int main(int argc, char** argv) {
     init(argc, argv);
     namespace DSC = Dune::Stuff::Common;
     //!TODO include base in config
-    path_ = std::string("data/MsFEM/") + DSC::Parameter::Config().get("global.datadir", "data");
+    path_ = std::string("data/MsFEM/") + DSC_CONFIG_GET("global.datadir", "data");
 
     // generate directories for data output
     DSC::Filesystem::testCreateDirectory(path_);
@@ -587,12 +587,12 @@ int main(int argc, char** argv) {
     std::string save_filename = path_ + "/problem-info.txt";
     DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
-    const int start_level = DSC::Parameter::Config().get("grid.start_level", 4);
-    coarse_grid_level_ = DSC::Parameter::Config().get( "grid.coarse_level", 4, DSC::Parameter::ValidateLess< int >(start_level) );
-    number_of_layers_ = DSC::Parameter::Config().get("grid.oversampling_layers", 4);
+    const int start_level = DSC_CONFIG_GET("grid.start_level", 4);
+    coarse_grid_level_ = DSC_CONFIG_GETV( "grid.coarse_level", 4, DSC::Parameter::ValidateLess< int >(start_level) );
+    number_of_layers_ = DSC_CONFIG_GET("grid.oversampling_layers", 4);
 
     #ifdef ADAPTIVE
-    error_tolerance_ = DSC::Parameter::Config().get("problem.error_tolerance", 1e-6);
+    error_tolerance_ = DSC_CONFIG_GET("problem.error_tolerance", 1e-6);
     #endif   // ifdef ADAPTIVE
 
     // data for the model problem; the information manager
@@ -601,7 +601,7 @@ int main(int argc, char** argv) {
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
     total_refinement_level_
-      = DSC::Parameter::Config().get( "grid.total_refinement", 4, DSC::Parameter::ValidateLess< int >(coarse_grid_level_) );
+      = DSC_CONFIG_GETV( "grid.total_refinement", 4, DSC::Parameter::ValidateLess< int >(coarse_grid_level_) );
 
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();

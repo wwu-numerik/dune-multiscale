@@ -95,7 +95,7 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
     corrector_u_H_on_entity.clear();
 
     // in the linear case, we still need to compute the corrector of u_H:
-    if (DSC_CONFIG.get("problem.linear", true)) {
+    if (DSC_CONFIG_GET("problem.linear", true)) {
       typename HMM::PeriodicDiscreteFunctionType corrector_of_base_func("Corrector of macro base function",
                                                           periodicDiscreteFunctionSpace);
       corrector_of_base_func.clear();
@@ -147,7 +147,7 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
         const typename HMM::EntityType& entity_outside = *it_outside;
 
         // in the linear case, we still need to compute the corrector of u_H:
-        if (DSC_CONFIG.get("problem.linear", true)) {
+        if (DSC_CONFIG_GET("problem.linear", true)) {
           typename HMM::PeriodicDiscreteFunctionType corrector_of_base_func_neighbor("Corrector of macro base function",
                                                                        periodicDiscreteFunctionSpace);
           corrector_of_base_func_neighbor.clear();

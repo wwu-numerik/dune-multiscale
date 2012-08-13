@@ -49,10 +49,10 @@ int main(int argc, char** argv) {
     check_config();
     namespace DSC = Dune::Stuff::Common;
 
-    const std::string path = std::string("data/HMM/") + DSC::Parameter::Config().get("global.datadir", "data");
+    const std::string path = std::string("data/HMM/") + DSC_CONFIG_GET("global.datadir", "data");
     // generate directories for data output
     DSC::Filesystem::testCreateDirectory(path);
-    if ( DSC_CONFIG.get("problem.stochastic_pertubation", false)) {
+    if ( DSC_CONFIG_GET("problem.stochastic_pertubation", false)) {
       //! Do we want to force the algorithm to come to an end?
       // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht
       // erreicht etc.)
@@ -72,14 +72,14 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-    const int refinement_level_macrogrid_ = DSC::Parameter::Config().get("grid.refinement_level_macrogrid", 0);
+    const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
     // grid refinement level for solving the cell problems, i.e. it describes 'h':
-    const int refinement_level_cellgrid = DSC::Parameter::Config().get("grid.refinement_level_cellgrid", 1);
+    const int refinement_level_cellgrid = DSC_CONFIG_GET("grid.refinement_level_cellgrid", 1);
     // (starting) grid refinement level for solving the reference problem
     int refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
     // in general: for the homogenized case = 11 and for the high resolution case = 14
     // Note that this depends on the model problem!
-    if (!DSC_CONFIG.get("fsr", true))
+    if (!DSC_CONFIG_GET("fsr", true))
     //!TODO völliig widersprüchlich zu oben
       refinement_level_referenceprob_ = 8;
 
@@ -116,14 +116,8 @@ int main(int argc, char** argv) {
     Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(UnitCubeName);
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
-    algorithm<HMMTraits>
-        (info,
-          UnitCubeName,
-              macro_grid_pointer,
-              fine_macro_grid_pointer,
-              periodic_grid_pointer,
-              refinement_difference_for_referenceproblem,
-              filename_);
+    algorithm<HMMTraits> (info, UnitCubeName, macro_grid_pointer, fine_macro_grid_pointer,
+              periodic_grid_pointer, refinement_difference_for_referenceproblem, filename_);
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
     //normal
     // macro problem
@@ -138,7 +132,7 @@ int main(int argc, char** argv) {
   return 1;
 } // main
 
-/** \brief constains non-transformed macro stuff that might contain logic
+/** \brief contains non-transformed macro stuff that might contain logic
  * \todo use config instead
  **/
 void check_config()

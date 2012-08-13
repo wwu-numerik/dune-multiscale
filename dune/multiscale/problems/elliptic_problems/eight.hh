@@ -239,7 +239,7 @@ public:
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& /*direction_gradient*/,
                              JacobianRangeType& /*flux*/) const {
-    if (DSC_CONFIG.get("problem.linear", true))
+    if (DSC_CONFIG_GET("problem.linear", true))
       DUNE_THROW(Dune::NotImplemented, "Not yet implemented.");
     else
       DUNE_THROW(Dune::NotImplemented, "Nonlinear example not yet implemented.");

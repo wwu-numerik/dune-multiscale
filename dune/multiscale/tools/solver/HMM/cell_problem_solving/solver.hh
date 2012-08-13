@@ -103,7 +103,7 @@ public:
     // if yes, the solution of the cell problem is also identical to zero. The solver is getting a problem with this
     // situation, which is why we do not solve cell problems for zero-right-hand-side, since we already know the result.
 
-    if (DSC_CONFIG.get("problem.linear", true)) {
+    if (DSC_CONFIG_GET("problem.linear", true)) {
       // assemble the stiffness matrix
       cell_problem_op.assemble_matrix(globalQuadPoint, cell_system_matrix);
       // assemble right hand side of algebraic cell problem
@@ -139,8 +139,8 @@ public:
 
       // the Newton step for for solving the current cell problem (solved with Newton Method):
       // L2-Norm of residual < tolerance ?
-      const double tolerance = DSC_CONFIG.get("problem.stochastic_pertubation", false)
-                               ? 1e-01 * DSC_CONFIG.get("problem.stochastic_variance",  0.01)
+      const double tolerance = DSC_CONFIG_GET("problem.stochastic_pertubation", false)
+                               ? 1e-01 * DSC_CONFIG_GET("problem.stochastic_variance",  0.01)
                                : 1e-06;
 
       while (relative_newton_error > tolerance)
@@ -164,7 +164,7 @@ public:
         {
           DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
         }
-        if ((norm_rhs < DSC_CONFIG.get("max_norm_rhs", 1e-10)))
+        if ((norm_rhs < DSC_CONFIG_GET("max_norm_rhs", 1e-10)))
         {
           break;
         }

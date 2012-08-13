@@ -51,7 +51,7 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
 
   const typename HMM::FirstSourceType f;   // standard source f
 
-  if (DSC_CONFIG.get("problem.linear", true))
+  if (DSC_CONFIG_GET("problem.linear", true))
   {
     DSC_LOG_INFO << "Solving linear problem." << std::endl;
     DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
@@ -223,10 +223,10 @@ void print_info(const ProblemDataType& info, std::ostream& out)
   // note that (delta/epsilon_est) needs to be a positive integer!
   // edge length of the cells in the cell proplems,
   const double delta_ = info.getDelta();
-  const int refinement_level_macrogrid_ = DSC_CONFIG.get("grid.refinement_level_macrogrid", 0);
+  const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
   out << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std::endl
             << std::endl;
-  if (DSC_CONFIG.get("problem.linear", true))
+  if (DSC_CONFIG_GET("problem.linear", true))
     out << "Problem is declared as being LINEAR." << std::endl;
   else
     out << "Problem is declared as being NONLINEAR." << std::endl;
@@ -238,14 +238,14 @@ void print_info(const ProblemDataType& info, std::ostream& out)
   }
   out << "Computations were made for:" << std::endl << std::endl;
   out << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
-  const int refinement_level_cellgrid = DSC_CONFIG.get("grid.refinement_level_cellgrid", 1);
+  const int refinement_level_cellgrid = DSC_CONFIG_GET("grid.refinement_level_cellgrid", 1);
   out << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
   #ifdef TFR
   out << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
   #else
   out << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
   #endif // ifdef TFR
-  if (DSC_CONFIG.get("AD_HOC_COMPUTATION", false)) {
+  if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
     out << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
   } else {
     out << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
@@ -256,11 +256,11 @@ void print_info(const ProblemDataType& info, std::ostream& out)
   out << "Epsilon = " << epsilon_ << std::endl;
   out << "Estimated Epsilon = " << epsilon_est_ << std::endl;
   out << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
-  if (DSC_CONFIG.get("problem.stochastic_pertubation", false))
-    out << std::endl << "Stochastic perturbation added. Variance = " << DSC_CONFIG.get("problem.stochastic_variance", 0.01) << std::endl;
-  if (DSC_CONFIG.get("hmm.adaptive", true)) {
+  if (DSC_CONFIG_GET("problem.stochastic_pertubation", false))
+    out << std::endl << "Stochastic perturbation added. Variance = " << DSC_CONFIG_GET("problem.stochastic_variance", 0.01) << std::endl;
+  if (DSC_CONFIG_GET("hmm.adaptive", true)) {
     //only used in adaptive config
-    const double error_tolerance_ = DSC_CONFIG.get("problem.error_tolerance", 1e-6);
+    const double error_tolerance_ = DSC_CONFIG_GET("problem.error_tolerance", 1e-6);
     out << std::endl << "Adaptive computation. Global error tolerance for program abort = "
               << error_tolerance_ << std::endl;
   }
@@ -452,8 +452,8 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
 
 // UNUSED  RangeType size_of_domain = get_size_of_domain(discreteFunctionSpace);
   static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
-  if (DSC_CONFIG.get("HOMOGENIZEDSOL_AVAILABLE", false)) {
-    if (DSC_CONFIG.get("problem.linear", true)) {
+  if (DSC_CONFIG_GET("HOMOGENIZEDSOL_AVAILABLE", false)) {
+    if (DSC_CONFIG_GET("problem.linear", true)) {
       const std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
       // descretized homogenizer:
 
@@ -496,15 +496,15 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   typename HMM::DiscreteFunctionType fem_newton_solution(filename + " Reference (FEM Newton) Solution", finerDiscreteFunctionSpace);
   fem_newton_solution.clear();
 
-  if (DSC_CONFIG.get("fsr", true))
+  if (DSC_CONFIG_GET("fsr", true))
   {
-    if (DSC_CONFIG.get("fsr_compute", true))
+    if (DSC_CONFIG_GET("fsr_compute", true))
     {
       fsr_compute<HMM>(fem_newton_solution, finerDiscreteFunctionSpace, discrete_elliptic_op,
                        filename, problem_data, rhsassembler);
     }
     //! load und compute sollten sich ausschliessen??
-    if (DSC_CONFIG.get("fsr_load", false))
+    if (DSC_CONFIG_GET("fsr_load", false))
     {
       fsr_load<HMM>(fem_newton_solution, problem_data);
     }
@@ -517,10 +517,10 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   typename HMM::GridPartType gridPart_refHMM(*macro_grid_pointer_refHMM);
   typename HMM::DiscreteFunctionSpaceType discreteFunctionSpace_refHMM(gridPart_refHMM);
   typename HMM::DiscreteFunctionType hmm_reference_solution(filename + " Reference (HMM) Solution", discreteFunctionSpace_refHMM);
-  if (DSC_CONFIG.get("hmm_reference", false))
+  if (DSC_CONFIG_GET("hmm_reference", false))
   {
     //! Macro_'gridLevel'
-    const int gridLevel_refHMM = DSC_CONFIG.get("grid.ref_hmm", 10);
+    const int gridLevel_refHMM = DSC_CONFIG_GET("grid.ref_hmm", 10);
     macro_grid_pointer_refHMM->globalRefine(gridLevel_refHMM);
     hmm_reference_solution.clear();
     const std::string location_hmm_ref = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
@@ -535,7 +535,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   // number of the loop cycle of the while-loop
   int loop_cycle = 1;
   double total_hmm_time = 0.0;
-  const double error_tolerance_ = DSC_CONFIG.get("problem.error_tolerance", 1e-6);
+  const double error_tolerance_ = DSC_CONFIG_GET("problem.error_tolerance", 1e-6);
   bool repeat = true;
   while (repeat == true)
   {
@@ -553,7 +553,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
     const auto result = single_step<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                 diffusion_op, rhsassembler, filename, hmm_solution, fem_newton_solution);
 
-    if (!DSC_CONFIG.get("hmm.adaptive", true))
+    if (!DSC_CONFIG_GET("hmm.adaptive", true))
       break;
 
     if (!adapt<HMM>(result, loop_cycle, error_tolerance_, discreteFunctionSpace, adaptationManager))
