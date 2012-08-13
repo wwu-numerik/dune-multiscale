@@ -777,12 +777,10 @@ public:
     // -------------------------------------------------------
     #endif // ifdef VTK_OUTPUT
 
-    long double starting_time = clock();
+    DSC_PROFILER.startTiming("localproblemsolver-assemble_all");
 
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-    double minimum_time_c_p = 1000000;
-    double DUNE_UNUSED(average_time_c_p) = 0;
-    double maximum_time_c_p = 0;
+    Dune::Stuff::Common::Math::MinMaxAvg<double> cell_time;
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
 
@@ -830,16 +828,14 @@ public:
         local_problem_solution_1.clear();
 
         // take time
-        long double time_now = clock();
+        DSC_PROFILER.startTiming("solvelocalproblem");
 
         // solve the problems
         solvelocalproblem(e[0], local_problem_solution_0);
 
-        // min/max time
-        if ( (clock() - time_now) / CLOCKS_PER_SEC > maximum_time_c_p )
-        { maximum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-        if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
-        { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
+        cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
+        DSC_PROFILER.resetTiming("local_problem_solution");
+
 
         dfw.append(local_problem_solution_0);
 
@@ -880,26 +876,22 @@ public:
                       << subGrid.size(2) << " nodes." << std::endl;
 
         // take time
-        time_now = clock();
+        DSC_PROFILER.startTiming("local_problem_solution");
 
         // solve the problems
         solvelocalproblem(e[1], local_problem_solution_1);
 
         // min/max time
-        if ( (clock() - time_now) / CLOCKS_PER_SEC > maximum_time_c_p )
-        { maximum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-        if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
-        { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
+        cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
+        DSC_PROFILER.resetTiming("local_problem_solution");
 
         dfw.append(local_problem_solution_1);
-
-        // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_0 );
-        // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_1 );
 
         subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
 
         // --------------- writing data output ---------------------
         // (writing)
+        //!TODO refactor into func, see same code above
         #ifdef VTK_OUTPUT
 
         // --------- data output local solution --------------
@@ -926,19 +918,19 @@ public:
       }
     } // end: 'if ( writer_is_open )'
 
+    const auto total_time = DSC_PROFILER.stopTiming("localproblemsolver-assemble_all");
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
     DSC_LOG_INFO << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."
                   << std::endl;
     DSC_LOG_INFO << dimension * number_of_coarse_grid_entities << " local MsFEM problems solved in total."
                   << std::endl;
-    DSC_LOG_INFO << "Minimum time for solving a local problem = " << minimum_time_c_p << "s." << std::endl;
-    DSC_LOG_INFO << "Maximum time for solving a localproblem = " << maximum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s." << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s." << std::endl;
     DSC_LOG_INFO << "Average time for solving a localproblem = "
-                  << ( (clock()
-          - starting_time) / CLOCKS_PER_SEC ) / (dimension * number_of_coarse_grid_entities) << "s." << std::endl;
+                  << cell_time.average()<< "s." << std::endl;
     DSC_LOG_INFO << "Total time for computing and saving the localproblems = "
-                    << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
+                    << total_time << "s," << std::endl << std::endl;
   } // assemble_all
 }; // end class
 } // end namespace Dune

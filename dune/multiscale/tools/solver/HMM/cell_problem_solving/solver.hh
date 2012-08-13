@@ -370,12 +370,10 @@ public:
 
     const bool writer_is_open = dfw.is_open();
 
-    long double starting_time = clock();
+    DSC_PROFILER.startTiming("solver-saveTheSolutions_baseSet");
 
     // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
-    double minimum_time_c_p = 1000000;
-    double DUNE_UNUSED(average_time_c_p) = 0;
-    double maximum_time_c_p = 0;
+    Dune::Stuff::Common::Math::MinMaxAvg<double> cell_time;
 
     int number_of_cell_problem = 0;
 
@@ -389,15 +387,10 @@ public:
 
         // entity
         const EntityType& entity = *it;
-
-        const BaseFunctionSetType baseSet
-          = discreteFunctionSpace.baseFunctionSet(entity);
-
+        const BaseFunctionSetType baseSet = discreteFunctionSpace.baseFunctionSet(entity);
         const EntityGeometryType& geometry = entity.geometry();
-
-        EntityQuadratureType quadrature(entity, 0);
-
-        DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+        const EntityQuadratureType quadrature(entity, 0);
+        const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
         // number of base functions on entity
         const int numBaseFunctions = baseSet.size();
@@ -420,16 +413,13 @@ public:
           correctorPhi_i.clear();
 
           // take time
-          long double time_now = clock();
+          DSC_PROFILER.startTiming("solvecellproblem");
 
           solvecellproblem< JacobianRangeType >
             (gradientPhi[i], barycenter_of_entity, correctorPhi_i);
 
-          // min/max time
-          if ( (clock() - time_now) / CLOCKS_PER_SEC > maximum_time_c_p )
-          { maximum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-          if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
-          { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
+          cell_time(DSC_PROFILER.stopTiming("solvecellproblem"));
+          DSC_PROFILER.resetTiming("solvecellproblem");
 
           dfw.append(correctorPhi_i);
 
@@ -444,17 +434,17 @@ public:
       } // end: for-loop: IteratorType it
     } // end: 'if ( writer_is_open )'
 
-
+    const auto total_time = DSC_PROFILER.getTiming("solver-saveTheSolutions_baseSet") / 1000.f;
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In method: saveTheSolutions_baseSet." << std::endl << std::endl;
     DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
                   << std::endl;
-    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
-    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << cell_time.min() << "s." << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << cell_time.max()  << "s." << std::endl;
     DSC_LOG_INFO << "Average time for solving a cell problem = "
-                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) / number_of_cell_problem << "s." << std::endl;
+                  << cell_time.average() << "s." << std::endl;
     DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
-                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
+                  << total_time << "s," << std::endl << std::endl;
   } // saveTheSolutions_baseSet
 
 
@@ -497,29 +487,24 @@ public:
     std::string cell_solution_location = "data/HMM/" + filename + "_cellSolutions_discFunc";
     DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
 
-    long double starting_time = clock();
+    DSC_PROFILER.startTiming("solver-saveTheSolutions_discFunc");
 
     // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
-    double minimum_time_c_p = 1000000;
-    double DUNE_UNUSED(average_time_c_p) = 0;
-    double maximum_time_c_p = 0;
+    Dune::Stuff::Common::Math::MinMaxAvg<double> cell_time;
 
     const DiscreteFunctionSpaceType& discreteFunctionSpace = macro_discrete_function.space();
 
     if (dfw.is_open())
     {
       int number_of_entity = 0;
-      IteratorType endit = discreteFunctionSpace.end();
+      const IteratorType endit = discreteFunctionSpace.end();
       for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
       {
         // entity
         const EntityType& entity = *it;
-
         const EntityGeometryType& geometry = entity.geometry();
-
-        EntityQuadratureType quadrature(entity, 0);
-
-        DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+        const EntityQuadratureType quadrature(entity, 0);
+        const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
         LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
         JacobianRangeType grad_macro_discrete_function;
@@ -529,33 +514,31 @@ public:
                                                              periodicDiscreteFunctionSpace_);
 
         // take time
-        long double time_now = clock();
+        DSC_PROFILER.startTiming("solver-saveTheSolutions_discFunc-solvecellproblem");
 
         solvecellproblem< JacobianRangeType >
           (grad_macro_discrete_function, barycenter_of_entity, cell_solution_on_entity);
 
         // min/max time
-        if ( (clock() - time_now) / CLOCKS_PER_SEC > maximum_time_c_p )
-        { maximum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-        if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
-        { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
+        cell_time(DSC_PROFILER.stopTiming("solver-saveTheSolutions_discFunc-solvecellproblem"));
+        DSC_PROFILER.resetTiming("solver-saveTheSolutions_discFunc-solvecellproblem");
 
         dfw.append(cell_solution_on_entity);
         number_of_entity += 1;
       } // end: for-loop: IteratorType it
     } // end: 'if ( writer_is_open )'
 
+    const auto total_time = DSC_PROFILER.stopTiming("solver-saveTheSolutions_discFunc");
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In method: saveTheSolutions_discFunc." << std::endl << std::endl;
     DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
                   << std::endl;
-    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
-    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << cell_time.min() << "s." << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << cell_time.max() << "s." << std::endl;
     DSC_LOG_INFO << "Average time for solving a cell problem = "
-                  << ( (clock()
-          - starting_time) / CLOCKS_PER_SEC ) / discreteFunctionSpace.grid().size(0) << "s." << std::endl;
+                  << cell_time.average() << "s." << std::endl;
     DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
-                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
+                  << total_time << "s," << std::endl << std::endl;
   } // saveTheSolutions_discFunc
 
   // compute and save solutions of the jacobian corrector cell problems for the base function set of the
@@ -608,12 +591,10 @@ public:
     DiscreteFunctionReader discrete_function_reader( (cell_solution_discFunc_location).c_str() );
     reader_is_open = discrete_function_reader.open();
 
-    long double starting_time = clock();
+    DSC_PROFILER.startTiming("solver-saveTheJacCorSolutions_baseSet_discFunc");
 
     // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
-    double minimum_time_c_p = 1000000;
-//    double average_time_c_p = 0;
-    double maximum_time_c_p = 0;
+    Dune::Stuff::Common::Math::MinMaxAvg<double> cell_time;
 
     int number_of_cell_problem = 0;
 
@@ -630,14 +611,9 @@ public:
 
         // entity
         const EntityType& entity = *it;
-
-        const BaseFunctionSetType baseSet
-          = discreteFunctionSpace.baseFunctionSet(entity);
-
+        const BaseFunctionSetType baseSet = discreteFunctionSpace.baseFunctionSet(entity);
         const EntityGeometryType& geometry = entity.geometry();
-
         const EntityQuadratureType quadrature(entity, 0);
-
         const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
         // number of base functions on entity
@@ -671,7 +647,7 @@ public:
           jac_corrector_Phi_i.clear();
 
           // take time
-          long double time_now = clock();
+          DSC_PROFILER.startTiming("solver-saveTheJacCorSolutions_baseSet_discFunc-solve_jacobiancorrector_cellproblem");
 
           solve_jacobiancorrector_cellproblem< JacobianRangeType >
             (gradientPhi[i],
@@ -681,10 +657,7 @@ public:
             jac_corrector_Phi_i);
 
           // min/max time
-          if ( (clock() - time_now) / CLOCKS_PER_SEC > maximum_time_c_p )
-          { maximum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-          if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
-          { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
+          cell_time(DSC_PROFILER.stopTiming("solver-saveTheJacCorSolutions_baseSet_discFunc-solve_jacobiancorrector_cellproblem"));
 
           dfw.append(jac_corrector_Phi_i);
 
@@ -702,16 +675,17 @@ public:
       } // end: for-loop: IteratorType it
     } // end: 'if ( writer_is_open )'
 
+    const auto total_time = DSC_PROFILER.stopTiming("solver-saveTheJacCorSolutions_baseSet_discFunc");
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In method: saveTheJacCorSolutions_baseSet_discFunc." << std::endl << std::endl;
     DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
                   << std::endl;
-    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << minimum_time_c_p << "s." << std::endl;
-    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << maximum_time_c_p << "s." << std::endl;
+    DSC_LOG_INFO << "Minimum time for solving a cell problem = " << cell_time.min() << "s." << std::endl;
+    DSC_LOG_INFO << "Maximum time for solving a cell problem = " << cell_time.max() << "s." << std::endl;
     DSC_LOG_INFO << "Average time for solving a cell problem = "
-                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) / number_of_cell_problem << "s." << std::endl;
+                  << cell_time.average()<< "s." << std::endl;
     DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
-                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
+                  << total_time << "s," << std::endl << std::endl;
   } // saveTheJacCorSolutions_baseSet_discFunc
 }; // end class
 } //namespace Dune {

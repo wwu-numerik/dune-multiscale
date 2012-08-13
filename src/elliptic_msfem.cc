@@ -579,6 +579,7 @@ int main(int argc, char** argv) {
     init(argc, argv);
     namespace DSC = Dune::Stuff::Common;
     //!TODO include base in config
+    DSC_PROFILER.startTiming("msfem_all");
     path_ = std::string("data/MsFEM/") + DSC_CONFIG_GET("global.datadir", "data");
 
     // generate directories for data output
@@ -646,7 +647,7 @@ int main(int argc, char** argv) {
     //normal
     // macro problem
 
-    const long double cpu_time = clock() / double(CLOCKS_PER_SEC);
+    const auto cpu_time = DSC_PROFILER.stopTiming("msfem_all");
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
     return 0;
   } catch (Dune::Exception& e) {

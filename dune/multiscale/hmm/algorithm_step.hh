@@ -50,6 +50,9 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
   }
 } // boundaryTreatment
 
+/**
+ * \return true if a program should continue with a new newton step
+ **/
 template < class HMM >
 bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
                                  typename HMM::DiscreteFunctionType& hmm_solution,
@@ -161,13 +164,12 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   // residual solution almost identical to zero: break
   if (relative_newton_error <= hmm_tolerance)
   {
-    //!TODO replace with profiler
-//      newton_step_time = clock() - newton_step_time;
-//      newton_step_time = newton_step_time / CLOCKS_PER_SEC;
-//      DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
-//                << std::endl << std::endl;
-//      DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
-//      DSC_LOG_INFO << "....................................................." << std::endl << std::endl;
+      const auto newton_step_time = DSC_PROFILER.getTiming("newton_step_", hmm_iteration_step);
+      DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
+                << std::endl << std::endl;
+      DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
+      DSC_LOG_INFO << "....................................................." << std::endl << std::endl;
+      return false;
   }
   return true;
 }
@@ -353,7 +355,7 @@ HMMResult<HMMTraits>
       while (relative_newton_error > hmm_tolerance)
       {
         // (here: hmm_solution = solution from the last iteration step)
-        long double newton_step_time = clock();
+        DSC_PROFILER.startTiming("newton_step_", hmm_iteration_step);
         DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
 
         if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false))
@@ -414,15 +416,14 @@ HMMResult<HMMTraits>
 
         if (!process_hmm_newton_residual<HMM>(relative_newton_error, hmm_solution, hmm_newton_matrix, hmm_newton_rhs,
                                     hmm_iteration_step, filename, hmm_tolerance)) {
-          break;//invalid dofs in residual
+          break;//invalid dofs in residual or
         }
 
         hmm_iteration_step += 1;
 
         if (relative_newton_error > hmm_tolerance)
         {
-          newton_step_time = clock() - newton_step_time;
-          newton_step_time = newton_step_time / CLOCKS_PER_SEC;
+          auto newton_step_time = DSC_PROFILER.stopTiming("newton_step_", hmm_iteration_step) / 1000.f;
           DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
                       << std::endl << std::endl;
 
@@ -485,7 +486,7 @@ HMMResult<HMMTraits>
     //! ----------------- compute L2-errors -------------------
     if (DSC_CONFIG_GET("fsr", true))
     {
-      long double timeadapt = clock();
+      DSC_PROFILER.startTiming("timeadapt");
 
       // expensive hack to deal with discrete functions, defined on different grids
       Dune::ImprovedL2Error< typename HMM::DiscreteFunctionType > impL2error;
@@ -495,9 +496,7 @@ HMMResult<HMMTraits>
 
       DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
 
-      timeadapt = clock() - timeadapt;
-      timeadapt = timeadapt / CLOCKS_PER_SEC;
-
+      auto timeadapt = DSC_PROFILER.stopTiming("timeadapt") / 1000.f;
       // if it took longer then 1 minute to compute the error:
       if (timeadapt > 60)
       {
@@ -506,27 +505,18 @@ HMMResult<HMMTraits>
     }
 
     #ifdef HMM_REFERENCE
-    long double timeadapthmmref = clock();
-
-    RangeType hmm_vs_hmm_ref_error = impL2error.norm_adaptive_grids_2< hmm_polorder >(
-      hmm_solution,
-      hmm_reference_solution);
-
-    DSC_LOG_INFO << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl << std::endl;
-    if ( DSC_LOG_INFO.is_open() )
     {
-      DSC_LOG_INFO << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl;
-    }
+      DSC_PROFILER.startTiming("timeadapthmmref", hmm_iteration_step)
 
-    timeadapthmmref = clock() - timeadapthmmref;
-    timeadapthmmref = timeadapthmmref / CLOCKS_PER_SEC;
+      RangeType hmm_vs_hmm_ref_error = impL2error.norm_adaptive_grids_2< hmm_polorder >(
+        hmm_solution,
+        hmm_reference_solution);
 
-    // if it took longer then 1 minute to compute the error:
-    if (timeadapthmmref > 60)
-    {
-      DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
+      DSC_LOG_INFO << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl << std::endl;
 
-      if ( DSC_LOG_INFO.is_open() )
+      auto timeadapthmmref = DSC_PROFILER.stopTiming("timeadapthmmref") / 1000.f;
+      // if it took longer then 1 minute to compute the error:
+      if (timeadapthmmref > 60)
       {
         DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
       }
@@ -551,10 +541,7 @@ HMMResult<HMMTraits>
                                                                                                  homogenized_solution);
 
     DSC_LOG_INFO << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl << std::endl;
-    if ( DSC_LOG_INFO.is_open() )
-    {
-      DSC_LOG_INFO << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl;
-    }
+
     #endif // ifdef HOMOGENIZEDSOL_AVAILABLE
 
     if (HMM::ModelProblemDataType::has_exact_solution)

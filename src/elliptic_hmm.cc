@@ -49,6 +49,7 @@ int main(int argc, char** argv) {
     check_config();
     namespace DSC = Dune::Stuff::Common;
 
+    DSC_PROFILER.startTiming("total_cpu");
     const std::string path = std::string("data/HMM/") + DSC_CONFIG_GET("global.datadir", "data");
     // generate directories for data output
     DSC::Filesystem::testCreateDirectory(path);
@@ -122,8 +123,7 @@ int main(int argc, char** argv) {
     //normal
     // macro problem
 
-    long double cpu_time = clock();
-    cpu_time = cpu_time / CLOCKS_PER_SEC;
+    const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
     return 0;
   } catch (Dune::Exception& e) {

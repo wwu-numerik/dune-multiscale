@@ -24,6 +24,7 @@
 // dune-fem includes:
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/stuff/common/math.hh>
 
 // / done
 
@@ -858,12 +859,11 @@ public:
     // number of coarse grid entities (of codim 0).
     const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
-    long double starting_time = clock();
+    DSC_PROFILER.startTiming("conservative_flux_solver-solve_all_subgrids");
 
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-    double minimum_time_c_p = 1000000;
-    double DUNE_UNUSED(average_time_c_p) = 0;
-    double maximum_time_c_p = 0;
+    Dune::Stuff::Common::Math::MinMaxAvg<double> cell_time;
+
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
     const LeafIndexSetType& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
@@ -892,7 +892,7 @@ public:
 
       char location_lps[50];
       sprintf(location_lps, "/local_problems/_localProblemSolutions_%d", global_index_entity);
-      std::string location_lps_s(location_lps);
+      const std::string location_lps_s(location_lps);
 
       std::string local_solution_location;
 
@@ -905,12 +905,12 @@ public:
       reader_is_open = discrete_function_reader.open();
 
       if (reader_is_open)
-      { discrete_function_reader.read(0, local_problem_solution_e0); } else {
+      { discrete_function_reader.read(0, local_problem_solution_e0);
+        discrete_function_reader.read(1, local_problem_solution_e1);
+      } else {
         DUNE_THROW(Dune::InvalidStateException,"Error! Could not read data file for the conservative flux problem solutions.");
       }
 
-      if (reader_is_open)
-      { discrete_function_reader.read(1, local_problem_solution_e1); }
 
       SubGridDiscreteFunctionType conservative_flux_e0("Conservative Flux for e_0", localDiscreteFunctionSpace);
       SubGridDiscreteFunctionType conservative_flux_e1("Conservative Flux for e_1", localDiscreteFunctionSpace);
@@ -919,50 +919,38 @@ public:
                 << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
 
       // take time
-      long double time_now = clock();
+      DSC_PROFILER.startTiming("local_problem_solution");
 
       this->solve(e[0], local_problem_solution_e0, global_index_entity, 0, conservative_flux_e0);
 
-      // min/max time
-      if ( (clock() - time_now) / CLOCKS_PER_SEC > maximum_time_c_p )
-      { maximum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-      if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
-      { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-
       DSC_LOG_INFO << "Number of the 'conservative flux problem': "
-                << (dimension
-          * global_index_entity) + 1 << " (of "
+                << (dimension * global_index_entity) + 1 << " (of "
                 << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
 
-      // take time
-      time_now = clock();
+      cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
+      DSC_PROFILER.resetTiming("local_problem_solution");
+      DSC_PROFILER.startTiming("local_problem_solution");
 
       this->solve(e[1], local_problem_solution_e1, global_index_entity, 1, conservative_flux_e1);
 
-      // min/max time
-      if ( (clock() - time_now) / CLOCKS_PER_SEC > maximum_time_c_p )
-      { maximum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-      if ( (clock() - time_now) / CLOCKS_PER_SEC < minimum_time_c_p )
-      { minimum_time_c_p = (clock() - time_now) / CLOCKS_PER_SEC; }
-
-      // oneLinePrint( DSC_LOG_DEBUG, conservative_flux_e0 );
-      // oneLinePrint( DSC_LOG_DEBUG, conservative_flux_e1 );
+      cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
+      DSC_PROFILER.resetTiming("local_problem_solution");
     }
+    const auto total_time = DSC_PROFILER.stopTiming("conservative_flux_solver-solve_all_subgrids");
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In: 'assemble all conservatice fluxes'." << std::endl << std::endl;
     DSC_LOG_INFO << "Conservative Flux determined for " << number_of_coarse_grid_entities
                   << " coarse grid entities." << std::endl;
     DSC_LOG_INFO << dimension * number_of_coarse_grid_entities
                   << " conservative flux problems solved in total." << std::endl;
-    DSC_LOG_INFO << "Minimum time for solving a conservative flux problem = " << minimum_time_c_p << "s."
+    DSC_LOG_INFO << "Minimum time for solving a conservative flux problem = " << cell_time.min() << "s."
                   << std::endl;
-    DSC_LOG_INFO << "Maximum time for solving a conservative flux problem = " << maximum_time_c_p << "s."
+    DSC_LOG_INFO << "Maximum time for solving a conservative flux problem = " << cell_time.max() << "s."
                   << std::endl;
     DSC_LOG_INFO << "Average time for solving a conservative flux problem = "
-                  << ( (clock()
-          - starting_time) / CLOCKS_PER_SEC ) / (dimension * number_of_coarse_grid_entities) << "s." << std::endl;
+                  << cell_time.average() << "s." << std::endl;
     DSC_LOG_INFO << "Total time for computing and saving the conservative flux problems = "
-                  << ( (clock() - starting_time) / CLOCKS_PER_SEC ) << "s," << std::endl << std::endl;
+                  << total_time << "s," << std::endl << std::endl;
 
   } // solve_all
 }; // end class
