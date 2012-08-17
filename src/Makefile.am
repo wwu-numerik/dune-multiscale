@@ -12,7 +12,7 @@ SOURCE_PREFIX=elliptic_hmm elliptic_msfem
 elliptic_hmm_SOURCES = elliptic_hmm.cc
 elliptic_msfem_SOURCES = elliptic_msfem.cc
 
-common_CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
+CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
 	$(UG_CPPFLAGS) \
 	$(AMIRAMESH_CPPFLAGS) \
@@ -27,26 +27,24 @@ elliptic_msfem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(MSFEM_PROBLEM)
 # last).  Also, due to some misunderstanding, a lot of libraries include the
 # -L option in LDFLAGS instead of LIBS -- so we have to include the LDFLAGS
 # here as well.
-common_LDADD = \
+LDADD = \
 	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
 	$(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
 	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
 	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
-	$(UG_LDFLAGS) $(UG_LIBS) -lboost_filesystem -lboost_system \
+	$(UG_LDFLAGS) $(UG_LIBS) $(BOOST_LDFLAGS) \
+	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_TIMER_LIB) $(BOOST_CHRONO_LIB) \
+	-lboost_system -lboost_timer -lboost_chrono\
 	$(DUNEMPILIBS)	\
-	$(LDADD)
-common_LDFLAGS = $(AM_LDFLAGS) \
+	$(DUNE_LDADD)
+LDFLAGS = $(AM_LDFLAGS) \
 	$(DUNEMPILDFLAGS) \
 	$(UG_LDFLAGS) \
 	$(AMIRAMESH_LDFLAGS) \
+	$(BOOST_LDFLAGS) \
 	$(ALBERTA_LDFLAGS) \
 	$(ALUGRID_LDFLAGS) \
 	$(DUNE_LDFLAGS)
-
-elliptic_hmm_LDADD=$(common_LDADD)
-elliptic_msfem_LDADD=$(common_LDADD)
-elliptic_hmm_LDFLAGS=$(common_LDFLAGS)
-elliptic_msfem_LDFLAGS=$(common_LDFLAGS)
 
 .PHONY: all_problems
 all_problems: 

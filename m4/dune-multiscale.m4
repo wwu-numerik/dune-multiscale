@@ -8,9 +8,16 @@ dnl -*- autoconf -*-
 # well as by dune-multiscale itself
 AC_DEFUN([DUNE_MULTISCALE_CHECKS],
 [
-	DUNE_BOOST_BASE(1.41, [] , [] )
+	DUNE_BOOST_BASE(1.48, [DUNE_BOOST_SYSTEM] , [] )
 	AC_REQUIRE(HAVE_DUNE)
 	AC_REQUIRE([GXX0X])
+
+    AX_BOOST_FILESYSTEM
+    AX_BOOST_DATE_TIME
+    AX_BOOST_SYSTEM
+    AX_BOOST_CHRONO
+    AX_BOOST_TIMER
+    AX_BOOST_FUSION
 ])
 
 # Additional checks needed to find dune-multiscale
