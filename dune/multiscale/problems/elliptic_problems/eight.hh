@@ -22,8 +22,8 @@ struct ModelProblemData
 {
   static const bool has_exact_solution = true;
 
-  ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(constants(), filename) {
+  ModelProblemData()
+    : IModelProblemData(constants()) {
     if (constants().get("linear", true))
       DUNE_THROW(Dune::InvalidStateException, "problem eight is entirely nonlinear, but problem.linear was true");
   }

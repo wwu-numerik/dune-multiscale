@@ -51,17 +51,14 @@ namespace Problem {
 class IModelProblemData
 {
 protected:
-  //! name of the file where data is saved
-  const std::string file_name_;
   const Constants constants_;
 
 public:
 
   static const bool has_exact_solution = false;
   //! Constructor for ModelProblemData
-  inline IModelProblemData(const Constants constants, const std::string file_name = "no_name")
-    : file_name_(file_name)
-      , constants_(constants)
+  inline IModelProblemData(const Constants constants)
+    : constants_(constants)
   {}
   virtual ~IModelProblemData()
   {}
@@ -86,7 +83,6 @@ public:
     return constants_.delta;
     // NOTE that (delta/epsilon_est) needs to be a positive integer!
   }
-
 
   /**
    * get the (starting) grid refinement level for solving the reference problem

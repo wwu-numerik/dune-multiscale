@@ -20,8 +20,8 @@ struct ModelProblemData
   : public IModelProblemData
 {
   static const bool has_exact_solution = true;
-  ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(constants(), filename)
+  ModelProblemData()
+    : IModelProblemData(constants())
   {}
 
   inline int get_Number_of_Model_Problem() const {

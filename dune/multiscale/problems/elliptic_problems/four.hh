@@ -19,8 +19,8 @@ CONSTANTSFUNCTION(0.05, 0.05, 0.05)
 struct ModelProblemData
   : public IModelProblemData
 {
-  ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(constants(), filename) {
+  ModelProblemData()
+    : IModelProblemData(constants()) {
   }
 
   inline int get_Number_of_Model_Problem() const {

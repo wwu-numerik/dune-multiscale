@@ -61,8 +61,8 @@ CONSTANTSFUNCTION(0.05, 0.0, 0.0)
 struct ModelProblemData
   : public IModelProblemData
 {
-  ModelProblemData(const std::string filename = "no_name")
-    : IModelProblemData(constants(), filename) {
+  ModelProblemData()
+    : IModelProblemData(constants()) {
     assert(!constants_.epsilon != 0.0);
     assert(!constants_.epsilon_est != 0.0);
   }
