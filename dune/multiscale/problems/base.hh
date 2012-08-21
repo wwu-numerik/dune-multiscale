@@ -54,7 +54,6 @@ protected:
   //! name of the file where data is saved
   const std::string file_name_;
   const Constants constants_;
-  int current_number_of_cell_problem_;
 
 public:
 
@@ -63,7 +62,6 @@ public:
   inline IModelProblemData(const Constants constants, const std::string file_name = "no_name")
     : file_name_(file_name)
       , constants_(constants)
-      , current_number_of_cell_problem_(-1)
   {}
   virtual ~IModelProblemData()
   {}
@@ -89,21 +87,6 @@ public:
     // NOTE that (delta/epsilon_est) needs to be a positive integer!
   }
 
-  /** get an information on whether we use the solutions of cell problems that are already computed and saved in a file
-   * with the name 'name_'
-   **/
-  inline std::string getName_and_getBool(bool& use_saved) const {
-    use_saved = (file_name_ != "no_name");
-    return file_name_;
-  }
-
-  inline void set_current_number_of_cell_problem(int number) {
-    current_number_of_cell_problem_ = number;
-  }
-
-  inline int get_current_number_of_cell_problem() const {
-    return current_number_of_cell_problem_;
-  }
 
   /**
    * get the (starting) grid refinement level for solving the reference problem
