@@ -115,8 +115,8 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
           hmm_iteration_step);
   std::string fname_s(fname);
 
-  std::string location = "data/HMM/" + filename + fname_s;
-  DiscreteFunctionWriter dfw( (location).c_str() );
+  std::string location = "HMM/" + filename + fname_s;
+  DiscreteFunctionWriter dfw(location);
   if (dfw.is_open())
     dfw.append(hmm_solution);
 
@@ -460,8 +460,8 @@ HMMResult<HMMTraits>
     char fname[40];
     sprintf(fname, "/hmm_solution_discFunc_refLevel_%d", refinement_level_macrogrid_);
     std::string fname_s(fname);
-    std::string location = "data/HMM/" + filename + fname_s;
-    DiscreteFunctionWriter dfw( (location).c_str() );
+    std::string location = "HMM/" + filename + fname_s;
+    DiscreteFunctionWriter dfw(location);
     if (dfw.is_open())
       dfw.append(hmm_solution);
     #endif // ifndef ADAPTIVE
@@ -473,8 +473,8 @@ HMMResult<HMMTraits>
       char fine_fname[50];
       sprintf(fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
       std::string fine_fname_s(fine_fname);
-      std::string fine_location = "data/HMM/" + filename + fine_fname_s;
-      DiscreteFunctionWriter fine_dfw( (fine_location).c_str() );
+      std::string fine_location = "HMM/" + filename + fine_fname_s;
+      DiscreteFunctionWriter fine_dfw(fine_location);
       if (fine_dfw.is_open())
         fine_dfw.append(fem_newton_solution);
       else

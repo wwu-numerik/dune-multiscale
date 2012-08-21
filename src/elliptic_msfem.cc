@@ -36,13 +36,12 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 #include <dune/fem/io/file/dataoutput.hh>
 #include <dune/fem/io/parameter.hh>
 #include <dune/fem/io/file/datawriter.hh>
-
-// dune-fem includes:
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/h1norm.hh>
 
+#include <dune/stuff/common/filesystem.hh>
 //! local (dune-multiscale) includes
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
@@ -580,7 +579,7 @@ int main(int argc, char** argv) {
     namespace DSC = Dune::Stuff::Common;
     //!TODO include base in config
     DSC_PROFILER.startTiming("msfem_all");
-    path_ = std::string("data/MsFEM/") + DSC_CONFIG_GET("global.datadir", "data");
+    path_ = std::string("MsFEM/");
 
     // generate directories for data output
     DSC::Filesystem::testCreateDirectory(path_);

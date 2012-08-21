@@ -534,7 +534,6 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   //! ************************* Assembling and solving the HMM problem ****************************
   // number of the loop cycle of the while-loop
   int loop_cycle = 1;
-  double total_hmm_time = 0.0;
   const double error_tolerance_ = DSC_CONFIG_GET("problem.error_tolerance", 1e-6);
   bool repeat = true;
   while (repeat == true)

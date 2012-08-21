@@ -50,9 +50,8 @@ int main(int argc, char** argv) {
     namespace DSC = Dune::Stuff::Common;
 
     DSC_PROFILER.startTiming("total_cpu");
-    const std::string path = std::string("data/HMM/") + DSC_CONFIG_GET("global.datadir", "data");
-    // generate directories for data output
-    DSC::Filesystem::testCreateDirectory(path);
+    const std::string path = std::string("HMM/");
+
     if ( DSC_CONFIG_GET("problem.stochastic_pertubation", false)) {
       //! Do we want to force the algorithm to come to an end?
       // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht

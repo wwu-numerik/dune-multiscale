@@ -771,7 +771,7 @@ public:
            && ( (F_inverse_of_x[1] >= 0.0) && ( F_inverse_of_x[1] <= (1.0 - F_inverse_of_x[0]) ) ) )
       {
 
-        LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
+        const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
 
         // beschreibe das Dreieck mit Hilfe seiner Eckpunkt-Koordinaten (Konvexkombination) und schaue ob das Zentrum
         // des Fine-Grid elements in dieser Konvexkombination liegt.
@@ -780,7 +780,7 @@ public:
         // (determined in the previous loop):
 
         // create at quadrature with 3 quadrature points:
-        CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);       // 3 points for linear pol in 2D
+        const CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);       // 3 points for linear pol in 2D
         // for the Lagrange Interpolation on the relevant coarse entity:
         DomainType coarse_quad_point[3];
         RangeType local_value_coarse_func[3];
