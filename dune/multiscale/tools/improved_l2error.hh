@@ -434,8 +434,6 @@ public:
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(lp_num_manager.get_location());
 
-    const bool reader_is_open = discrete_function_reader.open();
-    assert(reader_is_open);
     bool error_in_compuation = false;
     // get function spaces
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
@@ -695,7 +693,6 @@ public:
 
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(lp_num_manager.get_location());
-    const bool reader_is_open = discrete_function_reader.open();
 
     bool error_in_compuation = false;
 

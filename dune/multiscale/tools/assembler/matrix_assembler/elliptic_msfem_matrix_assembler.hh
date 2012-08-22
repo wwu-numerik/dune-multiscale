@@ -286,17 +286,10 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
     // the file/place, where we saved the solutions of the cell problems
     const std::string local_solution_location = (boost::format("%s/local_problems/_localProblemSolutions_%d")
                                                 % path_  % global_index_entity).str();
-
-    bool reader_is_open = false;
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
-    reader_is_open = discrete_function_reader.is_open();
-
-    if (reader_is_open)
-    {
-      discrete_function_reader.read(0, local_problem_solution_e0);
-      discrete_function_reader.read(1, local_problem_solution_e1);
-    }
+    discrete_function_reader.read(0, local_problem_solution_e0);
+    discrete_function_reader.read(1, local_problem_solution_e1);
 
     // 1 point quadrature!! We only need the gradient of the base function,
     // which is constant on the whole entity.
@@ -454,8 +447,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
       }
     }
   }
-
-  // discrete_function_reader.close();
 
   // boundary treatment
   const CoarseGridPart& coarseGridPart = coarseDiscreteFunctionSpace_.gridPart();

@@ -17,36 +17,54 @@
 #include <dune/stuff/common/filesystem.hh>
 #include <boost/filesystem/path.hpp>
 
+/**
+ * \brief simple discrete function to disk writer
+ * this class isn't type safe in the sense that different appends may append
+ * non-convertible discrete function implementations
+ * \todo base on discrete's functions write_xdr functionality
+ */
 class DiscreteFunctionWriter
 {
 public:
+  /**
+   * \brief DiscreteFunctionWriter
+   * \param filename will open fstream at config["global.datadir"]/filename
+   *  filename may include additional path components
+   * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
+   */
   DiscreteFunctionWriter(const std::string filename)
     : filename_(filename)
     , dir_(DSC_CONFIG_GET("global.datadir", "data"))
     , file_(Dune::Stuff::Common::Filesystem
             ::make_ofstream(dir_ / filename_,
                             std::fstream::trunc | std::fstream::out | std::fstream::binary))
-  {}
+  {
+    if(!file_->is_open())
+      DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for writing") % filename_ % dir_ );
+  }
+
+  /**
+   * \copydoc DiscreteFunctionReader()
+   */
   DiscreteFunctionWriter(const boost::filesystem::path& path)
     : filename_(path.string())
     , dir_(DSC_CONFIG_GET("global.datadir", "data"))
     , file_(Dune::Stuff::Common::Filesystem
             ::make_ofstream(dir_ / filename_,
                             std::fstream::trunc | std::fstream::out | std::fstream::binary))
-  {}
+  {
+    if(!file_->is_open())
+      DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for writing") % filename_ % dir_ );
+  }
 
   ~DiscreteFunctionWriter() {
     if (file_->is_open())
       file_->close();
   }
 
-  bool is_open() const {
+  bool Kis_open() const {
     return file_->is_open();
   }
-
-  bool DUNE_DEPRECATED_MSG("filestream is opened in ctor") open() {
-    return file_->is_open();
-  } // open
 
   template< class DFType >
   void append(const DFType& df) {
@@ -80,6 +98,12 @@ private:
   std::unique_ptr<boost::filesystem::ofstream> file_;
 };
 
+/**
+ * \brief simple discrete function from disk reader
+ * this class isn't type safe in the sense that different appends may append
+ * non-convertible discrete function implementations
+ * \todo base on discrete's functions write_xdr functionality
+ */
 class DiscreteFunctionReader
 {
   void init() {
@@ -122,20 +146,12 @@ public:
       file_->close();
   }
 
-  bool is_open() const {
+  bool Kis_open() const {
     return file_->is_open();
   }
-
-  bool DUNE_DEPRECATED_MSG("filestream is opened in ctor") open() const {
-    return file_->is_open();
-  } // open
 
   long size() const {
     return size_;
-  }
-
-  void close() {
-    file_->close();
   }
 
   template< class DFType >

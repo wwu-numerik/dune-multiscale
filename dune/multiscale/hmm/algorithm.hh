@@ -181,10 +181,7 @@ void fsr_load(typename HMM::DiscreteFunctionType& fem_newton_solution,
                              / reference_solution_name_s;
 
   // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_ref(location_fine_scale_ref);
-  discrete_function_reader_ref.open();
-
-  discrete_function_reader_ref.read(0, fem_newton_solution);
+  DiscreteFunctionReader(location_fine_scale_ref).read(0, fem_newton_solution);
   DSC_LOG_INFO << "fine scale reference read." << std::endl;
 }
 

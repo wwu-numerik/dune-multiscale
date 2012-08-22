@@ -131,7 +131,6 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader(cell_solution_location);
-  const bool reader_is_open = discrete_function_reader.is_open();
 
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
@@ -192,10 +191,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       cell_problem_solver.template solvecellproblem< JacobianRangeType >
         ( gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]) );
       #else // ifdef AD_HOC_COMPUTATION
-      if (reader_is_open)
-      {
-        discrete_function_reader.read( cell_problem_id[i], *(corrector_Phi[i]) );
-      }
+      discrete_function_reader.read( cell_problem_id[i], *(corrector_Phi[i]) );
       #endif // ifdef AD_HOC_COMPUTATION
     }
 

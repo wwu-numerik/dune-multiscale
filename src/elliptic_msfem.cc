@@ -439,9 +439,7 @@ void algorithm(const std::string& macroGridName) {
   // ---------------------- write discrete msfem solution to file ---------
   const std::string location = (boost::format("%s/msfem_solution_discFunc_refLevel_%d_%d")
                                 % path_ %  total_refinement_level_ % coarse_grid_level_).str();
-  DiscreteFunctionWriter dfw(location);
-  if (dfw.is_open())
-    dfw.append(msfem_solution);
+  DiscreteFunctionWriter(location).append(msfem_solution);
   //! --------------------------------------------------------------------
 
   //! ------------------------------------------------------------
@@ -533,9 +531,7 @@ void algorithm(const std::string& macroGridName) {
   // ------------- write discrete fem solution to file -----------
   const std::string fine_location = (boost::format("%s/fem_solution_discFunc_refLevel_%d")
                                      % path_ % total_refinement_level_).str();
-  DiscreteFunctionWriter fem_dfw(fine_location);
-  if (fem_dfw.is_open())
-    fem_dfw.append(fem_solution);
+  DiscreteFunctionWriter(fine_location).append(fem_solution);
 
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
   //! ----------------- compute L2- and H1- errors -------------------

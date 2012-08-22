@@ -368,8 +368,6 @@ public:
     std::string cell_solution_location = "HMM/" + filename + "_cellSolutions_baseSet";
     DiscreteFunctionWriter dfw(cell_solution_location);
 
-    const bool writer_is_open = dfw.is_open();
-
     DSC_PROFILER.startTiming("solver-saveTheSolutions_baseSet");
 
     // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
@@ -377,62 +375,60 @@ public:
 
     int number_of_cell_problem = 0;
 
-    if (writer_is_open)
+    IteratorType endit = discreteFunctionSpace.end();
+    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
     {
-      IteratorType endit = discreteFunctionSpace.end();
-      for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+      // gradients of the macroscopic base functions
+      JacobianRangeType gradientPhi[maxnumOfBaseFct];
+
+      // entity
+      const EntityType& entity = *it;
+      const BaseFunctionSetType baseSet = discreteFunctionSpace.baseFunctionSet(entity);
+      const EntityGeometryType& geometry = entity.geometry();
+      const EntityQuadratureType quadrature(entity, 0);
+      const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+
+      // number of base functions on entity
+      const int numBaseFunctions = baseSet.size();
+
+      // calc Jacobian inverse before volume is evaluated
+      const FieldMatrix< double, dimension, dimension >& inv
+        = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
+
+      PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
+
+      for (int i = 0; i < numBaseFunctions; ++i)
       {
-        // gradients of the macroscopic base functions
-        JacobianRangeType gradientPhi[maxnumOfBaseFct];
+        baseSet.jacobian(i, quadrature[0 /*=quadraturePoint*/], gradientPhi[i]);
+        // multiply with transpose of jacobian inverse
+        gradientPhi[i][0] = FMatrixHelp::mult(inv, gradientPhi[i][0]);
+      }
 
-        // entity
-        const EntityType& entity = *it;
-        const BaseFunctionSetType baseSet = discreteFunctionSpace.baseFunctionSet(entity);
-        const EntityGeometryType& geometry = entity.geometry();
-        const EntityQuadratureType quadrature(entity, 0);
-        const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+      for (int i = 0; i < numBaseFunctions; ++i)
+      {
+        correctorPhi_i.clear();
 
-        // number of base functions on entity
-        const int numBaseFunctions = baseSet.size();
+        // take time
+        DSC_PROFILER.startTiming("solvecellproblem");
 
-        // calc Jacobian inverse before volume is evaluated
-        const FieldMatrix< double, dimension, dimension >& inv
-          = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
+        solvecellproblem< JacobianRangeType >
+          (gradientPhi[i], barycenter_of_entity, correctorPhi_i);
 
-        PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
+        cell_time(DSC_PROFILER.stopTiming("solvecellproblem"));
+        DSC_PROFILER.resetTiming("solvecellproblem");
 
-        for (int i = 0; i < numBaseFunctions; ++i)
+        dfw.append(correctorPhi_i);
+
+        // check if we use a correct numeration of the cell problems:
+        typename EntityType::EntityPointer entity_pointer(*it);
+        if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
         {
-          baseSet.jacobian(i, quadrature[0 /*=quadraturePoint*/], gradientPhi[i]);
-          // multiply with transpose of jacobian inverse
-          gradientPhi[i][0] = FMatrixHelp::mult(inv, gradientPhi[i][0]);
+          DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
         }
+        number_of_cell_problem++;
+      }
+    } // end: for-loop: IteratorType it
 
-        for (int i = 0; i < numBaseFunctions; ++i)
-        {
-          correctorPhi_i.clear();
-
-          // take time
-          DSC_PROFILER.startTiming("solvecellproblem");
-
-          solvecellproblem< JacobianRangeType >
-            (gradientPhi[i], barycenter_of_entity, correctorPhi_i);
-
-          cell_time(DSC_PROFILER.stopTiming("solvecellproblem"));
-          DSC_PROFILER.resetTiming("solvecellproblem");
-
-          dfw.append(correctorPhi_i);
-
-          // check if we use a correct numeration of the cell problems:
-          typename EntityType::EntityPointer entity_pointer(*it);
-          if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
-          {
-            DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
-          }
-          number_of_cell_problem++;
-        }
-      } // end: for-loop: IteratorType it
-    } // end: 'if ( writer_is_open )'
 
     const auto total_time = DSC_PROFILER.getTiming("solver-saveTheSolutions_baseSet") / 1000.f;
     DSC_LOG_INFO << std::endl;
@@ -494,39 +490,36 @@ public:
 
     const DiscreteFunctionSpaceType& discreteFunctionSpace = macro_discrete_function.space();
 
-    if (dfw.is_open())
+    int number_of_entity = 0;
+    const IteratorType endit = discreteFunctionSpace.end();
+    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
     {
-      int number_of_entity = 0;
-      const IteratorType endit = discreteFunctionSpace.end();
-      for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-      {
-        // entity
-        const EntityType& entity = *it;
-        const EntityGeometryType& geometry = entity.geometry();
-        const EntityQuadratureType quadrature(entity, 0);
-        const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+      // entity
+      const EntityType& entity = *it;
+      const EntityGeometryType& geometry = entity.geometry();
+      const EntityQuadratureType quadrature(entity, 0);
+      const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
-        LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
-        JacobianRangeType grad_macro_discrete_function;
-        local_macro_disc.jacobian(quadrature[0], grad_macro_discrete_function);
+      LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
+      JacobianRangeType grad_macro_discrete_function;
+      local_macro_disc.jacobian(quadrature[0], grad_macro_discrete_function);
 
-        PeriodicDiscreteFunctionType cell_solution_on_entity("corrector of macro discrete function",
-                                                             periodicDiscreteFunctionSpace_);
+      PeriodicDiscreteFunctionType cell_solution_on_entity("corrector of macro discrete function",
+                                                           periodicDiscreteFunctionSpace_);
 
-        // take time
-        DSC_PROFILER.startTiming("solver-saveTheSolutions_discFunc-solvecellproblem");
+      // take time
+      DSC_PROFILER.startTiming("solver-saveTheSolutions_discFunc-solvecellproblem");
 
-        solvecellproblem< JacobianRangeType >
-          (grad_macro_discrete_function, barycenter_of_entity, cell_solution_on_entity);
+      solvecellproblem< JacobianRangeType >
+        (grad_macro_discrete_function, barycenter_of_entity, cell_solution_on_entity);
 
-        // min/max time
-        cell_time(DSC_PROFILER.stopTiming("solver-saveTheSolutions_discFunc-solvecellproblem"));
-        DSC_PROFILER.resetTiming("solver-saveTheSolutions_discFunc-solvecellproblem");
+      // min/max time
+      cell_time(DSC_PROFILER.stopTiming("solver-saveTheSolutions_discFunc-solvecellproblem"));
+      DSC_PROFILER.resetTiming("solver-saveTheSolutions_discFunc-solvecellproblem");
 
-        dfw.append(cell_solution_on_entity);
-        number_of_entity += 1;
-      } // end: for-loop: IteratorType it
-    } // end: 'if ( writer_is_open )'
+      dfw.append(cell_solution_on_entity);
+      number_of_entity += 1;
+    } // end: for-loop: IteratorType it
 
     const auto total_time = DSC_PROFILER.stopTiming("solver-saveTheSolutions_discFunc");
     DSC_LOG_INFO << std::endl;
@@ -587,7 +580,6 @@ public:
 
     // reader for the cell problem data file (discrete functions):
     DiscreteFunctionReader discrete_function_reader(cell_solution_discFunc_location);
-    bool reader_is_open = discrete_function_reader.is_open();
 
     DSC_PROFILER.startTiming("solver-saveTheJacCorSolutions_baseSet_discFunc");
 
@@ -598,80 +590,76 @@ public:
 
     const DiscreteFunctionSpaceType& discreteFunctionSpace = macro_discrete_function.space();
 
-    if (dfw.is_open())
+    int number_of_entity = 0;
+    const IteratorType endit = discreteFunctionSpace.end();
+    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
     {
-      int number_of_entity = 0;
-      const IteratorType endit = discreteFunctionSpace.end();
-      for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+      // gradients of the macroscopic base functions
+      JacobianRangeType gradientPhi[maxnumOfBaseFct];
+
+      // entity
+      const EntityType& entity = *it;
+      const BaseFunctionSetType baseSet = discreteFunctionSpace.baseFunctionSet(entity);
+      const EntityGeometryType& geometry = entity.geometry();
+      const EntityQuadratureType quadrature(entity, 0);
+      const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+
+      // number of base functions on entity
+      const int numBaseFunctions = baseSet.size();
+
+      // calc Jacobian inverse before volume is evaluated
+      const FieldMatrix< double, dimension, dimension >& inv
+        = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
+
+      LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
+      JacobianRangeType grad_macro_discrete_function;
+      local_macro_disc.jacobian(quadrature[0], grad_macro_discrete_function);
+
+      PeriodicDiscreteFunctionType corrector_macro_discrete_function("corrector of macro discrete function",
+                                                                     periodicDiscreteFunctionSpace_);
+      discrete_function_reader.read(number_of_entity, corrector_macro_discrete_function);
+
+      // the solution that we want to save to the data file
+      PeriodicDiscreteFunctionType jac_corrector_Phi_i("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
+
+      for (int i = 0; i < numBaseFunctions; ++i)
       {
-        // gradients of the macroscopic base functions
-        JacobianRangeType gradientPhi[maxnumOfBaseFct];
+        baseSet.jacobian(i, quadrature[0 /*=quadraturePoint*/], gradientPhi[i]);
+        // multiply with transpose of jacobian inverse
+        gradientPhi[i][0] = FMatrixHelp::mult(inv, gradientPhi[i][0]);
+      }
 
-        // entity
-        const EntityType& entity = *it;
-        const BaseFunctionSetType baseSet = discreteFunctionSpace.baseFunctionSet(entity);
-        const EntityGeometryType& geometry = entity.geometry();
-        const EntityQuadratureType quadrature(entity, 0);
-        const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+      for (int i = 0; i < numBaseFunctions; ++i)
+      {
+        jac_corrector_Phi_i.clear();
 
-        // number of base functions on entity
-        const int numBaseFunctions = baseSet.size();
+        // take time
+        DSC_PROFILER.startTiming("solver-saveTheJacCorSolutions_baseSet_discFunc-solve_jacobiancorrector_cellproblem");
 
-        // calc Jacobian inverse before volume is evaluated
-        const FieldMatrix< double, dimension, dimension >& inv
-          = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
+        solve_jacobiancorrector_cellproblem< JacobianRangeType >
+          (gradientPhi[i],
+          grad_macro_discrete_function,
+          corrector_macro_discrete_function,
+          barycenter_of_entity,
+          jac_corrector_Phi_i);
 
-        LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
-        JacobianRangeType grad_macro_discrete_function;
-        local_macro_disc.jacobian(quadrature[0], grad_macro_discrete_function);
+        // min/max time
+        cell_time(DSC_PROFILER.stopTiming("solver-saveTheJacCorSolutions_baseSet_discFunc-solve_jacobiancorrector_cellproblem"));
 
-        PeriodicDiscreteFunctionType corrector_macro_discrete_function("corrector of macro discrete function",
-                                                                       periodicDiscreteFunctionSpace_);
-        if (reader_is_open)
-        { discrete_function_reader.read(number_of_entity, corrector_macro_discrete_function); }
+        dfw.append(jac_corrector_Phi_i);
 
-        // the solution that we want to save to the data file
-        PeriodicDiscreteFunctionType jac_corrector_Phi_i("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
-
-        for (int i = 0; i < numBaseFunctions; ++i)
+        // check if we use a correct numeration of the cell problems:
+        const EntityPointerType entity_pointer(*it);
+        if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
         {
-          baseSet.jacobian(i, quadrature[0 /*=quadraturePoint*/], gradientPhi[i]);
-          // multiply with transpose of jacobian inverse
-          gradientPhi[i][0] = FMatrixHelp::mult(inv, gradientPhi[i][0]);
+          DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
         }
 
-        for (int i = 0; i < numBaseFunctions; ++i)
-        {
-          jac_corrector_Phi_i.clear();
+        number_of_cell_problem++;
+      }
 
-          // take time
-          DSC_PROFILER.startTiming("solver-saveTheJacCorSolutions_baseSet_discFunc-solve_jacobiancorrector_cellproblem");
-
-          solve_jacobiancorrector_cellproblem< JacobianRangeType >
-            (gradientPhi[i],
-            grad_macro_discrete_function,
-            corrector_macro_discrete_function,
-            barycenter_of_entity,
-            jac_corrector_Phi_i);
-
-          // min/max time
-          cell_time(DSC_PROFILER.stopTiming("solver-saveTheJacCorSolutions_baseSet_discFunc-solve_jacobiancorrector_cellproblem"));
-
-          dfw.append(jac_corrector_Phi_i);
-
-          // check if we use a correct numeration of the cell problems:
-          const EntityPointerType entity_pointer(*it);
-          if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
-          {
-            DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
-          }
-
-          number_of_cell_problem++;
-        }
-
-        number_of_entity += 1;
-      } // end: for-loop: IteratorType it
-    } // end: 'if ( writer_is_open )'
+      number_of_entity += 1;
+    } // end: for-loop: IteratorType it
 
     const auto total_time = DSC_PROFILER.stopTiming("solver-saveTheJacCorSolutions_baseSet_discFunc");
     DSC_LOG_INFO << std::endl;

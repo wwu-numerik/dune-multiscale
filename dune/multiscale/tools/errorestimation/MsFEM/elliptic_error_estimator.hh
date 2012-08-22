@@ -325,22 +325,12 @@ public:
     const std::string cf_solution_location_0 = (flux_location
                                                % path_ % 0 % index_coarse_entity).str();
     // reader for data file:
-    DiscreteFunctionReader discrete_function_reader_0(cf_solution_location_0);
-    bool reader_is_open = discrete_function_reader_0.open();
-
-    if (reader_is_open)
-    { discrete_function_reader_0.read(0, conservative_flux_coarse_ent_e0); }
-
+    DiscreteFunctionReader(cf_solution_location_0).read(0, conservative_flux_coarse_ent_e0);
     // flux for e_1 ...
     const std::string cf_solution_location_1 = (flux_location
                                                % path_ % 1 % index_coarse_entity).str();
-
     // reader for data file:
-    DiscreteFunctionReader discrete_function_reader_1(cf_solution_location_1);
-    reader_is_open = discrete_function_reader_1.open();
-
-    if (reader_is_open)
-    { discrete_function_reader_1.read(0, conservative_flux_coarse_ent_e1); }
+    DiscreteFunctionReader(cf_solution_location_1).read(0, conservative_flux_coarse_ent_e1);
 
     DiscreteFunctionType cflux_coarse_ent_e0_host("Conservative Flux on coarse entity for e_0",
                                                   fineDiscreteFunctionSpace_);
@@ -398,24 +388,14 @@ public:
         // the file/place, where we saved the solutions conservative flux problems problems
         const std::string cf_solution_location_0_neighbor = (flux_location
                                           % path_ % 0 % index_coarse_neighbor_entity).str();
-
         // reader for data file:
-        DiscreteFunctionReader discrete_function_reader_0_neighbor(cf_solution_location_0_neighbor);
-        reader_is_open = discrete_function_reader_0_neighbor.is_open();
-
-        if (reader_is_open)
-        { discrete_function_reader_0_neighbor.read(0, conservative_flux_coarse_ent_e0_neighbor); }
+        DiscreteFunctionReader(cf_solution_location_0_neighbor).read(0, conservative_flux_coarse_ent_e0_neighbor);
 
         // flux for e_1 ...
         const std::string cf_solution_location_1_neighbor = (flux_location
                                           % path_ % 1 % index_coarse_neighbor_entity).str();
-
         // reader for data file:
-        DiscreteFunctionReader discrete_function_reader_1_neighbor(cf_solution_location_1_neighbor);
-        reader_is_open = discrete_function_reader_1_neighbor.open();
-
-        if (reader_is_open)
-        { discrete_function_reader_1_neighbor.read(0, conservative_flux_coarse_ent_e1_neighbor); }
+        DiscreteFunctionReader(cf_solution_location_1_neighbor).read(0, conservative_flux_coarse_ent_e1_neighbor);
 
         cflux_neighbor_ent_e0_host[local_face_index] = new DiscreteFunctionType(
           "Conservative Flux on neighbor coarse entity for e_0",
@@ -697,15 +677,8 @@ public:
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
-      const bool reader_is_open = discrete_function_reader.open();
-
-      if (reader_is_open)
-      {
-        discrete_function_reader.read(0, local_problem_solution_e0);
-        discrete_function_reader.read(1, local_problem_solution_e1);
-      } else {
-        DUNE_THROW(Dune::InvalidStateException,"Error! Could not read data file for the local problem solutions.");
-      }
+      discrete_function_reader.read(0, local_problem_solution_e0);
+      discrete_function_reader.read(1, local_problem_solution_e1);
 
       // iterator for the local micro grid ('the subgrid corresponding with U(T)')
       const SubGridIteratorType local_grid_it_end = localDiscreteFunctionSpace.end();

@@ -468,11 +468,10 @@ public:
     // get the local discrete function space
     const DiscreteFunctionSpaceType& localDiscreteFunctionSpace = lp_num_manager.get_local_discrete_function_space();
 
-    bool reader_is_open = false;
 
     // reader for the local problem data file:
     DiscreteFunctionReader discrete_function_reader(lp_num_manager.get_location());
-    reader_is_open = discrete_function_reader.is_open();
+
     #endif // ifndef PGF
 
     // set discreteFunction to zero:
@@ -571,13 +570,13 @@ public:
         // where we already added \int_T f \phi in the previous step )
         #ifndef PGF
         // get number of cell problem from entity and number of base function
-        int cell_problem_id = lp_num_manager.get_number_of_local_problem(it, i);
+        const int cell_problem_id = lp_num_manager.get_number_of_local_problem(it, i);
 
         DiscreteFunctionType corrector_phi("Corrector Function of Phi", localDiscreteFunctionSpace);
         corrector_phi.clear();
 
-        if (reader_is_open)
-        { discrete_function_reader.read(cell_problem_id, corrector_phi); }
+
+        discrete_function_reader.read(cell_problem_id, corrector_phi);
 
         RangeType f_x_transformed, Q_phi_transformed;
 

@@ -783,12 +783,10 @@ public:
     Dune::Stuff::Common::Math::MinMaxAvg<double> cell_time;
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
-
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-
     for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
     {
-      int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
+      const int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
 
       DSC_LOG_INFO << "-------------------------" << std::endl
                    << "Coarse index " << coarse_index << std::endl;
@@ -798,122 +796,118 @@ public:
 
       DiscreteFunctionWriter dfw(locprob_solution_location);
 
-      if (!dfw.is_open()) {
-        DUNE_THROW(Dune::InvalidStateException, "Error. Could not open 'Discrete Function Writer.");
-      } else {
-        SubGridType& subGrid = subgrid_list_.getSubGrid(coarse_index);
+      SubGridType& subGrid = subgrid_list_.getSubGrid(coarse_index);
 
-        SubGridPartType subGridPart(subGrid);
+      SubGridPartType subGridPart(subGrid);
 
-        DSC_LOG_INFO  << std::endl
-                      << "Number of the local problem: " << dimension * coarse_index << " (of "
-                      << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
-                      << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
-                      << subGrid.size(2) << " nodes." << std::endl;
+      DSC_LOG_INFO  << std::endl
+                    << "Number of the local problem: " << dimension * coarse_index << " (of "
+                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
+                    << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
+                    << subGrid.size(2) << " nodes." << std::endl;
 
-        const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
+      const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
 
-        char name_loc_sol[50];
-        sprintf(name_loc_sol, "Local Problem Solution %d", coarse_index);
-        const std::string name_local_solution(name_loc_sol);
+      char name_loc_sol[50];
+      sprintf(name_loc_sol, "Local Problem Solution %d", coarse_index);
+      const std::string name_local_solution(name_loc_sol);
 
-        //! only for dimension 2!
-        SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
-        local_problem_solution_0.clear();
+      //! only for dimension 2!
+      SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
+      local_problem_solution_0.clear();
 
-        SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
-        local_problem_solution_1.clear();
+      SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
+      local_problem_solution_1.clear();
 
-        // take time
-        DSC_PROFILER.startTiming("solvelocalproblem");
+      // take time
+      DSC_PROFILER.startTiming("solvelocalproblem");
 
-        // solve the problems
-        solvelocalproblem(e[0], local_problem_solution_0);
+      // solve the problems
+      solvelocalproblem(e[0], local_problem_solution_0);
 
-        cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
-        DSC_PROFILER.resetTiming("local_problem_solution");
+      cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
+      DSC_PROFILER.resetTiming("local_problem_solution");
 
 
-        dfw.append(local_problem_solution_0);
+      dfw.append(local_problem_solution_0);
 
-        HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
-        subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
+      HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
+      subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
 
-        // --------------- writing data output ---------------------
-        // (writing)
-        #ifdef VTK_OUTPUT
+      // --------------- writing data output ---------------------
+      // (writing)
+      #ifdef VTK_OUTPUT
 
-        // --------- data output local solution --------------
+      // --------- data output local solution --------------
 
-        // create and initialize output class
-        IOTupleType local_solution_series_0(&host_local_solution);
+      // create and initialize output class
+      IOTupleType local_solution_series_0(&host_local_solution);
 
-        char ls_name_0[50];
-        sprintf(ls_name_0, "local_problem_solution_e0_%d", coarse_index);
-        std::string ls_name_0_s(ls_name_0);
+      char ls_name_0[50];
+      sprintf(ls_name_0, "local_problem_solution_e0_%d", coarse_index);
+      std::string ls_name_0_s(ls_name_0);
 
-        outputparam.set_prefix(ls_name_0_s);
-        DataOutputType localsol_dataoutput_0(
-          hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_0, outputparam);
+      outputparam.set_prefix(ls_name_0_s);
+      DataOutputType localsol_dataoutput_0(
+        hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_0, outputparam);
 
-        // write data
-        outstring << "local-problem-solution-0";
-        localsol_dataoutput_0.writeData( 1.0 /*dummy*/, outstring.str() );
-        // clear the std::stringstream:
-        outstring.str( std::string() );
+      // write data
+      outstring << "local-problem-solution-0";
+      localsol_dataoutput_0.writeData( 1.0 /*dummy*/, outstring.str() );
+      // clear the std::stringstream:
+      outstring.str( std::string() );
 
-        // -------------------------------------------------------
-        #endif // ifdef VTK_OUTPUT
+      // -------------------------------------------------------
+      #endif // ifdef VTK_OUTPUT
 
-        DSC_LOG_INFO  << std::endl
-                      << "Number of the local problem: "
-                      << (dimension * coarse_index) + 1 << " (of "
-                      << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
-                      << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
-                      << subGrid.size(2) << " nodes." << std::endl;
+      DSC_LOG_INFO  << std::endl
+                    << "Number of the local problem: "
+                    << (dimension * coarse_index) + 1 << " (of "
+                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
+                    << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
+                    << subGrid.size(2) << " nodes." << std::endl;
 
-        // take time
-        DSC_PROFILER.startTiming("local_problem_solution");
+      // take time
+      DSC_PROFILER.startTiming("local_problem_solution");
 
-        // solve the problems
-        solvelocalproblem(e[1], local_problem_solution_1);
+      // solve the problems
+      solvelocalproblem(e[1], local_problem_solution_1);
 
-        // min/max time
-        cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
-        DSC_PROFILER.resetTiming("local_problem_solution");
+      // min/max time
+      cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
+      DSC_PROFILER.resetTiming("local_problem_solution");
 
-        dfw.append(local_problem_solution_1);
+      dfw.append(local_problem_solution_1);
 
-        subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
+      subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
 
-        // --------------- writing data output ---------------------
-        // (writing)
-        //!TODO refactor into func, see same code above
-        #ifdef VTK_OUTPUT
+      // --------------- writing data output ---------------------
+      // (writing)
+      //!TODO refactor into func, see same code above
+      #ifdef VTK_OUTPUT
 
-        // --------- data output local solution --------------
+      // --------- data output local solution --------------
 
-        // create and initialize output class
-        IOTupleType local_solution_series_1(&host_local_solution);
+      // create and initialize output class
+      IOTupleType local_solution_series_1(&host_local_solution);
 
-        char ls_name_1[50];
-        sprintf(ls_name_1, "local_problem_solution_e1_%d", coarse_index);
-        std::string ls_name_1_s(ls_name_1);
+      char ls_name_1[50];
+      sprintf(ls_name_1, "local_problem_solution_e1_%d", coarse_index);
+      std::string ls_name_1_s(ls_name_1);
 
-        outputparam.set_prefix(ls_name_1_s);
-        DataOutputType localsol_dataoutput_1(
-          hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_1, outputparam);
+      outputparam.set_prefix(ls_name_1_s);
+      DataOutputType localsol_dataoutput_1(
+        hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_1, outputparam);
 
-        // write data
-        outstring << "local-problem-solution-1";
-        localsol_dataoutput_1.writeData( 1.0 /*dummy*/, outstring.str() );
-        // clear the std::stringstream:
-        outstring.str( std::string() );
+      // write data
+      outstring << "local-problem-solution-1";
+      localsol_dataoutput_1.writeData( 1.0 /*dummy*/, outstring.str() );
+      // clear the std::stringstream:
+      outstring.str( std::string() );
 
-        // -------------------------------------------------------
-        #endif // ifdef VTK_OUTPUT
-      }
-    } // end: 'if ( writer_is_open )'
+      // -------------------------------------------------------
+      #endif // ifdef VTK_OUTPUT
+    } //for
 
     const auto total_time = DSC_PROFILER.stopTiming("localproblemsolver-assemble_all");
     DSC_LOG_INFO << std::endl;

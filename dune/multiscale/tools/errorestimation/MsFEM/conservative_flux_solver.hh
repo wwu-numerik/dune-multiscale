@@ -836,9 +836,7 @@ public:
                         const int direction_index) const {
     const std::string locprob_solution_location = (boost::format("%s/cf_problems/_conservativeFlux_e_%d_sg_%d")
                                                     % path_ % direction_index % sub_grid_index).str();
-    DiscreteFunctionWriter dfw(locprob_solution_location);
-    if (dfw.is_open())
-      dfw.append(subgrid_disc_func);
+    DiscreteFunctionWriter(locprob_solution_location).append(subgrid_disc_func);
   } // file_data_output
 
   template< typename SubGridListType >
@@ -893,15 +891,8 @@ public:
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
-      const bool reader_is_open = discrete_function_reader.is_open();
-
-      if (reader_is_open)
-      { discrete_function_reader.read(0, local_problem_solution_e0);
-        discrete_function_reader.read(1, local_problem_solution_e1);
-      } else {
-        DUNE_THROW(Dune::InvalidStateException,"Error! Could not read data file for the conservative flux problem solutions.");
-      }
-
+      discrete_function_reader.read(0, local_problem_solution_e0);
+      discrete_function_reader.read(1, local_problem_solution_e1);
 
       SubGridDiscreteFunctionType conservative_flux_e0("Conservative Flux for e_0", localDiscreteFunctionSpace);
       SubGridDiscreteFunctionType conservative_flux_e1("Conservative Flux for e_1", localDiscreteFunctionSpace);

@@ -608,12 +608,8 @@ public:
                                                   % path_ % index).str();
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
-      const bool reader_is_open = discrete_function_reader.open();
-
-      if (reader_is_open) {
-        discrete_function_reader.read(0, local_problem_solution_e0);
-        discrete_function_reader.read(1, local_problem_solution_e1);
-      }
+      discrete_function_reader.read(0, local_problem_solution_e0);
+      discrete_function_reader.read(1, local_problem_solution_e1);
 
       LocalFunction local_coarse_part = coarse_msfem_solution.localFunction(*coarse_it);
 

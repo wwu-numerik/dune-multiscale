@@ -115,10 +115,8 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
           hmm_iteration_step);
   std::string fname_s(fname);
 
-  std::string location = "HMM/" + filename + fname_s;
-  DiscreteFunctionWriter dfw(location);
-  if (dfw.is_open())
-    dfw.append(hmm_solution);
+  const std::string location = "HMM/" + filename + fname_s;
+  DiscreteFunctionWriter(location).append(hmm_solution);
 
   // if you want an utput for all newton steps, even for an adaptive computation, use:
   // #endif
@@ -457,9 +455,7 @@ HMMResult<HMMTraits>
     sprintf(fname, "/hmm_solution_discFunc_refLevel_%d", refinement_level_macrogrid_);
     std::string fname_s(fname);
     std::string location = "HMM/" + filename + fname_s;
-    DiscreteFunctionWriter dfw(location);
-    if (dfw.is_open())
-      dfw.append(hmm_solution);
+    DiscreteFunctionWriter(location).append(hmm_solution);
     #endif // ifndef ADAPTIVE
     #endif   // #ifdef WRITE_HMM_SOL_TO_FILE
 
@@ -470,11 +466,7 @@ HMMResult<HMMTraits>
       sprintf(fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
       std::string fine_fname_s(fine_fname);
       std::string fine_location = "HMM/" + filename + fine_fname_s;
-      DiscreteFunctionWriter fine_dfw(fine_location);
-      if (fine_dfw.is_open())
-        fine_dfw.append(fem_newton_solution);
-      else
-        DUNE_THROW(Dune::InvalidStateException, "cannot write finescale solution to file");
+      DiscreteFunctionWriter(fine_location).append(fem_newton_solution);
     }
 
     //! ******************** End of assembling and solving the HMM problem ***************************
