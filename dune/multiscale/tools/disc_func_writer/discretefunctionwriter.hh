@@ -62,7 +62,7 @@ public:
       file_->close();
   }
 
-  bool Kis_open() const {
+  bool is_open() const {
     return file_->is_open();
   }
 
@@ -146,7 +146,7 @@ public:
       file_->close();
   }
 
-  bool Kis_open() const {
+  bool is_open() const {
     return file_->is_open();
   }
 

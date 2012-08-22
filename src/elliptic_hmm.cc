@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(UnitCubeName);
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
-    algorithm<HMMTraits> (info, UnitCubeName, macro_grid_pointer, fine_macro_grid_pointer,
+    algorithm<HMMTraits> (UnitCubeName, macro_grid_pointer, fine_macro_grid_pointer,
               periodic_grid_pointer, refinement_difference_for_referenceproblem, filename_);
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
     //normal

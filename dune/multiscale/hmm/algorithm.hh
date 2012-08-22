@@ -32,7 +32,6 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
                  const typename HMM::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
                  const typename HMM::EllipticOperatorType& discrete_elliptic_op,
                  const std::string& filename,
-                 const typename HMM::ModelProblemDataType& problem_data,
                  const Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType >& rhsassembler)
 {
   static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
@@ -55,7 +54,7 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
   {
     DSC_LOG_INFO << "Solving linear problem." << std::endl;
     DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
-              << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
+              << typename HMM::ModelProblemDataType().getRefinementLevelReferenceProblem() << "." << std::endl;
     DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     // to assemble the computational time
@@ -81,7 +80,7 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
   } else {
     DSC_LOG_INFO << "Solving non-linear problem." << std::endl;
     DSC_LOG_INFO << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
-              << problem_data.getRefinementLevelReferenceProblem() << "." << std::endl;
+              << typename HMM::ModelProblemDataType().getRefinementLevelReferenceProblem() << "." << std::endl;
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
 
     Dune::Timer assembleTimer;
@@ -161,14 +160,14 @@ void fsr_compute(typename HMM::DiscreteFunctionType& fem_newton_solution,
 }
 
 template < class HMM >
-void fsr_load(typename HMM::DiscreteFunctionType& fem_newton_solution,
-              const typename HMM::ModelProblemDataType& problem_data )
+void fsr_load(typename HMM::DiscreteFunctionType& fem_newton_solution)
 {
   fem_newton_solution.clear();
   const boost::filesystem::path modeprob_s(
       (boost::format("Model_Problem_%d") % DSC_CONFIG_GET("problem.numbder", 0u)).str());
 
-  const int refinement_level_referenceprob_ = problem_data.getRefinementLevelReferenceProblem();  
+  const int refinement_level_referenceprob_ =
+      typename HMM::ModelProblemDataType().getRefinementLevelReferenceProblem();
   const boost::filesystem::path reference_solution_directory_s(
         (boost::format("reference_solution_ref_%d") % refinement_level_referenceprob_).str());
 
@@ -393,8 +392,7 @@ bool adapt(const HMMResult<HMM>& result,
 
 //! the main hmm computation
 template < class HMMTraits >
-void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
-               const std::string& /*UnitCubeName*/,
+void algorithm(const std::string& /*UnitCubeName*/,
                typename HMMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
                typename HMMTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
                                                            // reference computations)
@@ -405,6 +403,7 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   typedef HMMTraits HMM;
   using namespace Dune;
 
+  const typename HMM::ModelProblemDataType problem_data;
   print_info(problem_data, DSC_LOG_INFO);
   //! ---- tools ----
   // model problem data
@@ -495,13 +494,13 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
   {
     if (DSC_CONFIG_GET("fsr_compute", true))
     {
-      fsr_compute<HMM>(fem_newton_solution, finerDiscreteFunctionSpace, discrete_elliptic_op,
-                       filename, problem_data, rhsassembler);
+      fsr_compute<HMM>(fem_newton_solution, finerDiscreteFunctionSpace,
+                       discrete_elliptic_op, filename, rhsassembler);
     }
     //! load und compute sollten sich ausschliessen??
     if (DSC_CONFIG_GET("fsr_load", false))
     {
-      fsr_load<HMM>(fem_newton_solution, problem_data);
+      fsr_load<HMM>(fem_newton_solution);
     }
   }
 
