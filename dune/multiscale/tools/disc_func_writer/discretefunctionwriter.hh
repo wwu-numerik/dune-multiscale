@@ -12,6 +12,7 @@
 #include <memory>
 
 #include <dune/common/deprecated.hh>
+#include <dune/common/exceptions.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <boost/filesystem/path.hpp>
@@ -21,6 +22,13 @@ class DiscreteFunctionWriter
 public:
   DiscreteFunctionWriter(const std::string filename)
     : filename_(filename)
+    , dir_(DSC_CONFIG_GET("global.datadir", "data"))
+    , file_(Dune::Stuff::Common::Filesystem
+            ::make_ofstream(dir_ / filename_,
+                            std::fstream::trunc | std::fstream::out | std::fstream::binary))
+  {}
+  DiscreteFunctionWriter(const boost::filesystem::path& path)
+    : filename_(path.string())
     , dir_(DSC_CONFIG_GET("global.datadir", "data"))
     , file_(Dune::Stuff::Common::Filesystem
             ::make_ofstream(dir_ / filename_,
@@ -74,6 +82,18 @@ private:
 
 class DiscreteFunctionReader
 {
+  void init() {
+    if(file_->is_open())
+    {
+      // get size of file
+      file_->seekg(0, std::fstream::end);
+      size_ = file_->tellg();
+      file_->seekg(0);
+    }
+    else
+      DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for reading") % filename_ % dir_ );
+  }
+
 public:
   DiscreteFunctionReader(const std::string filename)
     : filename_(filename)
@@ -83,13 +103,18 @@ public:
             ::make_ifstream(dir_ / filename_,
                             std::fstream::in | std::fstream::binary))
   {
-    if(file_->is_open())
-    {
-      // get size of file
-      file_->seekg(0, std::fstream::end);
-      size_ = file_->tellg();
-      file_->seekg(0);
-    }
+    init();
+  }
+
+  DiscreteFunctionReader(const boost::filesystem::path path)
+    : filename_(path.string())
+    , size_(-1)
+    , dir_(DSC_CONFIG_GET("global.datadir", "data"))
+    , file_(Dune::Stuff::Common::Filesystem
+            ::make_ifstream(dir_ / filename_,
+                            std::fstream::in | std::fstream::binary))
+  {
+    init();
   }
 
   ~DiscreteFunctionReader() {
@@ -97,7 +122,11 @@ public:
       file_->close();
   }
 
-  bool open() const {
+  bool is_open() const {
+    return file_->is_open();
+  }
+
+  bool DUNE_DEPRECATED_MSG("filestream is opened in ctor") open() const {
     return file_->is_open();
   } // open
 

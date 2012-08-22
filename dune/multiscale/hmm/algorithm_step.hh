@@ -325,18 +325,14 @@ HMMResult<HMMTraits>
       const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
       #ifdef RESUME_TO_BROKEN_COMPUTATION
       // std :: string location_hmm_newton_step_solution = "data/HMM/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
-      char fnewtonname[50];
-      sprintf(fnewtonname,
-              "/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d",
-              refinement_level_macrogrid_,
-              HMM_NEWTON_ITERATION_STEP);
-      std::string fnewtonname_s(fnewtonname);
-      std::string location_hmm_newton_step_solution = "data/HMM/" + filename + fnewtonname_s;
+      const std::string location_hmm_newton_step_solution = "HMM/" + filename + boost::format("/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
+                                                            % refinement_level_macrogrid_
+                                                            % HMM_NEWTON_ITERATION_STEP;
 
       bool reader_open = false;
 
       // reader for the cell problem data file:
-      typename HMM::DiscreteFunctionReader discrete_function_reader_hmm_newton_ref( (location_hmm_newton_step_solution).c_str() );
+      typename HMM::DiscreteFunctionReader discrete_function_reader_hmm_newton_ref(location_hmm_newton_step_solution);
       discrete_function_reader_hmm_newton_ref.open();
 
       discrete_function_reader_hmm_newton_ref.read(0, hmm_solution);

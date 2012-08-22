@@ -432,7 +432,7 @@ public:
     RangeType value = 0.0;
 
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader( ( lp_num_manager.get_location() ).c_str() );
+    DiscreteFunctionReader discrete_function_reader(lp_num_manager.get_location());
 
     const bool reader_is_open = discrete_function_reader.open();
     assert(reader_is_open);
@@ -694,7 +694,7 @@ public:
     RangeType value = 0.0;
 
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader( ( lp_num_manager.get_location() ).c_str() );
+    DiscreteFunctionReader discrete_function_reader(lp_num_manager.get_location());
     const bool reader_is_open = discrete_function_reader.open();
 
     bool error_in_compuation = false;

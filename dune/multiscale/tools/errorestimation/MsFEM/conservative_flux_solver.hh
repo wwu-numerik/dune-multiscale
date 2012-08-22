@@ -834,11 +834,9 @@ public:
   void file_data_output(const SubGridDiscreteFunctionType& subgrid_disc_func,
                         const int sub_grid_index,
                         const int direction_index) const {
-    char location_lps[50];
-    sprintf(location_lps, "_conservativeFlux_e_%d_sg_%d", direction_index, sub_grid_index);
-    std::string location_lps_s(location_lps);
-    std::string locprob_solution_location = path_ + "/cf_problems/" + location_lps_s;
-    DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
+    const std::string locprob_solution_location = (boost::format("%s/cf_problems/_conservativeFlux_e_%d_sg_%d")
+                                                    % path_ % direction_index % sub_grid_index).str();
+    DiscreteFunctionWriter dfw(locprob_solution_location);
     if (dfw.is_open())
       dfw.append(subgrid_disc_func);
   } // file_data_output
@@ -889,20 +887,13 @@ public:
       local_problem_solution_e1.clear();
 
       // --------- load local solutions -------
-
-      char location_lps[50];
-      sprintf(location_lps, "/local_problems/_localProblemSolutions_%d", global_index_entity);
-      const std::string location_lps_s(location_lps);
-
-      std::string local_solution_location;
-
       // the file/place, where we saved the solutions of the cell problems
-      local_solution_location = path_ + location_lps_s;
+      const std::string local_solution_location = (boost::format("%s/local_problems/_localProblemSolutions_%d")
+                                            % path_ % global_index_entity).str();
 
-      bool reader_is_open = false;
       // reader for the cell problem data file:
-      DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
-      reader_is_open = discrete_function_reader.open();
+      DiscreteFunctionReader discrete_function_reader(local_solution_location);
+      const bool reader_is_open = discrete_function_reader.is_open();
 
       if (reader_is_open)
       { discrete_function_reader.read(0, local_problem_solution_e0);

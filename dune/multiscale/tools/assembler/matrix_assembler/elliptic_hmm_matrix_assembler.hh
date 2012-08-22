@@ -70,24 +70,13 @@ public:
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                               const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
                               const DiffusionModel& diffusion_op,
-                              const CellProblemNumberingManager& cp_num_manager)
-    : discreteFunctionSpace_(discreteFunctionSpace)
-      , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
-      , diffusion_operator_(diffusion_op)
-      , cp_num_manager_(cp_num_manager)
-      , filename_(NULL)
-  {}
-
-  DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
-                              const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
-                              const DiffusionModel& diffusion_op,
                               const CellProblemNumberingManager& cp_num_manager,
                               const std::string& filename)
     : discreteFunctionSpace_(discreteFunctionSpace)
       , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
       , diffusion_operator_(diffusion_op)
       , cp_num_manager_(cp_num_manager)
-      , filename_(&filename)
+      , filename_(filename)
   {}
 
 public:
@@ -107,7 +96,7 @@ private:
   const CellProblemNumberingManager& cp_num_manager_;
 
   // name of data file, e.g. required if we want to use the saved solutions of the cell problems
-  const std::string* filename_;
+  const std::string filename_;
 };
 
 // dummy implementation of "operator()"
@@ -132,18 +121,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
   DSC_LOG_INFO << "Assembling HMM Matrix." << std::endl;
   #endif // ifdef TFR
 
-  std::string cell_solution_location;
-
-  // if we know the file, where we saved the solutions of the cell problems, use it
-  if (filename_)
-  {
-    // place, where we saved the solutions of the cell problems
-    cell_solution_location = "data/" + (*filename_) + "/cell_problems/_cellSolutions_baseSet";
-  } else {
-    #ifndef AD_HOC_COMPUTATION
-    DUNE_THROW(Dune::InvalidStateException,"ERROR! No 'filename_' in class 'DiscreteEllipticHMMOperator', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename_'-variable!");
-    #endif // ifndef AD_HOC_COMPUTATION
-  }
+  // place, where we saved the solutions of the cell problems
+  const std::string cell_solution_location = filename_ + "/cell_problems/_cellSolutions_baseSet";;
 
   const Problem::ModelProblemData model_info;
   const double delta = model_info.getDelta();
@@ -151,8 +130,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
 
   // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader( (cell_solution_location).c_str() );
-  const bool reader_is_open = discrete_function_reader.open();
+  DiscreteFunctionReader discrete_function_reader(cell_solution_location);
+  const bool reader_is_open = discrete_function_reader.is_open();
 
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
@@ -339,9 +318,10 @@ template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class Di
           class CellProblemNumberingManagerImp >
 template< class MatrixType >
 void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
-                                  CellProblemNumberingManagerImp >::assemble_jacobian_matrix(DiscreteFunction& old_u_H /*u_H^(n-1)*/,
-                                                                                             MatrixType& global_matrix)
-const {
+                                  CellProblemNumberingManagerImp >
+      ::assemble_jacobian_matrix(DiscreteFunction& old_u_H /*u_H^(n-1)*/,
+                                 MatrixType& global_matrix) const
+{
   // if test function reconstruction
   #ifdef TFR
   DSC_LOG_INFO << "Assembling TFR-HMM Matrix for Newton Iteration." << std::endl;
@@ -349,38 +329,23 @@ const {
   DSC_LOG_INFO << "Assembling HMM Matrix for Newton Iteration." << std::endl;
   #endif // ifdef TFR
 
-  std::string cell_solution_location_baseSet;
-  std::string cell_solution_location_discFunc;
-  std::string jac_cor_cell_solution_location_baseSet_discFunc;
-
-  // if we know the file, where we saved the solutions of the cell problems, use it
-  if (filename_)
-  {
-    // place, where we saved the solutions of the cell problems
-    cell_solution_location_baseSet = "data/HMM/" + (*filename_) + "/cell_problems/_cellSolutions_baseSet";
-    cell_solution_location_discFunc = "data/HMM/" + (*filename_) + "/cell_problems/_cellSolutions_discFunc";
-    jac_cor_cell_solution_location_baseSet_discFunc = "data/HMM/" + (*filename_)
-                                                      + "/cell_problems/_JacCorCellSolutions_baseSet_discFunc";
-  } else {
-    #ifndef AD_HOC_COMPUTATION
-    DUNE_THROW(Dune::InvalidStateException,"ERROR! No 'filename_' in class 'DiscreteEllipticHMMOperator', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename_'-variable!");
-    #endif // ifndef AD_HOC_COMPUTATION
-  }
-
+  // place, where we saved the solutions of the cell problems
+  const std::string cell_solution_location_baseSet = "HMM/" + filename_ + "/cell_problems/_cellSolutions_baseSet";
+  const std::string cell_solution_location_discFunc = "HMM/" + filename_ + "/cell_problems/_cellSolutions_discFunc";
+  const std::string jac_cor_cell_solution_location_baseSet_discFunc = "HMM/" + filename_
+                                                    + "/cell_problems/_JacCorCellSolutions_baseSet_discFunc";
   const Problem::ModelProblemData model_info;
   const double delta = model_info.getDelta();
   const double epsilon_estimated = model_info.getEpsilonEstimated();
 
   // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_baseSet( (cell_solution_location_baseSet).c_str() );
-  discrete_function_reader_baseSet.open();
+  DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);
 
   // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_discFunc( (cell_solution_location_discFunc).c_str() );
-  discrete_function_reader_discFunc.open();
+  DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);
 
   // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_jac_cor( (jac_cor_cell_solution_location_baseSet_discFunc).c_str() );
+  DiscreteFunctionReader discrete_function_reader_jac_cor(jac_cor_cell_solution_location_baseSet_discFunc);
 //  const bool reader_is_open = discrete_function_reader_jac_cor.open();
 
   typedef typename MatrixType::LocalMatrixType LocalMatrix;

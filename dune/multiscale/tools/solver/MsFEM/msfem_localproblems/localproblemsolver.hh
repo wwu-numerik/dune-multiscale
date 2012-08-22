@@ -793,13 +793,10 @@ public:
       DSC_LOG_INFO << "-------------------------" << std::endl
                    << "Coarse index " << coarse_index << std::endl;
 
-      char location_lps[50];
-      sprintf(location_lps, "_localProblemSolutions_%d", coarse_index);
-      std::string location_lps_s(location_lps);
+      const std::string locprob_solution_location =
+          (boost::format("_localProblemSolutions_%d") % path_ % coarse_index).str();
 
-      std::string locprob_solution_location = path_ + location_lps_s;
-
-      DiscreteFunctionWriter dfw( (locprob_solution_location).c_str() );
+      DiscreteFunctionWriter dfw(locprob_solution_location);
 
       if (!dfw.is_open()) {
         DUNE_THROW(Dune::InvalidStateException, "Error. Could not open 'Discrete Function Writer.");

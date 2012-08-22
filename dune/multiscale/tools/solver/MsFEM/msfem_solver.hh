@@ -603,34 +603,22 @@ public:
       local_problem_solution_e1.clear();
 
       // --------- load local solutions -------
-
-      char location_lps[50];
-      sprintf(location_lps, "/local_problems/_localProblemSolutions_%d", index);
-      std::string location_lps_s(location_lps);
-
-      std::string local_solution_location;
-
       // the file/place, where we saved the solutions of the cell problems
-      local_solution_location = path_ + location_lps_s;
-
-      bool reader_is_open = false;
+      const std::string local_solution_location = (boost::format("%s/local_problems/_localProblemSolutions_%d")
+                                                  % path_ % index).str();
       // reader for the cell problem data file:
-      DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
-      reader_is_open = discrete_function_reader.open();
+      DiscreteFunctionReader discrete_function_reader(local_solution_location);
+      const bool reader_is_open = discrete_function_reader.open();
 
-      if (reader_is_open)
-      { discrete_function_reader.read(0, local_problem_solution_e0); }
-
-      if (reader_is_open)
-      { discrete_function_reader.read(1, local_problem_solution_e1); }
-
-      // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e0 );
-      // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e1 );
+      if (reader_is_open) {
+        discrete_function_reader.read(0, local_problem_solution_e0);
+        discrete_function_reader.read(1, local_problem_solution_e1);
+      }
 
       LocalFunction local_coarse_part = coarse_msfem_solution.localFunction(*coarse_it);
 
       // 1 point quadrature!! We only need the gradient of the coarse scale part on the element, which is a constant.
-      CachingQuadrature< GridPart, 0 > one_point_quadrature(*coarse_it, 0);
+      const CachingQuadrature< GridPart, 0 > one_point_quadrature(*coarse_it, 0);
 
       JacobianRangeType grad_coarse_msfem_on_entity;
       local_coarse_part.jacobian(one_point_quadrature[0], grad_coarse_msfem_on_entity);

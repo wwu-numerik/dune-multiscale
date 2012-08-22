@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
     // name of the error file in which the data will be saved
     std::string filename_;
-    const Problem::ModelProblemData info(path);
+    const Problem::ModelProblemData info;
     #ifdef RESUME_TO_BROKEN_COMPUTATION
     // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
     // (vorlauefig sollte diese Variante aber reichen)

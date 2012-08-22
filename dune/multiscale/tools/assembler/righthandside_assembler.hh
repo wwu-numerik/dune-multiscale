@@ -471,8 +471,8 @@ public:
     bool reader_is_open = false;
 
     // reader for the local problem data file:
-    DiscreteFunctionReader discrete_function_reader( ( lp_num_manager.get_location() ).c_str() );
-    reader_is_open = discrete_function_reader.open();
+    DiscreteFunctionReader discrete_function_reader(lp_num_manager.get_location());
+    reader_is_open = discrete_function_reader.is_open();
     #endif // ifndef PGF
 
     // set discreteFunction to zero:
@@ -652,7 +652,13 @@ public:
                                       const CellProblemNumberingManagerType& /*cp_num_manager*/,
                                       const PeriodicDiscreteFunctionType& dummy_func,
                                       DiscreteFunctionType& rhsVector,
-                                      const std::string filename = "no_file") const {
+                                      const std::string filename = "no_file") const
+  {
+    if (filename == "no_file")
+    {
+      DUNE_THROW(Dune::InvalidStateException,"ERROR! No 'filename' in RHSAssembler method 'assemble_for_HMM_Newton_method', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename'-variable!");
+    }
+
     typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
     PeriodicDiscreteFunctionSpaceType;
 
@@ -662,25 +668,15 @@ public:
     #ifdef AD_HOC_COMPUTATION
     typedef CellProblemSolver< PeriodicDiscreteFunctionType, DiffusionOperatorType > CellProblemSolverType;
     #else
-    std::string cell_solution_location_baseSet;
-    std::string cell_solution_location_discFunc;
-    if (filename == "no_file")
-    {
-      DUNE_THROW(Dune::InvalidStateException,"ERROR! No 'filename' in RHSAssembler method 'assemble_for_HMM_Newton_method', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename'-variable!");
-    }
-
-    cell_solution_location_baseSet = "data/HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
-    cell_solution_location_discFunc = "data/HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
+    const std::string cell_solution_location_baseSet = "data/HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
+    const std::string cell_solution_location_discFunc = "data/HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
 
 //    bool reader_is_open = false;
 
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader_baseSet( (cell_solution_location_baseSet).c_str() );
-    discrete_function_reader_baseSet.open();
-
+    DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader_discFunc( (cell_solution_location_discFunc).c_str() );
-    discrete_function_reader_discFunc.open();
+    DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);
     #endif // ifdef AD_HOC_COMPUTATION
 
     Problem::ModelProblemData model_info;
@@ -786,19 +782,19 @@ public:
         #endif // ifdef TFR
 
         #ifdef AD_HOC_COMPUTATION
-        CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace, A);
-        cell_problem_solver.template solvecellproblem< JacobianRangeType >
-          (grad_old_u_H_x, macro_entity_barycenter, corrector_old_u_H);
-        #ifdef TFR
-        cell_problem_solver.template solvecellproblem< JacobianRangeType >
-          (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
-        #endif // ifdef TFR
+          CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace, A);
+          cell_problem_solver.template solvecellproblem< JacobianRangeType >
+            (grad_old_u_H_x, macro_entity_barycenter, corrector_old_u_H);
+          #ifdef TFR
+          cell_problem_solver.template solvecellproblem< JacobianRangeType >
+            (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
+          #endif // ifdef TFR
         #else // ifdef AD_HOC_COMPUTATION
-        discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
-        #ifdef TFR
-        discrete_function_reader_baseSet.read(cp_num_manager.get_number_of_cell_problem(macro_grid_it,
-                                                                                        i), corrector_Phi_i);
-        #endif // ifdef TFR
+          discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
+          #ifdef TFR
+          discrete_function_reader_baseSet.read(cp_num_manager.get_number_of_cell_problem(macro_grid_it,
+                                                                                          i), corrector_Phi_i);
+          #endif // ifdef TFR
         #endif // ifdef AD_HOC_COMPUTATION
 
         RangeType fine_scale_contribution = 0.0;

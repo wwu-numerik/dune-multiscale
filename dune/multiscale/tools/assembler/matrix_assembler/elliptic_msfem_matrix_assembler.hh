@@ -283,34 +283,24 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
     local_problem_solution_e1.clear();
 
     // --------- load local solutions -------
-
-    char location_lps[50];
-    sprintf(location_lps, "/local_problems/_localProblemSolutions_%d", global_index_entity);
-    std::string location_lps_s(location_lps);
-
-    std::string local_solution_location;
-
     // the file/place, where we saved the solutions of the cell problems
-    local_solution_location = path_ + location_lps_s;
+    const std::string local_solution_location = (boost::format("%s/local_problems/_localProblemSolutions_%d")
+                                                % path_  % global_index_entity).str();
 
     bool reader_is_open = false;
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
-    reader_is_open = discrete_function_reader.open();
+    DiscreteFunctionReader discrete_function_reader(local_solution_location);
+    reader_is_open = discrete_function_reader.is_open();
 
     if (reader_is_open)
     {
       discrete_function_reader.read(0, local_problem_solution_e0);
-    }
-
-    if (reader_is_open)
-    {
       discrete_function_reader.read(1, local_problem_solution_e1);
     }
 
     // 1 point quadrature!! We only need the gradient of the base function,
     // which is constant on the whole entity.
-    CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
+    const CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
 
     // the barycenter of the macro_grid_entity
     const typename CoarseQuadrature::CoordinateType& local_coarse_point

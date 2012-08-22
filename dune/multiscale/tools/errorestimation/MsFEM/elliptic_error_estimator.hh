@@ -320,38 +320,23 @@ public:
     conservative_flux_coarse_ent_e1.clear();
 
     // --------- load local solutions -------
-
-    char location_lps_0[50];
-    sprintf(location_lps_0, "_conservativeFlux_e_%d_sg_%d", 0, index_coarse_entity);
-    std::string location_lps_s_0(location_lps_0);
-
-    std::string cf_solution_location_0;
-
+    boost::format flux_location("%s/cf_problems/_conservativeFlux_e_%d_sg_%d");
     // the file/place, where we saved the solutions conservative flux problems problems
-    cf_solution_location_0 = path_ + "/cf_problems/" + location_lps_s_0;
-
-    bool reader_is_open = false;
+    const std::string cf_solution_location_0 = (flux_location
+                                               % path_ % 0 % index_coarse_entity).str();
     // reader for data file:
-    DiscreteFunctionReader discrete_function_reader_0( (cf_solution_location_0).c_str() );
-    reader_is_open = discrete_function_reader_0.open();
+    DiscreteFunctionReader discrete_function_reader_0(cf_solution_location_0);
+    bool reader_is_open = discrete_function_reader_0.open();
 
     if (reader_is_open)
     { discrete_function_reader_0.read(0, conservative_flux_coarse_ent_e0); }
 
     // flux for e_1 ...
+    const std::string cf_solution_location_1 = (flux_location
+                                               % path_ % 1 % index_coarse_entity).str();
 
-    char location_lps_1[50];
-    sprintf(location_lps_1, "_conservativeFlux_e_%d_sg_%d", 1, index_coarse_entity);
-    std::string location_lps_s_1(location_lps_1);
-
-    std::string cf_solution_location_1;
-
-    // the file/place, where we saved the solutions conservative flux problems problems
-    cf_solution_location_1 = path_ + "/cf_problems/" + location_lps_s_1;
-
-    reader_is_open = false;
     // reader for data file:
-    DiscreteFunctionReader discrete_function_reader_1( (cf_solution_location_1).c_str() );
+    DiscreteFunctionReader discrete_function_reader_1(cf_solution_location_1);
     reader_is_open = discrete_function_reader_1.open();
 
     if (reader_is_open)
@@ -368,6 +353,7 @@ public:
                                 cflux_coarse_ent_e1_host);
 
     // flux for each neighbor entity
+    //!TODO automatic memory
     DiscreteFunctionType* cflux_neighbor_ent_e0_host[3];
     DiscreteFunctionType* cflux_neighbor_ent_e1_host[3];
 
@@ -409,38 +395,23 @@ public:
         conservative_flux_coarse_ent_e1_neighbor.clear();
 
         // --------- load local solutions -------
-
-        char location_lps_0_neighbor[50];
-        sprintf(location_lps_0_neighbor, "_conservativeFlux_e_%d_sg_%d", 0, index_coarse_neighbor_entity);
-        std::string location_lps_s_0_neighbor(location_lps_0_neighbor);
-
-        std::string cf_solution_location_0_neighbor;
-
         // the file/place, where we saved the solutions conservative flux problems problems
-        cf_solution_location_0_neighbor = path_ + "/cf_problems/" + location_lps_s_0_neighbor;
+        const std::string cf_solution_location_0_neighbor = (flux_location
+                                          % path_ % 0 % index_coarse_neighbor_entity).str();
 
-        reader_is_open = false;
         // reader for data file:
-        DiscreteFunctionReader discrete_function_reader_0_neighbor( (cf_solution_location_0_neighbor).c_str() );
-        reader_is_open = discrete_function_reader_0_neighbor.open();
+        DiscreteFunctionReader discrete_function_reader_0_neighbor(cf_solution_location_0_neighbor);
+        reader_is_open = discrete_function_reader_0_neighbor.is_open();
 
         if (reader_is_open)
         { discrete_function_reader_0_neighbor.read(0, conservative_flux_coarse_ent_e0_neighbor); }
 
         // flux for e_1 ...
+        const std::string cf_solution_location_1_neighbor = (flux_location
+                                          % path_ % 1 % index_coarse_neighbor_entity).str();
 
-        char location_lps_1_neighbor[50];
-        sprintf(location_lps_1_neighbor, "_conservativeFlux_e_%d_sg_%d", 1, index_coarse_neighbor_entity);
-        std::string location_lps_s_1_neighbor(location_lps_1_neighbor);
-
-        std::string cf_solution_location_1_neighbor;
-
-        // the file/place, where we saved the solutions conservative flux problems problems
-        cf_solution_location_1_neighbor = path_ + "/cf_problems/" + location_lps_s_1_neighbor;
-
-        reader_is_open = false;
         // reader for data file:
-        DiscreteFunctionReader discrete_function_reader_1_neighbor( (cf_solution_location_1_neighbor).c_str() );
+        DiscreteFunctionReader discrete_function_reader_1_neighbor(cf_solution_location_1_neighbor);
         reader_is_open = discrete_function_reader_1_neighbor.open();
 
         if (reader_is_open)
@@ -720,28 +691,21 @@ public:
       local_problem_solution_e1.clear();
 
       // --------- load local solutions -------
-
-      char location_lps[50];
-      sprintf(location_lps, "/local_problems/_localProblemSolutions_%d", global_index_entity);
-      std::string location_lps_s(location_lps);
-
-      std::string local_solution_location;
-
       // the file/place, where we saved the solutions of the cell problems
-      local_solution_location = path_ + location_lps_s;
+      const std::string local_solution_location = (boost::format("%s/local_problems/_localProblemSolutions_%d")
+                                % path_ % global_index_entity).str();
 
-      bool reader_is_open = false;
       // reader for the cell problem data file:
-      DiscreteFunctionReader discrete_function_reader( (local_solution_location).c_str() );
-      reader_is_open = discrete_function_reader.open();
+      DiscreteFunctionReader discrete_function_reader(local_solution_location);
+      const bool reader_is_open = discrete_function_reader.open();
 
       if (reader_is_open)
-      { discrete_function_reader.read(0, local_problem_solution_e0); } else {
+      {
+        discrete_function_reader.read(0, local_problem_solution_e0);
+        discrete_function_reader.read(1, local_problem_solution_e1);
+      } else {
         DUNE_THROW(Dune::InvalidStateException,"Error! Could not read data file for the local problem solutions.");
       }
-
-      if (reader_is_open)
-      { discrete_function_reader.read(1, local_problem_solution_e1); }
 
       // iterator for the local micro grid ('the subgrid corresponding with U(T)')
       const SubGridIteratorType local_grid_it_end = localDiscreteFunctionSpace.end();
@@ -753,7 +717,6 @@ public:
 
         // check if "local_grid_entity" (which is an entity of U(T)) is in T:
         // -------------------------------------------------------------------
-
         const EntityPointerType host_local_grid_it = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(
           local_grid_entity);
 

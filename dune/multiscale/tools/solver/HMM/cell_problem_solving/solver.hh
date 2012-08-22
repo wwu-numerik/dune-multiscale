@@ -365,8 +365,8 @@ public:
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
 
-    std::string cell_solution_location = "data/HMM/" + filename + "_cellSolutions_baseSet";
-    DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
+    std::string cell_solution_location = "HMM/" + filename + "_cellSolutions_baseSet";
+    DiscreteFunctionWriter dfw(cell_solution_location);
 
     const bool writer_is_open = dfw.is_open();
 
@@ -484,8 +484,8 @@ public:
 
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
-    std::string cell_solution_location = "data/HMM/" + filename + "_cellSolutions_discFunc";
-    DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
+    std::string cell_solution_location = "HMM/" + filename + "_cellSolutions_discFunc";
+    DiscreteFunctionWriter dfw(cell_solution_location);
 
     DSC_PROFILER.startTiming("solver-saveTheSolutions_discFunc");
 
@@ -579,17 +579,15 @@ public:
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
     // where we save the solutions:
-    const std::string cell_solution_location = "data/HMM/" + filename + "_JacCorCellSolutions_baseSet_discFunc";
-    DiscreteFunctionWriter dfw( (cell_solution_location).c_str() );
+    const std::string cell_solution_location = "HMM/" + filename + "_JacCorCellSolutions_baseSet_discFunc";
+    DiscreteFunctionWriter dfw(cell_solution_location);
     // where we saved the solutions for the discrete function
     // NOTE: they already need to be assembled, i.e. we already applied the method saveSolutions_discFunc!
-    const std::string cell_solution_discFunc_location = "data/HMM/" + filename + "_cellSolutions_discFunc";
-
-    bool reader_is_open = false;
+    const std::string cell_solution_discFunc_location = "HMM/" + filename + "_cellSolutions_discFunc";
 
     // reader for the cell problem data file (discrete functions):
-    DiscreteFunctionReader discrete_function_reader( (cell_solution_discFunc_location).c_str() );
-    reader_is_open = discrete_function_reader.open();
+    DiscreteFunctionReader discrete_function_reader(cell_solution_discFunc_location);
+    bool reader_is_open = discrete_function_reader.is_open();
 
     DSC_PROFILER.startTiming("solver-saveTheJacCorSolutions_baseSet_discFunc");
 

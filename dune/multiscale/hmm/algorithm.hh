@@ -165,25 +165,23 @@ void fsr_load(typename HMM::DiscreteFunctionType& fem_newton_solution,
               const typename HMM::ModelProblemDataType& problem_data )
 {
   fem_newton_solution.clear();
+  const boost::filesystem::path modeprob_s(
+      (boost::format("Model_Problem_%d") % DSC_CONFIG_GET("problem.numbder", 0u)).str());
 
-  char modeprob[50];
-  sprintf( modeprob, "/Model_Problem_%d", problem_data.get_Number_of_Model_Problem() );
-  const std::string modeprob_s(modeprob);
+  const int refinement_level_referenceprob_ = problem_data.getRefinementLevelReferenceProblem();  
+  const boost::filesystem::path reference_solution_directory_s(
+        (boost::format("reference_solution_ref_%d") % refinement_level_referenceprob_).str());
 
-  const int refinement_level_referenceprob_ = problem_data.getRefinementLevelReferenceProblem();
-  char reference_solution_directory[50];
-  sprintf(reference_solution_directory, "/reference_solution_ref_%d", refinement_level_referenceprob_);
-  const std::string reference_solution_directory_s(reference_solution_directory);
+  const std::string reference_solution_name_s(
+        (boost::format("finescale_solution_discFunc_refLevel_%d") % refinement_level_referenceprob_).str());
 
-  char reference_solution_name[50];
-  sprintf(reference_solution_name, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
-  const std::string reference_solution_name_s(reference_solution_name);
-
-  const std::string location_fine_scale_ref = "data/HMM/" + modeprob_s + reference_solution_directory_s
-                                        + reference_solution_name_s;
+  boost::filesystem::path location_fine_scale_ref("HMM");
+  location_fine_scale_ref /= modeprob_s
+                             / reference_solution_directory_s
+                             / reference_solution_name_s;
 
   // reader for the cell problem data file:
-  DiscreteFunctionReader discrete_function_reader_ref( (location_fine_scale_ref).c_str() );
+  DiscreteFunctionReader discrete_function_reader_ref(location_fine_scale_ref);
   discrete_function_reader_ref.open();
 
   discrete_function_reader_ref.read(0, fem_newton_solution);
@@ -523,10 +521,10 @@ void algorithm(const typename HMMTraits::ModelProblemDataType& problem_data,
     const int gridLevel_refHMM = DSC_CONFIG_GET("grid.ref_hmm", 10);
     macro_grid_pointer_refHMM->globalRefine(gridLevel_refHMM);
     hmm_reference_solution.clear();
-    const std::string location_hmm_ref = "data/HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
+    //!TODO this being hardcoded makes no sense
+    const std::string location_hmm_ref = "HMM/Model_Problem_1/Macro_10_Micro_8/hmm_solution_discFunc_refLevel_10";
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader_hmm_ref( (location_hmm_ref).c_str() );
-    discrete_function_reader_hmm_ref.open();
+    DiscreteFunctionReader discrete_function_reader_hmm_ref(location_hmm_ref);
     discrete_function_reader_hmm_ref.read(0, hmm_reference_solution);
     DSC_LOG_INFO << "HMM reference read." << std::endl;
   }

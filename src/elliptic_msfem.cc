@@ -437,12 +437,9 @@ void algorithm(const std::string& macroGridName) {
 
   // ----------------------------------------------------------------------
   // ---------------------- write discrete msfem solution to file ---------
-  char fname[50];
-  sprintf(fname, "/msfem_solution_discFunc_refLevel_%d_%d", total_refinement_level_, coarse_grid_level_);
-  std::string fname_s(fname);
-
-  std::string location = path_ + fname_s;
-  DiscreteFunctionWriter dfw( (location).c_str() );
+  const std::string location = (boost::format("%s/msfem_solution_discFunc_refLevel_%d_%d")
+                                % path_ %  total_refinement_level_ % coarse_grid_level_).str();
+  DiscreteFunctionWriter dfw(location);
   if (dfw.is_open())
     dfw.append(msfem_solution);
   //! --------------------------------------------------------------------
@@ -534,12 +531,9 @@ void algorithm(const std::string& macroGridName) {
   // -------------------------------------------------------------
 
   // ------------- write discrete fem solution to file -----------
-  char fem_fname[50];
-  sprintf(fem_fname, "/fem_solution_discFunc_refLevel_%d", total_refinement_level_);
-  std::string fem_fname_s(fem_fname);
-
-  std::string fine_location = path_ + fem_fname_s;
-  DiscreteFunctionWriter fem_dfw( (fine_location).c_str() );
+  const std::string fine_location = (boost::format("%s/fem_solution_discFunc_refLevel_%d")
+                                     % path_ % total_refinement_level_).str();
+  DiscreteFunctionWriter fem_dfw(fine_location);
   if (fem_dfw.is_open())
     fem_dfw.append(fem_solution);
 
@@ -597,7 +591,7 @@ int main(int argc, char** argv) {
 
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
-    const Problem::ModelProblemData info(filename_);
+    const Problem::ModelProblemData info;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
     total_refinement_level_
@@ -606,7 +600,7 @@ int main(int argc, char** argv) {
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
 
-    DSC_LOG_INFO << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem()
+    DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
               << " with epsilon = " << info.getEpsilon() << "." << std::endl << std::endl;
     #ifdef UNIFORM
     DSC_LOG_INFO << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
