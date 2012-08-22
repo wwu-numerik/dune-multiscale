@@ -530,7 +530,7 @@ void algorithm(const std::string& /*UnitCubeName*/,
   int loop_cycle = 1;
   const double error_tolerance_ = DSC_CONFIG_GET("problem.error_tolerance", 1e-6);
   bool repeat = true;
-  while (repeat == true)
+  while (repeat)
   {
     DSC_LOG_INFO << "########################### LOOP CYCLE " << loop_cycle << " ###########################"
                 << std::endl << std::endl << std::endl;

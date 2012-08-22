@@ -13,6 +13,7 @@
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
+#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <boost/filesystem/path.hpp>
@@ -164,12 +165,9 @@ public:
     assert( size_ >= long( bytes * (index + 1) ) );
     file_->seekg(bytes * index);
 
-    typedef typename DFType::DofIteratorType
-    Iter;
-    Iter end = df.dend();
-    for (Iter it = df.dbegin(); it != end; ++it)
+    for (auto dof : df)
     {
-      file_->read( reinterpret_cast< char* >( &(*it) ), sizeof(Field) );
+      file_->read( reinterpret_cast< char* >( &(dof) ), sizeof(Field) );
     }
   } // read
 

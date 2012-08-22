@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <dune/stuff/grid/ranges.hh>
+
 template <class HMMTraits>
 struct HMMResult {
     typedef HMMTraits HMM;
@@ -52,10 +54,11 @@ HMMResult<HMMTraits>  estimate_error(
         const typename HMMTraits::DiscreteFunctionType& hmm_solution
          )
 {
-typedef HMMTraits HMM;
-// auxiliary grid part for the periodic function space, required for HMM-cell-problems
-typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridPart().grid());
-// and the corresponding auxiliary one:
+  using namespace Dune::Stuff;
+  typedef HMMTraits HMM;
+  // auxiliary grid part for the periodic function space, required for HMM-cell-problems
+  typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridPart().grid());
+  // and the corresponding auxiliary one:
   typename HMM::DiscreteFunctionSpaceType auxiliaryDiscreteFunctionSpace(auxiliaryGridPart);
     // auxiliaryGridPart for the error estimator (the auxiliaryGridPart yields an intersection iterator, which can not be
     // done by the periodicGridPart)
@@ -77,11 +80,8 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
   HMMResult<HMM> result(discreteFunctionSpace.grid().size(0));
   const typename HMM::FirstSourceType f;   // standard source f
   int element_number = 0;
-  typedef typename HMM::DiscreteFunctionSpaceType::IteratorType IteratorType;
-  IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+  for (const auto& entity : discreteFunctionSpace)
   {
-    const typename HMM::EntityType& entity = *it;
     // corrector of u_H^(n-1) \approx u_H on the macro element T
     typename HMM::PeriodicDiscreteFunctionType corrector_u_H_on_entity("Corrector of u_H", periodicDiscreteFunctionSpace);
     corrector_u_H_on_entity.clear();
@@ -97,7 +97,7 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
       std::vector<int> cell_problem_id(numMacroBaseFunctions);
       for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
       {
-        const typename HMM::EntityType::EntityPointer p(*it);
+        const typename HMM::EntityType::EntityPointer p(entity);
         cell_problem_id[i] = cp_num_manager.get_number_of_cell_problem(p, i);
         discrete_function_reader_baseSet.read(cell_problem_id[i], corrector_of_base_func);
         corrector_of_base_func *= local_hmm_solution[i];
@@ -125,17 +125,15 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
     typename HMM::RangeType local_residual_indicator = error_estimator.indicator_res_T(entity, hmm_solution, corrector_u_H_on_entity);
     result.estimated_residual_error_micro_jumps += local_residual_indicator;
 
-    typedef typename HMM::GridPartType::IntersectionIteratorType IntersectionIteratorType;
-    IntersectionIteratorType endnit = gridPart.iend(entity);
-    for (IntersectionIteratorType nit = gridPart.ibegin(entity); nit != endnit; ++nit)
+    for (const auto& intersection : intersectionRange(gridPart,entity))
     {
-      if ( nit->neighbor() )           // if there is a neighbor entity
+      if ( intersection.neighbor() )           // if there is a neighbor entity
       {
         // corrector of u_H^(n-1) \approx u_H on the neighbor element
         typename HMM::PeriodicDiscreteFunctionType corrector_u_H_on_neighbor_entity("Corrector of u_H", periodicDiscreteFunctionSpace);
         corrector_u_H_on_neighbor_entity.clear();
 
-        typename HMM::EntityPointerType it_outside = nit->outside();
+        typename HMM::EntityPointerType it_outside = intersection.outside();
         const typename HMM::EntityType& entity_outside = *it_outside;
 
         // in the linear case, we still need to compute the corrector of u_H:
@@ -163,7 +161,7 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
           discrete_function_reader_discFunc.read(neighbor_element_number, corrector_u_H_on_neighbor_entity);
         }
 
-        typename HMM::RangeType val = error_estimator.indicator_res_E(*nit,
+        typename HMM::RangeType val = error_estimator.indicator_res_E(intersection,
                                                         hmm_solution,
                                                         corrector_u_H_on_entity,
                                                         corrector_u_H_on_neighbor_entity);
@@ -189,6 +187,7 @@ typename HMM::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridP
     local_error_indicator[element_number] += local_tfr_indicator;
     #endif
 
+    //!TODO minmaxaverge
     if (result.local_error_indicator[element_number] < result.minimal_loc_indicator)
     {
       result.minimal_loc_indicator = result.local_error_indicator[element_number];

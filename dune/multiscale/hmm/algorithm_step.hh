@@ -14,6 +14,7 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
+#include <dune/stuff/grid/ranges.hh>
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
@@ -21,31 +22,19 @@ namespace {
 //! set the dirichlet points to zero
 template< class DiscreteFunctionType >
 void boundaryTreatment(DiscreteFunctionType& rhs) {
-  static const int faceCodim = 1;
+  using namespace Dune::Stuff;
   const auto& discreteFunctionSpace = rhs.space();
-  const auto& gridPart = discreteFunctionSpace.gridPart();
-  const auto space_end = discreteFunctionSpace.end();
-  for (auto entity_it = discreteFunctionSpace.begin(); entity_it != space_end; ++entity_it)
+  for (const auto& entity : discreteFunctionSpace)
   {
-    const auto& entity = *entity_it;
-    auto it = gridPart.ibegin(entity);
-    const auto endit = gridPart.iend(entity);
-    for ( ; it != endit; ++it)
+    for (const auto& intersection : intersectionRange(discreteFunctionSpace.gridPart(), entity))
     {
-      if ( !(*it).boundary() )
+      if ( !intersection.boundary() )
         continue;
-
       auto rhsLocal = rhs.localFunction(entity);
-      const auto& lagrangePointSet
-        = discreteFunctionSpace.lagrangePointSet(entity);
-
-      const int face = (*it).indexInInside();
-      auto faceIterator
-        = lagrangePointSet.template beginSubEntity< faceCodim >(face);
-      const auto faceEndIterator
-        = lagrangePointSet.template endSubEntity< faceCodim >(face);
-      for ( ; faceIterator != faceEndIterator; ++faceIterator)
-        rhsLocal[*faceIterator] = 0;
+      const int face = intersection.indexInInside();
+      static const int faceCodim = 1;
+      for( auto point : lagrangePointSetRange<faceCodim>(discreteFunctionSpace, entity, face))
+        rhsLocal[point] = 0;
     }
   }
 } // boundaryTreatment
