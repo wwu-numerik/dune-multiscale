@@ -39,6 +39,8 @@ namespace Dune {
    * Shift the discrete function to meanvalue zero:
    *
    * mymean.adapt<DiscreteFunctionType>( a_discreteFunction , theMeanValue );
+   *
+   * \TODO use stuff/fem/funtions/integrals.hh instead
    **/
 template< class DiscreteFunctionType >
 class Meanvalue
@@ -78,13 +80,10 @@ class Meanvalue
 
 public:
   RangeType getMeanvalue(const DiscreteFunctionType& discFunc) const {
-    int polOrd = (2 * spacePolOrd + 2);
+    const int polOrd = (2 * spacePolOrd + 2);
 
     // get function space
     const DiscreteFunctionSpaceType& space = discFunc.space();
-    const GridPartType& gridPart = space.gridPart();
-    const auto& comm = gridPart.grid().comm();
-
     RangeType y(0.0);    // return value
     RangeType theMeanValue(0.0);
 
@@ -92,15 +91,11 @@ public:
     {
       // create quadrature for given geometry type
       const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
-
-      // get local function
-      LocalFunctionType localfunc = discFunc.localFunction(entity);
-
-      // get geoemetry of entity
+      const LocalFunctionType localfunc = discFunc.localFunction(entity);
       const EnGeometryType& geo = entity.geometry();
 
       // integrate
-      const int quadratureNop = quadrature.nop();
+      const int quadratureNop = quadrature.size();
       for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
       {
         const double det = quadrature.weight(quadraturePoint)
@@ -112,6 +107,7 @@ public:
       }
     }
 
+    const auto& comm = space.gridPart().grid().comm();
     theMeanValue = comm.sum(theMeanValue);
 
     return theMeanValue;

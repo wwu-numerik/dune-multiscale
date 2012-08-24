@@ -15,34 +15,25 @@ struct classcomp
                   const std::pair< EntityPointerType, int >& right_entity_pair) const {
     // compare the barycenteres of the entities with the lexicographic order, than compare the int's (number of local
     // base function)
-
     typedef Fem::CachingQuadrature< GridPartType, 0 > Quadrature;
 
     // ------ right element
-
-    const typename EntityPointerType::Entity::Geometry& geometry_right = ( *(right_entity_pair.first) ).geometry();
-
-    Quadrature quadrature_right( ( *(right_entity_pair.first) ), 0 );
+    const auto& geometry_right = ( *(right_entity_pair.first) ).geometry();
+    const Quadrature quadrature_right( ( *(right_entity_pair.first) ), 0 );
 
     // local barycenter (with respect to entity)
-    const typename Quadrature::CoordinateType& local_point_right = quadrature_right.point(0);
-
-    DomainType barycenter_right_entity = geometry_right.global(local_point_right);
+    const auto& local_point_right = quadrature_right.point(0);
+    const DomainType barycenter_right_entity = geometry_right.global(local_point_right);
 
     // ------ left element
-
-    const typename EntityPointerType::Entity::Geometry& geometry_left = ( *(left_entity_pair.first) ).geometry();
-
-    Quadrature quadrature_left( ( *(left_entity_pair.first) ), 0 );
+    const auto& geometry_left = ( *(left_entity_pair.first) ).geometry();
+    const Quadrature quadrature_left( ( *(left_entity_pair.first) ), 0 );
 
     // local barycenter (with respect to entity)
-    const typename Quadrature::CoordinateType& local_point_left = quadrature_left.point(0);
+    const auto& local_point_left = quadrature_left.point(0);
+    const DomainType barycenter_left_entity = geometry_left.global(local_point_left);
 
-    DomainType barycenter_left_entity = geometry_left.global(local_point_left);
-
-    enum { dimension = GridPartType::GridType::dimension };
-
-    int current_axis = dimension - 1;
+    int current_axis = GridPartType::GridType::dimension - 1;
 
     while (current_axis >= 0)
     {
@@ -53,13 +44,7 @@ struct classcomp
       current_axis -= 1;
     }
 
-    if (left_entity_pair.second < right_entity_pair.second)
-    {
-      return true;
-    } else
-    { return false; }
-
-    return true;
+    return left_entity_pair.second < right_entity_pair.second;
   } // ()
 };
 
@@ -135,25 +120,18 @@ public:
    * local number of base function) and in the nonlinear case we need CellNumMapNLType (NL stands for nonlinear).
    * CellNumMapType is also required in the nonlinear case if we use test function reconstruction (TFR)
    **/
-  inline explicit CellProblemNumberingManager(DiscreteFunctionSpaceType& discreteFunctionSpace)
+  inline explicit CellProblemNumberingManager(const DiscreteFunctionSpaceType& discreteFunctionSpace)
   {
     int counter = 0;
     int number_of_entity = 0;
-
-    const IteratorType endit = discreteFunctionSpace.end();
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+    for (const auto& entity : discreteFunctionSpace)
     {
-      cell_numbering_map_NL_.insert( std::make_pair(EntityPointerType(*it), number_of_entity) );
-
-      const BaseFunctionSetType baseSet
-        = discreteFunctionSpace.baseFunctionSet(*it);
-
-      // number of base functions on entity
-      const int numBaseFunctions = baseSet.size();
-
+      EntityPointerType ep(entity);
+      cell_numbering_map_NL_.insert( std::make_pair(ep, number_of_entity) );
+      const int numBaseFunctions = discreteFunctionSpace.baseFunctionSet(entity).size();
       for (int i = 0; i < numBaseFunctions; ++i)
       {
-        const std::pair< EntityPointerType, int > idPair(EntityPointerType(*it), i);
+        const std::pair< EntityPointerType, int > idPair(ep, i);
         cell_numbering_map_.insert( std::make_pair(idPair, counter) );
         counter++;
       }
