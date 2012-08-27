@@ -115,8 +115,6 @@ class DiscreteFunctionReader
       size_ = file_->tellg();
       file_->seekg(0);
     }
-    else
-      DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for reading") % filename_ % dir_ );
   }
 
 public:
@@ -157,6 +155,8 @@ public:
 
   template< class DFType >
   void read(const unsigned long index, DFType& df) {
+    if(!is_open())
+      DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for reading") % filename_ % dir_ );
     typedef typename DFType::DomainFieldType
     Field;
     const unsigned long bytes = df.size() * sizeof(Field);
