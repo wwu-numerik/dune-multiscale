@@ -14,7 +14,7 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
-#include <dune/stuff/grid/ranges.hh>
+#include <dune/stuff/common/ranges.hh>
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
@@ -24,6 +24,7 @@ template< class DiscreteFunctionType >
 void boundaryTreatment(DiscreteFunctionType& rhs) {
   using namespace Dune::Stuff;
   const auto& discreteFunctionSpace = rhs.space();
+  static const unsigned int faceCodim = 1;
   for (const auto& entity : discreteFunctionSpace)
   {
     for (const auto& intersection : intersectionRange(discreteFunctionSpace.gridPart(), entity))
@@ -31,13 +32,13 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
       if ( !intersection.boundary() )
         continue;
       auto rhsLocal = rhs.localFunction(entity);
-      const int face = intersection.indexInInside();
-      static const int faceCodim = 1;
-      for( auto point : lagrangePointSetRange<faceCodim>(discreteFunctionSpace, entity, face))
+      const auto face = intersection.indexInInside();
+      for(auto point : lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
         rhsLocal[point] = 0;
     }
   }
 } // boundaryTreatment
+
 
 /**
  * \return true if a program should continue with a new newton step
@@ -151,7 +152,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   // residual solution almost identical to zero: break
   if (relative_newton_error <= hmm_tolerance)
   {
-      const auto newton_step_time = DSC_PROFILER.getTiming("newton_step_", hmm_iteration_step);
+      const auto newton_step_time = DSC_PROFILER.stopTiming("newton_step_", hmm_iteration_step);
       DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
                 << std::endl << std::endl;
       DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;

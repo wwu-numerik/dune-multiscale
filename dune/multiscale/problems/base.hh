@@ -3,7 +3,7 @@
 
 #include <string>
 #include <dune/multiscale/problems/constants.hh>
-#include <dune/stuff/fem/functions.hh>
+#include <dune/stuff/fem/functions/analytical.hh>
 
 namespace Problem {
 /**

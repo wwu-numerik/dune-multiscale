@@ -1,7 +1,7 @@
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EASY
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EASY
 
-#include <dune/stuff/fem/functions.hh>
+#include <dune/stuff/fem/functions/analytical.hh>
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>

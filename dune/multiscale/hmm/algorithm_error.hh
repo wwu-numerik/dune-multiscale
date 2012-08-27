@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include <dune/stuff/grid/ranges.hh>
+#include <dune/stuff/common/ranges.hh>
 
 template <class HMMTraits>
 struct HMMResult {

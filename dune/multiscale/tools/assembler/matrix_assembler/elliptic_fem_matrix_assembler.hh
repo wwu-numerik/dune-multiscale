@@ -13,7 +13,7 @@
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 
-#include <dune/stuff/grid/ranges.hh>
+#include <dune/stuff/common/ranges.hh>
 
 namespace Dune {
 // Imp stands for Implementation

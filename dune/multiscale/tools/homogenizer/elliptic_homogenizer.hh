@@ -26,8 +26,8 @@
 #include <dune/fem/io/parameter.hh>
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/stuff/fem/functions/analytical.hh>
 
-#include <dune/stuff/fem/functions.hh>
 namespace Dune {
 // define output traits
 struct CellDataOutputParameters
