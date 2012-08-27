@@ -268,31 +268,31 @@ HMMResult<HMMTraits>
       hmm_biCGStab(hmm_newton_rhs, hmm_solution);
       DSC_LOG_INFO << seperator_line << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl;
       } else {
-      // the nonlinear case
-      // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
-      if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false))
-      {
-        //! -------------- solve and save the cell problems for the macroscopic base function set
-        const Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType,
-            typename HMM::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
-        const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
-        DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
-          // generate directory for cell problem data output
-        Dune::Stuff::Common::Filesystem::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
-        // only for the case with test function reconstruction:
-        #ifdef TFR
-        // -------------- solve cell problems for the macro basefunction set ------------------------------
-        // save the solutions of the cell problems for the set of macroscopic base functions
+        // the nonlinear case
+        // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
+        if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false))
+        {
+          //! -------------- solve and save the cell problems for the macroscopic base function set
+          const Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType,
+              typename HMM::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+          const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
+          DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
+            // generate directory for cell problem data output
+          Dune::Stuff::Common::Filesystem::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
+          // only for the case with test function reconstruction:
+          if (DSC_CONFIG_GET("TFR", false)) {
+            // -------------- solve cell problems for the macro basefunction set ------------------------------
+            // save the solutions of the cell problems for the set of macroscopic base functions
 
-        cell_problem_solver.template saveTheSolutions_baseSet< typename HMM::DiscreteFunctionType >(discreteFunctionSpace,
-                                                                             cp_num_manager,
-                                                                             filename + "/cell_problems/");
+            cell_problem_solver.template saveTheSolutions_baseSet< typename HMM::DiscreteFunctionType >(discreteFunctionSpace,
+                                                                                 cp_num_manager,
+                                                                                 filename + "/cell_problems/");
 
-        DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
-        // end solving and saving cell problems
-        #endif // ifdef TFR
-               //! --------------- end solving and saving cell problems -----------------------------------------
-      }
+            DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
+            // end solving and saving cell problems
+          }
+          //! --------------- end solving and saving cell problems -----------------------------------------
+        }
 
       DSC_LOG_INFO << "Solving nonlinear HMM problem with Newton method." << std::endl;
       DSC_LOG_INFO << seperator_line << std::endl;
@@ -312,21 +312,17 @@ HMMResult<HMMTraits>
       // the next one is 'HMM_NEWTON_ITERATION_STEP+1' = hmm_iteration_step
       int hmm_iteration_step = DSC_CONFIG_GET("HMM_NEWTON_ITERATION_STEP", 0) + 1;
 
-      const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
-      #ifdef RESUME_TO_BROKEN_COMPUTATION
-      // std :: string location_hmm_newton_step_solution = "data/HMM/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
-      const std::string location_hmm_newton_step_solution = "HMM/" + filename + boost::format("/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
-                                                            % refinement_level_macrogrid_
-                                                            % HMM_NEWTON_ITERATION_STEP;
+      if (DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)) {
+        const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
+        // std :: string location_hmm_newton_step_solution = "data/HMM/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
+        const std::string location_hmm_newton_step_solution =
+            (boost::format("HMM/%s/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
+             % filename % refinement_level_macrogrid_ % DSC_CONFIG_GET("HMM_NEWTON_ITERATION_STEP", 0)).str();
 
-      bool reader_open = false;
-
-      // reader for the cell problem data file:
-      typename HMM::DiscreteFunctionReader discrete_function_reader_hmm_newton_ref(location_hmm_newton_step_solution);
-      discrete_function_reader_hmm_newton_ref.open();
-
-      discrete_function_reader_hmm_newton_ref.read(0, hmm_solution);
-      #endif       // RESUME_TO_BROKEN_COMPUTATION
+        // reader for the cell problem data file:
+        DiscreteFunctionReader discrete_function_reader_hmm_newton_ref(location_hmm_newton_step_solution);
+        discrete_function_reader_hmm_newton_ref.read(0, hmm_solution);
+      }
 
       double old_error = 100.0;
       double error_decay = 0.0;
@@ -552,9 +548,8 @@ HMMResult<HMMTraits>
     DSC_LOG_INFO << "   Estimated residual error = " << estimated_residual_error << ", where:" << std::endl;
     DSC_LOG_INFO << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std::endl;
     DSC_LOG_INFO << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std::endl;
-    #ifdef TFR
-    DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
-    #endif
+    if (DSC_CONFIG_GET("TFR", false))
+      DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
     #endif // ifdef ERRORESTIMATION
     //! -------------------------------------------------------
 

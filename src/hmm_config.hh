@@ -1,6 +1,7 @@
 #ifndef HMM_CONFIG_HH
 #define HMM_CONFIG_HH
 
+/****   all this should go into a default parameter file ********/
 //! do we have a linear elliptic problem?
 // if yes, #define LINEAR_PROBLEM
 // #define LINEAR_PROBLEM
@@ -34,18 +35,6 @@
 // (this only works for non-adaptive computations!)
 // #define RESUME_TO_BROKEN_COMPUTATION
 
-
-// hmfemmain:
-//!---------
- #include <dune/fem/solver/oemsolver/oemsolver.hh>
-
- #include <dune/fem/operator/discreteoperatorimp.hh>
- #include <dune/fem/misc/l2error.hh>
- #include <dune/fem/misc/l2norm.hh>
-// #include <dune/fem/io/visual/grape/datadisp/errordisplay.hh>
-//!-----------
-
-
-#include <dune/multiscale/problems/elliptic_problems/selector.hh>
+/**** ***********************************************************/
 
 #endif // HMM_CONFIG_HH

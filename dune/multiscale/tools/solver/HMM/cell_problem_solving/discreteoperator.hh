@@ -177,6 +177,8 @@ private:
   const DiffusionModel& diffusion_operator_;
 };
 
+} //namespace Dune
+
 #include "discreteoperator.cc"
 
 #endif // #ifndef DiscreteElliptic_HH

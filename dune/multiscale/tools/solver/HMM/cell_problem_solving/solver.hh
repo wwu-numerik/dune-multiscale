@@ -5,6 +5,7 @@
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/misc/l2error.hh>
 
 //! --------------------- the essential cell problem solver class ----------------------------------
 namespace Dune {
@@ -364,7 +365,7 @@ public:
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
 
-    std::string cell_solution_location = "HMM/" + filename + "_cellSolutions_baseSet";
+    std::string cell_solution_location = "HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
     DiscreteFunctionWriter dfw(cell_solution_location);
 
     DSC_PROFILER.startTiming("solver-saveTheSolutions_baseSet");

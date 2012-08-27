@@ -645,7 +645,7 @@ public:
                                       const DiscreteFunctionType& old_u_H, // old_u_H from the last iteration step
                                       // to obtain some information about the periodic discrete function space (space
                                       // for the cell problems)
-                                      const CellProblemNumberingManagerType& /*cp_num_manager*/,
+                                      const CellProblemNumberingManagerType& cp_num_manager,
                                       const PeriodicDiscreteFunctionType& dummy_func,
                                       DiscreteFunctionType& rhsVector,
                                       const std::string filename = "no_file") const
@@ -769,25 +769,24 @@ public:
         PeriodicDiscreteFunctionType corrector_old_u_H("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace);
         corrector_old_u_H.clear();
 
-        #ifdef TFR
         PeriodicDiscreteFunctionType corrector_Phi_i("Corrector of Phi_i", periodicDiscreteFunctionSpace);
         corrector_Phi_i.clear();
-        #endif // ifdef TFR
 
         if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
           CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace, A);
           cell_problem_solver.template solvecellproblem< JacobianRangeType >
             (grad_old_u_H_x, macro_entity_barycenter, corrector_old_u_H);
-          #ifdef TFR
-          cell_problem_solver.template solvecellproblem< JacobianRangeType >
-            (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
-          #endif // ifdef TFR
+          if (DSC_CONFIG_GET("TFR", false))
+            cell_problem_solver.template solvecellproblem< JacobianRangeType >
+              (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
+
         } else {
           discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
-          #ifdef TFR
-          discrete_function_reader_baseSet.read(cp_num_manager.get_number_of_cell_problem(macro_grid_it,
-                                                                                          i), corrector_Phi_i);
-          #endif // ifdef TFR
+          if (DSC_CONFIG_GET("TFR", false)) {
+            typename EntityType::EntityPointer entity_ptr(macro_grid_it);
+            discrete_function_reader_baseSet.read(cp_num_manager.get_number_of_cell_problem(entity_ptr, i)
+                                                  , corrector_Phi_i);
+          }
         }
 
         RangeType fine_scale_contribution = 0.0;
@@ -801,13 +800,8 @@ public:
           const GeometryType& micro_grid_geometry = micro_grid_entity.geometry();
           assert(micro_grid_entity.partitionType() == InteriorEntity);
 
-          typename PeriodicDiscreteFunctionType::LocalFunctionType loc_corrector_old_u_H
-            = corrector_old_u_H.localFunction(micro_grid_entity);
-
-          #ifdef TFR
-          typename PeriodicDiscreteFunctionType::LocalFunctionType loc_corrector_Phi_i = corrector_Phi_i.localFunction(
-            micro_grid_entity);
-          #endif // ifdef TFR
+          auto loc_corrector_old_u_H = corrector_old_u_H.localFunction(micro_grid_entity);
+          auto loc_corrector_Phi_i = corrector_Phi_i.localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
           const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace.order() + 2);
@@ -827,10 +821,9 @@ public:
             JacobianRangeType grad_corrector_old_u_H;
             loc_corrector_old_u_H.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_old_u_H);
 
-            #ifdef TFR
             JacobianRangeType grad_corrector_Phi_i;
-            loc_corrector_Phi_i.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_Phi_i);
-            #endif // ifdef TFR
+            if (DSC_CONFIG_GET("TFR", false))
+              loc_corrector_Phi_i.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_Phi_i);
 
             // x_T + (delta * y)
             DomainType current_point_in_macro_grid;
@@ -855,16 +848,16 @@ public:
             }
 
             // if test function reconstruction
-            #ifdef TFR
-            JacobianRangeType grad_reconstruction_Phi_i;
-            for (int k = 0; k < dimension; ++k)
-              grad_reconstruction_Phi_i[0][k] = grad_Phi_x[0][k] + grad_corrector_Phi_i[0][k];
+            if (DSC_CONFIG_GET("TFR", false)) {
+              JacobianRangeType grad_reconstruction_Phi_i;
+              for (int k = 0; k < dimension; ++k)
+                grad_reconstruction_Phi_i[0][k] = grad_Phi_x[0][k] + grad_corrector_Phi_i[0][k];
 
-            fine_scale_contribution += cutting_function * weight_micro_quadrature
-                                       * (diffusive_flux[0] * grad_reconstruction_Phi_i[0]);
-            #else // ifdef TFR
-            fine_scale_contribution += cutting_function * weight_micro_quadrature * (diffusive_flux[0] * grad_Phi_x[0]);
-            #endif // ifdef TFR
+              fine_scale_contribution += cutting_function * weight_micro_quadrature
+                                         * (diffusive_flux[0] * grad_reconstruction_Phi_i[0]);
+            } else {
+              fine_scale_contribution += cutting_function * weight_micro_quadrature * (diffusive_flux[0] * grad_Phi_x[0]);
+            }
           }
         }
 

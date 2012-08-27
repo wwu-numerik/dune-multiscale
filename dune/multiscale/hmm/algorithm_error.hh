@@ -172,20 +172,18 @@ HMMResult<HMMTraits>  estimate_error(
 
     result.estimated_residual_error += local_residual_indicator;
 
-    #ifdef TFR
-    // use 'indicator_effective_tfr' or 'indicator_tfr_1'
-    // contribution of the local tfr error:
-    typename HMM::RangeType local_tfr_indicator = error_estimator.indicator_tfr_1(entity, hmm_solution, corrector_u_H_on_entity);
-    estimated_tfr_error += local_tfr_indicator;
-    #endif // ifdef TFR
+    typename HMM::RangeType local_tfr_indicator(0);
+    if (DSC_CONFIG_GET("TFR", false)) {
+      // use 'indicator_effective_tfr' or 'indicator_tfr_1'
+      // contribution of the local tfr error:
+      local_tfr_indicator = error_estimator.indicator_tfr_1(entity, hmm_solution, corrector_u_H_on_entity);
+      result.estimated_tfr_error += local_tfr_indicator;
+    }
 
     result.local_error_indicator[element_number] = local_source_indicator
                                             + local_approximation_indicator
                                             + local_residual_indicator;
-
-    #ifdef TFR
-    local_error_indicator[element_number] += local_tfr_indicator;
-    #endif
+    result.local_error_indicator[element_number] += local_tfr_indicator;
 
     //!TODO minmaxaverge
     if (result.local_error_indicator[element_number] < result.minimal_loc_indicator)
@@ -215,10 +213,10 @@ HMMResult<HMMTraits>  estimate_error(
   result.estimated_error = result.estimated_source_error +
           result.estimated_approximation_error + result.estimated_residual_error;
 
-  #ifdef TFR
-  result.estimated_tfr_error = sqrt(result.estimated_tfr_error);
-  result.estimated_error += result.estimated_tfr_error;
-  #endif // ifdef TFR
+  if (DSC_CONFIG_GET("TFR", false)) {
+    result.estimated_tfr_error = sqrt(result.estimated_tfr_error);
+    result.estimated_error += result.estimated_tfr_error;
+  }
 
   #ifdef ADAPTIVE
   // maximum variation (up) from average

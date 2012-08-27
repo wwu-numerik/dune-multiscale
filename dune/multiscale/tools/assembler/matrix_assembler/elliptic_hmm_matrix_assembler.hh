@@ -2,12 +2,14 @@
 #define DiscreteEllipticHMMOperator_HH
 
 #include <boost/noncopyable.hpp>
+#include <memory>
 
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
+
 
 namespace Dune {
 // Imp stands for Implementation
@@ -113,11 +115,10 @@ template< class MatrixType >
 void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
                                   CellProblemNumberingManagerImp >::assemble_matrix(MatrixType& global_matrix) const {
   // if test function reconstruction
-  #ifdef TFR
-  DSC_LOG_INFO << "Assembling TFR-HMM Matrix." << std::endl;
-  #else
-  DSC_LOG_INFO << "Assembling HMM Matrix." << std::endl;
-  #endif // ifdef TFR
+  if (DSC_CONFIG_GET("TFR", false))
+    DSC_LOG_INFO << "Assembling TFR-HMM Matrix." << std::endl;
+  else
+    DSC_LOG_INFO << "Assembling HMM Matrix." << std::endl;
 
   // place, where we saved the solutions of the cell problems
   const std::string cell_solution_location = filename_ + "/cell_problems/_cellSolutions_baseSet";;
@@ -259,17 +260,17 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
             }
 
             // if test function reconstruction
-            #ifdef TFR
-            JacobianRangeType grad_reconstruction_Phi_j;
-            for (int k = 0; k < dimension; ++k)
-              grad_reconstruction_Phi_j[0][k] = gradient_Phi[j][0][k] + grad_corrector_j[0][k];
+            if (DSC_CONFIG_GET("TFR", false)) {
+              JacobianRangeType grad_reconstruction_Phi_j;
+              for (int k = 0; k < dimension; ++k)
+                grad_reconstruction_Phi_j[0][k] = gradient_Phi[j][0][k] + grad_corrector_j[0][k];
 
-            fine_scale_average += cutting_function * weight_micro_quadrature
-                                  * (diffusion_in_gradient_Phi_reconstructed[0] * grad_reconstruction_Phi_j[0]);
-            #else // ifdef TFR
-            fine_scale_average += cutting_function * weight_micro_quadrature
-                                  * (diffusion_in_gradient_Phi_reconstructed[0] * gradient_Phi[j][0]);
-            #endif // ifdef TFR
+              fine_scale_average += cutting_function * weight_micro_quadrature
+                                    * (diffusion_in_gradient_Phi_reconstructed[0] * grad_reconstruction_Phi_j[0]);
+            } else {// ifdef TFR}
+              fine_scale_average += cutting_function * weight_micro_quadrature
+                                    * (diffusion_in_gradient_Phi_reconstructed[0] * gradient_Phi[j][0]);
+            }
           }
         }
 
@@ -317,11 +318,10 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
                                  MatrixType& global_matrix) const
 {
   // if test function reconstruction
-  #ifdef TFR
-  DSC_LOG_INFO << "Assembling TFR-HMM Matrix for Newton Iteration." << std::endl;
-  #else
-  DSC_LOG_INFO << "Assembling HMM Matrix for Newton Iteration." << std::endl;
-  #endif // ifdef TFR
+  if (DSC_CONFIG_GET("TFR", false))
+    DSC_LOG_INFO << "Assembling TFR-HMM Matrix for Newton Iteration." << std::endl;
+  else
+    DSC_LOG_INFO << "Assembling HMM Matrix for Newton Iteration." << std::endl;
 
   // place, where we saved the solutions of the cell problems
   const std::string cell_solution_location_baseSet = "HMM/" + filename_ + "/cell_problems/_cellSolutions_baseSet";
@@ -402,10 +402,9 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
     }
 
-    #ifdef TFR
     //!TODO automatic memory
-    PeriodicDiscreteFunction* corrector_Phi[discreteFunctionSpace_.mapper().maxNumDofs()];
-    #endif
+    std::vector<std::unique_ptr<PeriodicDiscreteFunction> > corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
+
 
     // gradients of macrocopic base functions:
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -421,16 +420,17 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
       inverse_jac.mv(gradient_Phi_ref_element[0], gradient_Phi[i][0]);
 
-      #ifdef TFR
-      corrector_Phi[i] = new PeriodicDiscreteFunction("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_);
-      corrector_Phi[i]->clear();
-      if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
-      cell_problem_solver.template solvecellproblem< JacobianRangeType >
-        ( gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]) );
-      } else {
-        discrete_function_reader_baseSet.read( cell_problem_id[i], *(corrector_Phi[i]) );
+      if (DSC_CONFIG_GET("TFR", false)) {
+        corrector_Phi[i] = std::unique_ptr<PeriodicDiscreteFunction>(
+                             new PeriodicDiscreteFunction("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_));
+        corrector_Phi[i]->clear();
+        if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+          cell_problem_solver.template solvecellproblem< JacobianRangeType >
+            (gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]));
+        } else {
+          discrete_function_reader_baseSet.read( cell_problem_id[i], *(corrector_Phi[i]) );
+        }
       }
-      #endif // ifdef TFR
     }
     // the multiplication with jacobian inverse is delegated
     macro_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_new);
@@ -468,16 +468,9 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
           const Geometry& micro_grid_geometry = micro_grid_entity.geometry();
           assert(micro_grid_entity.partitionType() == InteriorEntity);
 
-          typename PeriodicDiscreteFunction::LocalFunctionType loc_corrector_old_u_H = corrector_old_u_H.localFunction(
-            micro_grid_entity);
-
-          typename PeriodicDiscreteFunction::LocalFunctionType loc_D_Q_old_u_H_Phi_i
-            = jacobian_corrector_old_u_H_Phi_i.localFunction(micro_grid_entity);
-
-          #ifdef TFR
-          typename PeriodicDiscreteFunction::LocalFunctionType loc_corrector_Phi_j = corrector_Phi[j]->localFunction(
-            micro_grid_entity);
-          #endif // ifdef TFR
+          auto loc_corrector_old_u_H = corrector_old_u_H.localFunction(micro_grid_entity);
+          auto loc_D_Q_old_u_H_Phi_i = jacobian_corrector_old_u_H_Phi_i.localFunction(micro_grid_entity);
+          auto loc_corrector_Phi_j = corrector_Phi[j]->localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
           Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
@@ -498,10 +491,10 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
             loc_corrector_old_u_H.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_old_u_H);
             loc_D_Q_old_u_H_Phi_i.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_D_Q_old_u_H_Phi_i);
 
-            #ifdef TFR
             JacobianRangeType grad_corrector_Phi_j;
-            loc_corrector_Phi_j.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_Phi_j);
-            #endif // ifdef TFR
+            if (DSC_CONFIG_GET("TFR", false)) {
+              loc_corrector_Phi_j.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_Phi_j);
+            }
 
             // x_T + (delta * y)
             DomainType current_point_in_macro_grid;
@@ -535,17 +528,17 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
             }
 
             // if test function reconstruction
-            #ifdef TFR
-            JacobianRangeType grad_reconstruction_Phi_j;
-            for (int k = 0; k < dimension; ++k)
-              grad_reconstruction_Phi_j[0][k] = gradient_Phi[j][0][k] + grad_corrector_Phi_j[0][k];
+            if (DSC_CONFIG_GET("TFR", false)) {
+              JacobianRangeType grad_reconstruction_Phi_j;
+              for (int k = 0; k < dimension; ++k)
+                grad_reconstruction_Phi_j[0][k] = gradient_Phi[j][0][k] + grad_corrector_Phi_j[0][k];
 
-            fine_scale_average += cutting_function * weight_micro_quadrature
-                                  * (jac_diffusion_flux[0] * grad_reconstruction_Phi_j[0]);
-            #else // ifdef TFR
-            fine_scale_average += cutting_function * weight_micro_quadrature
-                                  * (jac_diffusion_flux[0] * gradient_Phi[j][0]);
-            #endif // ifdef TFR
+              fine_scale_average += cutting_function * weight_micro_quadrature
+                                    * (jac_diffusion_flux[0] * grad_reconstruction_Phi_j[0]);
+            } else {
+              fine_scale_average += cutting_function * weight_micro_quadrature
+                                    * (jac_diffusion_flux[0] * gradient_Phi[j][0]);
+            }
           }
         }
 

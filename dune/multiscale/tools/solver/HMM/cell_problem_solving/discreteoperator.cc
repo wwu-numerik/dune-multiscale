@@ -1,3 +1,7 @@
+#include <dune/multiscale/problems/elliptic_problems/selector.hh>
+
+namespace Dune {
+
 template< class DiscreteFunctionImp, class DiffusionImp >
 void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const DiscreteFunction&/* u*/,
                                                                                   DiscreteFunction& /*w*/) const {
@@ -581,5 +585,5 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_
   }
 } // assemble_jacobian_corrector_cell_prob_RHS
 
-} // namespace Dune {
+} // namespace Dune
 

@@ -234,11 +234,11 @@ void print_info(const ProblemDataType& info, std::ostream& out)
   out << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
   const int refinement_level_cellgrid = DSC_CONFIG_GET("grid.refinement_level_cellgrid", 1);
   out << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
-  #ifdef TFR
-  out << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
-  #else
-  out << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
-  #endif // ifdef TFR
+  if (DSC_CONFIG_GET("TFR", false))
+    out << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
+  else
+    out << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
+
   if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
     out << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
   } else {
@@ -392,13 +392,10 @@ bool adapt(const HMMResult<HMM>& result,
 
 //! the main hmm computation
 template < class HMMTraits >
-void algorithm(const std::string& /*UnitCubeName*/,
-               typename HMMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
+void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
                typename HMMTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
                                                            // reference computations)
                typename HMMTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
-               int /*refinement_difference*/,   // refinement difference for the macro grid (problem-to-solve vs. reference
-                                            // problem)
                const std::string filename) {
   typedef HMMTraits HMM;
   using namespace Dune;
@@ -420,7 +417,6 @@ void algorithm(const std::string& /*UnitCubeName*/,
   typename HMM::GridPartType gridPartFine(*fine_macro_grid_pointer);
 
   typename HMM::GridType& grid = gridPart.grid();
-  typename HMM::GridType& gridFine = gridPartFine.grid();
   //! --------------------------------------------------------------------------------------
 
   //! ------------------------- discrete function spaces -----------------------------------

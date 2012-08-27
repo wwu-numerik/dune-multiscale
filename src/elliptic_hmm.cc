@@ -60,13 +60,12 @@ int main(int argc, char** argv) {
     // name of the error file in which the data will be saved
     std::string filename_;
     const Problem::ModelProblemData info;
-    #ifdef RESUME_TO_BROKEN_COMPUTATION
+
     // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
     // (vorlauefig sollte diese Variante aber reichen)
-    const std::string save_filename = path + "/problem-info-resumed-computation.txt";
-    #else // ifdef RESUME_TO_BROKEN_COMPUTATION
-    const std::string save_filename = path + "/problem-info.txt";
-    #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
+    const std::string save_filename = DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)
+                                      ? std::string(path + "/problem-info-resumed-computation.txt")
+                                      : std::string(path + "/problem-info.txt");
     DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
@@ -81,9 +80,6 @@ int main(int argc, char** argv) {
     //!TODO völliig widersprüchlich zu oben
       refinement_level_referenceprob_ = 8;
 
-    // how many times finer do we solve the reference problem (it is either a homogenized problem or the exact problem
-    // with a fine-scale resolution)
-    const int refinement_difference_for_referenceproblem = refinement_level_referenceprob_ - refinement_level_macrogrid_;
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
     DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
@@ -103,7 +99,8 @@ int main(int argc, char** argv) {
     fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
 
     // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
-    const std::string UnitCubeName("../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf");     // --> the 0-centered
+    boost::filesystem::path grid_dir(DSC_CONFIG_GET("grid.dir", "../dune/multiscale/grids/cell_grids"));
+    const boost::filesystem::path unitCubeName = grid_dir / "unit_cube_0_centered.dgf";     // --> the 0-centered
                                                                                                   // unit cube, i.e.
                                                                                                   // [-1/2,1/2]^2
     // note that the centering is fundamentaly important for the implementation. Do NOT change it to e.g. [0,1]^2!!!
@@ -111,11 +108,11 @@ int main(int argc, char** argv) {
     // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated
     //on
     // such a grid )
-    Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(UnitCubeName);
+    Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(unitCubeName.string());
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
-    algorithm<HMMTraits> (UnitCubeName, macro_grid_pointer, fine_macro_grid_pointer,
-              periodic_grid_pointer, refinement_difference_for_referenceproblem, filename_);
+    algorithm<HMMTraits> (macro_grid_pointer, fine_macro_grid_pointer,
+              periodic_grid_pointer, filename_);
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
     //normal
     // macro problem

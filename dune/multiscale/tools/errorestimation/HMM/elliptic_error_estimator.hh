@@ -803,16 +803,9 @@ public:
     // (+0.2 to avoid rounding errors)
 
     // generalized jump up/down
-    RangeType jump_up_down[num_boundary_faces_per_direction];
-
+    std::vector<RangeType> jump_up_down(num_boundary_faces_per_direction, RangeType(0.0));
     // generalized jump left/right
-    RangeType jump_left_right[num_boundary_faces_per_direction];
-
-    for (int id = 0; id < num_boundary_faces_per_direction; ++id)
-    {
-      jump_up_down[id] = 0.0;
-      jump_left_right[id] = 0.0;
-    }
+    std::vector<RangeType> jump_left_right(num_boundary_faces_per_direction, RangeType(0.0));
 
     // did you find a boundary edge of the \eps-\delta-cube? (you must find it!!)
     bool eps_delta_boundary_edge_found = false;
