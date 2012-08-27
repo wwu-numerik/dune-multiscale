@@ -430,7 +430,7 @@ public:
     } // end: for-loop: IteratorType it
 
 
-    const auto total_time = DSC_PROFILER.getTiming("solver-saveTheSolutions_baseSet") / 1000.f;
+    const auto total_time = DSC_PROFILER.stopTiming("solver-saveTheSolutions_baseSet") / 1000.f;
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In method: saveTheSolutions_baseSet." << std::endl << std::endl;
     DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."

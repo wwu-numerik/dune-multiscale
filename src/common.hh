@@ -70,9 +70,9 @@ CollectiveCommunication init(int argc, char** argv) {
   DSC::Logger().create(DSC_CONFIG_GETB("logging.level", 62, useLogger),
                   DSC_CONFIG_GETB("logging.file", std::string(argv[0]) + ".log", useLogger),
                   DSC_CONFIG_GETB("global.datadir", "data", useLogger),
-                  DSC_CONFIG_GETB("logging.dir", "" /*path below datadir*/, useLogger)
+                  DSC_CONFIG_GETB("logging.dir", "log" /*path below datadir*/, useLogger)
                   );
-
+  DSC_CONFIG.setRecordDefaults(true);
   return CollectiveCommunication();  // ( Dune::MPIManager::helper().getCommunicator() );
 } // init
 
