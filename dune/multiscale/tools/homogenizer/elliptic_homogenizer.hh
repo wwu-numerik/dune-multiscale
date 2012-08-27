@@ -27,6 +27,7 @@
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
+#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 
 namespace Dune {
 // define output traits

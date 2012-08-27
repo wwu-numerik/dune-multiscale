@@ -6,15 +6,14 @@
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-
 //! --------------------- the essential cell problem solver class ----------------------------------
 namespace Dune {
-template< class Traits >
+template< class PeriodicDiscreteFunctionImp, class DiffusionImp >
 class CellProblemSolver
 {
 public:
   //! type of discrete functions
-  typedef typename Traits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionType;
+  typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
 
   //! type of discrete function space
   typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
@@ -36,7 +35,7 @@ public:
   enum { polynomialOrder = PeriodicDiscreteFunctionSpaceType::polynomialOrder };
 
   //! type of the (possibly non-linear) diffusion operator
-  typedef typename Traits::DiffusionType DiffusionType;
+  typedef DiffusionImp DiffusionType;
 
   struct CellMatrixTraits
   {
@@ -48,7 +47,7 @@ public:
     template< class M >
     struct Adapter
     {
-      typedef typename Traits::template LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
+      typedef Dune::LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
     };
   };
 

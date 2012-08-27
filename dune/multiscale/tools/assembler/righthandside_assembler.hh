@@ -3,12 +3,9 @@
 
 // - Dune includes
 #include <dune/fem/quadrature/quadrature.hh>
-
-#ifdef AD_HOC_COMPUTATION
- #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/cellproblemsolver.hh>
-#endif
-
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
+
 
 namespace Dune {
 // Assembler for right rand side
@@ -664,9 +661,7 @@ public:
     typedef typename PeriodicDiscreteFunctionType::LocalFunctionType
     PeriodicLocalFunctionType;
 
-    #ifdef AD_HOC_COMPUTATION
     typedef CellProblemSolver< PeriodicDiscreteFunctionType, DiffusionOperatorType > CellProblemSolverType;
-    #else
     const std::string cell_solution_location_baseSet = "data/HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
     const std::string cell_solution_location_discFunc = "data/HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
 
@@ -676,7 +671,6 @@ public:
     DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);
-    #endif // ifdef AD_HOC_COMPUTATION
 
     Problem::ModelProblemData model_info;
     const double delta = model_info.getDelta();
@@ -780,7 +774,7 @@ public:
         corrector_Phi_i.clear();
         #endif // ifdef TFR
 
-        #ifdef AD_HOC_COMPUTATION
+        if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
           CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace, A);
           cell_problem_solver.template solvecellproblem< JacobianRangeType >
             (grad_old_u_H_x, macro_entity_barycenter, corrector_old_u_H);
@@ -788,13 +782,13 @@ public:
           cell_problem_solver.template solvecellproblem< JacobianRangeType >
             (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
           #endif // ifdef TFR
-        #else // ifdef AD_HOC_COMPUTATION
+        } else {
           discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
           #ifdef TFR
           discrete_function_reader_baseSet.read(cp_num_manager.get_number_of_cell_problem(macro_grid_it,
                                                                                           i), corrector_Phi_i);
           #endif // ifdef TFR
-        #endif // ifdef AD_HOC_COMPUTATION
+        }
 
         RangeType fine_scale_contribution = 0.0;
 

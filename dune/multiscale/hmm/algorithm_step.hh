@@ -58,34 +58,34 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   typename HMM::DiscreteFunctionType hmm_newton_residual(filename + "HMM Newton Residual", hmm_solution.space());
   hmm_newton_residual.clear();
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
-  #ifndef AD_HOC_COMPUTATION
-  double hmm_biCG_tolerance = 1e-8;
-  bool hmm_solution_convenient = false;
-  while (hmm_solution_convenient == false)
-  {
-    hmm_newton_residual.clear();
-    const typename HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,
-                                         1e-8, hmm_biCG_tolerance, 20000, VERBOSE);
+  if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+    double hmm_biCG_tolerance = 1e-8;
+    bool hmm_solution_convenient = false;
+    while (hmm_solution_convenient == false)
+    {
+      hmm_newton_residual.clear();
+      const typename HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,
+                                           1e-8, hmm_biCG_tolerance, 20000, VERBOSE);
 
+      hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
+
+      if ( hmm_newton_residual.dofsValid() )
+      {
+        hmm_solution_convenient = true;
+      }
+
+      if (hmm_biCG_tolerance > 1e-4)
+      {
+        DSC_LOG_INFO << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'."
+                  << std::endl;
+        DUNE_THROW(Dune::InvalidStateException, "Right hand side invalid!");
+      }
+      hmm_biCG_tolerance *= 10.0;
+    }
+  } else {
+    const typename HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
     hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
-
-    if ( hmm_newton_residual.dofsValid() )
-    {
-      hmm_solution_convenient = true;
-    }
-
-    if (hmm_biCG_tolerance > 1e-4)
-    {
-      DSC_LOG_INFO << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'."
-                << std::endl;
-      DUNE_THROW(Dune::InvalidStateException, "Right hand side invalid!");
-    }
-    hmm_biCG_tolerance *= 10.0;
   }
-  #else         // AD_HOC_COMPUTATION
-  InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
-  hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
-  #endif         // AD_HOC_COMPUTATION
 
 
   if ( !hmm_newton_residual.dofsValid() ) {
@@ -231,7 +231,8 @@ HMMResult<HMMTraits>
       // solve cell problems in a preprocess, if AD_HOC_COMPUTATION is not defined
       if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
         //! -------------- solve and save the cell problems for the base function set --------------------------------------
-        const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+        const Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType,
+            typename HMM::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
         const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
         DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
         // generate directory for cell problem data output
@@ -272,7 +273,8 @@ HMMResult<HMMTraits>
       if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false))
       {
         //! -------------- solve and save the cell problems for the macroscopic base function set
-        const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+        const Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType,
+            typename HMM::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
         const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
         DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
           // generate directory for cell problem data output
@@ -345,7 +347,8 @@ HMMResult<HMMTraits>
         if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false))
         {
           // solve cell problems for the solution of the last iteration step
-          const Dune::CellProblemSolver< HMM > cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+          const Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType,
+              typename HMM::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
           cell_problem_solver.template saveTheSolutions_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution, filename + "/cell_problems/");
           cell_problem_solver.template saveTheJacCorSolutions_baseSet_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution,
                                                                                               cp_num_manager,

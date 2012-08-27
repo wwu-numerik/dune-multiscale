@@ -9,7 +9,6 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
 
-
 namespace Dune {
 // Imp stands for Implementation
 template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
@@ -43,9 +42,8 @@ public:
   typedef typename DiscreteFunctionSpace::JacobianRangeType
   JacobianRangeType;
 
-  #ifdef AD_HOC_COMPUTATION
-  typedef CellProblemSolver< PeriodicDiscreteFunction, DiffusionModel > CellProblemSolverType;
-  #endif
+  //!only used in adhoc computation
+  typedef CellProblemSolver< PeriodicDiscreteFunction, DiffusionImp > CellProblemSolverType;
 
 protected:
   static const int dimension = GridPart::GridType::dimension;
@@ -186,13 +184,13 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
       corrector_Phi[i] = new PeriodicDiscreteFunction("Corrector Function of Phi", periodicDiscreteFunctionSpace_);
       corrector_Phi[i]->clear();
-      #ifdef AD_HOC_COMPUTATION
-      CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
-      cell_problem_solver.template solvecellproblem< JacobianRangeType >
-        ( gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]) );
-      #else // ifdef AD_HOC_COMPUTATION
-      discrete_function_reader.read( cell_problem_id[i], *(corrector_Phi[i]) );
-      #endif // ifdef AD_HOC_COMPUTATION
+      if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+        CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
+        cell_problem_solver.template solvecellproblem< JacobianRangeType >
+          ( gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]) );
+      } else {
+        discrete_function_reader.read( cell_problem_id[i], *(corrector_Phi[i]) );
+      }
     }
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -396,14 +394,13 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
     PeriodicDiscreteFunction corrector_old_u_H("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace_);
     corrector_old_u_H.clear();
 
-    #ifdef AD_HOC_COMPUTATION
-    CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
-    cell_problem_solver.template solvecellproblem< JacobianRangeType >
-      (grad_old_u_H, macro_entity_barycenter, corrector_old_u_H);
-    #else // ifdef AD_HOC_COMPUTATION
-    discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
-
-    #endif // ifdef AD_HOC_COMPUTATION
+    const CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
+    if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+      cell_problem_solver.template solvecellproblem< JacobianRangeType >
+        (grad_old_u_H, macro_entity_barycenter, corrector_old_u_H);
+    } else {
+      discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
+    }
 
     #ifdef TFR
     //!TODO automatic memory
@@ -427,12 +424,12 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       #ifdef TFR
       corrector_Phi[i] = new PeriodicDiscreteFunction("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_);
       corrector_Phi[i]->clear();
-      #ifdef AD_HOC_COMPUTATION
+      if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
       cell_problem_solver.template solvecellproblem< JacobianRangeType >
         ( gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]) );
-      #else // ifdef AD_HOC_COMPUTATION
-      discrete_function_reader_baseSet.read( cell_problem_id[i], *(corrector_Phi[i]) );
-      #endif // ifdef AD_HOC_COMPUTATION
+      } else {
+        discrete_function_reader_baseSet.read( cell_problem_id[i], *(corrector_Phi[i]) );
+      }
       #endif // ifdef TFR
     }
     // the multiplication with jacobian inverse is delegated
@@ -447,16 +444,16 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
                                                                 periodicDiscreteFunctionSpace_);
       jacobian_corrector_old_u_H_Phi_i.clear();
 
-      #ifdef AD_HOC_COMPUTATION
-      cell_problem_solver.template solve_jacobiancorrector_cellproblem< JacobianRangeType >
-        (gradient_Phi[i],
-        grad_old_u_H,
-        corrector_old_u_H,
-        macro_entity_barycenter,
-        jacobian_corrector_old_u_H_Phi_i);
-      #else // ifdef AD_HOC_COMPUTATION
-      discrete_function_reader_jac_cor.read(cell_problem_id[i], jacobian_corrector_old_u_H_Phi_i);
-      #endif // ifdef AD_HOC_COMPUTATION
+      if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+        cell_problem_solver.template solve_jacobiancorrector_cellproblem< JacobianRangeType >
+          (gradient_Phi[i],
+          grad_old_u_H,
+          corrector_old_u_H,
+          macro_entity_barycenter,
+          jacobian_corrector_old_u_H_Phi_i);
+      } else {
+        discrete_function_reader_jac_cor.read(cell_problem_id[i], jacobian_corrector_old_u_H_Phi_i);
+      }
 
       for (unsigned int j = 0; j < numMacroBaseFunctions; ++j)
       {

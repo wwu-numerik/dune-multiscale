@@ -5,9 +5,7 @@
 
 // we only use error estimation, if the solutions of the cell problems have been determined in a pre-process. Otherwise
 // it is far too expensive!
-#ifndef AD_HOC_COMPUTATION
- #include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
-#endif
+#include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
 
 //! (very restrictive) homogenizer
 #include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
@@ -39,7 +37,7 @@ public:
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/solver/HMM/reconstruction_manager/elliptic/reconstructionintegrator.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
-#include <dune/multiscale/hmm/types.hh>
+#include <dune/multiscale/hmm/hmm_traits.hh>
 
 void check_config();
 
