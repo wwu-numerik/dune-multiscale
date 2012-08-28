@@ -5,6 +5,7 @@
 #include <vector>
 
 // - dune inclues
+#include <dune/geometry/type.hh>
 #include <dune/grid/common/grid.hh>
 
 #include <dune/fem/storage/array.hh>
@@ -78,9 +79,9 @@ public:
 
   //! Return the size of the index set for a codimension
   //! Marked for revision in grid/common/defaultindexsets.hh
-  IndexType size(GeometryType type) const {
-    if ( geometryTypeValid(type) )
-      return size( dimension - type.dim() );
+  IndexType size(GeometryType _type) const {
+    if ( geometryTypeValid(_type) )
+      return size( dimension - _type.dim() );
 
     return 0;
   }
@@ -209,9 +210,9 @@ inline void PeriodicLeafIndexSet< Grid >
   ::calcVertexIndices(const Iterator& begin, const Iterator& end) {
   enum { codim = dimension };
 
-  typedef typename GridType::template Codim< codim >::Geometry GeometryType;
-  const unsigned int dimWorld = GeometryType::coorddimension;
-  typedef FieldVector< typename GeometryType::ctype, dimWorld > VertexType;
+  typedef typename GridType::template Codim< codim >::Geometry GeometryImp;
+  const unsigned int dimWorld = GeometryImp::coorddimension;
+  typedef FieldVector< typename GeometryImp::ctype, dimWorld > VertexType;
 
   const int n = baseIndexSet_.size(codim);
   index_.resize(n);
@@ -225,7 +226,7 @@ inline void PeriodicLeafIndexSet< Grid >
     int idx = baseIndexSet_.index(*it);
     VertexType& vertex = vertices[idx];
 
-    const GeometryType& geometry = it->geometry();
+    const GeometryImp& geometry = it->geometry();
     vertex = geometry.corner(0);
     truncate(vertex);
 
@@ -252,8 +253,8 @@ inline void PeriodicLeafIndexSet< Grid >
   ::calcEdgeIndices(const Iterator& begin, const Iterator& end) {
   enum { codim = dimension - 1 };
 
-  typedef typename GridType::template Codim< codim >::Geometry GeometryType;
-  typedef FieldVector< typename GeometryType::ctype, GeometryType::coorddimension >
+  typedef typename GridType::template Codim< codim >::Geometry GeometryImp;
+  typedef FieldVector< typename GeometryImp::ctype, GeometryImp::coorddimension >
   VertexType;
 
   const ctype eps = tolerance * tolerance;
@@ -272,7 +273,7 @@ inline void PeriodicLeafIndexSet< Grid >
     VertexType& vertex0 = vertices0[idx];
     VertexType& vertex1 = vertices1[idx];
 
-    const GeometryType& geometry = it->geometry();
+    const GeometryImp& geometry = it->geometry();
     vertex0 = geometry.corner(0);
     vertex1 = geometry.corner(1);
     truncate(vertex0, vertex1);
@@ -299,13 +300,13 @@ inline void PeriodicLeafIndexSet< Grid >
 } // calcEdgeIndices
 
 template< class Grid >
-inline bool PeriodicLeafIndexSet< Grid >::geometryTypeValid(const GeometryType& type) const {
-  const int codim = dimension - type.dim();
+inline bool PeriodicLeafIndexSet< Grid >::geometryTypeValid(const GeometryType& _type) const {
+  const int codim = dimension - _type.dim();
 
   const std::vector< GeometryType >& gT = geomTypes(codim);
   for (size_t i = 0; i < gT.size(); ++i)
   {
-    if (gT[i] == type)
+    if (gT[i] == _type)
       return true;
   }
   return false;

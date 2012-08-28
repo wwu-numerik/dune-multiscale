@@ -108,9 +108,9 @@ public:
   };
 
   //! Constructor wrapping a grid in the grid partition
-  PeriodicLeafGridPart(GridType& grid)
-    : BaseType(grid)
-      , indexSet_(grid)
+  PeriodicLeafGridPart(GridType& _grid)
+    : BaseType(_grid)
+      , indexSet_(_grid)
   {}
 
   //! Returns reference to index set of the underlying grid
