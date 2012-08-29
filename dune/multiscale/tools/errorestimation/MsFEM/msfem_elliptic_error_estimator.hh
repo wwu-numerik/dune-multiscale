@@ -2,6 +2,8 @@
 #define DUNE_MSFEM_ERRORESTIMATOR_HH
 
 #include <dune/common/unused.hh>
+#include <memory>
+#include <array>
 
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -119,23 +121,19 @@ public:
       , path_(path)
   {}
 
-  // create a hostgrid function from a subgridfunction
-  void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func,
-                                   DiscreteFunctionType& host_func) const {
+private:
+  //! create a hostgrid function from a subgridfunction
+  static void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func,
+                                   DiscreteFunctionType& host_func) {
     host_func.clear();
-
     const SubGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
     const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
-
-    SubGridIteratorType sub_endit = subDiscreteFunctionSpace.end();
-    for (SubGridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it)
+    for (const auto& sub_entity : sub_func.space())
     {
-      const SubGridEntityType& sub_entity = *sub_it;
-
-      EntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(*sub_it);
+      const EntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(sub_entity);
       const EntityType& host_entity = *host_entity_pointer;
 
-      SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
+      const SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
       LocalFunctionType host_loc_value = host_func.localFunction(host_entity);
 
       const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
@@ -146,27 +144,21 @@ public:
     }
   } // subgrid_to_hostrid_function
 
-  // create twoa hostgrid functions from two subgridfunctions
-  void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func_1,
+  //! create twoa hostgrid functions from two subgridfunctions
+  static void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func_1,
                                    const SubGridDiscreteFunctionType& sub_func_2,
                                    DiscreteFunctionType& host_func_1,
-                                   DiscreteFunctionType& host_func_2) const {
+                                   DiscreteFunctionType& host_func_2) {
     host_func_1.clear();
     host_func_2.clear();
-
-    const SubGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func_1.space();
-    const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
-
-    SubGridIteratorType sub_endit = subDiscreteFunctionSpace.end();
-    for (SubGridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it)
+    const SubGridType& subGrid = sub_func_1.space().grid();
+    for (const auto& sub_entity : sub_func_1.space())
     {
-      const SubGridEntityType& sub_entity = *sub_it;
-
-      EntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(*sub_it);
+      EntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(sub_entity);
       const EntityType& host_entity = *host_entity_pointer;
 
-      SubGridLocalFunctionType sub_loc_value_1 = sub_func_1.localFunction(sub_entity);
-      SubGridLocalFunctionType sub_loc_value_2 = sub_func_2.localFunction(sub_entity);
+      const SubGridLocalFunctionType sub_loc_value_1 = sub_func_1.localFunction(sub_entity);
+      const SubGridLocalFunctionType sub_loc_value_2 = sub_func_2.localFunction(sub_entity);
       LocalFunctionType host_loc_value_1 = host_func_1.localFunction(host_entity);
       LocalFunctionType host_loc_value_2 = host_func_2.localFunction(host_entity);
 
@@ -214,12 +206,12 @@ public:
   // return:  H_T ||f||_{L^2(T)}
   RangeType indicator_f(const EntityType& entity) const {
     // create quadrature for given geometry type
-    CachingQuadrature< GridPartType, 0 > entityQuadrature(entity, 2 * spacePolOrd + 2);
+    const CachingQuadrature< GridPartType, 0 > entityQuadrature(entity, 2 * spacePolOrd + 2);
 
     // get geoemetry of entity
     const EntityGeometryType& geometry = entity.geometry();
 
-    RangeType H_T = get_coarse_grid_H(entity);
+    const RangeType H_T = get_coarse_grid_H(entity);
 
     RangeType y(0);
     RangeType local_indicator(0);
@@ -236,47 +228,43 @@ public:
       local_indicator += weight * y;
     }
 
-    local_indicator *= pow(H_T, 2.0);
+    local_indicator *= std::pow(H_T, 2.0);
 
     return sqrt(local_indicator);
   } // indicator_f
 
-  // is a given point on a given face?
-  bool point_on_face(const Intersection& face, const DomainType& point) const {
-    DomainType corner_0 = face.geometry().corner(0);
-    DomainType corner_1 = face.geometry().corner(1);
+  //! is a given point on a given face?
+  static bool point_on_face(const Intersection& face, const DomainType& point) {
+    const DomainType corner_0 = face.geometry().corner(0);
+    const DomainType corner_1 = face.geometry().corner(1);
 
     if (corner_0[0] == corner_1[0])
     {
-      if (point[0] != corner_0[0])
-      { return false; } else {
-        RangeType lambda = (point[1] - corner_1[1]) / (corner_0[1] - corner_1[1]);
-        if ( (lambda >= 0.0) && (lambda <= 1.0) )
-        { return true; } else
-        { return false; }
+      if (point[0] != corner_0[0]) {
+        return false;
+      } else {
+        //!TODO das face ist nen punkt ungleich point, warum sollte rückgabe true noch möglich sein?
+        const RangeType lambda = (point[1] - corner_1[1]) / (corner_0[1] - corner_1[1]);
+        return ( (lambda >= 0.0) && (lambda <= 1.0) );
       }
     } else {
-      RangeType lambda = (point[0] - corner_1[0]) / (corner_0[0] - corner_1[0]);
+      const RangeType lambda = (point[0] - corner_1[0]) / (corner_0[0] - corner_1[0]);
 
       if ( (lambda >= 0.0) && (lambda <= 1.0) )
       {
-        RangeType convex_comb = (lambda * corner_0[1]) + ( (1.0 - lambda) * corner_1[1] );
-        if (convex_comb == point[1])
-        { return true; } else
-        { return false; }
-      } else
-      { return false; }
+        const RangeType convex_comb = (lambda * corner_0[1]) + ( (1.0 - lambda) * corner_1[1] );
+        return convex_comb == point[1];
+      } else {
+        return false;
+      }
     }
   } // point_on_face
 
   // is a given face part of another given coarse face
-  bool is_subface(const Intersection& fine_face, const Intersection& coarse_face) const {
-    DomainType corner_0 = fine_face.geometry().corner(0);
-    DomainType corner_1 = fine_face.geometry().corner(1);
-
-    if ( point_on_face(coarse_face, corner_0) && point_on_face(coarse_face, corner_1) )
-    { return true; } else
-    { return false; }
+  static bool is_subface(const Intersection& fine_face, const Intersection& coarse_face) {
+    const DomainType corner_0 = fine_face.geometry().corner(0);
+    const DomainType corner_1 = fine_face.geometry().corner(1);
+    return ( point_on_face(coarse_face, corner_0) && point_on_face(coarse_face, corner_1) );
   } // is_subface
 
   // jump in conservative flux
@@ -285,36 +273,23 @@ public:
                  RangeType& jump_conservative_flux,
                  RangeType& jump_coarse_flux) const {
     // jump for each face
-    RangeType jump[3];
-
-    jump[0] = 0.0;
-    jump[1] = 0.0;
-    jump[2] = 0.0;
-
+    std::array<RangeType, 3> jump = {{ 0.0, 0.0, 0.0 }};
     // coarse grid jump for each face
-    RangeType coarse_jump[3];
-
-    coarse_jump[0] = 0.0;
-    coarse_jump[1] = 0.0;
-    coarse_jump[2] = 0.0;
+    std::array<RangeType, 3> coarse_jump = {{ 0.0, 0.0, 0.0 }};
 
     const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
     const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
-
-    int index_coarse_entity = coarseGridLeafIndexSet.index(coarse_entity);
+    const int index_coarse_entity = coarseGridLeafIndexSet.index(coarse_entity);
 
     //! ---- get sub grid that for coarse entity
-
     // the sub grid U(T) that belongs to the coarse_grid_entity T
     SubGridType& sub_grid_U_T = subgrid_list_.getSubGrid(index_coarse_entity);
     SubGridPart subGridPart(sub_grid_U_T);
 
     SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
-
     SubGridDiscreteFunctionType conservative_flux_coarse_ent_e0("Conservative Flux on coarse entity for e_0",
                                                                 localDiscreteFunctionSpace);
     conservative_flux_coarse_ent_e0.clear();
-
     SubGridDiscreteFunctionType conservative_flux_coarse_ent_e1("Conservative Flux on coarse entity for e_1",
                                                                 localDiscreteFunctionSpace);
     conservative_flux_coarse_ent_e1.clear();
@@ -343,10 +318,11 @@ public:
                                 cflux_coarse_ent_e1_host);
 
     // flux for each neighbor entity
-    //!TODO automatic memory
-    DiscreteFunctionType* cflux_neighbor_ent_e0_host[3];
-    DiscreteFunctionType* cflux_neighbor_ent_e1_host[3];
+    typedef std::unique_ptr< DiscreteFunctionType > DF_ptr;
+    std::array< DF_ptr, 3 > cflux_neighbor_ent_e0_host;
+    std::array< DF_ptr, 3 > cflux_neighbor_ent_e1_host;
 
+    //!TODO save Intersection(s) instead
     std::vector< IntersectionIteratorType > coarse_face;
     RangeType coarse_face_volume[3];
 
@@ -358,7 +334,6 @@ public:
     for (IntersectionIteratorType face_it = coarseGridPart.ibegin(coarse_entity); face_it != endnit; ++face_it)
     {
       coarse_face.push_back(face_it);
-
       coarse_face_volume[local_face_index] = face_it->geometry().volume();
 
       if ( face_it->neighbor() )
@@ -370,7 +345,6 @@ public:
         // --- get subgrids and load fluxes ---
 
         SubGridType& sub_grid_neighbor_U_T = subgrid_list_.getSubGrid(index_coarse_neighbor_entity);
-
         SubGridPart subGridPart_neighbor(sub_grid_neighbor_U_T);
         SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_neighbor(subGridPart_neighbor);
 
@@ -397,13 +371,13 @@ public:
         // reader for data file:
         DiscreteFunctionReader(cf_solution_location_1_neighbor).read(0, conservative_flux_coarse_ent_e1_neighbor);
 
-        cflux_neighbor_ent_e0_host[local_face_index] = new DiscreteFunctionType(
+        cflux_neighbor_ent_e0_host[local_face_index] = DF_ptr(new DiscreteFunctionType(
           "Conservative Flux on neighbor coarse entity for e_0",
-          fineDiscreteFunctionSpace_);
+          fineDiscreteFunctionSpace_));
 
-        cflux_neighbor_ent_e1_host[local_face_index] = new DiscreteFunctionType(
+        cflux_neighbor_ent_e1_host[local_face_index] = DF_ptr(new DiscreteFunctionType(
           "Conservative Flux on neighbor coarse entity for e_1",
-          fineDiscreteFunctionSpace_);
+          fineDiscreteFunctionSpace_));
 
         subgrid_to_hostrid_function(conservative_flux_coarse_ent_e0_neighbor,
                                     conservative_flux_coarse_ent_e1_neighbor,
@@ -419,12 +393,9 @@ public:
       DUNE_THROW(Dune::InvalidStateException,"Error! Implementation only for triangular mesh in 2d!");
     }
 
-    SubGridIteratorType sub_endit = localDiscreteFunctionSpace.end();
-    for (SubGridIteratorType sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it)
+    for (const auto& sub_entity : localDiscreteFunctionSpace)
     {
-      const SubGridEntityType& DUNE_UNUSED(sub_entity) = *sub_it;
-
-      EntityPointerType host_entity_pointer = sub_grid_U_T.template getHostEntity< 0 >(*sub_it);
+      EntityPointerType host_entity_pointer = sub_grid_U_T.template getHostEntity< 0 >(sub_entity);
       const EntityType& host_entity = *host_entity_pointer;
 
       EntityPointerType father_of_sub_grid_entity = host_entity_pointer;
@@ -446,10 +417,10 @@ public:
       if (coarse_sub_father_index != index_coarse_entity)
       { continue; }
 
-      LocalFunctionType loc_cf_coarse_ent_e0 = cflux_coarse_ent_e0_host.localFunction(host_entity);
-      LocalFunctionType loc_cf_coarse_ent_e1 = cflux_coarse_ent_e1_host.localFunction(host_entity);
+      const LocalFunctionType loc_cf_coarse_ent_e0 = cflux_coarse_ent_e0_host.localFunction(host_entity);
+      const LocalFunctionType loc_cf_coarse_ent_e1 = cflux_coarse_ent_e1_host.localFunction(host_entity);
 
-      LocalFunctionType loc_msfem_coarse_part = msfem_coarse_part.localFunction(host_entity);
+      const LocalFunctionType loc_msfem_coarse_part = msfem_coarse_part.localFunction(host_entity);
 
       IntersectionIteratorType end_it_U_T = fineDiscreteFunctionSpace_.gridPart().iend(host_entity);
       for (IntersectionIteratorType face_it_U_T = fineDiscreteFunctionSpace_.gridPart().ibegin(host_entity);
@@ -572,7 +543,7 @@ public:
     jump_conservative_flux = ( sqrt(jump[0]) + sqrt(jump[1]) + sqrt(jump[2]) );
     jump_coarse_flux = sqrt(coarse_jump[0]) + sqrt(coarse_jump[1]) + sqrt(coarse_jump[2]);
   } // getFluxes
-
+public:
   // adaptive_refinement
   RangeType adaptive_refinement(const DiscreteFunctionType& msfem_solution,
                                 const DiscreteFunctionType& msfem_coarse_part,
