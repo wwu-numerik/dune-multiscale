@@ -9,7 +9,7 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
+//#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
 
 
 // / done

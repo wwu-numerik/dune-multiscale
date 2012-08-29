@@ -27,8 +27,7 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-
-// use leaf index set -> wahrscheinlich hier fertig
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 // define output traits
@@ -738,7 +737,7 @@ public:
   void assemble_all(bool /*silent*/ = true /* state information on subgrids */) {
     Dune::Stuff::Common::Filesystem::testCreateDirectory(path_);
 
-    enum { dimension = GridType::dimension };
+    enum { dimension = MsfemTraits::GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
 
     JacobianRangeType e[dimension];

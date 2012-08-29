@@ -3,22 +3,16 @@
 
 #include <dune/common/fmatrix.hh>
 
-#include <dune/subgrid/subgrid.hh>
-
 #include <dune/fem/solver/oemsolver/oemsolver.hh>
 #include <dune/fem/solver/inverseoperators.hh>
 #include <dune/fem/operator/discreteoperatorimp.hh>
-
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
-
 #include <dune/fem/space/common/adaptmanager.hh>
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
-
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
-
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 
 // / done

@@ -18,17 +18,6 @@
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
 
-//! ----- typedefs for the macro grid and the corresponding discrete space -----
-typedef Dune::GridSelector::GridType
-GridType;
-// Dune::InteriorBorder_Partition or Dune::All_Partition >?
-// see:
-// http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
-typedef Dune::AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
-
-typedef Dune::GridPtr< GridType > GridPointerType;
-
-typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 
 // to display data with ParaView:
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
@@ -55,112 +44,27 @@ typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 > FunctionSpaceType;
 
 //!-----------------------------------------------------------------------------
 
-//! --------- typedefs for the coefficient and data functions ------------------
-using namespace Dune;
-// type of first source term (right hand side of differential equation or type of 'f')
-typedef Problem::FirstSource< FunctionSpaceType > FirstSourceType;
-
-// type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
-typedef Problem::Diffusion< FunctionSpaceType > DiffusionType;
-
-// default type for any missing coefficient function (e.g. advection,...)
-typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionType;
-
-// type of exact solution (in general unknown)
-typedef Problem::ExactSolution< FunctionSpaceType > ExactSolutionType;
-typedef GridFunctionAdapter< ExactSolutionType, GridPartType >
-DiscreteExactSolutionType;     // for data output with paraview or grape
-
-
-//! ----  typedefs for the standard discrete function space (macroscopic) -----
-typedef FunctionSpaceType::DomainType DomainType;
-//! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
-typedef FunctionSpaceType::RangeType RangeType;
-//! defines the function space to which the numerical solution belongs to
-//! see dune/fem/lagrangebase.hh
-typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >  // 1 = POLORDER
-DiscreteFunctionSpaceType;
-
-typedef AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
-//!-----------------------------------------------------------------------------
-
-//!------------------------- for adaptive grid refinement ---------------------------------
-//! For adaption:
-//! type of restrict-prolong operator
-typedef RestrictProlongDefault< DiscreteFunctionType >
-RestrictProlongOperatorType;
-//! type of the adaption manager
-typedef AdaptationManager< GridType, RestrictProlongOperatorType >
-AdaptationManagerType;
-//!---------------------------------------------------------------------------------------
-
-typedef MacroMicroGridSpecifier< DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
-typedef SubGrid< GridType::dimension, GridType >                                      SubGridType;
-typedef SubGridList< DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
-
-//! -------------------------- MsFEM error estimator ----------------------------
-typedef MsFEMErrorEstimator< DiscreteFunctionType,
-                             DiffusionType,
-                             FirstSourceType,
-                             MacroMicroGridSpecifierType,
-                             SubGridListType >
-MsFEMErrorEstimatorType;
-//! -----------------------------------------------------------------------------
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 #include "msfem_globals.hh"
-
-//! ------------------ typedefs and classes for data output ---------------------
-typedef tuple< DiscreteFunctionType* >      IOTupleType;
-typedef DataOutput< GridType, IOTupleType > DataOutputType;
-// just for the discretized exact solution (in case it is available)
-typedef tuple< const DiscreteExactSolutionType* > ExSolIOTupleType;
-// just for the discretized exact solution (in case it is available)
-typedef DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
-
 #include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <dune/multiscale/problems/elliptic_problems/selector.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 //!---------------------------------------------------------------------------------------
 
-//! algorithm
-void algorithm(const std::string& macroGridName) {
-  DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
-  // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
-  // for the parameters:
-  // create a grid pointer for the DGF file belongig to the macro grid:
-  GridPointerType macro_grid_pointer(macroGridName);
-  // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine(coarse_grid_level_);
-  //! ---- tools ----
-  // model problem data
-  Problem::ModelProblemData problem_info;
-  L2Error< DiscreteFunctionType > l2error;
-  H1Error< DiscreteFunctionType > DUNE_UNUSED(h1error);
-  // expensive hack to deal with discrete functions, defined on different grids
-  Dune::ImprovedL2Error< DiscreteFunctionType > DUNE_UNUSED(impL2error);
-
-  //! ---------------------------- grid parts ----------------------------------------------
-  // grid part for the global function space, required for MsFEM-macro-problem
-  GridPartType gridPart(*macro_grid_pointer);
-  GridType& grid = gridPart.grid();
-  //! --------------------------------------------------------------------------------------
-
-  // coarse grid
-  GridPointerType macro_grid_pointer_coarse(macroGridName);
-  macro_grid_pointer_coarse->globalRefine(coarse_grid_level_);
-  GridPartType gridPart_coarse(*macro_grid_pointer_coarse);
-  GridType& grid_coarse = gridPart_coarse.grid();
-
-  // strategy for adaptivity:
-  #ifdef ADAPTIVE
-  typedef GridType::LeafGridView         GridView;
+void adapt(Dune::MsfemTraits::GridType& grid,
+           Dune::MsfemTraits::GridType& grid_coarse) {
+  using namespace Dune;
+  typedef MsfemTraits::GridType::LeafGridView         GridView;
   typedef GridView::Codim< 0 >::Iterator ElementLeafIterator;
-  typedef GridType::Traits::LeafIndexSet GridLeafIndexSet;
+  typedef MsfemTraits::GridType::Traits::LeafIndexSet GridLeafIndexSet;
 
   if (local_indicators_available_ == true)
   {
-    const bool coarse_scale_error_dominant = false;
-    const bool fine_scale_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
-    const bool oversampling_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
+    bool coarse_scale_error_dominant = false;
+    bool fine_scale_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
+    bool oversampling_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
     // identify the dominant contribution:
     const double average_est_error = total_estimated_H1_error_[loop_number_ - 1] / 6.0;     // 6 contributions
 
@@ -195,7 +99,7 @@ void algorithm(const std::string& macroGridName) {
       coarse_scale_error_dominant = true;   /* mark elementwise for 2 refinments */
     }
 
-    std::vector< RangeType > average_coarse_error_indicator(loop_number_);        // arithmetic average
+    std::vector< MsfemTraits::RangeType > average_coarse_error_indicator(loop_number_);        // arithmetic average
     for (int l = 0; l < loop_number_; ++l)
     {
       assert( loc_coarse_residual_[l].size() == loc_coarse_grid_jumps_[l].size() );
@@ -216,15 +120,15 @@ void algorithm(const std::string& macroGridName) {
       double variance = 1.1;   // = 110 % of the average
       for (int l = 0; l < loop_number_; ++l)
       {
-        const GridLeafIndexSet& gridLeafIndexSet = grid.leafIndexSet();
-        GridView gridView = grid.leafView();
+        const auto& gridLeafIndexSet = grid.leafIndexSet();
+        auto gridView = grid.leafView();
 
         int total_number_of_entities = 0;
         int number_of_marked_entities = 0;
         for (ElementLeafIterator it = gridView.begin< 0 >();
              it != gridView.end< 0 >(); ++it)
         {
-          RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet.index(*it)]
+          MsfemTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet.index(*it)]
                                                  + loc_coarse_residual_[l][gridLeafIndexSet.index(*it)];
           total_number_of_entities += 1;
 
@@ -252,7 +156,7 @@ void algorithm(const std::string& macroGridName) {
         for (ElementLeafIterator it = gridView_coarse.begin< 0 >();
              it != gridView_coarse.end< 0 >(); ++it)
         {
-          RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet_coarse.index(*it)]
+          MsfemTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet_coarse.index(*it)]
                                                  + loc_coarse_residual_[l][gridLeafIndexSet_coarse.index(*it)];
 
           if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l])
@@ -266,125 +170,33 @@ void algorithm(const std::string& macroGridName) {
       }
     }
   }
+}
 
-  #endif // #ifdef ADAPTIVE
-
-  grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
-
-  //! ------------------------- discrete function spaces -----------------------------------
-
-  // the global-problem function space:
-  DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
-
-  DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
-
-  //! --------------------------------------------------------------------------------------
-
-  //! --------------------------- coefficient functions ------------------------------------
-
-  // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  DiffusionType diffusion_op;
-  // define (first) source term:
-  FirstSourceType f; // standard source f
-
-
-  //! ---------------------------- general output parameters ------------------------------
-  // general output parameters
-  myDataOutputParameters outputparam;
-  outputparam.set_path(path_);
-  // sequence stamp
-  std::stringstream outstring;
-  //! --------------------------------------------------------------------------------------
-
-  //! -------------------------- writing data output Exact Solution ------------------------
-  if (Problem::ModelProblemData::has_exact_solution)
-  {
-    const ExactSolutionType u;
-    const DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
-
-    // create and initialize output class
-    ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-    outputparam.set_prefix("exact_solution");
-    ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
-
-    // write data
-    outstring << "exact-solution";
-    exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-    // clear the std::stringstream:
-    outstring.str( std::string() );
-    // -------------------------------------------------------
-  }
-  //! --------------------------------------------------------------------------------------
-
-  //! --------------- writing data output for the coarse grid visualization ------------------
-  DiscreteFunctionType coarse_grid_visualization(filename_ + " Visualization of the coarse grid",
-                                                 discreteFunctionSpace_coarse);
-  coarse_grid_visualization.clear();
-  // -------------------------- data output -------------------------
-  // create and initialize output class
-  IOTupleType coarse_grid_series(&coarse_grid_visualization);
-  char coarse_grid_fname[50];
-  sprintf(coarse_grid_fname, "coarse_grid_visualization_%d_", loop_number_);
-  const std::string coarse_grid_fname_s(coarse_grid_fname);
-  outputparam.set_prefix(coarse_grid_fname_s);
-  DataOutputType coarse_grid_dataoutput(gridPart_coarse.grid(), coarse_grid_series, outputparam);
-  // write data
-  outstring << coarse_grid_fname_s;
-  coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
-  // -------------------------------------------------------
-  //! --------------------------------------------------------------------------------------
-
-  //! ---------------------- solve MsFEM problem ---------------------------
-  //! solution vector
-  // solution of the standard finite element method
-  DiscreteFunctionType msfem_solution(filename_ + " MsFEM Solution", discreteFunctionSpace);
-  msfem_solution.clear();
-
-  DiscreteFunctionType coarse_part_msfem_solution(filename_ + " Coarse Part MsFEM Solution", discreteFunctionSpace);
-  coarse_part_msfem_solution.clear();
-
-  DiscreteFunctionType fine_part_msfem_solution(filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace);
-  fine_part_msfem_solution.clear();
-
-  const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
-  const int DUNE_UNUSED(coarse_level_fine_level_difference) = grid.maxLevel() - grid_coarse.maxLevel();
-
-  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-  MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
-  for (int i = 0; i < number_of_level_host_entities; i += 1)
-  {
-    specifier.setLayer(i, number_of_layers_);
-  }
-
-  //! create subgrids:
-  const bool silence = false;
-  SubGridListType subgrid_list(specifier, silence);
-
-  // just for Dirichlet zero-boundary condition
-  Elliptic_MsFEM_Solver< DiscreteFunctionType > msfem_solver(discreteFunctionSpace, path_);
-  msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
-                                    coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
-
-  DSC_LOG_INFO << "Data output for MsFEM Solution." << std::endl;
+void solution_output(Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
+                     Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
+                     Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
+                     myDataOutputParameters& outputparam)
+{
+  using namespace Dune;
   //! ----------------- writing data output MsFEM Solution -----------------
   // --------- VTK data output for MsFEM solution --------------------------
   // create and initialize output class
-  IOTupleType msfem_solution_series(&msfem_solution);
+  MsfemTraits::IOTupleType msfem_solution_series(&msfem_solution);
+  const auto& gridPart = msfem_solution.space().gridPart();
+  std::stringstream outstring;
   #ifdef ADAPTIVE
-  char msfem_fname[50];
-  sprintf(msfem_fname, "msfem_solution_%d_", loop_number_);
-  std::string msfem_fname_s(msfem_fname);
-  outputparam.set_prefix(msfem_fname_s);
-  DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
-  // write data
-  outstring << msfem_fname_s;
+    char msfem_fname[50];
+    sprintf(msfem_fname, "msfem_solution_%d_", loop_number_);
+    std::string msfem_fname_s(msfem_fname);
+    outputparam.set_prefix(msfem_fname_s);
+    DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
+    // write data
+    outstring << msfem_fname_s;
   #else // ifdef ADAPTIVE
-  outputparam.set_prefix("msfem_solution");
-  DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
-  // write data
-  outstring << "msfem_solution";
+    outputparam.set_prefix("msfem_solution");
+    MsfemTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
+    // write data
+    outstring << "msfem_solution";
   #endif // ifdef ADAPTIVE
 
   msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
@@ -392,21 +204,21 @@ void algorithm(const std::string& macroGridName) {
   outstring.str( std::string() );
 
   // create and initialize output class
-  IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
+  MsfemTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
 
   #ifdef ADAPTIVE
-  char coarse_msfem_fname[50];
-  sprintf(coarse_msfem_fname, "coarse_part_msfem_solution_%d_", loop_number_);
-  const std::string coarse_msfem_fname_s(coarse_msfem_fname);
-  outputparam.set_prefix(coarse_msfem_fname_s);
-  DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
-  // write data
-  outstring << coarse_msfem_fname_s;
+    char coarse_msfem_fname[50];
+    sprintf(coarse_msfem_fname, "coarse_part_msfem_solution_%d_", loop_number_);
+    const std::string coarse_msfem_fname_s(coarse_msfem_fname);
+    outputparam.set_prefix(coarse_msfem_fname_s);
+    DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
+    // write data
+    outstring << coarse_msfem_fname_s;
   #else // ifdef ADAPTIVE
-  outputparam.set_prefix("coarse_part_msfem_solution");
-  DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
-  // write data
-  outstring << "coarse_part_msfem_solution";
+    outputparam.set_prefix("coarse_part_msfem_solution");
+    MsfemTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
+    // write data
+    outstring << "coarse_part_msfem_solution";
   #endif // ifdef ADAPTIVE
 
   coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
@@ -414,21 +226,21 @@ void algorithm(const std::string& macroGridName) {
   outstring.str( std::string() );
 
   // create and initialize output class
-  IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
+  MsfemTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
 
   #ifdef ADAPTIVE
-  char fine_msfem_fname[50];
-  sprintf(fine_msfem_fname, "fine_part_msfem_solution_%d_", loop_number_);
-  std::string fine_msfem_fname_s(fine_msfem_fname);
-  outputparam.set_prefix(fine_msfem_fname_s);
-  DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
-  // write data
-  outstring << fine_msfem_fname_s;
+    char fine_msfem_fname[50];
+    sprintf(fine_msfem_fname, "fine_part_msfem_solution_%d_", loop_number_);
+    std::string fine_msfem_fname_s(fine_msfem_fname);
+    outputparam.set_prefix(fine_msfem_fname_s);
+    MsfemTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
+    // write data
+    outstring << fine_msfem_fname_s;
   #else // ifdef ADAPTIVE
-  outputparam.set_prefix("fine_part_msfem_solution");
-  DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
-  // write data
-  outstring << "fine_msfem_solution";
+    outputparam.set_prefix("fine_part_msfem_solution");
+    MsfemTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
+    // write data
+    outstring << "fine_msfem_solution";
   #endif // ifdef ADAPTIVE
 
   fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
@@ -441,38 +253,97 @@ void algorithm(const std::string& macroGridName) {
                                 % path_ %  total_refinement_level_ % coarse_grid_level_).str();
   DiscreteFunctionWriter(location).append(msfem_solution);
   //! --------------------------------------------------------------------
+}
 
-  //! ------------------------------------------------------------
+void data_output(Dune::MsfemTraits::GridPartType& gridPart,
+                 Dune::MsfemTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
+                 myDataOutputParameters& outputparam)
+{
+  using namespace Dune;
+  // sequence stamp
+  std::stringstream outstring;
+  //! --------------------------------------------------------------------------------------
 
+  //! -------------------------- writing data output Exact Solution ------------------------
+  if (Problem::ModelProblemData::has_exact_solution)
+  {
+    const MsfemTraits::ExactSolutionType u;
+    const MsfemTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
+
+    // create and initialize output class
+    MsfemTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+    outputparam.set_prefix("exact_solution");
+    MsfemTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
+
+    // write data
+    outstring << "exact-solution";
+    exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+    // clear the std::stringstream:
+    outstring.str( std::string() );
+    // -------------------------------------------------------
+  }
+  //! --------------------------------------------------------------------------------------
+
+  //! --------------- writing data output for the coarse grid visualization ------------------
+  MsfemTraits::DiscreteFunctionType coarse_grid_visualization(filename_ + " Visualization of the coarse grid",
+                                                 discreteFunctionSpace_coarse);
+  coarse_grid_visualization.clear();
+  // -------------------------- data output -------------------------
+  // create and initialize output class
+  MsfemTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
+  char coarse_grid_fname[50];
+  sprintf(coarse_grid_fname, "coarse_grid_visualization_%d_", loop_number_);
+  const std::string coarse_grid_fname_s(coarse_grid_fname);
+  outputparam.set_prefix(coarse_grid_fname_s);
+  MsfemTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
+  // write data
+  outstring << coarse_grid_fname_s;
+  coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
+  // clear the std::stringstream:
+  outstring.str( std::string() );
+  // -------------------------------------------------------
+  //! --------------------------------------------------------------------------------------
+}
+
+void error_estimation(Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
+                      Dune::MsfemTraits::GridType& grid_coarse,
+                      Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
+                      Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
+                      Dune::MsfemTraits::MsFEMErrorEstimatorType& estimator,
+                      Dune::MsfemTraits::MacroMicroGridSpecifierType& specifier)
+{
+  using namespace Dune;
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
+  L2Error< MsfemTraits::DiscreteFunctionType > l2error;
+  H1Error< MsfemTraits::DiscreteFunctionType > h1error;
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
-    const ExactSolutionType u;
-    RangeType msfem_error = l2error.norm< ExactSolutionType >(u,
+    const MsfemTraits::ExactSolutionType u;
+    MsfemTraits::RangeType msfem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
                                                               msfem_solution,
-                                                              2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
+                                                              2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
 
-    RangeType h1_msfem_error(0.0);
-    h1_msfem_error = h1error.semi_norm< ExactSolutionType >(u, msfem_solution);
+    MsfemTraits::RangeType h1_msfem_error(0.0);
+    h1_msfem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, msfem_solution);
     h1_msfem_error += msfem_error;
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
   }
 
   // error estimation
-  RangeType total_estimated_H1_error(0.0);
+  MsfemTraits::RangeType total_estimated_H1_error(0.0);
 
-  MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_);
+
   total_estimated_H1_error = estimator.adaptive_refinement(grid_coarse,
                                                            msfem_solution,
                                                            coarse_part_msfem_solution,
                                                            fine_part_msfem_solution);
   {//intentional scope
-    std::vector<RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_, &loc_projection_error_, &loc_conservative_flux_jumps_, &loc_approximation_error_, &loc_fine_grid_jumps_}};
-    std::vector<RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_, &total_coarse_grid_jumps_, &total_conservative_flux_jumps_, &total_approximation_error_, &total_fine_grid_jumps_ }};
+    std::vector<MsfemTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_, &loc_projection_error_, &loc_conservative_flux_jumps_, &loc_approximation_error_, &loc_fine_grid_jumps_}};
+    std::vector<MsfemTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_, &total_coarse_grid_jumps_, &total_conservative_flux_jumps_, &total_approximation_error_, &total_fine_grid_jumps_ }};
     assert(locals.size() == totals.size());
-    for(auto loc : locals) (*loc)[loop_number_] = RangeVector(specifier.getNumOfCoarseEntities(),0.0);
+    for(auto loc : locals) (*loc)[loop_number_] = MsfemTraits::RangeVector(specifier.getNumOfCoarseEntities(),0.0);
     for(auto total : totals) (*total)[loop_number_] = 0.0;
 
     for (int m = 0; m < specifier.getNumOfCoarseEntities(); ++m) {
@@ -492,6 +363,99 @@ void algorithm(const std::string& macroGridName) {
     }
     local_indicators_available_ = true;
   }
+}
+
+//! algorithm
+void algorithm(const std::string& macroGridName) {
+  using namespace Dune;
+  DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
+  // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
+  // for the parameters:
+  // create a grid pointer for the DGF file belongig to the macro grid:
+  MsfemTraits::GridPointerType macro_grid_pointer(macroGridName);
+  // refine the grid 'starting_refinement_level' times:
+  macro_grid_pointer->globalRefine(coarse_grid_level_);
+  //! ---- tools ----
+  // model problem data
+  Problem::ModelProblemData problem_info;
+  L2Error< MsfemTraits::DiscreteFunctionType > l2error;
+  // expensive hack to deal with discrete functions, defined on different grids
+  Dune::ImprovedL2Error< MsfemTraits::DiscreteFunctionType > DUNE_UNUSED(impL2error);
+
+  //! ---------------------------- grid parts ----------------------------------------------
+  // grid part for the global function space, required for MsFEM-macro-problem
+  MsfemTraits::GridPartType gridPart(*macro_grid_pointer);
+  MsfemTraits::GridType& grid = gridPart.grid();
+  //! --------------------------------------------------------------------------------------
+
+  // coarse grid
+  MsfemTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
+  macro_grid_pointer_coarse->globalRefine(coarse_grid_level_);
+  MsfemTraits::GridPartType gridPart_coarse(*macro_grid_pointer_coarse);
+  MsfemTraits::GridType& grid_coarse = gridPart_coarse.grid();
+
+  // strategy for adaptivity:
+  #ifdef ADAPTIVE
+  adapt();
+  #endif
+
+  grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
+
+  //! ------------------------- discrete function spaces -----------------------------------
+  // the global-problem function space:
+  MsfemTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  MsfemTraits::DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
+
+  //! --------------------------- coefficient functions ------------------------------------
+
+  // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
+  const MsfemTraits::DiffusionType diffusion_op;
+  // define (first) source term:
+  const MsfemTraits::FirstSourceType f; // standard source f
+  //! ---------------------------- general output parameters ------------------------------
+  // general output parameters
+  myDataOutputParameters outputparam;
+  outputparam.set_path(path_);
+  data_output(gridPart, discreteFunctionSpace_coarse, outputparam);
+
+  //! ---------------------- solve MsFEM problem ---------------------------
+  //! solution vector
+  // solution of the standard finite element method
+  MsfemTraits::DiscreteFunctionType msfem_solution(filename_ + " MsFEM Solution", discreteFunctionSpace);
+  msfem_solution.clear();
+
+  MsfemTraits::DiscreteFunctionType coarse_part_msfem_solution(filename_ + " Coarse Part MsFEM Solution", discreteFunctionSpace);
+  coarse_part_msfem_solution.clear();
+
+  MsfemTraits::DiscreteFunctionType fine_part_msfem_solution(filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace);
+  fine_part_msfem_solution.clear();
+
+  const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
+  const int DUNE_UNUSED(coarse_level_fine_level_difference) = grid.maxLevel() - grid_coarse.maxLevel();
+
+  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
+  MsfemTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
+  for (int i = 0; i < number_of_level_host_entities; i += 1)
+  {
+    specifier.setLayer(i, number_of_layers_);
+  }
+
+  //! create subgrids:
+  const bool silence = false;
+  MsfemTraits::SubGridListType subgrid_list(specifier, silence);
+
+  // just for Dirichlet zero-boundary condition
+  Elliptic_MsFEM_Solver< MsfemTraits::DiscreteFunctionType > msfem_solver(discreteFunctionSpace, path_);
+  msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
+                                    coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
+
+  DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
+  solution_output(msfem_solution, coarse_part_msfem_solution,
+                  fine_part_msfem_solution, outputparam);
+
+  MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_);
+  error_estimation(msfem_solution, grid_coarse, coarse_part_msfem_solution,
+                  fine_part_msfem_solution, estimator, specifier);
 
   #ifdef ADAPTIVE
   if (total_estimated_H1_error <= error_tolerance_)
@@ -503,11 +467,11 @@ void algorithm(const std::string& macroGridName) {
   //! ---------------------- solve FEM problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  DiscreteFunctionType fem_solution(filename_ + " FEM Solution", discreteFunctionSpace);
+  MsfemTraits::DiscreteFunctionType fem_solution(filename_ + " FEM Solution", discreteFunctionSpace);
   fem_solution.clear();
 
   // just for Dirichlet zero-boundary condition
-  const Elliptic_FEM_Solver< DiscreteFunctionType > fem_solver(discreteFunctionSpace);
+  const Elliptic_FEM_Solver< MsfemTraits::DiscreteFunctionType > fem_solver(discreteFunctionSpace);
   fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
 
   //! ----------------------------------------------------------------------
@@ -516,11 +480,12 @@ void algorithm(const std::string& macroGridName) {
 
   // ------------- VTK data output for FEM solution --------------
   // create and initialize output class
-  IOTupleType fem_solution_series(&fem_solution);
+  MsfemTraits::IOTupleType fem_solution_series(&fem_solution);
   outputparam.set_prefix("fem_solution");
-  DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
+  MsfemTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
   // write data
+  std::stringstream outstring;
   outstring << "fem_solution";
   fem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
   // clear the std::stringstream:
@@ -537,25 +502,26 @@ void algorithm(const std::string& macroGridName) {
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
-    const ExactSolutionType u;
-    RangeType fem_error = l2error.norm< ExactSolutionType >(u,
+    const MsfemTraits::ExactSolutionType u;
+    MsfemTraits::RangeType fem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
                                                             fem_solution,
-                                                            2 * DiscreteFunctionSpaceType::polynomialOrder + 2);
+                                                            2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
     DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
 
-    RangeType h1_fem_error(0.0);
-    h1_fem_error = h1error.semi_norm< ExactSolutionType >(u, fem_solution);
+    MsfemTraits::RangeType h1_fem_error(0.0);
+    H1Error< MsfemTraits::DiscreteFunctionType > h1error;
+    h1_fem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, fem_solution);
     h1_fem_error += fem_error;
     DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
   } else {
     DSC_LOG_ERROR << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
                   << std::endl << std::endl;
-    RangeType approx_msfem_error = l2error.norm2< 2* DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
+    MsfemTraits::RangeType approx_msfem_error = l2error.norm2< 2* MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
                                                                                                       msfem_solution);
     DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
-    H1Norm< GridPartType > h1norm(gridPart);
-    RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
+    H1Norm< MsfemTraits::GridPartType > h1norm(gridPart);
+    MsfemTraits::RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
 
     DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
   }

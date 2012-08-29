@@ -2,7 +2,6 @@
 #define MSFEM_GLOBALS_HH
 
 //! ---------------------- important variables ---------------------------------
-enum { dimension = GridType::dimension };
 // name of the error file in which the data will be saved
 std::string filename_;
 std::string path_;
@@ -17,27 +16,25 @@ int number_of_layers_;
 int max_loop_number = 10;
 bool local_indicators_available_ = false;
 // local coarse residual, i.e. H ||f||_{L^2(T)}
-typedef std::vector< std::vector< RangeType > > RangeVectorVector;
-RangeVectorVector loc_coarse_residual_(max_loop_number);
+Dune::MsfemTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
 // local coarse grid jumps (contribute to the total coarse residual)
-RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
+Dune::MsfemTraits::RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
 // local projection error (we project to get a globaly continous approximation)
-RangeVectorVector loc_projection_error_(max_loop_number);
+Dune::MsfemTraits::RangeVectorVector loc_projection_error_(max_loop_number);
 // local jump in the conservative flux
-RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
+Dune::MsfemTraits::RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
 // local approximation error
-RangeVectorVector loc_approximation_error_(max_loop_number);
+Dune::MsfemTraits::RangeVectorVector loc_approximation_error_(max_loop_number);
 // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
-RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
+Dune::MsfemTraits::RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
 
-typedef std::vector< RangeType > RangeVector;
-RangeVector total_coarse_residual_(max_loop_number);
-RangeVector total_projection_error_(max_loop_number);
-RangeVector total_coarse_grid_jumps_(max_loop_number);
-RangeVector total_conservative_flux_jumps_(max_loop_number);
-RangeVector total_approximation_error_(max_loop_number);
-RangeVector total_fine_grid_jumps_(max_loop_number);
-RangeVector total_estimated_H1_error_(max_loop_number);
+Dune::MsfemTraits::RangeVector total_coarse_residual_(max_loop_number);
+Dune::MsfemTraits::RangeVector total_projection_error_(max_loop_number);
+Dune::MsfemTraits::RangeVector total_coarse_grid_jumps_(max_loop_number);
+Dune::MsfemTraits::RangeVector total_conservative_flux_jumps_(max_loop_number);
+Dune::MsfemTraits::RangeVector total_approximation_error_(max_loop_number);
+Dune::MsfemTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
+Dune::MsfemTraits::RangeVector total_estimated_H1_error_(max_loop_number);
 
 bool repeat_algorithm_ = true;
 int loop_number_ = 0;
