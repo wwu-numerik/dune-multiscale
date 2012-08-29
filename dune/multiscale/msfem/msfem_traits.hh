@@ -77,7 +77,7 @@ struct MsfemTraits {
   //! -----------------------------------------------------------------------------
 
   //! ------------------ typedefs and classes for data output ---------------------
-  typedef Dune::tuple< DiscreteFunctionType* >      IOTupleType;
+  typedef Dune::tuple< const DiscreteFunctionType* >      IOTupleType;
   typedef Dune::DataOutput< GridType, IOTupleType > DataOutputType;
   // just for the discretized exact solution (in case it is available)
   typedef Dune::tuple< const DiscreteExactSolutionType* > ExSolIOTupleType;

@@ -102,7 +102,7 @@ class MsFEMErrorEstimator
   SubGridListType& subgrid_list_;
   const DiffusionOperatorType& diffusion_;
   const SourceType& f_;
-  std::string& path_;
+  const std::string& path_;
 
 public:
   MsFEMErrorEstimator(const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace,
@@ -110,7 +110,7 @@ public:
                       SubGridListType& subgrid_list,
                       const DiffusionOperatorType& diffusion,
                       const SourceType& f,
-                      std::string& path)
+                      const std::string& path)
     : fineDiscreteFunctionSpace_(fineDiscreteFunctionSpace)
       , specifier_(specifier)
       , subgrid_list_(subgrid_list)
@@ -121,7 +121,7 @@ public:
 
   // create a hostgrid function from a subgridfunction
   void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func,
-                                   DiscreteFunctionType& host_func) {
+                                   DiscreteFunctionType& host_func) const {
     host_func.clear();
 
     const SubGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
@@ -138,7 +138,7 @@ public:
       SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
       LocalFunctionType host_loc_value = host_func.localFunction(host_entity);
 
-      const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+      const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         host_loc_value[i] = sub_loc_value[i];
@@ -150,7 +150,7 @@ public:
   void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func_1,
                                    const SubGridDiscreteFunctionType& sub_func_2,
                                    DiscreteFunctionType& host_func_1,
-                                   DiscreteFunctionType& host_func_2) {
+                                   DiscreteFunctionType& host_func_2) const {
     host_func_1.clear();
     host_func_2.clear();
 
@@ -181,7 +181,7 @@ public:
 
   //! method to get the local mesh size H of a coarse grid entity 'T'
   // works only for our 2D examples!!!!
-  RangeType get_coarse_grid_H(const EntityType& entity) {
+  RangeType get_coarse_grid_H(const EntityType& entity) const {
     // entity_H means H (the diameter of the entity)
     RangeType entity_H = 0.0;
 
@@ -212,7 +212,7 @@ public:
 
   // for a coarse grid entity T:
   // return:  H_T ||f||_{L^2(T)}
-  RangeType indicator_f(const EntityType& entity) {
+  RangeType indicator_f(const EntityType& entity) const {
     // create quadrature for given geometry type
     CachingQuadrature< GridPartType, 0 > entityQuadrature(entity, 2 * spacePolOrd + 2);
 
@@ -242,7 +242,7 @@ public:
   } // indicator_f
 
   // is a given point on a given face?
-  bool point_on_face(const Intersection& face, const DomainType& point) {
+  bool point_on_face(const Intersection& face, const DomainType& point) const {
     DomainType corner_0 = face.geometry().corner(0);
     DomainType corner_1 = face.geometry().corner(1);
 
@@ -270,7 +270,7 @@ public:
   } // point_on_face
 
   // is a given face part of another given coarse face
-  bool is_subface(const Intersection& fine_face, const Intersection& coarse_face) {
+  bool is_subface(const Intersection& fine_face, const Intersection& coarse_face) const {
     DomainType corner_0 = fine_face.geometry().corner(0);
     DomainType corner_1 = fine_face.geometry().corner(1);
 
@@ -283,7 +283,7 @@ public:
   void getFluxes(const EntityType& coarse_entity,
                  const DiscreteFunctionType& msfem_coarse_part,
                  RangeType& jump_conservative_flux,
-                 RangeType& jump_coarse_flux) {
+                 RangeType& jump_coarse_flux) const {
     // jump for each face
     RangeType jump[3];
 
@@ -574,8 +574,7 @@ public:
   } // getFluxes
 
   // adaptive_refinement
-  RangeType adaptive_refinement(GridType& /*coarse_grid*/,
-                                const DiscreteFunctionType& msfem_solution,
+  RangeType adaptive_refinement(const DiscreteFunctionType& msfem_solution,
                                 const DiscreteFunctionType& msfem_coarse_part,
                                 const DiscreteFunctionType& msfem_fine_part)
   {

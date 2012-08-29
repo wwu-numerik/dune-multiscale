@@ -172,9 +172,9 @@ void adapt(Dune::MsfemTraits::GridType& grid,
   }
 }
 
-void solution_output(Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
-                     Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
-                     Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
+void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
+                     const Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
+                     const Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
                      myDataOutputParameters& outputparam)
 {
   using namespace Dune;
@@ -255,8 +255,8 @@ void solution_output(Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
   //! --------------------------------------------------------------------
 }
 
-void data_output(Dune::MsfemTraits::GridPartType& gridPart,
-                 Dune::MsfemTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
+void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
+                 const Dune::MsfemTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
                  myDataOutputParameters& outputparam)
 {
   using namespace Dune;
@@ -305,10 +305,10 @@ void data_output(Dune::MsfemTraits::GridPartType& gridPart,
   //! --------------------------------------------------------------------------------------
 }
 
-void error_estimation(Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
-                      Dune::MsfemTraits::GridType& grid_coarse,
-                      Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
-                      Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
+void error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
+                      const Dune::MsfemTraits::GridType& grid_coarse,
+                      const Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
+                      const Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
                       Dune::MsfemTraits::MsFEMErrorEstimatorType& estimator,
                       Dune::MsfemTraits::MacroMicroGridSpecifierType& specifier)
 {
@@ -335,8 +335,7 @@ void error_estimation(Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
   MsfemTraits::RangeType total_estimated_H1_error(0.0);
 
 
-  total_estimated_H1_error = estimator.adaptive_refinement(grid_coarse,
-                                                           msfem_solution,
+  total_estimated_H1_error = estimator.adaptive_refinement(msfem_solution,
                                                            coarse_part_msfem_solution,
                                                            fine_part_msfem_solution);
   {//intentional scope
