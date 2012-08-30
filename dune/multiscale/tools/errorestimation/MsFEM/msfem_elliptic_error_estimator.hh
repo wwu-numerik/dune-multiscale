@@ -4,6 +4,8 @@
 #include <dune/common/unused.hh>
 #include <memory>
 #include <array>
+#include <unordered_map>
+#include <boost/range/adaptor/map.hpp>
 
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -201,6 +203,7 @@ private:
     return sqrt(local_indicator);
   } // indicator_f
 
+
   // jump in conservative flux
   void getFluxes(const EntityType& coarse_entity,
                  const DiscreteFunctionType& msfem_coarse_part,
@@ -361,13 +364,16 @@ public:
       loc_fine_grid_jumps[m] = 0.0;
     }
 
-    RangeType total_coarse_residual(0.0);
-    RangeType total_projection_error(0.0);
-    RangeType total_coarse_grid_jumps(0.0);
-    RangeType total_conservative_flux_jumps(0.0);
-    RangeType total_approximation_error(0.0);
-    RangeType total_fine_grid_jumps(0.0);
+//    std::array<std::pair<std::string, RangeType>, 6> err  {
+////    Dune::Stuff::Common::Misc::FixedMap<std::string, RangeType, 6> errors({
+//      {std::string("total_coarse_residual"), RangeType(0.0)},
+//      {std::string("total_projection_error"), RangeType(0.0)},
+//      {std::string("total_coarse_grid_jumps"), RangeType(0.0)},
+//      {std::string("total_conservative_flux_jumps"), RangeType(0.0)},
+//      {std::string("total_approximation_error"), RangeType(0.0)},
+//      {std::string("total_fine_grid_jumps"), RangeType(0.0)}};
 
+    Dune::Stuff::Common::Misc::FixedMap<std::string, RangeType, 6> errors;
     RangeType total_estimated_error(0.0);
 
     const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
@@ -383,7 +389,7 @@ public:
 
       loc_coarse_residual[global_index_entity] = indicator_f(*coarse_grid_it);
       specifier_.set_loc_coarse_residual(global_index_entity, loc_coarse_residual[global_index_entity]);
-      total_coarse_residual += pow(loc_coarse_residual[global_index_entity], 2.0);
+      errors["total_coarse_residual"] += std::pow(loc_coarse_residual[global_index_entity], 2.0);
 
       getFluxes(*coarse_grid_it,
                 msfem_coarse_part,
@@ -394,8 +400,8 @@ public:
 
       specifier_.set_loc_conservative_flux_jumps(global_index_entity, loc_conservative_flux_jumps[global_index_entity]);
 
-      total_conservative_flux_jumps += pow(loc_conservative_flux_jumps[global_index_entity], 2.0);
-      total_coarse_grid_jumps += pow(loc_coarse_grid_jumps[global_index_entity], 2.0);
+      errors["total_conservative_flux_jumps"] += pow(loc_conservative_flux_jumps[global_index_entity], 2.0);
+      errors["total_coarse_grid_jumps"] += pow(loc_coarse_grid_jumps[global_index_entity], 2.0);
 
       // -------------------------- subgrids and local function ----------------------
 
@@ -521,7 +527,7 @@ public:
           }
 
           loc_projection_error[global_index_entity] += value * weight_local_quadrature;
-          total_projection_error += value * weight_local_quadrature;
+          errors["total_projection_error"] += value * weight_local_quadrature;
         }
       }
     }
@@ -585,7 +591,7 @@ public:
           value += pow(diffusive_flux_x[0][i] - diffusive_flux_high_order[0][i], 2.0);
 
         loc_approximation_error[coarse_father_index] += weight * value;
-        total_approximation_error += weight * value;
+        errors["total_approximation_error"] += weight * value;
       }
 
       const GridPartType& fineGridPart = fineDiscreteFunctionSpace_.gridPart();
@@ -624,7 +630,7 @@ public:
         int_value = pow(int_value, 2.0);
 
         loc_fine_grid_jumps[coarse_father_index] += edge_length * edge_length * int_value;
-        total_fine_grid_jumps += edge_length * edge_length * int_value;
+        errors["total_fine_grid_jumps"] += edge_length * edge_length * int_value;
       }
     }
 
@@ -638,30 +644,19 @@ public:
       specifier_.set_loc_fine_grid_jumps(m, loc_fine_grid_jumps[m]);
       specifier_.set_loc_projection_error(m, loc_projection_error[m]);
     }
-    total_coarse_residual = sqrt(total_coarse_residual);
-    total_projection_error = sqrt(total_projection_error);
-    total_coarse_grid_jumps = sqrt(total_coarse_grid_jumps);
-    total_conservative_flux_jumps = sqrt(total_conservative_flux_jumps);
-    total_approximation_error = sqrt(total_approximation_error);
-    total_fine_grid_jumps = sqrt(total_fine_grid_jumps);
 
-    total_estimated_error += total_coarse_residual;
-    total_estimated_error += total_projection_error;
-    total_estimated_error += total_coarse_grid_jumps;
-    total_estimated_error += total_conservative_flux_jumps;
-    total_estimated_error += total_approximation_error;
-    total_estimated_error += total_fine_grid_jumps;
+    for( auto& error : errors | boost::adaptors::map_values ) {
+      error = std::sqrt(error);
+      total_estimated_error += error;
+    }
 
     DSC_LOG_INFO  << std::endl
                   << "Estimated Errors:" << std::endl << std::endl
                   << "Total estimated error = " << total_estimated_error << "." << std::endl
-                  << "where: " << std::endl
-                  << "total_coarse_residual = " << total_coarse_residual << "." << std::endl
-                  << "total_projection_error = " << total_projection_error << "." << std::endl
-                  << "total_coarse_grid_jumps = " << total_coarse_grid_jumps << "." << std::endl
-                  << "total_conservative_flux_jumps = " << total_conservative_flux_jumps << "." << std::endl
-                  << "total_approximation_error = " << total_approximation_error << "." << std::endl
-                  << "total_fine_grid_jumps = " << total_fine_grid_jumps << "." << std::endl;
+                  << "where: " << std::endl;
+    for( auto it : errors) {
+      DSC_LOG_INFO << it.first << " = " << it.second << "." << std::endl;
+    }
 
     return total_estimated_error;
   } // adaptive_refinement
