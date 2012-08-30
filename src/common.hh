@@ -53,6 +53,7 @@
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
 
+
 #if ENABLE_MPI
 typedef Dune::CollectiveCommunication< MPI_Comm > CollectiveCommunication;
 #else

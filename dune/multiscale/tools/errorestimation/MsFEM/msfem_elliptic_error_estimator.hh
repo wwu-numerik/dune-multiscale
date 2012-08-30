@@ -9,6 +9,7 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
 #include <dune/multiscale/tools/errorestimation/MsFEM/conservative_flux_solver.hh>
+#include "estimator_utils.hh"
 
 namespace Dune {
 template< class DiscreteFunctionImp,
@@ -18,6 +19,12 @@ template< class DiscreteFunctionImp,
           class SubGridListImp >
 class MsFEMErrorEstimator
 {
+  typedef MsFEMErrorEstimator< DiscreteFunctionImp,
+              DiffusionImp,
+              SourceImp,
+              MacroMicroGridSpecifierImp,
+              SubGridListImp >
+    ThisType;
   typedef DiffusionImp               DiffusionOperatorType;
   typedef SourceImp                  SourceType;
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
@@ -93,6 +100,15 @@ class MsFEMErrorEstimator
 
   typedef CachingQuadrature< SubGridPart, 0 > LocalGridEntityQuadratureType;
 
+  typedef std::array<RangeType, 3> JumpArray;
+  typedef std::array<const Intersection*, 3> IntersectionArray;
+  typedef std::unique_ptr< DiscreteFunctionType > DF_ptr;
+  typedef std::array< DF_ptr, 2 > DF_ptr_pair;
+
+  typedef EstimatorUtils<ThisType> EstimatorUtilsType;
+  template <class T>
+  friend struct EstimatorUtils;
+
   //!-----------------------------------------------------------------------------------------
 
   enum { dimension = GridType::dimension };
@@ -122,54 +138,6 @@ public:
   {}
 
 private:
-  //! create a hostgrid function from a subgridfunction
-  static void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func,
-                                   DiscreteFunctionType& host_func) {
-    host_func.clear();
-    const SubGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
-    const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
-    for (const auto& sub_entity : sub_func.space())
-    {
-      const EntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(sub_entity);
-      const EntityType& host_entity = *host_entity_pointer;
-
-      const SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
-      LocalFunctionType host_loc_value = host_func.localFunction(host_entity);
-
-      const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        host_loc_value[i] = sub_loc_value[i];
-      }
-    }
-  } // subgrid_to_hostrid_function
-
-  //! create twoa hostgrid functions from two subgridfunctions
-  static void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func_1,
-                                   const SubGridDiscreteFunctionType& sub_func_2,
-                                   DiscreteFunctionType& host_func_1,
-                                   DiscreteFunctionType& host_func_2) {
-    host_func_1.clear();
-    host_func_2.clear();
-    const SubGridType& subGrid = sub_func_1.space().grid();
-    for (const auto& sub_entity : sub_func_1.space())
-    {
-      EntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(sub_entity);
-      const EntityType& host_entity = *host_entity_pointer;
-
-      const SubGridLocalFunctionType sub_loc_value_1 = sub_func_1.localFunction(sub_entity);
-      const SubGridLocalFunctionType sub_loc_value_2 = sub_func_2.localFunction(sub_entity);
-      LocalFunctionType host_loc_value_1 = host_func_1.localFunction(host_entity);
-      LocalFunctionType host_loc_value_2 = host_func_2.localFunction(host_entity);
-
-      const unsigned int numBaseFunctions = sub_loc_value_1.baseFunctionSet().size();
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        host_loc_value_1[i] = sub_loc_value_1[i];
-        host_loc_value_2[i] = sub_loc_value_2[i];
-      }
-    }
-  } // subgrid_to_hostrid_function
 
   //! method to get the local mesh size H of a coarse grid entity 'T'
   // works only for our 2D examples!!!!
@@ -233,50 +201,11 @@ private:
     return sqrt(local_indicator);
   } // indicator_f
 
-  //! is a given point on a given face?
-  static bool point_on_face(const Intersection& face, const DomainType& point) {
-    const DomainType corner_0 = face.geometry().corner(0);
-    const DomainType corner_1 = face.geometry().corner(1);
-
-    if (corner_0[0] == corner_1[0])
-    {
-      if (point[0] != corner_0[0]) {
-        return false;
-      } else {
-        //!TODO das face ist nen punkt ungleich point, warum sollte rückgabe true noch möglich sein?
-        const RangeType lambda = (point[1] - corner_1[1]) / (corner_0[1] - corner_1[1]);
-        return ( (lambda >= 0.0) && (lambda <= 1.0) );
-      }
-    } else {
-      const RangeType lambda = (point[0] - corner_1[0]) / (corner_0[0] - corner_1[0]);
-
-      if ( (lambda >= 0.0) && (lambda <= 1.0) )
-      {
-        const RangeType convex_comb = (lambda * corner_0[1]) + ( (1.0 - lambda) * corner_1[1] );
-        return convex_comb == point[1];
-      } else {
-        return false;
-      }
-    }
-  } // point_on_face
-
-  // is a given face part of another given coarse face
-  static bool is_subface(const Intersection& fine_face, const Intersection& coarse_face) {
-    const DomainType corner_0 = fine_face.geometry().corner(0);
-    const DomainType corner_1 = fine_face.geometry().corner(1);
-    return ( point_on_face(coarse_face, corner_0) && point_on_face(coarse_face, corner_1) );
-  } // is_subface
-
   // jump in conservative flux
   void getFluxes(const EntityType& coarse_entity,
                  const DiscreteFunctionType& msfem_coarse_part,
                  RangeType& jump_conservative_flux,
                  RangeType& jump_coarse_flux) const {
-    // jump for each face
-    std::array<RangeType, 3> jump = {{ 0.0, 0.0, 0.0 }};
-    // coarse grid jump for each face
-    std::array<RangeType, 3> coarse_jump = {{ 0.0, 0.0, 0.0 }};
-
     const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
     const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
     const int index_coarse_entity = coarseGridLeafIndexSet.index(coarse_entity);
@@ -287,44 +216,35 @@ private:
     SubGridPart subGridPart(sub_grid_U_T);
 
     SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
-    SubGridDiscreteFunctionType conservative_flux_coarse_ent_e0("Conservative Flux on coarse entity for e_0",
-                                                                localDiscreteFunctionSpace);
-    conservative_flux_coarse_ent_e0.clear();
-    SubGridDiscreteFunctionType conservative_flux_coarse_ent_e1("Conservative Flux on coarse entity for e_1",
-                                                                localDiscreteFunctionSpace);
-    conservative_flux_coarse_ent_e1.clear();
-
+    std::array<SubGridDiscreteFunctionType, 2> conservative_flux_coarse_ent = {{
+        SubGridDiscreteFunctionType ("Conservative Flux on coarse entity for e_0",
+                                                                    localDiscreteFunctionSpace),
+        SubGridDiscreteFunctionType ("Conservative Flux on coarse entity for e_1",
+                                                                    localDiscreteFunctionSpace) }};
     // --------- load local solutions -------
     boost::format flux_location("%s/cf_problems/_conservativeFlux_e_%d_sg_%d");
-    // the file/place, where we saved the solutions conservative flux problems problems
-    const std::string cf_solution_location_0 = (flux_location
-                                               % path_ % 0 % index_coarse_entity).str();
-    // reader for data file:
-    DiscreteFunctionReader(cf_solution_location_0).read(0, conservative_flux_coarse_ent_e0);
-    // flux for e_1 ...
-    const std::string cf_solution_location_1 = (flux_location
-                                               % path_ % 1 % index_coarse_entity).str();
-    // reader for data file:
-    DiscreteFunctionReader(cf_solution_location_1).read(0, conservative_flux_coarse_ent_e1);
+    for( int i : Dune::Stuff::Common::Math::range(2)) {
+      conservative_flux_coarse_ent[i].clear();
+      const std::string cf_solution_location = (flux_location % path_ % i % index_coarse_entity).str();
+      DiscreteFunctionReader(cf_solution_location).read(0, conservative_flux_coarse_ent[i]);
+    }
 
-    DiscreteFunctionType cflux_coarse_ent_e0_host("Conservative Flux on coarse entity for e_0",
-                                                  fineDiscreteFunctionSpace_);
-    DiscreteFunctionType cflux_coarse_ent_e1_host("Conservative Flux on coarse entity for e_1",
-                                                  fineDiscreteFunctionSpace_);
 
-    subgrid_to_hostrid_function(conservative_flux_coarse_ent_e0,
-                                conservative_flux_coarse_ent_e1,
-                                cflux_coarse_ent_e0_host,
-                                cflux_coarse_ent_e1_host);
+    DF_ptr_pair cflux_coarse_ent_host = {{
+    DF_ptr( new DiscreteFunctionType ("Conservative Flux on coarse entity for e_0",
+                                                  fineDiscreteFunctionSpace_)),
+    DF_ptr( new DiscreteFunctionType ("Conservative Flux on coarse entity for e_1",
+                                                  fineDiscreteFunctionSpace_)) }};
+
+    EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent,
+                                cflux_coarse_ent_host);
 
     // flux for each neighbor entity
-    typedef std::unique_ptr< DiscreteFunctionType > DF_ptr;
-    std::array< DF_ptr, 3 > cflux_neighbor_ent_e0_host;
-    std::array< DF_ptr, 3 > cflux_neighbor_ent_e1_host;
+    std::array< DF_ptr_pair, 3 > cflux_neighbor_ent_host;
 
     //!TODO save Intersection(s) instead
-    std::vector< IntersectionIteratorType > coarse_face;
-    RangeType coarse_face_volume[3];
+    IntersectionArray coarse_face;
+    std::array<RangeType, 3> coarse_face_volume;
 
     const GridPartType& coarseGridPart = specifier_.coarseSpace().gridPart();
 
@@ -333,14 +253,14 @@ private:
     IntersectionIteratorType endnit = coarseGridPart.iend(coarse_entity);
     for (IntersectionIteratorType face_it = coarseGridPart.ibegin(coarse_entity); face_it != endnit; ++face_it)
     {
-      coarse_face.push_back(face_it);
+      coarse_face[local_face_index] = face_it.operator->();
       coarse_face_volume[local_face_index] = face_it->geometry().volume();
 
       if ( face_it->neighbor() )
       {
-        EntityPointerType outside_it = face_it->outside();
+        const EntityPointerType outside_it = face_it->outside();
 
-        int index_coarse_neighbor_entity = coarseGridLeafIndexSet.index(*outside_it);
+        const int index_coarse_neighbor_entity = coarseGridLeafIndexSet.index(*outside_it);
 
         // --- get subgrids and load fluxes ---
 
@@ -348,41 +268,26 @@ private:
         SubGridPart subGridPart_neighbor(sub_grid_neighbor_U_T);
         SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_neighbor(subGridPart_neighbor);
 
-        SubGridDiscreteFunctionType conservative_flux_coarse_ent_e0_neighbor(
-          "Conservative Flux on neighbor coarse entity for e_0",
-          localDiscreteFunctionSpace_neighbor);
-        conservative_flux_coarse_ent_e0_neighbor.clear();
-
-        SubGridDiscreteFunctionType conservative_flux_coarse_ent_e1_neighbor(
-          "Conservative Flux on neighbor coarse entity for e_1",
-          localDiscreteFunctionSpace_neighbor);
-        conservative_flux_coarse_ent_e1_neighbor.clear();
+        std::array<SubGridDiscreteFunctionType, 2> conservative_flux_coarse_ent_neighbor = {{
+          SubGridDiscreteFunctionType("Conservative Flux on neighbor coarse entity for e_0",
+                    localDiscreteFunctionSpace_neighbor),
+          SubGridDiscreteFunctionType("Conservative Flux on neighbor coarse entity for e_1",
+                    localDiscreteFunctionSpace_neighbor) }};
 
         // --------- load local solutions -------
         // the file/place, where we saved the solutions conservative flux problems problems
-        const std::string cf_solution_location_0_neighbor = (flux_location
-                                          % path_ % 0 % index_coarse_neighbor_entity).str();
-        // reader for data file:
-        DiscreteFunctionReader(cf_solution_location_0_neighbor).read(0, conservative_flux_coarse_ent_e0_neighbor);
-
-        // flux for e_1 ...
-        const std::string cf_solution_location_1_neighbor = (flux_location
-                                          % path_ % 1 % index_coarse_neighbor_entity).str();
-        // reader for data file:
-        DiscreteFunctionReader(cf_solution_location_1_neighbor).read(0, conservative_flux_coarse_ent_e1_neighbor);
-
-        cflux_neighbor_ent_e0_host[local_face_index] = DF_ptr(new DiscreteFunctionType(
-          "Conservative Flux on neighbor coarse entity for e_0",
-          fineDiscreteFunctionSpace_));
-
-        cflux_neighbor_ent_e1_host[local_face_index] = DF_ptr(new DiscreteFunctionType(
-          "Conservative Flux on neighbor coarse entity for e_1",
-          fineDiscreteFunctionSpace_));
-
-        subgrid_to_hostrid_function(conservative_flux_coarse_ent_e0_neighbor,
-                                    conservative_flux_coarse_ent_e1_neighbor,
-                                    *cflux_neighbor_ent_e0_host[local_face_index],
-                                    *cflux_neighbor_ent_e1_host[local_face_index]);
+        for( int i : Stuff::Common::Math::range(2)) {
+          conservative_flux_coarse_ent_neighbor[i].clear();
+          const std::string cf_solution_location_neighbor = (flux_location
+                                            % path_ % i % index_coarse_neighbor_entity).str();
+          // reader for data file:
+          DiscreteFunctionReader(cf_solution_location_neighbor).read(0, conservative_flux_coarse_ent_neighbor[i]);
+          cflux_neighbor_ent_host[local_face_index][i] = DF_ptr(new DiscreteFunctionType(
+            "Conservative Flux on neighbor coarse entity for e_" + Stuff::Common::String::convertTo(i),
+            fineDiscreteFunctionSpace_));
+        }
+        EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent_neighbor,
+                                    cflux_neighbor_ent_host[local_face_index]);
       }
 
       local_face_index += 1;
@@ -393,148 +298,19 @@ private:
       DUNE_THROW(Dune::InvalidStateException,"Error! Implementation only for triangular mesh in 2d!");
     }
 
-    for (const auto& sub_entity : localDiscreteFunctionSpace)
-    {
-      EntityPointerType host_entity_pointer = sub_grid_U_T.template getHostEntity< 0 >(sub_entity);
-      const EntityType& host_entity = *host_entity_pointer;
-
-      EntityPointerType father_of_sub_grid_entity = host_entity_pointer;
-      for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
-        father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-      EntityPointerType coarse_father_test = father_of_sub_grid_entity;
-      bool father_found = false;
-      while (father_found == false)
-      {
-        if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-        { father_of_sub_grid_entity = coarse_father_test; }
-
-        if (coarse_father_test->hasFather() == false)
-        { father_found = true; } else
-        { coarse_father_test = coarse_father_test->father(); }
-      }
-
-      int coarse_sub_father_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
-      if (coarse_sub_father_index != index_coarse_entity)
-      { continue; }
-
-      const LocalFunctionType loc_cf_coarse_ent_e0 = cflux_coarse_ent_e0_host.localFunction(host_entity);
-      const LocalFunctionType loc_cf_coarse_ent_e1 = cflux_coarse_ent_e1_host.localFunction(host_entity);
-
-      const LocalFunctionType loc_msfem_coarse_part = msfem_coarse_part.localFunction(host_entity);
-
-      IntersectionIteratorType end_it_U_T = fineDiscreteFunctionSpace_.gridPart().iend(host_entity);
-      for (IntersectionIteratorType face_it_U_T = fineDiscreteFunctionSpace_.gridPart().ibegin(host_entity);
-           face_it_U_T != end_it_U_T; ++face_it_U_T)
-      {
-        int relevant_face_index = -1;
-
-        if ( is_subface(*face_it_U_T, *coarse_face[0]) )
-        { relevant_face_index = 0; }
-
-        if ( is_subface(*face_it_U_T, *coarse_face[1]) )
-        { relevant_face_index = 1; }
-
-        if ( is_subface(*face_it_U_T, *coarse_face[2]) )
-        { relevant_face_index = 2; }
-
-        if ( (relevant_face_index == -1) || (face_it_U_T->neighbor() == false) )
-        { continue; }
-
-        EntityPointerType outside_sub_it = face_it_U_T->outside();
-
-        LocalFunctionType loc_cf_coarse_neighbor_ent_e0
-          = (*cflux_neighbor_ent_e0_host[relevant_face_index]).localFunction(host_entity);
-        LocalFunctionType loc_cf_coarse_neighbor_ent_e1
-          = (*cflux_neighbor_ent_e1_host[relevant_face_index]).localFunction(host_entity);
-
-        LocalFunctionType loc_msfem_coarse_part_neighbor = msfem_coarse_part.localFunction(*outside_sub_it);
-
-        // evaluate the gradient of the MsfEM coarse part in the center of the coarse entity
-        EntityQuadratureType coarseEntQuadrature(host_entity, 0);
-        JacobianRangeType gradient_msfem_coarse_ent(0.);
-        loc_msfem_coarse_part.jacobian(coarseEntQuadrature[0], gradient_msfem_coarse_ent);
-
-        // evaluate the gradient of the MsfEM coarse part in the center of the current neighbor of the coarse entity
-        EntityQuadratureType coarseEntQuadratureNeighbor(*outside_sub_it, 0);
-        JacobianRangeType gradient_msfem_coarse_neighbor_ent(0.);
-        loc_msfem_coarse_part_neighbor.jacobian(coarseEntQuadratureNeighbor[0], gradient_msfem_coarse_neighbor_ent);
-
-        FaceQuadratureType faceQuadrature(
-          fineDiscreteFunctionSpace_.gridPart(), *face_it_U_T,
-          2 * fineDiscreteFunctionSpace_.order() + 2, FaceQuadratureType::INSIDE);
-        // inside macht hier keinen Unterschied, da wir formal stetige Funktionen haben und nicht die Gradienten
-        // auswerten
-
-        const FaceGeometryType& faceGeometry = face_it_U_T->geometry();
-
-        const size_t numQuadraturePoints = faceQuadrature.nop();
-
-        RangeType jump_integral(0.0);
-
-        RangeType check_sum(0.0);
-        for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
-        {
-          typedef typename Intersection::LocalCoordinate LocalCoordinate;
-          const LocalCoordinate local_point = faceGeometry.local( faceQuadrature.point(quadraturePoint) );
-
-          // integration factors
-          const double integrationFactor = faceGeometry.integrationElement(local_point);
-
-          // weight
-          const double quadratureWeight = faceQuadrature.weight(quadraturePoint);
-
-          check_sum += integrationFactor * quadratureWeight;
-
-          RangeType value_ent_e0;
-          loc_cf_coarse_ent_e0.evaluate(faceQuadrature[quadraturePoint], value_ent_e0);
-
-          RangeType value_neighbor_ent_e0;
-          loc_cf_coarse_neighbor_ent_e0.evaluate(faceQuadrature[quadraturePoint], value_neighbor_ent_e0);
-
-          RangeType value_ent_e1;
-          loc_cf_coarse_ent_e1.evaluate(faceQuadrature[quadraturePoint], value_ent_e1);
-
-          RangeType value_neighbor_ent_e1;
-          loc_cf_coarse_neighbor_ent_e1.evaluate(faceQuadrature[quadraturePoint], value_neighbor_ent_e1);
-
-          RangeType H_E = coarse_face_volume[relevant_face_index];
-
-          // wenn man tunen moechtet... fabs() einbinden und das Vorzeichen davor aendern.
-
-          RangeType jump_contribution = gradient_msfem_coarse_ent[0][0]
-                                        * ( /*fabs*/ (value_ent_e0) + /*-fabs*/ (value_neighbor_ent_e0) );
-          jump_contribution += gradient_msfem_coarse_ent[0][1]
-                               * ( /*fabs*/ (value_ent_e1) + /*-fabs*/ (value_neighbor_ent_e1) );
-
-          jump[relevant_face_index] += H_E * integrationFactor * quadratureWeight * pow(jump_contribution, 2.0);
-
-          jump_contribution = gradient_msfem_coarse_neighbor_ent[0][0]
-                              * ( /*fabs*/ (value_ent_e0) + /*-fabs*/ (value_neighbor_ent_e0) );
-          jump_contribution += gradient_msfem_coarse_neighbor_ent[0][1]
-                               * ( /*fabs*/ (value_ent_e1) + /*-fabs*/ (value_neighbor_ent_e1) );
-
-          jump[relevant_face_index] += H_E * integrationFactor * quadratureWeight * pow(jump_contribution, 2.0);
-
-          JacobianRangeType coarse_jump_contribution;
-          coarse_jump_contribution[0] = gradient_msfem_coarse_ent[0] - gradient_msfem_coarse_neighbor_ent[0];
-
-          RangeType cjump(0.0);
-          cjump += fabs(value_ent_e0 * coarse_jump_contribution[0][0] + value_ent_e1 * coarse_jump_contribution[0][1]);
-          cjump += fabs(
-            value_neighbor_ent_e0 * coarse_jump_contribution[0][0] + value_neighbor_ent_e1
-            * coarse_jump_contribution[0][1]);
-
-          coarse_jump[relevant_face_index] += H_E * integrationFactor * quadratureWeight * pow(cjump, 2.0);
-
-        } // done loop over all quadrature points
-
-        if ( check_sum != faceGeometry.volume() )
-        {
-          DUNE_THROW(Dune::InvalidStateException, "Error in Face Quadrature.");
-        }
-      }
-    }
-
+    const auto contributions = EstimatorUtilsType::flux_contributions(localDiscreteFunctionSpace,
+                                                  sub_grid_U_T,
+                                                  coarseGridLeafIndexSet,
+                                                  cflux_coarse_ent_host,
+                                                  msfem_coarse_part,
+                                                  coarse_face,
+                                                  cflux_neighbor_ent_host,
+                                                  index_coarse_entity,
+                                                  coarse_face_volume,
+                                                  specifier_.getLevelDifference(),
+                                                  fineDiscreteFunctionSpace_);
+    const auto jump = contributions.first;
+    const auto coarse_jump = contributions.second;
     // std :: cout << "jump[0] = " << jump[0] << std :: endl;
     // std :: cout << "jump[1] = " << jump[1] << std :: endl;
     // std :: cout << "jump[2] = " << jump[2] << std :: endl;
@@ -547,7 +323,7 @@ public:
   // adaptive_refinement
   RangeType adaptive_refinement(const DiscreteFunctionType& msfem_solution,
                                 const DiscreteFunctionType& msfem_coarse_part,
-                                const DiscreteFunctionType& msfem_fine_part)
+                                const DiscreteFunctionType& msfem_fine_part) const
   {
     DSC_LOG_INFO << "Start computing conservative fluxes..." << std::endl;
     ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
@@ -565,17 +341,12 @@ public:
 
     // error contribution of H^2 ||f||_L2(T):
     std::vector< RangeType > loc_coarse_residual(number_of_coarse_grid_entities);
-
     std::vector< RangeType > loc_projection_error(number_of_coarse_grid_entities);
-
     std::vector< RangeType > loc_coarse_grid_jumps(number_of_coarse_grid_entities);
-
     std::vector< RangeType > loc_conservative_flux_jumps(number_of_coarse_grid_entities);
 
     // Summation ueber die einzelnen fine-grid indicators die zu coarse grid entity beitragen:
-
     std::vector< RangeType > loc_approximation_error(number_of_coarse_grid_entities);
-
     std::vector< RangeType > loc_fine_grid_jumps(number_of_coarse_grid_entities);
 
     specifier_.initialize_local_error_manager();
@@ -895,6 +666,8 @@ public:
     return total_estimated_error;
   } // adaptive_refinement
 }; // end of class MsFEMErrorEstimator
+
+
 } // end namespace
 
 #endif // ifndef DUNE_MSFEM_ERRORESTIMATOR_HH

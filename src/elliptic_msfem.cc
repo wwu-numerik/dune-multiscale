@@ -306,7 +306,6 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
 }
 
 void error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
-                      const Dune::MsfemTraits::GridType& grid_coarse,
                       const Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                       const Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
                       Dune::MsfemTraits::MsFEMErrorEstimatorType& estimator,
@@ -453,7 +452,7 @@ void algorithm(const std::string& macroGridName) {
                   fine_part_msfem_solution, outputparam);
 
   MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_);
-  error_estimation(msfem_solution, grid_coarse, coarse_part_msfem_solution,
+  error_estimation(msfem_solution, coarse_part_msfem_solution,
                   fine_part_msfem_solution, estimator, specifier);
 
   #ifdef ADAPTIVE
