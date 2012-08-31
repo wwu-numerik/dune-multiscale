@@ -36,7 +36,7 @@ public:
   DiscreteFunctionWriter(const std::string filename)
     : filename_(filename)
     , dir_(DSC_CONFIG_GET("global.datadir", "data"))
-    , file_(Dune::Stuff::Common::Filesystem
+    , file_(Dune::Stuff::Common
             ::make_ofstream(dir_ / filename_,
                             std::fstream::trunc | std::fstream::out | std::fstream::binary))
   {
@@ -50,7 +50,7 @@ public:
   DiscreteFunctionWriter(const boost::filesystem::path& path)
     : filename_(path.string())
     , dir_(DSC_CONFIG_GET("global.datadir", "data"))
-    , file_(Dune::Stuff::Common::Filesystem
+    , file_(Dune::Stuff::Common
             ::make_ofstream(dir_ / filename_,
                             std::fstream::trunc | std::fstream::out | std::fstream::binary))
   {
@@ -122,7 +122,7 @@ public:
     : filename_(filename)
     , size_(-1)
     , dir_(DSC_CONFIG_GET("global.datadir", "data"))
-    , file_(Dune::Stuff::Common::Filesystem
+    , file_(Dune::Stuff::Common
             ::make_ifstream(dir_ / filename_,
                             std::fstream::in | std::fstream::binary))
   {
@@ -133,7 +133,7 @@ public:
     : filename_(path.string())
     , size_(-1)
     , dir_(DSC_CONFIG_GET("global.datadir", "data"))
-    , file_(Dune::Stuff::Common::Filesystem
+    , file_(Dune::Stuff::Common
             ::make_ifstream(dir_ / filename_,
                             std::fstream::in | std::fstream::binary))
   {

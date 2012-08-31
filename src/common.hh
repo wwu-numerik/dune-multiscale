@@ -63,7 +63,7 @@ typedef Dune::CollectiveCommunication< double > CollectiveCommunication;
 CollectiveCommunication init(int argc, char** argv) {
   namespace DSC = Dune::Stuff::Common;
   Dune::MPIManager::initialize(argc, argv);
-  DSC::Parameter::Config().readCommandLine(argc, argv);
+  DSC::Config().readCommandLine(argc, argv);
 
   // LOG_NONE = 1, LOG_ERROR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
   // --> LOG_ERROR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62

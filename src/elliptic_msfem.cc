@@ -536,13 +536,13 @@ int main(int argc, char** argv) {
     path_ = std::string("MsFEM/");
 
     // generate directories for data output
-    DSC::Filesystem::testCreateDirectory(path_);
+    DSC::testCreateDirectory(path_);
 
     std::string save_filename = path_ + "/problem-info.txt";
     DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     const int start_level = DSC_CONFIG_GET("grid.start_level", 4);
-    coarse_grid_level_ = DSC_CONFIG_GETV( "grid.coarse_level", 4, DSC::Parameter::ValidateLess< int >(start_level) );
+    coarse_grid_level_ = DSC_CONFIG_GETV( "grid.coarse_level", 4, DSC::ValidateLess< int >(start_level) );
     number_of_layers_ = DSC_CONFIG_GET("grid.oversampling_layers", 4);
 
     #ifdef ADAPTIVE
@@ -555,7 +555,7 @@ int main(int argc, char** argv) {
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
     total_refinement_level_
-      = DSC_CONFIG_GETV( "grid.total_refinement", 4, DSC::Parameter::ValidateLess< int >(coarse_grid_level_) );
+      = DSC_CONFIG_GETV( "grid.total_refinement", 4, DSC::ValidateLess< int >(coarse_grid_level_) );
 
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();

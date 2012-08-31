@@ -755,7 +755,7 @@ public:
       DUNE_THROW(Dune::InvalidStateException,"Solution of the Local Flux Problem is invalid!");
     }
 
-    Dune::Stuff::Common::Filesystem::testCreateDirectory(path_ + "/cf_problems");
+    Dune::Stuff::Common::testCreateDirectory(path_ + "/cf_problems");
     #ifdef VTK_OUTPUT
     vtk_output(conservative_flux, sub_grid_id, direction_index);
     #endif
@@ -858,7 +858,7 @@ public:
     DSC_PROFILER.startTiming("conservative_flux_solver-solve_all_subgrids");
 
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-    Dune::Stuff::Common::Math::MinMaxAvg<double> cell_time;
+    Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();

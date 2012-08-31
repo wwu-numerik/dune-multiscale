@@ -4,8 +4,8 @@
 #include <dune/common/unused.hh>
 #include <memory>
 #include <array>
-#include <unordered_map>
 #include <boost/range/adaptor/map.hpp>
+#include <dune/stuff/common/fixed_map.hh>
 
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -226,7 +226,7 @@ private:
                                                                     localDiscreteFunctionSpace) }};
     // --------- load local solutions -------
     boost::format flux_location("%s/cf_problems/_conservativeFlux_e_%d_sg_%d");
-    for( int i : Dune::Stuff::Common::Math::range(2)) {
+    for( int i : {0,1}) {
       conservative_flux_coarse_ent[i].clear();
       const std::string cf_solution_location = (flux_location % path_ % i % index_coarse_entity).str();
       DiscreteFunctionReader(cf_solution_location).read(0, conservative_flux_coarse_ent[i]);
@@ -279,14 +279,14 @@ private:
 
         // --------- load local solutions -------
         // the file/place, where we saved the solutions conservative flux problems problems
-        for( int i : Stuff::Common::Math::range(2)) {
+        for( int i : {0,1}) {
           conservative_flux_coarse_ent_neighbor[i].clear();
           const std::string cf_solution_location_neighbor = (flux_location
                                             % path_ % i % index_coarse_neighbor_entity).str();
           // reader for data file:
           DiscreteFunctionReader(cf_solution_location_neighbor).read(0, conservative_flux_coarse_ent_neighbor[i]);
           cflux_neighbor_ent_host[local_face_index][i] = DF_ptr(new DiscreteFunctionType(
-            "Conservative Flux on neighbor coarse entity for e_" + Stuff::Common::String::convertTo(i),
+            "Conservative Flux on neighbor coarse entity for e_" + Stuff::Common::toString(i),
             fineDiscreteFunctionSpace_));
         }
         EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent_neighbor,
@@ -373,7 +373,7 @@ public:
 //      {std::string("total_approximation_error"), RangeType(0.0)},
 //      {std::string("total_fine_grid_jumps"), RangeType(0.0)}};
 
-    Dune::Stuff::Common::Misc::FixedMap<std::string, RangeType, 6> errors;
+    Dune::Stuff::Common::FixedMap<std::string, RangeType, 6> errors;
     RangeType total_estimated_error(0.0);
 
     const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();

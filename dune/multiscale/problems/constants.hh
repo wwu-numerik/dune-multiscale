@@ -16,9 +16,9 @@ struct Constants
       , delta( DSC_CONFIG_GET("hmm.delta", def_delta) )
   {}
 
-  template< typename T, class Validator = Dune::Stuff::Common::Parameter::ValidateAny< T > >
+  template< typename T, class Validator = Dune::Stuff::Common::ValidateAny< T > >
   T get( const std::string& key, const T& def,
-         Dune::Stuff::Common::Parameter::ValidatorInterface< T, Validator > validator = Validator() ) const {
+         Dune::Stuff::Common::ValidatorInterface< T, Validator > validator = Validator() ) const {
     return DSC_CONFIG_GETV(std::string("problem.") + key, def, validator);
   }
 

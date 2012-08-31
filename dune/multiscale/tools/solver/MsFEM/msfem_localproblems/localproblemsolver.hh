@@ -735,7 +735,7 @@ public:
 
   // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
   void assemble_all(bool /*silent*/ = true /* state information on subgrids */) {
-    Dune::Stuff::Common::Filesystem::testCreateDirectory(path_);
+    Dune::Stuff::Common::testCreateDirectory(path_);
 
     enum { dimension = MsfemTraits::GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
@@ -779,7 +779,7 @@ public:
     DSC_PROFILER.startTiming("localproblemsolver-assemble_all");
 
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-    Dune::Stuff::Common::Math::MinMaxAvg<double> cell_time;
+    Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
