@@ -106,6 +106,7 @@ class MsFEMErrorEstimator
   typedef std::array<const Intersection*, 3> IntersectionArray;
   typedef std::unique_ptr< DiscreteFunctionType > DF_ptr;
   typedef std::array< DF_ptr, 2 > DF_ptr_pair;
+  typedef Stuff::Common::FixedMap<std::string, RangeType, 6> ErrormapType;
 
   typedef EstimatorUtils<ThisType> EstimatorUtilsType;
   template <class T>
@@ -322,63 +323,125 @@ private:
     jump_conservative_flux = ( sqrt(jump[0]) + sqrt(jump[1]) + sqrt(jump[2]) );
     jump_coarse_flux = sqrt(coarse_jump[0]) + sqrt(coarse_jump[1]) + sqrt(coarse_jump[2]);
   } // getFluxes
-public:
-  // adaptive_refinement
-  RangeType adaptive_refinement(const DiscreteFunctionType& msfem_solution,
-                                const DiscreteFunctionType& msfem_coarse_part,
-                                const DiscreteFunctionType& msfem_fine_part) const
+
+  void fine_contribution(const LeafIndexSetType& coarseGridLeafIndexSet,
+                         const DiscreteFunctionType& msfem_solution,
+                         std::vector< RangeType >& loc_approximation_error,
+                         std::vector< RangeType >& loc_fine_grid_jumps,
+                         ErrormapType& errors) const
   {
-    DSC_LOG_INFO << "Start computing conservative fluxes..." << std::endl;
-    ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
-                                   MacroMicroGridSpecifierImp >
-    flux_problem_solver(fineDiscreteFunctionSpace_, diffusion_, specifier_, path_);
-
-    flux_problem_solver.solve_all(subgrid_list_);
-
-    DSC_LOG_INFO << "Conservative fluxes computed successfully." << std::endl;
-
-    DSC_LOG_INFO << "Starting error estimation..." << std::endl;
-
-    const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
-    const int DUNE_UNUSED(number_of_fine_grid_entities) = msfem_solution.space().gridPart().grid().size(0 /*codim*/);
-
-    // error contribution of H^2 ||f||_L2(T):
-    std::vector< RangeType > loc_coarse_residual(number_of_coarse_grid_entities);
-    std::vector< RangeType > loc_projection_error(number_of_coarse_grid_entities);
-    std::vector< RangeType > loc_coarse_grid_jumps(number_of_coarse_grid_entities);
-    std::vector< RangeType > loc_conservative_flux_jumps(number_of_coarse_grid_entities);
-
-    // Summation ueber die einzelnen fine-grid indicators die zu coarse grid entity beitragen:
-    std::vector< RangeType > loc_approximation_error(number_of_coarse_grid_entities);
-    std::vector< RangeType > loc_fine_grid_jumps(number_of_coarse_grid_entities);
-
-    specifier_.initialize_local_error_manager();
-
-    for (int m = 0; m < number_of_coarse_grid_entities; ++m)
+    // fine-grid iterator:
+    const IteratorType fine_grid_end = fineDiscreteFunctionSpace_.end();
+    for (IteratorType fine_grid_it = fineDiscreteFunctionSpace_.begin(); fine_grid_it != fine_grid_end; ++fine_grid_it)
     {
-      loc_coarse_residual[m] = 0.0;
-      loc_projection_error[m] = 0.0;
-      loc_coarse_grid_jumps[m] = 0.0;
-      loc_conservative_flux_jumps[m] = 0.0;
-      loc_approximation_error[m] = 0.0;
-      loc_fine_grid_jumps[m] = 0.0;
+      EntityType& entity = *fine_grid_it;
+
+      // identify coarse grid father entity
+      EntityPointerType coarse_father(*fine_grid_it);
+      for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
+        coarse_father = coarse_father->father();
+
+      //! new version:
+      EntityPointerType coarse_father_test = coarse_father;
+
+      bool father_found = false;
+      while (father_found == false)
+      {
+        if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
+        { coarse_father = coarse_father_test; }
+
+        if (coarse_father_test->hasFather() == false)
+        { father_found = true; } else
+        { coarse_father_test = coarse_father_test->father(); }
+      }
+
+      int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
+
+      const EntityGeometryType& entityGeometry = entity.geometry();
+
+      EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
+      const DomainType& x = entityGeometry.global( entityQuadrature.point(0) );
+
+      LocalFunctionType local_msfem_sol = msfem_solution.localFunction(entity);
+      JacobianRangeType gradient_msfem_sol(0.);
+      local_msfem_sol.jacobian(entityQuadrature[0], gradient_msfem_sol);
+
+      JacobianRangeType diffusive_flux_x;
+      diffusion_.diffusiveFlux(x, gradient_msfem_sol, diffusive_flux_x);
+
+      EntityQuadratureType highOrder_entityQuadrature(entity, 2 * spacePolOrd + 2);
+
+      const int quadratureNop = highOrder_entityQuadrature.nop();
+      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
+      {
+        const double weight = highOrder_entityQuadrature.weight(quadraturePoint)
+                              * entityGeometry.integrationElement( highOrder_entityQuadrature.point(quadraturePoint) );
+
+        DomainType point = entityGeometry.global( highOrder_entityQuadrature.point(quadraturePoint) );
+
+        JacobianRangeType diffusive_flux_high_order;
+        diffusion_.diffusiveFlux(point, gradient_msfem_sol, diffusive_flux_high_order);
+
+        RangeType value = 0.0;
+        for (int i = 0; i < dimension; ++i)
+          value += pow(diffusive_flux_x[0][i] - diffusive_flux_high_order[0][i], 2.0);
+
+        loc_approximation_error[coarse_father_index] += weight * value;
+        errors["total_approximation_error"] += weight * value;
+      }
+
+      const GridPartType& fineGridPart = fineDiscreteFunctionSpace_.gridPart();
+
+      IntersectionIteratorType endnit = fineGridPart.iend(*fine_grid_it);
+      for (IntersectionIteratorType nit = fineGridPart.ibegin(*fine_grid_it); nit != endnit; ++nit)
+      {
+        FaceQuadratureType innerFaceQuadrature(fineGridPart, *nit, 0, FaceQuadratureType::INSIDE);
+        const FaceGeometryType& faceGeometry = nit->geometry();
+
+        if (nit->neighbor() == false)
+        { continue; }
+
+        EntityPointerType outer_fine_grid_it = nit->outside();
+        EntityType& outer_entity = *outer_fine_grid_it;
+
+        EntityQuadratureType outer_entityQuadrature(outer_entity, 0);    // 0 = polynomial order
+        const EntityGeometryType& outer_entityGeometry = outer_entity.geometry();
+        const DomainType& outer_x = outer_entityGeometry.global( outer_entityQuadrature.point(0) );
+
+        LocalFunctionType outer_local_msfem_sol = msfem_solution.localFunction(outer_entity);
+        JacobianRangeType outer_gradient_msfem_sol(0.);
+        outer_local_msfem_sol.jacobian(outer_entityQuadrature[0], outer_gradient_msfem_sol);
+
+        JacobianRangeType diffusive_flux_outside;
+        diffusion_.diffusiveFlux(outer_x, outer_gradient_msfem_sol, diffusive_flux_outside);
+
+        DomainType unitOuterNormal
+          = nit->unitOuterNormal( innerFaceQuadrature.localPoint(0) );
+
+        const RangeType edge_length = faceGeometry.volume();
+
+        RangeType int_value = 0.0;
+        for (int i = 0; i < dimension; ++i)
+          int_value[i] += (diffusive_flux_x[0][i] - diffusive_flux_outside[0][i]) * unitOuterNormal[i];
+        int_value = pow(int_value, 2.0);
+
+        loc_fine_grid_jumps[coarse_father_index] += edge_length * edge_length * int_value;
+        errors["total_fine_grid_jumps"] += edge_length * edge_length * int_value;
+      }
     }
 
-//    std::array<std::pair<std::string, RangeType>, 6> err  {
-////    Dune::Stuff::Common::Misc::FixedMap<std::string, RangeType, 6> errors({
-//      {std::string("total_coarse_residual"), RangeType(0.0)},
-//      {std::string("total_projection_error"), RangeType(0.0)},
-//      {std::string("total_coarse_grid_jumps"), RangeType(0.0)},
-//      {std::string("total_conservative_flux_jumps"), RangeType(0.0)},
-//      {std::string("total_approximation_error"), RangeType(0.0)},
-//      {std::string("total_fine_grid_jumps"), RangeType(0.0)}};
+  }
 
-    Dune::Stuff::Common::FixedMap<std::string, RangeType, 6> errors;
-    RangeType total_estimated_error(0.0);
-
-    const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
+  void coarse_contribution(const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace,
+                           const DiscreteFunctionType& msfem_coarse_part,
+                           const DiscreteFunctionType& msfem_fine_part,
+                           std::vector< RangeType >& loc_coarse_grid_jumps,
+                           std::vector< RangeType >& loc_conservative_flux_jumps,
+                           std::vector< RangeType >& loc_coarse_residual,
+                           std::vector< RangeType >& loc_projection_error,
+                           ErrormapType& errors) const
+  {
     const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
-
     // Coarse Entity Iterator
     const IteratorType coarse_grid_end = coarseDiscreteFunctionSpace.end();
     for (IteratorType coarse_grid_it = coarseDiscreteFunctionSpace.begin();
@@ -531,108 +594,59 @@ public:
         }
       }
     }
+  }
 
-    // fine-grid iterator:
+public:
+  // adaptive_refinement
+  RangeType adaptive_refinement(const DiscreteFunctionType& msfem_solution,
+                                const DiscreteFunctionType& msfem_coarse_part,
+                                const DiscreteFunctionType& msfem_fine_part) const
+  {
+    DSC_LOG_INFO << "Start computing conservative fluxes..." << std::endl;
+    typedef ConservativeFluxProblemSolver< SubGridDiscreteFunctionType, DiscreteFunctionType,
+                                            DiffusionOperatorType, MacroMicroGridSpecifierImp >
+        ConservativeFluxProblemSolverType;
+    ConservativeFluxProblemSolverType flux_problem_solver(fineDiscreteFunctionSpace_,
+                                                          diffusion_, specifier_, path_);
+    flux_problem_solver.solve_all(subgrid_list_);
 
-    // Coarse Entity Iterator
-    const IteratorType fine_grid_end = fineDiscreteFunctionSpace_.end();
-    for (IteratorType fine_grid_it = fineDiscreteFunctionSpace_.begin(); fine_grid_it != fine_grid_end; ++fine_grid_it)
-    {
-      EntityType& entity = *fine_grid_it;
+    DSC_LOG_INFO << "Conservative fluxes computed successfully." << std::endl;
+    DSC_LOG_INFO << "Starting error estimation..." << std::endl;
 
-      // identify coarse grid father entity
-      EntityPointerType coarse_father(*fine_grid_it);
-      for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
-        coarse_father = coarse_father->father();
+    const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+    specifier_.initialize_local_error_manager();
 
-      //! new version:
-      EntityPointerType coarse_father_test = coarse_father;
+    ErrormapType errors({
+      {"total_coarse_residual", RangeType(0.0)},
+      {"total_projection_error", RangeType(0.0)},
+      {"total_coarse_grid_jumps", RangeType(0.0)},
+      {"total_conservative_flux_jumps", RangeType(0.0)},
+      {"total_approximation_error", RangeType(0.0)},
+      {"total_fine_grid_jumps", RangeType(0.0)}});
 
-      bool father_found = false;
-      while (father_found == false)
-      {
-        if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-        { coarse_father = coarse_father_test; }
+    RangeType total_estimated_error(0.0);
 
-        if (coarse_father_test->hasFather() == false)
-        { father_found = true; } else
-        { coarse_father_test = coarse_father_test->father(); }
-      }
+    const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
+    const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
 
-      int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
-
-      const EntityGeometryType& entityGeometry = entity.geometry();
-
-      EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
-      const DomainType& x = entityGeometry.global( entityQuadrature.point(0) );
-
-      LocalFunctionType local_msfem_sol = msfem_solution.localFunction(entity);
-      JacobianRangeType gradient_msfem_sol(0.);
-      local_msfem_sol.jacobian(entityQuadrature[0], gradient_msfem_sol);
-
-      JacobianRangeType diffusive_flux_x;
-      diffusion_.diffusiveFlux(x, gradient_msfem_sol, diffusive_flux_x);
-
-      EntityQuadratureType highOrder_entityQuadrature(entity, 2 * spacePolOrd + 2);
-
-      const int quadratureNop = highOrder_entityQuadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double weight = highOrder_entityQuadrature.weight(quadraturePoint)
-                              * entityGeometry.integrationElement( highOrder_entityQuadrature.point(quadraturePoint) );
-
-        DomainType point = entityGeometry.global( highOrder_entityQuadrature.point(quadraturePoint) );
-
-        JacobianRangeType diffusive_flux_high_order;
-        diffusion_.diffusiveFlux(point, gradient_msfem_sol, diffusive_flux_high_order);
-
-        RangeType value = 0.0;
-        for (int i = 0; i < dimension; ++i)
-          value += pow(diffusive_flux_x[0][i] - diffusive_flux_high_order[0][i], 2.0);
-
-        loc_approximation_error[coarse_father_index] += weight * value;
-        errors["total_approximation_error"] += weight * value;
-      }
-
-      const GridPartType& fineGridPart = fineDiscreteFunctionSpace_.gridPart();
-
-      IntersectionIteratorType endnit = fineGridPart.iend(*fine_grid_it);
-      for (IntersectionIteratorType nit = fineGridPart.ibegin(*fine_grid_it); nit != endnit; ++nit)
-      {
-        FaceQuadratureType innerFaceQuadrature(fineGridPart, *nit, 0, FaceQuadratureType::INSIDE);
-        const FaceGeometryType& faceGeometry = nit->geometry();
-
-        if (nit->neighbor() == false)
-        { continue; }
-
-        EntityPointerType outer_fine_grid_it = nit->outside();
-        EntityType& outer_entity = *outer_fine_grid_it;
-
-        EntityQuadratureType outer_entityQuadrature(outer_entity, 0);    // 0 = polynomial order
-        const EntityGeometryType& outer_entityGeometry = outer_entity.geometry();
-        const DomainType& outer_x = outer_entityGeometry.global( outer_entityQuadrature.point(0) );
-
-        LocalFunctionType outer_local_msfem_sol = msfem_solution.localFunction(outer_entity);
-        JacobianRangeType outer_gradient_msfem_sol(0.);
-        outer_local_msfem_sol.jacobian(outer_entityQuadrature[0], outer_gradient_msfem_sol);
-
-        JacobianRangeType diffusive_flux_outside;
-        diffusion_.diffusiveFlux(outer_x, outer_gradient_msfem_sol, diffusive_flux_outside);
-
-        DomainType unitOuterNormal
-          = nit->unitOuterNormal( innerFaceQuadrature.localPoint(0) );
-
-        const RangeType edge_length = faceGeometry.volume();
-
-        RangeType int_value = 0.0;
-        for (int i = 0; i < dimension; ++i)
-          int_value[i] += (diffusive_flux_x[0][i] - diffusive_flux_outside[0][i]) * unitOuterNormal[i];
-        int_value = pow(int_value, 2.0);
-
-        loc_fine_grid_jumps[coarse_father_index] += edge_length * edge_length * int_value;
-        errors["total_fine_grid_jumps"] += edge_length * edge_length * int_value;
-      }
-    }
+    // error contribution of H^2 ||f||_L2(T):
+    std::vector< RangeType > loc_coarse_residual(number_of_coarse_grid_entities, RangeType(0.0));
+    std::vector< RangeType > loc_projection_error(number_of_coarse_grid_entities, RangeType(0.0));
+    std::vector< RangeType > loc_coarse_grid_jumps(number_of_coarse_grid_entities, RangeType(0.0));
+    std::vector< RangeType > loc_conservative_flux_jumps(number_of_coarse_grid_entities, RangeType(0.0));
+    coarse_contribution(coarseDiscreteFunctionSpace,
+                        msfem_coarse_part,
+                        msfem_fine_part,
+                        loc_coarse_grid_jumps,
+                        loc_conservative_flux_jumps,
+                        loc_coarse_residual,
+                        loc_projection_error,
+                        errors);
+    fine_contribution(coarseGridLeafIndexSet,
+                      msfem_solution,
+                      loc_approximation_error,
+                      loc_fine_grid_jumps,
+                      errors);
 
     for (int m = 0; m < number_of_coarse_grid_entities; ++m)
     {
