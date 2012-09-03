@@ -218,14 +218,14 @@ void print_info(ProblemDataType info, std::ostream& out)
   // edge length of the cells in the cell proplems,
   const double delta_ = DSC_CONFIG_GET("problem.delta", 1.0f);
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
-  out << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std::endl
+  out << "Error File for Elliptic Model Problem " << DSC_CONFIG_GET("problem.number", 0) << "." << std::endl
             << std::endl;
   if (DSC_CONFIG_GET("problem.linear", true))
     out << "Problem is declared as being LINEAR." << std::endl;
   else
     out << "Problem is declared as being NONLINEAR." << std::endl;
 
-  if (ProblemDataType::has_exact_solution) {
+  if (info.has_exact_solution) {
     out << "Exact solution is available." << std::endl << std::endl;
   } else {
     out << "Exact solution is not available." << std::endl << std::endl;

@@ -67,10 +67,6 @@ struct ModelProblemData
     assert(!constants_.epsilon_est != 0.0);
   }
 
-  inline int get_Number_of_Model_Problem() const {
-    return 10;
-  }
-
   //! \copydoc IModelProblemData::getMacroGridFile()
   inline std::string getMacroGridFile() const {
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");      // _strange_grid

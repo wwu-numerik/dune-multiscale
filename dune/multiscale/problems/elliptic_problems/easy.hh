@@ -29,10 +29,6 @@ struct ModelProblemData
     : IModelProblemData(constants()) {
   }
 
-  inline int get_Number_of_Model_Problem() const {
-    return 0;
-  }
-
   //! \copydoc IModelProblemData::getMacroGridFile()
   inline std::string getMacroGridFile() const {
     return ("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");

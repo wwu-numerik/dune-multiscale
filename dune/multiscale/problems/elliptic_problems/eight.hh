@@ -28,10 +28,6 @@ struct ModelProblemData
       DUNE_THROW(Dune::InvalidStateException, "problem eight is entirely nonlinear, but problem.linear was true");
   }
 
-  inline int get_Number_of_Model_Problem() const {
-    return 8;
-  }
-
   //! \copydoc IModelProblemData::getMacroGridFile()
   inline std::string getMacroGridFile() const {
     return ("../dune/multiscale/grids/macro_grids/elliptic/unit_cube.dgf");

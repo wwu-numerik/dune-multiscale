@@ -79,8 +79,6 @@ public:
    * \todo paths need to be relative to binary
    */
   virtual std::string getMacroGridFile() const = 0;
-  //! a unique integral identifier for this problem
-  virtual int  get_Number_of_Model_Problem() const = 0;
 };
 }
 
