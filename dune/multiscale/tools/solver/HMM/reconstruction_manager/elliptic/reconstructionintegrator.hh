@@ -88,9 +88,7 @@ public:
     // 2. Y* is non-perorated or periodically perforated )
     // (if required, ask Patrick Henning for the old version of the code)
 
-    // model problem data
-    const Problem::ModelProblemData problem_info;
-    const double epsilon_est = problem_info.getEpsilonEstimated();
+    const double epsilon_est = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
     const PeriodicGridPartType& gridPart = periodicDiscreteFunctionSpace.gridPart();
     typedef typename PeriodicGridPartType::GridType::Traits::CollectiveCommunication
     CommunicatorType;
@@ -165,9 +163,7 @@ public:
     // 2. Y* is non-perorated or periodically perforated )
     // (if required, ask Patrick Henning for the old version of the code)
 
-    // model problem data
-    const Problem::ModelProblemData problem_info;
-    const double epsilon_est = problem_info.getEpsilonEstimated();
+    const double epsilon_est = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
     const PeriodicGridPartType& gridPart = periodicDiscreteFunctionSpace.gridPart();
 
     typedef typename PeriodicGridPartType::GridType::Traits::

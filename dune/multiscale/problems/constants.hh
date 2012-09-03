@@ -12,8 +12,8 @@ struct Constants
   const double delta;
   Constants(double def_epsilon, double def_epsilon_est, double def_delta)
     : epsilon( DSC_CONFIG_GET("problem.epsilon", def_epsilon) )
-      , epsilon_est( DSC_CONFIG_GET("hmm.epsilon_guess", def_epsilon_est) )
-      , delta( DSC_CONFIG_GET("hmm.delta", def_delta) )
+      , epsilon_est( DSC_CONFIG_GET("problem.epsilon_guess", def_epsilon_est) )
+      , delta( DSC_CONFIG_GET("problem.delta", def_delta) )
   {}
 
   template< typename T, class Validator = Dune::Stuff::Common::ValidateAny< T > >

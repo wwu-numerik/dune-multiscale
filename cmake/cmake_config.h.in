@@ -19,6 +19,7 @@
 #cmakedefine @ENABLE_ABERTA@ 
 
 #define DUNE_ISTL_WITH_CHECKING 1
+#define DUNE_COMMON_FIELDVECTOR_SIZE_IS_METHOD 1
 
 #include <config.h>
 

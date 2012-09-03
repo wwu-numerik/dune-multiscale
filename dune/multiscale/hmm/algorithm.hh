@@ -204,19 +204,19 @@ typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctio
   return size_of_domain;
 } // get_size_of_domain
 
-template < class ProblemDataType >
-void print_info(const ProblemDataType& info, std::ostream& out)
+template <class ProblemDataType>
+void print_info(ProblemDataType info, std::ostream& out)
 {
   // epsilon is specified in ModelProblemData, which is specified in problem_specification.hh
   // 'epsilon' in for instance A^{epsilon}(t,x) = A(t,x/epsilon)
-  const double epsilon_ = info.getEpsilon();
+  const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);
   // estimated epsilon (specified in ModelProblemData)
   // estimated epsilon in case epsilon is unknown
-  const double epsilon_est_ = info.getEpsilonEstimated();
+  const double epsilon_est_ = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
   // edge length of the cells in the cells, belonging to the cell problems
   // note that (delta/epsilon_est) needs to be a positive integer!
   // edge length of the cells in the cell proplems,
-  const double delta_ = info.getDelta();
+  const double delta_ = DSC_CONFIG_GET("problem.delta", 1.0f);
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
   out << "Error File for Elliptic Model Problem " << info.get_Number_of_Model_Problem() << "." << std::endl
             << std::endl;

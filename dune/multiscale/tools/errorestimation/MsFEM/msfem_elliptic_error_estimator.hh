@@ -315,10 +315,6 @@ private:
                                                   fineDiscreteFunctionSpace_);
     const auto jump = contributions.first;
     const auto coarse_jump = contributions.second;
-    // std :: cout << "jump[0] = " << jump[0] << std :: endl;
-    // std :: cout << "jump[1] = " << jump[1] << std :: endl;
-    // std :: cout << "jump[2] = " << jump[2] << std :: endl;
-    // std :: cout << std :: endl;
 
     jump_conservative_flux = ( sqrt(jump[0]) + sqrt(jump[1]) + sqrt(jump[2]) );
     jump_coarse_flux = sqrt(coarse_jump[0]) + sqrt(coarse_jump[1]) + sqrt(coarse_jump[2]);
@@ -642,6 +638,8 @@ public:
                         loc_coarse_residual,
                         loc_projection_error,
                         errors);
+    std::vector< RangeType > loc_approximation_error(number_of_coarse_grid_entities, RangeType(0.0));
+    std::vector< RangeType > loc_fine_grid_jumps(number_of_coarse_grid_entities, RangeType(0.0));
     fine_contribution(coarseGridLeafIndexSet,
                       msfem_solution,
                       loc_approximation_error,

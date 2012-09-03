@@ -27,13 +27,15 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
   static const unsigned int faceCodim = 1;
   for (const auto& entity : discreteFunctionSpace)
   {
-    for (const auto& intersection : intersectionRange(discreteFunctionSpace.gridPart(), entity))
+    for (const auto& intersection
+         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
     {
       if ( !intersection.boundary() )
         continue;
       auto rhsLocal = rhs.localFunction(entity);
       const auto face = intersection.indexInInside();
-      for(auto point : lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
+      for(auto point
+          : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
         rhsLocal[point] = 0;
     }
   }
@@ -237,7 +239,7 @@ HMMResult<HMMTraits>
         DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
         // generate directory for cell problem data output
         const std::string cell_path = "path";// + "/cell_problems/";assert(false);//path was not in scope
-        Dune::Stuff::Common::Filesystem::testCreateDirectory(cell_path);
+        Dune::Stuff::Common::testCreateDirectory(cell_path);
         // -------------- solve cell problems for the macro basefunction set ------------------------------
         // save the solutions of the cell problems for the set of macroscopic base functions
         cell_problem_solver.template saveTheSolutions_baseSet< typename HMM::DiscreteFunctionType >(discreteFunctionSpace,
@@ -278,7 +280,7 @@ HMMResult<HMMTraits>
           const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
           DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
             // generate directory for cell problem data output
-          Dune::Stuff::Common::Filesystem::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
+          Dune::Stuff::Common::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
           // only for the case with test function reconstruction:
           if (DSC_CONFIG_GET("TFR", false)) {
             // -------------- solve cell problems for the macro basefunction set ------------------------------

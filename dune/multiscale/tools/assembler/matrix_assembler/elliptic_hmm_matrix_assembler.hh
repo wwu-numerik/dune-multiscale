@@ -122,11 +122,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
   // place, where we saved the solutions of the cell problems
   const std::string cell_solution_location = filename_ + "/cell_problems/_cellSolutions_baseSet";;
-
-  const Problem::ModelProblemData model_info;
-  const double delta = model_info.getDelta();
-  const double epsilon_estimated = model_info.getEpsilonEstimated();
-
+  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+  const double epsilon_estimated = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
 
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader(cell_solution_location);
@@ -328,9 +325,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
   const std::string cell_solution_location_discFunc = "HMM/" + filename_ + "/cell_problems/_cellSolutions_discFunc";
   const std::string jac_cor_cell_solution_location_baseSet_discFunc = "HMM/" + filename_
                                                     + "/cell_problems/_JacCorCellSolutions_baseSet_discFunc";
-  const Problem::ModelProblemData model_info;
-  const double delta = model_info.getDelta();
-  const double epsilon_estimated = model_info.getEpsilonEstimated();
+  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+  const double epsilon_estimated = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
 
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);

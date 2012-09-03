@@ -561,7 +561,7 @@ int main(int argc, char** argv) {
     const std::string macroGridName = info.getMacroGridFile();
 
     DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
-              << " with epsilon = " << info.getEpsilon() << "." << std::endl << std::endl;
+              << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
     #ifdef UNIFORM
     DSC_LOG_INFO << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
     DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;

@@ -119,10 +119,7 @@ public:
   void diffusiveFlux(const DomainType& y,
                      const JacobianRangeType& direction,
                      JacobianRangeType& flux) const {
-    Problem::ModelProblemData model_info;
-
-    //! EPSILON BESSER AUS DEM PARAMETER-FILE HOLEN!
-    const double epsilon = model_info.getEpsilon();
+    const double epsilon = DSC_CONFIG_GET("problem.epsilon", 1.0f);
 
     DomainType new_y;
 

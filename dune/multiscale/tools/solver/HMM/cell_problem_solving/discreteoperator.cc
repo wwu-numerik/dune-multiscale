@@ -1,4 +1,5 @@
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
 
 namespace Dune {
 
@@ -20,8 +21,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
   // x_T is the barycenter of the macro grid element T
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
-  Problem::ModelProblemData model_info;
-  const double delta = model_info.getDelta();
+  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
 
   global_matrix.reserve();
   global_matrix.clear();
@@ -108,9 +108,9 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
   const DomainType& x_T,
   const JacobianRangeType& grad_coarse_function,
   const PeriodicDiscreteFunctionImp& old_fine_function,
-  MatrixType& global_matrix) const {
-  Problem::ModelProblemData model_info;
-  const double delta = model_info.getDelta();
+  MatrixType& global_matrix) const
+{
+  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
 
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
   typedef typename PeriodicDiscreteFunctionImp::LocalFunctionType
@@ -300,11 +300,8 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
   // set entries to zero:
   cell_problem_RHS.clear();
 
-  // model problem data:
-  Problem::ModelProblemData problem_info;
-
   // get edge length of cell:
-  const double delta = problem_info.getDelta();
+  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
@@ -389,11 +386,8 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
   // set entries to zero:
   cell_problem_RHS.clear();
 
-  // model problem data:
-  Problem::ModelProblemData problem_info;
-
   // get edge length of cell:
-  const double delta = problem_info.getDelta();
+  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
@@ -497,11 +491,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_
   // set entries of right hand side to zero:
   jac_corrector_cell_problem_RHS.clear();
 
-  // model problem data:
-  const Problem::ModelProblemData problem_info;
-
-  // get edge length of cell:
-  const double delta = problem_info.getDelta();
+  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );

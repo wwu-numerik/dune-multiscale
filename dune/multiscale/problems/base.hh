@@ -63,27 +63,6 @@ public:
   virtual ~IModelProblemData()
   {}
 
-  /** epsilon (the smaller epsilon, the finer the micro-structure)
-   *  in the periodic setting, epsilon denotes the periode of the fine-scale oscillations
-   *  in the non-periodic setting, can be seen as a representative size for the fine-scale behaviour
-   **/
-  inline double getEpsilon() const {
-    return constants_.epsilon;
-  }
-
-  //! epsilon (the smaller epsilon, the finer the micro-structure)
-  inline double getEpsilonEstimated() const {
-    return constants_.epsilon_est;
-  }
-
-  /** edge length of a cell (where we solve the cell problems)
-   *  we need delta >= epsilon
-   **/
-  inline double getDelta() const {
-    return constants_.delta;
-    // NOTE that (delta/epsilon_est) needs to be a positive integer!
-  }
-
   /**
    * get the (starting) grid refinement level for solving the reference problem
    * in genereal, this is the smallest integer (level), so that solving the reference problem on this level,
