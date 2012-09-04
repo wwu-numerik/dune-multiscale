@@ -58,15 +58,9 @@ public:
 
 public:
   static void printRHS(const DiscreteFunctionType& rhs) {
-    const DiscreteFunctionSpaceType& discreteFunctionSpace
-      = rhs.space();
-
-    const IteratorType endit = discreteFunctionSpace.end();
-
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+    for (auto entity : rhs.space())
     {
-      LocalFunctionType elementOfRHS = rhs.localFunction(*it);
-
+      const LocalFunctionType elementOfRHS = rhs.localFunction(entity);
       const int numDofs = elementOfRHS.numDofs();
       for (int i = 0; i < numDofs; ++i)
       {
@@ -78,168 +72,114 @@ public:
   // /############################ The rhs-assemble()-methods for linear elliptic problems
   // #########################################
 
+private:
+  //! need a virtual base to work around local classes not being allowed in templated scopes
+  struct FunctorBase {
+    virtual RangeType operator()(const DomainType& global_quad_point, const JacobianRangeType& gradientPhi) const = 0;
+  };
+
+  template< class FirstSourceType >
+  void assemble_common(const FirstSourceType& f,
+                       const FunctorBase& functor,
+                       const int polOrd,
+                       DiscreteFunctionType& rhsVector) const
+  {
+    // set rhsVector to zero:
+    rhsVector.clear();
+    for (const auto& entity : rhsVector.space())
+    {
+      // it* Pointer auf ein Element der Entity
+      const GeometryType& geometry = entity.geometry(); // Referenz auf Geometrie
+      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);   // entity zeigt auf ein bestimmtes Element der
+                                                                       // entity
+      // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
+      // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
+      // discreteFunction(aktuelleEntity)
+
+      const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
+        = rhsVector.space().baseFunctionSet(entity);     // entity Referenz auf eine bestimmtes Element der entity. In der
+                                                          // ersten Klasse war das Element fest, deshalb konnte man sich
+                                                          // dort Pointer sparen. //loeschen: discreteFunctionSpace
+                                                          // statt
+                                                          // functionSpace
+
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);   // 0 --> codim 0
+      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
+      for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
+      {
+        // the return values:
+        RangeType f_x, phi_x;
+        JacobianRangeType gradientPhi;
+        // to save: A \nabla PHI_H * \nabla phi_h;
+        RangeType res = 0;
+
+        const int numQuadraturePoints = quadrature.nop();
+        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+        {
+          const double det
+            = geometry.integrationElement( quadrature.point(quadraturePoint) );
+          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
+          f.evaluate(geometry.global( quadrature.point(quadraturePoint) ), f_x);
+          // evaluate the current base function at the current quadrature point and save its value in 'z':
+          baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
+          // evaluate the gradient of the current base function at the current quadrature point and save its value in
+          // 'returnGradient':
+          baseSet.jacobian(i, quadrature[quadraturePoint], gradientPhi);
+          // Bis jetzt nur der Gradient auf dem Referenzelement!!!!!!! Es muss noch transformiert werden, um den
+          // Gradienten auf dem echten Element zu bekommen! Das passiert folgendermassen:
+          const FieldMatrix< double, dimension, dimension >& inv
+            = geometry.jacobianInverseTransposed( quadrature.point(quadraturePoint) );
+          // multiply with transpose of jacobian inverse
+          gradientPhi[0] = FMatrixHelp::mult(inv, gradientPhi[0]);
+
+          res = functor(geometry.global(quadrature.point(quadraturePoint)), gradientPhi);
+
+          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
+          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (res);
+        }
+      }
+    }
+  }  // end method
+
+public:
   // assemble standard right hand side:
   // if there is only one source (f) (there is no second source):
   // discreteFunction is an output parameter (kind of return value)
   template< int polOrd, class FirstSourceType >
   void assemble(const FirstSourceType& f,
                 DiscreteFunctionType& rhsVector) const {
-    // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
-    // gespeichert
-    const DiscreteFunctionSpaceType& discreteFunctionSpace
-      = rhsVector.space();
-
-    // set discreteFunction to zero:
-    rhsVector.clear();
-
-    const IteratorType endit = discreteFunctionSpace.end();
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-    {
-      // it* Pointer auf ein Element der Entity
-      const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
-
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
-                                                                       // entity
-      // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
-      // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
-      // discreteFunction(aktuelleEntity)
-
-      const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
-                                                          // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                          // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                          // statt
-                                                          // functionSpace
-
-      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
-
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
-      for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
-      {
-        // std :: cout << i << "discreteFunction.localFunction( *it ) " << i << ": " << discreteFunction.localFunction(
-        // *it )[ i ] << std :: endl;
-
-        // the return values:
-        RangeType f_x, phi_x;
-
-        JacobianRangeType gradientPhi;
-
-        const int numQuadraturePoints = quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
-        {
-          const double det
-            = geometry.integrationElement( quadrature.point(quadraturePoint) );
-
-          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'y':
-          f.evaluate(geometry.global( quadrature.point(quadraturePoint) ), f_x);
-
-          // evaluate the current base function at the current quadrature point and save its value in 'z':
-          baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
-        }
+    struct Functor : public FunctorBase {
+      RangeType operator()(const DomainType&, const JacobianRangeType& ) const {
+        return RangeType(0.0);
       }
-    }
+    } functor;
+    assemble_common(f, functor, polOrd, rhsVector);
   }  // end method
 
   // if there is a first source f and a second source G:
   // discreteFunction is an output parameter (kind of return value)
   template< int polOrd, class FirstSourceType, class SecondSourceType >
   void assemble(const FirstSourceType& f,
-                const SecondSourceType& G,
+                const SecondSourceType& _G,
                 DiscreteFunctionType& rhsVector) const {
-    // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
-    // gespeichert
-    const DiscreteFunctionSpaceType& discreteFunctionSpace
-      = rhsVector.space();
+    struct Functor : public FunctorBase {
+      const SecondSourceType& G;
+      Functor(const SecondSourceType& __G)
+        :G(__G) {}
 
-    // set rhsVector to zero:
-    rhsVector.clear();
-
-    const IteratorType endit = discreteFunctionSpace.end();
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-    {
-      // it* Pointer auf ein Element der Entity
-      const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
-
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
-                                                                       // entity
-      // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
-      // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
-      // discreteFunction(aktuelleEntity)
-
-      const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
-                                                          // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                          // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                          // statt
-                                                          // functionSpace
-
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
-
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
-      for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
-      {
-        // std :: cout << i << "discreteFunction.localFunction( *it ) " << i << ": " << discreteFunction.localFunction(
-        // *it )[ i ] << std :: endl;
-
-        // the return values:
-        RangeType f_x, phi_x;
-
-        JacobianRangeType gradientPhi;
-
-        // to save: G \cdot \nabla PHI_H
-        RangeType G_x[dimension];
-
-        // to save: A \nabla PHI_H * \nabla phi_h;
-        RangeType t = 0;
-
-        const int numQuadraturePoints = quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
-        {
-          const double det
-            = geometry.integrationElement( quadrature.point(quadraturePoint) );
-
-          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-          f.evaluate(geometry.global( quadrature.point(quadraturePoint) ), f_x);
-
-          // evaluate the current base function at the current quadrature point and save its value in 'z':
-          baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-
-          // evaluate the gradient of the current base function at the current quadrature point and save its value in
-          // 'returnGradient':
-          baseSet.jacobian(i, quadrature[quadraturePoint], gradientPhi);
-          // Bis jetzt nur der Gradient auf dem Referenzelement!!!!!!! Es muss noch transformiert werden, um den
-          // Gradienten auf dem echten Element zu bekommen! Das passiert folgendermassen:
-
-          const FieldMatrix< double, dimension, dimension >& inv
-            = geometry.jacobianInverseTransposed( quadrature.point(quadraturePoint) );
-
-          // multiply with transpose of jacobian inverse
-          gradientPhi[0] = FMatrixHelp::mult(inv, gradientPhi[0]);
-
-          // set all entries of G_x to zero to delete old data of a former loop cycle
-          for (int k = 0; k < dimension; ++k)
-          {
-            G_x[k] = 0;
-          }
-
-          // the same for t:
-          t = 0;
-
-          // evaluate the second source at the current quadrature point and save its value in 'G_x':
-          for (int k = 0; k < dimension; ++k)
-            G.evaluate(k, geometry.global( quadrature.point(quadraturePoint) ), G_x[k]);
-
-          for (int k = 0; k < dimension; ++k)
-            t += G_x[k] * gradientPhi[0][k];
-
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
-
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (t);
+      RangeType operator()(const DomainType& global_quad_point, const JacobianRangeType& gradientPhi) const {
+        RangeType res(0.0);
+        RangeType G_x(0.0);
+        // evaluate the second source at the current quadrature point and save its value in 'G_x':
+        for (int k = 0; k < dimension; ++k) {
+          G_x = 0;
+          G.evaluate(k, global_quad_point, G_x);
+          res += G_x * gradientPhi[0][k];
         }
+        return res;
       }
-    }
+    } functor(_G);
+    assemble_common(f, functor, polOrd, rhsVector);
   }  // end method
 
   // if there is a first source f, a second source G and a parameter t:
@@ -249,96 +189,25 @@ public:
                 const SecondSourceType& G,
                 const TimeType& t,
                 DiscreteFunctionType& rhsVector) const {
-    // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
-    // gespeichert
-    const DiscreteFunctionSpaceType& discreteFunctionSpace
-      = rhsVector.space();
+    struct Functor : public FunctorBase {
+      const SecondSourceType& G;
+      const TimeType& t;
+      Functor(const SecondSourceType& __G, const TimeType& _t)
+        :G(__G), t(_t) {}
 
-    // set rhsVector to zero:
-    rhsVector.clear();
-
-    const IteratorType endit = discreteFunctionSpace.end();
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-    {
-      // it* Pointer auf ein Element der Entity
-      const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
-
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
-                                                                       // entity
-      // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
-      // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
-      // discreteFunction(aktuelleEntity)
-
-      const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
-                                                          // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                          // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                          // statt
-                                                          // functionSpace
-
-      CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
-
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
-      for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
-      {
-        // std :: cout << i << "discreteFunction.localFunction( *it ) " << i << ": " << discreteFunction.localFunction(
-        // *it )[ i ] << std :: endl;
-
-        // the return values:
-        RangeType f_x, phi_x;
-
-        JacobianRangeType gradientPhi;
-
-        // to save: G \cdot \nabla PHI_H
-        RangeType G_x[dimension];
-
-        // to save: A \nabla PHI_H * \nabla phi_h;
-        RangeType res = 0;
-
-        const int numQuadraturePoints = quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
-        {
-          const double det
-            = geometry.integrationElement( quadrature.point(quadraturePoint) );
-
-          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-          f.evaluate(geometry.global( quadrature.point(quadraturePoint) ), t, f_x);
-
-          // evaluate the current base function at the current quadrature point and save its value in 'z':
-          baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-
-          // evaluate the gradient of the current base function at the current quadrature point and save its value in
-          // 'returnGradient':
-          baseSet.jacobian(i, quadrature[quadraturePoint], gradientPhi);
-          // Bis jetzt nur der Gradient auf dem Referenzelement!!!!!!! Es muss noch transformiert werden, um den
-          // Gradienten auf dem echten Element zu bekommen! Das passiert folgendermassen:
-
-          const FieldMatrix< double, dimension, dimension >& inv
-            = geometry.jacobianInverseTransposed( quadrature.point(quadraturePoint) );
-
-          // multiply with transpose of jacobian inverse
-          gradientPhi[0] = FMatrixHelp::mult(inv, gradientPhi[0]);
-
-          // set all entries of G_x to zero to delete old data of a former loop cycle
-          for (int k = 0; k < dimension; ++k)
-            G_x[k] = 0;
-
-          // the same for res:
-          res = 0;
-
-          // evaluate the second source at the current quadrature point and save its value in 'G_x':
-          for (int k = 0; k < dimension; ++k)
-            G.evaluate(k, geometry.global( quadrature.point(quadraturePoint) ), t, G_x[k]);
-
-          for (int k = 0; k < dimension; ++k)
-            res += G_x[k] * gradientPhi[0][k];
-
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
-
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (res);
+      RangeType operator()(const DomainType& global_quad_point, const JacobianRangeType& gradientPhi) const {
+        RangeType res(0.0);
+        RangeType G_x(0.0);
+        // evaluate the second source at the current quadrature point and save its value in 'G_x':
+        for (int k = 0; k < dimension; ++k) {
+          G_x = 0;
+          G.evaluate(k, global_quad_point, t, G_x);
+          res += G_x * gradientPhi[0][k];
         }
+        return res;
       }
-    }
+    } functor(G, t);
+    assemble_common(f, functor, polOrd, rhsVector);
   }  // end method
 
   // /############################ The rhs-assemble()-methods for non-linear elliptic problems
@@ -351,92 +220,66 @@ public:
                                   const DiffusionOperatorType& A,
                                   const DiscreteFunctionType& old_u_H, // old_u_H from the last iteration step
                                   DiscreteFunctionType& rhsVector) const {
-    // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
-    // gespeichert
-    const DiscreteFunctionSpaceType& discreteFunctionSpace
-      = rhsVector.space();
-
-    // set rhsVector to zero:
     rhsVector.clear();
 
-    const IteratorType endit = discreteFunctionSpace.end();
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+    for (const auto& entity : rhsVector.space())
     {
       // it* Pointer auf ein Element der Entity
-      const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
-
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
+      const GeometryType& geometry = entity.geometry(); // Referenz auf Geometrie
+      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);   // entity zeigt auf ein bestimmtes Element der
                                                                        // entity
       // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
       // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
       // discreteFunction(aktuelleEntity)
 
       const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
+        = rhsVector.space().baseFunctionSet(entity);     // entity Referenz auf eine bestimmtes Element der entity. In der
                                                           // ersten Klasse war das Element fest, deshalb konnte man sich
                                                           // dort Pointer sparen. //loeschen: discreteFunctionSpace
                                                           // statt
                                                           // functionSpace
 
-      LocalFunctionType old_u_H_loc = old_u_H.localFunction(*it);
+      const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
 
-      Quadrature quadrature(*it, polOrd);   // 0 --> codim 0
+      const Quadrature quadrature(entity, polOrd);   // 0 --> codim 0
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
       {
-        // std :: cout << i << "discreteFunction.localFunction( *it ) " << i << ": " << discreteFunction.localFunction(
-        // *it )[ i ] << std :: endl;
-
         // the return values:
         RangeType f_x, phi_x;
-
         // gradient of base function and gradient of old_u_H
         JacobianRangeType grad_phi_x, grad_old_u_H;
-
         // Let A denote the diffusion operator, then we save
         // A( \gradient old_u_H )
         JacobianRangeType diffusive_flux_in_grad_old_u_H;
-
-        // to save: A \nabla PHI_H * \nabla phi_h;
-//        RangeType t = 0;
 
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
         {
           // local (barycentric) coordinates (with respect to entity)
-          const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+          const auto& local_point = quadrature.point(quadraturePoint);
+          const DomainType global_point = geometry.global(local_point);
 
-          DomainType global_point = geometry.global(local_point);
-
-          const double det
-            = geometry.integrationElement(local_point);
-
+          const double det = geometry.integrationElement(local_point);
           // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
           f.evaluate(global_point, f_x);
-
           // evaluate the current base function at the current quadrature point and save its value in 'z':
           baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-
           // evaluate the gradient of the current base function at the current quadrature point and save its value in
           // 'returnGradient':
           baseSet.jacobian(i, quadrature[quadraturePoint], grad_phi_x);
           // Bis jetzt nur der Gradient auf dem Referenzelement!!!!!!! Es muss noch transformiert werden, um den
           // Gradienten auf dem echten Element zu bekommen! Das passiert folgendermassen:
-
           const FieldMatrix< double, dimension, dimension >& inv
             = geometry.jacobianInverseTransposed(local_point);
           // multiply with transpose of jacobian inverse
           grad_phi_x[0] = FMatrixHelp::mult(inv, grad_phi_x[0]);
-
           // get gradient of old u_H:
           old_u_H_loc.jacobian(quadrature[quadraturePoint], grad_old_u_H);
-
           // evaluate diffusion operator in x(=global_point) and grad_old_u_H
           A.diffusiveFlux(global_point, grad_old_u_H, diffusive_flux_in_grad_old_u_H);
-
           elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
-
           elementOfRHS[i] -= det * quadrature.weight(quadraturePoint)
                              * (diffusive_flux_in_grad_old_u_H[0] * grad_phi_x[0]);
         }
@@ -451,49 +294,35 @@ public:
   // if there is only one source (f) (there is no second source):
   // discreteFunction is an output parameter (kind of return value)
   template< int polOrd, class FirstSourceType, class LocalProblemNumberingManagerType >
-  void assemble_msfem(const LocalProblemNumberingManagerType& lp_num_manager,  // get number of local problem to determine the
-                                                                         // reconstruction
+  void assemble_msfem(// get number of local problem to determine the reconstruction
+                      const LocalProblemNumberingManagerType& lp_num_manager,
                       const FirstSourceType& f,
                       DiscreteFunctionType& rhsVector) const {
-    // discreteFunction ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite
-    // gespeichert
-    const DiscreteFunctionSpaceType& discreteFunctionSpace
-      = rhsVector.space();
-
-    // If we do not use the Petrov-Galerkin formulation
-    #ifndef PGF
     // get the local discrete function space
     const DiscreteFunctionSpaceType& localDiscreteFunctionSpace = lp_num_manager.get_local_discrete_function_space();
-
-
     // reader for the local problem data file:
     DiscreteFunctionReader discrete_function_reader(lp_num_manager.get_location());
 
-    #endif // ifndef PGF
-
     // set discreteFunction to zero:
     rhsVector.clear();
-
-    const IteratorType endit = discreteFunctionSpace.end();
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+    for (const auto& entity : rhsVector.space())
     {
       // it* Pointer auf ein Element der Entity
-      const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
-
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
+      const GeometryType& geometry = (entity).geometry(); // Referenz auf Geometrie
+      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);   // entity zeigt auf ein bestimmtes Element der
                                                                        // entity
       // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
       // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
       // discreteFunction(aktuelleEntity)
 
       const BaseFunctionSetType& baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
+        = rhsVector.space().baseFunctionSet(entity);     // entity Referenz auf eine bestimmtes Element der entity. In der
                                                           // ersten Klasse war das Element fest, deshalb konnte man sich
                                                           // dort Pointer sparen. //loeschen: discreteFunctionSpace
                                                           // statt
                                                           // functionSpace
 
-      const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);   // 0 --> codim 0
 
       // transformation F : T_0 -> T
       // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
@@ -505,16 +334,11 @@ public:
       // A_21 = a_1( 2 ) - a_0( 2 )     A_22 = a_2( 2 ) - a_0( 2 )
 
       // corners of the reference element:
-      typename CachingQuadrature< GridPartType, 0 >::CoordinateType ref_corner_0, ref_corner_1, ref_corner_2;
+      typedef typename CachingQuadrature< GridPartType, 0 >::CoordinateType CoordinateType;
 
-      ref_corner_0[0] = 0.0;
-      ref_corner_0[1] = 0.0;
-
-      ref_corner_1[0] = 1.0;
-      ref_corner_1[1] = 0.0;
-
-      ref_corner_2[0] = 0.0;
-      ref_corner_2[1] = 1.0;
+      const CoordinateType ref_corner_0 = { 0.0, 0.0 };
+      const CoordinateType ref_corner_1 = { 0.0, 1.0 };
+      const CoordinateType ref_corner_2 = { 1.0, 0.0 };
 
       // corner of the global element:
       const DomainType corner_0_of_T = geometry.global(ref_corner_0);
@@ -538,14 +362,8 @@ public:
 
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
       {
-        // std :: cout << i << "discreteFunction.localFunction( *it ) " << i << ": " << discreteFunction.localFunction(
-        // *it )[ i ] << std :: endl;
-
         // the return values:
         RangeType f_x, phi_x;
-
-        JacobianRangeType gradientPhi;
-
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
         {
@@ -554,10 +372,8 @@ public:
 
           // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'y':
           f.evaluate(geometry.global( quadrature.point(quadraturePoint) ), f_x);
-
           // evaluate the current base function at the current quadrature point and save its value in 'z':
           baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-
           elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
         }
 
@@ -565,71 +381,65 @@ public:
         // we need to add the contribution of the corrector
         // (we splitt:  \int_T f ( \phi + Q(\phi) ) = \int_T f \phi + \int_{T_0} (f ○ F) (Q(\phi)○F) |det A|
         // where we already added \int_T f \phi in the previous step )
-        #ifndef PGF
-        // get number of cell problem from entity and number of base function
-        const int cell_problem_id = lp_num_manager.get_number_of_local_problem(it, i);
-
-        DiscreteFunctionType corrector_phi("Corrector Function of Phi", localDiscreteFunctionSpace);
-        corrector_phi.clear();
-
-
-        discrete_function_reader.read(cell_problem_id, corrector_phi);
-
-        RangeType f_x_transformed, Q_phi_transformed;
-
-        // iterator for the micro grid ( grid for the reference element T_0 )
-        const IteratorType micro_grid_end = localDiscreteFunctionSpace.end();
-        for (IteratorType micro_grid_it = localDiscreteFunctionSpace.begin();
-             micro_grid_it != micro_grid_end;
-             ++micro_grid_it)
+        if ( !DSC_CONFIG_GET("PGF", false) )
         {
-          const EntityType& micro_grid_entity = *micro_grid_it;
-          const GeometryType& micro_grid_geometry = micro_grid_entity.geometry();
+          // get number of cell problem from entity and number of base function
+          const int cell_problem_id = lp_num_manager.get_number_of_local_problem(entity, i);
 
-          // ( Q^eps(\Phi) ○ F ):
-          typename DiscreteFunctionType::LocalFunctionType localized_corrector = corrector_phi.localFunction(
-            micro_grid_entity);
+          DiscreteFunctionType corrector_phi("Corrector Function of Phi", localDiscreteFunctionSpace);
+          corrector_phi.clear();
 
-          // higher order quadrature
-          const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
-          const size_t locNumQuadraturePoints = micro_grid_quadrature.nop();
+          discrete_function_reader.read(cell_problem_id, corrector_phi);
 
-          for (size_t microQuadraturePoint = 0; microQuadraturePoint < locNumQuadraturePoints; ++microQuadraturePoint)
+          RangeType f_x_transformed, Q_phi_transformed;
+          // iterator for the micro grid ( grid for the reference element T_0 )
+          for (const auto& micro_grid_entity : localDiscreteFunctionSpace)
           {
-            // local (barycentric) coordinates (with respect to entity)
-            const typename Quadrature::CoordinateType& local_micro_point = micro_grid_quadrature.point(
-              microQuadraturePoint);
+            const GeometryType& micro_grid_geometry = micro_grid_entity.geometry();
 
-            const DomainType global_point_in_T_0 = micro_grid_geometry.global(local_micro_point);
+            // ( Q^eps(\Phi) ○ F ):
+            typename DiscreteFunctionType::LocalFunctionType localized_corrector = corrector_phi.localFunction(
+              micro_grid_entity);
 
-            const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint)
-                                             * micro_grid_geometry.integrationElement(local_micro_point)
-                                                   * abs_det_A;
+            // higher order quadrature
+            const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
+            const size_t locNumQuadraturePoints = micro_grid_quadrature.nop();
 
-            // Q^eps(\phi) ○ F :
-            localized_corrector.evaluate(micro_grid_quadrature[microQuadraturePoint], Q_phi_transformed);
+            for (size_t microQuadraturePoint = 0; microQuadraturePoint < locNumQuadraturePoints; ++microQuadraturePoint)
+            {
+              // local (barycentric) coordinates (with respect to entity)
+              const typename Quadrature::CoordinateType& local_micro_point = micro_grid_quadrature.point(
+                microQuadraturePoint);
 
-            // 'F(x)', i.e. F ( global point in the reference element T_0 )
-            // (the transformation of the global point in T_0 to its position in T)
-            DomainType global_point_transformed(0.0);
+              const DomainType global_point_in_T_0 = micro_grid_geometry.global(local_micro_point);
 
-            for (int k = 0; k < dimension; ++k)
-              for (int l = 0; l < dimension; ++l)
-                global_point_transformed[k] += (val_A[k][l] * global_point_in_T_0[l]);
+              const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint)
+                                               * micro_grid_geometry.integrationElement(local_micro_point)
+                                                     * abs_det_A;
 
-            global_point_transformed += corner_0_of_T;
+              // Q^eps(\phi) ○ F :
+              localized_corrector.evaluate(micro_grid_quadrature[microQuadraturePoint], Q_phi_transformed);
 
-            // F(x) = Ax + a_0, F : T_0 -> T is given by
-            // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
-            // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
+              // 'F(x)', i.e. F ( global point in the reference element T_0 )
+              // (the transformation of the global point in T_0 to its position in T)
+              DomainType global_point_transformed(0.0);
 
-            f.evaluate(global_point_transformed, f_x_transformed);
+              for (int k = 0; k < dimension; ++k)
+                for (int l = 0; l < dimension; ++l)
+                  global_point_transformed[k] += (val_A[k][l] * global_point_in_T_0[l]);
 
-            // note that |det A| is already contained in 'weight_micro_quadrature'
-            elementOfRHS[i] += weight_micro_quadrature * f_x_transformed * Q_phi_transformed;
+              global_point_transformed += corner_0_of_T;
+
+              // F(x) = Ax + a_0, F : T_0 -> T is given by
+              // A_11 = a_1(1) - a_0(1)     A_12 = a_2(1) - a_0(1)
+              // A_21 = a_1(2) - a_0(2)     A_22 = a_2(2) - a_0(2)
+              f.evaluate(global_point_transformed, f_x_transformed);
+
+              // note that |det A| is already contained in 'weight_micro_quadrature'
+              elementOfRHS[i] += weight_micro_quadrature * f_x_transformed * Q_phi_transformed;
+            }
           }
-        }
-        #endif // ifndef PGF
+        } //#endif // ifndef PGF
       }
     }
   }  // end method
