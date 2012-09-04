@@ -14,9 +14,8 @@ namespace Dune {
 template< class DiscreteFunctionImp >
 class RightHandSideAssembler
 {
-public:
+private:
   typedef DiscreteFunctionImp DiscreteFunctionType;
-
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
     DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionType::LocalFunctionType
@@ -123,9 +122,10 @@ private:
   }  // end method
 
 public:
-  // assemble standard right hand side:
-  // if there is only one source (f) (there is no second source):
-  // discreteFunction is an output parameter (kind of return value)
+  /** assemble standard right hand side:
+   * if there is only one source (f) (there is no second source):
+   * discreteFunction is an output parameter (kind of return value)
+   **/
   template< int polOrd, class FirstSourceType >
   static void assemble(const FirstSourceType& f,
                 DiscreteFunctionType& rhsVector) {
@@ -137,8 +137,9 @@ public:
     assemble_common(f, functor, polOrd, rhsVector);
   }  // end method
 
-  // if there is a first source f and a second source G:
-  // discreteFunction is an output parameter (kind of return value)
+  /** if there is a first source f and a second source G:
+   * discreteFunction is an output parameter (kind of return value)
+   **/
   template< int polOrd, class FirstSourceType, class SecondSourceType >
   static void assemble(const FirstSourceType& f,
                 const SecondSourceType& _G,
@@ -163,8 +164,9 @@ public:
     assemble_common(f, functor, polOrd, rhsVector);
   }  // end method
 
-  // if there is a first source f, a second source G and a parameter t:
-  // discreteFunction is an output parameter (kind of return value)
+  /** if there is a first source f, a second source G and a parameter t:
+   * discreteFunction is an output parameter (kind of return value)
+   **/
   template< int polOrd, class FirstSourceType, class SecondSourceType >
   static void assemble(const FirstSourceType& f,
                 const SecondSourceType& G,
@@ -191,11 +193,14 @@ public:
     assemble_common(f, functor, polOrd, rhsVector);
   }  // end method
 
-  // /############################ The rhs-assemble()-methods for non-linear elliptic problems
+  // /############################
   // #########################################
 
-  // if there is a first source f and a second source G:
-  // discreteFunction is an output parameter (kind of return value)
+  /**
+   * The rhs-assemble()-methods for non-linear elliptic problems
+   * if there is a first source f and a second source G:
+   * discreteFunction is an output parameter (kind of return value)
+   **/
   template< int polOrd, class FirstSourceType, class DiffusionOperatorType >
   static void assemble_for_Newton_method(const FirstSourceType& f,
                                   const DiffusionOperatorType& A,
@@ -205,24 +210,13 @@ public:
 
     for (const auto& entity : rhsVector.space())
     {
-      // it* Pointer auf ein Element der Entity
-      const GeometryType& geometry = entity.geometry(); // Referenz auf Geometrie
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);   // entity zeigt auf ein bestimmtes Element der
-                                                                       // entity
-      // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
-      // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
-      // discreteFunction(aktuelleEntity)
-
+      const GeometryType& geometry = entity.geometry();
+      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);
       const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = rhsVector.space().baseFunctionSet(entity);     // entity Referenz auf eine bestimmtes Element der entity. In der
-                                                          // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                          // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                          // statt
-                                                          // functionSpace
+        = rhsVector.space().baseFunctionSet(entity);
 
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
-
-      const Quadrature quadrature(entity, polOrd);   // 0 --> codim 0
+      const Quadrature quadrature(entity, polOrd);
 
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
@@ -268,12 +262,12 @@ public:
     }
   }  // end method
 
-  // /############################ The rhs-assemble()-method for linear elliptic problems, solved with MsFEM in
-  // non-Petriv-Galerkin-Formulation #########################################
-
-  // assemble standard right hand side:
-  // if there is only one source (f) (there is no second source):
-  // discreteFunction is an output parameter (kind of return value)
+  /** /############################ The rhs-assemble()-method for linear elliptic problems, solved with MsFEM in
+   * non-Petriv-Galerkin-Formulation #########################################
+   * assemble standard right hand side:
+   * if there is only one source (f) (there is no second source):
+   * discreteFunction is an output parameter (kind of return value)
+   **/
   template< int polOrd, class FirstSourceType, class LocalProblemNumberingManagerType >
   static void assemble_msfem(// get number of local problem to determine the reconstruction
                       const LocalProblemNumberingManagerType& lp_num_manager,
@@ -288,22 +282,12 @@ public:
     rhsVector.clear();
     for (const auto& entity : rhsVector.space())
     {
-      // it* Pointer auf ein Element der Entity
-      const GeometryType& geometry = (entity).geometry(); // Referenz auf Geometrie
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);   // entity zeigt auf ein bestimmtes Element der
-                                                                       // entity
-      // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
-      // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
-      // discreteFunction(aktuelleEntity)
+      const GeometryType& geometry = (entity).geometry();
+      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);
 
       const BaseFunctionSetType& baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = rhsVector.space().baseFunctionSet(entity);     // entity Referenz auf eine bestimmtes Element der entity. In der
-                                                          // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                          // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                          // statt
-                                                          // functionSpace
-
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);   // 0 --> codim 0
+        = rhsVector.space().baseFunctionSet(entity);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // transformation F : T_0 -> T
       // describe the mapping F(x) = Ax + b with F(T_0)=T for an entity T and the reference element T_0:
@@ -425,10 +409,10 @@ public:
     }
   }  // end method
 
-  // /############################ The rhs-assemble()-methods for non-linear elliptic problems, solved with the
-  // heterogenous multiscale method  #########################################
-
-  // requires reconstruction of old_u_H and local fine scale averages
+  /** /############################ The rhs-assemble()-methods for non-linear elliptic problems, solved with the
+   * heterogenous multiscale method  #########################################
+   * requires reconstruction of old_u_H and local fine scale averages
+   **/
   template< int polOrd, class FirstSourceType, class DiffusionOperatorType, class PeriodicDiscreteFunctionType,
             class CellProblemNumberingManagerType >
   static void assemble_for_HMM_Newton_method(const FirstSourceType& f,
@@ -439,24 +423,17 @@ public:
                                       const CellProblemNumberingManagerType& cp_num_manager,
                                       const PeriodicDiscreteFunctionType& dummy_func,
                                       DiscreteFunctionType& rhsVector,
-                                      const std::string filename = "no_file")
+                                      const std::string filename)
   {
-    if (filename == "no_file")
-    {
-      DUNE_THROW(Dune::InvalidStateException,"ERROR! No 'filename' in RHSAssembler method 'assemble_for_HMM_Newton_method', but no AD_HOC_COMPUTATION initialized. Therefore the location of the saved cell problems is not available. Please define AD_HOC_COMPUTATION (ad hoc computation of the cell problems) or pass a corresponding 'filename'-variable!");
-    }
-
     typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
-    PeriodicDiscreteFunctionSpaceType;
+      PeriodicDiscreteFunctionSpaceType;
 
     typedef typename PeriodicDiscreteFunctionType::LocalFunctionType
-    PeriodicLocalFunctionType;
+      PeriodicLocalFunctionType;
 
     typedef CellProblemSolver< PeriodicDiscreteFunctionType, DiffusionOperatorType > CellProblemSolverType;
-    const std::string cell_solution_location_baseSet = "data/HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
-    const std::string cell_solution_location_discFunc = "data/HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
-
-//    bool reader_is_open = false;
+    const std::string cell_solution_location_baseSet = "HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
+    const std::string cell_solution_location_discFunc = "HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
 
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);

@@ -35,19 +35,11 @@ void assembleParabolic(const FirstSourceTypeType& f,
   {
     // it* Pointer auf ein Element der Entity
     const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
-
-    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
-                                                                     // entity
-    // hier wird sozusagen ein Pointer von localFunction auf rhs erzeugt. Befinden wir uns auf einer bestimmten
-    // entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in rhs(aktuelleEntity)
+    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);
     LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
 
     const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-      = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
-                                                        // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                        // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                        // statt
-                                                        // functionSpace
+      = discreteFunctionSpace.baseFunctionSet(*it);
 
     const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
@@ -102,8 +94,6 @@ void assembleParabolic(const FirstSourceTypeType& f,
                        const RangeType& time_step_size,
                        const DiscreteFunctionType& u_H_k,
                        DiscreteFunctionType& rhsVector) const {
-  // rhsVector is the vector that occurs on the right hand side of the linear system of equations that is to solve
-  // rhs ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite gespeichert
   const DiscreteFunctionSpaceType& discreteFunctionSpace
     = rhsVector.space();
 
@@ -116,19 +106,11 @@ void assembleParabolic(const FirstSourceTypeType& f,
     // it* Pointer auf ein Element der Entity
     const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
 
-    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
-                                                                     // entity
-    // hier wird sozusagen ein Pointer von localFunction auf rhs erzeugt. Befinden wir uns auf einer bestimmten
-    // entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in rhs(aktuelleEntity)
+    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);
     const LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
 
     const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-      = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
-                                                        // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                        // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                        // statt
-                                                        // functionSpace
-
+      = discreteFunctionSpace.baseFunctionSet(*it);
     const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
     const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
@@ -182,8 +164,6 @@ void assembleParabolic(const FirstSourceTypeType& f,
                        const RangeType& time_step_size,
                        const DiscreteFunctionType& u_H_k,
                        DiscreteFunctionType& rhsVector) const {
-  // rhsVector is the vector that occurs on the right hand side of the linear system of equations that is to solve
-  // rhs ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite gespeichert
   const DiscreteFunctionSpaceType& discreteFunctionSpace
     = rhsVector.space();
 
@@ -196,19 +176,11 @@ void assembleParabolic(const FirstSourceTypeType& f,
     // it* Pointer auf ein Element der Entity
     const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
 
-    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
-                                                                     // entity
-    // hier wird sozusagen ein Pointer von localFunction auf rhs erzeugt. Befinden wir uns auf einer bestimmten
-    // entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in rhs(aktuelleEntity)
+    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);
     const LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
 
     const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-      = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
-                                                        // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                        // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                        // statt
-                                                        // functionSpace
-
+      = discreteFunctionSpace.baseFunctionSet(*it);
     const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
     const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
@@ -293,8 +265,6 @@ void assembleParabolic(const FirstSourceTypeType& f,
                        const RangeType& time_step_size,
                        const DiscreteFunctionType& u_H_k,
                        DiscreteFunctionType& rhsVector) const {
-  // rhsVector is the vector that occurs on the right hand side of the linear system of equations that is to solve
-  // rhs ist der Rueckgabewert der funktion 'assemble'. Hierin wird sozusagen die rechte Seite gespeichert
   const DiscreteFunctionSpaceType& discreteFunctionSpace
     = rhsVector.space();
 
@@ -307,19 +277,11 @@ void assembleParabolic(const FirstSourceTypeType& f,
     // it* Pointer auf ein Element der Entity
     const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
 
-    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
-                                                                     // entity
-    // hier wird sozusagen ein Pointer von localFunction auf rhs erzeugt. Befinden wir uns auf einer bestimmten
-    // entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in rhs(aktuelleEntity)
+    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);
     const LocalFunctionType elementOf_u_H_k = u_H_k.localFunction(*it);
 
     const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-      = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
-                                                        // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                        // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                        // statt
-                                                        // functionSpace
-
+      = discreteFunctionSpace.baseFunctionSet(*it);
     const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
     const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
@@ -362,23 +324,11 @@ void assembleParabolic(const FirstSourceTypeType& f,
         // multiply with transpose of jacobian inverse
         gradientPhi[0] = FMatrixHelp::mult(inv, gradientPhi[0]);
 
-        // set all entries of G_x to zero to delete old data of a former loop cycle
+        val = 0;
         for (int k = 0; k < dimension; ++k)
         {
           G_x[k] = 0;
-        }
-
-        // the same for val:
-        val = 0;
-
-        // evaluate the gradient of Phi_H at the current quadrature point and save its value in 'G_x':
-        for (int k = 0; k < dimension; ++k)
-        {
           G.evaluate(k, geometry.global( quadrature.point(quadraturePoint) ), t, G_x[k]);
-        }
-
-        for (int k = 0; k < dimension; ++k)
-        {
           val += G_x[k] * gradientPhi[0][k];
         }
 
@@ -413,21 +363,10 @@ void assembleParabolic(const FirstSourceType& f,
   const IteratorType endit = discreteFunctionSpace.end();
   for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
   {
-    // it* Pointer auf ein Element der Entity
     const GeometryType& geometry = (*it).geometry(); // Referenz auf Geometrie
-
-    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);   // *it zeigt auf ein bestimmtes Element der
-                                                                     // entity
-    // hier wird sozusagen ein Pointer von localFunction auf rhs erzeugt. Befinden wir uns auf einer bestimmten
-    // entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in rhs(aktuelleEntity)
-
+    LocalFunctionType elementOfRHS = rhsVector.localFunction(*it);
     const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-      = discreteFunctionSpace.baseFunctionSet(*it);     // *it Referenz auf eine bestimmtes Element der entity. In der
-                                                        // ersten Klasse war das Element fest, deshalb konnte man sich
-                                                        // dort Pointer sparen. //loeschen: discreteFunctionSpace
-                                                        // statt
-                                                        // functionSpace
-
+      = discreteFunctionSpace.baseFunctionSet(*it);
     const CachingQuadrature< GridPartType, 0 > quadrature(*it, polOrd);   // 0 --> codim 0
 
     const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
