@@ -517,48 +517,12 @@ public:
     //! build the right hand side (rhs) of the problem
 
     // the same right hand side for HM and FEM methods:
-    const RightHandSideAssembler< PeriodicDiscreteFunctionType > //!, TransformTensorType, CellSourceType >
-    cell_0_assembler;    //!( transTensor, G_0 );
-
-    const RightHandSideAssembler< PeriodicDiscreteFunctionType > //!, TransformTensorType, CellSourceType >
-    cell_1_assembler;    //!( transTensor, G_1 );
+    typedef RightHandSideAssembler< PeriodicDiscreteFunctionType > RhsAssembler;
 
     // Alternativly it is possible to call the RightHandSideAssembler with a second source Term '- div G':
     // RightHandSideAssembler< DiscreteFunctionType > rhsassembler( tensor , G );
-    cell_0_assembler.template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_0, rhs_0);       //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //!
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //G_0
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //loeschen!
-
-    cell_1_assembler.template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_1, rhs_1);       //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //!
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //G_1
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //
-                                                                                                                         //loeschen!
-
+    RhsAssembler::template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_0, rhs_0);
+    RhsAssembler::template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_1, rhs_1);
     // solve the linear systems (with Bi-CG):
 
     const InverseFEMMatrix fembiCG(lhsMatrix, 1e-8, 1e-8, 20000, VERBOSE);

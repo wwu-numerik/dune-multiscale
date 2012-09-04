@@ -417,7 +417,7 @@ public:
 
     //! define the right hand side assembler tool
     // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-    const RightHandSideAssembler< DiscreteFunction > rhsassembler;
+    typedef RightHandSideAssembler< DiscreteFunction > RhsAssembler;
 
     //! define the discrete (elliptic) operator that describes our problem
     // ( effect of the discretized differential operator on a certain discrete function )
@@ -448,7 +448,7 @@ public:
     DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs);
+    RhsAssembler::template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs);
 
     // oneLinePrint( DSC_LOG_DEBUG, fem_rhs );
 
