@@ -50,6 +50,8 @@ class Meanvalue
 
   typedef typename DiscreteFunctionType::RangeType
   RangeType;
+  typedef typename DiscreteFunctionType::DomainType
+  DomainType;
 
   typedef typename DiscreteFunctionSpaceType::IteratorType
   IteratorType;
@@ -78,6 +80,38 @@ class Meanvalue
   enum { dimension = GridType::dimension };
   enum { spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder };
 
+  struct FunctorBase {
+    virtual void evaluate(const DomainType& global_point, RangeType& y) const = 0;
+  };
+
+  RangeType getMeanvalue_common(const DiscreteFunctionSpaceType& space,
+                                const FunctorBase& function) const {
+    const int polOrd = (2 * spacePolOrd + 2);
+
+    RangeType y(0.0);    // return value
+    RangeType theMeanValue(0.0);
+
+    for (const auto& entity : space)
+    {
+      // create quadrature for given geometry type
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+
+      // get geoemetry of entity
+      const EnGeometryType& geo = entity.geometry();
+
+      // integrate
+      const int quadratureNop = quadrature.nop();
+      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
+      {
+        const double det = quadrature.weight(quadraturePoint)
+                           * geo.integrationElement( quadrature.point(quadraturePoint) );
+
+        y = function(geo.global( quadrature.point(quadraturePoint)));
+
+        theMeanValue += det * y;
+      }
+    }
+  }
 public:
   RangeType getMeanvalue(const DiscreteFunctionType& discFunc) const {
     const int polOrd = (2 * spacePolOrd + 2);
@@ -116,33 +150,14 @@ public:
   template< class FunctionType >
   RangeType getMeanvalue(const DiscreteFunctionSpaceType& space,
                          const FunctionType& function) const {
-    int polOrd = (2 * spacePolOrd + 2);
-
-    RangeType y(0.0);    // return value
-    RangeType theMeanValue(0.0);
-
-    for (const auto& entity : space)
-    {
-      // create quadrature for given geometry type
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
-
-      // get geoemetry of entity
-      const EnGeometryType& geo = entity.geometry();
-
-      // integrate
-      const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
-
-        function.evaluate(geo.global( quadrature.point(quadraturePoint) ), y);
-
-        theMeanValue += det * y;
+    struct Functor : public FunctorBase {
+      const FunctionType& function;
+      Functor(const FunctionType& f) : function(f) {}
+      virtual RangeType operator()(const DomainType& global_point, RangeType& y) const {
+        function.evaluate(global_point, y);
       }
-    }
-
-    return theMeanValue;
+    } f{function};
+    return getMeanvalue_common(space, f);
   }   // end of method
 
   // the case the function is a vector (for instance advection)
@@ -150,33 +165,15 @@ public:
   RangeType getMeanvalue(const DiscreteFunctionSpaceType& space,
                          const FunctionType& function,
                          const int& i /*in case there are several components*/) const {
-    int polOrd = (2 * spacePolOrd + 2);
-
-    RangeType y(0.0);    // return value
-    RangeType theMeanValue(0.0);
-
-    for (const auto& entity : space)
-    {
-      // create quadrature for given geometry type
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
-
-      // get geoemetry of entity
-      const EnGeometryType& geo = entity.geometry();
-
-      // integrate
-      const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
-
-        function.evaluate(i, geo.global( quadrature.point(quadraturePoint) ), y);
-
-        theMeanValue += det * y;
+    struct Functor : public FunctorBase {
+      const FunctionType& function;
+      const int i;
+      Functor(const FunctionType& f, const int _i) : function(f), i(_i) {}
+      virtual RangeType operator()(const DomainType& global_point, RangeType& y) const {
+        function.evaluate(i, global_point, y);
       }
-    }
-
-    return theMeanValue;
+    } f{function, i};
+    return getMeanvalue_common(space, f);
   }   // end of method
 
   // the case the function is a time-dependent vector (for instance advection). The Time t is fixed.
@@ -185,33 +182,16 @@ public:
                          const FunctionType& function,
                          const TimeType& t,
                          const int& i /*in case there are several components*/) const {
-    int polOrd = (2 * spacePolOrd + 2);
-
-    RangeType y(0.0);    // return value
-    RangeType theMeanValue(0.0);
-
-    for (const auto& entity : space)
-    {
-      // create quadrature for given geometry type
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
-
-      // get geoemetry of entity
-      const EnGeometryType& geo = entity.geometry();
-
-      // integrate
-      const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
-
-        function.evaluate(i, geo.global( quadrature.point(quadraturePoint) ), t, y);
-
-        theMeanValue += det * y;
+    struct Functor : public FunctorBase {
+      const FunctionType& function;
+      const int i;
+      const TimeType t;
+      Functor(const FunctionType& f, const int _i, const TimeType _t) : function(f), i(_i), t(_t) {}
+      virtual RangeType operator()(const DomainType& global_point, RangeType& y) const {
+        function.evaluate(i, global_point,t, y);
       }
-    }
-
-    return theMeanValue;
+    } f{function, i, t};
+    return getMeanvalue_common(space, f);
   }   // end of method
 
   // the case the function is a matrix (for instance diffusion)
@@ -220,33 +200,15 @@ public:
                          const FunctionType& function,
                          const int& i,
                          const int& j) const {
-    int polOrd = (2 * spacePolOrd + 2);
-
-    RangeType y(0.0);    // return value
-    RangeType theMeanValue(0.0);
-
-    for (const auto& entity : space)
-    {
-      // create quadrature for given geometry type
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
-
-      // get geoemetry of entity
-      const EnGeometryType& geo = entity.geometry();
-
-      // integrate
-      const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
-
-        function.evaluate(i, j, geo.global( quadrature.point(quadraturePoint) ), y);
-
-        theMeanValue += det * y;
+    struct Functor : public FunctorBase {
+      const FunctionType& function;
+      const int i;
+      const int j;
+      virtual RangeType operator()(const DomainType& global_point, RangeType& y) const {
+        function.evaluate(i, j, global_point, y);
       }
-    }
-
-    return theMeanValue;
+    } f{function, i, j};
+    return getMeanvalue_common(space, f);
   }   // end of method
 
   // the case the function is a matrix (for instance diffusion) with Time t
@@ -256,33 +218,17 @@ public:
                          const TimeType& t,
                          const int& i,
                          const int& j) const {
-    int polOrd = (2 * spacePolOrd + 2);
-
-    RangeType y(0.0);    // return value
-    RangeType theMeanValue(0.0);
-
-    for (const auto& entity : space)
-    {
-      // create quadrature for given geometry type
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
-
-      // get geoemetry of entity
-      const EnGeometryType& geo = entity.geometry();
-
-      // integrate
-      const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
-
-        function.evaluate(i, j, geo.global( quadrature.point(quadraturePoint) ), t, y);
-
-        theMeanValue += det * y;
+    struct Functor : public FunctorBase {
+      const FunctionType& function;
+      const int i;
+      const int j;
+      const TimeType t;
+      Functor(const FunctionType& f, const int _i, const int _j, const TimeType _t) : function(f), i(_i), j(_j), t(_t) {}
+      virtual RangeType operator()(const DomainType& global_point, RangeType& y) const {
+        function.evaluate(i, j, global_point,t, y);
       }
-    }
-
-    return theMeanValue;
+    } f{function, i, j, t};
+    return getMeanvalue_common(space, f);
   }   // end of method
 
   //! Subdraktion des Mittelwertes von der DiscreteFunction
