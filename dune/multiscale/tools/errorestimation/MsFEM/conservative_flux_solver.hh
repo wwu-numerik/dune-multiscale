@@ -2,15 +2,12 @@
 #define DiscreteEllipticMsFEMConservativeFluxSolver_HH
 
 #include <vector>
-
-#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/common/fmatrix.hh>
 
+#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-
-#include <dune/geometry/quadraturerules.hh>
-
 #include <dune/fem/operator/common/operator.hh>
+#include <dune/geometry/quadraturerules.hh>
 
 // FLUX_SOLVER_VERBOSE: 0 = false, 1 = true
 #define FLUX_SOLVER_VERBOSE false
@@ -25,6 +22,8 @@
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/stuff/common/math.hh>
+
+#include <dune/multiscale/tools/misc.hh>
 
 // / done
 
@@ -221,13 +220,10 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     typedef typename GridType::Traits::LeafIndexSet CoarseGridLeafIndexSet;
     const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
-    EntityPointer father_of_sub_grid_entity = host_entity_pointer;
-    for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
-      father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-
-    Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_sub_grid_entity);
-
-    int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
+    EntityPointer father_of_sub_grid_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                       host_entity_pointer,
+                                                                       specifier_.getLevelDifference());
+    const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
 
     const SubGridGeometry& DUNE_UNUSED(sub_grid_geometry) = sub_grid_entity.geometry();
     assert(sub_grid_entity.partitionType() == InteriorEntity);
@@ -255,23 +251,9 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
       {
         EntityPointer outside_it = iit->outside();
 
-        EntityPointer father_of_neighbor = outside_it;
-        for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
-          father_of_neighbor = father_of_neighbor->father();
-
-        Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_neighbor);
-
-        bool entities_identical = true;
-        int number_of_nodes = (*father_of_neighbor).template count< 2 >();
-        for (int k = 0; k < number_of_nodes; k += 1)
-        {
-          if ( !( father_of_sub_grid_entity->geometry().corner(k) == father_of_neighbor->geometry().corner(k) ) )
-          {
-            entities_identical = false;
-          }
-        }
-
-        if (entities_identical == true)
+        EntityPointer father_of_neighbor = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                    outside_it, specifier_.getLevelDifference());
+        if (Stuff::Grid::entities_identical(*father_of_sub_grid_entity,*father_of_neighbor))
         {
           set_zero = true;
         }
@@ -435,12 +417,9 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     typedef typename GridType::Traits::LeafIndexSet CoarseGridLeafIndexSet;
     const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
-    EntityPointer father_of_sub_grid_entity = host_entity_pointer;
-    for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
-      father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-
-    Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_sub_grid_entity);
-
+    EntityPointer father_of_sub_grid_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                       host_entity_pointer,
+                                                                       specifier_.getLevelDifference());
     const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
 
     if (coarse_index != sub_grid_id)

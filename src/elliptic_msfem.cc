@@ -63,8 +63,8 @@ void adapt(Dune::MsfemTraits::GridType& grid,
   if (local_indicators_available_ == true)
   {
     bool coarse_scale_error_dominant = false;
-    bool fine_scale_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
-    bool oversampling_error_dominant = false;   // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
+    bool DUNE_UNUSED(fine_scale_error_dominant) = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
+    bool DUNE_UNUSED(oversampling_error_dominant) = false;   // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
     // identify the dominant contribution:
     const double average_est_error = total_estimated_H1_error_[loop_number_ - 1] / 6.0;     // 6 contributions
 

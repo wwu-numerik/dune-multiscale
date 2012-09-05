@@ -127,12 +127,9 @@ private:
 
         if (layer > 0)
         {
-          HostEntityPointerType father = entities_sharing_same_node[global_index_node][j];
-          for (int lev = 0; lev < level_difference; ++lev)
-            father = father->father();
-
-          Stuff::Grid::make_father(coarseGridLeafIndexSet, father);
-
+          HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                  entities_sharing_same_node[global_index_node][j],
+                                                                  level_difference);
           if ( !(father == level_father_it) )
           {
             if (enriched[father_index][hostGridLeafIndexSet.index(*entities_sharing_same_node[global_index_node][j])][
@@ -252,16 +249,9 @@ public:
       const int DUNE_UNUSED(number_of_nodes_in_entity) = (*host_it).template count< 2 >();
 
       // get the coarse-grid-father of host_entity (which is a maxlevel entity)
-      HostEntityPointerType level_father_entity = HostEntityPointerType(*host_it);
-
-      for (int lev = 0; lev < level_difference; ++lev)
-        level_father_entity = level_father_entity->father();
-
-      // changed 'contains'-method in 'indexset.hh'
-      // we use: "return ( (subIndex >= 0) && (subIndex < size( codim )) );"
-      // instead of "return (subIndex >= 0);"
-      Stuff::Grid::make_father(coarseGridLeafIndexSet, level_father_entity);
-
+      HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                           HostEntityPointerType(*host_it),
+                                                                           level_difference);
       const int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
 
       if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) )
@@ -280,12 +270,9 @@ public:
           const HostEntityPointerType neighborHostEntityPointer = iit->outside();
           const HostEntityType& DUNE_UNUSED(neighborHostEntity) = *neighborHostEntityPointer;
 
-          HostEntityPointerType level_father_neighbor_entity = neighborHostEntityPointer;
-          for (int lev = 0; lev < level_difference; ++lev)
-            level_father_neighbor_entity = level_father_neighbor_entity->father();
-
-          Stuff::Grid::make_father(coarseGridLeafIndexSet, level_father_neighbor_entity);
-
+          HostEntityPointerType level_father_neighbor_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                                        neighborHostEntityPointer,
+                                                                                        level_difference);
           if ( !(level_father_neighbor_entity == level_father_entity) )
           {
             all_neighbors_have_same_father = false;

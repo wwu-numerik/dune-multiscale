@@ -334,12 +334,9 @@ private:
       EntityType& entity = *fine_grid_it;
 
       // identify coarse grid father entity
-      EntityPointerType coarse_father(*fine_grid_it);
-      for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
-        coarse_father = coarse_father->father();
-
-      Stuff::Grid::make_father(coarseGridLeafIndexSet, coarse_father);
-
+      EntityPointerType coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                 EntityPointerType(*fine_grid_it),
+                                                                 specifier_.getLevelDifference());
       const int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
 
       const EntityGeometryType& entityGeometry = entity.geometry();
@@ -488,22 +485,10 @@ private:
         const EntityPointerType host_local_grid_it = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(
           local_grid_entity);
 
-        EntityPointerType father_of_loc_grid_it = host_local_grid_it;
-
-        for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
-          father_of_loc_grid_it = father_of_loc_grid_it->father();
-
-        Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_loc_grid_it);
-
-        bool entities_identical = true;
-        int number_of_nodes = (*coarse_grid_it).template count< 2 >();
-        for (int k = 0; k < number_of_nodes; k += 1)
-        {
-          if ( !( coarse_grid_it->geometry().corner(k) == father_of_loc_grid_it->geometry().corner(k) ) )
-          { entities_identical = false; }
-        }
-
-        if (entities_identical == false)
+        EntityPointerType father_of_loc_grid_it = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                           host_local_grid_it,
+                                                                           specifier_.getLevelDifference());
+        if (!Stuff::Grid::entities_identical(*coarse_grid_it, *father_of_loc_grid_it))
           continue;
 
         // -------------------------------------------------------------------

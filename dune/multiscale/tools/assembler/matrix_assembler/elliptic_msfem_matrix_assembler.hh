@@ -316,14 +316,10 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
           // check if "local_grid_entity" (which is an entity of U(T)) is in T:
           // -------------------------------------------------------------------
 
-          auto father_of_loc_grid_ent = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(
-            local_grid_entity);
-
-          for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
-            father_of_loc_grid_ent = father_of_loc_grid_ent->father();
-
-          Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_loc_grid_ent);
-
+          auto father_of_loc_grid_ent =
+              Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                   localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity),
+                                   specifier_.getLevelDifference());
           if (!Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
           {
             continue;

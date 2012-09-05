@@ -506,11 +506,9 @@ public:
     {
       typedef typename HostEntity::template Codim< 0 >::EntityPointer
       HostEntityPointer;
-      HostEntityPointer coarse_father(*it);
-      for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
-        coarse_father = coarse_father->father();
-
-      Stuff::Grid::make_father(coarseGridLeafIndexSet, coarse_father);
+      HostEntityPointer coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                 HostEntityPointer(*it),
+                                                                 specifier.getLevelDifference());
 
       LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse(coarse_father);
 
@@ -630,12 +628,9 @@ public:
         const HostEntityPointer fine_host_entity_pointer = sub_grid_U_T.template getHostEntity< 0 >(*sub_it);
         const HostEntity& fine_host_entity = *fine_host_entity_pointer;
 
-        HostEntityPointer father = fine_host_entity_pointer;
-        for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
-          father = father->father();
-
-        Stuff::Grid::make_father(coarseGridLeafIndexSet, father);
-
+        HostEntityPointer father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                            fine_host_entity_pointer,
+                                                            specifier.getLevelDifference());
         if (!Stuff::Grid::entities_identical(*father,*coarse_it))
         {
           continue;
@@ -647,8 +642,8 @@ public:
         int number_of_nodes_entity = (*sub_it).template count< 2 >();
         for (int i = 0; i < number_of_nodes_entity; i += 1)
         {
-          const typename HostEntity::template Codim< 2 >::EntityPointer node = fine_host_entity.template subEntity< 2 >(
-            i);
+          const typename HostEntity::template Codim< 2 >::EntityPointer node =
+              fine_host_entity.template subEntity< 2 >(i);
 
           const int global_index_node = gridPart.indexSet().index(*node);
 
@@ -658,12 +653,9 @@ public:
           // count the number of different coarse-grid-entities that share the above node
           for (size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1)
           {
-            HostEntityPointer inner_it = entities_sharing_same_node[global_index_node][j];
-            for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
-              inner_it = inner_it->father();
-
-            Stuff::Grid::make_father(coarseGridLeafIndexSet, inner_it);
-
+            HostEntityPointer inner_it = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                  entities_sharing_same_node[global_index_node][j],
+                                                                  specifier.getLevelDifference());
             bool new_entity_found = true;
             for (size_t k = 0; k < coarse_entities.size(); k += 1)
             {

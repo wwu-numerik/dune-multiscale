@@ -11,8 +11,8 @@ namespace Grid {
 
 //!
 template < class GridImp, class IteratorImp, class IndexSetImp, class IndexTypeImp >
-bool make_father(const IndexSet< GridImp, IndexSetImp, IndexTypeImp >& index_set,
-                 EntityPointer< const GridImp, IteratorImp >& entity )
+EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet< GridImp, IndexSetImp, IndexTypeImp >& index_set,
+                EntityPointer< const GridImp, IteratorImp > entity )
 {
   bool father_found = false;
   auto test_entity = entity;
@@ -30,7 +30,18 @@ bool make_father(const IndexSet< GridImp, IndexSetImp, IndexTypeImp >& index_set
       test_entity = test_entity->father();
     }
   }
-  return father_found;
+  return entity;
+}
+
+
+template < class GridImp, class IteratorImp, class IndexSetImp, class IndexTypeImp >
+EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet< GridImp, IndexSetImp, IndexTypeImp >& index_set,
+                 EntityPointer< const GridImp, IteratorImp > entity,
+                 int level_difference)
+{
+    for (int lev = 0; lev < level_difference; ++lev)
+          entity = entity->father();
+    return make_father(index_set, entity);
 }
 
 template < int cd, int dim,
