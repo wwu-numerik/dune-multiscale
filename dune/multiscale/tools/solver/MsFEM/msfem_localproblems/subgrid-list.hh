@@ -9,7 +9,7 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/stuff/grid/entity.hh>
+#include <dune/multiscale/tools/misc.hh>
 
 // / done
 

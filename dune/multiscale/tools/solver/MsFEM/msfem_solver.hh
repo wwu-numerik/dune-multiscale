@@ -636,15 +636,7 @@ public:
 
         Stuff::Grid::make_father(coarseGridLeafIndexSet, father);
 
-        bool entities_identical = true;
-        const int number_of_nodes = (*father).template count< 2 >();
-        for (int k = 0; k < number_of_nodes; k += 1)
-        {
-          if ( !( father->geometry().corner(k) == (*coarse_it).geometry().corner(k) ) )
-          { entities_identical = false; }
-        }
-
-        if (entities_identical == false)
+        if (!Stuff::Grid::entities_identical(*father,*coarse_it))
         {
           continue;
         }

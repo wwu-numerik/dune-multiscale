@@ -1,7 +1,7 @@
 #ifndef ESTIMATOR_UTILS_HH
 #define ESTIMATOR_UTILS_HH
 
-#include <dune/stuff/grid/entity.hh>
+#include <dune/multiscale/tools/misc.hh>
 
 namespace Dune {
 

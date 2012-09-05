@@ -7,7 +7,7 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
-#include <dune/stuff/grid/entity.hh>
+#include <dune/multiscale/tools/misc.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 namespace Dune {
@@ -322,24 +322,11 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
           for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
             father_of_loc_grid_ent = father_of_loc_grid_ent->father();
 
+          Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_loc_grid_ent);
 
-
-          const bool father_found = Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_loc_grid_ent); {
-
-            bool entities_identical = true;
-            int number_of_nodes = coarse_grid_entity.template count< 2 >();
-            for (int k = 0; k < number_of_nodes; k += 1)
-            {
-              if ( !( coarse_grid_entity.geometry().corner(k) == father_of_loc_grid_ent->geometry().corner(k) ) )
-              {
-                entities_identical = false;
-              }
-            }
-
-            if (entities_identical == false)
-            {
-              continue;
-            }
+          if (!Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
+          {
+            continue;
           }
           // -------------------------------------------------------------------
 

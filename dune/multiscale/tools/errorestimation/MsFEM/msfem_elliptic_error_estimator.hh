@@ -6,7 +6,7 @@
 #include <array>
 #include <boost/range/adaptor/map.hpp>
 #include <dune/stuff/common/fixed_map.hh>
-#include <dune/stuff/grid/entity.hh>
+#include <dune/multiscale/tools/misc.hh>
 
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
