@@ -23,7 +23,7 @@ class DiscreteEllipticHMMOperator
   typedef DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
                                        CellProblemNumberingManagerImp > This;
 
-public:
+private:
   typedef DiscreteFunctionImp            DiscreteFunction;
   typedef PeriodicDiscreteFunctionImp    PeriodicDiscreteFunction;
   typedef DiffusionImp                   DiffusionModel;
@@ -47,7 +47,6 @@ public:
   //!only used in adhoc computation
   typedef CellProblemSolver< PeriodicDiscreteFunction, DiffusionImp > CellProblemSolverType;
 
-protected:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
@@ -73,16 +72,20 @@ public:
                               const CellProblemNumberingManager& cp_num_manager,
                               const std::string& filename)
     : discreteFunctionSpace_(discreteFunctionSpace)
-      , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
-      , diffusion_operator_(diffusion_op)
-      , cp_num_manager_(cp_num_manager)
-      , filename_(filename)
+    , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
+    , diffusion_operator_(diffusion_op)
+    , cp_num_manager_(cp_num_manager)
+    , filename_(filename)
   {}
 
-public:
+private:
   // dummy operator
   virtual void operator()(const DiscreteFunction& u, DiscreteFunction& w) const;
 
+  template< class MatrixType >
+  void boundary_treatment(MatrixType& global_matrix) const;
+
+public:
   template< class MatrixType >
   void assemble_matrix(MatrixType& global_matrix) const;
 
@@ -113,6 +116,36 @@ template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class Di
           class CellProblemNumberingManagerImp >
 template< class MatrixType >
 void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
+                                  CellProblemNumberingManagerImp >::boundary_treatment(MatrixType& global_matrix) const {
+  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
+  for (const Entity& entity : discreteFunctionSpace_)
+  {
+    if ( !entity.hasBoundaryIntersections() )
+      continue;
+
+    auto local_matrix = global_matrix.localMatrix(entity, entity);
+
+    const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+
+    const IntersectionIterator iend = gridPart.iend(entity);
+    for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
+    {
+      const Intersection& intersection = *iit;
+      if ( !intersection.boundary() )
+        continue;
+
+      const int face = intersection.indexInInside();
+      const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
+      for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+        local_matrix.unitRow(*fdit);
+    }
+  }
+}
+
+template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
+          class CellProblemNumberingManagerImp >
+template< class MatrixType >
+void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
                                   CellProblemNumberingManagerImp >::assemble_matrix(MatrixType& global_matrix) const {
   // if test function reconstruction
   if (DSC_CONFIG_GET("TFR", false))
@@ -135,10 +168,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
   std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_Phi( discreteFunctionSpace_.mapper().maxNumDofs() );
 
-  const Iterator macro_grid_end = discreteFunctionSpace_.end();
-  for (Iterator macro_grid_it = discreteFunctionSpace_.begin(); macro_grid_it != macro_grid_end; ++macro_grid_it)
+  for (const auto& macro_grid_entity : discreteFunctionSpace_)
   {
-    const Entity& macro_grid_entity = *macro_grid_it;
     const Geometry& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
@@ -164,13 +195,13 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
     std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
 
-    //!TODO automatic memory
-    std::vector<PeriodicDiscreteFunction*> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs(), nullptr);
+    typedef std::unique_ptr<PeriodicDiscreteFunction> PeriodicDF_ptr;
+    std::vector<PeriodicDF_ptr> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
     {
       // get number of cell problem from entity and number of base function
-      typename Entity::EntityPointer macro_entity_pointer(*macro_grid_it);
+      typename Entity::EntityPointer macro_entity_pointer(macro_grid_entity);
       cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
 
       // jacobian of the base functions, with respect to the reference element
@@ -180,7 +211,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
       inverse_jac.mv(gradient_Phi_ref_element[0], gradient_Phi[i][0]);
 
-      corrector_Phi[i] = new PeriodicDiscreteFunction("Corrector Function of Phi", periodicDiscreteFunctionSpace_);
+      corrector_Phi[i] = PeriodicDF_ptr(new PeriodicDiscreteFunction("Corrector Function of Phi",
+                                                                     periodicDiscreteFunctionSpace_));
       corrector_Phi[i]->clear();
       if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
         CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
@@ -200,19 +232,13 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
         // nur checken ob der momentane Quadraturpunkt in der Zelle delta/epsilon_estimated*Y ist (0 bzw. 1 =>
         // Abschneidefunktion!)
 
-        const Iterator micro_grid_end = periodicDiscreteFunctionSpace_.end();
-        for (Iterator micro_grid_it = periodicDiscreteFunctionSpace_.begin();
-             micro_grid_it != micro_grid_end;
-             ++micro_grid_it)
+        for (const auto& micro_grid_entity : periodicDiscreteFunctionSpace_)
         {
-          const Entity& micro_grid_entity = *micro_grid_it;
           const Geometry& micro_grid_geometry = micro_grid_entity.geometry();
           assert(micro_grid_entity.partitionType() == InteriorEntity);
 
-          typename PeriodicDiscreteFunction::LocalFunctionType localized_corrector_i = corrector_Phi[i]->localFunction(
-            micro_grid_entity);
-          typename PeriodicDiscreteFunction::LocalFunctionType localized_corrector_j = corrector_Phi[j]->localFunction(
-            micro_grid_entity);
+          const auto localized_corrector_i = corrector_Phi[i]->localFunction(micro_grid_entity);
+          const auto localized_corrector_j = corrector_Phi[j]->localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
           const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
@@ -221,8 +247,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint)
           {
             // local (barycentric) coordinates (with respect to entity)
-            const typename Quadrature::CoordinateType& local_micro_point = micro_grid_quadrature.point(
-              microQuadraturePoint);
+            const auto& local_micro_point = micro_grid_quadrature.point(microQuadraturePoint);
 
             const DomainType global_point_in_Y = micro_grid_geometry.global(local_micro_point);
 
@@ -277,32 +302,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       }
     }
   }
-
-  // boundary treatment
-  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-  for (Iterator it = discreteFunctionSpace_.begin(); it != macro_grid_end; ++it)
-  {
-    const Entity& entity = *it;
-    if ( !entity.hasBoundaryIntersections() )
-      continue;
-
-    LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
-
-    const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-
-    const IntersectionIterator iend = gridPart.iend(entity);
-    for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
-    {
-      const Intersection& intersection = *iit;
-      if ( !intersection.boundary() )
-        continue;
-
-      const int face = intersection.indexInInside();
-      const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-      for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
-        local_matrix.unitRow(*fdit);
-    }
-  }
+  boundary_treatment(global_matrix);
 } // assemble_matrix
 
 // assemble stiffness matrix for HMM with Newton Method
@@ -398,9 +398,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
     }
 
-    //!TODO automatic memory
     std::vector<std::unique_ptr<PeriodicDiscreteFunction> > corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
-
 
     // gradients of macrocopic base functions:
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -546,31 +544,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
     number_of_macro_entity += 1;
   }
 
-  // boundary treatment
-  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-  for (Iterator it = discreteFunctionSpace_.begin(); it != macro_grid_end; ++it)
-  {
-    const Entity& entity = *it;
-    if ( !entity.hasBoundaryIntersections() )
-      continue;
-
-    LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
-
-    const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-
-    const IntersectionIterator iend = gridPart.iend(entity);
-    for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
-    {
-      const Intersection& intersection = *iit;
-      if ( !intersection.boundary() )
-        continue;
-
-      const int face = intersection.indexInInside();
-      const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-      for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
-        local_matrix.unitRow(*fdit);
-    }
-  }
+  boundary_treatment(global_matrix);
 } // assemble_jacobian_matrix
 
 //! ------------------------------------------------------------------------------------------------

@@ -494,9 +494,6 @@ public:
     // additional condition. Therefor we solve
     // \lambda w - \div A \nabla w = rhs        instead of      - \div A \nabla w = rhs
 
-    // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
-    const MassWeightType mass(lambda);
-
     const TransformTensorType tensor_transformed(tensor);
 
     // if we have some additional source term (-div G), define:
@@ -509,7 +506,10 @@ public:
 
     //! build the left hand side (lhs) of the problem
 
-    const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace, tensor_transformed, mass);
+    // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
+    const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace,
+                                                         tensor_transformed,
+                                                         new MassWeightType(lambda));
 
     FEMMatrix lhsMatrix("Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace, periodicDiscreteFunctionSpace);
     discrete_cell_elliptic_op.assemble_matrix(lhsMatrix, false /*no boundary treatment*/);

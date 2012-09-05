@@ -7,24 +7,26 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
-
+#include <dune/stuff/grid/entity.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-// / done
-
 namespace Dune {
-// Imp stands for Implementation
+
+/**
+ * \todo warum ist das nen operator?
+ */
 template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp,
           class DiffusionImp >
 class DiscreteEllipticMsFEMOperator
   : public Operator< typename CoarseDiscreteFunctionImp::RangeFieldType,
                      typename CoarseDiscreteFunctionImp::RangeFieldType,
                      CoarseDiscreteFunctionImp, CoarseDiscreteFunctionImp >
+    , boost::noncopyable
 {
   typedef DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp, MacroMicroGridSpecifierImp, FineDiscreteFunctionImp,
                                          DiffusionImp > This;
 
-public:
+private:
   typedef CoarseDiscreteFunctionImp  CoarseDiscreteFunction;
   typedef FineDiscreteFunctionImp    FineDiscreteFunction;
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
@@ -45,13 +47,12 @@ public:
   typedef typename FineDiscreteFunctionSpace::JacobianRangeType
   JacobianRangeType;
 
-  typedef SubGrid< WORLDDIM, FineGrid >                                                 SubGridType;
+  typedef SubGrid< FineGrid::dimensionworld, FineGrid >  SubGridType;
   typedef SubGridList< FineDiscreteFunction, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
 
   typedef MsFEMLocalProblemSolver< FineDiscreteFunction, SubGridListType, MacroMicroGridSpecifierType,
                                    DiffusionModel > MsFEMLocalProblemSolverType;
 
-protected:
   static const int dimension = FineGridPart::GridType::dimension;
   static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
 
@@ -68,11 +69,9 @@ protected:
   typedef typename FineIntersectionIterator::Intersection FineIntersection;
   typedef CachingQuadrature< FineGridPart, 0 > FineQuadrature;
 
-public:
   typedef typename CoarseDiscreteFunctionSpace::GridPartType CoarseGridPart;
   typedef typename CoarseDiscreteFunctionSpace::GridType     CoarseGrid;
 
-protected:
   typedef typename CoarseDiscreteFunction::LocalFunctionType CoarseLocalFunction;
   typedef typename CoarseDiscreteFunctionSpace::BaseFunctionSetType                   CoarseBaseFunctionSet;
   typedef typename CoarseDiscreteFunctionSpace::LagrangePointSetType                  CoarseLagrangePointSet;
@@ -85,7 +84,6 @@ protected:
   typedef typename CoarseIntersectionIterator::Intersection CoarseIntersection;
   typedef CachingQuadrature< CoarseGridPart, 0 > CoarseQuadrature;
 
-public:
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
@@ -135,15 +133,12 @@ public:
     loc_prob_solver.assemble_all(silence);
   }
 
-private:
-  DiscreteEllipticMsFEMOperator(const This&);
-
-public:
-  // dummy operator
-  virtual void operator()(const CoarseDiscreteFunction& u, CoarseDiscreteFunction& w) const;
-
   template< class MatrixType >
   void assemble_matrix(MatrixType& global_matrix) const;
+
+private:
+  //! dummy operator
+  virtual void operator()(const CoarseDiscreteFunction& u, CoarseDiscreteFunction& w) const;
 
   // oneLinePrint( std :: cout , );
   template< class Stream >
@@ -158,19 +153,19 @@ public:
     stream << " ] " << std::endl;
   } // oneLinePrint
 
-private:
-  // create a hostgrid function from a subgridfunction
-  // Note: the maximum gride levels for both underlying grids must be the same
+  /** create a hostgrid function from a subgridfunction
+   * Note: the maximum gride levels for both underlying grids must be the same
+   * \todo use function from estimator utils instead
+   **/
   void subgrid_to_hostrid_function(const LocalDiscreteFunction& sub_func, FineDiscreteFunction& host_func);
 
-private:
   MacroMicroGridSpecifierType& specifier_;
 
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
   SubGridListType& subgrid_list_;
   const DiffusionModel& diffusion_operator_;
   //! path where to save the data output
-  std::string path_;
+  const std::string path_;
 };
 
 // create a hostgrid function from a subgridfunction
@@ -183,7 +178,7 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
                                                                                 FineDiscreteFunction& host_func) {
   if ( sub_func.space().gridPart().grid().maxLevel() != host_func.space().gridPart().grid().maxLevel() )
   {
-    std::cout
+    DSC_LOG_ERROR
     << "Error in method 'subgrid_to_hostrid_function': MaxLevel of SubGrid not identical to MaxLevel of FineGrid."
     << std::endl;
   }
@@ -214,12 +209,8 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
 
 // dummy implementation of "operator()"
 // 'w' = effect of the discrete operator on 'u'
-template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp,
-          class DiffusionImp >
-void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
-                                    MacroMicroGridSpecifierImp,
-                                    FineDiscreteFunctionImp,
-                                    DiffusionImp >::operator()(const CoarseDiscreteFunction& /*u*/,
+template< class K, class L, class O, class P >
+void DiscreteEllipticMsFEMOperator< K,L,O,P >::operator()(const CoarseDiscreteFunction& /*u*/,
                                                                CoarseDiscreteFunction& /*w*/) const {
   DUNE_THROW(Dune::NotImplemented,"the ()-operator of the DiscreteEllipticMsFEMOperator class is not yet implemented and still a dummy.");
 }
@@ -250,20 +241,14 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
   std::vector< typename CoarseBaseFunctionSet::JacobianRangeType > gradient_Phi(
     coarseDiscreteFunctionSpace_.mapper().maxNumDofs() );
 
-  const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
+  const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
 
-  // Coarse Entity Iterator
-  const CoarseIterator coarse_grid_end = coarseDiscreteFunctionSpace_.end();
-  for (CoarseIterator coarse_grid_it = coarseDiscreteFunctionSpace_.begin();
-       coarse_grid_it != coarse_grid_end;
-       ++coarse_grid_it)
+  for (const CoarseEntity& coarse_grid_entity : coarseDiscreteFunctionSpace_)
   {
-    // the coarse grid element T:
-    const CoarseEntity& coarse_grid_entity = *coarse_grid_it;
     const CoarseGeometry& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
-    int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
+    const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
     LocalMatrix local_matrix = global_matrix.localMatrix(coarse_grid_entity, coarse_grid_entity);
 
@@ -356,24 +341,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
               continue;
             }
           }
-
-          if (entities_identical == false)
-          {
-            // std :: cout << "coarse_grid_it->geometry().corner(0) = " << coarse_grid_it->geometry().corner(0) << std
-            // :: endl;
-            // std :: cout << "coarse_grid_it->geometry().corner(1) = " << coarse_grid_it->geometry().corner(1) << std
-            // :: endl;
-            // std :: cout << "coarse_grid_it->geometry().corner(2) = " << coarse_grid_it->geometry().corner(2) << std
-            // :: endl;
-            // std :: cout << "father_of_loc_grid_ent->geometry().corner(0) = " <<
-            // father_of_loc_grid_ent->geometry().corner(0) << std :: endl;
-            // std :: cout << "father_of_loc_grid_ent->geometry().corner(1) = " <<
-            // father_of_loc_grid_ent->geometry().corner(1) << std :: endl;
-            // std :: cout << "father_of_loc_grid_ent->geometry().corner(2) = " <<
-            // father_of_loc_grid_ent->geometry().corner(2) << std :: endl << std :: endl;
-            continue;
-          }
-
           // -------------------------------------------------------------------
 
           const LocalGridGeometry& local_grid_geometry = local_grid_entity.geometry();
@@ -441,6 +408,7 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
   }
 
   // boundary treatment
+  //!TODO use function call
   const CoarseGridPart& coarseGridPart = coarseDiscreteFunctionSpace_.gridPart();
   for (CoarseIterator it = coarseDiscreteFunctionSpace_.begin(); it != coarseDiscreteFunctionSpace_.end(); ++it)
   {
@@ -466,9 +434,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
     }
   }
 } // assemble_matrix
-
-//! ------------------------------------------------------------------------------------------------
-//! ------------------------------------------------------------------------------------------------
 }
 
 #endif // #ifndef DiscreteElliptic_HH

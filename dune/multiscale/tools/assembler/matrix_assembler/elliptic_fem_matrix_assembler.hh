@@ -21,10 +21,11 @@ template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
 class DiscreteEllipticOperator
   : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
                      DiscreteFunctionImp, DiscreteFunctionImp >
+    , boost::noncopyable
 {
   typedef DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp > This;
 
-public:
+private:
   typedef DiscreteFunctionImp DiscreteFunction;
   typedef DiffusionImp        DiffusionModel;
   typedef ReactionImp         Reaction;
@@ -38,7 +39,6 @@ public:
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType  RangeType;
 
-protected:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
@@ -58,46 +58,48 @@ protected:
   typedef CachingQuadrature< GridPart, 0 > Quadrature;
 
 public:
-  DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionModel& diffusion_op)
-    : discreteFunctionSpace_(discreteFunctionSpace)
-      , diffusion_operator_(diffusion_op)
-      , reaction_coefficient_(nullptr)
-  {}
 
+  /**
+   * \param reaction_coefficient Operator assumes ownership of it
+   **/
   DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                            const DiffusionModel& diffusion_op,
-                           const Reaction& reaction_coefficient)
+                           const Reaction* reaction_coefficient = nullptr)
     : discreteFunctionSpace_(discreteFunctionSpace)
-      , diffusion_operator_(diffusion_op)
-      , reaction_coefficient_(&reaction_coefficient)
+    , diffusion_operator_(diffusion_op)
+    , reaction_coefficient_(reaction_coefficient)
   {}
 
 private:
-  DiscreteEllipticOperator(const This&);
-
-public:
-  // dummy operator
+  /** dummy implementation of "operator()"
+   * \param w = effect of the discrete operator on 'u'
+   **/
   virtual void operator()(const DiscreteFunction& u, DiscreteFunction& w) const;
 
+public:
   template< class MatrixType >
   void assemble_matrix(MatrixType& global_matrix, bool boundary_treatment = true) const;
 
-  // Matrix Assembler for local problems on a Subgrid of the Hostgrid:
+  //! Matrix Assembler for local problems on a Subgrid of the Hostgrid:
   template< class MatrixType, class HostDiscreteFunctionSpaceType >
   void assemble_matrix(MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace,
                        bool boundary_treatment = true) const;
 
+  /** assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain
+   * discrete function (in case of the Newton method, it is the preceeding iterate u_H^{(n-1)} )
+   * stiffness matrix with entries
+   * \int JA(\nabla disc_func) \nabla phi_i \nabla phi_j
+   * (here, JA denotes the jacobian matrix of the diffusion operator A)
+   **/
   template< class MatrixType >
   void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix, bool boundary_treatment = true) const;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
-  const Reaction* const  reaction_coefficient_;
+  const std::unique_ptr<const ReactionImp> reaction_coefficient_;
 };
 
-// dummy implementation of "operator()"
-// 'w' = effect of the discrete operator on 'u'
 template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
 void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::operator()(const DiscreteFunction& /*u*/,
                                                                                             DiscreteFunction& /*w*/)
@@ -119,11 +121,8 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
 
   // micro scale base function:
   std::vector< RangeType > phi( discreteFunctionSpace_.mapper().maxNumDofs() );
-
-  const Iterator end = discreteFunctionSpace_.end();
-  for (Iterator it = discreteFunctionSpace_.begin(); it != end; ++it)
+  for (const auto& entity : discreteFunctionSpace_)
   {
-    const Entity& entity = *it;
     const Geometry& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
@@ -140,9 +139,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
     {
       // local (barycentric) coordinates (with respect to entity)
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
-
       const DomainType global_point = geometry.global(local_point);
-
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
@@ -185,16 +182,13 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
   if (boundary_treatment)
   {
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-    for (Iterator it = discreteFunctionSpace_.begin(); it != end; ++it)
+    for (const auto& entity : discreteFunctionSpace_)
     {
-      const Entity& entity = *it;
       if ( !entity.hasBoundaryIntersections() )
         continue;
 
       LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
-
       const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-
       const IntersectionIterator iend = gridPart.iend(entity);
       for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
       {
@@ -211,7 +205,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
   }
 } // assemble_matrix
 
-// Matrix Assembler for local problems on a Subgrid of the Hostgrid:
+
 template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
 template< class MatrixType, class HostDiscreteFunctionSpaceType >
 void DiscreteEllipticOperator< DiscreteFunctionImp,
@@ -339,11 +333,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
   }
 } // assemble_matrix
 
-// assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain
-// discrete function (in case of the Newton method, it is the preceeding iterate u_H^{(n-1)} )
-// stiffness matrix with entries
-// \int JA(\nabla disc_func) \nabla phi_i \nabla phi_j
-// (here, JA denotes the jacobian matrix of the diffusion operator A)
+
 template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
 template< class MatrixType >
 void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::assemble_jacobian_matrix(

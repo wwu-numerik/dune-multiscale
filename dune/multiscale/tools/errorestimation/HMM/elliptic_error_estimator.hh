@@ -1010,9 +1010,7 @@ public:
     // the global quadrature (quadrature on the macro element T)
 
     const EntityGeometryType& globalEntityGeometry = entity.geometry();
-
     const DomainType& x_T = globalEntityGeometry.global( entityQuadrature.point(0) );
-
     const RangeType entityVolume = entityQuadrature.weight(0)
                                    * globalEntityGeometry.integrationElement( entityQuadrature.point(0) );
 
@@ -1022,19 +1020,11 @@ public:
 
     u_H_local.jacobian(entityQuadrature[0], gradient_u_H);
 
-    if (dimension != 2)
-    {
-      std::cout
-      <<
-      "The error indicator 'indicator_tfr_1' is not implemented for dimension!=2 and only works for uniformly refined micro-grids!"
-      << std::endl;
-    }
+    static_assert(dimension != 2, "The error indicator 'indicator_tfr_1' is not implemented for dimension!=2 and only works for uniformly refined micro-grids!");
 
     // edge length of a boundary face
     RangeType ref_edge_length = 1.0;
-
-    GridPartType auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
-
+    const GridPartType& auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
     IteratorType micro_it = auxiliaryDiscreteFunctionSpace_.begin();
 
     // we just need one element to determine all the properties (due to uniform refinement)!
