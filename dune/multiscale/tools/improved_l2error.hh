@@ -45,16 +45,12 @@ public:
   template< int polOrd >
   RangeFieldType norm_L2(const DiscreteFunctionType& f1,
                          const DiscreteFunctionType& f2, double /*dummy*/ = 0) const {
+    static_assert(dimRange==1,"L2Error::norm2: only implemented for dimRange = 1! \n");
     const DiscreteFunctionSpaceType& space = f1.space();
     const GridPartType& gridPart = space.gridPart();
     const auto& comm = gridPart.grid().comm();
 
     RangeFieldType ret = 0;
-    if (dimRange > 1)
-    {
-      DUNE_THROW(Dune::NotImplemented,"L2Error::norm2: only implemented for dimRange = 1! \n");
-    }
-
     // get function space
     const DiscreteFunctionSpaceType& dfsp = f1.space();
     const DiscreteFunctionSpaceType& dfsp_2 = f2.space();
@@ -105,6 +101,7 @@ public:
   template< int polOrd >
   RangeFieldType norm_uniform_grids(const DiscreteFunctionType& coarse_disc_func,
                                     const DiscreteFunctionType& fine_disc_func, double /*dummy*/ = 0) const {
+    static_assert(dimRange==1,"L2Error::norm2: only implemented for dimRange = 1! \n");
     // get function spaces
     const DiscreteFunctionSpaceType& coarse_discreteFunctionSpace = coarse_disc_func.space();
     const DiscreteFunctionSpaceType& fine_discreteFunctionSpace = fine_disc_func.space();
@@ -121,15 +118,9 @@ public:
 
     // to return the L2 Norm:
     RangeFieldType l2Norm = 0.0;
-
-    if (dimRange > 1)
-    {
-      DUNE_THROW(Dune::NotImplemented,"L2Error::norm2: only implemented for dimRange = 1! \n");
-    }
-
     // for product:
     // int quadOrd = (polOrd*2)*(polOrd*2);
-    int quadOrd = polOrd;
+    const int quadOrd = polOrd;
 
     // last entity of fine grid:
     const IteratorType fine_end = fine_discreteFunctionSpace.end();
