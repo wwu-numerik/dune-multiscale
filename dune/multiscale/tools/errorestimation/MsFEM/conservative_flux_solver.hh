@@ -225,23 +225,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
       father_of_sub_grid_entity = father_of_sub_grid_entity->father();
 
-    EntityPointer coarse_father_test = father_of_sub_grid_entity;
-
-    bool father_found = false;
-    while (father_found == false)
-    {
-      if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-      {
-        father_of_sub_grid_entity = coarse_father_test;
-      }
-
-      if (coarse_father_test->hasFather() == false)
-      {
-        father_found = true;
-      } else {
-        coarse_father_test = coarse_father_test->father();
-      }
-    }
+    Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_sub_grid_entity);
 
     int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
 
@@ -275,23 +259,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
         for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
           father_of_neighbor = father_of_neighbor->father();
 
-
-        EntityPointer coarse_father_test = father_of_neighbor;
-        bool father_found = false;
-        while (father_found == false)
-        {
-          if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-          {
-            father_of_neighbor = coarse_father_test;
-          }
-
-          if (coarse_father_test->hasFather() == false)
-          {
-            father_found = true;
-          } else {
-            coarse_father_test = coarse_father_test->father();
-          }
-        }
+        Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_neighbor);
 
         bool entities_identical = true;
         int number_of_nodes = (*father_of_neighbor).template count< 2 >();
@@ -471,24 +439,9 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
       father_of_sub_grid_entity = father_of_sub_grid_entity->father();
 
-    EntityPointer coarse_father_test = father_of_sub_grid_entity;
+    Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_sub_grid_entity);
 
-    bool father_found = false;
-    while (father_found == false)
-    {
-      if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-      {
-        father_of_sub_grid_entity = coarse_father_test;
-      }
-
-      if (coarse_father_test->hasFather() == false)
-      {
-        father_found = true;
-      } else {
-        coarse_father_test = coarse_father_test->father();
-      }
-    }
-    int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
+    const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
 
     if (coarse_index != sub_grid_id)
     {

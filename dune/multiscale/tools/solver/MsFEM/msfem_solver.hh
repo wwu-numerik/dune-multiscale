@@ -510,20 +510,7 @@ public:
       for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
         coarse_father = coarse_father->father();
 
-      typename HostEntity::template Codim< 0 >::EntityPointer coarse_father_test = coarse_father;
-
-      bool father_found = false;
-      while (father_found == false)
-      {
-        if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-        {
-          coarse_father = coarse_father_test;
-        }
-
-        if (coarse_father_test->hasFather() == false)
-        { father_found = true; } else
-        { coarse_father_test = coarse_father_test->father(); }
-      }
+      Stuff::Grid::make_father(coarseGridLeafIndexSet, coarse_father);
 
       LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse(coarse_father);
 
@@ -647,20 +634,7 @@ public:
         for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
           father = father->father();
 
-        typename HostEntity::template Codim< 0 >::EntityPointer coarse_father_test = father;
-
-        bool father_found = false;
-        while (father_found == false)
-        {
-          if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-          {
-            father = coarse_father_test;
-          }
-
-          if (coarse_father_test->hasFather() == false)
-          { father_found = true; } else
-          { coarse_father_test = coarse_father_test->father(); }
-        }
+        Stuff::Grid::make_father(coarseGridLeafIndexSet, father);
 
         bool entities_identical = true;
         const int number_of_nodes = (*father).template count< 2 >();
@@ -696,17 +670,8 @@ public:
             for (int lev = 0; lev < specifier.getLevelDifference(); ++lev)
               inner_it = inner_it->father();
 
-            typename HostEntity::template Codim< 0 >::EntityPointer coarse_father_test = inner_it;
-            bool father_found = false;
-            while (father_found == false)
-            {
-              if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-              { inner_it = coarse_father_test; }
+            Stuff::Grid::make_father(coarseGridLeafIndexSet, inner_it);
 
-              if (coarse_father_test->hasFather() == false)
-              { father_found = true; } else
-              { coarse_father_test = coarse_father_test->father(); }
-            }
             bool new_entity_found = true;
             for (size_t k = 0; k < coarse_entities.size(); k += 1)
             {

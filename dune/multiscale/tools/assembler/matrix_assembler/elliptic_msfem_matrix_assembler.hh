@@ -331,37 +331,29 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
           // check if "local_grid_entity" (which is an entity of U(T)) is in T:
           // -------------------------------------------------------------------
 
-          FineEntityPointer father_of_loc_grid_ent = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(
+          auto father_of_loc_grid_ent = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(
             local_grid_entity);
 
           for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
             father_of_loc_grid_ent = father_of_loc_grid_ent->father();
 
-          FineEntityPointer coarse_father_test = father_of_loc_grid_ent;
 
-          bool father_found = false;
-          while (father_found == false)
-          {
-            if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
+
+          const bool father_found = Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_loc_grid_ent); {
+
+            bool entities_identical = true;
+            int number_of_nodes = coarse_grid_entity.template count< 2 >();
+            for (int k = 0; k < number_of_nodes; k += 1)
             {
-              father_of_loc_grid_ent = coarse_father_test;
+              if ( !( coarse_grid_entity.geometry().corner(k) == father_of_loc_grid_ent->geometry().corner(k) ) )
+              {
+                entities_identical = false;
+              }
             }
 
-            if (coarse_father_test->hasFather() == false)
+            if (entities_identical == false)
             {
-              father_found = true;
-            } else {
-              coarse_father_test = coarse_father_test->father();
-            }
-          }
-
-          bool entities_identical = true;
-          int number_of_nodes = (*coarse_grid_it).template count< 2 >();
-          for (int k = 0; k < number_of_nodes; k += 1)
-          {
-            if ( !( coarse_grid_it->geometry().corner(k) == father_of_loc_grid_ent->geometry().corner(k) ) )
-            {
-              entities_identical = false;
+              continue;
             }
           }
 

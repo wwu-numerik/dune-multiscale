@@ -1,6 +1,8 @@
 #ifndef ESTIMATOR_UTILS_HH
 #define ESTIMATOR_UTILS_HH
 
+#include <dune/stuff/grid/entity.hh>
+
 namespace Dune {
 
 template < class EstimatorType >
@@ -96,17 +98,8 @@ struct EstimatorUtils {
       auto father_of_sub_grid_entity = host_entity_pointer;
       for (int lev = 0; lev < level_difference; ++lev)
         father_of_sub_grid_entity = father_of_sub_grid_entity->father();
-      auto coarse_father_test = father_of_sub_grid_entity;
-      bool father_found = false;
-      while (father_found == false)
-      {
-        if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-        { father_of_sub_grid_entity = coarse_father_test; }
 
-        if (coarse_father_test->hasFather() == false)
-        { father_found = true; } else
-        { coarse_father_test = coarse_father_test->father(); }
-      }
+      Stuff::Grid::make_father(coarseGridLeafIndexSet,father_of_sub_grid_entity);
 
       const int coarse_sub_father_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
       if (coarse_sub_father_index != index_coarse_entity)

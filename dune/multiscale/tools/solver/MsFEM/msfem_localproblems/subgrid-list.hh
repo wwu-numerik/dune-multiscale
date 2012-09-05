@@ -9,8 +9,7 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-//#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
-
+#include <dune/stuff/grid/entity.hh>
 
 // / done
 
@@ -92,7 +91,7 @@ private:
   template< typename EntityPointerCollectionType >
   void enrichment(const HostEntityPointerType& hit,
                   const HostEntityPointerType& level_father_it,
-                  int& father_index,
+                  const int& father_index,
                   const HostGridPartType& hostGridPart,
                   SubGridType& subGrid,
                   EntityPointerCollectionType& entities_sharing_same_node,
@@ -132,19 +131,7 @@ private:
           for (int lev = 0; lev < level_difference; ++lev)
             father = father->father();
 
-          HostEntityPointerType coarse_father_test = father;
-          bool father_found = false;
-          while (father_found == false)
-          {
-            if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-            {
-              father = coarse_father_test;
-            }
-
-            if (coarse_father_test->hasFather() == false)
-            { father_found = true; } else
-            { coarse_father_test = coarse_father_test->father(); }
-          }
+          Stuff::Grid::make_father(coarseGridLeafIndexSet, father);
 
           if ( !(father == level_father_it) )
           {
@@ -273,19 +260,9 @@ public:
       // changed 'contains'-method in 'indexset.hh'
       // we use: "return ( (subIndex >= 0) && (subIndex < size( codim )) );"
       // instead of "return (subIndex >= 0);"
-      HostEntityPointerType coarse_father_test = level_father_entity;
-      bool father_found = false;
-      while (father_found == false)
-      {
-        if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-        { level_father_entity = coarse_father_test; }
+      Stuff::Grid::make_father(coarseGridLeafIndexSet, level_father_entity);
 
-        if (coarse_father_test->hasFather() == false)
-        { father_found = true; } else
-        { coarse_father_test = coarse_father_test->father(); }
-      }
-
-      int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
+      const int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
 
       if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) )
       { subGridList_[father_index]->insertPartial(host_entity); }
@@ -307,24 +284,14 @@ public:
           for (int lev = 0; lev < level_difference; ++lev)
             level_father_neighbor_entity = level_father_neighbor_entity->father();
 
-          HostEntityPointerType coarse_father_test = level_father_neighbor_entity;
-
-          bool father_found = false;
-          while (father_found == false)
-          {
-            if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-            { level_father_neighbor_entity = coarse_father_test; }
-
-            if (coarse_father_test->hasFather() == false)
-            { father_found = true; } else
-            { coarse_father_test = coarse_father_test->father(); }
-          }
+          Stuff::Grid::make_father(coarseGridLeafIndexSet, level_father_neighbor_entity);
 
           if ( !(level_father_neighbor_entity == level_father_entity) )
           {
             all_neighbors_have_same_father = false;
           }
-        } else {
+        }
+        else {
           all_neighbors_have_same_father = false;
         }
       }

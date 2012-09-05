@@ -6,6 +6,7 @@
 #include <array>
 #include <boost/range/adaptor/map.hpp>
 #include <dune/stuff/common/fixed_map.hh>
+#include <dune/stuff/grid/entity.hh>
 
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -337,35 +338,23 @@ private:
       for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
         coarse_father = coarse_father->father();
 
-      //! new version:
-      EntityPointerType coarse_father_test = coarse_father;
+      Stuff::Grid::make_father(coarseGridLeafIndexSet, coarse_father);
 
-      bool father_found = false;
-      while (father_found == false)
-      {
-        if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-        { coarse_father = coarse_father_test; }
-
-        if (coarse_father_test->hasFather() == false)
-        { father_found = true; } else
-        { coarse_father_test = coarse_father_test->father(); }
-      }
-
-      int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
+      const int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
 
       const EntityGeometryType& entityGeometry = entity.geometry();
 
-      EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
+      const EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
       const DomainType& x = entityGeometry.global( entityQuadrature.point(0) );
 
-      LocalFunctionType local_msfem_sol = msfem_solution.localFunction(entity);
+      const LocalFunctionType local_msfem_sol = msfem_solution.localFunction(entity);
       JacobianRangeType gradient_msfem_sol(0.);
       local_msfem_sol.jacobian(entityQuadrature[0], gradient_msfem_sol);
 
       JacobianRangeType diffusive_flux_x;
       diffusion_.diffusiveFlux(x, gradient_msfem_sol, diffusive_flux_x);
 
-      EntityQuadratureType highOrder_entityQuadrature(entity, 2 * spacePolOrd + 2);
+      const EntityQuadratureType highOrder_entityQuadrature(entity, 2 * spacePolOrd + 2);
 
       const int quadratureNop = highOrder_entityQuadrature.nop();
       for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
@@ -504,17 +493,7 @@ private:
         for (int lev = 0; lev < specifier_.getLevelDifference(); ++lev)
           father_of_loc_grid_it = father_of_loc_grid_it->father();
 
-        EntityPointerType coarse_father_test = father_of_loc_grid_it;
-        bool father_found = false;
-        while (father_found == false)
-        {
-          if (coarseGridLeafIndexSet.contains(*coarse_father_test) == true)
-          { father_of_loc_grid_it = coarse_father_test; }
-
-          if (coarse_father_test->hasFather() == false)
-          { father_found = true; } else
-          { coarse_father_test = coarse_father_test->father(); }
-        }
+        Stuff::Grid::make_father(coarseGridLeafIndexSet, father_of_loc_grid_it);
 
         bool entities_identical = true;
         int number_of_nodes = (*coarse_grid_it).template count< 2 >();
