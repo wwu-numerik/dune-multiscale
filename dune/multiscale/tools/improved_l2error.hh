@@ -359,7 +359,7 @@ public:
         }
       }
 
-      if (relevant_coarse_entity_found == false)
+      if (!relevant_coarse_entity_found)
       {
         DSC_LOG_ERROR << "In class >>ImprovedL2Error<<, in method >>norm_adaptive_grids<< :" << std::endl
                       << "No corresponding coarse grid entity found for fine grid entity => Error in computation of L2 error."
@@ -411,7 +411,7 @@ public:
     }   // end fine grid element iteration
     l2Norm = fine_comm.sum(l2Norm);
 
-    if (error_in_compuation == true)
+    if (error_in_compuation)
     {
       return 0.0;
     }
@@ -670,7 +670,7 @@ public:
       }
     }  // end coarse grid element iteration
 
-    if (error_in_compuation == true)
+    if (error_in_compuation)
     {
       return 0.0;
     }
@@ -936,7 +936,7 @@ public:
       }
     }  // end coarse grid element iteration
 
-    if (error_in_compuation == true)
+    if (error_in_compuation)
     {
       return 0.0;
     }
@@ -1177,7 +1177,7 @@ public:
         }
       }
 
-      if (has_father == true)
+      if (has_father)
       { number_of_coarse_elements_that_are_fathers += 1; } else
       { DSC_LOG_DEBUG << "Coarse element number " << number_of_coarse_grid_elements << "is not a father!!!" << std::endl; }
 

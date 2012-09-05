@@ -122,7 +122,7 @@ struct EstimatorUtils {
         if ( is_subface(*face_it_U_T, *coarse_face[2]) )
         { relevant_face_index = 2; }
 
-        if ( (relevant_face_index == -1) || (face_it_U_T->neighbor() == false) )
+        if ( (relevant_face_index == -1) || (!face_it_U_T->neighbor()) )
         { continue; }
 
         auto outside_sub_it = face_it_U_T->outside();

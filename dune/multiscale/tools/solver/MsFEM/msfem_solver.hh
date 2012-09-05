@@ -662,7 +662,7 @@ public:
               if (coarse_entities[k] == inner_it)
               { new_entity_found = false; }
             }
-            if (new_entity_found == true)
+            if (new_entity_found)
             { coarse_entities.push_back(inner_it); }
           }
 

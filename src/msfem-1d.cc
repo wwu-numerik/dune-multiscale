@@ -35,7 +35,7 @@ double integrate(unsigned int N, double leftB, double rightB, FunctionType& func
 
   double integral = 0.0;
 
-  if (function_to_integrate.antiderivative_available == true)
+  if (function_to_integrate.antiderivative_available)
   {
     integral = function_to_integrate.evaluate_antiderivative(rightB) - function_to_integrate.evaluate_antiderivative(
       leftB);

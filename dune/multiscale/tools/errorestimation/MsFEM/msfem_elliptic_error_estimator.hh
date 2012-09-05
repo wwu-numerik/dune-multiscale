@@ -380,7 +380,7 @@ private:
         FaceQuadratureType innerFaceQuadrature(fineGridPart, *nit, 0, FaceQuadratureType::INSIDE);
         const FaceGeometryType& faceGeometry = nit->geometry();
 
-        if (nit->neighbor() == false)
+        if (!nit->neighbor())
         { continue; }
 
         EntityPointerType outer_fine_grid_it = nit->outside();

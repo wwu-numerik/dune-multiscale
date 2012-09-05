@@ -63,7 +63,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
     double hmm_biCG_tolerance = 1e-8;
     bool hmm_solution_convenient = false;
-    while (hmm_solution_convenient == false)
+    while (!hmm_solution_convenient)
     {
       hmm_newton_residual.clear();
       const typename HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,

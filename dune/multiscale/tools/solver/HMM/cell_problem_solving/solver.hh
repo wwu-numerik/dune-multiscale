@@ -170,7 +170,7 @@ public:
         }
         double biCG_tolerance = 1e-8;
         bool cell_solution_convenient = false;
-        while (cell_solution_convenient == false)
+        while (!cell_solution_convenient)
         {
           cell_problem_residual.clear();
           const InverseCellFEMMatrix cell_fem_newton_biCGStab(cell_system_matrix,

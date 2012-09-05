@@ -132,10 +132,11 @@ private:
                                                                   level_difference);
           if ( !(father == level_father_it) )
           {
-            if (enriched[father_index][hostGridLeafIndexSet.index(*entities_sharing_same_node[global_index_node][j])][
-                  layer] == false)
+            const auto& tmp_entity_ptr = entities_sharing_same_node[global_index_node][j];
+            if (!enriched[father_index][hostGridLeafIndexSet
+                .index(*tmp_entity_ptr)][layer])
             {
-              enrichment(entities_sharing_same_node[global_index_node][j], level_father_it,
+              enrichment(tmp_entity_ptr, level_father_it,
                          /*specifier,*/ father_index,
                          hostGridPart, subGrid, entities_sharing_same_node, layer, enriched);
 
@@ -283,7 +284,7 @@ public:
         }
       }
 
-      if (all_neighbors_have_same_father == true)
+      if (all_neighbors_have_same_father)
       { continue; }
 
       int layers = specifier_.getLayer(father_index);

@@ -247,7 +247,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
         set_zero = true;
       }
 
-      if ( ( iit->neighbor() ) && (set_zero == false) )
+      if ( ( iit->neighbor() ) && (!set_zero) )
       {
         EntityPointer outside_it = iit->outside();
 
@@ -285,7 +285,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
         {
           for (unsigned int j = 0; j < numBaseFunctions; ++j)
           {
-            if (set_zero == false)
+            if (!set_zero)
             {
               local_matrix.add( j, i, integrationFactor * quadratureWeight * (phi[i][0] * phi[j][0]) );
             } else {

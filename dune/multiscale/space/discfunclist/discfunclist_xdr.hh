@@ -611,7 +611,7 @@ public:
 private:
   void checkCleared() const {
     // check if function list has been cleared
-    if (cleared_ == true)
+    if (cleared_)
       DUNE_THROW(InvalidStateException,
                  "This discrete function list has been cleared already, further operations on it are prohibited!");
   }

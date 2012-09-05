@@ -981,7 +981,7 @@ public:
       local_indicator += ( pow(jump_up_down[id], 2.0) + pow(jump_left_right[id], 2.0) );
     }
 
-    if (eps_delta_boundary_edge_found == false)
+    if (!eps_delta_boundary_edge_found)
     {
       DUNE_THROW(Dune::InvalidStateException,"Error! Make sure that the restriction of the Y-triangulation on 'eps/delta Y' is a complete periodic triangulation of 'eps/delta Y' on its own. (for instance: delta = 2 epsilon should work)");
     }
@@ -1233,7 +1233,7 @@ public:
       local_indicator += ( pow(jump_up_down[id], 2.0) + pow(jump_left_right[id], 2.0) );
     }
 
-    if (eps_delta_boundary_edge_found == false)
+    if (!eps_delta_boundary_edge_found)
     {
       DUNE_THROW(Dune::InvalidStateException,"Error! Make sure that the restriction of the Y-triangulation on 'eps/delta Y' is a complete periodic triangulation of 'eps/delta Y' on its own. (for instance: delta = 2 epsilon should work)");
     }

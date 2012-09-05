@@ -60,7 +60,7 @@ void adapt(Dune::MsfemTraits::GridType& grid,
   typedef GridView::Codim< 0 >::Iterator ElementLeafIterator;
   typedef MsfemTraits::GridType::Traits::LeafIndexSet GridLeafIndexSet;
 
-  if (local_indicators_available_ == true)
+  if (local_indicators_available_)
   {
     bool coarse_scale_error_dominant = false;
     bool DUNE_UNUSED(fine_scale_error_dominant) = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
@@ -113,7 +113,7 @@ void adapt(Dune::MsfemTraits::GridType& grid,
 
     // allgemeineren Algorithmus vorgestellt, aber noch nicht implementiert
 
-    if (coarse_scale_error_dominant == true)
+    if (coarse_scale_error_dominant)
     {
       int number_of_refinements = 4;
       // allowed varianve from average ( in percent )
@@ -584,7 +584,7 @@ int main(int argc, char** argv) {
     #endif   // ifdef UNIFORM
 
     loop_number_ = 0;
-    while (repeat_algorithm_ == true)
+    while (repeat_algorithm_)
     {
       #ifdef ADAPTIVE
       DSC_LOG_INFO << "------------------ run " << loop_number_ + 1 << " --------------------" << std::endl << std::endl;
