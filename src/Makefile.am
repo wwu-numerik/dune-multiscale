@@ -46,16 +46,6 @@ LDFLAGS = $(AM_LDFLAGS) \
 	$(ALUGRID_LDFLAGS) \
 	$(DUNE_LDFLAGS)
 
-.PHONY: all_problems
-all_problems: 
-	@for problem in $(PROBLEM_NAMES) ; do \
-		$(MAKE) clean; \
-		$(MAKE) PROBLEM_NAME=$$problem elliptic_hmm; \
-		$(MAKE) PROBLEM_NAME=$$problem elliptic_msfem; \
-	done
-
-TESTS=all_problems
-
 # don't follow the full GNU-standard
 # we need automake 1.5
 AUTOMAKE_OPTIONS = foreign 1.5
