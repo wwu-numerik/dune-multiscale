@@ -79,13 +79,14 @@ public:
 
 };
 
-// since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} )
-// for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving
-// cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon}
-// instead of A(x,\cdot) )
+/** since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} )
+ * for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving
+ * cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon}
+ * instead of A(x,\cdot) )
+ **/
 template< class FunctionSpaceImp, class TensorImp >
 class TransformTensor
-  : public Function< FunctionSpaceImp, TransformTensor< FunctionSpaceImp, TensorImp > >
+  : public Fem::Function< FunctionSpaceImp, TransformTensor< FunctionSpaceImp, TensorImp > >
 {
 public:
   typedef FunctionSpaceImp FunctionSpaceType;
@@ -93,7 +94,7 @@ public:
 
 private:
   typedef TransformTensor< FunctionSpaceType, TensorImp > ThisType;
-  typedef Function< FunctionSpaceType, ThisType >         BaseType;
+  typedef Fem::Function< FunctionSpaceType, ThisType >         BaseType;
 
 public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
@@ -151,7 +152,7 @@ public:
 // the following class is comparable to a SecondSource-Class (some kind of -div G )
 template< class FunctionSpaceImp, class TensorImp >
 class CellSource
-  : public Dune::Fem::Function< FunctionSpaceImp, CellSource< FunctionSpaceImp, TensorImp > >
+  : public Fem::Function< FunctionSpaceImp, CellSource< FunctionSpaceImp, TensorImp > >
 {
 public:
   typedef TensorImp TensorType;
@@ -160,7 +161,7 @@ public:
 
 private:
   typedef CellSource< FunctionSpaceType, TensorImp > ThisType;
-  typedef Function< FunctionSpaceType, ThisType >    BaseType;
+  typedef Fem::Function< FunctionSpaceType, ThisType >    BaseType;
 
 public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
@@ -210,14 +211,14 @@ public:
 
 template< class FunctionSpaceImp >
 class DefaultDummyAdvection
-  : public Dune::Fem::Function< FunctionSpaceImp, DefaultDummyAdvection< FunctionSpaceImp > >
+  : public Fem::Function< FunctionSpaceImp, DefaultDummyAdvection< FunctionSpaceImp > >
 {
 public:
   typedef FunctionSpaceImp FunctionSpaceType;
 
 private:
   typedef DefaultDummyAdvection< FunctionSpaceType > ThisType;
-  typedef Function< FunctionSpaceType, ThisType >    BaseType;
+  typedef Fem::Function< FunctionSpaceType, ThisType >    BaseType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;

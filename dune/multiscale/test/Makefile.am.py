@@ -7,7 +7,7 @@ problems = ['Easy', 'Toy', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'
 algos = ['hmm', 'msfem']
 
 tpl = jinja2.Template(u'''
-GRIDTYPE=YASPGRID
+GRIDTYPE=ALUGRID_SIMPLEX
 GRIDDIM=2
 
 # tests where program to build and program to run are equal
@@ -20,13 +20,13 @@ TESTS = $(NORMALTESTS)
 check_PROGRAMS = $(NORMALTESTS)
 
 
-LDFLAGS = -lboost_filesystem -lboost_system
+LDFLAGS = -lboost_timer -lboost_chrono -lboost_filesystem -lboost_system $(BOOST_LDFLAGS)
 CXXFLAGS = $(BOOST_CPPFLAGS) $(DUNE_CPPFLAGS) \\
-    -DGRIDDIM=$(GRIDDIM) -D$(GRIDTYPE)
+    -DGRIDDIM=$(GRIDDIM) -D$(GRIDTYPE) $(ALL_PKG_CPPFLAGS)
 
 {% for algo in algos %}{% for problem in problems %}
 test_{{algo}}_{{ problem|lower }}_SOURCES = $(top_srcdir)/src/elliptic_{{  algo|lower }}.cc
-test_{{algo}}_{{ problem|lower }}_CPPFLAGS = -DPROBLEM_NAME={{ problem }}.cc
+test_{{algo}}_{{ problem|lower }}_CPPFLAGS = -DPROBLEM_NAME={{ problem }}
 {% endfor %}{% endfor %}    
 
 ## distribution tarball
