@@ -4,6 +4,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <dune/common/fmatrix.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/subgrid/subgrid.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -63,7 +64,7 @@ private:
   template< typename EntityPointerCollectionType >
   bool entity_patch_in_subgrid(const HostEntityPointerType& hit,
                                const HostGridPartType& hostGridPart,
-                               const SubGridType& subGrid,
+                               shared_ptr<const SubGridType> subGrid,
                                const EntityPointerCollectionType& entities_sharing_same_node) const {
     bool patch_in_subgrid_ = true;
 
@@ -93,7 +94,7 @@ private:
                   const HostEntityPointerType& level_father_it,
                   const int& father_index,
                   const HostGridPartType& hostGridPart,
-                  SubGridType& subGrid,
+                  shared_ptr<SubGridType> subGrid,
                   EntityPointerCollectionType& entities_sharing_same_node,
                   int& layer,
                   bool***& enriched) {
@@ -120,9 +121,9 @@ private:
 
       for (size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1)
       {
-        if ( !( subGrid.template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
+        if ( !( subGrid->template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
         {
-          subGrid.insertPartial(*entities_sharing_same_node[global_index_node][j]);
+          subGrid->insertPartial(*entities_sharing_same_node[global_index_node][j]);
         }
 
         if (layer > 0)
@@ -194,7 +195,7 @@ public:
 
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
-    subGridList_ = new SubGridType *[number_of_coarse_grid_entities];
+    subGridList_ = SubGridStorageType(number_of_coarse_grid_entities, make_shared<SubGridType>(hostGrid));
 
     //! ----------- create subgrids --------------------
 
@@ -203,8 +204,6 @@ public:
     for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
     {
       const int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
-
-      subGridList_[coarse_index] = new SubGridType(hostGrid);
       subGridList_[coarse_index]->createBegin();
     }
 
@@ -269,7 +268,7 @@ public:
         {
           // check if the neighbor entity is in the subgrid
           const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-          const HostEntityType& DUNE_UNUSED(neighborHostEntity) = *neighborHostEntityPointer;
+          const HostEntityType& DUNE_UNUSED neighborHostEntity = *neighborHostEntityPointer;
 
           HostEntityPointerType level_father_neighbor_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                                         neighborHostEntityPointer,
@@ -292,12 +291,14 @@ public:
       {
         HostEntityPointerType hep(*host_it);
         enrichment(hep, level_father_entity, father_index, hostGridPart,
-                   *subGridList_[father_index], entities_sharing_same_node, layers, enriched);
+                   subGridList_[father_index], entities_sharing_same_node, layers, enriched);
       }
     }
 
     for (int i = 0; i < number_of_coarse_grid_entities; ++i)
     {
+      assert(int(subGridList_.size()) > i);
+      assert(subGridList_[i]);
       subGridList_[i]->createEnd();
       if (!silent_)
       {
@@ -355,18 +356,14 @@ private:
 
   bool silent_;
 
-  SubGridType** subGridList_;
+  typedef std::vector< shared_ptr<SubGridType> > SubGridStorageType;
+  SubGridStorageType subGridList_;
 
 public:
-  // Destruktor (Dynamisch angeforderter Speicher wird wieder freigegeben)
-  ~SubGridList() {
-    const int size = specifier_.getNumOfCoarseEntities();
-
-    for (int i = 0; i < size; ++i)
-      delete subGridList_[i];
-    delete[] subGridList_;
-  }
+  ~SubGridList()
+  {}
 };
-}
+
+} //namespace Dune
 
 #endif // #ifndef SUBGRIDLIST_HH
