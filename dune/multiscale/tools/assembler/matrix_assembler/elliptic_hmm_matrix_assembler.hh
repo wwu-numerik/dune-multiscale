@@ -195,8 +195,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
     std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
 
-    typedef std::unique_ptr<PeriodicDiscreteFunction> PeriodicDF_ptr;
-    std::vector<PeriodicDF_ptr> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
+    typedef std::unique_ptr<PeriodicDiscreteFunction> PeriodicDiscreteFunctionPointer;
+    std::vector<PeriodicDiscreteFunctionPointer> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
     {
@@ -211,7 +211,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
       inverse_jac.mv(gradient_Phi_ref_element[0], gradient_Phi[i][0]);
 
-      corrector_Phi[i] = PeriodicDF_ptr(new PeriodicDiscreteFunction("Corrector Function of Phi",
+      corrector_Phi[i] = PeriodicDiscreteFunctionPointer(new PeriodicDiscreteFunction("Corrector Function of Phi",
                                                                      periodicDiscreteFunctionSpace_));
       corrector_Phi[i]->clear();
       if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {

@@ -10,7 +10,7 @@ struct EstimatorUtils {
   //! create N hostgrid functions from N subgridfunctions
   template < std::array<int, 1>::size_type N >
   static void subgrid_to_hostrid_function(const std::array<typename EstimatorType::SubGridDiscreteFunctionType, N>& sub_funcs,
-                                          std::array< typename EstimatorType::DF_ptr, N >& host_funcs) {
+                                          std::array< typename EstimatorType::DiscreteFunctionPointer, N >& host_funcs) {
     for( auto& host_func: host_funcs)
       host_func->clear();
 
@@ -76,10 +76,10 @@ struct EstimatorUtils {
   flux_contributions( const typename EstimatorType::SubGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace,
                       const typename EstimatorType::SubGridType& sub_grid_U_T,
                       const typename EstimatorType::LeafIndexSetType& coarseGridLeafIndexSet,
-                      const typename EstimatorType::DF_ptr_pair& cflux_coarse_ent_host,
+                      const typename EstimatorType::DiscreteFunctionPointerPair& cflux_coarse_ent_host,
                       const typename EstimatorType::DiscreteFunctionType& msfem_coarse_part,
                       const typename EstimatorType::IntersectionArray& coarse_face,
-                      const std::array< typename EstimatorType::DF_ptr_pair, 3 >& cflux_neighbor_ent_host,
+                      const std::array< typename EstimatorType::DiscreteFunctionPointerPair, 3 >& cflux_neighbor_ent_host,
                       const int index_coarse_entity,
                       const std::array<typename EstimatorType::RangeType, 3>& coarse_face_volume,
                       const int level_difference,

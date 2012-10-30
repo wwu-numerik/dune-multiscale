@@ -6,6 +6,8 @@
 #include <array>
 #include <boost/range/adaptor/map.hpp>
 #include <dune/stuff/common/fixed_map.hh>
+#include <dune/stuff/common/memory.hh>
+#include <dune/stuff/aliases.hh>
 #include <dune/multiscale/tools/misc.hh>
 
 // where the quadratures are defined
@@ -105,8 +107,8 @@ class MsFEMErrorEstimator
 
   typedef std::array<RangeType, 3> JumpArray;
   typedef std::array<const Intersection*, 3> IntersectionArray;
-  typedef std::unique_ptr< DiscreteFunctionType > DF_ptr;
-  typedef std::array< DF_ptr, 2 > DF_ptr_pair;
+  typedef std::unique_ptr< DiscreteFunctionType > DiscreteFunctionPointer;
+  typedef std::array< DiscreteFunctionPointer, 2 > DiscreteFunctionPointerPair;
   typedef Stuff::Common::FixedMap<std::string, RangeType, 6> ErrormapType;
 
   typedef EstimatorUtils<ThisType> EstimatorUtilsType;
@@ -235,17 +237,17 @@ private:
     }
 
 
-    DF_ptr_pair cflux_coarse_ent_host = {{
-    DF_ptr( new DiscreteFunctionType ("Conservative Flux on coarse entity for e_0",
+    DiscreteFunctionPointerPair cflux_coarse_ent_host = {{
+    DiscreteFunctionPointer( new DiscreteFunctionType ("Conservative Flux on coarse entity for e_0",
                                                   fineDiscreteFunctionSpace_)),
-    DF_ptr( new DiscreteFunctionType ("Conservative Flux on coarse entity for e_1",
+    DiscreteFunctionPointer( new DiscreteFunctionType ("Conservative Flux on coarse entity for e_1",
                                                   fineDiscreteFunctionSpace_)) }};
 
     EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent,
                                 cflux_coarse_ent_host);
 
     // flux for each neighbor entity
-    std::array< DF_ptr_pair, 3 > cflux_neighbor_ent_host;
+    std::array< DiscreteFunctionPointerPair, 3 > cflux_neighbor_ent_host;
 
     //!TODO save Intersection(s) instead
     IntersectionArray coarse_face;
@@ -287,9 +289,9 @@ private:
                                             % path_ % i % index_coarse_neighbor_entity).str();
           // reader for data file:
           DiscreteFunctionReader(cf_solution_location_neighbor).read(0, conservative_flux_coarse_ent_neighbor[i]);
-          cflux_neighbor_ent_host[local_face_index][i] = DF_ptr(new DiscreteFunctionType(
+          cflux_neighbor_ent_host[local_face_index][i] = DSC::make_unique<DiscreteFunctionType>(
             "Conservative Flux on neighbor coarse entity for e_" + Stuff::Common::toString(i),
-            fineDiscreteFunctionSpace_));
+            fineDiscreteFunctionSpace_);
         }
         EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent_neighbor,
                                     cflux_neighbor_ent_host[local_face_index]);
