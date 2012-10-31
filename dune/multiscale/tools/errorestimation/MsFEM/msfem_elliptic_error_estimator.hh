@@ -406,7 +406,7 @@ private:
 
         RangeType int_value = 0.0;
         for (int i = 0; i < dimension; ++i)
-          int_value[i] += (diffusive_flux_x[0][i] - diffusive_flux_outside[0][i]) * unitOuterNormal[i];
+          int_value += (diffusive_flux_x[0][i] - diffusive_flux_outside[0][i]) * unitOuterNormal[i];
         int_value = pow(int_value, 2.0);
 
         loc_fine_grid_jumps[coarse_father_index] += edge_length * edge_length * int_value;
