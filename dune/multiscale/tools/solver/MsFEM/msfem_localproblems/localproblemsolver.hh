@@ -750,9 +750,9 @@ public:
       }
 
 
-    const HostGridPartType& DUNE_UNUSED(hostGridPart) = hostDiscreteFunctionSpace_.gridPart();
+    const HostGridPartType& DUNE_UNUSED hostGridPart = hostDiscreteFunctionSpace_.gridPart();
 
-    HostGridType& DUNE_UNUSED(hostGrid) = hostDiscreteFunctionSpace_.gridPart().grid();
+    HostGridType& DUNE_UNUSED hostGrid = hostDiscreteFunctionSpace_.gridPart().grid();
 
     // number of coarse grid entities (of codim 0).
     int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
@@ -819,7 +819,7 @@ public:
       local_problem_solution_1.clear();
 
       // take time
-      DSC_PROFILER.startTiming("solvelocalproblem");
+      DSC_PROFILER.startTiming("local_problem_solution");
 
       // solve the problems
       solvelocalproblem(e[0], local_problem_solution_0);
