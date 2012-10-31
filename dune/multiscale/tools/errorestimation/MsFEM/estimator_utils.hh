@@ -127,10 +127,12 @@ struct EstimatorUtils {
 
         auto outside_sub_it = face_it_U_T->outside();
 
+        assert(cflux_neighbor_ent_host[relevant_face_index][0]);
+        assert(cflux_neighbor_ent_host[relevant_face_index][1]);
         auto loc_cf_coarse_neighbor_ent_e0
-          = (*cflux_neighbor_ent_host[0][relevant_face_index]).localFunction(host_entity);
+          = (*cflux_neighbor_ent_host[relevant_face_index][0]).localFunction(host_entity);
         auto loc_cf_coarse_neighbor_ent_e1
-          = (*cflux_neighbor_ent_host[1][relevant_face_index]).localFunction(host_entity);
+          = (*cflux_neighbor_ent_host[relevant_face_index][1]).localFunction(host_entity);
 
         auto loc_msfem_coarse_part_neighbor = msfem_coarse_part.localFunction(*outside_sub_it);
 

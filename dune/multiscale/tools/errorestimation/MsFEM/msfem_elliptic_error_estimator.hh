@@ -117,9 +117,9 @@ class MsFEMErrorEstimator
 
   //!-----------------------------------------------------------------------------------------
 
-  enum { dimension = GridType::dimension };
-  enum { spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder };
-  enum { maxnumOfBaseFct = 100 };
+  static const int dimension = GridType::dimension;
+  static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
+  static const int maxnumOfBaseFct = 100;
 
   const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace_;
   MacroMicroGridSpecifierType& specifier_;
@@ -238,10 +238,10 @@ private:
 
 
     DiscreteFunctionPointerPair cflux_coarse_ent_host = {{
-    DiscreteFunctionPointer( new DiscreteFunctionType ("Conservative Flux on coarse entity for e_0",
-                                                  fineDiscreteFunctionSpace_)),
-    DiscreteFunctionPointer( new DiscreteFunctionType ("Conservative Flux on coarse entity for e_1",
-                                                  fineDiscreteFunctionSpace_)) }};
+      DSC::make_unique<DiscreteFunctionType>("Conservative Flux on coarse entity for e_0",
+                                                  fineDiscreteFunctionSpace_),
+      DSC::make_unique<DiscreteFunctionType>("Conservative Flux on coarse entity for e_1",
+                                                  fineDiscreteFunctionSpace_) }};
 
     EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent,
                                 cflux_coarse_ent_host);
@@ -304,6 +304,15 @@ private:
     {
       DUNE_THROW(Dune::InvalidStateException,"Error! Implementation only for triangular mesh in 2d!");
     }
+
+    //! TODO this shouldn't be necessary if the same conditions here in init and in flux_contribution
+    // were met
+    for (int i :{0,1,2})
+      for (int j :{0,1})
+       if (!cflux_neighbor_ent_host[i][j])
+         cflux_neighbor_ent_host[i][j] = DSC::make_unique<DiscreteFunctionType>(
+                                           "DUMMY",
+                                           fineDiscreteFunctionSpace_);
 
     const auto contributions = EstimatorUtilsType::flux_contributions(localDiscreteFunctionSpace,
                                                   sub_grid_U_T,
