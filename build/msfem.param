@@ -1,0 +1,71 @@
+# Initfile
+
+[problem]
+epsilon_est = 0.5
+delta = 0.5
+error_tolerance = 1e-6
+# representative size of the micro structure
+epsilon = 0.1
+
+
+
+[grid]
+# starting level for the coarse grid
+coarse_level = 0
+
+
+###################### NEW:
+
+[global]
+# directory to save the data output
+datadir = data
+
+
+[logging]
+# logging specifications
+
+level = 62
+file = ms.log
+dir = data
+
+[problem]
+#problem specifications
+
+
+# method specifications (MsFEM and HMM)
+
+[msfem]
+
+# initial coarse grid level
+coarse_grid_level = 2 
+
+# initial fine grid level 
+fine_grid_level = 8
+
+# number of oversampling layers (layers of fine grid elements)
+oversampling_layers = 1
+
+# use error estimation and adaptivity?
+adaptivity = 0
+
+# error tolerance  
+error_tolerance = 1e-6
+
+[hmm]
+# initial coarse level
+coarse_level =
+
+# resolution level for the grid for the unit cube Y
+fine_level =
+
+# guess for epsilon (indicator for size of small scale)
+epsilon_guess =
+
+# oversampling parameter ( delta >= epsilon_guess )
+delta =
+
+# use error estimation and adaptivity?
+adaptivity = 
+
+# error tolerance  
+error_tolerance =

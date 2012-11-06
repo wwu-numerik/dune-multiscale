@@ -541,9 +541,13 @@ int main(int argc, char** argv) {
     std::string save_filename = path_ + "/problem-info.txt";
     DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
-    const int start_level = DSC_CONFIG_GET("grid.start_level", 4);
-    coarse_grid_level_ = DSC_CONFIG_GETV( "grid.coarse_level", 4, DSC::ValidateLess< int >(start_level) );
-    number_of_layers_ = DSC_CONFIG_GET("grid.oversampling_layers", 4);
+    // syntax: info_from_par_file / default  / validation of the value
+
+    // coarse_grid_level denotes the (starting) grid refinement level for the global coarse scale problem, i.e. it describes 'H'
+    coarse_grid_level_ = DSC_CONFIG_GETV( "msfem.coarse_grid_level", 4, DSC::ValidateLess< int >( -1 ) );
+
+    // syntax: info_from_par_file / default
+    number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
     #ifdef ADAPTIVE
     error_tolerance_ = DSC_CONFIG_GET("problem.error_tolerance", 1e-6);
@@ -553,9 +557,9 @@ int main(int argc, char** argv) {
     // (see 'problem_specification.hh' for details)
     const Problem::ModelProblemData info;
 
-    // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
+    // total_refinement_level denotes the (starting) grid refinement level for the global fine scale problem, i.e. it describes 'h'
     total_refinement_level_
-      = DSC_CONFIG_GETV( "grid.total_refinement", 4, DSC::ValidateLess< int >(coarse_grid_level_) );
+      = DSC_CONFIG_GETV( "msfem.fine_grid_level", 4, DSC::ValidateLess< int >(coarse_grid_level_-1) );
 
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
