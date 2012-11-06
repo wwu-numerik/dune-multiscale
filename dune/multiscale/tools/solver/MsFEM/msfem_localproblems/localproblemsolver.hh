@@ -14,7 +14,7 @@
 #define LOCPROBLEMSOLVER_VERBOSE false
 
 // VTK output for local problems
-// #define VTK_OUTPUT
+#define VTK_OUTPUT
 
 // write solutions of the local problems (vtk)
 // #define LOCALDATAOUTPUT
@@ -764,7 +764,7 @@ public:
     // typedefs and initialization
     #ifdef VTK_OUTPUT
 
-    typedef Tuple< HostDiscreteFunctionType* >      IOTupleType;
+    typedef tuple< HostDiscreteFunctionType* >      IOTupleType;
     typedef DataOutput< HostGridType, IOTupleType > DataOutputType;
 
     // general output parameters

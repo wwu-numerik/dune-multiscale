@@ -6,6 +6,7 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/exceptions.hh>
+#include <dune/stuff/grid/entity.hh>
 #include <dune/subgrid/subgrid.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
@@ -158,8 +159,10 @@ public:
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
 
+    // the fine grid part
     const HostGridPartType& hostGridPart = hostSpace_.gridPart();
 
+    // the fine grid
     HostGridType& hostGrid = hostSpace_.gridPart().grid();
 
     const int number_of_nodes = hostGrid.size(2 /*codim*/);
@@ -168,6 +171,7 @@ public:
 
     std::vector< std::vector< HostEntityPointerType > > entities_sharing_same_node(number_of_nodes);
 
+    // determine the entities that share a common global node with a given index
     for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it)
     {
       int number_of_nodes_in_entity = (*it).template count< 2 >();
@@ -180,6 +184,7 @@ public:
       }
     }
 
+    // determine the maximum number of oversampling layers
     int max_num_layers = 0;
     for (int i = 0; i < specifier_.getNumOfCoarseEntities(); i += 1)
     {
@@ -187,10 +192,10 @@ public:
       { max_num_layers = specifier_.getLayer(i); }
     }
 
-    // difference in levels between coarse and fine grid
+    // the difference in levels between coarse and fine grid
     const int level_difference = specifier_.getLevelDifference();
 
-    // number of coarse grid entities (of codim 0).
+    // the number of coarse grid entities (of codim 0).
     const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
@@ -238,6 +243,9 @@ public:
       }
     }
 
+    std::cout << "hostSpace_.size() = " << hostSpace_.size() << std::endl;// std :: abort();
+    std::cout << "hostSpace_.grid().size() = " << hostSpace_.grid().size(0) << std::endl;// std :: abort();
+
     // a fine grid iterator for the codim 0 hostgrid entities:
     const HostGridEntityIteratorType host_endit = hostSpace_.end();
     for (HostGridEntityIteratorType host_it = hostSpace_.begin();
@@ -245,17 +253,23 @@ public:
          ++host_it)
     {
       const HostEntityType& host_entity = *host_it;
+      Dune::Stuff::Grid::printEntity(host_entity);
 
       const int DUNE_UNUSED(number_of_nodes_in_entity) = (*host_it).template count< 2 >();
 
       // get the coarse-grid-father of host_entity (which is a maxlevel entity)
       HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                                                           HostEntityPointerType(*host_it),
+                                                                           HostEntityPointerType(host_entity),
                                                                            level_difference);
       const int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
 
       if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) )
-      { subGridList_[father_index]->insertPartial(host_entity); }
+      {
+          Dune::Stuff::Grid::printEntity(host_entity);
+//          std::cout << "SUBGRID " << father_index << " size 0 pre =" << subGridList_[father_index]->size(0);
+          subGridList_[father_index]->insertPartial(host_entity);
+//          std::cout << "\nSUBGRID " << father_index << " size 0 pos =" << subGridList_[father_index]->size(0) << std::endl;
+      }
 
       // check the neighbor entities and look if they belong to the same father
       // if yes, continue
@@ -287,6 +301,7 @@ public:
       { continue; }
 
       int layers = specifier_.getLayer(father_index);
+
       if (layers > 0)
       {
         HostEntityPointerType hep(*host_it);
@@ -294,6 +309,7 @@ public:
                    subGridList_[father_index], entities_sharing_same_node, layers, enriched);
       }
     }
+
 
     for (int i = 0; i < number_of_coarse_grid_entities; ++i)
     {

@@ -698,7 +698,7 @@ public:
 
   // create a hostgrid function from a subgridfunction
   void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func,
-                                   HostDiscreteFunctionType& host_func) {
+                                   HostDiscreteFunctionType& host_func) const {
     host_func.clear();
 
     const SubGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
@@ -725,7 +725,7 @@ public:
 
   void vtk_output(const SubGridDiscreteFunctionType& subgrid_disc_func,
                   const int sub_grid_index,
-                  const int direction_index) {
+                  const int direction_index) const {
     const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
 
     HostGridType& hostGrid = hostDiscreteFunctionSpace_.gridPart().grid();
