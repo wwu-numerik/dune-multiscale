@@ -200,7 +200,7 @@ public:
 
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
-    subGridList_ = SubGridStorageType(number_of_coarse_grid_entities, make_shared<SubGridType>(hostGrid));
+//    subGridList_ = SubGridStorageType();
 
     //! ----------- create subgrids --------------------
 
@@ -209,6 +209,7 @@ public:
     for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
     {
       const int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
+      subGridList_.push_back(make_shared<SubGridType>(hostGrid));
       subGridList_[coarse_index]->createBegin();
     }
 
@@ -243,9 +244,6 @@ public:
       }
     }
 
-    std::cout << "hostSpace_.size() = " << hostSpace_.size() << std::endl;// std :: abort();
-    std::cout << "hostSpace_.grid().size() = " << hostSpace_.grid().size(0) << std::endl;// std :: abort();
-
     // a fine grid iterator for the codim 0 hostgrid entities:
     const HostGridEntityIteratorType host_endit = hostSpace_.end();
     for (HostGridEntityIteratorType host_it = hostSpace_.begin();
@@ -266,9 +264,7 @@ public:
       if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) )
       {
           Dune::Stuff::Grid::printEntity(host_entity);
-//          std::cout << "SUBGRID " << father_index << " size 0 pre =" << subGridList_[father_index]->size(0);
           subGridList_[father_index]->insertPartial(host_entity);
-//          std::cout << "\nSUBGRID " << father_index << " size 0 pos =" << subGridList_[father_index]->size(0) << std::endl;
       }
 
       // check the neighbor entities and look if they belong to the same father

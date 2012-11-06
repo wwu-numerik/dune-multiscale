@@ -43,7 +43,7 @@ coarse_grid_level = 0
 fine_grid_level = 2
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 0
+oversampling_layers = 1
 
 # use error estimation and adaptivity?
 adaptivity = 0
