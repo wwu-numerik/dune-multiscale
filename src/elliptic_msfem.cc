@@ -434,9 +434,10 @@ void algorithm(const std::string& macroGridName) {
                   fine_part_msfem_solution, outputparam);
 
   // error estimation
-  MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_);
-  error_estimation(msfem_solution, coarse_part_msfem_solution,
-                  fine_part_msfem_solution, estimator, specifier);
+  if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
+    MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_);
+    error_estimation(msfem_solution, coarse_part_msfem_solution,
+                  fine_part_msfem_solution, estimator, specifier); }
 
   #ifdef ADAPTIVE
   if (total_estimated_H1_error <= error_tolerance_)
@@ -548,7 +549,7 @@ int main(int argc, char** argv) {
     number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
     #ifdef ADAPTIVE
-    error_tolerance_ = DSC_CONFIG_GET("problem.error_tolerance", 1e-6);
+    error_tolerance_ = DSC_CONFIG_GET("msfem.error_tolerance", 1e-6);
     #endif   // ifdef ADAPTIVE
 
     // data for the model problem; the information manager

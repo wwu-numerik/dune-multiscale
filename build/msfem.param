@@ -1,11 +1,11 @@
 # Initfile
 
 [problem]
-epsilon_est = 0.5
-delta = 0.5
-error_tolerance = 1e-6
+epsilon_est = 0.05
+delta = 0.05
+
 # representative size of the micro structure
-epsilon = 0.1
+epsilon = 0.05
 
 
 
@@ -35,18 +35,19 @@ dir = logdata
 #problem specifications
 
 
-# method specifications (MsFEM and HMM)
+#### method specifications (MsFEM and HMM) #####
+
 
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 0 
+coarse_grid_level = 2 
 
 # initial fine grid level 
-fine_grid_level = 4
+fine_grid_level = 6
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 0
+oversampling_layers = 10
 
 # oversampling strategy 1, 2 or 3.
 # !!! key not yet activated !!!
@@ -59,8 +60,13 @@ petrov_galerkin = 1
 # use error estimation and adaptivity?
 adaptivity = 0
 
+# compute the estimated error?
+error_estimation = 1
+
 # error tolerance  
 error_tolerance = 1e-6
+
+
 
 [hmm]
 # initial coarse level
