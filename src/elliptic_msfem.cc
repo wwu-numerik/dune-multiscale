@@ -312,28 +312,10 @@ void error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solut
                       Dune::MsfemTraits::MacroMicroGridSpecifierType& specifier)
 {
   using namespace Dune;
-  DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
-  L2Error< MsfemTraits::DiscreteFunctionType > l2error;
-  H1Error< MsfemTraits::DiscreteFunctionType > h1error;
-  //! ----------------- compute L2- and H1- errors -------------------
-  if (Problem::ModelProblemData::has_exact_solution)
-  {
-    const MsfemTraits::ExactSolutionType u;
-    MsfemTraits::RangeType msfem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
-                                                              msfem_solution,
-                                                              2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
-    DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
 
-    MsfemTraits::RangeType h1_msfem_error(0.0);
-    h1_msfem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, msfem_solution);
-    h1_msfem_error += msfem_error;
-    DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
-  }
-
-  // error estimation
   MsfemTraits::RangeType total_estimated_H1_error(0.0);
 
-
+  // error estimation
   total_estimated_H1_error = estimator.adaptive_refinement(msfem_solution,
                                                            coarse_part_msfem_solution,
                                                            fine_part_msfem_solution);
@@ -451,6 +433,7 @@ void algorithm(const std::string& macroGridName) {
   solution_output(msfem_solution, coarse_part_msfem_solution,
                   fine_part_msfem_solution, outputparam);
 
+  // error estimation
   MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_);
   error_estimation(msfem_solution, coarse_part_msfem_solution,
                   fine_part_msfem_solution, estimator, specifier);
@@ -500,7 +483,22 @@ void algorithm(const std::string& macroGridName) {
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
+
+    H1Error< MsfemTraits::DiscreteFunctionType > h1error;
+
     const MsfemTraits::ExactSolutionType u;
+
+    MsfemTraits::RangeType msfem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
+                                                              msfem_solution,
+                                                              2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
+    DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
+
+    MsfemTraits::RangeType h1_msfem_error(0.0);
+    h1_msfem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, msfem_solution);
+    h1_msfem_error += msfem_error;
+    DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
+
+
     MsfemTraits::RangeType fem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
                                                             fem_solution,
                                                             2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
@@ -508,7 +506,7 @@ void algorithm(const std::string& macroGridName) {
     DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
 
     MsfemTraits::RangeType h1_fem_error(0.0);
-    H1Error< MsfemTraits::DiscreteFunctionType > h1error;
+
     h1_fem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, fem_solution);
     h1_fem_error += fem_error;
     DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
@@ -533,13 +531,13 @@ int main(int argc, char** argv) {
     namespace DSC = Dune::Stuff::Common;
     //!TODO include base in config
     DSC_PROFILER.startTiming("msfem_all");
-    path_ = std::string("MsFEM/");
+
+    path_ = DSC_CONFIG_GET("global.datadir", "data");
 
     // generate directories for data output
     DSC::testCreateDirectory(path_);
 
-    std::string save_filename = path_ + "/problem-info.txt";
-    DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
+    DSC_LOG_INFO << "Data will be saved under: " << path_ +  "/" + DSC_CONFIG_GET("logging.dir", "log") + "/ms.log.log" << std::endl;
 
     // syntax: info_from_par_file / default  / validation of the value
 

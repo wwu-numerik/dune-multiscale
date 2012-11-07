@@ -251,7 +251,7 @@ public:
          ++host_it)
     {
       const HostEntityType& host_entity = *host_it;
-      Dune::Stuff::Grid::printEntity(host_entity);
+      // Dune::Stuff::Grid::printEntity(host_entity);
 
       const int DUNE_UNUSED(number_of_nodes_in_entity) = (*host_it).template count< 2 >();
 
@@ -262,10 +262,7 @@ public:
       const int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
 
       if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) )
-      {
-          Dune::Stuff::Grid::printEntity(host_entity);
-          subGridList_[father_index]->insertPartial(host_entity);
-      }
+      { subGridList_[father_index]->insertPartial(host_entity); }
 
       // check the neighbor entities and look if they belong to the same father
       // if yes, continue

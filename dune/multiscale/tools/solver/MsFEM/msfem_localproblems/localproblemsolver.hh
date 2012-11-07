@@ -791,7 +791,7 @@ public:
                    << "Coarse index " << coarse_index << std::endl;
 
       const std::string locprob_solution_location =
-          (boost::format("%s/_localProblemSolutions_%d") % path_ % coarse_index).str();
+          (boost::format("%s_localProblemSolutions_%d") % path_ % coarse_index).str();
 
       DiscreteFunctionWriter dfw(locprob_solution_location);
 

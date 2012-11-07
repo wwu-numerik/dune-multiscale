@@ -18,7 +18,7 @@ coarse_level = 0
 
 [global]
 # directory to save the data output
-datadir = data
+datadir = data/MsFEM/test_problem
 
 
 [logging]
@@ -26,7 +26,10 @@ datadir = data
 
 level = 62
 file = ms.log
-dir = data
+
+# logging directory relative to datadir
+# data will be saved under 'datadir/dir'
+dir = logdata
 
 [problem]
 #problem specifications
@@ -40,10 +43,18 @@ dir = data
 coarse_grid_level = 0 
 
 # initial fine grid level 
-fine_grid_level = 2
+fine_grid_level = 4
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 1
+oversampling_layers = 0
+
+# oversampling strategy 1, 2 or 3.
+# !!! key not yet activated !!!
+oversampling_strategy = 1
+
+# use the MsFEM in Petrov-Galerkin (unsymmetric) formulation
+# !!! key not yet activated !!!
+petrov_galerkin = 1
 
 # use error estimation and adaptivity?
 adaptivity = 0
