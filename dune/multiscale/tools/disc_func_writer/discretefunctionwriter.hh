@@ -165,7 +165,7 @@ public:
     assert( size_ >= long( bytes * (index + 1) ) );
     file_->seekg(bytes * index);
 
-    for (auto dof : df)
+    for (auto& dof : df)
     {
       file_->read( reinterpret_cast< char* >( &(dof) ), sizeof(Field) );
     }

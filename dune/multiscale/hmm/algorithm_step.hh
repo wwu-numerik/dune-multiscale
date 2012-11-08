@@ -155,7 +155,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   if (relative_newton_error <= hmm_tolerance)
   {
       const auto newton_step_time = DSC_PROFILER.stopTiming("newton_step_", hmm_iteration_step);
-      DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
+      DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "ms."
                 << std::endl << std::endl;
       DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
       DSC_LOG_INFO << "....................................................." << std::endl << std::endl;

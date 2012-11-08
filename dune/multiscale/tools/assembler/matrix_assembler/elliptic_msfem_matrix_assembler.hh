@@ -10,6 +10,8 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
+#include <dune/stuff/fem/functions/checks.hh>
+
 namespace Dune {
 
 /**
@@ -159,8 +161,6 @@ private:
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
   SubGridListType& subgrid_list_;
   const DiffusionModel& diffusion_operator_;
-  //! path where to save the data output
-  const std::string path_;
 };
 
 // create a hostgrid function from a subgridfunction
@@ -264,8 +264,8 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
 
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
-    const std::string local_solution_location = (boost::format("%s/local_problems/_localProblemSolutions_%d")
-                                                % path_  % global_index_entity).str();
+    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
+                                                % global_index_entity).str();
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
     discrete_function_reader.read(0, local_problem_solution_e0);

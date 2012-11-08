@@ -595,7 +595,7 @@ int main(int argc, char** argv) {
     // macro problem
 
     const auto cpu_time = DSC_PROFILER.stopTiming("msfem_all");
-    DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
+    DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
     return 0;
   } catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;

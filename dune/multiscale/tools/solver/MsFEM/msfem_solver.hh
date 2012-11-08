@@ -588,6 +588,8 @@ public:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
+      Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(local_problem_solution_e0, "local_problem_solution_e0", DSC_LOG_DEBUG);
+      Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(local_problem_solution_e1, "local_problem_solution_e1", DSC_LOG_DEBUG);
 
       LocalFunction local_coarse_part = coarse_msfem_solution.localFunction(*coarse_it);
 
@@ -668,6 +670,7 @@ public:
           host_loc_value[i] = ( sub_loc_value[i] / coarse_entities.size() );
         }
       }
+      Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(correction_on_U_T, "correction_on_U_T", DSC_LOG_DEBUG);
       fine_scale_part += correction_on_U_T;
     }
     DSC_LOG_INFO << " done." << std::endl;
@@ -675,13 +678,8 @@ public:
     // ------------------------------------------------------------------------------------
 
     // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
-    auto kop = Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(coarse_scale_part);
-    auto pok = Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(fine_scale_part);
-    DSC_LOG_DEBUG << "coarse_scale_dofs ";
-    kop.output(DSC_LOG_DEBUG);
-    DSC_LOG_DEBUG << "fine_scale_dofs ";
-    pok.output(DSC_LOG_DEBUG);
-    DSC_LOG_DEBUG.flush();
+    Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(coarse_scale_part, "coarse_scale_dofs", DSC_LOG_DEBUG);
+    Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(fine_scale_part, "fine_scale_dofs", DSC_LOG_DEBUG);
     solution += coarse_scale_part;
     solution += fine_scale_part;
   } // solve_dirichlet_zero
