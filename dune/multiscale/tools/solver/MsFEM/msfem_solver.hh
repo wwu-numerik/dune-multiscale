@@ -15,6 +15,8 @@
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 
+#include <dune/stuff/fem/functions/checks.hh>
+
 // / done
 
 namespace Dune {
@@ -673,6 +675,13 @@ public:
     // ------------------------------------------------------------------------------------
 
     // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
+    auto kop = Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(coarse_scale_part);
+    auto pok = Dune::Stuff::Fem::getMinMaxOfDiscreteFunction(fine_scale_part);
+    DSC_LOG_DEBUG << "coarse_scale_dofs ";
+    kop.output(DSC_LOG_DEBUG);
+    DSC_LOG_DEBUG << "fine_scale_dofs ";
+    pok.output(DSC_LOG_DEBUG);
+    DSC_LOG_DEBUG.flush();
     solution += coarse_scale_part;
     solution += fine_scale_part;
   } // solve_dirichlet_zero
