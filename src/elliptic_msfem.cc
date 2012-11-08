@@ -175,7 +175,7 @@ void adapt(Dune::MsfemTraits::GridType& grid,
 void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
                      const Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                     myDataOutputParameters& outputparam)
+                     Dune::myDataOutputParameters& outputparam)
 {
   using namespace Dune;
   //! ----------------- writing data output MsFEM Solution -----------------
@@ -249,19 +249,18 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
 
   // ----------------------------------------------------------------------
   // ---------------------- write discrete msfem solution to file ---------
-  const std::string location = (boost::format("%s/msfem_solution_discFunc_refLevel_%d_%d")
-                                % path_ %  total_refinement_level_ % coarse_grid_level_).str();
+  const std::string location = (boost::format("msfem_solution_discFunc_refLevel_%d_%d")
+                                %  total_refinement_level_ % coarse_grid_level_).str();
   DiscreteFunctionWriter(location).append(msfem_solution);
   //! --------------------------------------------------------------------
 }
 
 void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
                  const Dune::MsfemTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
-                 myDataOutputParameters& outputparam)
+                 Dune::myDataOutputParameters& outputparam)
 {
   using namespace Dune;
   // sequence stamp
-  std::stringstream outstring;
   //! --------------------------------------------------------------------------------------
 
   //! -------------------------- writing data output Exact Solution ------------------------
@@ -276,10 +275,7 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
     MsfemTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
 
     // write data
-    outstring << "exact-solution";
-    exactsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-    // clear the std::stringstream:
-    outstring.str( std::string() );
+    exactsol_dataoutput.writeData( 1.0 /*dummy*/, "exact-solution" );
     // -------------------------------------------------------
   }
   //! --------------------------------------------------------------------------------------
@@ -291,16 +287,11 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
   // -------------------------- data output -------------------------
   // create and initialize output class
   MsfemTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
-  char coarse_grid_fname[50];
-  sprintf(coarse_grid_fname, "coarse_grid_visualization_%d_", loop_number_);
-  const std::string coarse_grid_fname_s(coarse_grid_fname);
-  outputparam.set_prefix(coarse_grid_fname_s);
+  const auto coarse_grid_fname = (boost::format("coarse_grid_visualization_%d_") % loop_number_).str();
+  outputparam.set_prefix(coarse_grid_fname);
   MsfemTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
   // write data
-  outstring << coarse_grid_fname_s;
-  coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
+  coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, coarse_grid_fname );
   // -------------------------------------------------------
   //! --------------------------------------------------------------------------------------
 }
@@ -394,8 +385,7 @@ void algorithm(const std::string& macroGridName) {
   const MsfemTraits::FirstSourceType f; // standard source f
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
-  myDataOutputParameters outputparam;
-  outputparam.set_path(path_);
+  Dune::myDataOutputParameters outputparam;
   data_output(gridPart, discreteFunctionSpace_coarse, outputparam);
 
   //! ---------------------- solve MsFEM problem ---------------------------
@@ -425,7 +415,7 @@ void algorithm(const std::string& macroGridName) {
   MsfemTraits::SubGridListType subgrid_list(specifier, silence);
 
   // just for Dirichlet zero-boundary condition
-  Elliptic_MsFEM_Solver< MsfemTraits::DiscreteFunctionType > msfem_solver(discreteFunctionSpace, path_);
+  Elliptic_MsFEM_Solver< MsfemTraits::DiscreteFunctionType > msfem_solver(discreteFunctionSpace);
   msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
                                     coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
 
@@ -435,7 +425,7 @@ void algorithm(const std::string& macroGridName) {
 
   // error estimation
   if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
-    MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f, path_);
+    MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
     error_estimation(msfem_solution, coarse_part_msfem_solution,
                   fine_part_msfem_solution, estimator, specifier); }
 
@@ -476,8 +466,8 @@ void algorithm(const std::string& macroGridName) {
   // -------------------------------------------------------------
 
   // ------------- write discrete fem solution to file -----------
-  const std::string fine_location = (boost::format("%s/fem_solution_discFunc_refLevel_%d")
-                                     % path_ % total_refinement_level_).str();
+  const std::string fine_location = (boost::format("fem_solution_discFunc_refLevel_%d")
+                                     % total_refinement_level_).str();
   DiscreteFunctionWriter(fine_location).append(fem_solution);
 
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
@@ -533,12 +523,13 @@ int main(int argc, char** argv) {
     //!TODO include base in config
     DSC_PROFILER.startTiming("msfem_all");
 
-    path_ = DSC_CONFIG_GET("global.datadir", "data");
+    const std::string datadir = DSC_CONFIG_GET("global.datadir", "data");
 
     // generate directories for data output
-    DSC::testCreateDirectory(path_);
+    DSC::testCreateDirectory(datadir);
 
-    DSC_LOG_INFO << "Data will be saved under: " << path_ +  "/" + DSC_CONFIG_GET("logging.dir", "log") + "/ms.log.log" << std::endl;
+    DSC_LOG_INFO << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log")
+                            % datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
 
     // syntax: info_from_par_file / default  / validation of the value
 

@@ -113,22 +113,17 @@ public:
                                 // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                                 // n(T)-layers:
                                 SubGridListType& subgrid_list,
-                                const DiffusionModel& diffusion_op,
-                                std::string path = "")
+                                const DiffusionModel& diffusion_op)
     : specifier_(specifier)
       , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
       , subgrid_list_(subgrid_list)
-      , diffusion_operator_(diffusion_op)
-      , path_(path) {
+      , diffusion_operator_(diffusion_op) {
     bool silence = false;
 
     // coarseDiscreteFunctionSpace_ = specifier_.coarseSpace();
     // fineDiscreteFunctionSpace_ = specifier_.fineSpace();
-
-    std::string local_path = path_ + "/local_problems/";
-
     MsFEMLocalProblemSolverType loc_prob_solver(
-      specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_, local_path);
+      specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_);
 
     loc_prob_solver.assemble_all(silence);
   }

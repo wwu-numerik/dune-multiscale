@@ -116,7 +116,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   // writing paraview data output
 
   // general output parameters
-  myDataOutputParameters outputparam;
+  Dune::myDataOutputParameters outputparam;
   outputparam.set_path("data/HMM/" + filename);
 
   // sequence stamp

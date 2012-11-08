@@ -27,49 +27,20 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
-// define output traits
+/** \brief define output parameters for local problems
+ *  appends "local_problems" for path
+ **/
 struct LocalProblemDataOutputParameters
-  : public DataOutputParameters
+  : public myDataOutputParameters
 {
 public:
-  std::string my_prefix_;
-  std::string my_path_;
-
-  void set_prefix(std::string my_prefix) {
-    my_prefix_ = my_prefix;
-    // std :: cout << "Set prefix. my_prefix_ = " << my_prefix_ << std :: endl;
-  }
-
-  void set_path(std::string my_path) {
-    my_path_ = my_path;
-  }
-
-  // base of file name for data file
-  std::string prefix() const {
-    if (my_prefix_ == "")
-      return "solutions";
-    else
-      return my_prefix_;
-  }
-
-  // path where the data is stored
-  std::string path() const {
-    if (my_path_ == "")
-      return "data_output_hmm";
-    else
-      return my_path_;
-  }
-
-  // format of output:
-  int outputformat() const {
-    // return 0; // GRAPE (lossless format)
-    return 1; // VTK
-    // return 2; // VTK vertex data
-    // return 3; // gnuplot
-  }
+  explicit LocalProblemDataOutputParameters()
+    : myDataOutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/")
+  {}
 };
 
 // Imp stands for Implementation
@@ -516,8 +487,6 @@ private:
   const DiffusionOperatorType& diffusion_;
   const MacroMicroGridSpecifierType& specifier_;
   SubGridListType& subgrid_list_;
-  //! path where to save the data output
-  const std::string path_;
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
@@ -527,13 +496,11 @@ public:
   MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                           const MacroMicroGridSpecifierType& specifier,
                           SubGridListType& subgrid_list,
-                          const DiffusionOperatorType& diffusion_operator,
-                          std::string path = "")
+                          const DiffusionOperatorType& diffusion_operator)
     : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
       , diffusion_(diffusion_operator)
       , specifier_(specifier)
       , subgrid_list_(subgrid_list)
-      , path_(path)
   {}
 
   template< class Stream >
@@ -735,7 +702,8 @@ public:
 
   // Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
   void assemble_all(bool /*silent*/ = true /* state information on subgrids */) {
-    Dune::Stuff::Common::testCreateDirectory(path_);
+    std::string local_path = DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/";
+    Dune::Stuff::Common::testCreateDirectory(local_path);
 
     enum { dimension = MsfemTraits::GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
@@ -769,8 +737,6 @@ public:
 
     // general output parameters
     LocalProblemDataOutputParameters outputparam;
-    outputparam.set_path(path_);
-
     // sequence stamp
     std::stringstream outstring;
     // -------------------------------------------------------
@@ -791,7 +757,7 @@ public:
                    << "Coarse index " << coarse_index << std::endl;
 
       const std::string locprob_solution_location =
-          (boost::format("%s_localProblemSolutions_%d") % path_ % coarse_index).str();
+          (boost::format("local_problems/_localProblemSolutions_%d") % coarse_index).str();
 
       DiscreteFunctionWriter dfw(locprob_solution_location);
 

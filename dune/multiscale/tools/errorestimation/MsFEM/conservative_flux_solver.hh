@@ -24,52 +24,22 @@
 #include <dune/stuff/common/math.hh>
 
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 
 // / done
 
 namespace Dune {
-// define output traits
+/** \brief define output parameters for local problems
+ *  appends "local_problems" for path
+ **/
 struct ConFluxProblemDataOutputParameters
-  : public DataOutputParameters
+  : public myDataOutputParameters
 {
 public:
-  std::string my_prefix_;
-  std::string my_path_;
-
-  void set_prefix(std::string my_prefix) {
-    my_prefix_ = my_prefix;
-    // std :: cout << "Set prefix. my_prefix_ = " << my_prefix_ << std :: endl;
-  }
-
-  void set_path(std::string my_path) {
-    my_path_ = my_path;
-  }
-
-  // base of file name for data file
-  std::string prefix() const {
-    if (my_prefix_ == "")
-      return "solutions";
-    else
-      return my_prefix_;
-  }
-
-  // path where the data is stored
-  std::string path() const {
-    if (my_path_ == "")
-      return "data_output_msfem_conservative_flux";
-    else
-      return my_path_;
-  }
-
-  // format of output:
-  int outputformat() const {
-    // return 0; // GRAPE (lossless format)
-    return 1; // VTK
-    // return 2; // VTK vertex data
-    // return 3; // gnuplot
-  }
+  explicit ConFluxProblemDataOutputParameters()
+    : myDataOutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/cf_problems/")
+  {}
 };
-
 // Imp stands for Implementation
 template< class SubGridDiscreteFunctionType, class DiscreteFunctionType, class DiffusionOperatorType,
           class MacroMicroGridSpecifierType >
@@ -594,20 +564,17 @@ private:
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
 
   const MacroMicroGridSpecifierType& specifier_;
-
-  // path where to save the data output
-  const std::string path_;
+  mutable boost::format filename_template_;
 
 public:
   //! constructor - with diffusion operator A^{\epsilon}(x)
   ConservativeFluxProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                                 const DiffusionOperatorType& diffusion_operator,
-                                const MacroMicroGridSpecifierType& specifier,
-                                std::string path = "")
+                                const MacroMicroGridSpecifierType& specifier)
     : diffusion_(diffusion_operator)
       , hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
       , specifier_(specifier)
-      , path_(path)
+      , filename_template_(boost::format("_conservativeFlux_e_%d_sg_%d"))
   {}
 
   template< class Stream >
@@ -687,7 +654,6 @@ public:
       DUNE_THROW(Dune::InvalidStateException,"Solution of the Local Flux Problem is invalid!");
     }
 
-    Dune::Stuff::Common::testCreateDirectory(path_ + "/cf_problems");
     #ifdef VTK_OUTPUT
     vtk_output(conservative_flux, sub_grid_id, direction_index);
     #endif
@@ -715,7 +681,7 @@ public:
       SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
       HostLocalFunctionType host_loc_value = host_func.localFunction(host_entity);
 
-      const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+      const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         host_loc_value[i] = sub_loc_value[i];
@@ -726,21 +692,13 @@ public:
   void vtk_output(const SubGridDiscreteFunctionType& subgrid_disc_func,
                   const int sub_grid_index,
                   const int direction_index) const {
-    const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
-
-    HostGridType& hostGrid = hostDiscreteFunctionSpace_.gridPart().grid();
-
     // --------------- writing data output ---------------------
     // typedefs and initialization
-    typedef tuple< HostDiscreteFunctionType* >      IOTupleType;
+    typedef Dune::tuple< HostDiscreteFunctionType* >      IOTupleType;
     typedef DataOutput< HostGridType, IOTupleType > DataOutputType;
 
     // general output parameters
     ConFluxProblemDataOutputParameters outputparam;
-    outputparam.set_path(path_ + "/cf_problems/");
-
-    // sequence stamp
-    std::stringstream outstring;
     // -------------------------------------------------------
 
     HostDiscreteFunctionType host_disc_func("Conservative Flux", hostDiscreteFunctionSpace_);
@@ -748,26 +706,19 @@ public:
 
     // create and initialize output class
     IOTupleType conservative_flux_series(&host_disc_func);
-
-    char cf_name_0[50];
-    sprintf(cf_name_0, "conservative_flux_e_%d_sg_%d", direction_index, sub_grid_index);
-    std::string cf_name_0_s(cf_name_0);
-
-    outputparam.set_prefix(cf_name_0_s);
+    filename_template_ % direction_index % sub_grid_index;
+    outputparam.set_prefix(filename_template_.str());
     DataOutputType cf_dataoutput(hostDiscreteFunctionSpace_.gridPart().grid(), conservative_flux_series, outputparam);
 
-    // write data
-    outstring << "conservative-flux";
-    cf_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-    // clear the std::stringstream:
-    outstring.str( std::string() );
+    cf_dataoutput.writeData( 1.0 /*dummy*/, "conservative-flux" );
   } // vtk_output
 
   void file_data_output(const SubGridDiscreteFunctionType& subgrid_disc_func,
                         const int sub_grid_index,
                         const int direction_index) const {
-    const std::string locprob_solution_location = (boost::format("%s/cf_problems/_conservativeFlux_e_%d_sg_%d")
-                                                    % path_ % direction_index % sub_grid_index).str();
+    const std::string locprob_solution_location
+        = std::string("cf_problems/")
+          + (filename_template_ % direction_index % sub_grid_index).str();
     DiscreteFunctionWriter(locprob_solution_location).append(subgrid_disc_func);
   } // file_data_output
 
@@ -818,8 +769,8 @@ public:
 
       // --------- load local solutions -------
       // the file/place, where we saved the solutions of the cell problems
-      const std::string local_solution_location = (boost::format("%s/local_problems/_localProblemSolutions_%d")
-                                            % path_ % global_index_entity).str();
+      const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
+                                            % global_index_entity).str();
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);

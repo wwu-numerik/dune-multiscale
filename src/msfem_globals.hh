@@ -4,7 +4,7 @@
 //! ---------------------- important variables ---------------------------------
 // name of the error file in which the data will be saved
 std::string filename_;
-std::string path_;
+//std::string path_;
 int total_refinement_level_;
 int coarse_grid_level_;
 // only for uniform computations / use the same number of layers for every coarse grid entity

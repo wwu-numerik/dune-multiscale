@@ -126,21 +126,18 @@ class MsFEMErrorEstimator
   SubGridListType& subgrid_list_;
   const DiffusionOperatorType& diffusion_;
   const SourceType& f_;
-  const std::string& path_;
 
 public:
   MsFEMErrorEstimator(const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace,
                       MacroMicroGridSpecifierType& specifier,
                       SubGridListType& subgrid_list,
                       const DiffusionOperatorType& diffusion,
-                      const SourceType& f,
-                      const std::string& path)
+                      const SourceType& f)
     : fineDiscreteFunctionSpace_(fineDiscreteFunctionSpace)
       , specifier_(specifier)
       , subgrid_list_(subgrid_list)
       , diffusion_(diffusion)
       , f_(f)
-      , path_(path)
   {}
 
 private:
@@ -229,10 +226,10 @@ private:
         SubGridDiscreteFunctionType ("Conservative Flux on coarse entity for e_1",
                                                                     localDiscreteFunctionSpace) }};
     // --------- load local solutions -------
-    boost::format flux_location("%s/cf_problems/_conservativeFlux_e_%d_sg_%d");
+    boost::format flux_location("cf_problems/_conservativeFlux_e_%d_sg_%d");
     for( int i : {0,1}) {
       conservative_flux_coarse_ent[i].clear();
-      const std::string cf_solution_location = (flux_location % path_ % i % index_coarse_entity).str();
+      const std::string cf_solution_location = (flux_location % i % index_coarse_entity).str();
       DiscreteFunctionReader(cf_solution_location).read(0, conservative_flux_coarse_ent[i]);
     }
 
@@ -286,7 +283,7 @@ private:
         for( int i : {0,1}) {
           conservative_flux_coarse_ent_neighbor[i].clear();
           const std::string cf_solution_location_neighbor = (flux_location
-                                            % path_ % i % index_coarse_neighbor_entity).str();
+                                            % i % index_coarse_neighbor_entity).str();
           // reader for data file:
           DiscreteFunctionReader(cf_solution_location_neighbor).read(0, conservative_flux_coarse_ent_neighbor[i]);
           cflux_neighbor_ent_host[local_face_index][i] = DSC::make_unique<DiscreteFunctionType>(
@@ -475,8 +472,8 @@ private:
 
       // --------- load local solutions -------
       // the file/place, where we saved the solutions of the cell problems
-      const std::string local_solution_location = (boost::format("%s/local_problems/_localProblemSolutions_%d")
-                                % path_ % global_index_entity).str();
+      const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
+                                % global_index_entity).str();
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
@@ -578,7 +575,7 @@ public:
                                             DiffusionOperatorType, MacroMicroGridSpecifierImp >
         ConservativeFluxProblemSolverType;
     ConservativeFluxProblemSolverType flux_problem_solver(fineDiscreteFunctionSpace_,
-                                                          diffusion_, specifier_, path_);
+                                                          diffusion_, specifier_);
     flux_problem_solver.solve_all(subgrid_list_);
 
     DSC_LOG_INFO << "Conservative fluxes computed successfully." << std::endl;
