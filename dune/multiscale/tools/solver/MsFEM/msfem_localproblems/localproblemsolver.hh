@@ -6,6 +6,7 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/stuff/common/filesystem.hh>
+#include <dune/stuff/fem/functions/checks.hh>
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
@@ -792,7 +793,6 @@ public:
 
       cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
       DSC_PROFILER.resetTiming("local_problem_solution");
-
 
       dfw.append(local_problem_solution_0);
 
