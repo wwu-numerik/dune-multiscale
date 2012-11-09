@@ -78,8 +78,7 @@ struct EstimatorUtils {
                       const typename EstimatorType::LeafIndexSetType& coarseGridLeafIndexSet,
                       const typename EstimatorType::DiscreteFunctionPointerPair& cflux_coarse_ent_host,
                       const typename EstimatorType::DiscreteFunctionType& msfem_coarse_part,
-                      const typename EstimatorType::IntersectionArray& coarse_face,
-                      const std::array< typename EstimatorType::DiscreteFunctionPointerPair, 3 >& cflux_neighbor_ent_host,
+                      typename EstimatorType::FluxContainerType& cflux_neighbor_ent_host,
                       const int index_coarse_entity,
                       const std::array<typename EstimatorType::RangeType, 3>& coarse_face_volume,
                       const int level_difference,
@@ -111,28 +110,18 @@ struct EstimatorUtils {
       for (auto face_it_U_T = fineDiscreteFunctionSpace.gridPart().ibegin(host_entity);
            face_it_U_T != end_it_U_T; ++face_it_U_T)
       {
-        int relevant_face_index = -1;
-
-        if ( is_subface(*face_it_U_T, *coarse_face[0]) )
-        { relevant_face_index = 0; }
-
-        if ( is_subface(*face_it_U_T, *coarse_face[1]) )
-        { relevant_face_index = 1; }
-
-        if ( is_subface(*face_it_U_T, *coarse_face[2]) )
-        { relevant_face_index = 2; }
+        int relevant_face_index = cflux_neighbor_ent_host.intersection_compatible(*face_it_U_T);
 
         if ( (relevant_face_index == -1) || (!face_it_U_T->neighbor()) )
         { continue; }
 
         auto outside_sub_it = face_it_U_T->outside();
-
-        assert(cflux_neighbor_ent_host[relevant_face_index][0]);
-        assert(cflux_neighbor_ent_host[relevant_face_index][1]);
+        assert(cflux_neighbor_ent_host.fluxes[relevant_face_index][0]);
+        assert(cflux_neighbor_ent_host.fluxes[relevant_face_index][1]);
         auto loc_cf_coarse_neighbor_ent_e0
-          = (*cflux_neighbor_ent_host[relevant_face_index][0]).localFunction(host_entity);
+          = (*cflux_neighbor_ent_host.fluxes[relevant_face_index][0]).localFunction(host_entity);
         auto loc_cf_coarse_neighbor_ent_e1
-          = (*cflux_neighbor_ent_host[relevant_face_index][1]).localFunction(host_entity);
+          = (*cflux_neighbor_ent_host.fluxes[relevant_face_index][1]).localFunction(host_entity);
 
         auto loc_msfem_coarse_part_neighbor = msfem_coarse_part.localFunction(*outside_sub_it);
 

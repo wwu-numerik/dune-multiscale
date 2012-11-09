@@ -7,7 +7,10 @@
 #include <boost/range/adaptor/map.hpp>
 #include <dune/stuff/common/fixed_map.hh>
 #include <dune/stuff/common/memory.hh>
+#include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
+#include <dune/stuff/grid/entity.hh>
+#include <dune/stuff/grid/intersection.hh>
 #include <dune/multiscale/tools/misc.hh>
 
 // where the quadratures are defined
@@ -15,6 +18,40 @@
 
 #include <dune/multiscale/tools/errorestimation/MsFEM/conservative_flux_solver.hh>
 #include "estimator_utils.hh"
+
+template < class DiscreteFunctionPointerPair,
+           class EntityPointer,
+           class GridPartType,
+           int N = 3 >
+struct FluxContainer {
+  FluxContainer(const EntityPointer _entity, const GridPartType& _grid_part)
+    : entity(_entity)
+    , grid_part(_grid_part)
+  {}
+
+  std::array< DiscreteFunctionPointerPair, N > fluxes;
+  const EntityPointer entity;
+  const GridPartType& grid_part;
+
+  template < class SmallerIntersectionType >
+  int intersection_compatible(const SmallerIntersectionType& smaller) const {
+    int j = 0;
+    for(auto& intersection : DSC::intersectionRange(grid_part, *entity)) {
+      assert(intersection.dimension == SmallerIntersectionType::dimension);
+      bool compatible = true;
+      if (intersection.geometry().corners() != smaller.geometry().corners())
+        return false;
+      for(auto i : DSC::valueRange(intersection.geometry().corners())) {
+        const bool contains = DSG::intersectionContains(intersection, smaller.geometry().corner(i));
+        compatible = compatible && contains;
+      }
+      if(compatible)
+        return j;
+      j++;
+    }
+    return -1;
+  }
+};
 
 namespace Dune {
 template< class DiscreteFunctionImp,
@@ -109,6 +146,7 @@ class MsFEMErrorEstimator
   typedef std::array<const Intersection*, 3> IntersectionArray;
   typedef std::unique_ptr< DiscreteFunctionType > DiscreteFunctionPointer;
   typedef std::array< DiscreteFunctionPointer, 2 > DiscreteFunctionPointerPair;
+  typedef FluxContainer< DiscreteFunctionPointerPair, EntityPointerType, GridPartType, 3 > FluxContainerType;
   typedef Stuff::Common::FixedMap<std::string, RangeType, 6> ErrormapType;
 
   typedef EstimatorUtils<ThisType> EstimatorUtilsType;
@@ -243,21 +281,16 @@ private:
     EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent,
                                 cflux_coarse_ent_host);
 
-    // flux for each neighbor entity
-    std::array< DiscreteFunctionPointerPair, 3 > cflux_neighbor_ent_host;
-
-    //!TODO save Intersection(s) instead
-    IntersectionArray coarse_face;
     std::array<RangeType, 3> coarse_face_volume;
 
     const GridPartType& coarseGridPart = specifier_.coarseSpace().gridPart();
+    // flux for each neighbor entity
+    FluxContainerType cflux_neighbor_ent_host(coarse_entity, coarseGridPart);
 
     int local_face_index = 0;
-
     IntersectionIteratorType endnit = coarseGridPart.iend(coarse_entity);
     for (IntersectionIteratorType face_it = coarseGridPart.ibegin(coarse_entity); face_it != endnit; ++face_it)
     {
-      coarse_face[local_face_index] = face_it.operator->();
       coarse_face_volume[local_face_index] = face_it->geometry().volume();
 
       if ( face_it->neighbor() )
@@ -286,12 +319,12 @@ private:
                                             % i % index_coarse_neighbor_entity).str();
           // reader for data file:
           DiscreteFunctionReader(cf_solution_location_neighbor).read(0, conservative_flux_coarse_ent_neighbor[i]);
-          cflux_neighbor_ent_host[local_face_index][i] = DSC::make_unique<DiscreteFunctionType>(
+          cflux_neighbor_ent_host.fluxes[local_face_index][i] = DSC::make_unique<DiscreteFunctionType>(
             "Conservative Flux on neighbor coarse entity for e_" + Stuff::Common::toString(i),
             fineDiscreteFunctionSpace_);
         }
         EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent_neighbor,
-                                    cflux_neighbor_ent_host[local_face_index]);
+                                    cflux_neighbor_ent_host.fluxes[local_face_index]);
       }
 
       local_face_index += 1;
@@ -302,21 +335,11 @@ private:
       DUNE_THROW(Dune::InvalidStateException,"Error! Implementation only for triangular mesh in 2d!");
     }
 
-    //! TODO this shouldn't be necessary if the same conditions here in init and in flux_contribution
-    // were met
-    for (int i :{0,1,2})
-      for (int j :{0,1})
-       if (!cflux_neighbor_ent_host[i][j])
-         cflux_neighbor_ent_host[i][j] = DSC::make_unique<DiscreteFunctionType>(
-                                           "DUMMY",
-                                           fineDiscreteFunctionSpace_);
-
     const auto contributions = EstimatorUtilsType::flux_contributions(localDiscreteFunctionSpace,
                                                   sub_grid_U_T,
                                                   coarseGridLeafIndexSet,
                                                   cflux_coarse_ent_host,
                                                   msfem_coarse_part,
-                                                  coarse_face,
                                                   cflux_neighbor_ent_host,
                                                   index_coarse_entity,
                                                   coarse_face_volume,
