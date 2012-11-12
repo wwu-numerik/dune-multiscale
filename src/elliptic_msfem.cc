@@ -186,14 +186,14 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
   std::stringstream outstring;
   #ifdef ADAPTIVE
     char msfem_fname[50];
-    sprintf(msfem_fname, "msfem_solution_%d_", loop_number_);
+    sprintf(msfem_fname, "/msfem_solution_%d_", loop_number_);
     std::string msfem_fname_s(msfem_fname);
     outputparam.set_prefix(msfem_fname_s);
     DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
     // write data
     outstring << msfem_fname_s;
   #else // ifdef ADAPTIVE
-    outputparam.set_prefix("msfem_solution");
+    outputparam.set_prefix("/msfem_solution");
     MsfemTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
     // write data
     outstring << "msfem_solution";
@@ -208,14 +208,14 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
 
   #ifdef ADAPTIVE
     char coarse_msfem_fname[50];
-    sprintf(coarse_msfem_fname, "coarse_part_msfem_solution_%d_", loop_number_);
+    sprintf(coarse_msfem_fname, "/coarse_part_msfem_solution_%d_", loop_number_ );
     const std::string coarse_msfem_fname_s(coarse_msfem_fname);
     outputparam.set_prefix(coarse_msfem_fname_s);
     DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
     // write data
     outstring << coarse_msfem_fname_s;
   #else // ifdef ADAPTIVE
-    outputparam.set_prefix("coarse_part_msfem_solution");
+    outputparam.set_prefix("/coarse_part_msfem_solution");
     MsfemTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
     // write data
     outstring << "coarse_part_msfem_solution";
@@ -230,14 +230,14 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
 
   #ifdef ADAPTIVE
     char fine_msfem_fname[50];
-    sprintf(fine_msfem_fname, "fine_part_msfem_solution_%d_", loop_number_);
+    sprintf(fine_msfem_fname, "/fine_part_msfem_solution_%d_", loop_number_);
     std::string fine_msfem_fname_s(fine_msfem_fname);
     outputparam.set_prefix(fine_msfem_fname_s);
     MsfemTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
     // write data
     outstring << fine_msfem_fname_s;
   #else // ifdef ADAPTIVE
-    outputparam.set_prefix("fine_part_msfem_solution");
+    outputparam.set_prefix("/fine_part_msfem_solution");
     MsfemTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
     // write data
     outstring << "fine_msfem_solution";
@@ -268,12 +268,10 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
   {
     const MsfemTraits::ExactSolutionType u;
     const MsfemTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
-
     // create and initialize output class
     MsfemTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-    outputparam.set_prefix("exact_solution");
+    outputparam.set_prefix("/exact_solution");
     MsfemTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
-
     // write data
     exactsol_dataoutput.writeData( 1.0 /*dummy*/, "exact-solution" );
     // -------------------------------------------------------
@@ -287,7 +285,8 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
   // -------------------------- data output -------------------------
   // create and initialize output class
   MsfemTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
-  const auto coarse_grid_fname = (boost::format("coarse_grid_visualization_%d_") % loop_number_).str();
+
+  const auto coarse_grid_fname = (boost::format("/coarse_grid_visualization_%d_") % loop_number_).str();
   outputparam.set_prefix(coarse_grid_fname);
   MsfemTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
   // write data
@@ -383,6 +382,7 @@ void algorithm(const std::string& macroGridName) {
   const MsfemTraits::DiffusionType diffusion_op;
   // define (first) source term:
   const MsfemTraits::FirstSourceType f; // standard source f
+
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
   Dune::myDataOutputParameters outputparam;
@@ -453,7 +453,7 @@ void algorithm(const std::string& macroGridName) {
   // ------------- VTK data output for FEM solution --------------
   // create and initialize output class
   MsfemTraits::IOTupleType fem_solution_series(&fem_solution);
-  outputparam.set_prefix("fem_solution");
+  outputparam.set_prefix("/fem_solution");
   MsfemTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
   // write data
@@ -523,7 +523,7 @@ int main(int argc, char** argv) {
     //!TODO include base in config
     DSC_PROFILER.startTiming("msfem_all");
 
-    const std::string datadir = DSC_CONFIG_GET("global.datadir", "data");
+    const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output
     DSC::testCreateDirectory(datadir);
