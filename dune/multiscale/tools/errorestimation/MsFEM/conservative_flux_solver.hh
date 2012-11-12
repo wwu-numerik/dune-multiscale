@@ -574,7 +574,7 @@ public:
     : diffusion_(diffusion_operator)
       , hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
       , specifier_(specifier)
-      , filename_template_(boost::format("_conservativeFlux_e_%d_sg_%d"))
+      , filename_template_(boost::format("/_conservativeFlux_e_%d_sg_%d"))
   {}
 
   template< class Stream >
