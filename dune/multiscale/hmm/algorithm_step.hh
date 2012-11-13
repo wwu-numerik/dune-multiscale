@@ -117,7 +117,6 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
 
   // general output parameters
   Dune::myDataOutputParameters outputparam;
-  outputparam.set_path("data/HMM/" + filename);
 
   // sequence stamp
   std::stringstream outstring;
@@ -557,8 +556,7 @@ HMMResult<HMMTraits>
 
     //! --------------- writing data output ---------------------
     // general output parameters
-    myDataOutputParameters outputparam;
-    outputparam.set_path("data/HMM/" + filename);
+    Dune::myDataOutputParameters outputparam;
 
     // sequence stamp
     std::stringstream outstring;
