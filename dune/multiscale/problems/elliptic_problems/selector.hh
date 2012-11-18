@@ -18,7 +18,7 @@
 namespace Problem {
 //this pulls everything from the subnamespace into Problem and should only be done for the "active" problem
 #ifndef PROBLEM_NAME
-  using namespace Problem::Ten;
+  using namespace Problem::Nine;
 #else
   using namespace Problem::PROBLEM_NAME;
 #endif
