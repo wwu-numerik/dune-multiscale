@@ -71,7 +71,10 @@ struct LGFunctor
         auto geo = ent.geometry();
         auto kk = lg_points.point(i);
         auto ll = geo.global(kk);
-        DSC_LOG_DEBUG << kk << " (" << ll << ") ";
+        auto idx = lg_points.entityDofNumber(key.codim(), key.subEntity(), key.index());
+        auto global_idx = df_space_.mapper().mapToGlobal(ent, idx);
+        DSC_LOG_DEBUG << boost::format("local point %f/%f | global point %f/%f | local idx %d | global idx %d\n")
+                         % kk[0] % kk[1] % ll[0] % ll[1] % idx % global_idx;
       }
     }
     DSC_LOG_DEBUG << "\n" << std::endl;
