@@ -135,6 +135,9 @@ set_target_properties(elliptic_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${M
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
+ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(lg-test ${COMMON_LIBS} )
+
 add_subdirectory(doc)
 add_subdirectory(dune)
 
