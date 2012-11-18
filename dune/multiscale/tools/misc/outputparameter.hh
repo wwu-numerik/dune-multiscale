@@ -13,10 +13,10 @@ struct myDataOutputParameters
   : public Dune::DataOutputParameters
 {
 public:
-  explicit myDataOutputParameters(const std::string path
+  explicit myDataOutputParameters(const std::string _path
                                   = DSC_CONFIG_GET("global.datadir", "data"))
     : my_prefix_("solutions")
-    , my_path_(path)
+    , my_path_(_path)
   {
     Dune::Stuff::Common::testCreateDirectory(my_path_);
   }
