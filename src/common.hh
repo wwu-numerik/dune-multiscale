@@ -8,7 +8,9 @@
 #endif // ifdef HAVE_CMAKE_CONFIG
 
 // polynomial order of discrete space
-#define POLORDER 1
+#ifndef POLORDER
+  #define POLORDER 1
+#endif
 
 #ifndef USE_GRAPE
  #define USE_GRAPE HAVE_GRAPE
