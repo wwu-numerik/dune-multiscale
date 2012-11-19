@@ -583,6 +583,27 @@ HMMResult<HMMTraits>
     outstring.str( std::string() );
     // -------------------------------------------------------
 
+/*
+    // --------- VTK data output for MsFEM solution --------------------------
+
+    Dune::myDataOutputParameters outputparam;
+
+    MsfemTraits::IOTupleType msfem_solution_series(&msfem_solution);
+    const auto& gridPart = msfem_solution.space().gridPart();
+
+    std::stringstream outstring;
+
+    outputparam.set_prefix("msfem_solution");
+    // (set_path gibt es in der MsFEM nicht mehr)
+    MsfemTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
+    outstring << "msfem_solution";
+
+    msfem_dataoutput.writeData( 1.0, outstring.str() );
+    // clear the std::stringstream:
+    outstring.str( std::string() );
+*/
+
+
     if (HMM::ModelProblemDataType::has_exact_solution) {
       // --------- data output discrete exact solution --------------
 
