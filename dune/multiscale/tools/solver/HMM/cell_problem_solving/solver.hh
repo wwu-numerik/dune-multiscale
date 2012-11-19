@@ -64,6 +64,7 @@ public:
 private:
   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_; // Referenz &, wenn & verwendet, dann unten:
   const DiffusionType& diffusion_;
+  static const std::string subdir_; /*"cell_problems"*/
 
 public:
   //! constructor - with diffusion operator A^{\epsilon}(x)
@@ -335,8 +336,8 @@ public:
   template< class DiscreteFunctionImp, class CellProblemNumberingManagerImp >
   void saveTheSolutions_baseSet(
     const typename DiscreteFunctionImp::DiscreteFunctionSpaceType& discreteFunctionSpace,
-    const CellProblemNumberingManagerImp& cp_num_manager,   // just to check, if we use the correct numeration
-    const std::string& filename) const {
+    const CellProblemNumberingManagerImp& cp_num_manager   // just to check, if we use the correct numeration
+      ) const {
     typedef DiscreteFunctionImp DiscreteFunctionType;
 
     typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
@@ -365,7 +366,7 @@ public:
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
 
-    std::string cell_solution_location = "HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
+    std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
     DiscreteFunctionWriter dfw(cell_solution_location);
 
     DSC_PROFILER.startTiming("solver-saveTheSolutions_baseSet");
@@ -451,8 +452,7 @@ public:
    **/
   template< class DiscreteFunctionImp >
   void saveTheSolutions_discFunc(
-    const DiscreteFunctionImp& macro_discrete_function,
-    const std::string& filename) const {
+    const DiscreteFunctionImp& macro_discrete_function) const {
     typedef DiscreteFunctionImp DiscreteFunctionType;
 
     typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
@@ -480,7 +480,7 @@ public:
 
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
-    std::string cell_solution_location = "HMM/" + filename + "_cellSolutions_discFunc";
+    std::string cell_solution_location = subdir_ + "/_cellSolutions_discFunc";
     DiscreteFunctionWriter dfw(cell_solution_location);
 
     DSC_PROFILER.startTiming("solver-saveTheSolutions_discFunc");
@@ -540,8 +540,8 @@ public:
   template< class DiscreteFunctionImp, class CellProblemNumberingManagerImp >
   void saveTheJacCorSolutions_baseSet_discFunc(
     const DiscreteFunctionImp& macro_discrete_function,
-    const CellProblemNumberingManagerImp& cp_num_manager,   // just to check, if we use the correct numeration
-    const std::string& filename) const {
+    const CellProblemNumberingManagerImp& cp_num_manager   // just to check, if we use the correct numeration
+    ) const {
     typedef DiscreteFunctionImp DiscreteFunctionType;
 
     typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
@@ -572,11 +572,11 @@ public:
     enum { dimension = GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
     // where we save the solutions:
-    const std::string cell_solution_location = "HMM/" + filename + "_JacCorCellSolutions_baseSet_discFunc";
+    const std::string cell_solution_location = subdir_ + "/_JacCorCellSolutions_baseSet_discFunc";
     DiscreteFunctionWriter dfw(cell_solution_location);
     // where we saved the solutions for the discrete function
     // NOTE: they already need to be assembled, i.e. we already applied the method saveSolutions_discFunc!
-    const std::string cell_solution_discFunc_location = "HMM/" + filename + "_cellSolutions_discFunc";
+    const std::string cell_solution_discFunc_location = subdir_ + "/_cellSolutions_discFunc";
 
     // reader for the cell problem data file (discrete functions):
     DiscreteFunctionReader discrete_function_reader(cell_solution_discFunc_location);
@@ -674,5 +674,9 @@ public:
                   << total_time << "s," << std::endl << std::endl;
   } // saveTheJacCorSolutions_baseSet_discFunc
 }; // end class
+
+template< class T, class S >
+const std::string CellProblemSolver<T,S>::subdir_ = "cell_problems";
+
 } //namespace Dune {
 #endif // DUNEMS_HMM_CELL_SOLVER_HH

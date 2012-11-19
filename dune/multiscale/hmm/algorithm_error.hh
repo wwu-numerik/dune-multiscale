@@ -44,12 +44,9 @@ struct HMMResult {
 template < class HMMTraits >
 HMMResult<HMMTraits>  estimate_error(
         const typename HMMTraits::GridPartType& gridPart,
-        const typename HMMTraits::GridPartType& /*gridPartFine*/,
         const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename HMMTraits::DiffusionType& diffusion_op,
-        const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& /*rhsassembler*/,
-        const std::string filename,
         const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
         const typename HMMTraits::DiscreteFunctionType& hmm_solution
          )
@@ -65,9 +62,9 @@ HMMResult<HMMTraits>  estimate_error(
   // Notation: u_H = hmm_solution
   // to load the solutions of the cell problems:
   // location of the solutions of the cell problems for the base function set:
-  const std::string cell_solution_location_baseSet = "HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
+  const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
   // location of the solutions of the cell problems for the discrete function u_H:
-  const std::string cell_solution_location_discFunc = "HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
+  const std::string cell_solution_location_discFunc = "/cell_problems/_cellSolutions_discFunc";
 
   DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);
   DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);

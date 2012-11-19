@@ -69,13 +69,11 @@ public:
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                               const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
                               const DiffusionModel& diffusion_op,
-                              const CellProblemNumberingManager& cp_num_manager,
-                              const std::string& filename)
+                              const CellProblemNumberingManager& cp_num_manager)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
     , cp_num_manager_(cp_num_manager)
-    , filename_(filename)
   {}
 
 private:
