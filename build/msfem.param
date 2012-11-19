@@ -9,16 +9,12 @@ epsilon = 0.05
 
 
 
-[grid]
-# starting level for the coarse grid
-coarse_level = 0
-
 
 ###################### NEW:
 
 [global]
 # directory to save the data output
-datadir = data/MsFEM/test_problem
+datadir = data/HMM/test_problem
 
 
 [logging]
@@ -41,10 +37,10 @@ dir = logdata
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 2 
+coarse_grid_level = 0 
 
 # initial fine grid level 
-fine_grid_level = 6
+fine_grid_level = 4
 
 # number of oversampling layers (layers of fine grid elements)
 oversampling_layers = 10
@@ -69,17 +65,19 @@ error_tolerance = 1e-6
 
 
 [hmm]
-# initial coarse level
-coarse_level =
-
-# resolution level for the grid for the unit cube Y
-fine_level =
 
 # guess for epsilon (indicator for size of small scale)
 epsilon_guess =
 
 # oversampling parameter ( delta >= epsilon_guess )
 delta =
+
+# initial coarse level
+coarse_grid_level = 4
+
+# resolution level for the grid for the unit cube Y
+cell_grid_level = 4
+# 'effective fine grid level' = 'epslion guess' * 'cell grid size'
 
 # use error estimation and adaptivity?
 adaptivity = 

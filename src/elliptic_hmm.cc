@@ -48,7 +48,11 @@ int main(int argc, char** argv) {
     namespace DSC = Dune::Stuff::Common;
 
     DSC_PROFILER.startTiming("total_cpu");
-    const std::string path = std::string("HMM/");
+
+    const std::string path = DSC_CONFIG_GET("global.datadir", "data/");
+
+    // generate directories for data output
+    DSC::testCreateDirectory(path);
 
     if ( DSC_CONFIG_GET("problem.stochastic_pertubation", false)) {
       //! Do we want to force the algorithm to come to an end?
@@ -64,14 +68,14 @@ int main(int argc, char** argv) {
     // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
     // (vorlauefig sollte diese Variante aber reichen)
     const std::string save_filename = DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)
-                                      ? std::string(path + "/problem-info-resumed-computation.txt")
-                                      : std::string(path + "/problem-info.txt");
+                                      ? std::string(path + "problem-info-resumed-computation.txt")
+                                      : std::string(path + "problem-info.txt");
     DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-    const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
+    const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
     // grid refinement level for solving the cell problems, i.e. it describes 'h':
-    const int refinement_level_cellgrid = DSC_CONFIG_GET("grid.refinement_level_cellgrid", 1);
+    const int refinement_level_cellgrid = DSC_CONFIG_GET("hmm.cell_grid_level", 4);
     // (starting) grid refinement level for solving the reference problem
     int refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
     // in general: for the homogenized case = 11 and for the high resolution case = 14
