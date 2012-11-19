@@ -422,8 +422,7 @@ public:
                                       // for the cell problems)
                                       const CellProblemNumberingManagerType& cp_num_manager,
                                       const PeriodicDiscreteFunctionType& dummy_func,
-                                      DiscreteFunctionType& rhsVector,
-                                      const std::string filename)
+                                      DiscreteFunctionType& rhsVector)
   {
     typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
       PeriodicDiscreteFunctionSpaceType;
@@ -432,8 +431,8 @@ public:
       PeriodicLocalFunctionType;
 
     typedef CellProblemSolver< PeriodicDiscreteFunctionType, DiffusionOperatorType > CellProblemSolverType;
-    const std::string cell_solution_location_baseSet = "HMM/" + filename + "/cell_problems/_cellSolutions_baseSet";
-    const std::string cell_solution_location_discFunc = "HMM/" + filename + "/cell_problems/_cellSolutions_discFunc";
+    const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
+    const std::string cell_solution_location_discFunc ="/cell_problems/_cellSolutions_discFunc";
 
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);

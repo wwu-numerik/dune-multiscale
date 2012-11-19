@@ -410,25 +410,27 @@ void algorithm(const std::string& macroGridName) {
     specifier.setLayer(i, number_of_layers_);
   }
 
+
   //! create subgrids:
   const bool silence = false;
-  MsfemTraits::SubGridListType subgrid_list(specifier, silence);
+  {//this scopes subgridlist
+    MsfemTraits::SubGridListType subgrid_list(specifier, silence);
 
-  // just for Dirichlet zero-boundary condition
-  Elliptic_MsFEM_Solver< MsfemTraits::DiscreteFunctionType > msfem_solver(discreteFunctionSpace);
-  msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
-                                    coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
+    // just for Dirichlet zero-boundary condition
+    Elliptic_MsFEM_Solver< MsfemTraits::DiscreteFunctionType > msfem_solver(discreteFunctionSpace);
+    msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
+                                      coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
 
-  DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
-  solution_output(msfem_solution, coarse_part_msfem_solution,
-                  fine_part_msfem_solution, outputparam);
+    DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
+    solution_output(msfem_solution, coarse_part_msfem_solution,
+                    fine_part_msfem_solution, outputparam);
 
-  // error estimation
-  if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
-    MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
-    error_estimation(msfem_solution, coarse_part_msfem_solution,
-                  fine_part_msfem_solution, estimator, specifier); }
-
+    // error estimation
+    if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
+      MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
+      error_estimation(msfem_solution, coarse_part_msfem_solution,
+                    fine_part_msfem_solution, estimator, specifier); }
+  }
   #ifdef ADAPTIVE
   if (total_estimated_H1_error <= error_tolerance_)
     repeat_algorithm_ = false;

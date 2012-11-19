@@ -48,7 +48,7 @@ struct MsfemTraits {
   typedef std::vector< RangeVector > RangeVectorVector;
   //! defines the function space to which the numerical solution belongs to
   //! see dune/fem/lagrangebase.hh
-  typedef Dune::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >  // 1 = POLORDER
+  typedef Dune::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, POLORDER >  // 1 = POLORDER
     DiscreteFunctionSpaceType;
 
   typedef Dune::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;

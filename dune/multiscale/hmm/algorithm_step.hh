@@ -51,13 +51,12 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
                                  const typename HMM::FEMMatrix& hmm_newton_matrix,
                                  const typename HMM::DiscreteFunctionType& hmm_newton_rhs,
                                  const int hmm_iteration_step,
-                                 const std::string& filename,
                                  const double hmm_tolerance
                                  )
 {
   //! residual vector
   // current residual
-  typename HMM::DiscreteFunctionType hmm_newton_residual(filename + "HMM Newton Residual", hmm_solution.space());
+  typename HMM::DiscreteFunctionType hmm_newton_residual("HMM Newton Residual", hmm_solution.space());
   hmm_newton_residual.clear();
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
   if (!DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
@@ -107,8 +106,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
           hmm_iteration_step);
   std::string fname_s(fname);
 
-  const std::string location = "HMM/" + filename + fname_s;
-  DiscreteFunctionWriter(location).append(hmm_solution);
+  DiscreteFunctionWriter(fname_s).append(hmm_solution);
 
   // if you want an utput for all newton steps, even for an adaptive computation, use:
   // #endif
@@ -117,7 +115,6 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
 
   // general output parameters
   Dune::myDataOutputParameters outputparam;
-  outputparam.set_path("data/HMM/" + filename);
 
   // sequence stamp
   std::stringstream outstring;
@@ -173,7 +170,6 @@ HMMResult<HMMTraits>
         typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename HMMTraits::DiffusionType& diffusion_op,
         const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& rhsassembler,
-        const std::string filename,
         typename HMMTraits::DiscreteFunctionType& hmm_solution,
         const typename HMMTraits::DiscreteFunctionType& fem_newton_solution
         )
@@ -209,8 +205,7 @@ HMMResult<HMMTraits>
     const typename HMM::EllipticHMMOperatorType discrete_elliptic_hmm_op(discreteFunctionSpace,
                                                      periodicDiscreteFunctionSpace,
                                                      diffusion_op,
-                                                     cp_num_manager,
-                                                     filename);
+                                                     cp_num_manager);
 
     // ----------------------------------------------------------------------------------------------//
     // ----------------------------------------------------------------------------------------------//
@@ -226,7 +221,7 @@ HMMResult<HMMTraits>
 
 
     // starting value for the Newton method
-    typename HMM::DiscreteFunctionType zero_func_coarse(filename + " constant zero function coarse ", discreteFunctionSpace);
+    typename HMM::DiscreteFunctionType zero_func_coarse( " constant zero function coarse ", discreteFunctionSpace);
     zero_func_coarse.clear();
 
     if (DSC_CONFIG_GET("problem.linear", true)) {
@@ -237,14 +232,10 @@ HMMResult<HMMTraits>
             typename HMM::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
         const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
         DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
-        // generate directory for cell problem data output
-        const std::string cell_path = "path";// + "/cell_problems/";assert(false);//path was not in scope
-        Dune::Stuff::Common::testCreateDirectory(cell_path);
         // -------------- solve cell problems for the macro basefunction set ------------------------------
         // save the solutions of the cell problems for the set of macroscopic base functions
         cell_problem_solver.template saveTheSolutions_baseSet< typename HMM::DiscreteFunctionType >(discreteFunctionSpace,
-                                                                             cp_num_manager,
-                                                                             cell_path);
+                                                                             cp_num_manager);
         // ------------- end solving and saving cell problems for the macro basefunction set --------------
         //! --------------- end solving and saving cell problems -----------------------------------------
       }
@@ -280,15 +271,13 @@ HMMResult<HMMTraits>
           const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
           DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
             // generate directory for cell problem data output
-          Dune::Stuff::Common::testCreateDirectory("data/HMM/" + filename + "/cell_problems/");
           // only for the case with test function reconstruction:
           if (DSC_CONFIG_GET("TFR", false)) {
             // -------------- solve cell problems for the macro basefunction set ------------------------------
             // save the solutions of the cell problems for the set of macroscopic base functions
 
             cell_problem_solver.template saveTheSolutions_baseSet< typename HMM::DiscreteFunctionType >(discreteFunctionSpace,
-                                                                                 cp_num_manager,
-                                                                                 filename + "/cell_problems/");
+                                                                                 cp_num_manager);
 
             DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
             // end solving and saving cell problems
@@ -318,8 +307,8 @@ HMMResult<HMMTraits>
         const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
         // std :: string location_hmm_newton_step_solution = "data/HMM/test/hmm_solution_discFunc_refLevel_5_NewtonStep_2";
         const std::string location_hmm_newton_step_solution =
-            (boost::format("HMM/%s/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
-             % filename % refinement_level_macrogrid_ % DSC_CONFIG_GET("HMM_NEWTON_ITERATION_STEP", 0)).str();
+            (boost::format("hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
+             % refinement_level_macrogrid_ % DSC_CONFIG_GET("HMM_NEWTON_ITERATION_STEP", 0)).str();
 
         // reader for the cell problem data file:
         DiscreteFunctionReader discrete_function_reader_hmm_newton_ref(location_hmm_newton_step_solution);
@@ -347,10 +336,9 @@ HMMResult<HMMTraits>
           // solve cell problems for the solution of the last iteration step
           const Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType,
               typename HMM::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
-          cell_problem_solver.template saveTheSolutions_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution, filename + "/cell_problems/");
+          cell_problem_solver.template saveTheSolutions_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution);
           cell_problem_solver.template saveTheJacCorSolutions_baseSet_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution,
-                                                                                              cp_num_manager,
-                                                                                              filename + "/cell_problems/");
+                                                                                              cp_num_manager);
         }
 
         // to assemble the computational time
@@ -370,8 +358,7 @@ HMMResult<HMMTraits>
           hmm_solution,
           cp_num_manager,
           dummy_periodic_func,
-          hmm_newton_rhs,
-          filename);
+          hmm_newton_rhs);
         DSC_LOG_INFO << "Right hand side assembled!" << std::endl;
 
         if ( !( hmm_newton_rhs.dofsValid() ) )
@@ -400,7 +387,7 @@ HMMResult<HMMTraits>
         boundaryTreatment(hmm_newton_rhs);
 
         if (!process_hmm_newton_residual<HMM>(relative_newton_error, hmm_solution, hmm_newton_matrix, hmm_newton_rhs,
-                                    hmm_iteration_step, filename, hmm_tolerance)) {
+                                    hmm_iteration_step, hmm_tolerance)) {
           break;//invalid dofs in residual or
         }
 
@@ -435,8 +422,8 @@ HMMResult<HMMTraits>
       #endif
     } //if not problem.linear
 
-    const auto retval = estimate_error<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                   diffusion_op, rhsassembler, filename, cp_num_manager, hmm_solution);
+    const auto retval = estimate_error<HMM>(gridPart, discreteFunctionSpace, periodicDiscreteFunctionSpace,
+                   diffusion_op, cp_num_manager, hmm_solution);
 
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
     #ifdef WRITE_HMM_SOL_TO_FILE
@@ -445,7 +432,7 @@ HMMResult<HMMTraits>
     char fname[40];
     sprintf(fname, "/hmm_solution_discFunc_refLevel_%d", refinement_level_macrogrid_);
     std::string fname_s(fname);
-    std::string location = "HMM/" + filename + fname_s;
+    std::string location = fname_s;
     DiscreteFunctionWriter(location).append(hmm_solution);
     #endif // ifndef ADAPTIVE
     #endif   // #ifdef WRITE_HMM_SOL_TO_FILE
@@ -456,7 +443,7 @@ HMMResult<HMMTraits>
       char fine_fname[50];
       sprintf(fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
       std::string fine_fname_s(fine_fname);
-      std::string fine_location = "HMM/" + filename + fine_fname_s;
+      std::string fine_location = fine_fname_s;
       DiscreteFunctionWriter(fine_location).append(fem_newton_solution);
     }
 
@@ -557,8 +544,7 @@ HMMResult<HMMTraits>
 
     //! --------------- writing data output ---------------------
     // general output parameters
-    myDataOutputParameters outputparam;
-    outputparam.set_path("data/HMM/" + filename);
+    Dune::myDataOutputParameters outputparam;
 
     // sequence stamp
     std::stringstream outstring;

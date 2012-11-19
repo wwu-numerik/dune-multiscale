@@ -534,13 +534,13 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
     //! solution vector
     // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the
     // non-linear system of equations
-    typename HMM::DiscreteFunctionType hmm_solution(filename + " HMM (+Newton) Solution", discreteFunctionSpace);
+    typename HMM::DiscreteFunctionType hmm_solution(" HMM (+Newton) Solution", discreteFunctionSpace);
     hmm_solution.clear();
 
     typename HMM::RestrictProlongOperatorType rp(hmm_solution);
     typename HMM::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                diffusion_op, rhsassembler, filename, hmm_solution, fem_newton_solution);
+                diffusion_op, rhsassembler, hmm_solution, fem_newton_solution);
 
     if (!DSC_CONFIG_GET("hmm.adaptive", true))
       break;
