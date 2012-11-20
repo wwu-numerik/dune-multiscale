@@ -299,7 +299,7 @@ void solve_cell_problems_linear(const typename HMM::PeriodicDiscreteFunctionSpac
 
 template < class HMM >
 bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
-                                 const typename HMM::DiscreteFunctionType& hmm_solution,
+                                 typename HMM::DiscreteFunctionType& hmm_solution,
                                  const typename HMM::FEMMatrix& hmm_newton_matrix,
                                  const typename HMM::DiscreteFunctionType& hmm_newton_rhs,
                                  const int hmm_iteration_step,
