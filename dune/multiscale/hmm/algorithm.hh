@@ -540,7 +540,7 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
     typename HMM::RestrictProlongOperatorType rp(hmm_solution);
     typename HMM::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                diffusion_op, rhsassembler, hmm_solution, fem_newton_solution);
+                diffusion_op, rhsassembler, hmm_solution, fem_newton_solution, loop_cycle);
 
     if (!DSC_CONFIG_GET("hmm.adaptive", true))
       break;
