@@ -215,11 +215,11 @@ HMMResult<HMMTraits>  estimate_error(
     result.estimated_error += result.estimated_tfr_error;
   }
 
-  #ifdef ADAPTIVE
-  // maximum variation (up) from average
-  result.max_variation = result.average_loc_indicator / result.maximal_loc_indicator;
-  result.min_variation = result.average_loc_indicator / result.minimal_loc_indicator;
-  #endif // ifdef ADAPTIVE
+  if (DSC_CONFIG_GET("adaptive", false)) {
+    // maximum variation (up) from average
+    result.max_variation = result.average_loc_indicator / result.maximal_loc_indicator;
+    result.min_variation = result.average_loc_indicator / result.minimal_loc_indicator;
+  }
   return result;
 }//! -------- End Error Estimation --------
 
