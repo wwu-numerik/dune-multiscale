@@ -310,7 +310,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
 
-//  if ( DSC_CONFIG_GET("msfem.oversampling_strategy", 1) ) {}
+  const RangeType DUNE_UNUSED(rhs_L2_Norm) = 0.0;
 
   const Iterator end = discreteFunctionSpace.end();
   for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
@@ -809,7 +809,7 @@ public:
       IOTupleType local_solution_series_0(&host_local_solution);
 
       char ls_name_0[50];
-      sprintf(ls_name_0, "local_problem_solution_e0_%d", coarse_index);
+      sprintf(ls_name_0, "/local_problem_solution_e0_%d", coarse_index);
       std::string ls_name_0_s(ls_name_0);
 
       outputparam.set_prefix(ls_name_0_s);
@@ -857,7 +857,7 @@ public:
       IOTupleType local_solution_series_1(&host_local_solution);
 
       char ls_name_1[50];
-      sprintf(ls_name_1, "local_problem_solution_e1_%d", coarse_index);
+      sprintf(ls_name_1, "/local_problem_solution_e1_%d", coarse_index);
       std::string ls_name_1_s(ls_name_1);
 
       outputparam.set_prefix(ls_name_1_s);
