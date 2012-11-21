@@ -4,6 +4,7 @@
 //for i in $(ls *hh) ; do echo \#include \"${i}\" ; done
 #include "easy.hh"
 #include "eight.hh"
+#include "example.hh"
 #include "five.hh"
 #include "four.hh"
 #include "nine.hh"

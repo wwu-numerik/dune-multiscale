@@ -13,7 +13,7 @@ namespace Problem {
 namespace Two {
 // description see below
 // vorher: 0.13
-CONSTANTSFUNCTION(0.05, 0.05, 0.05)
+CONSTANTSFUNCTION( 0.05 )
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information

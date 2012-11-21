@@ -14,19 +14,47 @@ namespace Problem {
 
  * Here we have:
  * u^{\epsilon} = exact solution of the problem
- * A^{\epsilon} = diffusion matrix (or tensor) with the structure A^{\epsilon}(x) = A(x,\frac{x}{\epsilon})
- * m^{\epsilon} = a mass term (or reaction term) with the structure m^{\epsilon}(x) = m(x,\frac{x}{\epsilon})
+ * A^{\epsilon} = diffusion matrix (or tensor), e.g. with the structure A^{\epsilon}(x) = A(x,\frac{x}{\epsilon})
+ * m^{\epsilon} = a mass term (or reaction term), e.g. with the structure m^{\epsilon}(x) = m(x,\frac{x}{\epsilon})
  * f = first source term with the structure f = f(x) (=> no micro-scale dependency)
- * G = second source term with the structure G = G(x) (=> no micro-scale dependency). Note that 'G' is directly
- * implemented! ( we do not implement '- div G'!)
+ * G = second source term with the structure G = G(x) (=> no micro-scale dependency).
+ * (Note that 'G' is directly implemented! We do not implement '- div G'!)
 
- * Note, that A^{\epsilon} is a monotone operator
+ * A^{\epsilon} is can be a monotone operator (=> use HMM, the MsFEM is not implemented for nonlinear problems)
 
- * ! we define:
 
- * The entries of the operator A^{\epsilon} by
- * ! a^{\epsilon}_{1}(x_1,x_2) := (**y_1**,**y_2**)
- * ! a^{\epsilon}_{2}(x_1,x_2) := (**y_1**,**y_2**)
+ * ! we use the following class names:
+
+
+ * class ExactSolution -> describes u^{\epsilon}
+ * methods:
+ *   evaluate  u^{\epsilon}( x )        --> evaluate
+ *   evaluate  \grad u^{\epsilon}( x )  --> evaluateJacobian
+
+
+ * class Diffusion -> describes A^{\epsilon}
+ * methods:
+ *   evaluate A^{\epsilon}( x , direction )            --> diffusiveFlux
+ *   evaluate DA^{\epsilon}( x , position ) direction  --> jacobianDiffusiveFlux
+
+
+ * class MassTerm -> describes m^{\epsilon}
+ * methods:
+ *   evaluate m^{\epsilon}( x )         --> evaluate
+ *
+
+ * class FirstSource -> describes f
+ * methods:
+ *   evaluate f( x )                    --> evaluate
+
+
+ * class SecondSource -> describes G
+ * methods:
+ *   evaluate G( x )                    --> evaluate
+
+
+ ! See 'elliptic_problems/example.hh' for details
+
 
  * The mass (or reaction) term m^{\epsilon} is given by:
  * ! m^{\epsilon} := \epsilon

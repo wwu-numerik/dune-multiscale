@@ -1,18 +1,14 @@
 # Initfile
 
 [problem]
-epsilon_est = 0.05
-delta = 0.05
+# problem specifications
 
-# representative size of the micro structure
+# characteristic size of the micro structure
 epsilon = 0.05
 
 
-
-
-###################### NEW:
-
 [global]
+
 # directory to save the data output
 datadir = data/HMM/test_problem
 
@@ -27,12 +23,8 @@ file = ms.log
 # data will be saved under 'datadir/dir'
 dir = logdata
 
-[problem]
-#problem specifications
 
-
-#### method specifications (MsFEM and HMM) #####
-
+# method specifications for MsFEM and HMM #
 
 [msfem]
 
@@ -67,10 +59,11 @@ error_tolerance = 1e-6
 [hmm]
 
 # guess for epsilon (indicator for size of small scale)
-epsilon_guess =
+epsilon_guess = 0.05
 
-# oversampling parameter ( delta >= epsilon_guess )
-delta =
+# oversampling parameter
+delta = 0.05
+# NOTE that (delta/epsilon_guess) needs to be a positive integer!
 
 # initial coarse level
 coarse_grid_level = 4
@@ -80,7 +73,7 @@ cell_grid_level = 4
 # 'effective fine grid level' = 'epslion guess' * 'cell grid size'
 
 # use error estimation and adaptivity?
-adaptivity = 
+adaptivity = 0
 
 # error tolerance  
-error_tolerance =
+error_tolerance = 0.1

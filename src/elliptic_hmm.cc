@@ -11,10 +11,10 @@
 #include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
 #include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
 
-//! NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in
+// NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in
 // problem_specification.hh), which provides us with information about epsilon, delta, etc.
 //! HMM Assembler, Error Estimator, ... they all hark back to 'ModelProblemData'. Probably there is a better solution,
-// but for me, it works perfectly.
+//! but for me, it works perfectly.
 namespace Multiscale {
 // parameters for the current realization of the HMM
 class HMMParameters

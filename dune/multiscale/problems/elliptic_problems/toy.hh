@@ -18,7 +18,7 @@
 namespace Problem {
 namespace Toy {
 // description see below 0.05
-CONSTANTSFUNCTION(1.0, 1.0, 1.0)
+CONSTANTSFUNCTION( 1.0 )
 
 // model problem information
 struct ModelProblemData

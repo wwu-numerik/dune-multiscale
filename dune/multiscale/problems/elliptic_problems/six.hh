@@ -26,7 +26,7 @@
 namespace Problem {
 namespace Six {
 // description see below 0.05
-CONSTANTSFUNCTION(0.01, 0.01, 0.01)
+CONSTANTSFUNCTION( 0.01 )
 
 // model problem information
 struct ModelProblemData

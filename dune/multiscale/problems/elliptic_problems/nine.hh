@@ -11,7 +11,7 @@
 
 //! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
 
-//! For more further details about the implementation of the following classes, see the end of the file
+//! For more further details about the implementation see '../base.hh'
 
 // in general we regard problems of the following type:
 
@@ -63,14 +63,14 @@
 // eps = 0.128 => H Ref = 2
 // eps = 0.256 => H Ref = 0
 
-// NOTE that (delta/epsilon_est) needs to be a positive integer!
-
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
+
+
 namespace Problem {
 namespace Nine {
 // description see below 0.05
-CONSTANTSFUNCTION(0.05, 0.1, 0.1)
+CONSTANTSFUNCTION( 0.05 )
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
@@ -83,7 +83,7 @@ struct ModelProblemData
 
   //! \copydoc IModelProblemData::getMacroGridFile()
   inline std::string getMacroGridFile() const {
-    return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");      // _strange_grid
+    return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");
   }
 
   //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
@@ -92,7 +92,10 @@ struct ModelProblemData
   }
 };
 
+//! ----------------- Definition of ' f ' ------------------------
+
 template< class FunctionSpaceImp >
+// define the (first) source term 'f'
 class FirstSource
   : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
 {
@@ -119,8 +122,11 @@ public:
 public:
   FirstSource(){}
 
+  // evaluate f, i.e. return y=f(x) for a given x
+  // the following method defines 'f':
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
+
     double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
     double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
 
@@ -168,9 +174,20 @@ public:
   }
 };
 
+//! ----------------- End Definition of ' f ' ------------------------
+
+
+
+//! ----------------- Definition of ' G ' ------------------------
+
   /** \brief default class for the second source term G.
    * Realization: set G(x) = 0: **/
   NULLFUNCTION(SecondSource)
+
+//! ----------------- End Definition of ' G ' ------------------------
+
+
+//! ----------------- Definition of ' A ' ------------------------
 
 // the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
 // A^{\epsilon} : R^d -> R^d
@@ -206,17 +223,18 @@ public:
 
   // instantiate all possible cases of the evaluate-method:
 
-  // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
+  // (diffusive) flux = A^{\epsilon}( x , direction )
+  // (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& x,
-                     const JacobianRangeType& gradient,
+                     const JacobianRangeType& direction,
                      JacobianRangeType& flux) const {
     double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
     double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
 
     double stab = 0.0;
 
-    flux[0][0] = coefficient_0 * gradient[0][0] + stab * gradient[0][1];
-    flux[0][1] = coefficient_1 * gradient[0][1] + stab * gradient[0][0];
+    flux[0][0] = coefficient_0 * direction[0][0] + stab * direction[0][1];
+    flux[0][1] = coefficient_1 * direction[0][1] + stab * direction[0][0];
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -240,6 +258,11 @@ public:
     DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   }
 };
+
+//! ----------------- End Definition of ' A ' ------------------------
+
+
+
 
 template< class FunctionSpaceImp, class FieldMatrixImp >
 class HomDiffusion
@@ -305,10 +328,18 @@ public:
   }
 };
 
+//! ----------------- Definition of ' m ' ----------------------------
 CONSTANTFUNCTION(MassTerm,  0.00001)
-NULLFUNCTION(DefaultDummyFunction)
+//! ----------------- End Definition of ' m ' ------------------------
 
-//! Exact solution (typically it is unknown)
+
+//! ----------------- Definition of some dummy -----------------------
+NULLFUNCTION(DefaultDummyFunction)
+//! ----------------- End Definition of some dummy -------------------
+
+
+//! ----------------- Definition of ' u ' ----------------------------
+// Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
   : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
@@ -338,25 +369,19 @@ public:
 public:
   ExactSolution(){}
 
-  // in case 'u' has NO time-dependency use the following method:
+  // evaluate 'u(x)'
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
     // approximation obtained by homogenized solution + first corrector
-    y = sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);         // coarse part
-    y += 0.5 * constants().epsilon * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );          //
-                                                                                                                              //
-                                                                                                                              //
-                                                                                                                              //
-                                                                                                                              //
-                                                                                                                              //fine
-                                                                                                                              //
-                                                                                                                              //
-                                                                                                                              //
-                                                                                                                              //
-                                                                                                                              //part
-    // || u_fine_part ||_L2 = 0.00883883 (fuer eps = 0.05 )
+
+    // coarse part
+    y = sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
+
+    // fine part // || u_fine_part ||_L2 = 0.00883883 (for eps = 0.05 )
+    y += 0.5 * constants().epsilon * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
   } // evaluate
 
+  // evaluate 'grad u(x)'
   inline void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const {
     grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
@@ -378,6 +403,8 @@ public:
     evaluate(x, y);
   }
 };
+//! ----------------- End Definition of ' u ' ------------------------
+
 } // namespace Nine {
 }
 

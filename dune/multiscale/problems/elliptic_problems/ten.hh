@@ -56,7 +56,7 @@
 namespace Problem {
 namespace Ten {
 // description see below 0.05
-CONSTANTSFUNCTION(0.05, 0.0, 0.0)
+CONSTANTSFUNCTION( 0.05 )
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
@@ -64,7 +64,6 @@ struct ModelProblemData
   ModelProblemData()
     : IModelProblemData(constants()) {
     assert(!constants_.epsilon != 0.0);
-    assert(!constants_.epsilon_est != 0.0);
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()

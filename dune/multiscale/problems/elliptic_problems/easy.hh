@@ -19,7 +19,7 @@
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
 namespace Easy {
-CONSTANTSFUNCTION(1.0, 1.0, 1.0)
+CONSTANTSFUNCTION( 1.0 )
 
 // model problem information
 struct ModelProblemData

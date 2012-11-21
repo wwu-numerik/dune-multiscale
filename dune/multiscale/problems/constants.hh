@@ -8,12 +8,9 @@ namespace Problem {
 struct Constants
 {
   const double epsilon;
-  const double epsilon_est;
-  const double delta;
-  Constants(double def_epsilon, double def_epsilon_est, double def_delta)
+  Constants(double def_epsilon /*, double def_dummy, .. */)
     : epsilon( DSC_CONFIG_GET("problem.epsilon", def_epsilon) )
-      , epsilon_est( DSC_CONFIG_GET("problem.epsilon_guess", def_epsilon_est) )
-      , delta( DSC_CONFIG_GET("problem.delta", def_delta) )
+      // , dummy( DSC_CONFIG_GET("problem.dummy", def_dummy) ) ..
   {}
 
   template< typename T, class Validator = Dune::Stuff::Common::ValidateAny< T > >
@@ -105,10 +102,10 @@ struct Constants
 
 };
 
-#define CONSTANTSFUNCTION(d, e, f) \
+#define CONSTANTSFUNCTION( d /*,e,f*/ ) \
   static const Constants &constants() \
   { \
-    static Constants c(d, e, f); \
+    static Constants c( d /*,e,f*/ ); \
     return c; \
   }
 } // namespace Problem

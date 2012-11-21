@@ -7,13 +7,10 @@
 
 //!############################## Elliptic Problem 1 ###################################
 
-
-// NOTE that (delta/epsilon_est) needs to be a positive integer!
-
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
 namespace One {
-CONSTANTSFUNCTION(0.05, 0.05, 0.05)
+CONSTANTSFUNCTION( 0.05 )
 
 // model problem information
 struct ModelProblemData
@@ -36,6 +33,7 @@ struct ModelProblemData
 };
 
 CONSTANTFUNCTION(FirstSource, 1.0)
+
 NULLFUNCTION(SecondSource)
 
 template< class FunctionSpaceImp >

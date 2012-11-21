@@ -12,7 +12,7 @@
 namespace Problem {
 namespace Four {
 // description see below 0.05
-CONSTANTSFUNCTION(0.05, 0.05, 0.05)
+CONSTANTSFUNCTION( 0.05 )
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information

@@ -439,8 +439,8 @@ public:
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);
 
-    const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
-    const double epsilon_estimated = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
+    const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
+    const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
     const DiscreteFunctionSpaceType& discreteFunctionSpace
       = rhsVector.space();

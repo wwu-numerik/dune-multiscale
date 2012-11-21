@@ -13,7 +13,7 @@ namespace Problem {
 namespace Eight {
 // description see below
 // vorher: 0.13
-CONSTANTSFUNCTION(0.0001, 0.0001, 0.0001)
+CONSTANTSFUNCTION( 0.0001 )
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information
