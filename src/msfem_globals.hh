@@ -36,9 +36,6 @@ Dune::MsfemTraits::RangeVector total_approximation_error_(max_loop_number);
 Dune::MsfemTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
 Dune::MsfemTraits::RangeVector total_estimated_H1_error_(max_loop_number);
 
-bool repeat_algorithm_ = true;
-int loop_number_ = 0;
-
 #ifdef ADAPTIVE
 double error_tolerance_;
 #endif

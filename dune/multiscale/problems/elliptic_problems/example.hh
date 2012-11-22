@@ -226,7 +226,7 @@ public:
 
   // (diffusive) flux = A ( x , direction )
   // (typically direction is some 'gradient_of_a_function')
-  void diffusiveFlux(const DomainType& x,
+  void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& direction,
                      JacobianRangeType& flux) const {
 
@@ -243,7 +243,7 @@ public:
       jacobian diffusiv flux = JA(x,\nabla v) nabla w:
   */
   // jacobianDiffusiveFlux = JA( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& x,
+  void jacobianDiffusiveFlux(const DomainType& /*x*/,
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {

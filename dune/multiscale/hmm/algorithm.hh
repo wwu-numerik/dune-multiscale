@@ -296,7 +296,7 @@ bool adapt(const HMMResult<HMM>& result,
 
   std::vector<double> border(number_of_areas);
   border[0] = 0.5;
-  for (int bo = 1; bo < border.size(); ++bo)
+  for (std::size_t bo = 1; bo < border.size(); ++bo)
   {
     border[bo] = border[bo - 1] + ( (1.0 - border[bo - 1]) / 2.0 );
   }
