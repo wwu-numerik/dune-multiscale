@@ -774,9 +774,7 @@ public:
 
       const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
 
-      char name_loc_sol[50];
-      sprintf(name_loc_sol, "Local Problem Solution %d", coarse_index);
-      const std::string name_local_solution(name_loc_sol);
+      const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarse_index).str();
 
       //! only for dimension 2!
       SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
@@ -808,9 +806,7 @@ public:
       // create and initialize output class
       IOTupleType local_solution_series_0(&host_local_solution);
 
-      char ls_name_0[50];
-      sprintf(ls_name_0, "/local_problem_solution_e0_%d", coarse_index);
-      std::string ls_name_0_s(ls_name_0);
+      const std::string ls_name_0_s = (boost::format("/local_problem_solution_e0_%d") % coarse_index).str();
 
       outputparam.set_prefix(ls_name_0_s);
       DataOutputType localsol_dataoutput_0(
@@ -856,9 +852,7 @@ public:
       // create and initialize output class
       IOTupleType local_solution_series_1(&host_local_solution);
 
-      char ls_name_1[50];
-      sprintf(ls_name_1, "/local_problem_solution_e1_%d", coarse_index);
-      std::string ls_name_1_s(ls_name_1);
+      const std::string ls_name_1_s = (boost::format("/local_problem_solution_e1_%d") % coarse_index).str();
 
       outputparam.set_prefix(ls_name_1_s);
       DataOutputType localsol_dataoutput_1(

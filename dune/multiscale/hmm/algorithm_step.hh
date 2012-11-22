@@ -403,19 +403,14 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
   // create and initialize output class
   typename HMM::IOTupleType hmm_solution_series(&hmm_solution);
   #ifdef ADAPTIVE
-  char hmm_prefix[30];
-  sprintf(hmm_prefix, "hmm_solution_%d", loop_cycle);
-  outputparam.set_prefix(hmm_prefix);
+  outputparam.set_prefix((boost::format("hmm_solution_%d") % loop_cycle).str());
   #else // ifdef ADAPTIVE
   outputparam.set_prefix("hmm_solution");
   #endif // ifdef ADAPTIVE
   typename HMM::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
 
   // write data
-  outstring << "hmm-solution";
-  hmmsol_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
+  hmmsol_dataoutput.writeData( 1.0 /*dummy*/, "hmm-solution" );
   // -------------------------------------------------------
 
   if (HMM::ModelProblemDataType::has_exact_solution) {
@@ -519,22 +514,16 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
     #ifdef WRITE_HMM_SOL_TO_FILE
     // for adaptive computations, the saved solution is not suitable for a later usage
     #ifndef ADAPTIVE
-    char fname[40];
-    sprintf(fname, "/hmm_solution_discFunc_refLevel_%d", refinement_level_macrogrid_);
-    std::string fname_s(fname);
-    std::string location = fname_s;
-    DiscreteFunctionWriter(location).append(hmm_solution);
+    DiscreteFunctionWriter((boost::format("/hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
+                           ).append(hmm_solution);
     #endif // ifndef ADAPTIVE
     #endif   // #ifdef WRITE_HMM_SOL_TO_FILE
 
     if (DSC_CONFIG_GET("fsr", true) && DSC_CONFIG_GET("WRITE_FINESCALE_SOL_TO_FILE", true))
     {
       const int refinement_level_referenceprob_ = typename HMM::ModelProblemDataType().getRefinementLevelReferenceProblem();
-      char fine_fname[50];
-      sprintf(fine_fname, "/finescale_solution_discFunc_refLevel_%d", refinement_level_referenceprob_);
-      std::string fine_fname_s(fine_fname);
-      std::string fine_location = fine_fname_s;
-      DiscreteFunctionWriter(fine_location).append(fem_newton_solution);
+      DiscreteFunctionWriter((boost::format("/finescale_solution_discFunc_refLevel_%d") % refinement_level_referenceprob_).str()
+          ).append(fem_newton_solution);
     }
 
     //! ******************** End of assembling and solving the HMM problem ***************************

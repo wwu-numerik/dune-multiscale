@@ -185,10 +185,7 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
   const auto& gridPart = msfem_solution.space().gridPart();
   std::stringstream outstring;
   #ifdef ADAPTIVE
-    char msfem_fname[50];
-    sprintf(msfem_fname, "/msfem_solution_%d_", loop_number_);
-    std::string msfem_fname_s(msfem_fname);
-    outputparam.set_prefix(msfem_fname_s);
+    outputparam.set_prefix((boost::format("/msfem_solution_%d_") % loop_number_));
     DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
     // write data
     outstring << msfem_fname_s;
@@ -207,10 +204,7 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
   MsfemTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
 
   #ifdef ADAPTIVE
-    char coarse_msfem_fname[50];
-    sprintf(coarse_msfem_fname, "/coarse_part_msfem_solution_%d_", loop_number_ );
-    const std::string coarse_msfem_fname_s(coarse_msfem_fname);
-    outputparam.set_prefix(coarse_msfem_fname_s);
+    outputparam.set_prefix((boost::format("/coarse_part_msfem_solution_%d_") % loop_number_));
     DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
     // write data
     outstring << coarse_msfem_fname_s;
@@ -229,10 +223,7 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
   MsfemTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
 
   #ifdef ADAPTIVE
-    char fine_msfem_fname[50];
-    sprintf(fine_msfem_fname, "/fine_part_msfem_solution_%d_", loop_number_);
-    std::string fine_msfem_fname_s(fine_msfem_fname);
-    outputparam.set_prefix(fine_msfem_fname_s);
+    outputparam.set_prefix((boost::format("/fine_part_msfem_solution_%d_") % loop_number_));
     MsfemTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
     // write data
     outstring << fine_msfem_fname_s;
