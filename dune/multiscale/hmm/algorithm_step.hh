@@ -513,7 +513,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
       solve_cell_problems_nonlinear<HMM>(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution,
                                     cp_num_manager, discreteFunctionSpace, rhsassembler, loop_cycle);
 
-    const auto retval = estimate_error<HMM>(gridPart, discreteFunctionSpace, periodicDiscreteFunctionSpace,
+    const auto errors = estimate_error<HMM>(gridPart, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                    diffusion_op, cp_num_manager, hmm_solution);
 
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
@@ -546,7 +546,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
 
       DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
 
-      auto timeadapt = DSC_PROFILER.stopTiming("timeadapt") / 1000.f;
+      const auto timeadapt = DSC_PROFILER.stopTiming("timeadapt") / 1000.f;
       // if it took longer then 1 minute to compute the error:
       if (timeadapt > 60)
       {
@@ -613,21 +613,21 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
     }
 
 
-    #ifdef ERRORESTIMATION
-    DSC_LOG_INFO << "Estimated error = " << estimated_error << "." << std::endl;
-    DSC_LOG_INFO << "In detail:" << std::endl;
-    DSC_LOG_INFO << "   Estimated source error = " << estimated_source_error << "." << std::endl;
-    DSC_LOG_INFO << "   Estimated approximation error = " << estimated_approximation_error << "." << std::endl;
-    DSC_LOG_INFO << "   Estimated residual error = " << estimated_residual_error << ", where:" << std::endl;
-    DSC_LOG_INFO << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std::endl;
-    DSC_LOG_INFO << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std::endl;
-    if (DSC_CONFIG_GET("TFR", false))
-      DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
-    #endif // ifdef ERRORESTIMATION
+    if (DSC_CONFIG_GET("ERRORESTIMATION", false)) {
+      DSC_LOG_INFO << "Estimated error = " << errors.estimated_error << "." << std::endl;
+      DSC_LOG_INFO << "In detail:" << std::endl;
+      DSC_LOG_INFO << "   Estimated source error = " << errors.estimated_source_error << "." << std::endl;
+      DSC_LOG_INFO << "   Estimated approximation error = " << errors.estimated_approximation_error << "." << std::endl;
+      DSC_LOG_INFO << "   Estimated residual error = " << errors.estimated_residual_error << ", where:" << std::endl;
+      DSC_LOG_INFO << "        contribution of macro jumps = " << errors.estimated_residual_error_macro_jumps << " and " << std::endl;
+      DSC_LOG_INFO << "        contribution of micro jumps = " << errors.estimated_residual_error_micro_jumps << " and " << std::endl;
+      if (DSC_CONFIG_GET("TFR", false))
+        DSC_LOG_INFO << "   Estimated tfr error = " << errors.estimated_tfr_error << "." << std::endl;
+    }
     //! -------------------------------------------------------
 
     step_data_output<HMM>(gridPart, gridPartFine, hmm_solution, loop_cycle);
-    return retval;
+    return errors;
 }
 
 #endif // ALGORITHM_STEP_HH

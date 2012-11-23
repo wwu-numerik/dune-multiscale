@@ -547,26 +547,26 @@ int main(int argc, char** argv) {
 
     DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
               << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
-    #ifdef UNIFORM
-    DSC_LOG_INFO << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
-    DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
-    DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-    DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
-    DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-    DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-    DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
-    DSC_LOG_INFO << std::endl << std::endl;
-    #else   // ifdef UNIFORM
-    DSC_LOG_INFO << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
-    DSC_LOG_INFO << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
-    DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-    DSC_LOG_INFO << "Error tolerance = " << DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) << std::endl << std::endl;
-    DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
-    DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-    DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-    DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
-    DSC_LOG_INFO << std::endl << std::endl;
-    #endif   // ifdef UNIFORM
+    if (DSC_CONFIG_GET("msfem.uniform", true)) {
+      DSC_LOG_INFO << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
+      DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
+      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
+      DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      DSC_LOG_INFO << std::endl << std::endl;
+    } else {
+      DSC_LOG_INFO << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
+      DSC_LOG_INFO << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
+      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      DSC_LOG_INFO << "Error tolerance = " << DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) << std::endl << std::endl;
+      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
+      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      DSC_LOG_INFO << std::endl << std::endl;
+    }
 
     unsigned int loop_number = 0;
     while (algorithm(macroGridName, loop_number++))

@@ -243,9 +243,9 @@ void print_info(ProblemDataType info, std::ostream& out)
     out << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
   } else {
     out << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
-    #ifdef ERRORESTIMATION
-    out << "Error estimation activated!" << std::endl << std::endl;
-    #endif
+    if (DSC_CONFIG_GET("ERRORESTIMATION", false)) {
+      out << "Error estimation activated!" << std::endl << std::endl;
+    }
   }
   out << "Epsilon = " << epsilon_ << std::endl;
   out << "Estimated Epsilon = " << epsilon_est_ << std::endl;
