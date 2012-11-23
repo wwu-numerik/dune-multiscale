@@ -1,11 +1,5 @@
 #include "common.hh"
 
-// #define ADAPTIVE
-
-#ifndef ADAPTIVE
- #define UNIFORM
-#endif
-
 #if HAVE_GRAPE
  #include <dune/grid/io/visual/grapedatadisplay.hh>
 #endif

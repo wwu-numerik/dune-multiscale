@@ -15,6 +15,7 @@
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/common/profiler.hh>
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
@@ -87,7 +88,7 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
     DSC_LOG_INFO << "Solving nonlinear HMM problem with Newton method." << std::endl;
     DSC_LOG_INFO << seperator_line << std::endl;
 
-    Dune::Timer hmmAssembleTimer;
+    DSC_PROFILER.startTiming("hmmAssemble");
 
     // just to provide some information
     typename HMM::PeriodicDiscreteFunctionType dummy_periodic_func("a periodic dummy", periodicDiscreteFunctionSpace);
@@ -229,12 +230,15 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
       }
     }       // while( relative_newton_error > hmm_tolerance )
 
-    DSC_LOG_INFO << seperator_line << "HMM problem with Newton method solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl
+    const auto elapsed = DSC_PROFILER.stopTiming("hmmAssemble");
+    DSC_LOG_INFO << seperator_line << "HMM problem with Newton method solved in " << elapsed / 1000.f << "s." << std::endl
               << std::endl;
 
-    #ifdef ADAPTIVE
-    total_hmm_time += hmmAssembleTimer.elapsed();
-    #endif
+    if (DSC_CONFIG_GET("adaptive", false)) {
+      //! TODO which section the local time needs to be added to
+      // or if it's necessary at all
+      //total_hmm_time += DSC_PROFILER.stopTiming("hmmAssemble");
+    }
 } //solve_cell_problems_nonlinear
 
 template <class HMM>
@@ -381,7 +385,8 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
 template <class HMM>
 void step_data_output(const typename HMM::GridPartType& gridPart,
                       const typename HMM::GridPartType& gridPartFine,
-                      typename HMM::DiscreteFunctionType& hmm_solution) {
+                      typename HMM::DiscreteFunctionType& hmm_solution,
+                      const int loop_cycle) {
   //! --------------- writing data output ---------------------
   // general output parameters
   Dune::myDataOutputParameters outputparam;
@@ -393,11 +398,12 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
 
   // create and initialize output class
   typename HMM::IOTupleType hmm_solution_series(&hmm_solution);
-  #ifdef ADAPTIVE
-  outputparam.set_prefix((boost::format("hmm_solution_%d") % loop_cycle).str());
-  #else // ifdef ADAPTIVE
-  outputparam.set_prefix("hmm_solution");
-  #endif // ifdef ADAPTIVE
+  if (DSC_CONFIG_GET("adaptive", false)) {
+    outputparam.set_prefix((boost::format("hmm_solution_%d") % loop_cycle).str());
+  }
+  else {
+    outputparam.set_prefix("hmm_solution");
+  }
   typename HMM::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
 
   // write data
@@ -498,17 +504,15 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
       solve_cell_problems_nonlinear<HMM>(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution,
                                     cp_num_manager, discreteFunctionSpace, rhsassembler, loop_cycle);
 
-    const auto retval = estimate_error<HMM>(gridPart, discreteFunctionSpace, periodicDiscreteFunctionSpace,
+    const auto errors = estimate_error<HMM>(gridPart, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                    diffusion_op, cp_num_manager, hmm_solution);
 
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
-    #ifdef WRITE_HMM_SOL_TO_FILE
     // for adaptive computations, the saved solution is not suitable for a later usage
-    #ifndef ADAPTIVE
-    DiscreteFunctionWriter((boost::format("/hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
-                           ).append(hmm_solution);
-    #endif // ifndef ADAPTIVE
-    #endif   // #ifdef WRITE_HMM_SOL_TO_FILE
+    if (!DSC_CONFIG_GET("adaptive", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", false)) {
+      DiscreteFunctionWriter((boost::format("/hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
+                             ).append(hmm_solution);
+    }
 
     if (DSC_CONFIG_GET("fsr", true) && DSC_CONFIG_GET("WRITE_FINESCALE_SOL_TO_FILE", true))
     {
@@ -533,7 +537,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
 
       DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
 
-      auto timeadapt = DSC_PROFILER.stopTiming("timeadapt") / 1000.f;
+      const auto timeadapt = DSC_PROFILER.stopTiming("timeadapt") / 1000.f;
       // if it took longer then 1 minute to compute the error:
       if (timeadapt > 60)
       {
@@ -599,22 +603,21 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
       }
     }
 
-
-    #ifdef ERRORESTIMATION
-    DSC_LOG_INFO << "Estimated error = " << estimated_error << "." << std::endl;
-    DSC_LOG_INFO << "In detail:" << std::endl;
-    DSC_LOG_INFO << "   Estimated source error = " << estimated_source_error << "." << std::endl;
-    DSC_LOG_INFO << "   Estimated approximation error = " << estimated_approximation_error << "." << std::endl;
-    DSC_LOG_INFO << "   Estimated residual error = " << estimated_residual_error << ", where:" << std::endl;
-    DSC_LOG_INFO << "        contribution of macro jumps = " << estimated_residual_error_macro_jumps << " and " << std::endl;
-    DSC_LOG_INFO << "        contribution of micro jumps = " << estimated_residual_error_micro_jumps << " and " << std::endl;
-    if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) )
-      DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
-    #endif // ifdef ERRORESTIMATION
+    if (DSC_CONFIG_GET("ERRORESTIMATION", false)) {
+      DSC_LOG_INFO << "Estimated error = " << errors.estimated_error << "." << std::endl;
+      DSC_LOG_INFO << "In detail:" << std::endl;
+      DSC_LOG_INFO << "   Estimated source error = " << errors.estimated_source_error << "." << std::endl;
+      DSC_LOG_INFO << "   Estimated approximation error = " << errors.estimated_approximation_error << "." << std::endl;
+      DSC_LOG_INFO << "   Estimated residual error = " << errors.estimated_residual_error << ", where:" << std::endl;
+      DSC_LOG_INFO << "        contribution of macro jumps = " << errors.estimated_residual_error_macro_jumps << " and " << std::endl;
+      DSC_LOG_INFO << "        contribution of micro jumps = " << errors.estimated_residual_error_micro_jumps << " and " << std::endl;
+      if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) )
+        DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
+    }
     //! -------------------------------------------------------
 
-    step_data_output<HMM>(gridPart, gridPartFine, hmm_solution);
-    return retval;
+    step_data_output<HMM>(gridPart, gridPartFine, hmm_solution, loop_cycle);
+    return errors;
 }
 
 #endif // ALGORITHM_STEP_HH

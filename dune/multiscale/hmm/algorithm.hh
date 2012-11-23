@@ -240,10 +240,8 @@ void print_info(ProblemDataType info, std::ostream& out)
     out << "We use the HMM in classical 'symmetric' formulation (non-Petrov-Galerkin)." << std::endl;
 
   out << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
-  #ifdef ERRORESTIMATION
-  out << "Error estimation activated!" << std::endl << std::endl;
-  #endif
-
+  if (DSC_CONFIG_GET("ERRORESTIMATION", false))
+     out << "Error estimation activated!" << std::endl << std::endl;
   out << "Epsilon = " << epsilon_ << std::endl;
   out << "Estimated Epsilon = " << epsilon_est_ << std::endl;
   out << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
@@ -293,7 +291,7 @@ bool adapt(const HMMResult<HMM>& result,
 
   std::vector<double> border(number_of_areas);
   border[0] = 0.5;
-  for (int bo = 1; bo < border.size(); ++bo)
+  for (std::size_t bo = 1; bo < border.size(); ++bo)
   {
     border[bo] = border[bo - 1] + ( (1.0 - border[bo - 1]) / 2.0 );
   }

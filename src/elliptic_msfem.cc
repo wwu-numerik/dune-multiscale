@@ -1,8 +1,7 @@
 #include "common.hh"
 
-// #define ADAPTIVE
-
 #ifndef ADAPTIVE
+ //! TODO macht keinen sinn mehr mit param file
  #define UNIFORM
 #endif
 
@@ -54,7 +53,8 @@
 //!---------------------------------------------------------------------------------------
 
 void adapt(Dune::MsfemTraits::GridType& grid,
-           Dune::MsfemTraits::GridType& grid_coarse) {
+           Dune::MsfemTraits::GridType& grid_coarse,
+           const int loop_number) {
   using namespace Dune;
   typedef MsfemTraits::GridType::LeafGridView         GridView;
   typedef GridView::Codim< 0 >::Iterator ElementLeafIterator;
@@ -66,10 +66,10 @@ void adapt(Dune::MsfemTraits::GridType& grid,
     bool DUNE_UNUSED(fine_scale_error_dominant) = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
     bool DUNE_UNUSED(oversampling_error_dominant) = false;   // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
     // identify the dominant contribution:
-    const double average_est_error = total_estimated_H1_error_[loop_number_ - 1] / 6.0;     // 6 contributions
+    const double average_est_error = total_estimated_H1_error_[loop_number - 1] / 6.0;     // 6 contributions
 
-    if ( (total_approximation_error_[loop_number_ - 1] >= average_est_error)
-         || (total_fine_grid_jumps_[loop_number_ - 1] >= average_est_error) )
+    if ( (total_approximation_error_[loop_number - 1] >= average_est_error)
+         || (total_fine_grid_jumps_[loop_number - 1] >= average_est_error) )
     {
       fine_scale_error_dominant = true;   /* increase fine level resolution by 2 levels */
       total_refinement_level_ += 2;   // 'the fine grid level'
@@ -80,8 +80,8 @@ void adapt(Dune::MsfemTraits::GridType& grid,
                 << " refinement levels finer than the coarse grid." << std::endl;
     }
 
-    if ( (total_projection_error_[loop_number_ - 1] >= average_est_error)
-         || (total_conservative_flux_jumps_[loop_number_ - 1] >= average_est_error) )
+    if ( (total_projection_error_[loop_number - 1] >= average_est_error)
+         || (total_conservative_flux_jumps_[loop_number - 1] >= average_est_error) )
     {
       oversampling_error_dominant = true;   /* increase number of layers by 1 */
       number_of_layers_ += 1;
@@ -91,16 +91,16 @@ void adapt(Dune::MsfemTraits::GridType& grid,
       DSC_LOG_INFO << "NEW: Number of layers = " << number_of_layers_ << std::endl;
     }
 
-    if ( (total_coarse_residual_[loop_number_ - 1] >= average_est_error)
-         || (total_coarse_grid_jumps_[loop_number_ - 1] >= average_est_error) )
+    if ( (total_coarse_residual_[loop_number - 1] >= average_est_error)
+         || (total_coarse_grid_jumps_[loop_number - 1] >= average_est_error) )
     {
       DSC_LOG_INFO << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment."
                 << std::endl;
       coarse_scale_error_dominant = true;   /* mark elementwise for 2 refinments */
     }
 
-    std::vector< MsfemTraits::RangeType > average_coarse_error_indicator(loop_number_);        // arithmetic average
-    for (int l = 0; l < loop_number_; ++l)
+    std::vector< MsfemTraits::RangeType > average_coarse_error_indicator(loop_number);        // arithmetic average
+    for (int l = 0; l < loop_number; ++l)
     {
       assert( loc_coarse_residual_[l].size() == loc_coarse_grid_jumps_[l].size() );
       average_coarse_error_indicator[l] = 0.0;
@@ -118,7 +118,7 @@ void adapt(Dune::MsfemTraits::GridType& grid,
       int number_of_refinements = 4;
       // allowed varianve from average ( in percent )
       double variance = 1.1;   // = 110 % of the average
-      for (int l = 0; l < loop_number_; ++l)
+      for (int l = 0; l < loop_number; ++l)
       {
         const auto& gridLeafIndexSet = grid.leafIndexSet();
         auto gridView = grid.leafView();
@@ -139,7 +139,7 @@ void adapt(Dune::MsfemTraits::GridType& grid,
           }
         }
 
-        if ( l == (loop_number_ - 1) )
+        if ( l == (loop_number - 1) )
         {
           DSC_LOG_INFO << number_of_marked_entities << " of " << total_number_of_entities
                     << " coarse grid entities marked for mesh refinement." << std::endl;
@@ -175,7 +175,8 @@ void adapt(Dune::MsfemTraits::GridType& grid,
 void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
                      const Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                     Dune::myDataOutputParameters& outputparam)
+                     Dune::myDataOutputParameters& outputparam,
+                     const int loop_number)
 {
   using namespace Dune;
   //! ----------------- writing data output MsFEM Solution -----------------
@@ -183,60 +184,50 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
   // create and initialize output class
   MsfemTraits::IOTupleType msfem_solution_series(&msfem_solution);
   const auto& gridPart = msfem_solution.space().gridPart();
-  std::stringstream outstring;
-  #ifdef ADAPTIVE
-    outputparam.set_prefix((boost::format("/msfem_solution_%d_") % loop_number_));
-    DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
-    // write data
-    outstring << msfem_fname_s;
-  #else // ifdef ADAPTIVE
+  std::string outstring;
+  if (DSC_CONFIG_GET("adaptive", false)) {
+    const std::string msfem_fname_s = (boost::format("/msfem_solution_%d_") % loop_number).str();
+    outputparam.set_prefix(msfem_fname_s);
+    outstring = msfem_fname_s;
+  } else {
     outputparam.set_prefix("/msfem_solution");
-    MsfemTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
-    // write data
-    outstring << "msfem_solution";
-  #endif // ifdef ADAPTIVE
+    outstring = "msfem_solution";
+  }
 
-  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
+  MsfemTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
+  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
   // create and initialize output class
   MsfemTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
 
-  #ifdef ADAPTIVE
-    outputparam.set_prefix((boost::format("/coarse_part_msfem_solution_%d_") % loop_number_));
-    DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
-    // write data
-    outstring << coarse_msfem_fname_s;
-  #else // ifdef ADAPTIVE
+  if (DSC_CONFIG_GET("adaptive", false)) {
+    const std::string coarse_msfem_fname_s = (boost::format("/coarse_part_msfem_solution_%d_") % loop_number).str();
+    outputparam.set_prefix(coarse_msfem_fname_s);
+    outstring = coarse_msfem_fname_s;
+  } else {
     outputparam.set_prefix("/coarse_part_msfem_solution");
-    MsfemTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
-    // write data
-    outstring << "coarse_part_msfem_solution";
-  #endif // ifdef ADAPTIVE
+    outstring = "coarse_part_msfem_solution";
+  }
 
-  coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
+  MsfemTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
+  coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
   // create and initialize output class
   MsfemTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
 
-  #ifdef ADAPTIVE
-    outputparam.set_prefix((boost::format("/fine_part_msfem_solution_%d_") % loop_number_));
-    MsfemTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
+  if (DSC_CONFIG_GET("adaptive", false)) {
+    const std::string fine_msfem_fname_s = (boost::format("/fine_part_msfem_solution_%d_") % loop_number).str();
+    outputparam.set_prefix(fine_msfem_fname_s);
     // write data
-    outstring << fine_msfem_fname_s;
-  #else // ifdef ADAPTIVE
+    outstring = fine_msfem_fname_s;
+  } else {
     outputparam.set_prefix("/fine_part_msfem_solution");
-    MsfemTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
     // write data
-    outstring << "fine_msfem_solution";
-  #endif // ifdef ADAPTIVE
+    outstring = "fine_msfem_solution";
+  }
 
-  fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
+  MsfemTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
+  fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring);
 
   // ----------------------------------------------------------------------
   // ---------------------- write discrete msfem solution to file ---------
@@ -248,7 +239,8 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
 
 void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
                  const Dune::MsfemTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
-                 Dune::myDataOutputParameters& outputparam)
+                 Dune::myDataOutputParameters& outputparam,
+                 const int loop_number)
 {
   using namespace Dune;
   // sequence stamp
@@ -277,7 +269,7 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
   // create and initialize output class
   MsfemTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
 
-  const auto coarse_grid_fname = (boost::format("/coarse_grid_visualization_%d_") % loop_number_).str();
+  const auto coarse_grid_fname = (boost::format("/coarse_grid_visualization_%d_") % loop_number).str();
   outputparam.set_prefix(coarse_grid_fname);
   MsfemTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
   // write data
@@ -286,11 +278,12 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
   //! --------------------------------------------------------------------------------------
 }
 
-void error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
+bool error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solution,
                       const Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                       const Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
                       Dune::MsfemTraits::MsFEMErrorEstimatorType& estimator,
-                      Dune::MsfemTraits::MacroMicroGridSpecifierType& specifier)
+                      Dune::MsfemTraits::MacroMicroGridSpecifierType& specifier,
+                      const int loop_number)
 {
   using namespace Dune;
 
@@ -304,31 +297,38 @@ void error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solut
     std::vector<MsfemTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_, &loc_projection_error_, &loc_conservative_flux_jumps_, &loc_approximation_error_, &loc_fine_grid_jumps_}};
     std::vector<MsfemTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_, &total_coarse_grid_jumps_, &total_conservative_flux_jumps_, &total_approximation_error_, &total_fine_grid_jumps_ }};
     assert(locals.size() == totals.size());
-    for(auto loc : locals) (*loc)[loop_number_] = MsfemTraits::RangeVector(specifier.getNumOfCoarseEntities(),0.0);
-    for(auto total : totals) (*total)[loop_number_] = 0.0;
+    for(auto loc : locals) (*loc)[loop_number] = MsfemTraits::RangeVector(specifier.getNumOfCoarseEntities(),0.0);
+    for(auto total : totals) (*total)[loop_number] = 0.0;
 
     for (int m = 0; m < specifier.getNumOfCoarseEntities(); ++m) {
-      loc_coarse_residual_[loop_number_][m] = specifier.get_loc_coarse_residual(m);
-      loc_coarse_grid_jumps_[loop_number_][m] = specifier.get_loc_coarse_grid_jumps(m);
-      loc_projection_error_[loop_number_][m] = specifier.get_loc_projection_error(m);
-      loc_conservative_flux_jumps_[loop_number_][m] = specifier.get_loc_conservative_flux_jumps(m);
-      loc_approximation_error_[loop_number_][m] = specifier.get_loc_approximation_error(m);
-      loc_fine_grid_jumps_[loop_number_][m] = specifier.get_loc_fine_grid_jumps(m);
+      loc_coarse_residual_[loop_number][m] = specifier.get_loc_coarse_residual(m);
+      loc_coarse_grid_jumps_[loop_number][m] = specifier.get_loc_coarse_grid_jumps(m);
+      loc_projection_error_[loop_number][m] = specifier.get_loc_projection_error(m);
+      loc_conservative_flux_jumps_[loop_number][m] = specifier.get_loc_conservative_flux_jumps(m);
+      loc_approximation_error_[loop_number][m] = specifier.get_loc_approximation_error(m);
+      loc_fine_grid_jumps_[loop_number][m] = specifier.get_loc_fine_grid_jumps(m);
 
-      for (size_t i = 0; i < totals.size(); ++i) (*totals[i])[loop_number_] += std::pow((*locals[i])[loop_number_][m], 2.0);
+      for (size_t i = 0; i < totals.size(); ++i) (*totals[i])[loop_number] += std::pow((*locals[i])[loop_number][m], 2.0);
     }
-    total_estimated_H1_error_[loop_number_] = 0.0;
+    total_estimated_H1_error_[loop_number] = 0.0;
     for(auto total : totals) {
-      (*total)[loop_number_] = std::sqrt((*total)[loop_number_]);
-      total_estimated_H1_error_[loop_number_] += (*total)[loop_number_];
+      (*total)[loop_number] = std::sqrt((*total)[loop_number]);
+      total_estimated_H1_error_[loop_number] += (*total)[loop_number];
     }
     local_indicators_available_ = true;
   }
+
+  return DSC_CONFIG_GET("adaptive", false)
+      ? total_estimated_H1_error > DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) : false;
 }
 
 //! algorithm
-void algorithm(const std::string& macroGridName) {
+bool algorithm(const std::string& macroGridName, const int loop_number) {
   using namespace Dune;
+
+  if (DSC_CONFIG_GET("adaptive", false))
+    DSC_LOG_INFO << "------------------ run " << loop_number + 1 << " --------------------" << std::endl << std::endl;
+
   DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
   // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
   // for the parameters:
@@ -356,9 +356,8 @@ void algorithm(const std::string& macroGridName) {
   MsfemTraits::GridType& grid_coarse = gridPart_coarse.grid();
 
   // strategy for adaptivity:
-  #ifdef ADAPTIVE
-  adapt();
-  #endif
+  if (DSC_CONFIG_GET("adaptive", false))
+    adapt(grid, grid_coarse, loop_number);
 
   grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
 
@@ -377,7 +376,7 @@ void algorithm(const std::string& macroGridName) {
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
   Dune::myDataOutputParameters outputparam;
-  data_output(gridPart, discreteFunctionSpace_coarse, outputparam);
+  data_output(gridPart, discreteFunctionSpace_coarse, outputparam, loop_number);
 
   //! ---------------------- solve MsFEM problem ---------------------------
   //! solution vector
@@ -401,6 +400,8 @@ void algorithm(const std::string& macroGridName) {
     specifier.setLayer(i, number_of_layers_);
   }
 
+  //default to false, error_estimation might change it
+  bool repeat_algorithm = false;
 
   //! create subgrids:
   const bool silence = false;
@@ -414,20 +415,17 @@ void algorithm(const std::string& macroGridName) {
 
     DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
     solution_output(msfem_solution, coarse_part_msfem_solution,
-                    fine_part_msfem_solution, outputparam);
+                    fine_part_msfem_solution, outputparam, loop_number);
 
     // error estimation
     if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
       MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
       error_estimation(msfem_solution, coarse_part_msfem_solution,
-                    fine_part_msfem_solution, estimator, specifier); }
+                    fine_part_msfem_solution, estimator, specifier, loop_number);
+    }
   }
-  #ifdef ADAPTIVE
-  if (total_estimated_H1_error <= error_tolerance_)
-    repeat_algorithm_ = false;
-  #else // ifdef ADAPTIVE
-  repeat_algorithm_ = false;
-  #endif // ifdef ADAPTIVE
+
+
 
   //! ---------------------- solve FEM problem ---------------------------
   //! solution vector
@@ -506,7 +504,11 @@ void algorithm(const std::string& macroGridName) {
     DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
   }
   //! -------------------------------------------------------
-
+  if (DSC_CONFIG_GET("adaptive", false)) {
+    DSC_LOG_INFO << std::endl << std::endl;
+    DSC_LOG_INFO << "---------------------------------------------" << std::endl;
+  }
+  return repeat_algorithm;
 } // function algorithm
 
 int main(int argc, char** argv) {
@@ -532,10 +534,6 @@ int main(int argc, char** argv) {
     // syntax: info_from_par_file / default
     number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
-    #ifdef ADAPTIVE
-    error_tolerance_ = DSC_CONFIG_GET("msfem.error_tolerance", 1e-6);
-    #endif   // ifdef ADAPTIVE
-
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
     const Problem::ModelProblemData info;
@@ -549,40 +547,31 @@ int main(int argc, char** argv) {
 
     DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
               << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
-    #ifdef UNIFORM
-    DSC_LOG_INFO << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
-    DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
-    DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-    DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
-    DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-    DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-    DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
-    DSC_LOG_INFO << std::endl << std::endl;
-    #else   // ifdef UNIFORM
-    DSC_LOG_INFO << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
-    DSC_LOG_INFO << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
-    DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-    DSC_LOG_INFO << "Error tolerance = " << error_tolerance_ << std::endl << std::endl;
-    DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
-    DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-    DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-    DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
-    DSC_LOG_INFO << std::endl << std::endl;
-    #endif   // ifdef UNIFORM
-
-    loop_number_ = 0;
-    while (repeat_algorithm_)
-    {
-      #ifdef ADAPTIVE
-      DSC_LOG_INFO << "------------------ run " << loop_number_ + 1 << " --------------------" << std::endl << std::endl;
-      #endif
-      algorithm(macroGridName);
-      #ifdef ADAPTIVE
+    if (DSC_CONFIG_GET("msfem.uniform", true)) {
+      DSC_LOG_INFO << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
+      DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
+      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
+      DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
       DSC_LOG_INFO << std::endl << std::endl;
-      DSC_LOG_INFO << "---------------------------------------------" << std::endl;
-      loop_number_ += 1;
-      #endif   // ifdef ADAPTIVE
+    } else {
+      DSC_LOG_INFO << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
+      DSC_LOG_INFO << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
+      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      DSC_LOG_INFO << "Error tolerance = " << DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) << std::endl << std::endl;
+      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
+      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      DSC_LOG_INFO << std::endl << std::endl;
     }
+
+    unsigned int loop_number = 0;
+    while (algorithm(macroGridName, loop_number++))
+    {}
+
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
     //normal
     // macro problem
