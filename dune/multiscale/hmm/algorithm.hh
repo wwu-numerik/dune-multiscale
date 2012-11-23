@@ -234,19 +234,16 @@ void print_info(ProblemDataType info, std::ostream& out)
   out << "Refinement Level for (uniform) Macro Grid = " << refinement_level_macrogrid_ << std::endl;
   const int refinement_level_cellgrid = DSC_CONFIG_GET("hmm.cell_grid_level", 1);
   out << "Refinement Level for Periodic Micro Grid = " << refinement_level_cellgrid << std::endl << std::endl;
-  if (DSC_CONFIG_GET("TFR", false))
-    out << "We use TFR-HMM (HMM with test function reconstruction)." << std::endl;
+  if ( DSC_CONFIG_GET("hmm.petrov_galerkin", true ))
+    out << "We use the HMM in Petrov Galerkin formulation." << std::endl;
   else
-    out << "We use HMM without test function reconstruction (NO TFR)." << std::endl;
+    out << "We use the HMM in classical 'symmetric' formulation (non-Petrov-Galerkin)." << std::endl;
 
-  if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
-    out << "Cell problems are solved ad hoc (where required)." << std::endl << std::endl;
-  } else {
-    out << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
-    #ifdef ERRORESTIMATION
-    out << "Error estimation activated!" << std::endl << std::endl;
-    #endif
-  }
+  out << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
+  #ifdef ERRORESTIMATION
+  out << "Error estimation activated!" << std::endl << std::endl;
+  #endif
+
   out << "Epsilon = " << epsilon_ << std::endl;
   out << "Estimated Epsilon = " << epsilon_est_ << std::endl;
   out << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
@@ -486,7 +483,7 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
   typename HMM::DiscreteFunctionType fem_newton_solution(filename + " Reference (FEM Newton) Solution", finerDiscreteFunctionSpace);
   fem_newton_solution.clear();
 
-  if (DSC_CONFIG_GET("fsr", true))
+  if (DSC_CONFIG_GET("fsr", false))
   {
     if (DSC_CONFIG_GET("fsr_compute", true))
     {

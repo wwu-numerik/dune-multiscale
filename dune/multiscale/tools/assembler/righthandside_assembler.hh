@@ -538,7 +538,7 @@ public:
         PeriodicDiscreteFunctionType corrector_Phi_i("Corrector of Phi_i", periodicDiscreteFunctionSpace);
         corrector_Phi_i.clear();
 
-        if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+        /* // if the cell problems are not precomputed, we might use:
           CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace, A);
           cell_problem_solver.template solvecellproblem< JacobianRangeType >
             (grad_old_u_H_x, macro_entity_barycenter, corrector_old_u_H);
@@ -546,14 +546,13 @@ public:
             cell_problem_solver.template solvecellproblem< JacobianRangeType >
               (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
 
-        } else {
-          discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
-          if (DSC_CONFIG_GET("TFR", false)) {
+        */
+        discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
+        if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
             typename EntityType::EntityPointer entity_ptr(macro_grid_it);
             discrete_function_reader_baseSet.read(cp_num_manager.get_number_of_cell_problem(entity_ptr, i)
                                                   , corrector_Phi_i);
           }
-        }
 
         RangeType fine_scale_contribution = 0.0;
 
@@ -588,7 +587,7 @@ public:
             loc_corrector_old_u_H.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_old_u_H);
 
             JacobianRangeType grad_corrector_Phi_i;
-            if (DSC_CONFIG_GET("TFR", false))
+            if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) )
               loc_corrector_Phi_i.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_Phi_i);
 
             // x_T + (delta * y)
@@ -613,8 +612,8 @@ public:
               { cutting_function *= 0.0; }
             }
 
-            // if test function reconstruction
-            if (DSC_CONFIG_GET("TFR", false)) {
+            // if test function reconstruction = non-Petrov-Galerkin
+            if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
               JacobianRangeType grad_reconstruction_Phi_i;
               for (int k = 0; k < dimension; ++k)
                 grad_reconstruction_Phi_i[0][k] = grad_Phi_x[0][k] + grad_corrector_Phi_i[0][k];

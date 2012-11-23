@@ -24,11 +24,6 @@ public:
   inline explicit HMMParameters()
   {}
 
-  // do you want to save the solutions of the cell problems for a later usage?
-  // (e.g. for error estimation and adaptivity)
-  inline bool save_cell_problems() const {
-    return true;
-  }
 };
 }
 
@@ -80,7 +75,7 @@ int main(int argc, char** argv) {
     int refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
     // in general: for the homogenized case = 11 and for the high resolution case = 14
     // Note that this depends on the model problem!
-    if (!DSC_CONFIG_GET("fsr", true))
+    if (!DSC_CONFIG_GET("fsr", false))
     //!TODO völliig widersprüchlich zu oben
       refinement_level_referenceprob_ = 8;
 
@@ -158,15 +153,11 @@ void check_config()
  #define HMM_NEWTON_ITERATION_STEP 0
 #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
 
-  //! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
-  // Not possible for ad-hoc computations! (in this case, error estimation is far too expensive)
-  #ifndef AD_HOC_COMPUTATION
-  //
-  // #define ERRORESTIMATION
-  // only possible if we use error estimation:
-   #ifdef ERRORESTIMATION
+//! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
+// #define ERRORESTIMATION
+// only possible if we use error estimation:
+#ifdef ERRORESTIMATION
   // Do you want to allow adaptive mesh refinement?
   // #define ADAPTIVE
-   #endif // ifdef ERRORESTIMATION
-  #endif // ifndef AD_HOC_COMPUTATION
+#endif // ifdef ERRORESTIMATION
 }

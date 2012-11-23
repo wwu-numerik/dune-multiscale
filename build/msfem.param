@@ -6,6 +6,8 @@
 # characteristic size of the micro structure
 epsilon = 0.05
 
+# linear or nonlinear problem?
+linear = 0
 
 [global]
 
@@ -66,11 +68,15 @@ delta = 0.05
 # NOTE that (delta/epsilon_guess) needs to be a positive integer!
 
 # initial coarse level
-coarse_grid_level = 4
+coarse_grid_level = 2
 
 # resolution level for the grid for the unit cube Y
 cell_grid_level = 4
 # 'effective fine grid level' = 'epslion guess' * 'cell grid size'
+
+# use the MsFEM in Petrov-Galerkin (unsymmetric) formulation
+# !!! key not yet activated !!!
+petrov_galerkin = 1
 
 # use error estimation and adaptivity?
 adaptivity = 0

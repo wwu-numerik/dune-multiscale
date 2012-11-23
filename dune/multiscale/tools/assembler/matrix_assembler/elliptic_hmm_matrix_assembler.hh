@@ -146,10 +146,10 @@ template< class MatrixType >
 void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
                                   CellProblemNumberingManagerImp >::assemble_matrix(MatrixType& global_matrix) const {
   // if test function reconstruction
-  if (DSC_CONFIG_GET("TFR", false))
-    DSC_LOG_INFO << "Assembling TFR-HMM Matrix." << std::endl;
+  if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) )
+    DSC_LOG_INFO << "Assembling classical (non-Petrov-Galerkin) HMM Matrix." << std::endl;
   else
-    DSC_LOG_INFO << "Assembling HMM Matrix." << std::endl;
+    DSC_LOG_INFO << "Assembling (Petrov-Galerkin) HMM Matrix." << std::endl;
 
   // place, where we saved the solutions of the cell problems
   const std::string cell_solution_location = filename_ + "/cell_problems/_cellSolutions_baseSet";;
@@ -212,13 +212,12 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       corrector_Phi[i] = PeriodicDiscreteFunctionPointer(new PeriodicDiscreteFunction("Corrector Function of Phi",
                                                                      periodicDiscreteFunctionSpace_));
       corrector_Phi[i]->clear();
-      if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+      /* // if the cell problems are not precomputed, we might use:
         CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
         cell_problem_solver.template solvecellproblem< JacobianRangeType >
           ( gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]) );
-      } else {
-        discrete_function_reader.read( cell_problem_id[i], *(corrector_Phi[i]) );
-      }
+      */
+      discrete_function_reader.read( cell_problem_id[i], *(corrector_Phi[i]) );
     }
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -279,15 +278,15 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
               }
             }
 
-            // if test function reconstruction
-            if (DSC_CONFIG_GET("TFR", false)) {
+            // if test function reconstruction = non-Petrov-Galerkin HMM
+            if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
               JacobianRangeType grad_reconstruction_Phi_j;
               for (int k = 0; k < dimension; ++k)
                 grad_reconstruction_Phi_j[0][k] = gradient_Phi[j][0][k] + grad_corrector_j[0][k];
 
               fine_scale_average += cutting_function * weight_micro_quadrature
                                     * (diffusion_in_gradient_Phi_reconstructed[0] * grad_reconstruction_Phi_j[0]);
-            } else {// ifdef TFR}
+            } else {// if Petrov-Galerkin-HMM
               fine_scale_average += cutting_function * weight_micro_quadrature
                                     * (diffusion_in_gradient_Phi_reconstructed[0] * gradient_Phi[j][0]);
             }
@@ -312,16 +311,17 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       ::assemble_jacobian_matrix(DiscreteFunction& old_u_H /*u_H^(n-1)*/,
                                  MatrixType& global_matrix) const
 {
+
   // if test function reconstruction
-  if (DSC_CONFIG_GET("TFR", false))
-    DSC_LOG_INFO << "Assembling TFR-HMM Matrix for Newton Iteration." << std::endl;
+  if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) )
+    DSC_LOG_INFO << "Assembling classical (non-Petrov-Galerkin) HMM Matrix for Newton Iteration." << std::endl;
   else
-    DSC_LOG_INFO << "Assembling HMM Matrix for Newton Iteration." << std::endl;
+    DSC_LOG_INFO << "Assembling (Petrov-Galerkin) HMM Matrix for Newton Iteration." << std::endl;
 
   // place, where we saved the solutions of the cell problems
-  const std::string cell_solution_location_baseSet = "HMM/" + filename_ + "/cell_problems/_cellSolutions_baseSet";
-  const std::string cell_solution_location_discFunc = "HMM/" + filename_ + "/cell_problems/_cellSolutions_discFunc";
-  const std::string jac_cor_cell_solution_location_baseSet_discFunc = "HMM/" + filename_
+  const std::string cell_solution_location_baseSet = filename_ + "/cell_problems/_cellSolutions_baseSet";
+  const std::string cell_solution_location_discFunc = filename_ + "/cell_problems/_cellSolutions_discFunc";
+  const std::string jac_cor_cell_solution_location_baseSet_discFunc = filename_
                                                     + "/cell_problems/_JacCorCellSolutions_baseSet_discFunc";
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
@@ -389,12 +389,11 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
     corrector_old_u_H.clear();
 
     const CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
-    if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+    /* // if the cell problems are not precomputed, we might use:
       cell_problem_solver.template solvecellproblem< JacobianRangeType >
         (grad_old_u_H, macro_entity_barycenter, corrector_old_u_H);
-    } else {
-      discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
-    }
+    */
+    discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
 
     std::vector<std::unique_ptr<PeriodicDiscreteFunction> > corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
@@ -412,16 +411,15 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
       // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
       inverse_jac.mv(gradient_Phi_ref_element[0], gradient_Phi[i][0]);
 
-      if (DSC_CONFIG_GET("TFR", false)) {
+      if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
         corrector_Phi[i] = std::unique_ptr<PeriodicDiscreteFunction>(
                              new PeriodicDiscreteFunction("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_));
         corrector_Phi[i]->clear();
-        if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+        /* // if the cell problems are not precomputed, we might use:
           cell_problem_solver.template solvecellproblem< JacobianRangeType >
             (gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]));
-        } else {
-          discrete_function_reader_baseSet.read( cell_problem_id[i], *(corrector_Phi[i]) );
-        }
+        */
+        discrete_function_reader_baseSet.read( cell_problem_id[i], *(corrector_Phi[i]) );
       }
     }
     // the multiplication with jacobian inverse is delegated
@@ -436,16 +434,15 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
                                                                 periodicDiscreteFunctionSpace_);
       jacobian_corrector_old_u_H_Phi_i.clear();
 
-      if (DSC_CONFIG_GET("AD_HOC_COMPUTATION", false)) {
+      /* // if the cell problems are not precomputed, we might use:
         cell_problem_solver.template solve_jacobiancorrector_cellproblem< JacobianRangeType >
           (gradient_Phi[i],
           grad_old_u_H,
           corrector_old_u_H,
           macro_entity_barycenter,
           jacobian_corrector_old_u_H_Phi_i);
-      } else {
-        discrete_function_reader_jac_cor.read(cell_problem_id[i], jacobian_corrector_old_u_H_Phi_i);
-      }
+      */
+      discrete_function_reader_jac_cor.read(cell_problem_id[i], jacobian_corrector_old_u_H_Phi_i);
 
       for (unsigned int j = 0; j < numMacroBaseFunctions; ++j)
       {
@@ -484,7 +481,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
             loc_D_Q_old_u_H_Phi_i.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_D_Q_old_u_H_Phi_i);
 
             JacobianRangeType grad_corrector_Phi_j;
-            if (DSC_CONFIG_GET("TFR", false)) {
+            if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
               loc_corrector_Phi_j.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_Phi_j);
             }
 
@@ -520,7 +517,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
             }
 
             // if test function reconstruction
-            if (DSC_CONFIG_GET("TFR", false)) {
+            if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
               JacobianRangeType grad_reconstruction_Phi_j;
               for (int k = 0; k < dimension; ++k)
                 grad_reconstruction_Phi_j[0][k] = gradient_Phi[j][0][k] + grad_corrector_Phi_j[0][k];

@@ -169,8 +169,9 @@ HMMResult<HMMTraits>  estimate_error(
 
     result.estimated_residual_error += local_residual_indicator;
 
+    // tfr = test function reconstruction ( = non-Petrov-Galerkin )
     typename HMM::RangeType local_tfr_indicator(0);
-    if (DSC_CONFIG_GET("TFR", false)) {
+    if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
       // use 'indicator_effective_tfr' or 'indicator_tfr_1'
       // contribution of the local tfr error:
       local_tfr_indicator = error_estimator.indicator_tfr_1(entity, hmm_solution, corrector_u_H_on_entity);
@@ -210,7 +211,7 @@ HMMResult<HMMTraits>  estimate_error(
   result.estimated_error = result.estimated_source_error +
           result.estimated_approximation_error + result.estimated_residual_error;
 
-  if (DSC_CONFIG_GET("TFR", false)) {
+  if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
     result.estimated_tfr_error = sqrt(result.estimated_tfr_error);
     result.estimated_error += result.estimated_tfr_error;
   }

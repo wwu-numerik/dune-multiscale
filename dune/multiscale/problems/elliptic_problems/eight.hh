@@ -35,7 +35,7 @@ struct ModelProblemData
 
   //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
   inline int getRefinementLevelReferenceProblem() const {
-    return 18;
+    return 10;
   }
 };
 
