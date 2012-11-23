@@ -216,7 +216,7 @@ HMMResult<HMMTraits>  estimate_error(
     result.estimated_error += result.estimated_tfr_error;
   }
 
-  if (DSC_CONFIG_GET("adaptive", false)) {
+  if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
     // maximum variation (up) from average
     result.max_variation = result.average_loc_indicator / result.maximal_loc_indicator;
     result.min_variation = result.average_loc_indicator / result.minimal_loc_indicator;

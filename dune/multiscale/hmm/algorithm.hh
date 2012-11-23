@@ -247,9 +247,9 @@ void print_info(ProblemDataType info, std::ostream& out)
   out << "Delta (edge length of cell-cube) = " << delta_ << std::endl;
   if (DSC_CONFIG_GET("problem.stochastic_pertubation", false))
     out << std::endl << "Stochastic perturbation added. Variance = " << DSC_CONFIG_GET("problem.stochastic_variance", 0.01) << std::endl;
-  if (DSC_CONFIG_GET("hmm.adaptive", true)) {
+  if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
     //only used in adaptive config
-    const double error_tolerance_ = DSC_CONFIG_GET("problem.error_tolerance", 1e-6);
+    const double error_tolerance_ = DSC_CONFIG_GET("hmm.error_tolerance", 1e-6);
     out << std::endl << "Adaptive computation. Global error tolerance for program abort = "
               << error_tolerance_ << std::endl;
   }
@@ -537,7 +537,7 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
     const auto result = single_step<HMM>(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                 diffusion_op, rhsassembler, hmm_solution, fem_newton_solution, loop_cycle);
 
-    if (!DSC_CONFIG_GET("hmm.adaptive", true))
+    if ( !DSC_CONFIG_GET("hmm.adaptivity", false) )
       break;
 
     if (!adapt<HMM>(result, loop_cycle, error_tolerance_, discreteFunctionSpace, adaptationManager))

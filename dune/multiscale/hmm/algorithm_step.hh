@@ -207,8 +207,6 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
         break;//invalid dofs in residual or
       }
 
-      hmm_iteration_step += 1;
-
       if (relative_newton_error > hmm_tolerance)
       {
         auto newton_step_time = DSC_PROFILER.stopTiming("newton_step_", hmm_iteration_step) / 1000.f;
@@ -228,13 +226,16 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
         }
         DSC_LOG_INFO << "....................................................." << std::endl << std::endl;
       }
+
+      hmm_iteration_step += 1;
+
     }       // while( relative_newton_error > hmm_tolerance )
 
     const auto elapsed = DSC_PROFILER.stopTiming("hmmAssemble");
     DSC_LOG_INFO << seperator_line << "HMM problem with Newton method solved in " << elapsed / 1000.f << "s." << std::endl
               << std::endl;
 
-    if (DSC_CONFIG_GET("adaptive", false)) {
+    if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
       //! TODO which section the local time needs to be added to
       // or if it's necessary at all
       //total_hmm_time += DSC_PROFILER.stopTiming("hmmAssemble");
@@ -343,7 +344,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
 
   // write the solution after the current HMM Newton step to a file
   // for adaptive computations, the saved solution is not suitable for a later usage
-  if (DSC_CONFIG_GET("adaptive", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", true)) {
+  if (DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", true)) {
     std::string fname = (boost::format("/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
                          % refinement_level_macrogrid_ % hmm_iteration_step).str();
     DiscreteFunctionWriter(fname).append(hmm_solution);
@@ -398,7 +399,7 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
 
   // create and initialize output class
   typename HMM::IOTupleType hmm_solution_series(&hmm_solution);
-  if (DSC_CONFIG_GET("adaptive", false)) {
+  if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
     outputparam.set_prefix((boost::format("hmm_solution_%d") % loop_cycle).str());
   }
   else {
@@ -509,7 +510,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
 
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
     // for adaptive computations, the saved solution is not suitable for a later usage
-    if (!DSC_CONFIG_GET("adaptive", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", false)) {
+    if (!DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", false)) {
       DiscreteFunctionWriter((boost::format("/hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
                              ).append(hmm_solution);
     }
@@ -612,7 +613,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
       DSC_LOG_INFO << "        contribution of macro jumps = " << errors.estimated_residual_error_macro_jumps << " and " << std::endl;
       DSC_LOG_INFO << "        contribution of micro jumps = " << errors.estimated_residual_error_micro_jumps << " and " << std::endl;
       if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) )
-        DSC_LOG_INFO << "   Estimated tfr error = " << estimated_tfr_error << "." << std::endl;
+        DSC_LOG_INFO << "   Estimated tfr error = " << errors.estimated_tfr_error << "." << std::endl;
     }
     //! -------------------------------------------------------
 

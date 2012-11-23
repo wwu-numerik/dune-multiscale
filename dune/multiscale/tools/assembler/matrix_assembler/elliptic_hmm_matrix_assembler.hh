@@ -456,10 +456,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
           const Entity& micro_grid_entity = *micro_grid_it;
           const Geometry& micro_grid_geometry = micro_grid_entity.geometry();
           assert(micro_grid_entity.partitionType() == InteriorEntity);
-
           auto loc_corrector_old_u_H = corrector_old_u_H.localFunction(micro_grid_entity);
           auto loc_D_Q_old_u_H_Phi_i = jacobian_corrector_old_u_H_Phi_i.localFunction(micro_grid_entity);
-          auto loc_corrector_Phi_j = corrector_Phi[j]->localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
           Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
@@ -482,6 +480,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
             JacobianRangeType grad_corrector_Phi_j;
             if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
+              auto loc_corrector_Phi_j = corrector_Phi[j]->localFunction(micro_grid_entity);
               loc_corrector_Phi_j.jacobian(micro_grid_quadrature[microQuadraturePoint], grad_corrector_Phi_j);
             }
 

@@ -68,10 +68,10 @@ delta = 0.05
 # NOTE that (delta/epsilon_guess) needs to be a positive integer!
 
 # initial coarse level
-coarse_grid_level = 2
+coarse_grid_level = 0
 
 # resolution level for the grid for the unit cube Y
-cell_grid_level = 4
+cell_grid_level = 2
 # 'effective fine grid level' = 'epslion guess' * 'cell grid size'
 
 # use the MsFEM in Petrov-Galerkin (unsymmetric) formulation
