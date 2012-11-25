@@ -54,7 +54,10 @@
 
 void adapt(Dune::MsfemTraits::GridType& grid,
            Dune::MsfemTraits::GridType& grid_coarse,
-           const int loop_number) {
+           const int loop_number,
+           int& total_refinement_level_,
+           int& coarse_grid_level_,
+           int& number_of_layers_) {
   using namespace Dune;
   typedef MsfemTraits::GridType::LeafGridView         GridView;
   typedef GridView::Codim< 0 >::Iterator ElementLeafIterator;
@@ -176,7 +179,9 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
                      const Dune::MsfemTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
                      Dune::myDataOutputParameters& outputparam,
-                     const int loop_number)
+                     const int loop_number,
+                     int& total_refinement_level_,
+                     int& coarse_grid_level_)
 {
   using namespace Dune;
   //! ----------------- writing data output MsFEM Solution -----------------
@@ -262,7 +267,7 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
   //! --------------------------------------------------------------------------------------
 
   //! --------------- writing data output for the coarse grid visualization ------------------
-  MsfemTraits::DiscreteFunctionType coarse_grid_visualization(filename_ + " Visualization of the coarse grid",
+  MsfemTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
                                                  discreteFunctionSpace_coarse);
   coarse_grid_visualization.clear();
   // -------------------------- data output -------------------------
@@ -323,7 +328,11 @@ bool error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solut
 }
 
 //! algorithm
-bool algorithm(const std::string& macroGridName, const int loop_number) {
+bool algorithm(const std::string& macroGridName,
+               const int loop_number,
+               int& total_refinement_level_,
+               int& coarse_grid_level_,
+               int& number_of_layers_) {
   using namespace Dune;
 
   if (DSC_CONFIG_GET("adaptive", false))
@@ -357,7 +366,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number) {
 
   // strategy for adaptivity:
   if (DSC_CONFIG_GET("adaptive", false))
-    adapt(grid, grid_coarse, loop_number);
+    adapt(grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_);
 
   grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
 
@@ -381,13 +390,13 @@ bool algorithm(const std::string& macroGridName, const int loop_number) {
   //! ---------------------- solve MsFEM problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  MsfemTraits::DiscreteFunctionType msfem_solution(filename_ + " MsFEM Solution", discreteFunctionSpace);
+  MsfemTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", discreteFunctionSpace);
   msfem_solution.clear();
 
-  MsfemTraits::DiscreteFunctionType coarse_part_msfem_solution(filename_ + " Coarse Part MsFEM Solution", discreteFunctionSpace);
+  MsfemTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution", discreteFunctionSpace);
   coarse_part_msfem_solution.clear();
 
-  MsfemTraits::DiscreteFunctionType fine_part_msfem_solution(filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace);
+  MsfemTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
   const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
@@ -415,7 +424,8 @@ bool algorithm(const std::string& macroGridName, const int loop_number) {
 
     DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
     solution_output(msfem_solution, coarse_part_msfem_solution,
-                    fine_part_msfem_solution, outputparam, loop_number);
+                    fine_part_msfem_solution, outputparam, loop_number,
+                    total_refinement_level_, coarse_grid_level_);
 
     // error estimation
     if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
@@ -430,7 +440,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number) {
   //! ---------------------- solve FEM problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  MsfemTraits::DiscreteFunctionType fem_solution(filename_ + " FEM Solution", discreteFunctionSpace);
+  MsfemTraits::DiscreteFunctionType fem_solution("FEM Solution", discreteFunctionSpace);
   fem_solution.clear();
 
   // just for Dirichlet zero-boundary condition
@@ -529,17 +539,17 @@ int main(int argc, char** argv) {
     // syntax: info_from_par_file / default  / validation of the value
 
     // coarse_grid_level denotes the (starting) grid refinement level for the global coarse scale problem, i.e. it describes 'H'
-    coarse_grid_level_ = DSC_CONFIG_GETV( "msfem.coarse_grid_level", 4, DSC::ValidateLess< int >( -1 ) );
+    int coarse_grid_level_ = DSC_CONFIG_GETV( "msfem.coarse_grid_level", 4, DSC::ValidateLess< int >( -1 ) );
 
     // syntax: info_from_par_file / default
-    number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
+    int number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
     const Problem::ModelProblemData info;
 
     // total_refinement_level denotes the (starting) grid refinement level for the global fine scale problem, i.e. it describes 'h'
-    total_refinement_level_
+    int total_refinement_level_
       = DSC_CONFIG_GETV( "msfem.fine_grid_level", 4, DSC::ValidateLess< int >(coarse_grid_level_-1) );
 
     // name of the grid file that describes the macro-grid:
@@ -569,7 +579,7 @@ int main(int argc, char** argv) {
     }
 
     unsigned int loop_number = 0;
-    while (algorithm(macroGridName, loop_number++))
+    while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_, number_of_layers_))
     {}
 
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the

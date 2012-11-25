@@ -1,19 +1,10 @@
 #ifndef MSFEM_GLOBALS_HH
 #define MSFEM_GLOBALS_HH
 
-//! ---------------------- important variables ---------------------------------
-// name of the error file in which the data will be saved
-std::string filename_;
-//std::string path_;
-int total_refinement_level_;
-int coarse_grid_level_;
-// only for uniform computations / use the same number of layers for every coarse grid entity
-int number_of_layers_;
-//! -----------------------------------------------------------------------------
 
 //! ---------------------- local error indicators --------------------------------
 // ----- local error indicators (for each coarse grid element T) -------------
-int max_loop_number = 10;
+const int max_loop_number = 10;
 bool local_indicators_available_ = false;
 // local coarse residual, i.e. H ||f||_{L^2(T)}
 Dune::MsfemTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
