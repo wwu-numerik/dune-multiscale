@@ -2,6 +2,9 @@
 #define DiscreteEllipticMsFEMLocalProblem_HH
 
 #include <vector>
+#ifdef HAVE_OMP
+  #include <omp.h>
+#endif
 
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/common/fmatrix.hh>
@@ -738,9 +741,14 @@ public:
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-    for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
+    std::vector<int> coarse_indices;
+    // Coarse Entity Iterator
+    const HostGridEntityIteratorType coarse_grid_end = coarseSpace.end();
+    for (HostGridEntityIteratorType coarse_grid_it = coarseSpace.begin();
+         coarse_grid_it != coarse_grid_end;
+         ++coarse_grid_it)
     {
-      const int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
+      const int coarse_index = coarseGridLeafIndexSet.index(*coarse_grid_it);
 
       DSC_LOG_INFO << "-------------------------" << std::endl
                    << "Coarse index " << coarse_index << std::endl;
