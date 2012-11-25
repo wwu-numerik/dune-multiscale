@@ -794,7 +794,7 @@ public:
       cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
       DSC_PROFILER.resetTiming("local_problem_solution");
     }
-    const auto total_time = DSC_PROFILER.stopTiming("conservative_flux_solver-solve_all_subgrids");
+    const auto total_time = DSC_PROFILER.stopTiming("conservative_flux_solver-solve_all_subgrids") / 1000.f;
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In: 'assemble all conservatice fluxes'." << std::endl << std::endl;
     DSC_LOG_INFO << "Conservative Flux determined for " << number_of_coarse_grid_entities

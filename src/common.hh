@@ -76,6 +76,7 @@ CollectiveCommunication init(int argc, char** argv) {
                   DSC_CONFIG_GETB("logging.dir", "log" /*path below datadir*/, useLogger)
                   );
   DSC_CONFIG.setRecordDefaults(true);
+  DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
   return CollectiveCommunication();  // ( Dune::MPIManager::helper().getCommunicator() );
 } // init
 
