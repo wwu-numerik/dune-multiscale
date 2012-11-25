@@ -397,12 +397,6 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
 
   const typename HMM::ModelProblemDataType problem_data;
   print_info(problem_data, DSC_LOG_INFO);
-  //! ---- tools ----
-  // model problem data
-// UNUSED  Problem::ModelProblemData problem_data;
-// set of hmm parameters/information
-// UNUSED  Multiscale::HMMParameters method_info;
-
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
   typename HMM::GridPartType gridPart(*macro_grid_pointer);
@@ -433,10 +427,8 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
- const typename HMM::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
+  const typename HMM::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
 
-// UNUSED  RangeType size_of_domain = get_size_of_domain(discreteFunctionSpace);
-  static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
   if (DSC_CONFIG_GET("HOMOGENIZEDSOL_AVAILABLE", false)) {
     if (DSC_CONFIG_GET("problem.linear", true)) {
       const std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";

@@ -253,8 +253,6 @@ public:
       const HostEntityType& host_entity = *host_it;
       // Dune::Stuff::Grid::printEntity(host_entity);
 
-      const int DUNE_UNUSED(number_of_nodes_in_entity) = (*host_it).template count< 2 >();
-
       // get the coarse-grid-father of host_entity (which is a maxlevel entity)
       HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                            HostEntityPointerType(host_entity),
@@ -275,8 +273,6 @@ public:
         {
           // check if the neighbor entity is in the subgrid
           const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-          const HostEntityType& DUNE_UNUSED neighborHostEntity = *neighborHostEntityPointer;
-
           HostEntityPointerType level_father_neighbor_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                                         neighborHostEntityPointer,
                                                                                         level_difference);

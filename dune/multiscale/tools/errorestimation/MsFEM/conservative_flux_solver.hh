@@ -194,8 +194,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
                                                                        host_entity_pointer,
                                                                        specifier_.getLevelDifference());
     const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
-
-    const SubGridGeometry& DUNE_UNUSED(sub_grid_geometry) = sub_grid_entity.geometry();
     assert(sub_grid_entity.partitionType() == InteriorEntity);
 
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
@@ -373,8 +371,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( subDiscreteFunctionSpace.mapper().maxNumDofs() );
-
-  RangeType DUNE_UNUSED(rhs_L2_Norm) = 0.0;
 
   const SubGridIterator end = subDiscreteFunctionSpace.end();
   for (SubGridIterator it = subDiscreteFunctionSpace.begin(); it != end; ++it)
@@ -617,9 +613,6 @@ public:
                                                      hostDiscreteFunctionSpace_,
                                                      diffusion_,
                                                      specifier_);
-
-    const SubGridPartType& DUNE_UNUSED(subGridPart) = localDiscreteFunctionSpace.gridPart();
-    const SubGridType& DUNE_UNUSED(subGrid) = localDiscreteFunctionSpace.grid();
 
     //! right hand side vector of the algebraic local MsFEM problem
     SubGridDiscreteFunctionType rhs("RHS of Conservative Flux Problem", localDiscreteFunctionSpace);

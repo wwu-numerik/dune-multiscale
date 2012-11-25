@@ -66,15 +66,12 @@ void adapt(Dune::MsfemTraits::GridType& grid,
   if (local_indicators_available_)
   {
     bool coarse_scale_error_dominant = false;
-    bool DUNE_UNUSED(fine_scale_error_dominant) = false;   // wird noch nicht benoetigt, dass wir diese Verfeinerung uniform regeln
-    bool DUNE_UNUSED(oversampling_error_dominant) = false;   // wird noch nicht benoetigt, dass wir diese Adadption uniform regeln
     // identify the dominant contribution:
     const double average_est_error = total_estimated_H1_error_[loop_number - 1] / 6.0;     // 6 contributions
 
     if ( (total_approximation_error_[loop_number - 1] >= average_est_error)
          || (total_fine_grid_jumps_[loop_number - 1] >= average_est_error) )
     {
-      fine_scale_error_dominant = true;   /* increase fine level resolution by 2 levels */
       total_refinement_level_ += 2;   // 'the fine grid level'
       DSC_LOG_INFO << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2."
                 << std::endl;
@@ -86,7 +83,6 @@ void adapt(Dune::MsfemTraits::GridType& grid,
     if ( (total_projection_error_[loop_number - 1] >= average_est_error)
          || (total_conservative_flux_jumps_[loop_number - 1] >= average_est_error) )
     {
-      oversampling_error_dominant = true;   /* increase number of layers by 1 */
       number_of_layers_ += 1;
       DSC_LOG_INFO
       << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5."
@@ -346,11 +342,7 @@ bool algorithm(const std::string& macroGridName,
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine(coarse_grid_level_);
   //! ---- tools ----
-  // model problem data
-  Problem::ModelProblemData problem_info;
   L2Error< MsfemTraits::DiscreteFunctionType > l2error;
-  // expensive hack to deal with discrete functions, defined on different grids
-  Dune::ImprovedL2Error< MsfemTraits::DiscreteFunctionType > DUNE_UNUSED(impL2error);
 
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for MsFEM-macro-problem
@@ -400,7 +392,6 @@ bool algorithm(const std::string& macroGridName,
   fine_part_msfem_solution.clear();
 
   const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
-  const int DUNE_UNUSED(coarse_level_fine_level_difference) = grid.maxLevel() - grid_coarse.maxLevel();
 
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MsfemTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);

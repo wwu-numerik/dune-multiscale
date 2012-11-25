@@ -401,8 +401,6 @@ public:
 
     DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
 
-    const HostgridIterator coarse_iterator_end = coarse_space.end();
-    const HostgridIterator coarse_iterator_begin = coarse_space.begin();
     const HostGrid& grid = discreteFunctionSpace_.gridPart().grid();
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
@@ -410,9 +408,6 @@ public:
 
     DiscreteFunction coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
     coarse_msfem_solution.clear();
-
-    //! create subgrids:
-    bool DUNE_UNUSED(silence) = false;
 
     //! define the right hand side assembler tool
     // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )

@@ -278,7 +278,6 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
     // the barycenter of the macro_grid_entity
     const typename CoarseQuadrature::CoordinateType& local_coarse_point
       = one_point_quadrature.point(0 /*=quadraturePoint*/);
-    DomainType DUNE_UNUSED(coarse_entity_barycenter) = coarse_grid_geometry.global(local_coarse_point);
 
     // transposed of the the inverse jacobian
     const FieldMatrix< double, dimension, dimension >& inverse_jac

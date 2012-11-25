@@ -304,13 +304,8 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
   // set entries to zero:
   local_problem_RHS.clear();
 
-  // model problem data:
-  const Problem::ModelProblemData problem_info;
-
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
-
-  const RangeType DUNE_UNUSED(rhs_L2_Norm) = 0.0;
 
   const Iterator end = discreteFunctionSpace.end();
   for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
@@ -535,12 +530,10 @@ public:
     // ( effect of the discretized differential operator on a certain discrete function )
     LocalProblemOperatorType local_problem_op(subDiscreteFunctionSpace, diffusion_);
 
-    const SubGridPartType& DUNE_UNUSED(subgridPart) = subDiscreteFunctionSpace.gridPart();
     const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
 
     typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
     typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
-    SGIteratorType sg_endit = subDiscreteFunctionSpace.end();
 
     //! right hand side vector of the algebraic local MsFEM problem
     SubDiscreteFunctionType local_problem_rhs("rhs of local MsFEM problem", subDiscreteFunctionSpace);
@@ -717,11 +710,6 @@ public:
         { e[i][0][j] = 1.0; } else
         { e[i][0][j] = 0.0; }
       }
-
-
-    const HostGridPartType& DUNE_UNUSED hostGridPart = hostDiscreteFunctionSpace_.gridPart();
-
-    HostGridType& DUNE_UNUSED hostGrid = hostDiscreteFunctionSpace_.gridPart().grid();
 
     // number of coarse grid entities (of codim 0).
     int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();

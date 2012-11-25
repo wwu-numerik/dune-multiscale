@@ -88,11 +88,6 @@ void algorithm(const std::string& macroGridName) {
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine(coarse_grid_level_);
   //! ---- tools ----
-  // model problem data
-  Problem::ModelProblemData problem_info;
-  L2Error< MsfemTraits::DiscreteFunctionType > l2error;
-  // expensive hack to deal with discrete functions, defined on different grids
-  Dune::ImprovedL2Error< MsfemTraits::DiscreteFunctionType > DUNE_UNUSED(impL2error);
 
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for MsFEM-macro-problem
