@@ -20,6 +20,14 @@ EXECUTE_PROCESS(
 	OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+MACRO(ADD_CXX_FLAGS)
+    string(REPLACE " " ";" FLAGS ${ARGN})
+ FOREACH( ARG ${FLAGS} )
+   ADD_DEFINITIONS(${ARG})
+   LIST(APPEND MY_CXX_FLAGS ${ARG} )
+ ENDFOREACH( ARG )
+ENDMACRO(ADD_CXX_FLAGS)
+
 #----------------------------------------------------------------------------------------------------
 # Options, that can be changed be the User in order to customise dune_multiscale
 #----------------------------------------------------------------------------------------------------
