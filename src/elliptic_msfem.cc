@@ -449,11 +449,7 @@ bool algorithm(const std::string& macroGridName,
   MsfemTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
   // write data
-  std::stringstream outstring;
-  outstring << "fem_solution";
-  fem_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
+  fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );
 
   // -------------------------------------------------------------
 

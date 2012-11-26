@@ -19,10 +19,14 @@
 namespace Problem {
 //this pulls everything from the subnamespace into Problem and should only be done for the "active" problem
 #ifndef PROBLEM_NAME
-  using namespace Problem::Nine;
-#else
-  using namespace Problem::PROBLEM_NAME;
+  #define PROBLEM_NAME Nine
 #endif
+
+using namespace Problem::PROBLEM_NAME;
+
+#define STR(x) #x
+static const std::string name = std::string(STR(PROBLEM_NAME));
+#undef STR
 } // namespace Problem
 
 #endif // DUNE_MS_PROBLEMS_SELECTOR_HH

@@ -218,7 +218,7 @@ void print_info(ProblemDataType info, std::ostream& out)
   // edge length of the cells in the cell proplems,
   const double delta_ = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 0);
-  out << "Error File for Elliptic Model Problem " << DSC_CONFIG_GET("problem.number", 0) << "." << std::endl
+  out << "Error File for Elliptic Model Problem " << Problem::name << "." << std::endl
             << std::endl;
   if (DSC_CONFIG_GET("problem.linear", true))
     out << "Problem is declared as being LINEAR." << std::endl;
@@ -453,7 +453,8 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
       homogenized_solution.clear();
       hom_discrete_elliptic_op.assemble_matrix(hom_stiff_matrix);
 
-      rhsassembler.template assemble < 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2 >(f, hom_rhs);
+      constexpr int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
+      rhsassembler.template assemble < hmm_polorder >(f, hom_rhs);
 
       // set Dirichlet Boundary to zero
       boundaryTreatment(hom_rhs);
