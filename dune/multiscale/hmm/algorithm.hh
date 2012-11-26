@@ -218,7 +218,7 @@ void print_info(ProblemDataType info, std::ostream& out)
   // edge length of the cells in the cell proplems,
   const double delta_ = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 0);
-  out << "Error File for Elliptic Model Problem " << DSC_CONFIG_GET("problem.number", 0) << "." << std::endl
+  out << "Error File for Elliptic Model Problem " << Problem::name << "." << std::endl
             << std::endl;
   if (DSC_CONFIG_GET("problem.linear", true))
     out << "Problem is declared as being LINEAR." << std::endl;
