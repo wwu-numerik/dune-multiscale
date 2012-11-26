@@ -4,6 +4,7 @@ PROJECT(dune_multiscale)
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../dune-stuff/cmake )
+set(ENABLE_MPI "1" CACHE FORCE STRING "set to 1 to enalbe mpi")
 include(DuneUtils)
 
 #----------------------------------------------------------------------------------------------------
@@ -60,14 +61,12 @@ SET( UGGRID_BASE_PATH
 SET(PROBLEM_NAMES "Easy" "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" INTERNAL )
 
 SET( HMM_PROBLEM
-	"Easy" CACHE STRING
+	"Nine" CACHE STRING
 	"HMM_PROBLEM NAME" )
 
 SET( MSFEM_PROBLEM
-	"Ten" CACHE STRING
+	"Nine" CACHE STRING
 	"MSFEM_PROBLEM NAME" )
-
-
 
 SET_CONFIGHEADER_VARS()
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
