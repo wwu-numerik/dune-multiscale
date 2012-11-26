@@ -140,8 +140,6 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
       DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
 
       // solve cell problems for the solution of the last iteration step
-      const Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType,
-            typename HMM::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
       cell_problem_solver.template saveTheSolutions_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution);
       cell_problem_solver.template saveTheJacCorSolutions_baseSet_discFunc< typename HMM::DiscreteFunctionType >(hmm_solution,
                                                                                           cp_num_manager);

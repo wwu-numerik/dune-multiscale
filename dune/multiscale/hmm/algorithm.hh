@@ -453,6 +453,7 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
       homogenized_solution.clear();
       hom_discrete_elliptic_op.assemble_matrix(hom_stiff_matrix);
 
+      constexpr int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
       rhsassembler.template assemble < hmm_polorder >(f, hom_rhs);
 
       // set Dirichlet Boundary to zero
