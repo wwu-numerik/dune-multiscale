@@ -26,6 +26,11 @@ file = ms.log
 dir = logdata
 
 
+[grid]
+
+file =
+
+
 # method specifications for MsFEM and HMM #
 
 [msfem]
@@ -43,7 +48,7 @@ oversampling_layers = 10
 # !!! key not yet activated !!!
 oversampling_strategy = 1
 
-# use the MsFEM in Petrov-Galerkin (unsymmetric) formulation
+# use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
 # !!! key not yet activated !!!
 petrov_galerkin = 1
 
@@ -80,6 +85,9 @@ petrov_galerkin = 1
 
 # use error estimation and adaptivity?
 adaptivity = 0
+
+# compute the estimated error?
+error_estimation = 1
 
 # error tolerance  
 error_tolerance = 0.1

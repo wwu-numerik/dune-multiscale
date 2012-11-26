@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     // (vorlauefig sollte diese Variante aber reichen)
     const std::string save_filename = DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)
                                       ? std::string(path + "problem-info-resumed-computation.txt")
-                                      : std::string(path + "problem-info.txt");
+                                      : std::string(path + "/logdata/ms.log.log");
     DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
@@ -98,15 +98,13 @@ int main(int argc, char** argv) {
     fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
 
     // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
-    boost::filesystem::path grid_dir(DSC_CONFIG_GET("grid.dir", "../dune/multiscale/grids/cell_grids"));
-    const boost::filesystem::path unitCubeName = grid_dir / "unit_cube_0_centered.dgf";     // --> the 0-centered
-                                                                                                  // unit cube, i.e.
-                                                                                                  // [-1/2,1/2]^2
+    // THIS GRID IS FIXED!
+    const boost::filesystem::path unitCubeName = "../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf";
+    // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2
     // note that the centering is fundamentaly important for the implementation. Do NOT change it to e.g. [0,1]^2!!!
     // to solve the cell problems, we always need a periodic gridPart.
     // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated
-    //on
-    // such a grid )
+    // on such a grid )
     Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(unitCubeName.string());
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
@@ -130,6 +128,9 @@ int main(int argc, char** argv) {
  **/
 void check_config()
 {
+  if ( !DSC_CONFIG_GET("hmm.error_estimation", false) && DSC_CONFIG_GET("hmm.adaptivity", false) )
+    DUNE_THROW(Dune::InvalidStateException, "Error estimation must be activated to use adaptivity.");
+
   //! Do we have/want a fine-scale reference solution?
   // #define FINE_SCALE_REFERENCE
   #ifdef FINE_SCALE_REFERENCE

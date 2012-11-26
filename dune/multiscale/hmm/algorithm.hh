@@ -207,8 +207,8 @@ typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctio
 template <class ProblemDataType>
 void print_info(ProblemDataType info, std::ostream& out)
 {
-  // epsilon is specified in ModelProblemData, which is specified in problem_specification.hh
-  // 'epsilon' in for instance A^{epsilon}(t,x) = A(t,x/epsilon)
+  // epsilon is specified in the parameter file
+  // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
   const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);
   // estimated epsilon (specified in ModelProblemData)
   // estimated epsilon in case epsilon is unknown
@@ -240,7 +240,7 @@ void print_info(ProblemDataType info, std::ostream& out)
     out << "We use the HMM in classical 'symmetric' formulation (non-Petrov-Galerkin)." << std::endl;
 
   out << "Cell problems are solved and saved (in a pre-process)." << std::endl << std::endl;
-  if (DSC_CONFIG_GET("ERRORESTIMATION", false))
+  if (DSC_CONFIG_GET("hmm.error_estimation", false))
      out << "Error estimation activated!" << std::endl << std::endl;
   out << "Epsilon = " << epsilon_ << std::endl;
   out << "Estimated Epsilon = " << epsilon_est_ << std::endl;
@@ -453,7 +453,7 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
       homogenized_solution.clear();
       hom_discrete_elliptic_op.assemble_matrix(hom_stiff_matrix);
 
-      rhsassembler.template assemble < hmm_polorder >(f, hom_rhs);
+      rhsassembler.template assemble < 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2 >(f, hom_rhs);
 
       // set Dirichlet Boundary to zero
       boundaryTreatment(hom_rhs);
@@ -515,7 +515,7 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
   bool repeat = true;
   while (repeat)
   {
-    DSC_LOG_INFO << "########################### LOOP CYCLE " << loop_cycle << " ###########################"
+    DSC_LOG_INFO << std::endl << "########################### LOOP CYCLE " << loop_cycle << " ###########################"
                 << std::endl << std::endl << std::endl;
 
     //! solution vector
