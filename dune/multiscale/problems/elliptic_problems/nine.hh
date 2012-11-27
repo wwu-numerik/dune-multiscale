@@ -212,7 +212,7 @@ public:
 
 
 //! ----------------- Definition of ' m ' ----------------------------
-CONSTANTFUNCTION(MassTerm,  0.00001)
+CONSTANTFUNCTION(MassTerm,  0.0)
 //! ----------------- End Definition of ' m ' ------------------------
 
 

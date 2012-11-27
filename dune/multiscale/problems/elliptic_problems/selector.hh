@@ -2,7 +2,6 @@
 #define DUNE_MS_PROBLEMS_SELECTOR_HH
 
 //for i in $(ls *hh) ; do echo \#include \"${i}\" ; done
-#include "easy.hh"
 #include "eight.hh"
 #include "example.hh"
 #include "five.hh"

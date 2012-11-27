@@ -5,25 +5,36 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-//! USE THIS ONE FOR MSFEM TESTS! PURELY LINEAR ELLIPTIC!
+// --------- TOY PROBLEM FOR SIMPLE TESTS --------------
+//! ------------ Elliptic Problem 0 --------------------
+// an epsilon-indepent linear elliptic toy model problem
 
-//! NOTE: MODEL PROBLEM 0!!!!!
+// we solve for
+//  u(x) = x_1 ( 1 - x_1 ) (1 - x_2 ) x_2
+// with
+//  a_12(x) = a_21(x) = 0 and a_11(x) = a_22(x) = 1 + (x_1)²
+// f is defined so that everything fits together
 
-//!############################## Elliptic Problem -1 ###################################
+//! For more further details about the implementation see '../base.hh'
+//! For details on the classes, see 'example.hh'
 
-
-// NOTE that (delta/epsilon_est) needs to be a positive integer!
+// if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
+#define SYMMETRIC_DIFFUSION_MATRIX
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
+
 namespace Problem {
 namespace Toy {
-// description see below 0.05
+// default value for epsilon (not required for this toy problem)
 CONSTANTSFUNCTION( 1.0 )
 
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
+
+  static const bool has_exact_solution = true;
+
   ModelProblemData()
     : IModelProblemData(constants()) {
   }
@@ -38,6 +49,8 @@ struct ModelProblemData
     return 10;
   }
 };
+
+//! ----------------- Definition of ' f ' ------------------------
 
 template< class FunctionSpaceImp >
 class FirstSource
@@ -97,12 +110,23 @@ public:
   }
 };
 
-/** \brief default class for the second source term G.
- * Realization: set G(x) = 0: **/
-NULLFUNCTION(SecondSource)
+//! ----------------- End Definition of ' f ' ------------------------
 
-// the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-// A^{\epsilon} : R^d -> R^d
+
+//! ----------------- Definition of ' G ' ------------------------
+
+  /** \brief default class for the second source term G.
+   * Realization: set G(x) = 0: **/
+  NULLFUNCTION(SecondSource)
+
+//! ----------------- End Definition of ' G ' ------------------------
+
+
+
+//! ----------------- Definition of ' A ' ------------------------
+
+// the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
+// A^{\epsilon} : \Omega × R² -> R²
 
 template< class FunctionSpaceImp >
 class Diffusion
@@ -126,16 +150,13 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-    Diffusion(){}
+  Diffusion(){}
 
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
-  // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
-  // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
 
-  // instantiate all possible cases of the evaluate-method:
-
-  // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
+  // (diffusive) flux = A^{\epsilon}( x , direction )
+  // (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
@@ -157,63 +178,21 @@ public:
     DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
   }
 };
+//! ----------------- End Definition of ' A ' ------------------------
 
-template< class FunctionSpaceImp, class FieldMatrixImp >
-class HomDiffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, HomDiffusion< FunctionSpaceImp, FieldMatrixImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-  typedef FieldMatrixImp   FieldMatrixType;
 
-private:
-  typedef HomDiffusion< FunctionSpaceType, FieldMatrixType > ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+//! ----------------- Definition of ' m ' ----------------------------
+CONSTANTFUNCTION(MassTerm,  0.0)
+//! ----------------- End Definition of ' m ' ------------------------
 
-public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  const FieldMatrixType& A_hom_;
-
-public:
-  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
-    : A_hom_(A_hom)
-  {}
-
-  // in the linear setting, use the structure
-  // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
-  // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
-  // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
-
-  // instantiate all possible cases of the evaluate-method:
-
-  // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& /*x*/,
-                     const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const {
-    flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
-    flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
-  }
-
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
-};
-
-CONSTANTFUNCTION(MassTerm,  0.00001)
+//! ----------------- Definition of some dummy -----------------------
 NULLFUNCTION(DefaultDummyFunction)
+//! ----------------- End Definition of some dummy -------------------
 
-//! Exact solution (typically it is unknown)
+
+//! ----------------- Definition of ' u ' ----------------------------
+// Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
   : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
@@ -263,6 +242,8 @@ public:
   }
 
 };
+//! ----------------- End Definition of ' u ' ------------------------
+
 } // namespace Toy {
 }
 

@@ -5,9 +5,18 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-//!############################## Elliptic Problem 1 ###################################
+//! ------------ Elliptic Problem 1 -------------------
+
+// linear elliptic model problem - periodic setting
+
+//! For more further details about the implementation see '../base.hh'
+//! For details on the classes, see 'example.hh'
+
+// if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
+#define SYMMETRIC_DIFFUSION_MATRIX
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
+
 namespace Problem {
 namespace One {
 CONSTANTSFUNCTION( 0.05 )
