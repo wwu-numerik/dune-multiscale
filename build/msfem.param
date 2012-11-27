@@ -55,11 +55,11 @@ oversampling_strategy = 1
 # !!! key not yet activated !!!
 petrov_galerkin = 1
 
-# use error estimation and adaptivity?
-adaptivity = 0
-
 # compute the estimated error?
 error_estimation = 1
+
+# use error estimation and adaptive mesh refinement?
+adaptivity = 0
 
 # error tolerance  
 error_tolerance = 1e-6
@@ -86,11 +86,13 @@ cell_grid_level = 2
 # !!! key not yet activated !!!
 petrov_galerkin = 1
 
-# use error estimation and adaptivity?
+# use error estimation and adaptive mesh refinement?
 adaptivity = 0
-
-# compute the estimated error?
-error_estimation = 1
 
 # error tolerance  
 error_tolerance = 0.1
+
+# compute the estimated error?
+error_estimation = 0
+
+[fem]

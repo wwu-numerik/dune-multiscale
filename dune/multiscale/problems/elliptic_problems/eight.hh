@@ -5,15 +5,19 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-//!############################## Elliptic Problem 8 ###################################
+//! ------------ Elliptic Problem 8 -------------------
 
+// a nonlinear model problem - periodic setting
+
+// For details, see 'example.hh'
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
 namespace Eight {
 // description see below
-// vorher: 0.13
-CONSTANTSFUNCTION( 0.0001 )
+
+// default value for epsilon
+CONSTANTSFUNCTION( 0.001 )
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information
@@ -39,6 +43,8 @@ struct ModelProblemData
   }
 };
 
+
+//! ----------------- Definition of ' f ' ------------------------
 
 template< class FunctionSpaceImp >
 class FirstSource
@@ -80,12 +86,24 @@ public:
   }
 };
 
-/** \brief default class for the second source term G.
- * Realization: set G(x) = 0: **/
-NULLFUNCTION(SecondSource)
+//! ----------------- End Definition of ' f ' ------------------------
+
+
+
+//! ----------------- Definition of ' G ' ------------------------
+
+  /** \brief default class for the second source term G.
+   * Realization: set G(x) = 0: **/
+  NULLFUNCTION(SecondSource)
+
+//! ----------------- End Definition of ' G ' ------------------------
+
+
+
+//! ----------------- Definition of ' A ' ------------------------
 
 // the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-// A^{\epsilon} : R^d -> R^d
+// A^{\epsilon} : \Omega × R² -> R²
 
 template< class FunctionSpaceImp >
 class Diffusion
@@ -111,11 +129,7 @@ public:
 public:
   Diffusion(){}
 
-  // in the linear setting, use the structure
-  // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
-  // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
-  // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
-
+  // to simplify evaluate
   double additivePart(const DomainType& x, const int i, const int j) const {
     double y = 0.0;
 
@@ -182,75 +196,20 @@ public:
   }
 };
 
-template< class FunctionSpaceImp, class FieldMatrixImp >
-class HomDiffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, HomDiffusion< FunctionSpaceImp, FieldMatrixImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-  typedef FieldMatrixImp   FieldMatrixType;
+//! ----------------- End Definition of ' A ' ------------------------
 
-private:
-  typedef HomDiffusion< FunctionSpaceType, FieldMatrixType > ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
-public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+//! ----------------- Definition of ' m ' ----------------------------
+CONSTANTFUNCTION(MassTerm,  0.0)
+//! ----------------- End Definition of ' m ' ------------------------
 
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
-  typedef DomainFieldType TimeType;
-
-public:
-  const FieldMatrixType& A_hom_;
-
-public:
-  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
-    : A_hom_(A_hom)
-  {}
-
-  // in the linear setting, use the structure
-  // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
-  // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
-  // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
-
-  // instantiate all possible cases of the evaluate-method:
-
-  // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& /*x*/,
-                     const JacobianRangeType& /*gradient*/,
-                     JacobianRangeType& /*flux*/) const {
-    DUNE_THROW(Dune::NotImplemented, "No homogenization available");
-  }
-
-  // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
-  // "nabla w", i.e.
-  // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
-
-  // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& /*x*/,
-                             const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& /*direction_gradient*/,
-                             JacobianRangeType& /*flux*/) const {
-    if (DSC_CONFIG_GET("problem.linear", true))
-      DUNE_THROW(Dune::NotImplemented, "Not yet implemented.");
-    else
-      DUNE_THROW(Dune::NotImplemented, "Nonlinear example not yet implemented.");
-  } // jacobianDiffusiveFlux
-
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details.");
-  }
-};
-
-CONSTANTFUNCTION(MassTerm,  0.00001)
+//! ----------------- Definition of some dummy -----------------------
 NULLFUNCTION(DefaultDummyFunction)
+//! ----------------- End Definition of some dummy -------------------
 
+
+//! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
@@ -283,6 +242,7 @@ public:
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
     y = (-1.0) * ( (x[0] * x[0]) - x[0] ) * ( (x[1] * x[1]) - x[1] );
+    y -= constants().epsilon * (x[0] + x[1]) * sin(2.0 * M_PI * x[0] / constants().epsilon) * sin(2.0 * M_PI * x[1] / constants().epsilon);
   }
 
   // in case 'u' HAS a time-dependency use the following method:
@@ -298,6 +258,8 @@ public:
     DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
   }
 };
+//! ----------------- End Definition of ' u ' ------------------------
+
 } // namespace Eight {
 }
 

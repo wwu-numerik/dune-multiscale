@@ -353,7 +353,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
 
     // create and initialize output class
     typename HMM::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
-    outputparam.set_prefix((boost::format("hmm_solution_%d_NewtonStep_%d") % loop_cycle % hmm_iteration_step).str());
+    outputparam.set_prefix((boost::format("/hmm_solution_%d_NewtonStep_%d") % loop_cycle % hmm_iteration_step).str());
     typename HMM::DataOutputType hmmsol_dataoutput(hmm_solution.space().gridPart().grid(),
                                                    hmm_solution_newton_step_series, outputparam);
     // write data
@@ -398,10 +398,10 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
   // create and initialize output class
   typename HMM::IOTupleType hmm_solution_series(&hmm_solution);
   if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
-    outputparam.set_prefix((boost::format("hmm_solution_%d") % loop_cycle).str());
+    outputparam.set_prefix((boost::format("/hmm_solution_%d") % loop_cycle).str());
   }
   else {
-    outputparam.set_prefix("hmm_solution");
+    outputparam.set_prefix("/hmm_solution");
   }
   typename HMM::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
 
@@ -416,7 +416,7 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
     typename HMM::ExactSolutionType u;
     typename HMM::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
     typename HMM::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-    outputparam.set_prefix("exact_solution");
+    outputparam.set_prefix("/exact_solution");
     typename HMM::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
 
     // write data
@@ -432,7 +432,7 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
 
   // create and initialize output class
   typename HMM::IOTupleType fem_newton_solution_series(&fem_newton_solution);
-  outputparam.set_prefix("reference_solution");
+  outputparam.set_prefix("/reference_solution");
   typename HMM::DataOutputType fem_newton_dataoutput(gridPartFine.grid(), fem_newton_solution_series, outputparam);
 
   // write data
@@ -449,7 +449,7 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
 
   // create and initialize output class
   IOTupleType homogenized_solution_series(&homogenized_solution);
-  outputparam.set_prefix("homogenized_solution");
+  outputparam.set_prefix("/homogenized_solution");
   DataOutputType homogenized_solution_dataoutput(gridPartFine.grid(), homogenized_solution_series, outputparam);
 
   // write data
@@ -602,16 +602,20 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
       }
     }
 
-    if (DSC_CONFIG_GET("ERRORESTIMATION", false)) {
+    if (DSC_CONFIG_GET("hmm.error_estimation", false)) {
       DSC_LOG_INFO << "Estimated error = " << errors.estimated_error << "." << std::endl;
       DSC_LOG_INFO << "In detail:" << std::endl;
       DSC_LOG_INFO << "   Estimated source error = " << errors.estimated_source_error << "." << std::endl;
       DSC_LOG_INFO << "   Estimated approximation error = " << errors.estimated_approximation_error << "." << std::endl;
       DSC_LOG_INFO << "   Estimated residual error = " << errors.estimated_residual_error << ", where:" << std::endl;
       DSC_LOG_INFO << "        contribution of macro jumps = " << errors.estimated_residual_error_macro_jumps << " and " << std::endl;
-      DSC_LOG_INFO << "        contribution of micro jumps = " << errors.estimated_residual_error_micro_jumps << " and " << std::endl;
+      DSC_LOG_INFO << "        contribution of micro jumps = " << errors.estimated_residual_error_micro_jumps;
       if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) )
-        DSC_LOG_INFO << "   Estimated tfr error = " << errors.estimated_tfr_error << "." << std::endl;
+       {
+         DSC_LOG_INFO << " and " << std::endl;
+         DSC_LOG_INFO << "   Estimated tfr error = " << errors.estimated_tfr_error << "." << std::endl;
+       }
+      DSC_LOG_INFO << std::endl;
     }
     //! -------------------------------------------------------
 

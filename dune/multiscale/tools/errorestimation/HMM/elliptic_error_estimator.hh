@@ -160,8 +160,8 @@ public:
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
-    const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
-    const double epsilon_estimated = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
+    const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
+    const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
     const EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
     // the global quadrature (quadrature on the macro element T)
@@ -270,7 +270,7 @@ public:
     RangeType local_indicator(0.0);
 
     Problem::ModelProblemData model_info;
-    const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+    const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
     EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
     // the global quadrature (quadrature on the macro element T)
@@ -372,8 +372,8 @@ public:
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_inner_entity,
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_outer_entity) const {
     RangeType local_indicator(0.0);
-    const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
-    const double epsilon_estimated = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
+    const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
+    const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
     EntityPointerType inner_it = intersection.inside();
     EntityPointerType outer_it = intersection.outside();
@@ -507,7 +507,7 @@ public:
     RangeType local_indicator(0.0);
 
     const Problem::ModelProblemData model_info;
-    const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+    const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
     const EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
     // the global quadrature (quadrature on the macro element T)
@@ -747,8 +747,8 @@ public:
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
-    const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
-    const double epsilon_estimated = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
+    const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
+    const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
     const EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
     // the global quadrature (quadrature on the macro element T)
@@ -1003,8 +1003,8 @@ public:
                                     const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
-    const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
-    const double epsilon_estimated = DSC_CONFIG_GET("problem.epsilon_guess", 1.0f);
+    const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
+    const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
     const EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
     // the global quadrature (quadrature on the macro element T)

@@ -61,9 +61,14 @@ CONSTANTSFUNCTION( 0.05 )
 struct ModelProblemData
   : public IModelProblemData
 {
+
+  static const bool has_exact_solution = false;
+
   ModelProblemData()
     : IModelProblemData(constants()) {
     assert(!constants_.epsilon != 0.0);
+    if (!constants().get("linear", true))
+      DUNE_THROW(Dune::InvalidStateException, "problem ten is entirely linear, but problem.linear was false");
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()

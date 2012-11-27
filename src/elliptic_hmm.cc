@@ -65,7 +65,8 @@ int main(int argc, char** argv) {
     const std::string save_filename = DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)
                                       ? std::string(path + "problem-info-resumed-computation.txt")
                                       : std::string(path + "/logdata/ms.log.log");
-    DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
+    DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
+    cout << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
@@ -154,11 +155,4 @@ void check_config()
  #define HMM_NEWTON_ITERATION_STEP 0
 #endif // ifdef RESUME_TO_BROKEN_COMPUTATION
 
-//! Do we want to use error estimation (a-posteriori estimate and adaptivity)?
-// #define ERRORESTIMATION
-// only possible if we use error estimation:
-#ifdef ERRORESTIMATION
-  // Do you want to allow adaptive mesh refinement?
-  // #define ADAPTIVE
-#endif // ifdef ERRORESTIMATION
 }

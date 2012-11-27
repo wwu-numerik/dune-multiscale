@@ -46,7 +46,7 @@ typedef Problem::MassTerm< FunctionSpaceType > MassTermType;
 // default type for any missing coefficient function (e.g. advection,...)
 typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionType;
 typedef Dune::Homogenizer< GridType, DiffusionType > HomogenizerType;
-typedef Problem::HomDiffusion< FunctionSpaceType, HomogenizerType::HomTensorType >
+typedef Problem::ConstantDiffusionMatrix< FunctionSpaceType, HomogenizerType::HomTensorType >
     HomDiffusionType;
 //!-----------------------------------------------------------------------------------------
 
