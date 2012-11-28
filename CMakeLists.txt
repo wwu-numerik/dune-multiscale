@@ -139,6 +139,14 @@ ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
 set_target_properties(elliptic_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
+ADD_EXECUTABLE(elliptic_hom_fem src/elliptic_hom_fem.cc ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
+set_target_properties(elliptic_hom_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
+
+ADD_EXECUTABLE(elliptic_fem src/elliptic_fem.cc ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
+set_target_properties(elliptic_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
+
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
