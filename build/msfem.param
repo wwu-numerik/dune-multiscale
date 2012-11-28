@@ -75,7 +75,9 @@ adaptivity = 0
 # error tolerance  
 error_tolerance = 1e-6
 
-
+# compute the errors between MsFEM and (standard) FEM approximations?
+fem_comparison = 1
+# (fem resolution = fine_grid_level of MsFEM)
 
 [hmm]
 

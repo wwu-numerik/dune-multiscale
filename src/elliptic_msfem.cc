@@ -50,9 +50,6 @@
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/aliases.hh>
-
 //!---------------------------------------------------------------------------------------
 
 void adapt(Dune::MsfemTraits::GridType& grid,
@@ -65,7 +62,6 @@ void adapt(Dune::MsfemTraits::GridType& grid,
            const std::vector<Dune::MsfemTraits::RangeVector*>& totals,
            const Dune::MsfemTraits::RangeVector& total_estimated_H1_error_)
 {
-  DSC::Profiler::ScopedTiming st("msfem.adapt");
   using namespace Dune;
   typedef MsfemTraits::GridType::LeafGridView         GridView;
   typedef GridView::Codim< 0 >::Iterator ElementLeafIterator;
@@ -192,7 +188,6 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
                      int& total_refinement_level_,
                      int& coarse_grid_level_)
 {
-  DSC::Profiler::ScopedTiming st("msfem.solution_output");
   using namespace Dune;
   //! ----------------- writing data output MsFEM Solution -----------------
   // --------- VTK data output for MsFEM solution --------------------------
@@ -257,7 +252,6 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
                  Dune::myDataOutputParameters& outputparam,
                  const int loop_number)
 {
-  DSC::Profiler::ScopedTiming st("msfem.data_output");
   using namespace Dune;
   // sequence stamp
   //! --------------------------------------------------------------------------------------
@@ -440,7 +434,6 @@ bool algorithm(const std::string& macroGridName,
 
     // error estimation
     if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
-      DSC::Profiler::ScopedTiming st("msfem.estimator");
       MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
       error_estimation(msfem_solution, coarse_part_msfem_solution,
                        fine_part_msfem_solution, estimator, specifier, loop_number,
@@ -450,45 +443,38 @@ bool algorithm(const std::string& macroGridName,
   }
 
 
-
-  //! ---------------------- solve FEM problem ---------------------------
+  //! ---------------------- solve FEM problem with same (fine) resolution ---------------------------
   //! solution vector
+  // solution of the standard finite element method
   MsfemTraits::DiscreteFunctionType fem_solution("FEM Solution", discreteFunctionSpace);
-  {
-    DSC::Profiler::ScopedTiming st("msfem.fem_solution");
-    // solution of the standard finite element method
-    fem_solution.clear();
+  fem_solution.clear();
 
+  if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
+  {
     // just for Dirichlet zero-boundary condition
     const Elliptic_FEM_Solver< MsfemTraits::DiscreteFunctionType > fem_solver(discreteFunctionSpace);
     fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
 
-    //! ----------------------------------------------------------------------
-    DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
-    //! -------------------------- writing data output FEM Solution ----------
+  //! ----------------------------------------------------------------------
+  DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
+  //! -------------------------- writing data output FEM Solution ----------
 
-    // ------------- VTK data output for FEM solution --------------
-    // create and initialize output class
-    MsfemTraits::IOTupleType fem_solution_series(&fem_solution);
-    outputparam.set_prefix("/fem_solution");
-    MsfemTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
+  // ------------- VTK data output for FEM solution --------------
+  // create and initialize output class
+  MsfemTraits::IOTupleType fem_solution_series(&fem_solution);
+  outputparam.set_prefix("/fem_solution");
+  MsfemTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
     // write data
     fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );
-
     // -------------------------------------------------------------
-
-    // ------------- write discrete fem solution to file -----------
-    const std::string fine_location = (boost::format("fem_solution_discFunc_refLevel_%d")
-                                       % total_refinement_level_).str();
-    DiscreteFunctionWriter(fine_location).append(fem_solution);
   }
 
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
-    DSC::Profiler::ScopedTiming st("msfem.exact_errors");
+
     H1Error< MsfemTraits::DiscreteFunctionType > h1error;
 
     const MsfemTraits::ExactSolutionType u;
@@ -503,20 +489,23 @@ bool algorithm(const std::string& macroGridName,
     h1_msfem_error += msfem_error;
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
 
-
-    MsfemTraits::RangeType fem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
+    if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
+    {
+      MsfemTraits::RangeType fem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
                                                             fem_solution,
                                                             2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
-    DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
+      DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
 
-    MsfemTraits::RangeType h1_fem_error(0.0);
+      MsfemTraits::RangeType h1_fem_error(0.0);
 
-    h1_fem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, fem_solution);
-    h1_fem_error += fem_error;
-    DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
-  } else {
-    DSC_LOG_ERROR << "Exact solution not available. Use fine-scale FEM-approximation as a reference solution."
+      h1_fem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, fem_solution);
+      h1_fem_error += fem_error;
+      DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
+    }
+  } else if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
+  {
+    DSC_LOG_ERROR << "Exact solution not available. Errors between MsFEM and FEM approximations for the same fine grid resolution."
                   << std::endl << std::endl;
     MsfemTraits::RangeType approx_msfem_error = l2error.norm2< 2* MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
                                                                                                       msfem_solution);
@@ -578,6 +567,8 @@ int main(int argc, char** argv) {
       DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
       DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
       DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
+       { DSC_LOG_INFO << std::endl << "Comparison with standard FEM computation on the MsFEM Fine Grid, i.e. on Refinement Level " << total_refinement_level_ << std::endl; }
       DSC_LOG_INFO << std::endl << std::endl;
     } else {
       DSC_LOG_INFO << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
@@ -588,6 +579,8 @@ int main(int argc, char** argv) {
       DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
       DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
       DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
+      if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
+      { DSC_LOG_INFO << std::endl << "Comparison with a standard FEM computation on the MsFEM Fine Grid." << std::endl; }
       DSC_LOG_INFO << std::endl << std::endl;
     }
 
