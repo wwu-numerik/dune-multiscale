@@ -9,6 +9,17 @@ epsilon = 0.05
 # linear or nonlinear problem?
 linear = 0
 
+# do we have a precomputed reference solution?
+reference_solution = 0
+
+# file where the reference solution is stored
+rs_file =
+
+# grid refinement level for which the reference was computed
+rs_grid_level = 
+
+
+
 [global]
 
 # directory to save the data output
@@ -95,4 +106,9 @@ error_tolerance = 0.1
 # compute the estimated error?
 error_estimation = 0
 
+
+
 [fem]
+
+# grid refinement level
+grid_level = 0

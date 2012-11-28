@@ -1,3 +1,5 @@
+//! MUSS NOCH AUFGERAEUMT UND UEBERARBEITET WERDEN!!!!!!!!!
+
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_THREE
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_THREE
 
@@ -5,7 +7,7 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-//!############################## Elliptic Problem 1 ###################################
+//!############################## Elliptic Problem 3 ###################################
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {

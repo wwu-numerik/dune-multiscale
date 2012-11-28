@@ -58,19 +58,19 @@
 
 \maketitle
 
-In the following $\Omega \subset \mathbb{R}^2$ is a given domain that can be replaced by any other domain, i.e. the model problems are not restricted to fixed computational domains. In the same way, the parameter $\epsilon$ is a given constant. The larger $\epsilon$, the coarser the structure, the smaller $\epsilon$ the finer the structure.
+In the following $\Omega \subset \mathbb{R}^2$ is a given domain that is related to a fixed model problem. The parameter $\epsilon$ is a (variable) given constant. The larger $\epsilon$, the coarser the structure, the smaller $\epsilon$ the finer the structure. It can take any value in a given range or with given restrictions.
 
-\begin{modelproblem}[One]
-Find $u^{\epsilon}$ with
+\begin{modelproblem}[ONE {\it- linear - periodic}]$\\$
+Let $\Omega := ]0,2[^2$ and $\epsilon>0$. Find $u^{\epsilon}$ with
 \begin{align*}
-- \nabla \cdot \left( A^{\epsilon}(x) \nabla u^{\epsilon}(x) \right) &= f(x) \quad \mbox{in} \enspace \Omega \\
-u^{\epsilon}(x) &= 0 \hspace{28pt} \mbox{on} \enspace \partial \Omega,
+- \nabla \cdot \left( A^{\epsilon}(x) \nabla u^{\epsilon}(x) \right) &= 1 \quad \mbox{in} \enspace \Omega \\
+u^{\epsilon}(x) &= 0 \hspace{12pt} \mbox{on} \enspace \partial \Omega,
 \end{align*}
-where:
-\begin{align*}
-f(x) = 
-\end{align*}
-and
+where the scalar diffusion coefficient $A^{\epsilon}$ is given by
+\begin{eqnarray*}
+A^{\epsilon}(x_1,x_2):= 2 + \sin( 2 \pi \frac{x_1}{\epsilon} ).
+\end{eqnarray*}
+The exact solution is unknown.
 \end{modelproblem}
 \hrule
 

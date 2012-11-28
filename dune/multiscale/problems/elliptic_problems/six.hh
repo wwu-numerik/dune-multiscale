@@ -1,3 +1,5 @@
+//! MUSS NOCH AUFGERAEUMT UND UEBERARBEITET WERDEN!!!!!!!!!
+
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SIX
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SIX
 
@@ -64,48 +66,6 @@ public:
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
   // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
   // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
-
-  // the following method generates arbitrary numbers, with a log-normal distribution
-  // the expected value (the value with the highest probability) is:
-  // E = exp( m + (s²/2))
-  inline double rand_log_normal(const float m, const float s) const {
-    // float m = 0.0;
-    // float s = 0.1;
-
-    // m is a real number
-    // s is a postiv real number. s is a meassure for the variance. The smaller s, the smaller the variance from the
-    // expected value
-
-    // we use the box-muller method to generate the number:
-
-    float x1, x2, w;
-
-    float random_number_1, random_number_2, random_number_3;
-
-    do {
-      do {
-        random_number_1 = std::rand();
-        random_number_2 = std::rand();
-      } while ( (random_number_1 == 0.0) || (random_number_2 == 0.0) );
-
-      if (random_number_1 > random_number_2)
-      { x1 = ( 2.0 * (random_number_2 / random_number_1) ) - 1.0; } else
-      { x1 = ( 2.0 * (random_number_1 / random_number_2) ) - 1.0; }
-
-      random_number_3 = std::rand();
-
-      if (random_number_3 > random_number_2)
-      { x2 = ( 2.0 * (random_number_2 / random_number_3) ) - 1.0; } else
-      { x2 = ( 2.0 * (random_number_3 / random_number_2) ) - 1.0; }
-
-      w = x1 * x1 + x2 * x2;
-    } while (w >= 1.0);
-
-    w = sqrt( ( -2.0 * log(w) ) / w );
-
-    // the log-normal arbitrary number:
-    return exp( m + (x1 * w * s) );
-  }   // end method
 
   // instantiate all possible cases of the evaluate-method:
 
