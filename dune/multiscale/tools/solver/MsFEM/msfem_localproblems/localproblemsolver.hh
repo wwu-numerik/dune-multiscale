@@ -689,6 +689,29 @@ public:
     }
   } // subgrid_to_hostrid_function
 
+  void output_local_solution(const int coarse_index, const int which,
+                             const HostDiscreteFunctionType& host_local_solution) const
+  {
+    if (!DSC_CONFIG_GET("global.vtk_output", false))
+      return;
+    typedef tuple< const HostDiscreteFunctionType* >      IOTupleType;
+    typedef DataOutput< HostGridType, IOTupleType > DataOutputType;
+
+    // general output parameters
+    LocalProblemDataOutputParameters outputparam;
+    // --------- data output local solution --------------
+
+    // create and initialize output class
+    IOTupleType local_solution_series(&host_local_solution);
+
+    const std::string ls_name_s = (boost::format("/local_problem_solution_e%d_%d") % which % coarse_index).str();
+
+    outputparam.set_prefix(ls_name_s);
+    DataOutputType localsol_dataoutput(
+      hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series, outputparam);
+    localsol_dataoutput.writeData( 1.0 /*dummy*/, (boost::format("local-problem-solution-%d") % which).str() );
+  }
+
   // method for solving and saving the solutions of the local msfem problems
   // for the whole set of macro-entities and for every unit vector e_i
 
@@ -716,21 +739,6 @@ public:
 
     DSC_LOG_INFO << "in method 'assemble_all': number_of_coarse_grid_entities = " << number_of_coarse_grid_entities
               << std::endl;
-
-    // --------------- writing data output ---------------------
-    // typedefs and initialization
-    #ifdef VTK_OUTPUT
-
-    typedef tuple< HostDiscreteFunctionType* >      IOTupleType;
-    typedef DataOutput< HostGridType, IOTupleType > DataOutputType;
-
-    // general output parameters
-    LocalProblemDataOutputParameters outputparam;
-    // sequence stamp
-    std::stringstream outstring;
-    // -------------------------------------------------------
-    #endif // ifdef VTK_OUTPUT
-
     DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
 
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
@@ -793,30 +801,7 @@ public:
 
       HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
       subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
-
-      // --------------- writing data output ---------------------
-      // (writing)
-      #ifdef VTK_OUTPUT
-
-      // --------- data output local solution --------------
-
-      // create and initialize output class
-      IOTupleType local_solution_series_0(&host_local_solution);
-
-      const std::string ls_name_0_s = (boost::format("/local_problem_solution_e0_%d") % coarse_index).str();
-
-      outputparam.set_prefix(ls_name_0_s);
-      DataOutputType localsol_dataoutput_0(
-        hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_0, outputparam);
-
-      // write data
-      outstring << "local-problem-solution-0";
-      localsol_dataoutput_0.writeData( 1.0 /*dummy*/, outstring.str() );
-      // clear the std::stringstream:
-      outstring.str( std::string() );
-
-      // -------------------------------------------------------
-      #endif // ifdef VTK_OUTPUT
+      output_local_solution(coarse_index, 0, host_local_solution);
 
       DSC_LOG_INFO  << std::endl
                     << "Number of the local problem: "
@@ -839,31 +824,6 @@ public:
 
       subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
       output_local_solution(coarse_index, 1, host_local_solution);
-
-      // --------------- writing data output ---------------------
-      // (writing)
-      //!TODO refactor into func, see same code above
-      #ifdef VTK_OUTPUT
-
-      // --------- data output local solution --------------
-
-      // create and initialize output class
-      IOTupleType local_solution_series_1(&host_local_solution);
-
-      const std::string ls_name_1_s = (boost::format("/local_problem_solution_e1_%d") % coarse_index).str();
-
-      outputparam.set_prefix(ls_name_1_s);
-      DataOutputType localsol_dataoutput_1(
-        hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series_1, outputparam);
-
-      // write data
-      outstring << "local-problem-solution-1";
-      localsol_dataoutput_1.writeData( 1.0 /*dummy*/, outstring.str() );
-      // clear the std::stringstream:
-      outstring.str( std::string() );
-
-      // -------------------------------------------------------
-      #endif // ifdef VTK_OUTPUT
     } //for
 
     const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all");
