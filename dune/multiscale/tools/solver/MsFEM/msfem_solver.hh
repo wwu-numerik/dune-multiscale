@@ -392,7 +392,9 @@ public:
                             SubGridListType& subgrid_list,
                             DiscreteFunction& coarse_scale_part,
                             DiscreteFunction& fine_scale_part,
-                            DiscreteFunction& solution) const {
+                            DiscreteFunction& solution) const
+  {
+    DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero");
     // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
     typedef DiscreteEllipticMsFEMOperator< DiscreteFunction /*type of coarse space*/,
                                            MacroMicroGridSpecifier< DiscreteFunctionSpace >,

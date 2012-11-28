@@ -719,14 +719,14 @@ public:
   void solve_all(SubGridListType& subgrid_list) const {
     JacobianRangeType e[dimension];
 
-    for (int i = 0; i < dimension; ++i)
+    for (int i = 0; i < dimension; ++i) {
       for (int j = 0; j < dimension; ++j)
       {
         if (i == j)
         { e[i][0][j] = 1.0; } else
         { e[i][0][j] = 0.0; }
       }
-
+    }
 
     // number of coarse grid entities (of codim 0).
     const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();

@@ -12,6 +12,8 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/aliases.hh>
 
 // / done
 
@@ -155,6 +157,8 @@ public:
     : hostSpace_( specifier.fineSpace() )
       , specifier_(specifier)
       , silent_(silent) {
+    DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
+    DSC_PROFILER.startTiming("msfem.subgrid_list.identify");
     DSC_LOG_INFO << "Starting creation of subgrids." << std::endl << std::endl;
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
@@ -201,7 +205,6 @@ public:
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
 //    subGridList_ = SubGridStorageType();
-
     //! ----------- create subgrids --------------------
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
@@ -243,6 +246,9 @@ public:
           enriched[k][m][l] = false;
       }
     }
+
+    DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
+    DSC_PROFILER.startTiming("msfem.subgrid_list.create");
 
     // a fine grid iterator for the codim 0 hostgrid entities:
     const HostGridEntityIteratorType host_endit = hostSpace_.end();
@@ -299,7 +305,8 @@ public:
       }
     }
 
-
+    DSC_PROFILER.stopTiming("msfem.subgrid_list.create");
+    DSC_PROFILER.startTiming("msfem.subgrid_list.create.finalize");
     for (int i = 0; i < number_of_coarse_grid_entities; ++i)
     {
       assert(int(subGridList_.size()) > i);
@@ -332,6 +339,7 @@ public:
         DUNE_THROW(Dune::InvalidStateException, "Created Subgrid with 0 nodes");
       }
     }
+    DSC_PROFILER.stopTiming("msfem.subgrid_list.create.finalize");
 
     //! ----------- end create subgrids --------------------
   }

@@ -2,9 +2,6 @@
 #define DiscreteEllipticMsFEMLocalProblem_HH
 
 #include <vector>
-#ifdef HAVE_OMP
-  #include <omp.h>
-#endif
 
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/common/fmatrix.hh>
@@ -739,16 +736,20 @@ public:
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
     Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
+    std::vector<int> coarse_indices;
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-    std::vector<int> coarse_indices;
-    // Coarse Entity Iterator
-    const HostGridEntityIteratorType coarse_grid_end = coarseSpace.end();
-    for (HostGridEntityIteratorType coarse_grid_it = coarseSpace.begin();
-         coarse_grid_it != coarse_grid_end;
-         ++coarse_grid_it)
+    for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
     {
-      const int coarse_index = coarseGridLeafIndexSet.index(*coarse_grid_it);
+      coarse_indices.push_back(coarseGridLeafIndexSet.index(*coarse_it));
+    }
+
+
+    const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
+    int slice = coarse_indices.size() / comm.size();
+    for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
+    {
+      const int coarse_index = coarse_indices[gc];
 
       DSC_LOG_INFO << "-------------------------" << std::endl
                    << "Coarse index " << coarse_index << std::endl;
@@ -837,6 +838,7 @@ public:
       dfw.append(local_problem_solution_1);
 
       subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
+      output_local_solution(coarse_index, 1, host_local_solution);
 
       // --------------- writing data output ---------------------
       // (writing)

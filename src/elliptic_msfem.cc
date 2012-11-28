@@ -50,6 +50,9 @@
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
+#include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/aliases.hh>
+
 //!---------------------------------------------------------------------------------------
 
 void adapt(Dune::MsfemTraits::GridType& grid,
@@ -62,6 +65,7 @@ void adapt(Dune::MsfemTraits::GridType& grid,
            const std::vector<Dune::MsfemTraits::RangeVector*>& totals,
            const Dune::MsfemTraits::RangeVector& total_estimated_H1_error_)
 {
+  DSC::Profiler::ScopedTiming st("msfem.adapt");
   using namespace Dune;
   typedef MsfemTraits::GridType::LeafGridView         GridView;
   typedef GridView::Codim< 0 >::Iterator ElementLeafIterator;
@@ -188,6 +192,7 @@ void solution_output(const Dune::MsfemTraits::DiscreteFunctionType& msfem_soluti
                      int& total_refinement_level_,
                      int& coarse_grid_level_)
 {
+  DSC::Profiler::ScopedTiming st("msfem.solution_output");
   using namespace Dune;
   //! ----------------- writing data output MsFEM Solution -----------------
   // --------- VTK data output for MsFEM solution --------------------------
@@ -252,6 +257,7 @@ void data_output(const Dune::MsfemTraits::GridPartType& gridPart,
                  Dune::myDataOutputParameters& outputparam,
                  const int loop_number)
 {
+  DSC::Profiler::ScopedTiming st("msfem.data_output");
   using namespace Dune;
   // sequence stamp
   //! --------------------------------------------------------------------------------------
@@ -434,6 +440,7 @@ bool algorithm(const std::string& macroGridName,
 
     // error estimation
     if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
+      DSC::Profiler::ScopedTiming st("msfem.estimator");
       MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
       error_estimation(msfem_solution, coarse_part_msfem_solution,
                        fine_part_msfem_solution, estimator, specifier, loop_number,
@@ -446,39 +453,42 @@ bool algorithm(const std::string& macroGridName,
 
   //! ---------------------- solve FEM problem ---------------------------
   //! solution vector
-  // solution of the standard finite element method
   MsfemTraits::DiscreteFunctionType fem_solution("FEM Solution", discreteFunctionSpace);
-  fem_solution.clear();
+  {
+    DSC::Profiler::ScopedTiming st("msfem.fem_solution");
+    // solution of the standard finite element method
+    fem_solution.clear();
 
-  // just for Dirichlet zero-boundary condition
-  const Elliptic_FEM_Solver< MsfemTraits::DiscreteFunctionType > fem_solver(discreteFunctionSpace);
-  fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
+    // just for Dirichlet zero-boundary condition
+    const Elliptic_FEM_Solver< MsfemTraits::DiscreteFunctionType > fem_solver(discreteFunctionSpace);
+    fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
 
-  //! ----------------------------------------------------------------------
-  DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
-  //! -------------------------- writing data output FEM Solution ----------
+    //! ----------------------------------------------------------------------
+    DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
+    //! -------------------------- writing data output FEM Solution ----------
 
-  // ------------- VTK data output for FEM solution --------------
-  // create and initialize output class
-  MsfemTraits::IOTupleType fem_solution_series(&fem_solution);
-  outputparam.set_prefix("/fem_solution");
-  MsfemTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
+    // ------------- VTK data output for FEM solution --------------
+    // create and initialize output class
+    MsfemTraits::IOTupleType fem_solution_series(&fem_solution);
+    outputparam.set_prefix("/fem_solution");
+    MsfemTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
-  // write data
-  fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );
+    // write data
+    fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );
 
-  // -------------------------------------------------------------
+    // -------------------------------------------------------------
 
-  // ------------- write discrete fem solution to file -----------
-  const std::string fine_location = (boost::format("fem_solution_discFunc_refLevel_%d")
-                                     % total_refinement_level_).str();
-  DiscreteFunctionWriter(fine_location).append(fem_solution);
+    // ------------- write discrete fem solution to file -----------
+    const std::string fine_location = (boost::format("fem_solution_discFunc_refLevel_%d")
+                                       % total_refinement_level_).str();
+    DiscreteFunctionWriter(fine_location).append(fem_solution);
+  }
 
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
-
+    DSC::Profiler::ScopedTiming st("msfem.exact_errors");
     H1Error< MsfemTraits::DiscreteFunctionType > h1error;
 
     const MsfemTraits::ExactSolutionType u;
@@ -529,7 +539,7 @@ int main(int argc, char** argv) {
     init(argc, argv);
     namespace DSC = Dune::Stuff::Common;
     //!TODO include base in config
-    DSC_PROFILER.startTiming("msfem_all");
+    DSC_PROFILER.startTiming("msfem.all");
 
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
 
@@ -584,7 +594,6 @@ int main(int argc, char** argv) {
     //! ---------------------- local error indicators --------------------------------
     // ----- local error indicators (for each coarse grid element T) -------------
     const int max_loop_number = 10;
-    bool local_indicators_available_ = false;
     // local coarse residual, i.e. H ||f||_{L^2(T)}
     Dune::MsfemTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
     // local coarse grid jumps (contribute to the total coarse residual)
@@ -623,7 +632,7 @@ int main(int argc, char** argv) {
     //normal
     // macro problem
 
-    const auto cpu_time = DSC_PROFILER.stopTiming("msfem_all");
+    const auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
     return 0;
