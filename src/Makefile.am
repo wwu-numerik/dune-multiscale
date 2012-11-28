@@ -3,14 +3,17 @@ SUBDIRS =
 
 GRIDTYPE=ALBERTAGRID
 GRIDDIM=2
-PROBLEM_NAMES=Easy Toy One Two Three Four Five Six Seven Eight Nine Ten
+PROBLEM_NAMES= Toy One Two Three Four Five Six Seven Eight Nine Ten
 HMM_PROBLEM=One
 MSFEM_PROBLEM=Ten
+DEFAULT_PROBLEM=One
 
-noinst_PROGRAMS = elliptic_hmm elliptic_msfem 
-SOURCE_PREFIX=elliptic_hmm elliptic_msfem
+noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem
+SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem
 elliptic_hmm_SOURCES = elliptic_hmm.cc
 elliptic_msfem_SOURCES = elliptic_msfem.cc
+elliptic_fem_SOURCES = elliptic_fem.cc
+elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc
 
 CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
@@ -22,6 +25,8 @@ CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	
 elliptic_hmm_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(HMM_PROBLEM)
 elliptic_msfem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(MSFEM_PROBLEM)
+elliptic_fem_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(DEFAULT_PROBLEM)
+elliptic_hom_fem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(DEFAULT_PROBLEM)
 
 # The libraries have to be given in reverse order (most basic libraries
 # last).  Also, due to some misunderstanding, a lot of libraries include the
