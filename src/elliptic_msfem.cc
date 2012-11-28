@@ -57,116 +57,125 @@ void adapt(Dune::MsfemTraits::GridType& grid,
            const int loop_number,
            int& total_refinement_level_,
            int& coarse_grid_level_,
-           int& number_of_layers_) {
+           int& number_of_layers_,
+           const std::vector<Dune::MsfemTraits::RangeVectorVector*>& locals,
+           const std::vector<Dune::MsfemTraits::RangeVector*>& totals,
+           const Dune::MsfemTraits::RangeVector& total_estimated_H1_error_)
+{
   using namespace Dune;
   typedef MsfemTraits::GridType::LeafGridView         GridView;
   typedef GridView::Codim< 0 >::Iterator ElementLeafIterator;
   typedef MsfemTraits::GridType::Traits::LeafIndexSet GridLeafIndexSet;
 
-  if (local_indicators_available_)
+  bool coarse_scale_error_dominant = false;
+  // identify the dominant contribution:
+  const double average_est_error = total_estimated_H1_error_[loop_number - 1] / 6.0;     // 6 contributions
+
+  const auto& total_approximation_error_ = *totals[4];
+  const auto& total_fine_grid_jumps_ = *totals[5];
+  if ( (total_approximation_error_[loop_number - 1] >= average_est_error)
+       || (total_fine_grid_jumps_[loop_number - 1] >= average_est_error) )
   {
-    bool coarse_scale_error_dominant = false;
-    // identify the dominant contribution:
-    const double average_est_error = total_estimated_H1_error_[loop_number - 1] / 6.0;     // 6 contributions
+    total_refinement_level_ += 2;   // 'the fine grid level'
+    DSC_LOG_INFO << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2."
+              << std::endl;
+    DSC_LOG_INFO << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+    DSC_LOG_INFO << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
+              << " refinement levels finer than the coarse grid." << std::endl;
+  }
 
-    if ( (total_approximation_error_[loop_number - 1] >= average_est_error)
-         || (total_fine_grid_jumps_[loop_number - 1] >= average_est_error) )
+  const auto& total_projection_error_ = *totals[1];
+  const auto& total_conservative_flux_jumps_ = *totals[3];
+  if ( (total_projection_error_[loop_number - 1] >= average_est_error)
+       || (total_conservative_flux_jumps_[loop_number - 1] >= average_est_error) )
+  {
+    number_of_layers_ += 1;
+    DSC_LOG_INFO
+    << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5."
+    << std::endl;
+    DSC_LOG_INFO << "NEW: Number of layers = " << number_of_layers_ << std::endl;
+  }
+
+  const auto& total_coarse_residual_ = *totals[0];
+  const auto& total_coarse_grid_jumps_ = *totals[2];
+  if ( (total_coarse_residual_[loop_number - 1] >= average_est_error)
+       || (total_coarse_grid_jumps_[loop_number - 1] >= average_est_error) )
+  {
+    DSC_LOG_INFO << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment."
+              << std::endl;
+    coarse_scale_error_dominant = true;   /* mark elementwise for 2 refinments */
+  }
+
+  const auto& loc_coarse_residual_ = *locals[0];
+  const auto& loc_coarse_grid_jumps_ = *totals[1];
+  std::vector< MsfemTraits::RangeType > average_coarse_error_indicator(loop_number);        // arithmetic average
+  for (int l = 0; l < loop_number; ++l)
+  {
+    assert( loc_coarse_residual_[l].size() == loc_coarse_grid_jumps_[l].size() );
+    average_coarse_error_indicator[l] = 0.0;
+    for (size_t i = 0; i < loc_coarse_grid_jumps_[l].size(); ++i)
     {
-      total_refinement_level_ += 2;   // 'the fine grid level'
-      DSC_LOG_INFO << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2."
-                << std::endl;
-      DSC_LOG_INFO << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-      DSC_LOG_INFO << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
-                << " refinement levels finer than the coarse grid." << std::endl;
+      average_coarse_error_indicator[l] += loc_coarse_residual_[l][i] + loc_coarse_grid_jumps_[l][i];
     }
+    average_coarse_error_indicator[l] = average_coarse_error_indicator[l] / loc_coarse_residual_[l].size();
+  }
 
-    if ( (total_projection_error_[loop_number - 1] >= average_est_error)
-         || (total_conservative_flux_jumps_[loop_number - 1] >= average_est_error) )
-    {
-      number_of_layers_ += 1;
-      DSC_LOG_INFO
-      << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5."
-      << std::endl;
-      DSC_LOG_INFO << "NEW: Number of layers = " << number_of_layers_ << std::endl;
-    }
+  // allgemeineren Algorithmus vorgestellt, aber noch nicht implementiert
 
-    if ( (total_coarse_residual_[loop_number - 1] >= average_est_error)
-         || (total_coarse_grid_jumps_[loop_number - 1] >= average_est_error) )
-    {
-      DSC_LOG_INFO << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment."
-                << std::endl;
-      coarse_scale_error_dominant = true;   /* mark elementwise for 2 refinments */
-    }
-
-    std::vector< MsfemTraits::RangeType > average_coarse_error_indicator(loop_number);        // arithmetic average
+  if (coarse_scale_error_dominant)
+  {
+    int number_of_refinements = 4;
+    // allowed varianve from average ( in percent )
+    double variance = 1.1;   // = 110 % of the average
     for (int l = 0; l < loop_number; ++l)
     {
-      assert( loc_coarse_residual_[l].size() == loc_coarse_grid_jumps_[l].size() );
-      average_coarse_error_indicator[l] = 0.0;
-      for (size_t i = 0; i < loc_coarse_grid_jumps_[l].size(); ++i)
+      const auto& gridLeafIndexSet = grid.leafIndexSet();
+      auto gridView = grid.leafView();
+
+      int total_number_of_entities = 0;
+      int number_of_marked_entities = 0;
+      for (ElementLeafIterator it = gridView.begin< 0 >();
+           it != gridView.end< 0 >(); ++it)
       {
-        average_coarse_error_indicator[l] += loc_coarse_residual_[l][i] + loc_coarse_grid_jumps_[l][i];
+        MsfemTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet.index(*it)]
+                                               + loc_coarse_residual_[l][gridLeafIndexSet.index(*it)];
+        total_number_of_entities += 1;
+
+        if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l])
+        {
+          grid.mark(number_of_refinements, *it);
+          number_of_marked_entities += 1;
+        }
       }
-      average_coarse_error_indicator[l] = average_coarse_error_indicator[l] / loc_coarse_residual_[l].size();
-    }
 
-    // allgemeineren Algorithmus vorgestellt, aber noch nicht implementiert
-
-    if (coarse_scale_error_dominant)
-    {
-      int number_of_refinements = 4;
-      // allowed varianve from average ( in percent )
-      double variance = 1.1;   // = 110 % of the average
-      for (int l = 0; l < loop_number; ++l)
+      if ( l == (loop_number - 1) )
       {
-        const auto& gridLeafIndexSet = grid.leafIndexSet();
-        auto gridView = grid.leafView();
-
-        int total_number_of_entities = 0;
-        int number_of_marked_entities = 0;
-        for (ElementLeafIterator it = gridView.begin< 0 >();
-             it != gridView.end< 0 >(); ++it)
-        {
-          MsfemTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet.index(*it)]
-                                                 + loc_coarse_residual_[l][gridLeafIndexSet.index(*it)];
-          total_number_of_entities += 1;
-
-          if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l])
-          {
-            grid.mark(number_of_refinements, *it);
-            number_of_marked_entities += 1;
-          }
-        }
-
-        if ( l == (loop_number - 1) )
-        {
-          DSC_LOG_INFO << number_of_marked_entities << " of " << total_number_of_entities
-                    << " coarse grid entities marked for mesh refinement." << std::endl;
-        }
-
-        grid.preAdapt();
-        grid.adapt();
-        grid.postAdapt();
-
-        // coarse grid
-        GridView gridView_coarse = grid_coarse.leafView();
-        const GridLeafIndexSet& gridLeafIndexSet_coarse = grid_coarse.leafIndexSet();
-
-        for (ElementLeafIterator it = gridView_coarse.begin< 0 >();
-             it != gridView_coarse.end< 0 >(); ++it)
-        {
-          MsfemTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet_coarse.index(*it)]
-                                                 + loc_coarse_residual_[l][gridLeafIndexSet_coarse.index(*it)];
-
-          if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l])
-          {
-            grid_coarse.mark(number_of_refinements, *it);
-          }
-        }
-        grid_coarse.preAdapt();
-        grid_coarse.adapt();
-        grid_coarse.postAdapt();
+        DSC_LOG_INFO << number_of_marked_entities << " of " << total_number_of_entities
+                  << " coarse grid entities marked for mesh refinement." << std::endl;
       }
+
+      grid.preAdapt();
+      grid.adapt();
+      grid.postAdapt();
+
+      // coarse grid
+      GridView gridView_coarse = grid_coarse.leafView();
+      const GridLeafIndexSet& gridLeafIndexSet_coarse = grid_coarse.leafIndexSet();
+
+      for (ElementLeafIterator it = gridView_coarse.begin< 0 >();
+           it != gridView_coarse.end< 0 >(); ++it)
+      {
+        MsfemTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet_coarse.index(*it)]
+                                               + loc_coarse_residual_[l][gridLeafIndexSet_coarse.index(*it)];
+
+        if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l])
+        {
+          grid_coarse.mark(number_of_refinements, *it);
+        }
+      }
+      grid_coarse.preAdapt();
+      grid_coarse.adapt();
+      grid_coarse.postAdapt();
     }
   }
 }
@@ -284,7 +293,10 @@ bool error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solut
                       const Dune::MsfemTraits::DiscreteFunctionType& fine_part_msfem_solution,
                       Dune::MsfemTraits::MsFEMErrorEstimatorType& estimator,
                       Dune::MsfemTraits::MacroMicroGridSpecifierType& specifier,
-                      const int loop_number)
+                      const int loop_number,
+                      std::vector<Dune::MsfemTraits::RangeVectorVector*>& locals,
+                      std::vector<Dune::MsfemTraits::RangeVector*>& totals,
+                      Dune::MsfemTraits::RangeVector& total_estimated_H1_error_)
 {
   using namespace Dune;
 
@@ -295,19 +307,17 @@ bool error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solut
                                                            coarse_part_msfem_solution,
                                                            fine_part_msfem_solution);
   {//intentional scope
-    std::vector<MsfemTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_, &loc_projection_error_, &loc_conservative_flux_jumps_, &loc_approximation_error_, &loc_fine_grid_jumps_}};
-    std::vector<MsfemTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_, &total_coarse_grid_jumps_, &total_conservative_flux_jumps_, &total_approximation_error_, &total_fine_grid_jumps_ }};
     assert(locals.size() == totals.size());
     for(auto loc : locals) (*loc)[loop_number] = MsfemTraits::RangeVector(specifier.getNumOfCoarseEntities(),0.0);
     for(auto total : totals) (*total)[loop_number] = 0.0;
 
     for (int m = 0; m < specifier.getNumOfCoarseEntities(); ++m) {
-      loc_coarse_residual_[loop_number][m] = specifier.get_loc_coarse_residual(m);
-      loc_coarse_grid_jumps_[loop_number][m] = specifier.get_loc_coarse_grid_jumps(m);
-      loc_projection_error_[loop_number][m] = specifier.get_loc_projection_error(m);
-      loc_conservative_flux_jumps_[loop_number][m] = specifier.get_loc_conservative_flux_jumps(m);
-      loc_approximation_error_[loop_number][m] = specifier.get_loc_approximation_error(m);
-      loc_fine_grid_jumps_[loop_number][m] = specifier.get_loc_fine_grid_jumps(m);
+      (*locals[0])[loop_number][m] = specifier.get_loc_coarse_residual(m);
+      (*locals[1])[loop_number][m] = specifier.get_loc_coarse_grid_jumps(m);
+      (*locals[2])[loop_number][m] = specifier.get_loc_projection_error(m);
+      (*locals[3])[loop_number][m] = specifier.get_loc_conservative_flux_jumps(m);
+      (*locals[4])[loop_number][m] = specifier.get_loc_approximation_error(m);
+      (*locals[5])[loop_number][m] = specifier.get_loc_fine_grid_jumps(m);
 
       for (size_t i = 0; i < totals.size(); ++i) (*totals[i])[loop_number] += std::pow((*locals[i])[loop_number][m], 2.0);
     }
@@ -316,7 +326,6 @@ bool error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solut
       (*total)[loop_number] = std::sqrt((*total)[loop_number]);
       total_estimated_H1_error_[loop_number] += (*total)[loop_number];
     }
-    local_indicators_available_ = true;
   }
 
   return DSC_CONFIG_GET("adaptive", false)
@@ -328,8 +337,12 @@ bool algorithm(const std::string& macroGridName,
                const int loop_number,
                int& total_refinement_level_,
                int& coarse_grid_level_,
-               int& number_of_layers_) {
+               int& number_of_layers_,
+               std::vector<Dune::MsfemTraits::RangeVectorVector*>& locals,
+               std::vector<Dune::MsfemTraits::RangeVector*>& totals,
+               Dune::MsfemTraits::RangeVector& total_estimated_H1_error_) {
   using namespace Dune;
+  bool local_indicators_available_ = false;
 
   if (DSC_CONFIG_GET("adaptive", false))
     DSC_LOG_INFO << "------------------ run " << loop_number + 1 << " --------------------" << std::endl << std::endl;
@@ -357,8 +370,9 @@ bool algorithm(const std::string& macroGridName,
   MsfemTraits::GridType& grid_coarse = gridPart_coarse.grid();
 
   // strategy for adaptivity:
-  if (DSC_CONFIG_GET("adaptive", false))
-    adapt(grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_);
+  if (DSC_CONFIG_GET("adaptive", false) && local_indicators_available_)
+    adapt(grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_,
+          number_of_layers_, locals, totals, total_estimated_H1_error_);
 
   grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
 
@@ -422,7 +436,9 @@ bool algorithm(const std::string& macroGridName,
     if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
       MsfemTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
       error_estimation(msfem_solution, coarse_part_msfem_solution,
-                    fine_part_msfem_solution, estimator, specifier, loop_number);
+                       fine_part_msfem_solution, estimator, specifier, loop_number,
+                       locals, totals, total_estimated_H1_error_);
+      local_indicators_available_ = true;
     }
   }
 
@@ -565,8 +581,42 @@ int main(int argc, char** argv) {
       DSC_LOG_INFO << std::endl << std::endl;
     }
 
+    //! ---------------------- local error indicators --------------------------------
+    // ----- local error indicators (for each coarse grid element T) -------------
+    const int max_loop_number = 10;
+    bool local_indicators_available_ = false;
+    // local coarse residual, i.e. H ||f||_{L^2(T)}
+    Dune::MsfemTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
+    // local coarse grid jumps (contribute to the total coarse residual)
+    Dune::MsfemTraits::RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
+    // local projection error (we project to get a globaly continous approximation)
+    Dune::MsfemTraits::RangeVectorVector loc_projection_error_(max_loop_number);
+    // local jump in the conservative flux
+    Dune::MsfemTraits::RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
+    // local approximation error
+    Dune::MsfemTraits::RangeVectorVector loc_approximation_error_(max_loop_number);
+    // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
+    Dune::MsfemTraits::RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
+
+    Dune::MsfemTraits::RangeVector total_coarse_residual_(max_loop_number);
+    Dune::MsfemTraits::RangeVector total_projection_error_(max_loop_number);
+    Dune::MsfemTraits::RangeVector total_coarse_grid_jumps_(max_loop_number);
+    Dune::MsfemTraits::RangeVector total_conservative_flux_jumps_(max_loop_number);
+    Dune::MsfemTraits::RangeVector total_approximation_error_(max_loop_number);
+    Dune::MsfemTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
+    Dune::MsfemTraits::RangeVector total_estimated_H1_error_(max_loop_number);
+
+    //! TODO put these into something like a named tuple/class
+    std::vector<Dune::MsfemTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_,
+                                                             &loc_projection_error_, &loc_conservative_flux_jumps_,
+                                                             &loc_approximation_error_, &loc_fine_grid_jumps_}};
+    std::vector<Dune::MsfemTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_,
+                                                      &total_coarse_grid_jumps_, &total_conservative_flux_jumps_,
+                                                      &total_approximation_error_, &total_fine_grid_jumps_ }};
+
     unsigned int loop_number = 0;
-    while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_, number_of_layers_))
+    while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_,
+                     number_of_layers_, locals, totals, total_estimated_H1_error_))
     {}
 
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
