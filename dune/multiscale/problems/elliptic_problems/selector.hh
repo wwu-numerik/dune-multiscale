@@ -23,9 +23,11 @@ namespace Problem {
 
 using namespace Problem::PROBLEM_NAME;
 
-#define STR(x) #x
-static const std::string name = std::string(STR(PROBLEM_NAME));
+#define STRIN(x) #x
+#define STR(x) STRIN(x)
+static const std::string name = std::string(STRIN(PROBLEM_NAME));
 #undef STR
+#undef STRIN
 } // namespace Problem
 
 #endif // DUNE_MS_PROBLEMS_SELECTOR_HH

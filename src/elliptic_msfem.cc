@@ -520,7 +520,7 @@ int main(int argc, char** argv) {
     // generate directories for data output
     DSC::testCreateDirectory(datadir);
 
-    DSC_LOG_INFO << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log")
+    DSC_LOG_INFO << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n")
                             % datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
 
     // syntax: info_from_par_file / default  / validation of the value
