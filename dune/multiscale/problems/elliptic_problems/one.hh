@@ -90,7 +90,7 @@ public:
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
 
-      diffusion_coefficient = 2.0 + sin( 2.0 * M_PI * (x[0] / constants().epsilon) );
+      const auto diffusion_coefficient = 2.0 + sin( 2.0 * M_PI * (x[0] / constants().epsilon) );
 
       flux[0][0] = diffusion_coefficient * gradient[0][0];
       flux[0][1] = diffusion_coefficient * gradient[0][1];
@@ -107,7 +107,7 @@ public:
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
 
-      diffusion_coefficient = 2.0 + sin( 2.0 * M_PI * (x[0] / constants().epsilon) );
+      const auto diffusion_coefficient = 2.0 + sin( 2.0 * M_PI * (x[0] / constants().epsilon) );
 
       flux[0][0] = diffusion_coefficient * direction_gradient[0][0];
       flux[0][1] = diffusion_coefficient * direction_gradient[0][1];
