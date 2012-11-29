@@ -164,7 +164,7 @@ void fsr_load(typename HMM::DiscreteFunctionType& fem_newton_solution)
 {
   fem_newton_solution.clear();
   const boost::filesystem::path modeprob_s(
-      (boost::format("Model_Problem_%d") % DSC_CONFIG_GET("problem.numbder", 0u)).str());
+      (boost::format("Model_Problem_%d") % DSC_CONFIG_GET("problem.number", 0u)).str());
 
   const int refinement_level_referenceprob_ =
       typename HMM::ModelProblemDataType().getRefinementLevelReferenceProblem();
