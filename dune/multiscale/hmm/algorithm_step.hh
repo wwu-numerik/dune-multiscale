@@ -88,7 +88,7 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
     DSC_LOG_INFO << "Solving nonlinear HMM problem with Newton method." << std::endl;
     DSC_LOG_INFO << seperator_line << std::endl;
 
-    DSC_PROFILER.startTiming("hmmAssemble");
+    DSC_PROFILER.startTiming("hmm.assemble");
 
     // just to provide some information
     typename HMM::PeriodicDiscreteFunctionType dummy_periodic_func("a periodic dummy", periodicDiscreteFunctionSpace);
@@ -136,7 +136,7 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
     while (relative_newton_error > hmm_tolerance)
     {
       // (here: hmm_solution = solution from the last iteration step)
-      DSC_PROFILER.startTiming("newton_step_", hmm_iteration_step);
+      DSC_PROFILER.startTiming("hmm.newton_step", hmm_iteration_step);
       DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
 
       // solve cell problems for the solution of the last iteration step
@@ -207,7 +207,7 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
 
       if (relative_newton_error > hmm_tolerance)
       {
-        auto newton_step_time = DSC_PROFILER.stopTiming("newton_step_", hmm_iteration_step) / 1000.f;
+        auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", hmm_iteration_step) / 1000.f;
         DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s."
                     << std::endl << std::endl;
 
@@ -229,7 +229,7 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
 
     }       // while( relative_newton_error > hmm_tolerance )
 
-    const auto elapsed = DSC_PROFILER.stopTiming("hmmAssemble");
+    const auto elapsed = DSC_PROFILER.stopTiming("hmm.assemble");
     DSC_LOG_INFO << seperator_line << "HMM problem with Newton method solved in " << elapsed / 1000.f << "s." << std::endl
               << std::endl;
 
@@ -371,7 +371,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   // residual solution almost identical to zero: break
   if (relative_newton_error <= hmm_tolerance)
   {
-      const auto newton_step_time = DSC_PROFILER.stopTiming("newton_step_", hmm_iteration_step);
+      const auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", hmm_iteration_step);
       DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "ms."
                 << std::endl << std::endl;
       DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
@@ -525,7 +525,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
     //! ----------------- compute L2-errors -------------------
     if (DSC_CONFIG_GET("fsr", true))
     {
-      DSC_PROFILER.startTiming("timeadapt");
+      DSC_PROFILER.startTiming("hmm.timeadapt");
 
       static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
       // expensive hack to deal with discrete functions, defined on different grids
@@ -536,7 +536,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
 
       DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
 
-      const auto timeadapt = DSC_PROFILER.stopTiming("timeadapt") / 1000.f;
+      const auto timeadapt = DSC_PROFILER.stopTiming("hmm.timeadapt") / 1000.f;
       // if it took longer then 1 minute to compute the error:
       if (timeadapt > 60)
       {
@@ -546,7 +546,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
 
     #ifdef HMM_REFERENCE
     {
-      DSC_PROFILER.startTiming("timeadapthmmref", hmm_iteration_step)
+      DSC_PROFILER.startTiming("hmm.timeadapthmmref", hmm_iteration_step)
 
       RangeType hmm_vs_hmm_ref_error = impL2error.norm_adaptive_grids_2< hmm_polorder >(
         hmm_solution,
@@ -554,7 +554,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
 
       DSC_LOG_INFO << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl << std::endl;
 
-      auto timeadapthmmref = DSC_PROFILER.stopTiming("timeadapthmmref") / 1000.f;
+      auto timeadapthmmref = DSC_PROFILER.stopTiming("hmm.timeadapthmmref") / 1000.f;
       // if it took longer then 1 minute to compute the error:
       if (timeadapthmmref > 60)
       {

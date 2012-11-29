@@ -731,7 +731,7 @@ public:
     // -------------------------------------------------------
     #endif // ifdef VTK_OUTPUT
 
-    DSC_PROFILER.startTiming("localproblemsolver-assemble_all");
+    DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
 
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
     Dune::Stuff::Common::MinMaxAvg<double> cell_time;
@@ -781,13 +781,13 @@ public:
       local_problem_solution_1.clear();
 
       // take time
-      DSC_PROFILER.startTiming("local_problem_solution");
+      DSC_PROFILER.startTiming("none.local_problem_solution");
 
       // solve the problems
       solvelocalproblem(e[0], local_problem_solution_0);
 
-      cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
-      DSC_PROFILER.resetTiming("local_problem_solution");
+      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
+      DSC_PROFILER.resetTiming("none.local_problem_solution");
 
       dfw.append(local_problem_solution_0);
 
@@ -826,14 +826,14 @@ public:
                     << subGrid.size(2) << " nodes." << std::endl;
 
       // take time
-      DSC_PROFILER.startTiming("local_problem_solution");
+      DSC_PROFILER.startTiming("none.local_problem_solution");
 
       // solve the problems
       solvelocalproblem(e[1], local_problem_solution_1);
 
       // min/max time
-      cell_time(DSC_PROFILER.stopTiming("local_problem_solution") / 1000.f);
-      DSC_PROFILER.resetTiming("local_problem_solution");
+      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
+      DSC_PROFILER.resetTiming("none.local_problem_solution");
 
       dfw.append(local_problem_solution_1);
 
@@ -866,7 +866,7 @@ public:
       #endif // ifdef VTK_OUTPUT
     } //for
 
-    const auto total_time = DSC_PROFILER.stopTiming("localproblemsolver-assemble_all");
+    const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all");
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
     DSC_LOG_INFO << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."
