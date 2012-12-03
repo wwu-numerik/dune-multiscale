@@ -1,28 +1,11 @@
 #include "common.hh"
 
-#include <dune/multiscale/fem/algorithm.hh>
-
 // The following FEM code requires an access to the 'ModelProblemData' class,
 // which provides us with information about f, A, \Omega, etc.
 
-namespace Multiscale {
-// parameters for the current realization of the FEM
-class FEMParameters
-{
-public:
-  // Constructor for ModelProblemData
-  inline explicit FEMParameters()
-  {}
-
-};
-}
-
 //! local (dune-multiscale) includes
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-
-#include <dune/multiscale/tools/meanvalue.hh>
-#include <dune/multiscale/fem/hmm_traits.hh>
+#include <dune/multiscale/fem/algorithm.hh>
+#include <dune/multiscale/fem/fem_traits.hh>
 
 int main(int argc, char** argv) {
   try {
@@ -41,8 +24,6 @@ int main(int argc, char** argv) {
     std::string filename_;
     const Problem::ModelProblemData info;
 
-    // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
-    // (vorlauefig sollte diese Variante aber reichen)
     const std::string save_filename = std::string(path + "/logdata/ms.log.log");
     DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
     cout << "Data will be saved under: " << save_filename << std::endl;
@@ -56,6 +37,8 @@ int main(int argc, char** argv) {
 
     // create a grid pointer for the DGF file belongig to the macro grid:
     FEMTraits::GridPointerType grid_pointer(gridName);
+    //cout << "Hiiiiier nicht mehr." << endl;
+
     // refine the grid 'starting_refinement_level' times:
     grid_pointer->globalRefine(refinement_level);
 

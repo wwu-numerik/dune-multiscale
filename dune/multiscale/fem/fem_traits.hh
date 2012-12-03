@@ -1,5 +1,5 @@
 #ifndef DUNE_FEM_TYPES_HH
-#define DUNE_FESM_TYPES_HH
+#define DUNE_FEM_TYPES_HH
 
 #ifdef HAVE_CMAKE_CONFIG
  #include "cmake_config.h"
@@ -10,6 +10,7 @@
 #include <dune/common/tuples.hh>
 
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/io/file/dataoutput.hh>
@@ -42,7 +43,7 @@ typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionT
 // type of exact solution (in general unknown)
 typedef Problem::ExactSolution< FunctionSpaceType >            ExactSolutionType;
 typedef Dune::GridFunctionAdapter< ExactSolutionType, GridPartType > DiscreteExactSolutionType;     // for data output with
-                                                                                              // paraview or grape
+
 
 typedef FunctionSpaceType::DomainType DomainType;
 //! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
@@ -51,19 +52,10 @@ typedef FunctionSpaceType::RangeType RangeType;
 //! see dune/fem/lagrangebase.hh
 typedef Dune::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >  // 1=POLORDER
     DiscreteFunctionSpaceType;
-typedef DiscreteFunctionSpaceType::DomainFieldType            TimeType;
-typedef DiscreteFunctionSpaceType::JacobianRangeType          JacobianRangeType;
-typedef GridType::Codim< 0 >::Entity                          EntityType;
-typedef GridType::Codim< 0 >::EntityPointer                   EntityPointerType;
-typedef GridType::Codim< 0 >::Geometry                        EntityGeometryType;
-typedef GridType::Codim< 1 >::Geometry                        FaceGeometryType;
-typedef DiscreteFunctionSpaceType::BaseFunctionSetType        BaseFunctionSetType;
-typedef Dune::CachingQuadrature< GridPartType, 0 >                  EntityQuadratureType;
-typedef Dune::CachingQuadrature< GridPartType, 1 >                  FaceQuadratureType;
-typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
+
+//typedef DiscreteFunctionSpaceType::JacobianRangeType          JacobianRangeType;
+//typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
 typedef Dune::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
-typedef DiscreteFunctionType::LocalFunctionType               LocalFunctionType;
-typedef DiscreteFunctionType::DofIteratorType                 DofIteratorType;
 //!-----------------------------------------------------------------------------------------
 
 //! --------------------- the standard matrix traits -------------------------------------
@@ -93,10 +85,11 @@ typedef Dune::OEMBICGSQOp
 //  OEMGMRESOp
   < DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
-//! --------------- the discrete operators (standard FEM and HMM) ------------------------
+//! --------------- the discrete operators (standard FEM) ----------------------------------
 //! discrete elliptic operator (corresponds with FEM Matrix)
-typedef Dune::DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType > EllipticOperatorType;
-//! --------------------------------------------------------------------------------------
+typedef Dune::DiscreteEllipticOperator< DiscreteFunctionType, DiffusionType, MassTermType >
+     EllipticOperatorType;
+//! ----------------------------------------------------------------------------------------
 
 //! --------- typedefs and classes for data output -----------------------------------------
 typedef Dune::tuple< DiscreteFunctionType* >      IOTupleType;

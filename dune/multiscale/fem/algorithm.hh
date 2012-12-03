@@ -7,9 +7,9 @@
  #include <config.h>
 #endif // ifdef HAVE_CMAKE_CONFIG
 
-#include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/stuff/common/logging.hh>
 
 #include <string>
@@ -20,6 +20,8 @@
 #include <dune/fem/misc/l2error.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
+
+#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
@@ -169,11 +171,19 @@ void solve(typename FEM::DiscreteFunctionType& solution,
       }
       iteration_step += 1;
     }
-    DSC_LOG_INFO << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
-                 << std::endl;
+
+    if (DSC_CONFIG_GET("problem.linear", true))
+    {
+      DSC_LOG_INFO << "Finite Element Problem solved in " << assembleTimer.elapsed() << "s." << std::endl
+                   << std::endl << std::endl;
+    }
+    else
+    {
+      DSC_LOG_INFO << "Nonlinear Finite Element Problem solved with Newton Method in " << assembleTimer.elapsed() << "s." << std::endl
+                   << std::endl << std::endl;
+    }
     DSC_LOG_INFO << seperator_line;
-    DSC_LOG_INFO << "Problem with FEM + Newton-Method solved in " << assembleTimer.elapsed() << "s." << std::endl
-              << std::endl << std::endl;
+
   }// end 'problem.linear <-> else'
 
   //! ********************** End of assembling the reference problem ***************************

@@ -31,7 +31,7 @@ struct ModelProblemData
 
   ModelProblemData()
     : IModelProblemData(constants()){
-      assert(!constants_.epsilon != 0.0);
+      assert( constants_.epsilon != 0.0);
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
