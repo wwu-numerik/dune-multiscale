@@ -48,6 +48,7 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/solver/inverseoperators.hh>
+#include <dune/fem/misc/mpimanager.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/debug.hh>
@@ -56,13 +57,7 @@
 #include <dune/stuff/common/profiler.hh>
 
 
-#if ENABLE_MPI
-typedef Dune::CollectiveCommunication< MPI_Comm > CollectiveCommunication;
-#else
-typedef Dune::CollectiveCommunication< double > CollectiveCommunication;
-#endif // if ENABLE_MPI
-
-CollectiveCommunication init(int argc, char** argv) {
+void init(int argc, char** argv) {
   namespace DSC = Dune::Stuff::Common;
   Dune::MPIManager::initialize(argc, argv);
   DSC::Config().readCommandLine(argc, argv);
@@ -77,7 +72,6 @@ CollectiveCommunication init(int argc, char** argv) {
                   );
   DSC_CONFIG.setRecordDefaults(true);
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
-  return CollectiveCommunication();  // ( Dune::MPIManager::helper().getCommunicator() );
 } // init
 
 #endif // DUNE_MULTISCALE_SRC_COMMON_HH

@@ -3,8 +3,13 @@ PROJECT(dune_multiscale)
 #set minimum cmake version
 cmake_minimum_required(VERSION 2.6)
 
+set(ENABLE_MPI "0" CACHE STRING "set to 1 to enable mpi")
+
+SET( BOOST_ROOT
+	"/opt/boost-1.48" CACHE STRING
+	"" )
+	
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../dune-stuff/cmake )
-set(ENABLE_MPI "1" CACHE FORCE STRING "set to 1 to enalbe mpi")
 include(DuneUtils)
 
 #----------------------------------------------------------------------------------------------------
@@ -41,7 +46,7 @@ SET( USE_ISTL
 	"Use fem-wrapped istl matrix" )
 		
 SET( GRIDTYPE
-	"ALBERTAGRID" CACHE STRING
+	"ALUGRID_CONFORM" CACHE STRING
 	"GRIDTYPE" )
 
 SET( GRIDDIM
@@ -95,9 +100,9 @@ IF( ${GRIDTYPE} MATCHES "ALUGRID" )
 	LINK_DIRECTORIES( "${ALUGRID_BASE_PATH}/lib"  )
 	SET( GRIDLIBS "alugrid" )
 	SET( ENABLE_ALUGRID ON )
-	IF ( ENABLE_PARALELL )
+	IF ( ENABLE_MPI )
 		INCLUDE_SYS_DIR( ${ALUGRID_BASE_PATH}/include/parallel )
-	ENDIF ( ENABLE_PARALELL )
+	ENDIF (ENABLE_MPI )
 	ADD_CXX_FLAGS( "-DENABLE_ALUGRID" )
 ENDIF( ${GRIDTYPE} MATCHES "ALUGRID" )
 
@@ -123,7 +128,7 @@ FILE( GLOB_RECURSE header "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh" )
 FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 
 set( COMMON_LIBS "dunefem" "dunegrid" "dunecommon" "dunegeometry"
-    ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES}
+    ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
     "boost_date_time" "boost_filesystem" "boost_system" "boost_timer")
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )

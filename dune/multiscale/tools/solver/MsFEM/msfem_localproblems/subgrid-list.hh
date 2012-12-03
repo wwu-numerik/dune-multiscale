@@ -157,7 +157,7 @@ public:
     : hostSpace_( specifier.fineSpace() )
       , specifier_(specifier)
       , silent_(silent) {
-    DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
+    DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
     DSC_PROFILER.startTiming("msfem.subgrid_list.identify");
     DSC_LOG_INFO << "Starting creation of subgrids." << std::endl << std::endl;
 
