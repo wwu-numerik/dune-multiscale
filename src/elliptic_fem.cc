@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
     const std::string save_filename = std::string(path + "/logdata/ms.log.log");
     DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
-    cout << "Data will be saved under: " << save_filename << std::endl;
+    DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the grid refinement level for the global problem, i.e. it describes 'H'
     const int refinement_level = DSC_CONFIG_GET("fem.grid_level", 4);

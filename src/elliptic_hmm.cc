@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
                                       ? std::string(path + "problem-info-resumed-computation.txt")
                                       : std::string(path + "/logdata/ms.log.log");
     DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
-    cout << "Data will be saved under: " << save_filename << std::endl;
+    DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
     // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
