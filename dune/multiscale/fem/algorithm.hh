@@ -50,6 +50,33 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 } // boundaryTreatment
 
 
+
+// write discrete function to a file + VTK Output
+template <class FEM>
+void write_discrete_function(typename FEM::DiscreteFunctionType& discrete_solution )
+ {
+  // write the final (discrete) solution to a file
+  std::string solution_file = (boost::format("/fem_solution_refLevel_%d")
+                                % DSC_CONFIG_GET("fem.grid_level", 4) ).str();
+  DiscreteFunctionWriter(solution_file).append(discrete_solution);
+
+  // writing paraview data output
+  // general output parameters
+  Dune::myDataOutputParameters outputparam;
+
+  // create and initialize output class
+  typename FEM::IOTupleType fem_solution_series(&discrete_solution);
+  outputparam.set_prefix((boost::format("/fem_solution")).str());
+  typename FEM::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
+                                                 fem_solution_series, outputparam);
+  // write data
+  if (DSC_CONFIG_GET("problem.linear", true))
+    femsol_dataoutput.writeData( 1.0 /*dummy*/, "fem-solution" );
+  else
+    femsol_dataoutput.writeData( 1.0 /*dummy*/, "fem-newton-solution" );
+ }
+
+
 template <class FEM>
 void solve(typename FEM::DiscreteFunctionType& solution,
                  const typename FEM::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
@@ -76,7 +103,7 @@ void solve(typename FEM::DiscreteFunctionType& solution,
   {
     DSC_LOG_INFO << "Solving linear problem." << std::endl;
     DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
-              << typename FEM::ModelProblemDataType().getRefinementLevelReferenceProblem() << "." << std::endl;
+                  << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
     DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     // to assemble the computational time
@@ -102,7 +129,7 @@ void solve(typename FEM::DiscreteFunctionType& solution,
   } else {
     DSC_LOG_INFO << "Solving non-linear problem." << std::endl;
     DSC_LOG_INFO << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
-              << typename FEM::ModelProblemDataType().getRefinementLevelReferenceProblem() << "." << std::endl;
+                  << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
 
     Dune::Timer assembleTimer;
@@ -254,7 +281,10 @@ void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,   // gri
   discrete_solution.clear();
 
   solve<FEM>(discrete_solution, discreteFunctionSpace, discrete_elliptic_op, filename, rhsassembler);
-
+  
+  // write FEM solution to a file and produce a VTK output
+  write_discrete_function<FEM>(discrete_solution);
+  
 }
 
 #endif // DUNE_FEM_ALGORITHM_HH

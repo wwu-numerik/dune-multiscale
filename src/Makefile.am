@@ -4,8 +4,9 @@ SUBDIRS =
 GRIDTYPE=ALBERTAGRID
 GRIDDIM=2
 PROBLEM_NAMES= Toy One Two Three Four Five Six Seven Eight Nine Ten
+FEM_PROBLEM=One
 HMM_PROBLEM=One
-MSFEM_PROBLEM=Ten
+MSFEM_PROBLEM=Nine
 DEFAULT_PROBLEM=One
 
 noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem
@@ -25,7 +26,7 @@ CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	
 elliptic_hmm_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(HMM_PROBLEM)
 elliptic_msfem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(MSFEM_PROBLEM)
-elliptic_fem_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(DEFAULT_PROBLEM)
+elliptic_fem_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(FEM_PROBLEM)
 elliptic_hom_fem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(DEFAULT_PROBLEM)
 
 # The libraries have to be given in reverse order (most basic libraries

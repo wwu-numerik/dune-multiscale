@@ -1,0 +1,116 @@
+# Initfile
+
+[problem]
+# problem specifications
+
+# characteristic size of the micro structure
+epsilon = 0.05
+
+# linear or nonlinear problem?
+linear = 1
+
+# do we have a precomputed reference solution?
+reference_solution = 0
+
+# file where the reference solution is stored
+rs_file =
+
+# grid refinement level for which the reference was computed
+rs_grid_level = 
+
+
+
+[global]
+
+# directory to save the data output
+datadir = data/HMM/test_problem
+
+
+[logging]
+# logging specifications
+# LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
+# # --> LOG_ERR | LOG_INFO | LOG_DEBUG | LOG_FILE = 46
+# # ANY odd number will disable ALL logging
+#
+level = 62
+file = ms.log
+
+# logging directory relative to datadir
+# data will be saved under 'datadir/dir'
+dir = logdata
+
+
+[grid]
+
+file =
+
+
+# method specifications for MsFEM and HMM #
+
+[msfem]
+
+# initial coarse grid level
+coarse_grid_level = 0 
+
+# initial fine grid level 
+fine_grid_level = 4
+
+# number of oversampling layers (layers of fine grid elements)
+oversampling_layers = 10
+
+# oversampling strategy 1, 2 or 3.
+# !!! key not yet activated !!!
+oversampling_strategy = 1
+
+# use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
+# !!! key not yet activated !!!
+petrov_galerkin = 1
+
+# compute the estimated error?
+error_estimation = 1
+
+# use error estimation and adaptive mesh refinement?
+adaptivity = 0
+
+# error tolerance  
+error_tolerance = 1e-6
+
+# compute the errors between MsFEM and (standard) FEM approximations?
+fem_comparison = 1
+# (fem resolution = fine_grid_level of MsFEM)
+
+[hmm]
+
+# guess for epsilon (indicator for size of small scale)
+epsilon_guess = 0.05
+
+# oversampling parameter
+delta = 0.05
+# NOTE that (delta/epsilon_guess) needs to be a positive integer!
+
+# initial coarse level
+coarse_grid_level = 0
+
+# resolution level for the grid for the unit cube Y
+cell_grid_level = 2
+# 'effective fine grid level' = 'epslion guess' * 'cell grid size'
+
+# use the MsFEM in Petrov-Galerkin (unsymmetric) formulation
+# !!! key not yet activated !!!
+petrov_galerkin = 1
+
+# use error estimation and adaptive mesh refinement?
+adaptivity = 0
+
+# error tolerance  
+error_tolerance = 0.1
+
+# compute the estimated error?
+error_estimation = 0
+
+
+
+[fem]
+
+# grid refinement level
+grid_level = 2

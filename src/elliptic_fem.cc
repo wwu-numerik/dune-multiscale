@@ -37,7 +37,6 @@ int main(int argc, char** argv) {
 
     // create a grid pointer for the DGF file belongig to the macro grid:
     FEMTraits::GridPointerType grid_pointer(gridName);
-    //cout << "Hiiiiier nicht mehr." << endl;
 
     // refine the grid 'starting_refinement_level' times:
     grid_pointer->globalRefine(refinement_level);
