@@ -38,10 +38,6 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");
   }
 
-  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
-  inline int getRefinementLevelReferenceProblem() const {
-    return 10;
-  }
 };
 
 //! ----------------- Definition of ' f ' ------------------------

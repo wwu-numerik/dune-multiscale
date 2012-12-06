@@ -119,12 +119,6 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_one.dgf"); // a standard 2d-cube
   }
 
-  // if you want to perform a reference computation (e.g. a homogenized problem or a fine-scale FEM computation)
-  // what resolution do you wish?
-  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
-  inline int getRefinementLevelReferenceProblem() const {
-    return 10; // resolution level of the macro grid
-  }
 };
 
 

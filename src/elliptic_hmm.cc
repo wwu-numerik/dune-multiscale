@@ -72,14 +72,12 @@ int main(int argc, char** argv) {
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
     // grid refinement level for solving the cell problems, i.e. it describes 'h':
     const int refinement_level_cellgrid = DSC_CONFIG_GET("hmm.cell_grid_level", 4);
-    // (starting) grid refinement level for solving the reference problem
-    int refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
-    // in general: for the homogenized case = 11 and for the high resolution case = 14
-    // Note that this depends on the model problem!
-    if (!DSC_CONFIG_GET("fsr", false))
-    //!TODO völliig widersprüchlich zu oben
-      refinement_level_referenceprob_ = 8;
-
+    // (macro) grid refinement level for which the reference problem was solved
+    int refinement_level_referenceprob_ = 0;
+    if (DSC_CONFIG_GET("problem.reference_solution", false)) // if there is a refernce solution
+      refinement_level_referenceprob_ = DSC_CONFIG_GET("problem.rs_grid_level", 0);
+    // (typically this is a very high level so that we get a very fine grid)
+      
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
     DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
@@ -131,21 +129,6 @@ void check_config()
 {
   if ( !DSC_CONFIG_GET("hmm.error_estimation", false) && DSC_CONFIG_GET("hmm.adaptivity", false) )
     DUNE_THROW(Dune::InvalidStateException, "Error estimation must be activated to use adaptivity.");
-
-  //! Do we have/want a fine-scale reference solution?
-  // #define FINE_SCALE_REFERENCE
-  #ifdef FINE_SCALE_REFERENCE
-  // load the precomputed fine scale reference from a file
-   #define FSR_LOAD
-   #ifndef FSR_LOAD
-  // compute the fine scale reference (on the fly)
-    #define FSR_COMPUTE
-    #ifdef FSR_COMPUTE
-  // Do we write the discrete fine-scale solution to a file? (for later usage)
-     #define WRITE_FINESCALE_SOL_TO_FILE
-    #endif       // FSR_COMPUTE
-   #endif    // FSR_LOAD
-  #endif // FINE_SCALE_REFERENCE
 
 #ifdef RESUME_TO_BROKEN_COMPUTATION
 // last HMM Newton step that was succesfully carried out, saving the iterate afterwards

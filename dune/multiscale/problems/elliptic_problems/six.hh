@@ -28,10 +28,6 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf");
   }
 
-  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
-  inline int getRefinementLevelReferenceProblem() const {
-    return 18;
-  }
 };
 
 CONSTANTFUNCTION(FirstSource, 1.0)

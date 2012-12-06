@@ -40,10 +40,6 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");      // _strange_grid
   }
 
-  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
-  inline int getRefinementLevelReferenceProblem() const {
-    return 10;
-  }
 };
 
 

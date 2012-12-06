@@ -37,10 +37,6 @@ struct ModelProblemData
     return ("../dune/multiscale/grids/macro_grids/elliptic/unit_cube.dgf");
   }
 
-  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
-  inline int getRefinementLevelReferenceProblem() const {
-    return 10;
-  }
 };
 
 

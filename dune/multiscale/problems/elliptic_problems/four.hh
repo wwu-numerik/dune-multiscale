@@ -30,10 +30,6 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/corner_singularity.dgf");
   }
 
-  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
-  inline int getRefinementLevelReferenceProblem() const {
-    return 20;
-  }
 };
 
 template< class FunctionSpaceImp >

@@ -32,10 +32,6 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/earth.dgf");
   }
 
-  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
-  inline int getRefinementLevelReferenceProblem() const {
-    return 18;  // 18;
-  }
 };
 
 template< class FunctionSpaceImp >

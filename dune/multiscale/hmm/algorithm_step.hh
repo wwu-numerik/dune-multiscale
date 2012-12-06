@@ -56,7 +56,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 } // boundaryTreatment
 
 template <class HMM>
-void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
+void solve_hmm_problem_nonlinear(const typename HMM::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                                    const typename HMM::DiffusionType& diffusion_op,
                                    typename HMM::DiscreteFunctionType& hmm_solution,
                                    const typename HMM::CellProblemNumberingManagerType& cp_num_manager,
@@ -241,12 +241,12 @@ void solve_cell_problems_nonlinear(const typename HMM::PeriodicDiscreteFunctionS
 } //solve_cell_problems_nonlinear
 
 template <class HMM>
-void solve_cell_problems_linear(const typename HMM::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                                const typename HMM::DiffusionType& diffusion_op,
-                                typename HMM::DiscreteFunctionType& hmm_solution,
-                                const typename HMM::CellProblemNumberingManagerType& cp_num_manager,
-                                const typename HMM::DiscreteFunctionSpaceType& discreteFunctionSpace,
-                                const Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType >& rhsassembler) {
+void solve_hmm_problem_linear(const typename HMM::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
+                              const typename HMM::DiffusionType& diffusion_op,
+                              typename HMM::DiscreteFunctionType& hmm_solution,
+                              const typename HMM::CellProblemNumberingManagerType& cp_num_manager,
+                              const typename HMM::DiscreteFunctionSpaceType& discreteFunctionSpace,
+                              const Dune::RightHandSideAssembler< typename HMM::DiscreteFunctionType >& rhsassembler) {
 
   //! -------------- solve and save the cell problems for the base function set --------------------------------------
   const Dune::CellProblemSolver< typename HMM::PeriodicDiscreteFunctionType,
@@ -426,40 +426,6 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
     outstring.str( std::string() );
     // -------------------------------------------------------
   }
-
-  #ifdef WRITE_FINESCALE_SOL_TO_FILE
-  // --------- data output reference solution (fine fem newton computation) --------------
-
-  // create and initialize output class
-  typename HMM::IOTupleType fem_newton_solution_series(&fem_newton_solution);
-  outputparam.set_prefix("/reference_solution");
-  typename HMM::DataOutputType fem_newton_dataoutput(gridPartFine.grid(), fem_newton_solution_series, outputparam);
-
-  // write data
-  outstring << "reference_solution";
-  fem_newton_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
-
-  // -------------------------------------------------------
-  #endif // ifdef WRITE_FINESCALE_SOL_TO_FILE
-
-  #ifdef HOMOGENIZEDSOL_AVAILABLE
-  // --------- data output homogenized solution --------------
-
-  // create and initialize output class
-  IOTupleType homogenized_solution_series(&homogenized_solution);
-  outputparam.set_prefix("/homogenized_solution");
-  DataOutputType homogenized_solution_dataoutput(gridPartFine.grid(), homogenized_solution_series, outputparam);
-
-  // write data
-  outstring << "homogenized_solution";
-  homogenized_solution_dataoutput.writeData( 1.0 /*dummy*/, outstring.str() );
-  // clear the std::stringstream:
-  outstring.str( std::string() );
-
-  // -------------------------------------------------------
-  #endif // ifdef HOMOGENIZEDSOL_AVAILABLE
 //!-------------------------------------------------------------
 }
 
@@ -471,7 +437,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
         const typename HMMTraits::DiffusionType& diffusion_op,
         const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& rhsassembler,
         typename HMMTraits::DiscreteFunctionType& hmm_solution,
-        const typename HMMTraits::DiscreteFunctionType& fem_newton_solution,
+        const typename HMMTraits::DiscreteFunctionType& reference_solution,
         const int loop_cycle ) {
     typedef HMMTraits HMM;
     DSC_LOG_INFO << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
@@ -484,46 +450,34 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
     // - div ( A^{\epsilon} \nabla u^{\epsilon} ) = f - div G
 
     const Dune::L2Error< typename HMM::DiscreteFunctionType > l2error;
-    // ----------------------------------------------------------------------------------------------//
-    // ----------------------- THE DISCRETE HMM OPERATOR -----------------------------------//
-    // ----------------------------------------------------------------------------------------------//
 
     // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
     typename HMM::CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
 
 
-    // ----------------------------------------------------------------------------------------------//
-    // ----------------------------------------------------------------------------------------------//
-    // ----------------------------------------------------------------------------------------------//
-
     if (DSC_CONFIG_GET("problem.linear", true))
-      solve_cell_problems_linear<HMM>(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution,
+      solve_hmm_problem_linear<HMM>(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution,
                                     cp_num_manager, discreteFunctionSpace, rhsassembler);
-    else
-      solve_cell_problems_nonlinear<HMM>(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution,
-                                    cp_num_manager, discreteFunctionSpace, rhsassembler, loop_cycle);
-
+    else //for a given loop cycle of the Newton scheme:
+      solve_hmm_problem_nonlinear<HMM>(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution,
+                                       cp_num_manager, discreteFunctionSpace, rhsassembler, loop_cycle);
+      
     const auto errors = estimate_error<HMM>(gridPart, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                    diffusion_op, cp_num_manager, hmm_solution);
 
-    const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
+    const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
     // for adaptive computations, the saved solution is not suitable for a later usage
-    if (!DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", false)) {
+    if (!DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("hmm.write_to_file", false)) {
       DiscreteFunctionWriter((boost::format("/hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
                              ).append(hmm_solution);
     }
 
-    if (DSC_CONFIG_GET("fsr", true) && DSC_CONFIG_GET("WRITE_FINESCALE_SOL_TO_FILE", true))
-    {
-      const int refinement_level_referenceprob_ = typename HMM::ModelProblemDataType().getRefinementLevelReferenceProblem();
-      DiscreteFunctionWriter((boost::format("/finescale_solution_discFunc_refLevel_%d") % refinement_level_referenceprob_).str()
-          ).append(fem_newton_solution);
-    }
-
-    //! ******************** End of assembling and solving the HMM problem ***************************
     DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
+
     //! ----------------- compute L2-errors -------------------
-    if (DSC_CONFIG_GET("fsr", true))
+    
+    // L2 error with reference solution
+    if (DSC_CONFIG_GET("problem.reference_solution", false))
     {
       DSC_PROFILER.startTiming("hmm.timeadapt");
 
@@ -532,9 +486,9 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
       Dune::ImprovedL2Error< typename HMM::DiscreteFunctionType > impL2error;
       typename HMM::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
         hmm_solution,
-        fem_newton_solution);
+        reference_solution);
 
-      DSC_LOG_INFO << "|| u_hmm - u_fine_scale ||_L2 =  " << hmm_error << std::endl << std::endl;
+      DSC_LOG_INFO << "|| u_hmm - u_reference ||_L2 =  " << hmm_error << std::endl << std::endl;
 
       const auto timeadapt = DSC_PROFILER.stopTiming("hmm.timeadapt") / 1000.f;
       // if it took longer then 1 minute to compute the error:
@@ -543,47 +497,8 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
         DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
       }
     }
-
-    #ifdef HMM_REFERENCE
-    {
-      DSC_PROFILER.startTiming("hmm.timeadapthmmref", hmm_iteration_step)
-
-      RangeType hmm_vs_hmm_ref_error = impL2error.norm_adaptive_grids_2< hmm_polorder >(
-        hmm_solution,
-        hmm_reference_solution);
-
-      DSC_LOG_INFO << "|| u_hmm - u_hmm_ref ||_L2 =  " << hmm_vs_hmm_ref_error << std::endl << std::endl;
-
-      auto timeadapthmmref = DSC_PROFILER.stopTiming("hmm.timeadapthmmref") / 1000.f;
-      // if it took longer then 1 minute to compute the error:
-      if (timeadapthmmref > 60)
-      {
-        DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapthmmref << "s." << std::endl << std::endl;
-      }
-    }
-    #endif // ifdef HMM_REFERENCE
-
-    #ifdef HOMOGENIZEDSOL_AVAILABLE
-
-    if (DSC_CONFIG_GET("fsr", true))
-    {
-      // not yet modified according to a generalized L2-error, here, homogenized_solution and fem_newton_solution still need
-      // to be defined on the same grid!
-      RangeType hom_error = l2error.norm2< hmm_polorder >(homogenized_solution, fem_newton_solution);
-      DSC_LOG_INFO << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl << std::endl;
-      if ( DSC_LOG_INFO.is_open() )
-      {
-        DSC_LOG_INFO << "|| u_hom - u_fine_scale ||_L2 =  " << hom_error << std::endl;
-      }
-    }
-
-    RangeType hom_hmm_error = l2error.norm2< hmm_polorder >(hmm_solution,
-                                                                                                 homogenized_solution);
-
-    DSC_LOG_INFO << "|| u_hom - u_hmm ||_L2 =  " << hom_hmm_error << std::endl << std::endl;
-
-    #endif // ifdef HOMOGENIZEDSOL_AVAILABLE
-
+    
+    // L2 errors with exact solution
     if (HMM::ModelProblemDataType::has_exact_solution)
     {
       const typename HMM::ExactSolutionType u;
@@ -592,13 +507,13 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
                                                                     2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
       DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
-      if (DSC_CONFIG_GET("fsr", true))
+      if (DSC_CONFIG_GET("problem.reference_solution", false))
       {
-        typename HMM::RangeType fem_newton_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
-                                                                       fem_newton_solution,
-                                                                       2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
+        typename HMM::RangeType reference_sol_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
+                                                                        reference_solution,
+                                                                        2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
 
-        DSC_LOG_INFO << "|| u_fem_newton - u_exact ||_L2 =  " << fem_newton_error << std::endl << std::endl;
+        DSC_LOG_INFO << "|| u_reference - u_exact ||_L2 =  " << reference_sol_error << std::endl << std::endl;
       }
     }
 

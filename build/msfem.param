@@ -10,14 +10,17 @@ epsilon = 0.05
 linear = 1
 
 # do we have a precomputed reference solution?
-reference_solution = 0
+reference_solution = 1
+# TODO: works only for HMM! MsFEM Variante noch nicht implementiert.
 
 # file where the reference solution is stored
-rs_file =
+# (momentan ausgehend Pfad 'global.datadir')
+rs_file = ../../../data/HMM/test_problem/hmm_solution_discFunc_refLevel_0
 
-# grid refinement level for which the reference was computed
-rs_grid_level = 
-
+# a saved/precomputed solution located at 'rs_file' is must be computed with the following refinement level:
+#   (grid refinement level for which the reference was computed)
+rs_grid_level = 0
+#   (must have been determined with a uniformly refined grid)
 
 
 [global]
@@ -77,7 +80,7 @@ error_tolerance = 1e-6
 
 # compute the errors between MsFEM and (standard) FEM approximations?
 fem_comparison = 1
-# (fem resolution = fine_grid_level of MsFEM)
+#   (fem resolution = fine_grid_level of MsFEM)
 
 [hmm]
 
@@ -86,7 +89,7 @@ epsilon_guess = 0.05
 
 # oversampling parameter
 delta = 0.05
-# NOTE that (delta/epsilon_guess) needs to be a positive integer!
+#     NOTE that (delta/epsilon_guess) needs to be a positive integer!
 
 # initial coarse level
 coarse_grid_level = 0
@@ -108,9 +111,11 @@ error_tolerance = 0.1
 # compute the estimated error?
 error_estimation = 0
 
-
+# write final (discrete) HMM solution to a file?
+write_to_file = 1
 
 [fem]
 
 # grid refinement level
 grid_level = 2
+

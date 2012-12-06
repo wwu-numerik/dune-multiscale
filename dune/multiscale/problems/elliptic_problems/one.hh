@@ -44,11 +44,7 @@ struct ModelProblemData
   inline bool problemIsPeriodic() const {
     return true; // = problem is periodic
   }
-  
-  //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
-  inline int getRefinementLevelReferenceProblem() const {
-    return 18;
-  }
+
 };
 
 //! ----------------- Definition of ' f ' ------------------------
