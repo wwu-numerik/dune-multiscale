@@ -1,45 +1,126 @@
 #include "common.hh"
-#include "hmm_config.hh"
 
-#include <dune/multiscale/hmm/algorithm.hh>
+// The following FEM code requires an access to the 'ModelProblemData' class,
+// which provides us with information about f, A, \Omega, etc.
 
-// we only use error estimation, if the solutions of the cell problems have been determined in a pre-process. Otherwise
-// it is far too expensive!
-#include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
+
+#ifdef HAVE_CMAKE_CONFIG
+ #include "cmake_config.h"
+#elif defined (HAVE_CONFIG_H)
+ #include <config.h>
+#endif // ifdef HAVE_CMAKE_CONFIG
+
+
+//! local (dune-multiscale) includes
+#include <dune/multiscale/fem/fem_traits.hh>
+#include <dune/multiscale/fem/algorithm.hh>
 
 //! (very restrictive) homogenizer
 #include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
 #include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
 
-// NOTE: All the multiscale code requires an access to the 'ModelProblemData' class (typically defined in
-// problem_specification.hh), which provides us with information about epsilon, delta, etc.
-//! HMM Assembler, Error Estimator, ... they all hark back to 'ModelProblemData'. Probably there is a better solution,
-//! but for me, it works perfectly.
-namespace Multiscale {
-// parameters for the current realization of the HMM
-class HMMParameters
-{
-public:
-  // Constructor for ModelProblemData
-  inline explicit HMMParameters()
-  {}
+//! the main FEM computation
+template < class FEMTraits >
+void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
+                       const std::string filename) {
+  typedef FEMTraits FEM;
+  using namespace Dune;
 
-};
+  const typename FEM::ModelProblemDataType problem_data;
+  print_info(problem_data, DSC_LOG_INFO);
+  //! ---------------------------- grid parts ----------------------------------------------
+  // grid part for the global function space, required for the finite element problem
+  typename FEM::GridPartType gridPart(*macro_grid_pointer);
+  //! --------------------------------------------------------------------------------------
+
+  //! ------------------------- discrete function spaces -----------------------------------
+  // the global-problem function space:
+  typename FEM::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  //! --------------------------------------------------------------------------------------
+
+  // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
+  const typename FEM::DiffusionType diffusion_op;
+
+  //! define the right hand side assembler tool
+  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
+  Dune::RightHandSideAssembler< typename FEM::DiscreteFunctionType > rhsassembler;
+  const typename FEM::FirstSourceType f;   // standard source f
+
+  //! define the discrete (elliptic) operator that describes our problem
+  // ( effect of the discretized differential operator on a certain discrete function )
+  const typename FEM::EllipticOperatorType discrete_elliptic_op(discreteFunctionSpace, diffusion_op);
+
+  // unit cube grid for the computations of cell problems
+  const std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
+  // descretized homogenizer:
+
+  typedef Dune::Homogenizer< typename FEM::GridType, typename FEM::DiffusionType > HomogenizerType;
+  
+  // to create an empty diffusion matrix that can be filled with constant values
+  typedef Problem::ConstantDiffusionMatrix< typename FEM::FunctionSpaceType, typename HomogenizerType::HomTensorType >
+     HomDiffusionType;
+    
+  const HomogenizerType disc_homogenizer(unit_cell_location);
+  const typename HomogenizerType::HomTensorType A_hom = disc_homogenizer.getHomTensor(diffusion_op);
+  const HomDiffusionType hom_diffusion_op(A_hom);
+  
+  //!TODO check: hatte nur 2 tmp parameter, Masse hinzugefUGT
+  typedef DiscreteEllipticOperator< typename FEM::DiscreteFunctionType,
+                                    HomDiffusionType, typename FEM::MassTermType > HomEllipticOperatorType;
+
+  HomEllipticOperatorType hom_discrete_elliptic_op( discreteFunctionSpace, hom_diffusion_op); 
+  
+  typename FEM::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
+  
+  typename FEM::DiscreteFunctionType hom_rhs("homogenized rhs", discreteFunctionSpace);
+  hom_rhs.clear();
+  
+  //! solution vector
+  // - By solution, we denote the (discrete) homogenized solution determined with FEM on the coarse scale and FEM for the cell problems
+  typename FEM::DiscreteFunctionType homogenized_solution(filename + " Homogenized Solution", discreteFunctionSpace);
+  homogenized_solution.clear();
+  hom_discrete_elliptic_op.assemble_matrix(hom_stiff_matrix);
+  
+  constexpr int hmm_polorder = 2* FEM::DiscreteFunctionSpaceType::polynomialOrder + 2;
+  rhsassembler.template assemble < hmm_polorder >(f, hom_rhs);
+
+  // set Dirichlet Boundary to zero
+  boundaryTreatment(hom_rhs);
+
+  const typename FEM::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, VERBOSE);
+  hom_biCGStab(hom_rhs, homogenized_solution);
+  
+  // write FEM solution to a file and produce a VTK output
+  // ---------------------------------------------------------------------------------
+  
+  // write the final (discrete) solution to a file
+  std::string solution_file = (boost::format("/homogenized_solution_macro_refLevel_%d")
+                                % DSC_CONFIG_GET("fem.grid_level", 4) ).str();
+  DiscreteFunctionWriter(solution_file).append(homogenized_solution);
+
+  // writing paraview data output
+  // general output parameters
+  Dune::myDataOutputParameters outputparam;
+
+  // create and initialize output class
+  typename FEM::IOTupleType hom_fem_solution_series(&homogenized_solution);
+  outputparam.set_prefix((boost::format("/homogenized_solution")).str());
+  typename FEM::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
+                                                    hom_fem_solution_series, outputparam);
+  homfemsol_dataoutput.writeData( 1.0 /*dummy*/, "homogenized-solution" );
+  
+  // ---------------------------------------------------------------------------------
+  
 }
 
-//! local (dune-multiscale) includes
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-#include <dune/multiscale/tools/solver/HMM/reconstruction_manager/elliptic/reconstructionintegrator.hh>
-#include <dune/multiscale/tools/meanvalue.hh>
-#include <dune/multiscale/hmm/hmm_traits.hh>
-
-void check_config();
 
 int main(int argc, char** argv) {
   try {
     init(argc, argv);
-    check_config();
+
+    if ( !DSC_CONFIG_GET("problem.linear", 1 ) )
+     DUNE_THROW(Dune::InvalidStateException, "Problem is declared to be nonlinear. Homogenizers are only available for linear homogenization problems.");
+     
     namespace DSC = Dune::Stuff::Common;
 
     DSC_PROFILER.startTiming("total_cpu");
@@ -49,71 +130,32 @@ int main(int argc, char** argv) {
     // generate directories for data output
     DSC::testCreateDirectory(path);
 
-    if ( DSC_CONFIG_GET("problem.stochastic_pertubation", false)) {
-      //! Do we want to force the algorithm to come to an end?
-      // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht
-      // erreicht etc.)
-      DSC_CONFIG.set("problem.force_end", true);
-    }
-
     // name of the error file in which the data will be saved
     std::string filename_;
     const Problem::ModelProblemData info;
 
-    // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
-    // (vorlauefig sollte diese Variante aber reichen)
-    const std::string save_filename = DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)
-                                      ? std::string(path + "problem-info-resumed-computation.txt")
-                                      : std::string(path + "/logdata/ms.log.log");
+    if ( !info.problemIsPeriodic() )
+     DUNE_THROW(Dune::InvalidStateException, "Problem is declared to be non-periodic. Homogenizers are only available for periodic homogenization problems.");
+    
+    const std::string save_filename = std::string(path + "/logdata/ms.log.log");
     DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
-    DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
+    cout << "Data will be saved under: " << save_filename << std::endl;
+    DSC_LOG_INFO << "Solving the homogenized problem with a standard Finite Element method." << std::endl << std::endl;
 
-    // refinement_level denotes the (starting) grid refinement level for the global problem, i.e. it describes 'H'
-    const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
-    // grid refinement level for solving the cell problems, i.e. it describes 'h':
-    const int refinement_level_cellgrid = DSC_CONFIG_GET("hmm.cell_grid_level", 4);
-    // (starting) grid refinement level for solving the reference problem
-    int refinement_level_referenceprob_ = info.getRefinementLevelReferenceProblem();
-    // in general: for the homogenized case = 11 and for the high resolution case = 14
-    // Note that this depends on the model problem!
-    if (!DSC_CONFIG_GET("fsr", false))
-    //!TODO völliig widersprüchlich zu oben
-      refinement_level_referenceprob_ = 8;
+    // refinement_level denotes the grid refinement level for the global problem, i.e. it describes 'H'
+    const int refinement_level = DSC_CONFIG_GET("fem.grid_level", 4);
 
     // name of the grid file that describes the macro-grid:
-    const std::string macroGridName = info.getMacroGridFile();
-    DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
-
-    // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
-    // for the parameters:
+    const std::string gridName = info.getMacroGridFile();
+    DSC_LOG_INFO << "loading dgf: " << gridName << std::endl;
 
     // create a grid pointer for the DGF file belongig to the macro grid:
-    HMMTraits::GridPointerType macro_grid_pointer(macroGridName);
+    FEMTraits::GridPointerType grid_pointer(gridName);
+
     // refine the grid 'starting_refinement_level' times:
-    macro_grid_pointer->globalRefine(refinement_level_macrogrid_);
+    grid_pointer->globalRefine(refinement_level);
 
-    // create a finer GridPart for either the homogenized or the fine-scale problem.
-    // this shall be used to compute an approximation of the exact solution.
-    HMMTraits::GridPointerType fine_macro_grid_pointer(macroGridName);
-    // refine the grid 'starting_refinement_level_reference' times:
-    fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
-
-    // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
-    // THIS GRID IS FIXED!
-    const boost::filesystem::path unitCubeName = "../dune/multiscale/grids/cell_grids/unit_cube_0_centered.dgf";
-    // --> the 0-centered unit cube, i.e. [-1/2,1/2]^2
-    // note that the centering is fundamentaly important for the implementation. Do NOT change it to e.g. [0,1]^2!!!
-    // to solve the cell problems, we always need a periodic gridPart.
-    // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated
-    // on such a grid )
-    Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(unitCubeName.string());
-    periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
-
-    algorithm<HMMTraits> (macro_grid_pointer, fine_macro_grid_pointer,
-              periodic_grid_pointer, filename_);
-    // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
-    //normal
-    // macro problem
+    algorithm_hom_fem<FEMTraits> (grid_pointer, filename_);
 
     const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
@@ -123,36 +165,3 @@ int main(int argc, char** argv) {
   }
   return 1;
 } // main
-
-/** \brief contains non-transformed macro stuff that might contain logic
- * \todo use config instead
- **/
-void check_config()
-{
-  if ( !DSC_CONFIG_GET("hmm.error_estimation", false) && DSC_CONFIG_GET("hmm.adaptivity", false) )
-    DUNE_THROW(Dune::InvalidStateException, "Error estimation must be activated to use adaptivity.");
-
-  //! Do we have/want a fine-scale reference solution?
-  // #define FINE_SCALE_REFERENCE
-  #ifdef FINE_SCALE_REFERENCE
-  // load the precomputed fine scale reference from a file
-   #define FSR_LOAD
-   #ifndef FSR_LOAD
-  // compute the fine scale reference (on the fly)
-    #define FSR_COMPUTE
-    #ifdef FSR_COMPUTE
-  // Do we write the discrete fine-scale solution to a file? (for later usage)
-     #define WRITE_FINESCALE_SOL_TO_FILE
-    #endif       // FSR_COMPUTE
-   #endif    // FSR_LOAD
-  #endif // FINE_SCALE_REFERENCE
-
-#ifdef RESUME_TO_BROKEN_COMPUTATION
-// last HMM Newton step that was succesfully carried out, saving the iterate afterwards
- #define HMM_NEWTON_ITERATION_STEP 2
-#else // ifdef RESUME_TO_BROKEN_COMPUTATION
-      // default: we need a full computation. start with step 1:
- #define HMM_NEWTON_ITERATION_STEP 0
-#endif // ifdef RESUME_TO_BROKEN_COMPUTATION
-
-}

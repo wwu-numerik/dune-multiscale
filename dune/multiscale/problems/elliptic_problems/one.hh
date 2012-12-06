@@ -39,6 +39,12 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf");
   }
 
+  // are the coefficients periodic? (e.g. A=A(x/eps))
+  // this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const {
+    return true; // = problem is periodic
+  }
+  
   //! \copydoc IModelProblemData::getRefinementLevelReferenceProblem()
   inline int getRefinementLevelReferenceProblem() const {
     return 18;
