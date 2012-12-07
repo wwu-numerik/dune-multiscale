@@ -32,6 +32,9 @@ struct ModelProblemData
   ModelProblemData()
     : IModelProblemData(constants()){
       assert( constants_.epsilon != 0.0);
+      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
+         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
+
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
@@ -44,7 +47,14 @@ struct ModelProblemData
   inline bool problemIsPeriodic() const {
     return true; // = problem is periodic
   }
-
+  
+  // does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const {
+    return false; // = problem does not allow stochastic perturbations
+    // (if you want it, you must add the 'perturb' method provided
+    // by 'constants.hh' - see model problems 4 to 7 for examples )
+  }
+  
 };
 
 //! ----------------- Definition of ' f ' ------------------------

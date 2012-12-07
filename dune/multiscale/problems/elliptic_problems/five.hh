@@ -24,8 +24,14 @@ CONSTANTSFUNCTION( 0.05 )
 struct ModelProblemData
   : public IModelProblemData
 {
+
+  static const bool has_exact_solution = false;
+  
   ModelProblemData()
     : IModelProblemData(constants()) {
+      assert( constants_.epsilon != 0.0);
+      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
+         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
@@ -33,6 +39,17 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/earth.dgf");
   }
 
+  // are the coefficients periodic? (e.g. A=A(x/eps))
+  // this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const {
+    return false; // = problem is not periodic
+  }
+  
+  // does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const {
+    return true; // = problem allows stochastic perturbations
+  }
+  
 };
 
 template< class FunctionSpaceImp >

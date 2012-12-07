@@ -28,13 +28,27 @@ struct ModelProblemData
     : IModelProblemData(constants()) {
       if (!constants().get("linear", true))
         DUNE_THROW(Dune::InvalidStateException, "problem seven is entirely linear, but problem.linear was false");
-  }
+      assert( constants_.epsilon != 0.0);
+      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
+         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");      
+    }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
   inline std::string getMacroGridFile() const {
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");
   }
 
+  // are the coefficients periodic? (e.g. A=A(x/eps))
+  // this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const {
+    return true; // = problem is periodic
+  }
+  
+  // does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const {
+    return true; // = problem allows stochastic perturbations
+  }
+  
 };
 
 //! ----------------- Definition of ' f ' ------------------------

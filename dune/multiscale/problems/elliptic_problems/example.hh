@@ -111,12 +111,27 @@ struct ModelProblemData
 
   ModelProblemData()
     : IModelProblemData(constants()) {
+      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
+         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
   // the computational grid in dgf format
   inline std::string getMacroGridFile() const {
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_one.dgf"); // a standard 2d-cube
+  }
+  
+  // are the coefficients periodic? (e.g. A=A(x/eps))
+  // this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const {
+    return false; // = problem is not periodic
+  }
+  
+  // does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const {
+    return false; // = problem does not allow stochastic perturbations
+    // (if you want it, you must add the 'perturb' method provided
+    // by 'constants.hh' - see model problems 4 to 7 for examples )
   }
 
 };

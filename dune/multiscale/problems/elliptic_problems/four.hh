@@ -7,8 +7,10 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-//!############################## Elliptic Problem 4 ###################################
+//! ------------ Elliptic Problem 4 -------------------
 
+// linear elliptic model problem - periodic setting
+// no exact solution available!
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
@@ -21,8 +23,14 @@ CONSTANTSFUNCTION( 0.05 )
 struct ModelProblemData
   : public IModelProblemData
 {
+
+  static const bool has_exact_solution = false;
+  
   ModelProblemData()
     : IModelProblemData(constants()) {
+      assert( constants_.epsilon != 0.0);
+      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
+         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
   }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
@@ -30,6 +38,17 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/corner_singularity.dgf");
   }
 
+  // are the coefficients periodic? (e.g. A=A(x/eps))
+  // this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const {
+    return true; // = problem is periodic
+  }
+  
+  // does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const {
+    return true; // = problem allows stochastic perturbations
+  }
+  
 };
 
 template< class FunctionSpaceImp >
@@ -117,14 +136,13 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
+
+    // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
+    // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
     const auto coeff = constants().coefficients_variant_A(x);
-    if (constants().get("linear", true)) {
-      flux[0][0] = coeff.first * gradient[0][0];
-      flux[0][1] = coeff.second * gradient[0][1];
-    } else {
-      flux[0][0] = coeff.first  * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
-      flux[0][1] = coeff.second * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
-    }
+
+    flux[0][0] = coeff.first * gradient[0][0];
+    flux[0][1] = coeff.second * gradient[0][1];
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -136,17 +154,14 @@ public:
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
+
+    // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
+    // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
     const auto coeff = constants().coefficients_variant_A(x);
 
-    if (constants().get("linear", true)) {
-      flux[0][0] = coeff.first * direction_gradient[0][0];
-      flux[0][1] = coeff.second * direction_gradient[0][1];
-    } else {
-      flux[0][0] = coeff.first * direction_gradient[0][0]
-                   * ( 1.0 + pow(position_gradient[0][0], 2.0) );
-      flux[0][1] = coeff.second * direction_gradient[0][1]
-                   * ( 1.0 + pow(position_gradient[0][1], 2.0) );
-    }
+    flux[0][0] = coeff.first * direction_gradient[0][0];
+    flux[0][1] = coeff.second * direction_gradient[0][1];
+    
   } // jacobianDiffusiveFlux
 
   /** \deprecated throws Dune::NotImplemented exception **/
@@ -157,77 +172,6 @@ public:
   }
 };
 
-template< class FunctionSpaceImp, class FieldMatrixImp >
-class HomDiffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, HomDiffusion< FunctionSpaceImp, FieldMatrixImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-  typedef FieldMatrixImp   FieldMatrixType;
-
-private:
-  typedef HomDiffusion< FunctionSpaceType, FieldMatrixType > ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  const FieldMatrixType& A_hom_;
-
-public:
-  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
-    : A_hom_(A_hom)
-  {}
-
-  // in the linear setting, use the structure
-  // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
-  // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
-  // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
-
-  // instantiate all possible cases of the evaluate-method:
-
-  // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& /*x*/,
-                     const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const {
-    DUNE_THROW(Dune::NotImplemented,"No homogenization available");
-    if (constants().get("linear", true)) {
-      flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
-      flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
-    } else {
-      flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
-      flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
-      //! TODO one of the the above is in the wrong branch
-      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
-    }
-  } // diffusiveFlux
-
-  /** the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
-   * "nabla w", i.e.
-   * jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
-   * jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient 
-  **/
-  void jacobianDiffusiveFlux(const DomainType&,
-                             const JacobianRangeType&,
-                             const JacobianRangeType&,
-                             JacobianRangeType&) const {
-    DUNE_THROW(Dune::NotImplemented,"");
-  } // jacobianDiffusiveFlux
-
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
-};
 
 CONSTANTFUNCTION(MassTerm,  0.00001)
 NULLFUNCTION(DefaultDummyFunction)
