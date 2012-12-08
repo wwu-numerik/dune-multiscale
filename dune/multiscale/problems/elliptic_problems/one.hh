@@ -57,12 +57,12 @@ struct ModelProblemData
   
 };
 
-//! ----------------- Definition of ' f ' ------------------------
+//! ----------------- Definition of ' f ' ----------------------------
 CONSTANTFUNCTION(FirstSource, 1.0)
 //! ----------------- End Definition of ' f ' ------------------------
 
 
-//! ----------------- Definition of ' G ' ------------------------
+//! ----------------- Definition of ' G ' ----------------------------
 NULLFUNCTION(SecondSource)
 //! ----------------- End Definition of ' G ' ------------------------
 

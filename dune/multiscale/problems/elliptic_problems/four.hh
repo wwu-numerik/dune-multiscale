@@ -1,5 +1,3 @@
-//! MUSS NOCH AUFGERAEUMT UND UEBERARBEITET WERDEN!!!!!!!!!
-
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
 
@@ -12,12 +10,17 @@
 // linear elliptic model problem - periodic setting
 // no exact solution available!
 
+//! For more further details about the implementation see '../base.hh'
+//! For details on the classes, see 'example.hh'
+
+// if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
+#define SYMMETRIC_DIFFUSION_MATRIX
+
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Problem {
 namespace Four {
-// description see below 0.05
+// default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
-// NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 // model problem information
 struct ModelProblemData
@@ -51,6 +54,7 @@ struct ModelProblemData
   
 };
 
+//! ----------------- Definition of ' f ' ------------------------
 template< class FunctionSpaceImp >
 class FirstSource
   : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
@@ -78,7 +82,8 @@ public:
 
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    // Krei um einspringende Ecke (Kreis um (0.5,0.5) )
+
+    // circle of radius 0.2 around the reentrant corner at (0.5,0.5)
     double distance = sqrt( pow(x[0] - 0.5, 2.0) + pow(x[1] - 0.5, 2.0) );
 
     if (distance < 0.2)
@@ -92,14 +97,17 @@ public:
     evaluate(x, y);
   }
 };
+//! ----------------- End Definition of ' f ' ------------------------
 
-  /** \brief default class for the second source term G.
-   * Realization: set G(x) = 0: **/
-  NULLFUNCTION(SecondSource)
 
-// the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-// A^{\epsilon} : R^d -> R^d
+//! ----------------- Definition of ' G ' ----------------------------
+NULLFUNCTION(SecondSource)
+//! ----------------- End Definition of ' G ' ------------------------
 
+
+//! ----------------- Definition of ' A ' ------------------------
+// the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
+// A^{\epsilon} : \Omega × R² -> R²
 template< class FunctionSpaceImp >
 class Diffusion
   : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
@@ -122,17 +130,13 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-    Diffusion(){}
+  Diffusion(){}
 
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
-  // the usage of an evaluate method with "evaluate ( i, j, x, y, z)" should be avoided
-  // use "evaluate ( i, x, y, z)" instead and return RangeType-vector.
 
-
-  // instantiate all possible cases of the evaluate-method:
-
-  // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
+  // (diffusive) flux = A^{\epsilon}( x , direction )
+  // (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
@@ -171,11 +175,71 @@ public:
     DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   }
 };
+//! ----------------- End Definition of ' A ' ------------------------
 
 
-CONSTANTFUNCTION(MassTerm,  0.00001)
+//! ----------------- Definition of ' m ' ----------------------------
+CONSTANTFUNCTION(MassTerm,  0.0)
+//! ----------------- End Definition of ' m ' ------------------------
+
+
+//! ----------------- Definition of some dummy -----------------------
 NULLFUNCTION(DefaultDummyFunction)
-NULLFUNCTION(ExactSolution)
+//! ----------------- End Definition of some dummy -------------------
+
+
+//! ----------------- Definition of ' u ' ----------------------------
+//! Exact solution is unknown for this model problem
+template< class FunctionSpaceImp >
+class ExactSolution
+  : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
+{
+public:
+  typedef FunctionSpaceImp FunctionSpaceType;
+
+private:
+  typedef ExactSolution< FunctionSpaceType >                 ThisType;
+  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+
+public:
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+
+  typedef DomainFieldType TimeType;
+  // essentially: 'DomainFieldType' is the type of an entry of a domain-element.
+  // But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
+  // This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
+  // entry of a domain-element.
+
+public:
+  ExactSolution(){}
+
+  // in case 'u' has NO time-dependency use the following method:
+  inline void evaluate(const DomainType& /*x*/,
+                       RangeType& /*y*/) const {
+    DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
+  }
+
+  inline void evaluateJacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const {
+    DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
+  }
+
+  // in case 'u' HAS a time-dependency use the following method:
+  // unfortunately GRAPE requires both cases of the method 'evaluate' to be
+  // instantiated
+  inline void evaluate(const DomainType& x,
+                       const TimeType& /*timedummy*/,
+                       RangeType& y) const {
+    evaluate(x, y);
+  }
+};
+//! ----------------- End Definition of ' u ' ------------------------
+
 } // namespace Four {
 }
 

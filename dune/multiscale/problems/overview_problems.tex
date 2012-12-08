@@ -132,24 +132,84 @@ In the left figure we see the computational domain $\Omega$, as well as a corres
 \end{modelproblem}
 \hrule
 
-\begin{modelproblem}[Four]
-
+\begin{modelproblem}[FOUR {\it- linear - periodic - stochastic perturbation}]$\\$
+Let $\Omega := ]0,1[^2 \setminus ]\frac{1}{2},1[^2$ (L-shaped domain / corner singularity) and $\epsilon>0$. Find $u^{\epsilon}$ with
+\begin{align*}
+- \nabla \cdot \left( A^{\epsilon}(x) \nabla u^{\epsilon}(x) \right) &= f(x) \quad \mbox{in} \enspace \Omega \\
+u^{\epsilon}(x) &= 0 \hspace{27pt} \mbox{on} \enspace \partial \Omega,
+\end{align*}
+where (for $B_{\frac{1}{5}}(\frac{1}{2},\frac{1}{2})$ being the circle of radius ${\frac{1}{5}}$ around $(\frac{1}{2},\frac{1}{2})$)
+\begin{align*}
+f(x)=\begin{cases}
+              1 \enspace &\mbox{if} \enspace x\in B_{\frac{1}{5}}(\frac{1}{2},\frac{1}{2}) \\
+              \frac{1}{10} \enspace &\mbox{else}
+              \end{cases}
+\end{align*}
+and with the diffusion matrix $A^{\epsilon}$ given by
+\begin{eqnarray*}
+A^{\epsilon}(x_1,x_2):= \left(\begin{matrix}
+                         \frac{1}{10} + \cos(2 \pi \frac{x_1}{\epsilon})^2  + X(x) - E(X)  & 0 \\
+                         0 &  \frac{101}{1000} + \frac{1}{10}\sin( 2 \pi \frac{x_2}{\epsilon} ) + X(x) - E(X) 
+                        \end{matrix}\right)
+\end{eqnarray*}
+where $X$ is a log-normal distributed random variable, with a variance $\sigma$ and expected value $E(X)=e^{\frac{\sigma^2}{2}}$.
 \end{modelproblem}
 \hrule
 
-\begin{modelproblem}[Five]
-
+\begin{modelproblem}[FIVE {\it- nonlinear - periodic - stochastic perturbation}]$\\$
+This is a nonlinear version of FOUR. Let $\Omega := ]0,1[^2 \setminus ]\frac{1}{2},1[^2$ (L-shaped domain / corner singularity) and $\epsilon>0$. Find $u^{\epsilon}$ with
+\begin{align*}
+- \nabla \cdot A^{\epsilon}(x, \nabla u^{\epsilon}(x)) &= f(x) \quad \mbox{in} \enspace \Omega \\
+u^{\epsilon}(x) &= 0 \hspace{27pt} \mbox{on} \enspace \partial \Omega,
+\end{align*}
+where (for $B_{\frac{1}{5}}(\frac{1}{2},\frac{1}{2})$ being the circle of radius ${\frac{1}{5}}$ around $(\frac{1}{2},\frac{1}{2})$)
+\begin{align*}
+f(x)=\begin{cases}
+              1 \enspace &\mbox{if} \enspace x\in B_{\frac{1}{5}}(\frac{1}{2},\frac{1}{2}) \\
+              \frac{1}{10} \enspace &\mbox{else}
+              \end{cases}
+\end{align*}
+and with the nonlinear diffusion operator $A^{\epsilon}(x,\xi)$ given by
+\begin{eqnarray*}
+A^{\epsilon}(x_1,x_2,\xi_1,\xi_2):= \left(\begin{matrix}
+                         \left( \frac{1}{10} + \cos(2 \pi \frac{x_1}{\epsilon})^2  + X(x) - E(X) \right) \left( \xi_1 + \frac{1}{3} \xi_1^3 \right) \\
+                         \left( \frac{101}{1000} + \frac{1}{10}\sin( 2 \pi \frac{x_2}{\epsilon} ) + X(x) - E(X) \right) \left( \xi_2 + \frac{1}{3} \xi_2^3 \right)
+                        \end{matrix}\right)
+\end{eqnarray*}
+where $X$ is a log-normal distributed random variable, with a variance $\sigma$ and expected value $E(X)=e^{\frac{\sigma^2}{2}}$.
 \end{modelproblem}
 \hrule
 
-\begin{modelproblem}[Six]
-
+\begin{modelproblem}[SIX {\it- linear - periodic - stochastic perturbation}]$\\$
+Let $\Omega := ]0,2[^2$ and $\epsilon>0$. Find $u^{\epsilon}$ with
+\begin{align*}
+- \nabla \cdot \left( A^{\epsilon}(x) \nabla u^{\epsilon}(x) \right) &= 1 \quad \mbox{in} \enspace \Omega \\
+u^{\epsilon}(x) &= 0 \hspace{12pt} \mbox{on} \enspace \partial \Omega,
+\end{align*}
+where the diffusion coefficient $A^{\epsilon}$ is given by
+\begin{eqnarray*}
+A^{\epsilon}(x_1,x_2):= \frac{101}{100} + \cos( 2 \pi \frac{x_1}{\epsilon} ) + X(x) - E(X)
+\end{eqnarray*}
+where $X$ is a log-normal distributed random variable, with a variance $\sigma$ and expected value $E(X)=e^{\frac{\sigma^2}{2}}$.
 \end{modelproblem}
 \hrule
 
 
-\begin{modelproblem}[Seven]
-
+\begin{modelproblem}[SEVEN {\it- nonlinear - periodic - stochastic perturbation}]$\\$
+This is a nonlinear version of SIX. Let $\Omega := ]0,2[^2$ and $\epsilon>0$. Find $u^{\epsilon}$ with
+\begin{align*}
+- \nabla \cdot A^{\epsilon}(x, \nabla u^{\epsilon}(x)) &= 1 \quad \mbox{in} \enspace \Omega \\
+u^{\epsilon}(x) &= 0 \hspace{12pt} \mbox{on} \enspace \partial \Omega,
+\end{align*}
+where the nonlinear diffusion operator $A^{\epsilon}(x,\xi)$ is given by
+\begin{eqnarray*}
+A^{\epsilon}(x_1,x_2,\xi_1,\xi_2):= \left( \frac{101}{100} + \cos( 2 \pi \frac{x_1}{\epsilon} ) + X(x) - E(X) \right)
+\left(\begin{matrix}
+ \xi_1 + \frac{1}{3} \xi_1^3 \\
+ \xi_2 + \frac{1}{3} \xi_2^3
+\end{matrix}\right),
+\end{eqnarray*}
+where $X$ is a log-normal distributed random variable, with a variance $\sigma$ and expected value $E(X)=e^{\frac{\sigma^2}{2}}$.
 \end{modelproblem}
 \hrule
 

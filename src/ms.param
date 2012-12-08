@@ -8,10 +8,14 @@ epsilon = 0.05
 
 # linear or nonlinear problem?
 linear = 1
+# NOTE: nonlinear problems ONLY for HMM and standard FEM!
 
 # do you want a stochastic perturbation of the diffusion operator?
-stochastic_pertubation = 0
+stochastic_pertubation = 1
 #  (note that not every model problem allows stochastic perturbations)
+
+# if stochastic perturbation is activated, what is the stochastic variance?
+stochastic_variance = 0.01
 
 # do we have a precomputed reference solution?
 reference_solution = 1
@@ -57,10 +61,10 @@ file =
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 0 
+coarse_grid_level = 2 
 
 # initial fine grid level 
-fine_grid_level = 4
+fine_grid_level = 6
 
 # number of oversampling layers (layers of fine grid elements)
 oversampling_layers = 10
@@ -86,6 +90,7 @@ error_tolerance = 1e-6
 fem_comparison = 1
 #   (fem resolution = fine_grid_level of MsFEM)
 
+
 [hmm]
 
 # guess for epsilon (indicator for size of small scale)
@@ -96,11 +101,11 @@ delta = 0.05
 #     NOTE that (delta/epsilon_guess) needs to be a positive integer!
 
 # initial coarse level
-coarse_grid_level = 0
+coarse_grid_level = 2
 
 # resolution level for the grid for the unit cube Y
 cell_grid_level = 2
-# 'effective fine grid level' = 'epslion guess' * 'cell grid size'
+# 'effective fine grid level' = 'delta' * 'cell grid size'
 
 # use the MsFEM in Petrov-Galerkin (unsymmetric) formulation
 # !!! key not yet activated !!!
