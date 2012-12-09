@@ -7,7 +7,7 @@
 
 //! ------------ Elliptic Problem 3 -------------------
 
-// linear elliptic model problem - heterogeneous setting
+// nonlinear elliptic model problem - heterogeneous setting
 // no exact solution available!
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
@@ -27,7 +27,7 @@ struct ModelProblemData
     : IModelProblemData(constants()){
       assert( constants_.epsilon != 0.0);
       if (constants().get("linear", true))
-         DUNE_THROW(Dune::InvalidStateException, "problem eight is entirely nonlinear, but problem.linear was true");
+         DUNE_THROW(Dune::InvalidStateException, "problem three is entirely nonlinear, but problem.linear was true");
       if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
          DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
   }
@@ -169,15 +169,10 @@ public:
       coefficient *= 0.1;
     }
 
-    if (constants().get("linear", true)) {
-      flux[0][0] = coefficient * direction_gradient[0][0];
-      flux[0][1] = coefficient * direction_gradient[0][1];
-    } else {
-      flux[0][0] = coefficient * direction_gradient[0][0]
+    flux[0][0] = coefficient * direction_gradient[0][0]
                    * ( 1.0 + pow(position_gradient[0][0], 2.0) );
-      flux[0][1] = coefficient * direction_gradient[0][1]
+    flux[0][1] = coefficient * direction_gradient[0][1]
                    * ( 1.0 + pow(position_gradient[0][1], 2.0) );
-    }
   } // jacobianDiffusiveFlux
 
   /** \deprecated throws Dune::NotImplemented exception **/

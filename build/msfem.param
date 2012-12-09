@@ -36,6 +36,9 @@ rs_grid_level = 0
 # directory to save the data output
 datadir = data/HMM/test_problem
 
+# VTK output for the solutions of the local problems
+local_solution_vtk_output = 1
+# (key currently only active for MsFEM!)
 
 [logging]
 # logging specifications
@@ -50,7 +53,6 @@ file = ms.log
 # data will be saved under 'datadir/dir'
 dir = logdata
 
-
 [grid]
 
 file =
@@ -61,17 +63,19 @@ file =
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 2 
+coarse_grid_level = 6
 
 # initial fine grid level 
-fine_grid_level = 6
+fine_grid_level = 10
 
 # number of oversampling layers (layers of fine grid elements)
 oversampling_layers = 10
 
-# oversampling strategy 1, 2 or 3.
-# !!! key not yet activated !!!
-oversampling_strategy = 1
+# oversampling strategy 1 or 2.
+oversampling_strategy = 2
+# stratgey 1: local problems are solved in the full fine space
+# strategy 2: local problems are solved in the full fine space
+#             without the 3 basis functions belonging to the the 3 coarse nodes
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
 # !!! key not yet activated !!!

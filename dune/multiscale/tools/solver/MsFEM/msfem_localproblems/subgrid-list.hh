@@ -36,6 +36,9 @@ public:
   //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
 
+  //! type of domain
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  
   //! type of grid partition
   typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
 
@@ -54,6 +57,9 @@ public:
 
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
+  typedef std::vector< DomainType> CoarseNodeVectorType;
+  typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
+  
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
@@ -169,8 +175,8 @@ public:
     // the fine grid
     HostGridType& hostGrid = hostSpace_.gridPart().grid();
 
-    const int number_of_nodes = hostGrid.size(2 /*codim*/);
-
+    const int number_of_nodes = hostGrid.size(2 /*codim*/);    
+    
     // -------- identify the entities that share a certain node -------
 
     std::vector< std::vector< HostEntityPointerType > > entities_sharing_same_node(number_of_nodes);
@@ -204,6 +210,15 @@ public:
 
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
+    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 )
+    {
+      for (int i = 0; i < number_of_coarse_grid_entities; ++i )
+      {
+         CoarseNodeVectorType coarse_node_vector;
+         coarse_node_store_.push_back( coarse_node_vector );
+      }
+    }      
+
 //    subGridList_ = SubGridStorageType();
     //! ----------- create subgrids --------------------
 
@@ -214,6 +229,13 @@ public:
       const int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
       subGridList_.push_back(make_shared<SubGridType>(hostGrid));
       subGridList_[coarse_index]->createBegin();
+      
+      if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 )
+       {
+        for (int c = 0; c < coarse_it->geometry().corners(); ++c )
+          coarse_node_store_[coarse_index].push_back( coarse_it->geometry().corner(c) );
+       }
+
     }
 
     for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it)
@@ -363,6 +385,18 @@ public:
     return *(subGridList_[i]);
   } // getSubGrid
 
+  // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
+  const CoarseNodeVectorType& getCoarseNodeVector(int i) const {
+    const int size = specifier_.getNumOfCoarseEntities();
+    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1 )
+      DUNE_THROW(Dune::InvalidStateException, "Method 'getCoarseNodeVector' of class 'SubGridList' should not be used in combination with oversampling strategy 1. Check your implementation!");
+    if (i >= size)
+    {
+      DUNE_THROW(Dune::RangeError, "Error. Subgrid-Index too large.");
+    }
+    return coarse_node_store_[i];
+  } // getSubGrid
+
 private:
   const HostDiscreteFunctionSpaceType& hostSpace_;
   MacroMicroGridSpecifierType& specifier_;
@@ -371,6 +405,8 @@ private:
 
   typedef std::vector< shared_ptr<SubGridType> > SubGridStorageType;
   SubGridStorageType subGridList_;
+
+  CoarseGridNodeStorageType coarse_node_store_;  
 
 public:
   ~SubGridList()

@@ -14,9 +14,6 @@
 // LOCPROBLEMSOLVER_VERBOSE: 0 = false, 1 = true
 #define LOCPROBLEMSOLVER_VERBOSE false
 
-// VTK output for local problems
-#define VTK_OUTPUT
-
 // write solutions of the local problems (vtk)
 // #define LOCALDATAOUTPUT
 
@@ -101,16 +98,28 @@ public:
   // dummy operator
   virtual void operator()(const DiscreteFunction& u, DiscreteFunction& w) const;
 
-  // assemble stiffness matrix for local problems
+  // assemble stiffness matrix for local problems (oversampling strategy 1)
   template< class MatrixType >
   void assemble_matrix(MatrixType& global_matrix) const;
 
+  // assemble stiffness matrix for local problems (oversampling strategy 2 and 3)
+  template< class MatrixType, class CoarseNodeVectorType >
+  void assemble_matrix(MatrixType& global_matrix, const CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
+  
   // the right hand side assembler methods
   void assemble_local_RHS(  // direction 'e'
     const JacobianRangeType& e,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
 
+  // the right hand side assembler methods
+  template< class CoarseNodeVectorType >
+  void assemble_local_RHS(  // direction 'e'
+    const JacobianRangeType& e,
+    const CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
+    // rhs local msfem problem:
+    DiscreteFunction& local_problem_RHS) const;
+    
   void printLocalRHS(const DiscreteFunction& rhs) const;
 
   double normRHS(const DiscreteFunction& rhs) const;
@@ -128,7 +137,10 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const
   DUNE_THROW(Dune::NotImplemented,"the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy.");
 }
 
+
+
 //! stiffness matrix for a linear elliptic diffusion operator
+// for oversampling strategy 1 (no constraints)
 template< class SubDiscreteFunctionImp, class DiffusionImp >
 template< class MatrixType >
 void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matrix(MatrixType& global_matrix) const
@@ -187,6 +199,113 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
         inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
 
         baseSet.evaluate(i, quadrature[quadraturePoint], phi[i]);
+      }
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+        // A( x, \nabla \phi(x) )
+        typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
+        diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
+        for (unsigned int j = 0; j < numBaseFunctions; ++j)
+        {
+          // stiffness contribution
+          local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) );
+          // mass contribution (just for stabilization!)
+          // local_matrix.add( j, i, 0.00000001 * weight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
+        }
+      }
+    }
+  }
+} // assemble_matrix
+
+
+
+
+//! stiffness matrix for a linear elliptic diffusion operator
+template< class SubDiscreteFunctionImp, class DiffusionImp >
+template< class MatrixType, class CoarseNodeVectorType >
+void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matrix(MatrixType& global_matrix, const CoarseNodeVectorType& coarse_node_vector ) const
+// x_T is the barycenter of the macro grid element T
+{
+  typedef typename MatrixType::LocalMatrixType LocalMatrix;
+
+  Problem::ModelProblemData model_info;
+
+  global_matrix.reserve();
+  global_matrix.clear();
+
+  // local grid basis functions:
+  std::vector< RangeType > phi( subDiscreteFunctionSpace_.mapper().maxNumDofs() );
+
+  // gradient of micro scale base function:
+  std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi(
+    subDiscreteFunctionSpace_.mapper().maxNumDofs() );
+
+  const Iterator end = subDiscreteFunctionSpace_.end();
+  for (Iterator it = subDiscreteFunctionSpace_.begin(); it != end; ++it)
+  {
+    const Entity& sub_grid_entity = *it;
+    const Geometry& sub_grid_geometry = sub_grid_entity.geometry();
+    assert(sub_grid_entity.partitionType() == InteriorEntity);
+
+    std::vector< int > sub_grid_entity_corner_is_relevant;
+    for ( int c = 0; c < sub_grid_geometry.corners(); ++c )
+    {
+      for ( int coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+       {
+	 // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
+	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
+         if ( (coarse_node_vector[coarse_node_local_id] == sub_grid_geometry.corner(c)) 
+	     && (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) == sub_grid_entity_corner_is_relevant.end()) )
+	     { sub_grid_entity_corner_is_relevant.push_back(c); }
+       }
+    }
+    
+    LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
+
+    const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const unsigned int numBaseFunctions = baseSet.size();
+
+    // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
+    // use a higher order quadrature:
+    const Quadrature quadrature(sub_grid_entity, 2 * subDiscreteFunctionSpace_.order() + 2);
+    const size_t numQuadraturePoints = quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      // local (barycentric) coordinates (with respect to local grid entity)
+      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const DomainType global_point = sub_grid_geometry.global(local_point);
+
+      const double weight = quadrature.weight(quadraturePoint)
+                            * sub_grid_geometry.integrationElement(local_point);
+
+      // transposed of the the inverse jacobian
+      const FieldMatrix< double, dimension, dimension >& inverse_jac
+        = sub_grid_geometry.jacobianInverseTransposed(local_point);
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+        // jacobian of the base functions, with respect to the reference element
+        typename BaseFunctionSet::JacobianRangeType gradient_phi_ref_element;
+        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
+
+        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
+        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
+
+        baseSet.evaluate(i, quadrature[quadraturePoint], phi[i]);
+
+        for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+        {
+          RangeType value_phi_i(0.0);
+          baseSet.evaluate(i, sub_grid_geometry.local(sub_grid_geometry.corner(sgec)), value_phi_i);
+          if ( value_phi_i == 1.0 )
+          {
+	    assert( dimension == 2);
+            phi[i][0] = 0.0;
+            gradient_phi[i][0][0] = 0.0;
+            gradient_phi[i][0][1] = 0.0;
+	  }
+        }
       }
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
@@ -359,6 +478,118 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
   }
 } // assemble_local_RHS
 
+
+
+// assemble method for the case of a linear diffusion operator
+// in a constraint space, for oversampling strategy 2
+
+// we compute the following entries for each fine-scale base function phi_h_i:
+// - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
+template< class DiscreteFunctionImp, class DiffusionImp >
+template< class CoarseNodeVectorType >
+void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
+      ::assemble_local_RHS(const JacobianRangeType &e, // direction 'e'
+                           const CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+                           // rhs local msfem problem:
+                           DiscreteFunction& local_problem_RHS) const {
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
+
+  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
+  typedef typename Iterator::Entity                           Entity;
+  typedef typename Entity::Geometry                           Geometry;
+
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+
+  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
+
+  // set entries to zero:
+  local_problem_RHS.clear();
+
+  // gradient of micro scale base function:
+  std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
+
+  const Iterator end = discreteFunctionSpace.end();
+  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
+  {
+    const Entity& local_grid_entity = *it;
+    const Geometry& geometry = local_grid_entity.geometry();
+    assert(local_grid_entity.partitionType() == InteriorEntity);
+
+    std::vector< int > sub_grid_entity_corner_is_relevant;
+    for ( int c = 0; c < geometry.corners(); ++c )
+    {
+      for ( int coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+       {
+	 // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
+	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
+         if ( (coarse_node_vector[coarse_node_local_id] == geometry.corner(c)) 
+	     && (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) == sub_grid_entity_corner_is_relevant.end()) )
+	     { sub_grid_entity_corner_is_relevant.push_back(c); }
+       }
+    }
+
+    LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
+
+    const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const unsigned int numBaseFunctions = baseSet.size();
+
+    const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const size_t numQuadraturePoints = quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+
+      // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
+
+      // global point in the subgrid
+      const DomainType global_point = geometry.global(local_point);
+
+      const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+
+      // transposed of the the inverse jacobian
+      const FieldMatrix< double, dimension, dimension >& inverse_jac
+        = geometry.jacobianInverseTransposed(local_point);
+
+      // A^eps(x) e
+      // diffusion operator evaluated in 'x' multiplied with e
+      JacobianRangeType diffusion_in_e;
+      diffusion_operator_.diffusiveFlux(global_point, e, diffusion_in_e);
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+        // jacobian of the base functions, with respect to the reference element
+        JacobianRangeType gradient_phi_ref_element;
+        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
+
+        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
+        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
+
+        for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+        {
+          RangeType value_phi_i(0.0);
+          baseSet.evaluate(i, geometry.local(geometry.corner(sgec)), value_phi_i);
+          if ( value_phi_i == 1.0 )
+          {
+	    assert( dimension == 2);
+            gradient_phi[i][0][0] = 0.0;
+            gradient_phi[i][0][1] = 0.0;
+	  }
+        }
+        
+      }
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+        elementOfRHS[i] -= weight * (diffusion_in_e[0] * gradient_phi[i][0]);
+      }
+    }
+  }
+} // assemble_local_RHS
+
+
 //! ------------------------------------------------------------------------------------------------
 //! ------------------------------------------------------------------------------------------------
 
@@ -514,7 +745,8 @@ public:
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
   void solvelocalproblem(JacobianRangeType& e,
-                         SubDiscreteFunctionType& local_problem_solution) const {
+                         SubDiscreteFunctionType& local_problem_solution,
+                         const int coarse_index = -1 ) const {
     // set solution equal to zero:
     local_problem_solution.clear();
 
@@ -546,7 +778,14 @@ public:
     // the result.
 
     // assemble the stiffness matrix
-    local_problem_op.assemble_matrix(locprob_system_matrix);
+    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1 )
+      { local_problem_op.assemble_matrix(locprob_system_matrix); }
+    else if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 )
+      { if ( coarse_index < 0 )
+          DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
+	local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) ); }
+    else
+      DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2!");
 
     //! boundary treatment:
     typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
@@ -555,7 +794,7 @@ public:
     FaceDofIteratorType;
 
     const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
-
+      
     const SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
     for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
     {
@@ -589,8 +828,16 @@ public:
       }
     }
 
+
     // assemble right hand side of algebraic local msfem problem
-    local_problem_op.assemble_local_RHS(e, local_problem_rhs);
+    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1 )
+      { local_problem_op.assemble_local_RHS(e, local_problem_rhs); }
+    else if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 )
+      { if ( coarse_index < 0 )
+          DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
+	local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector( coarse_index ), local_problem_rhs ); }
+    else
+      DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2!");
     // oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
 
     // zero boundary condition for 'cell problems':
@@ -692,7 +939,7 @@ public:
   void output_local_solution(const int coarse_index, const int which,
                              const HostDiscreteFunctionType& host_local_solution) const
   {
-    if (!DSC_CONFIG_GET("global.vtk_output", false))
+    if (!DSC_CONFIG_GET("global.local_solution_vtk_output", false))
       return;
     typedef tuple< const HostDiscreteFunctionType* >      IOTupleType;
     typedef DataOutput< HostGridType, IOTupleType > DataOutputType;
@@ -792,7 +1039,7 @@ public:
       DSC_PROFILER.startTiming("none.local_problem_solution");
 
       // solve the problems
-      solvelocalproblem(e[0], local_problem_solution_0);
+      solvelocalproblem(e[0], local_problem_solution_0, coarse_index);
 
       cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
       DSC_PROFILER.resetTiming("none.local_problem_solution");
@@ -814,7 +1061,7 @@ public:
       DSC_PROFILER.startTiming("none.local_problem_solution");
 
       // solve the problems
-      solvelocalproblem(e[1], local_problem_solution_1);
+      solvelocalproblem(e[1], local_problem_solution_1, coarse_index);
 
       // min/max time
       cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
