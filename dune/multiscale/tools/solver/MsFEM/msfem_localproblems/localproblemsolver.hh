@@ -14,9 +14,6 @@
 // LOCPROBLEMSOLVER_VERBOSE: 0 = false, 1 = true
 #define LOCPROBLEMSOLVER_VERBOSE false
 
-// write solutions of the local problems (vtk)
-// #define LOCALDATAOUTPUT
-
 // dune-subgrid include:
 #include <dune/subgrid/subgrid.hh>
 

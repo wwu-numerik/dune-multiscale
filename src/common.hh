@@ -7,6 +7,8 @@
  #include <config.h>
 #endif // ifdef HAVE_CMAKE_CONFIG
 
+#undef ENABLE_MPI
+
 // polynomial order of discrete space
 #ifndef POLORDER
   #define POLORDER 1

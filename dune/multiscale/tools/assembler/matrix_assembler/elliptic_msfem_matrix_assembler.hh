@@ -222,11 +222,11 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
   // let 'U(T)' denote the environment of 'T' that corresponds with the subgrid.
 
   // if Petrov-Galerkin-MsFEM
-  #ifdef PGF
-  DSC_LOG_INFO << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
-  #else
-  DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
-  #endif // ifdef PGF
+  if ( DSC_CONFIG_GET("msfem.petrov_galerkin", 1 ) )
+    DSC_LOG_INFO << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
+  else  // if classical (symmetric) MsFEM
+    DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
+
 
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
@@ -361,20 +361,23 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
             JacobianRangeType diffusive_flux(0.0);
             diffusion_operator_.diffusiveFlux(global_point_in_U_T, direction_of_diffusion, diffusive_flux);
 
-            // if not Petrov-Galerkin:
-            #ifndef PGF
-            JacobianRangeType reconstruction_grad_phi_j(0.0);
-            for (int k = 0; k < dimension; ++k)
-            {
-              reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][0] * grad_loc_sol_e0[0][k];
-              reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][1] * grad_loc_sol_e1[0][k];
-              reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][k];
-            }
+            // if not Petrov-Galerkin MsFEM:
+            if ( !DSC_CONFIG_GET("msfem.petrov_galerkin", true ) )
+	    {
+              JacobianRangeType reconstruction_grad_phi_j(0.0);
+              for (int k = 0; k < dimension; ++k)
+              {
+               reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][0] * grad_loc_sol_e0[0][k];
+               reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][1] * grad_loc_sol_e1[0][k];
+               reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][k];
+              }
 
-            local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstruction_grad_phi_j[0]);
-            #else // ifndef PGF
-            local_integral += weight_local_quadrature * (diffusive_flux[0] * gradient_Phi[j][0]);
-            #endif // ifndef PGF
+              local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstruction_grad_phi_j[0]);
+	    }
+            else // if Petrov-Galerkin MsFEM
+            {
+              local_integral += weight_local_quadrature * (diffusive_flux[0] * gradient_Phi[j][0]);
+	    }
           }
         }
 

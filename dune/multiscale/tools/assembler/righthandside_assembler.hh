@@ -49,11 +49,10 @@ public:
     }
   }  // end method
 
-  // /############################ The rhs-assemble()-methods for linear elliptic problems
-  // #########################################
+  //! --------------- The rhs-assemble()-methods for linear elliptic problems -----------------
 
 private:
-  //! need a virtual base to work around local classes not being allowed in templated scopes
+  // need a virtual base to work around local classes not being allowed in templated scopes
   struct FunctorBase {
     virtual RangeType operator()(const DomainType& global_quad_point, const JacobianRangeType& gradientPhi) const = 0;
   };
@@ -262,12 +261,15 @@ public:
     }
   }  // end method
 
-  /** /############################ The rhs-assemble()-method for linear elliptic problems, solved with MsFEM in
-   * non-Petriv-Galerkin-Formulation #########################################
-   * assemble standard right hand side:
-   * if there is only one source (f) (there is no second source):
-   * discreteFunction is an output parameter (kind of return value)
-   **/
+  
+ //! DEPRECATED!
+ // Variante fuer die alte MsFEM mit Transformation, aber ohne oversampling.
+   // The rhs-assemble()-method for linear elliptic problems, solved with MsFEM in
+   // classical non-Petrov-Galerkin-Formulation
+   // assemble standard right hand side:
+   // if there is only one source (f) (there is no second source):
+   // discreteFunction is an output parameter (kind of return value)
+ /*
   template< int polOrd, class FirstSourceType, class LocalProblemNumberingManagerType >
   static void assemble_msfem(// get number of local problem to determine the reconstruction
                       const LocalProblemNumberingManagerType& lp_num_manager,
@@ -346,7 +348,7 @@ public:
         // we need to add the contribution of the corrector
         // (we splitt:  \int_T f ( \phi + Q(\phi) ) = \int_T f \phi + \int_{T_0} (f ○ F) (Q(\phi)○F) |det A|
         // where we already added \int_T f \phi in the previous step )
-        if ( !DSC_CONFIG_GET("PGF", false) )
+        if ( !DSC_CONFIG_GET("msfem.petrov_galerkin", true) )
         {
           // get number of cell problem from entity and number of base function
           const int cell_problem_id = lp_num_manager.get_number_of_local_problem(entity, i);
@@ -404,15 +406,14 @@ public:
               elementOfRHS[i] += weight_micro_quadrature * f_x_transformed * Q_phi_transformed;
             }
           }
-        } //#endif // ifndef PGF
+        } //#endif // if not Petrov Galerkin
       }
     }
   }  // end method
-
-  /** /############################ The rhs-assemble()-methods for non-linear elliptic problems, solved with the
-   * heterogenous multiscale method  #########################################
-   * requires reconstruction of old_u_H and local fine scale averages
-   **/
+*/
+ 
+  //! The rhs-assemble()-methods for non-linear elliptic problems, solved with the heterogenous multiscale method
+  // ( requires reconstruction of old_u_H and local fine scale averages )
   template< int polOrd, class FirstSourceType, class DiffusionOperatorType, class PeriodicDiscreteFunctionType,
             class CellProblemNumberingManagerType >
   static void assemble_for_HMM_Newton_method(const FirstSourceType& f,

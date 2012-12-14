@@ -1,16 +1,8 @@
 #include "common.hh"
 
-#ifndef ADAPTIVE
- //! TODO macht keinen sinn mehr mit param file
- #define UNIFORM
-#endif
-
-
 #if HAVE_GRAPE
  #include <dune/grid/io/visual/grapedatadisplay.hh>
 #endif
-
-#define PGF
 
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
@@ -563,24 +555,32 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
               << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
     if (DSC_CONFIG_GET("msfem.uniform", true)) {
-      DSC_LOG_INFO << "Use MsFEM with an uniform computation, i.e.:" << std::endl;
+      if ( DSC_CONFIG_GET("msfem.petrov_galerkin", true) )
+        DSC_LOG_INFO << "Use MsFEM in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;
+      else
+        DSC_LOG_INFO << "Use MsFEM in classical (symmetric) formulation with an uniform computation, i.e.:" << std::endl;      
       DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
       DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
       DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
       DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
       DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
       DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
       if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
        { DSC_LOG_INFO << std::endl << "Comparison with standard FEM computation on the MsFEM Fine Grid, i.e. on Refinement Level " << total_refinement_level_ << std::endl; }
       DSC_LOG_INFO << std::endl << std::endl;
     } else {
-      DSC_LOG_INFO << "Use MsFEM with an adaptive computation, i.e.:" << std::endl;
+      if ( DSC_CONFIG_GET("msfem.petrov_galerkin", true) )
+        DSC_LOG_INFO << "Use MsFEM in Petrov-Galerkin formulation with an adaptive computation, i.e.:" << std::endl;
+      else
+        DSC_LOG_INFO << "Use MsFEM in classical (symmetric) formulation with an adaptive computation, i.e.:" << std::endl;  
       DSC_LOG_INFO << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
       DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
       DSC_LOG_INFO << "Error tolerance = " << DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) << std::endl << std::endl;
       DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
       DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
       DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
       DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
       if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
       { DSC_LOG_INFO << std::endl << "Comparison with a standard FEM computation on the MsFEM Fine Grid." << std::endl; }

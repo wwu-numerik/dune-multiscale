@@ -44,14 +44,14 @@ public:
   void setLayer(int i, int number_of_layers_for_entity) {
     if (i < number_of_level_host_entities_)
     { number_of_layers[i] = number_of_layers_for_entity; } else {
-      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not filfilled.");
+      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
     }
   } // setLayer
 
   int getLayer(int i) const {
     if (i < number_of_level_host_entities_)
     { return number_of_layers[i]; } else {
-      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not filfilled.");
+      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
     }
     return 0;
   } // getLayer
