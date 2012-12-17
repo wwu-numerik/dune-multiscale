@@ -101,7 +101,7 @@ private:
   template< typename EntityPointerCollectionType >
   void enrichment(const HostEntityPointerType& hit,
                   const HostEntityPointerType& level_father_it,
-                  const int& father_index,
+                  const int& father_index, // father_index = index/number of current subgrid
                   const HostGridPartType& hostGridPart,
                   shared_ptr<SubGridType> subGrid,
                   EntityPointerCollectionType& entities_sharing_same_node,
@@ -122,7 +122,7 @@ private:
 
     layer -= 1;
 
-    // loop over the nodes of the enity
+    // loop over the nodes of the fine grid enity
     for (int i = 0; i < (*hit).template count< 2 >(); i += 1)
     {
       const HostNodePointer node = (*hit).template subEntity< 2 >(i);
@@ -133,6 +133,21 @@ private:
         if ( !( subGrid->template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
         {
           subGrid->insertPartial(*entities_sharing_same_node[global_index_node][j]);
+#if 0
+	  // get the corners of the father of the fine grid entity 'entities_sharing_same_node[global_index_node][j]'
+	  // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
+          if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 )
+           {
+              HostEntityPointerType coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                             entities_sharing_same_node[global_index_node][j],
+                                                                             level_difference);
+              for (int c = 0; c < coarse_father->geometry().corners(); ++c )
+	      {
+		if (!(std::find(coarse_node_store_[father_index].begin(), coarse_node_store_[father_index].end(), coarse_father->geometry().corner(c)) == coarse_node_store_[father_index].end()))
+                 coarse_node_store_[father_index].push_back( coarse_father->geometry().corner(c) );
+	      }
+            }
+#endif
         }
 
         if (layer > 0)
@@ -210,7 +225,7 @@ public:
 
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
-    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 )
+    if ( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3) )
     {
       for (int i = 0; i < number_of_coarse_grid_entities; ++i )
       {
@@ -224,20 +239,26 @@ public:
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
+    // loop to initialize subgrids (and to initialize the coarse node vector):
+    // -----------------------------------------------------------
     for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
     {
       const int coarse_index = coarseGridLeafIndexSet.index(*coarse_it);
       subGridList_.push_back(make_shared<SubGridType>(hostGrid));
       subGridList_[coarse_index]->createBegin();
       
-      if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 )
+      if ( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3) )
        {
         for (int c = 0; c < coarse_it->geometry().corners(); ++c )
           coarse_node_store_[coarse_index].push_back( coarse_it->geometry().corner(c) );
        }
 
     }
-
+    // -----------------------------------------------------------
+    
+    // initialize and fill a vector 'entities_sharing_same_node' that tells you for
+    // a given node 'i' which fine grid entities intersect with 'i' 
+    // -----------------------------------------------------------
     for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it)
     {
       const int number_of_nodes_in_entity = (*it).template count< 2 >();
@@ -249,7 +270,11 @@ public:
         entities_sharing_same_node[global_index_node].push_back( HostEntityPointerType(*it) );
       }
     }
-
+    // -----------------------------------------------------------
+    
+    
+    // initialize the vector 'enriched' for a later usage
+    // -----------------------------------------------------------
     bool*** enriched = new bool**[number_of_coarse_grid_entities];
     for (int k = 0; k < number_of_coarse_grid_entities; k += 1)
     {
@@ -259,7 +284,6 @@ public:
         enriched[k][m] = new bool[max_num_layers + 1];
       }
     }
-
     for (int k = 0; k < number_of_coarse_grid_entities; k += 1)
     {
       for (int m = 0; m < hostGrid.size(0 /*codim*/); m += 1)
@@ -268,7 +292,8 @@ public:
           enriched[k][m][l] = false;
       }
     }
-
+    // -----------------------------------------------------------
+    
     DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
     DSC_PROFILER.startTiming("msfem.subgrid_list.create");
 
@@ -289,7 +314,7 @@ public:
 
       if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) )
       { subGridList_[father_index]->insertPartial(host_entity); }
-
+      
       // check the neighbor entities and look if they belong to the same father
       // if yes, continue
       // if not, enrichement with 'n(T)'-layers
