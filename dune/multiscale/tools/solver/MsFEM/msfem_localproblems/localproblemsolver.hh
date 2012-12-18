@@ -257,6 +257,14 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
 	     { sub_grid_entity_corner_is_relevant.push_back(c); }
        }
     }
+  
+//! delete me:
+/*
+    for ( int coarse_node_local_id = 0; coarse_node_local_id < subgrid_list_.getCoarseNodeVector( coarse_index ).size(); ++coarse_node_local_id )
+       {
+         std::cout << coarse_node_local_id+1 << " : " << subgrid_list_.getCoarseNodeVector( coarse_index )[coarse_node_local_id] << std :: endl << std :: endl << std :: endl;
+       }
+*/
     
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
@@ -773,17 +781,26 @@ public:
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-
+    
     // assemble the stiffness matrix
     if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1 )
       { local_problem_op.assemble_matrix(locprob_system_matrix); }
-    else if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 )
+    else if ( ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 ) ||
+              ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 ) )
       { if ( coarse_index < 0 )
           DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-	local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) ); }
+        local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) ); }
     else
-      DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2!");
+      DUNE_THROW( Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
 
+// can be deleted (just to check the coarse node vector)
+/*
+    for ( int coarse_node_local_id = 0; coarse_node_local_id < subgrid_list_.getCoarseNodeVector( coarse_index ).size(); ++coarse_node_local_id )
+       {
+         std::cout << coarse_node_local_id+1 << " : " << subgrid_list_.getCoarseNodeVector( coarse_index )[coarse_node_local_id] << std :: endl << std :: endl << std :: endl;
+       }
+*/
+    
     //! boundary treatment:
     typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
 
@@ -829,12 +846,13 @@ public:
     // assemble right hand side of algebraic local msfem problem
     if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1 )
       { local_problem_op.assemble_local_RHS(e, local_problem_rhs); }
-    else if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 )
+    else if ( ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 ) ||
+              ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 ) )
       { if ( coarse_index < 0 )
           DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
 	local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector( coarse_index ), local_problem_rhs ); }
     else
-      DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2!");
+      DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
     // oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
 
     // zero boundary condition for 'cell problems':

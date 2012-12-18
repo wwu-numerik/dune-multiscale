@@ -538,8 +538,15 @@ int main(int argc, char** argv) {
     // syntax: info_from_par_file / default
     int number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
-    if (!( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) ))
-     DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
+    switch ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) )
+    {
+      case 1: break;
+      case 2: break;
+      case 3: break;
+      default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3.");
+    }
+      //if (!( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) ))
+     
     
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)

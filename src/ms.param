@@ -4,7 +4,7 @@
 # problem specifications
 
 # characteristic size of the micro structure
-epsilon = 0.05
+epsilon = 0.112363
 
 # linear or nonlinear problem?
 linear = 1
@@ -23,7 +23,7 @@ reference_solution = 0
 
 # file where the reference solution is stored
 # (momentan ausgehend Pfad 'global.datadir')
-rs_file = ../../../data/HMM/test_problem/hmm_solution_discFunc_refLevel_0
+rs_file = ../../../data/Oversampling/test_problem/hmm_solution_discFunc_refLevel_0
 
 # a saved/precomputed solution located at 'rs_file' is must be computed with the following refinement level:
 #   (grid refinement level for which the reference was computed)
@@ -34,7 +34,7 @@ rs_grid_level = 0
 [global]
 
 # directory to save the data output
-datadir = data/HMM/test_problem
+datadir = data/Oversampling/test_problem
 
 # VTK output for the solutions of the local problems
 local_solution_vtk_output = 1
@@ -71,11 +71,13 @@ fine_grid_level = 10
 # number of oversampling layers (layers of fine grid elements)
 oversampling_layers = 10
 
-# oversampling strategy 1 or 2.
+# oversampling strategy 1, 2 or 3.
 oversampling_strategy = 2
 # stratgey 1: local problems are solved in the full fine space
 # strategy 2: local problems are solved in the full fine space
 #             without the 3 basis functions belonging to the the 3 coarse nodes
+# strategy 3: local problems are solved in the full fine space
+#             without the coarse grid nodes // IMP NOT YET COMPLETED!
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
 # !!! key not yet activated !!!

@@ -133,7 +133,7 @@ private:
         if ( !( subGrid->template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
         {
           subGrid->insertPartial(*entities_sharing_same_node[global_index_node][j]);
-#if 0
+
 	  // get the corners of the father of the fine grid entity 'entities_sharing_same_node[global_index_node][j]'
 	  // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
           if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 )
@@ -143,11 +143,20 @@ private:
                                                                              level_difference);
               for (int c = 0; c < coarse_father->geometry().corners(); ++c )
 	      {
-		if (!(std::find(coarse_node_store_[father_index].begin(), coarse_node_store_[father_index].end(), coarse_father->geometry().corner(c)) == coarse_node_store_[father_index].end()))
-                 coarse_node_store_[father_index].push_back( coarse_father->geometry().corner(c) );
+                //! not an effective search algorithm (should be improved eventually):
+                bool node_contained = false;
+                for (int cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
+	          {
+                    // hard coding - 2d case:
+                    if ( (coarse_node_store_[father_index][ cn ][ 0 ] == coarse_father->geometry().corner(c)[0])
+		       && (coarse_node_store_[father_index][ cn ][ 1 ] == coarse_father->geometry().corner(c)[1] ) )
+		      { node_contained = true; }
+		  }
+                if ( node_contained == false )
+                 { coarse_node_store_[father_index].push_back( coarse_father->geometry().corner(c) ); }
 	      }
             }
-#endif
+
         }
 
         if (layer > 0)
