@@ -72,7 +72,7 @@ fine_grid_level = 10
 oversampling_layers = 10
 
 # oversampling strategy 1, 2 or 3.
-oversampling_strategy = 2
+oversampling_strategy = 3
 # stratgey 1: local problems are solved in the full fine space
 # strategy 2: local problems are solved in the full fine space
 #             without the 3 basis functions belonging to the the 3 coarse nodes

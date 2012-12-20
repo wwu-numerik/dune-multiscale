@@ -302,7 +302,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
         for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
         {
           RangeType value_phi_i(0.0);
-          baseSet.evaluate(i, sub_grid_geometry.local(sub_grid_geometry.corner(sgec)), value_phi_i);
+          baseSet.evaluate(i, sub_grid_geometry.local(sub_grid_geometry.corner(sub_grid_entity_corner_is_relevant[sgec])), value_phi_i);
           if ( value_phi_i == 1.0 )
           {
 	    assert( dimension == 2);
@@ -320,8 +320,25 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
         diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
         for (unsigned int j = 0; j < numBaseFunctions; ++j)
         {
+#if 0
+	   bool zero_entry = false;
+           for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+            {
+              RangeType value_phi_i(0.0);
+              baseSet.evaluate(i, geometry.local(geometry.corner(sgec)), value_phi_i);
+              if ( value_phi_i == 1.0 )
+               {
+	        zero_entry = true;
+	       }
+           }
+           if ( zero_entry == false )
+            // stiffness contribution
+	   { local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) ); }
+	   else
+	   { local_matrix.set( j, i, 0.0 ); }
+#endif
           // stiffness contribution
-          local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) );
+	  local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) );
           // mass contribution (just for stabilization!)
           // local_matrix.add( j, i, 0.00000001 * weight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
         }
@@ -532,7 +549,10 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
 	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
          if ( (coarse_node_vector[coarse_node_local_id] == geometry.corner(c)) 
 	     && (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) == sub_grid_entity_corner_is_relevant.end()) )
-	     { sub_grid_entity_corner_is_relevant.push_back(c); }
+	     { sub_grid_entity_corner_is_relevant.push_back(c);
+//std :: cout << std ::endl << "geometry.corner(" << c << ") = " << geometry.corner(c) << " is relevant." << std ::endl;         
+
+	    }
        }
     }
 
@@ -571,24 +591,25 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
 
         // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
         inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-
+        
+      }
+//coarse_node_vector.size()
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+	bool zero_entry = false;
         for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
         {
           RangeType value_phi_i(0.0);
-          baseSet.evaluate(i, geometry.local(geometry.corner(sgec)), value_phi_i);
+          baseSet.evaluate(i, geometry.local(geometry.corner(sub_grid_entity_corner_is_relevant[sgec])), value_phi_i);
           if ( value_phi_i == 1.0 )
           {
-	    assert( dimension == 2);
-            gradient_phi[i][0][0] = 0.0;
-            gradient_phi[i][0][1] = 0.0;
+	    zero_entry = true;
 	  }
         }
-        
-      }
-
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        elementOfRHS[i] -= weight * (diffusion_in_e[0] * gradient_phi[i][0]);
+        if ( zero_entry == false )
+          elementOfRHS[i] -= weight * (diffusion_in_e[0] * gradient_phi[i][0]);
+	else
+          elementOfRHS[i] = 0.0;
       }
     }
   }
@@ -742,7 +763,7 @@ public:
     DofIteratorType it = func.dbegin();
     stream << "\n" << func.name() << ": [ ";
     for ( ; it != func.dend(); ++it)
-      stream << std::setw(5) << *it << "  ";
+      stream << std::setw(5) << *it << std::endl;// "  ";
 
     stream << " ] " << std::endl;
   } // oneLinePrint
@@ -853,8 +874,8 @@ public:
 	local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector( coarse_index ), local_problem_rhs ); }
     else
       DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
-    // oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
-
+    //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
+    
     // zero boundary condition for 'cell problems':
     // set Dirichlet Boundary to zero
     for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
