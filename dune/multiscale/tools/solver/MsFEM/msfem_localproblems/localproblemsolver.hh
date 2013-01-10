@@ -104,14 +104,16 @@ public:
   void assemble_matrix(MatrixType& global_matrix, const CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
   
   // the right hand side assembler methods
-  void assemble_local_RHS(  // direction 'e'
+  void assemble_local_RHS( 
+    // direction 'e'
     const JacobianRangeType& e,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
 
   // the right hand side assembler methods
   template< class CoarseNodeVectorType >
-  void assemble_local_RHS(  // direction 'e'
+  void assemble_local_RHS(
+    // direction 'e'
     const JacobianRangeType& e,
     const CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
     // rhs local msfem problem:
@@ -120,6 +122,9 @@ public:
   void printLocalRHS(const DiscreteFunction& rhs) const;
 
   double normRHS(const DiscreteFunction& rhs) const;
+  
+  // is a given 'point' in the convex hull of corner 0, corner 1 and corner 2 (which forms a codim 0 entity)
+  bool point_is_in_element( const DomainType& corner_0, const DomainType& corner_1, const DomainType& corner_2, const DomainType& point) const; 
 
 private:
   const DiscreteFunctionSpace& subDiscreteFunctionSpace_;
@@ -133,6 +138,57 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const
                                                                            DiscreteFunctionImp& /*w*/) const {
   DUNE_THROW(Dune::NotImplemented,"the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy.");
 }
+
+
+// is a given 'point' in the convex hull of corner 0, corner 1 and corner 2 (which forms a codim 0 entity)
+template< class SubDiscreteFunctionImp, class DiffusionImp >
+bool LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >
+    ::point_is_in_element( const DomainType& corner_0,
+			    const DomainType& corner_1,
+			    const DomainType& corner_2,
+			    const DomainType& point) const
+    {
+      DomainType v = corner_0 - corner_2;
+      DomainType w = corner_1 - corner_2;
+      DomainType p = point - corner_2;
+
+      double lambda_0, lambda_1;
+      
+      if ( v[0] != 0.0 )
+      {
+	double val0 = p[1] - ( (v[1]/v[0])*p[0]); 
+	double val1 = w[1] - ( (v[1]/v[0])*w[0]); 
+
+	if ( val1 != 0.0 )
+	{
+	  lambda_1 = val0 / val1;
+	  lambda_0 = (p[0] - (lambda_1*w[0]))/v[0];
+          if ( (0.0 <= lambda_0) && (1.0 >= lambda_0) && (0.0 <= lambda_1) && (1.0 >= lambda_1) && ( lambda_0+lambda_1<= 1.0) )
+	    return true;
+	  else
+	    return false;
+	}
+	else
+	{
+	  DUNE_THROW(Dune::InvalidStateException, "... in method 'point_is_in_element': Given corners do not span a codim 0 entity in 2D.");
+	}
+      }
+      else
+      {
+	if ( (w[0] != 0.0) && (v[1] != 0.0) )
+	{ 
+	  lambda_1 = p[0] / w[0];
+	  lambda_0 = (p[1] - (lambda_1*w[1]))/v[1];
+          if ( (0.0 <= lambda_0) && (1.0 >= lambda_0) && (0.0 <= lambda_1) && (1.0 >= lambda_1) && ( lambda_0+lambda_1<= 1.0) )
+	    return true;
+	  else
+	    return false;
+	}
+	else
+	{DUNE_THROW(Dune::InvalidStateException, "... in method 'point_is_in_element': Given corners do not span a codim 0 entity in 2D.");}
+      }
+
+    }
 
 
 
@@ -257,14 +313,6 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
 	     { sub_grid_entity_corner_is_relevant.push_back(c); }
        }
     }
-  
-//! delete me:
-/*
-    for ( int coarse_node_local_id = 0; coarse_node_local_id < subgrid_list_.getCoarseNodeVector( coarse_index ).size(); ++coarse_node_local_id )
-       {
-         std::cout << coarse_node_local_id+1 << " : " << subgrid_list_.getCoarseNodeVector( coarse_index )[coarse_node_local_id] << std :: endl << std :: endl << std :: endl;
-       }
-*/
     
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
@@ -320,23 +368,6 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
         diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
         for (unsigned int j = 0; j < numBaseFunctions; ++j)
         {
-#if 0
-	   bool zero_entry = false;
-           for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
-            {
-              RangeType value_phi_i(0.0);
-              baseSet.evaluate(i, geometry.local(geometry.corner(sgec)), value_phi_i);
-              if ( value_phi_i == 1.0 )
-               {
-	        zero_entry = true;
-	       }
-           }
-           if ( zero_entry == false )
-            // stiffness contribution
-	   { local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) ); }
-	   else
-	   { local_matrix.set( j, i, 0.0 ); }
-#endif
           // stiffness contribution
 	  local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) );
           // mass contribution (just for stabilization!)
@@ -540,6 +571,14 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     const Geometry& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
+    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 )
+      {
+        // the first three elements of the 'coarse_node_vector' are the corners of the relevant coarse grid entity
+        // (the coarse grid entity that was the starting entity to create the current subgrid that was constructed by enrichment)
+        if ( !(point_is_in_element( coarse_node_vector[0], coarse_node_vector[1], coarse_node_vector[2], geometry.center() )) )
+	   continue;
+      }
+    
     std::vector< int > sub_grid_entity_corner_is_relevant;
     for ( int c = 0; c < geometry.corners(); ++c )
     {
@@ -550,7 +589,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
          if ( (coarse_node_vector[coarse_node_local_id] == geometry.corner(c)) 
 	     && (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) == sub_grid_entity_corner_is_relevant.end()) )
 	     { sub_grid_entity_corner_is_relevant.push_back(c);
-//std :: cout << std ::endl << "geometry.corner(" << c << ") = " << geometry.corner(c) << " is relevant." << std ::endl;         
+         //std :: cout << std ::endl << "geometry.corner(" << c << ") = " << geometry.corner(c) << " is relevant." << std ::endl;         
 
 	    }
        }
@@ -593,7 +632,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
         inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
         
       }
-//coarse_node_vector.size()
+
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
 	bool zero_entry = false;

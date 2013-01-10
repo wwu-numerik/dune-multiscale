@@ -19,22 +19,22 @@ stochastic_variance = 0.01
 
 # do we have a precomputed reference solution?
 reference_solution = 0
-# TODO: works only for HMM! MsFEM Variante noch nicht implementiert.
+# TODO: works only for HMM! MsFEM Variante noch nicht implementiert!
 
 # file where the reference solution is stored
 # (momentan ausgehend Pfad 'global.datadir')
-rs_file = ../../../data/HMM/test_problem/hmm_solution_discFunc_refLevel_0
+rs_file = ../../../../dune/multiscale/problems/elliptic_problems/one/fem_eps_0.05_refLevel_16
 
 # a saved/precomputed solution located at 'rs_file' is must be computed with the following refinement level:
 #   (grid refinement level for which the reference was computed)
-rs_grid_level = 0
+rs_grid_level = 16
 #   (must have been determined with a uniformly refined grid)
 
 
 [global]
 
 # directory to save the data output
-datadir = data/HMM/test_problem
+datadir = data/MsFEM/oversampling
 
 # VTK output for the solutions of the local problems
 local_solution_vtk_output = 1
@@ -63,19 +63,23 @@ file =
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 6
+coarse_grid_level = 2
 
 # initial fine grid level 
-fine_grid_level = 10
+fine_grid_level = 6
 
 # number of oversampling layers (layers of fine grid elements)
 oversampling_layers = 10
 
-# oversampling strategy 1 or 2.
-oversampling_strategy = 2
+# oversampling strategy 1, 2 or 3.
+oversampling_strategy = 3
 # stratgey 1: local problems are solved in the full fine space
 # strategy 2: local problems are solved in the full fine space
 #             without the 3 basis functions belonging to the the 3 coarse nodes
+# strategy 3: local problems are solved in the full fine space
+#             without the coarse grid nodes // WRONG IMPLEMENTATION!!!!
+#   DO NOT USE STRATEGY 3! WRONG IMPLEMENTATION!
+#   Local problems are solved correctly, but are communicated incorrectly to coarse problem 
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
 # !!! key not yet activated !!!
@@ -130,5 +134,5 @@ write_to_file = 1
 [fem]
 
 # grid refinement level
-grid_level = 2
+grid_level = 16
 

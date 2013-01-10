@@ -16,6 +16,7 @@
 #include <dune/fem/misc/l2error.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
@@ -473,7 +474,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
     }
 
     DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
-
+    
     //! ----------------- compute L2-errors -------------------
     
     // L2 error with reference solution
@@ -482,20 +483,32 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
       DSC_PROFILER.startTiming("hmm.timeadapt");
 
       static const int hmm_polorder = 2* HMM::DiscreteFunctionSpaceType::polynomialOrder + 2;
-      // expensive hack to deal with discrete functions, defined on different grids
+
+      // project HMM solution in finer discrete function space
+      typename HMM::DiscreteFunctionType projected_hmm_solution("HMM Solution Projection", reference_solution.space());
+      projected_hmm_solution.clear();
+      Dune::Stuff::HeterogenousProjection<Dune::Stuff::InlevelSearchStrategy>::project( hmm_solution/*source*/, projected_hmm_solution/*target*/ );
+
+      Dune::L2Error< typename HMM::DiscreteFunctionType > l2error;
+      typename HMM::RangeType hmm_error = l2error.template norm2< hmm_polorder >(projected_hmm_solution, reference_solution);
+      
+      // old (expensive) hack to deal with discrete functions, defined on different grids
+      // (should do the same as the heterogenous projection above - could therefore be used for comparison)
+      /*
       Dune::ImprovedL2Error< typename HMM::DiscreteFunctionType > impL2error;
       typename HMM::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
         hmm_solution,
         reference_solution);
-
-      DSC_LOG_INFO << "|| u_hmm - u_reference ||_L2 =  " << hmm_error << std::endl << std::endl;
-
+        
       const auto timeadapt = DSC_PROFILER.stopTiming("hmm.timeadapt") / 1000.f;
       // if it took longer then 1 minute to compute the error:
       if (timeadapt > 60)
       {
         DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
       }
+      */
+        
+      DSC_LOG_INFO << "|| u_hmm - u_reference ||_L2 =  " << hmm_error << std::endl << std::endl;
     }
     
     // L2 errors with exact solution

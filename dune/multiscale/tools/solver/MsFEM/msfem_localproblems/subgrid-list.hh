@@ -68,7 +68,13 @@ public:
 
   //! type of grid part
   typedef LeafGridPart< SubGridType > SubGridPartType;
+  
+    //! type of subgrid discrete function space
+  typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1/*=POLORDER*/ > SubGridDiscreteFunctionSpace;
 
+  //! type of subgrid discrete function
+  typedef AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpace > SubGridDiscreteFunction;
+  
 private:
   template< typename EntityPointerCollectionType >
   bool entity_patch_in_subgrid(const HostEntityPointerType& hit,
