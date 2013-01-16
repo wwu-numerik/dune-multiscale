@@ -338,13 +338,13 @@ public:
 
             DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
 
-	    const double weight_local_quadrature
-              = local_grid_quadrature.weight(localQuadraturePoint) * local_grid_geometry.integrationElement(
-              local_subgrid_point);
+            const double weight_local_quadrature
+              = local_grid_quadrature.weight(localQuadraturePoint)
+                * local_grid_geometry.integrationElement(local_subgrid_point);
 
-            LocalGridLocalFunction localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
+            auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
               local_grid_entity);
-            LocalGridLocalFunction localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
+            auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
               local_grid_entity);
 
             // local corrector for e_0 and e_1
