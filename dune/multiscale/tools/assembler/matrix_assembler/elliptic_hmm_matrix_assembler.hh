@@ -188,26 +188,21 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
                                        * macro_grid_geometry.integrationElement(local_macro_point);
 
     // transposed of the the inverse jacobian
-    const FieldMatrix< double, dimension, dimension >& inverse_jac
-      = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
+    const auto& inverse_jac = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
 
     std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
 
     typedef std::unique_ptr<PeriodicDiscreteFunction> PeriodicDiscreteFunctionPointer;
     std::vector<PeriodicDiscreteFunctionPointer> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
+    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi);
+
+    //!TODO generator functions
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
     {
       // get number of cell problem from entity and number of base function
       typename Entity::EntityPointer macro_entity_pointer(macro_grid_entity);
       cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
-
-      // jacobian of the base functions, with respect to the reference element
-      typename BaseFunctionSet::JacobianRangeType gradient_Phi_ref_element;
-      macro_grid_baseSet.jacobian(i, one_point_quadrature[0], gradient_Phi_ref_element);
-
-      // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-      inverse_jac.mv(gradient_Phi_ref_element[0], gradient_Phi[i][0]);
 
       corrector_Phi[i] = PeriodicDiscreteFunctionPointer(new PeriodicDiscreteFunction("Corrector Function of Phi",
                                                                      periodicDiscreteFunctionSpace_));
@@ -374,8 +369,7 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
                                        * macro_grid_geometry.integrationElement(local_macro_point);
 
     // transposed of the the inverse jacobian
-    const FieldMatrix< double, dimension, dimension >& inverse_jac
-      = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
+    const auto& inverse_jac = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
 
     std::vector<int> cell_problem_id(numMacroBaseFunctions, -1);
 
@@ -388,7 +382,6 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
     PeriodicDiscreteFunction corrector_old_u_H("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace_);
     corrector_old_u_H.clear();
 
-    const CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
     /* // if the cell problems are not precomputed, we might use:
       cell_problem_solver.template solvecellproblem< JacobianRangeType >
         (grad_old_u_H, macro_entity_barycenter, corrector_old_u_H);
@@ -397,19 +390,15 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
 
     std::vector<std::unique_ptr<PeriodicDiscreteFunction> > corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
+    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac,gradient_Phi);
+
     // gradients of macrocopic base functions:
+    //TODO generator
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
     {
       // get number of cell problem from entity and number of base function
       typename Entity::EntityPointer macro_entity_pointer(*macro_grid_it);
       cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
-
-      // jacobian of the base functions, with respect to the reference element
-      typename BaseFunctionSet::JacobianRangeType gradient_Phi_ref_element;
-      macro_grid_baseSet.jacobian(i, one_point_quadrature[0], gradient_Phi_ref_element);
-
-      // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-      inverse_jac.mv(gradient_Phi_ref_element[0], gradient_Phi[i][0]);
 
       if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
         corrector_Phi[i] = std::unique_ptr<PeriodicDiscreteFunction>(

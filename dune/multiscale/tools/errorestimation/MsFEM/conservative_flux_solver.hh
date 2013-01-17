@@ -244,10 +244,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
         check_sum += integrationFactor * quadratureWeight;
 
-        for (unsigned int i = 0; i < numBaseFunctions; ++i)
-        {
-          baseSet.evaluate(i, faceQuadrature[quadraturePoint], phi[i]);
-        }
+        baseSet.evaluateAll(faceQuadrature[quadraturePoint], phi);
 
         for (unsigned int i = 0; i < numBaseFunctions; ++i)
         {
@@ -410,13 +407,12 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
       // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
 
       // global point in the subgrid
-      DomainType global_point = geometry.global(local_point);
+      const DomainType global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = geometry.jacobianInverseTransposed(local_point);
+      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
 
       // A^eps(x) ( e
       // diffusion operator evaluated in 'x' multiplied with e
@@ -432,15 +428,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
       total_diffusive_flux[0] += diffusion_in_e_i[0];
 
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        // jacobian of the base functions, with respect to the reference element
-        JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-      }
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {

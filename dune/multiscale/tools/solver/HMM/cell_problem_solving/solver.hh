@@ -380,7 +380,7 @@ public:
     for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
     {
       // gradients of the macroscopic base functions
-      JacobianRangeType gradientPhi[maxnumOfBaseFct];
+      std::vector<JacobianRangeType> gradientPhi(maxnumOfBaseFct);
 
       // entity
       const EntityType& entity = *it;
@@ -393,18 +393,10 @@ public:
       const int numBaseFunctions = baseSet.size();
 
       // calc Jacobian inverse before volume is evaluated
-      const FieldMatrix< double, dimension, dimension >& inv
-        = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
+      const auto& inv = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
+      baseSet.jacobianAll(quadrature[0], inv, gradientPhi);
 
       PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
-
-      for (int i = 0; i < numBaseFunctions; ++i)
-      {
-        baseSet.jacobian(i, quadrature[0 /*=quadraturePoint*/], gradientPhi[i]);
-        // multiply with transpose of jacobian inverse
-        gradientPhi[i][0] = FMatrixHelp::mult(inv, gradientPhi[i][0]);
-      }
-
       for (int i = 0; i < numBaseFunctions; ++i)
       {
         correctorPhi_i.clear();
@@ -595,7 +587,7 @@ public:
     for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
     {
       // gradients of the macroscopic base functions
-      JacobianRangeType gradientPhi[maxnumOfBaseFct];
+      std::vector<JacobianRangeType> gradientPhi(maxnumOfBaseFct);
 
       // entity
       const EntityType& entity = *it;
@@ -608,8 +600,7 @@ public:
       const int numBaseFunctions = baseSet.size();
 
       // calc Jacobian inverse before volume is evaluated
-      const FieldMatrix< double, dimension, dimension >& inv
-        = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
+      const auto& inv = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
 
       LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
       JacobianRangeType grad_macro_discrete_function;
@@ -622,12 +613,7 @@ public:
       // the solution that we want to save to the data file
       PeriodicDiscreteFunctionType jac_corrector_Phi_i("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
 
-      for (int i = 0; i < numBaseFunctions; ++i)
-      {
-        baseSet.jacobian(i, quadrature[0 /*=quadraturePoint*/], gradientPhi[i]);
-        // multiply with transpose of jacobian inverse
-        gradientPhi[i][0] = FMatrixHelp::mult(inv, gradientPhi[i][0]);
-      }
+      baseSet.jacobianAll(quadrature[0 /*=quadraturePoint*/], inv, gradientPhi);
 
       for (int i = 0; i < numBaseFunctions; ++i)
       {

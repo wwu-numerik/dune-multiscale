@@ -109,8 +109,7 @@ private:
           baseSet.jacobian(i, quadrature[quadraturePoint], gradientPhi);
           // Bis jetzt nur der Gradient auf dem Referenzelement!!!!!!! Es muss noch transformiert werden, um den
           // Gradienten auf dem echten Element zu bekommen! Das passiert folgendermassen:
-          const FieldMatrix< double, dimension, dimension >& inv
-            = geometry.jacobianInverseTransposed( quadrature.point(quadraturePoint) );
+          const auto& inv = geometry.jacobianInverseTransposed( quadrature.point(quadraturePoint) );
           // multiply with transpose of jacobian inverse
           gradientPhi[0] = FMatrixHelp::mult(inv, gradientPhi[0]);
 

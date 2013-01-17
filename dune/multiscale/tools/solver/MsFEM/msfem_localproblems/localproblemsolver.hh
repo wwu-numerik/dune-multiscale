@@ -239,20 +239,9 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
                             * sub_grid_geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = sub_grid_geometry.jacobianInverseTransposed(local_point);
-
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        // jacobian of the base functions, with respect to the reference element
-        typename BaseFunctionSet::JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-
-        baseSet.evaluate(i, quadrature[quadraturePoint], phi[i]);
-      }
+      const auto& inverse_jac = sub_grid_geometry.jacobianInverseTransposed(local_point);
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
@@ -333,19 +322,12 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
                             * sub_grid_geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = sub_grid_geometry.jacobianInverseTransposed(local_point);
+      const auto& inverse_jac = sub_grid_geometry.jacobianInverseTransposed(local_point);
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
-        // jacobian of the base functions, with respect to the reference element
-        typename BaseFunctionSet::JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-
-        baseSet.evaluate(i, quadrature[quadraturePoint], phi[i]);
 
         for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
         {
@@ -513,16 +495,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
       JacobianRangeType diffusion_in_e;
       diffusion_operator_.diffusiveFlux(global_point, e, diffusion_in_e);
 
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        // jacobian of the base functions, with respect to the reference element
-        JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-      }
-
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         elementOfRHS[i] -= weight * (diffusion_in_e[0] * gradient_phi[i][0]);
@@ -614,40 +587,29 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = geometry.jacobianInverseTransposed(local_point);
+      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
 
       // A^eps(x) e
       // diffusion operator evaluated in 'x' multiplied with e
       JacobianRangeType diffusion_in_e;
       diffusion_operator_.diffusiveFlux(global_point, e, diffusion_in_e);
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
-        // jacobian of the base functions, with respect to the reference element
-        JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-        
-      }
-
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-	bool zero_entry = false;
+        bool zero_entry = false;
         for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
         {
           RangeType value_phi_i(0.0);
           baseSet.evaluate(i, geometry.local(geometry.corner(sub_grid_entity_corner_is_relevant[sgec])), value_phi_i);
           if ( value_phi_i == 1.0 )
           {
-	    zero_entry = true;
-	  }
+            zero_entry = true;
+          }
         }
         if ( zero_entry == false )
           elementOfRHS[i] -= weight * (diffusion_in_e[0] * gradient_phi[i][0]);
-	else
+        else
           elementOfRHS[i] = 0.0;
       }
     }
