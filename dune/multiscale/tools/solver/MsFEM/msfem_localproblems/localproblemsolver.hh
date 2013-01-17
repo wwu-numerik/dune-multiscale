@@ -271,8 +271,6 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
 {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
-  Problem::ModelProblemData model_info;
-
   global_matrix.reserve();
   global_matrix.clear();
 
@@ -308,6 +306,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
 
+    std::vector<RangeType> value_phi(numBaseFunctions);
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
     const Quadrature quadrature(sub_grid_entity, 2 * subDiscreteFunctionSpace_.order() + 2);
@@ -326,20 +325,18 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
       baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
       {
-
-        for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+        baseSet.evaluateAll(sub_grid_geometry.local(sub_grid_geometry.corner(sub_grid_entity_corner_is_relevant[sgec])), value_phi);
+        for (unsigned int i = 0; i < numBaseFunctions; ++i)
         {
-          RangeType value_phi_i(0.0);
-          baseSet.evaluate(i, sub_grid_geometry.local(sub_grid_geometry.corner(sub_grid_entity_corner_is_relevant[sgec])), value_phi_i);
-          if ( value_phi_i == 1.0 )
+          if ( value_phi[i] == 1.0 )
           {
-	    assert( dimension == 2);
+            assert( dimension == 2);
             phi[i][0] = 0.0;
             gradient_phi[i][0][0] = 0.0;
             gradient_phi[i][0][1] = 0.0;
-	  }
+          }
         }
       }
 
@@ -351,7 +348,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
         for (unsigned int j = 0; j < numBaseFunctions; ++j)
         {
           // stiffness contribution
-	  local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) );
+          local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) );
           // mass contribution (just for stabilization!)
           // local_matrix.add( j, i, 0.00000001 * weight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
         }

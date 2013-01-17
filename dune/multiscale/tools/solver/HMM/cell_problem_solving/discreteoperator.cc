@@ -153,17 +153,8 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
       const FieldMatrix< double, dimension, dimension >& inverse_jac
         = cell_grid_geometry.jacobianInverseTransposed(local_point);
 
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        // jacobian of the base functions, with respect to the reference element
-        typename BaseFunctionSet::JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-
-        baseSet.evaluate(i, quadrature[quadraturePoint], phi[i]);
-      }
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
@@ -328,23 +319,14 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = geometry.jacobianInverseTransposed(local_point);
+      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
 
       // A^{\eps}( x_T + \delta y) \nabla_x PHI_H(x_T)
       // diffusion operator evaluated in (x_T + \delta y) multiplied with \nabla_x PHI_H(x_T)
       JacobianRangeType diffusion_in_gradient_PHI_H;
       diffusion_operator_.diffusiveFlux(x_T_delta_global_point, gradient_PHI_H, diffusion_in_gradient_PHI_H);
 
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        // jacobian of the base functions, with respect to the reference element
-        JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-      }
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
@@ -363,7 +345,6 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
   typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
 
@@ -381,10 +362,8 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
 
-  const Iterator end = discreteFunctionSpace.end();
-  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
+  for (const Entity& cell_grid_entity : discreteFunctionSpace)
   {
-    const Entity& cell_grid_entity = *it;
     const Geometry& geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
@@ -394,14 +373,14 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
 
-    Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
       // global point in the unit cell Y:
-      DomainType global_point = geometry.global(local_point);
+      const DomainType global_point = geometry.global(local_point);
 
       // x_T + (delta * global_point)
       DomainType x_T_delta_global_point;
@@ -427,19 +406,8 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = geometry.jacobianInverseTransposed(local_point);
-
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        // jacobian of the base functions, with respect to the reference element
-        JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-      }
-
+      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         elementOfRHS[i] -= weight * (diffusive_flux[0] * gradient_phi[i][0]);

@@ -718,9 +718,44 @@ public:
       // the fine scale reconstructions are only available for the barycenter of the macro grid entity (=> only
       // available for the canonical one point quadrature on this element)
 
+      const typename Quadrature::CoordinateType& local_macro_point = one_point_macro_quadrature.point(0 /*=quadraturePoint*/);
+
+      // barycenter of macro grid entity
+      const DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
+
+      const double macro_entity_volume = one_point_macro_quadrature.weight(0 /*=quadraturePoint*/)
+                                         * macro_grid_geometry.integrationElement(local_macro_point);
+
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade
+      // gradient of base function and gradient of old_u_H
+      std::vector<JacobianRangeType> grad_Phi_x_vec(numDofs);
+      JacobianRangeType grad_old_u_H_x;
+
+      const auto& inv = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
+      // get gradient of old u_H:
+      old_u_H_loc.jacobian(one_point_macro_quadrature[0], grad_old_u_H_x);
+
+      // Q_h(u_H^{(n-1}))(x_T,y):
+      PeriodicDiscreteFunctionType corrector_old_u_H("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace);
+      corrector_old_u_H.clear();
+
+      PeriodicDiscreteFunctionType corrector_Phi_i("Corrector of Phi_i", periodicDiscreteFunctionSpace);
+      /* // if the cell problems are not precomputed, we might use:
+        CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace, A);
+        cell_problem_solver.template solvecellproblem< JacobianRangeType >
+          (grad_old_u_H_x, macro_entity_barycenter, corrector_old_u_H);
+        if (DSC_CONFIG_GET("TFR", false))
+          cell_problem_solver.template solvecellproblem< JacobianRangeType >
+            (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
+
+      */
+      discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
+      macro_grid_baseSet.jacobianAll(one_point_macro_quadrature[0], inv, grad_Phi_x_vec);
+
+
       for (int i = 0; i < numDofs; ++i)
       {
+        const auto& grad_Phi_x = grad_Phi_x_vec[i];
         // --------------- the source contribution ( \int_{\Omega} f \Phi ) -------------------------------
 
         // the return values:
@@ -751,48 +786,8 @@ public:
         // --------------- the contribution of the jacobian of the diffusion operator, evaluated in the old
         // reconstructed macro solution -------------------------------
 
-        const typename Quadrature::CoordinateType& local_macro_point = one_point_macro_quadrature.point(0 /*=quadraturePoint*/);
 
-        // barycenter of macro grid entity
-        const DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
-
-        const double macro_entity_volume = one_point_macro_quadrature.weight(0 /*=quadraturePoint*/)
-                                           * macro_grid_geometry.integrationElement(local_macro_point);
-
-        // gradient of base function and gradient of old_u_H
-        JacobianRangeType grad_Phi_x, grad_old_u_H_x;
-
-        // evaluate the gradient of the current base function at the current quadrature point and save its value in
-        // 'returnGradient':
-        macro_grid_baseSet.jacobian(i, one_point_macro_quadrature[0], grad_Phi_x);
-        // Bis jetzt nur der Gradient auf dem Referenzelement!!!!!!! Es muss noch transformiert werden, um den
-        // Gradienten auf dem echten Element zu bekommen! Das passiert folgendermassen:
-
-        const FieldMatrix< double, dimension, dimension >& inv
-          = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
-        // multiply with transpose of jacobian inverse
-        grad_Phi_x[0] = FMatrixHelp::mult(inv, grad_Phi_x[0]);
-
-        // get gradient of old u_H:
-        old_u_H_loc.jacobian(one_point_macro_quadrature[0], grad_old_u_H_x);
-
-        // Q_h(u_H^{(n-1}))(x_T,y):
-        PeriodicDiscreteFunctionType corrector_old_u_H("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace);
-        corrector_old_u_H.clear();
-
-        PeriodicDiscreteFunctionType corrector_Phi_i("Corrector of Phi_i", periodicDiscreteFunctionSpace);
         corrector_Phi_i.clear();
-
-        /* // if the cell problems are not precomputed, we might use:
-          CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace, A);
-          cell_problem_solver.template solvecellproblem< JacobianRangeType >
-            (grad_old_u_H_x, macro_entity_barycenter, corrector_old_u_H);
-          if (DSC_CONFIG_GET("TFR", false))
-            cell_problem_solver.template solvecellproblem< JacobianRangeType >
-              (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
-
-        */
-        discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
         if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
             typename EntityType::EntityPointer entity_ptr(macro_grid_it);
             discrete_function_reader_baseSet.read(cp_num_manager.get_number_of_cell_problem(entity_ptr, i)
