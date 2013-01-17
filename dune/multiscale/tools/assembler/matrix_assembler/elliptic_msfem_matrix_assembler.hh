@@ -280,18 +280,8 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
       = one_point_quadrature.point(0 /*=quadraturePoint*/);
 
     // transposed of the the inverse jacobian
-    const FieldMatrix< double, dimension, dimension >& inverse_jac
-      = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
-
-    for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
-    {
-      // jacobian of the base functions, with respect to the reference element
-      typename CoarseBaseFunctionSet::JacobianRangeType gradient_Phi_ref_element;
-      coarse_grid_baseSet.jacobian(i, one_point_quadrature[0], gradient_Phi_ref_element);
-
-      // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-      inverse_jac.mv(gradient_Phi_ref_element[0], gradient_Phi[i][0]);
-    }
+    const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
+    coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi);
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
     {

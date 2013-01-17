@@ -70,7 +70,6 @@ private:
     rhsVector.clear();
     for (const auto& entity : rhsVector.space())
     {
-      // it* Pointer auf ein Element der Entity
       const GeometryType& geometry = entity.geometry(); // Referenz auf Geometrie
       LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);   // entity zeigt auf ein bestimmtes Element der
                                                                        // entity
@@ -86,36 +85,26 @@ private:
                                                           // functionSpace
 
       const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);   // 0 --> codim 0
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
-      for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
+      const int numQuadraturePoints = quadrature.nop();
+      const int numDofs = elementOfRHS.numDofs();
+      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
       {
         // the return values:
-        RangeType f_x, phi_x;
-        JacobianRangeType gradientPhi;
+        RangeType f_x;
+        std::vector<RangeType>phi_x;
+        std::vector<JacobianRangeType> gradientPhi;
         // to save: A \nabla PHI_H * \nabla phi_h;
         RangeType res = 0;
+        const double det = geometry.integrationElement(quadrature.point(quadraturePoint));
+        const auto& inv = geometry.jacobianInverseTransposed(quadrature.point(quadraturePoint));
+        f.evaluate(geometry.global( quadrature.point(quadraturePoint) ), f_x);
+        baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);
+        baseSet.jacobianAll(quadrature[quadraturePoint], inv, gradientPhi);
 
-        const int numQuadraturePoints = quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+        for (int i = 0; i < numDofs; ++i)
         {
-          const double det
-            = geometry.integrationElement( quadrature.point(quadraturePoint) );
-          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-          f.evaluate(geometry.global( quadrature.point(quadraturePoint) ), f_x);
-          // evaluate the current base function at the current quadrature point and save its value in 'z':
-          baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-          // evaluate the gradient of the current base function at the current quadrature point and save its value in
-          // 'returnGradient':
-          baseSet.jacobian(i, quadrature[quadraturePoint], gradientPhi);
-          // Bis jetzt nur der Gradient auf dem Referenzelement!!!!!!! Es muss noch transformiert werden, um den
-          // Gradienten auf dem echten Element zu bekommen! Das passiert folgendermassen:
-          const auto& inv = geometry.jacobianInverseTransposed( quadrature.point(quadraturePoint) );
-          // multiply with transpose of jacobian inverse
-          gradientPhi[0] = FMatrixHelp::mult(inv, gradientPhi[0]);
-
-          res = functor(geometry.global(quadrature.point(quadraturePoint)), gradientPhi);
-
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
+          res = functor(geometry.global(quadrature.point(quadraturePoint)), gradientPhi[i]);
+          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x[i]);
           elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (res);
         }
       }
@@ -251,26 +240,22 @@ public:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
-
       
       const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd);   // 0 --> codim 0
       const int numDofs = elementOfRHS.numDofs();
-      for (int i = 0; i < numDofs; ++i) 
+      std::vector<RangeType> phi_x_vec(numDofs);
+      RangeType f_x;
+      const int numQuadraturePoints = quadrature.nop();
+      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
       {
-
-        RangeType f_x, phi_x;
-
-        const int numQuadraturePoints = quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+        const double det
+          = coarse_grid_geometry.integrationElement( quadrature.point(quadraturePoint) );
+        // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
+        f.evaluate(coarse_grid_geometry.global( quadrature.point(quadraturePoint) ), f_x);
+        coarse_grid_baseSet.evaluateAll(quadrature[quadraturePoint], phi_x_vec);
+        for (int i = 0; i < numDofs; ++i)
         {
-          const double det
-            = coarse_grid_geometry.integrationElement( quadrature.point(quadraturePoint) );
-          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-          f.evaluate(coarse_grid_geometry.global( quadrature.point(quadraturePoint) ), f_x);
-          // evaluate the current base function at the current quadrature point and save its value in 'z':
-          coarse_grid_baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
+          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x_vec[i]);
         }
       }
       
@@ -283,21 +268,12 @@ public:
            = one_point_quadrature.point(0 /*=quadraturePoint*/);
 
       // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-           = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
-      
+      const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
+      std::vector<JacobianRangeType> gradient_Phi_vec(numDofs);
+      coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_vec);
+
       for (int i = 0; i < numDofs; ++i) 
-      {
-
-        JacobianRangeType gradientPhi;
-
-        // jacobian of the base functions, with respect to the reference element
-        JacobianRangeType gradient_Phi_ref_element;
-        coarse_grid_baseSet.jacobian(i, one_point_quadrature[0], gradient_Phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_Phi_ref_element[0], gradientPhi[0]);
-     
+      {    
         // iterator for the micro grid ( grid for the reference element T_0 )
         const LocalGridIterator local_grid_end = localDiscreteFunctionSpace.end();
         for (LocalGridIterator local_grid_it = localDiscreteFunctionSpace.begin();
@@ -490,45 +466,40 @@ public:
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
 
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
-      for (int i = 0; i < numDofs; ++i)  // Laufe ueber alle Knoten des entity-elements auf dem wir uns befinden
+      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)    
+      const int numQuadraturePoints = quadrature.nop();
+      // the return values:
+      RangeType f_x;
+      std::vector<RangeType> phi_x(numDofs);
+      // gradient of base function and gradient of old_u_H
+      std::vector<JacobianRangeType> grad_phi_x(numDofs);
+      JacobianRangeType grad_old_u_H;
+      // Let A denote the diffusion operator, then we save
+      // A( \gradient old_u_H )
+      JacobianRangeType diffusive_flux_in_grad_old_u_H;
+      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
       {
-        // the return values:
-        RangeType f_x, phi_x;
-        // gradient of base function and gradient of old_u_H
-        JacobianRangeType grad_phi_x, grad_old_u_H;
-        // Let A denote the diffusion operator, then we save
-        // A( \gradient old_u_H )
-        JacobianRangeType diffusive_flux_in_grad_old_u_H;
-
-        const int numQuadraturePoints = quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+        // local (barycentric) coordinates (with respect to entity)
+        const auto& local_point = quadrature.point(quadraturePoint);
+        const DomainType global_point = geometry.global(local_point);
+        const double det = geometry.integrationElement(local_point);
+        const auto& inv = geometry.jacobianInverseTransposed(local_point);
+        // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
+        f.evaluate(global_point, f_x);
+        // evaluate the current base function at the current quadrature point and save its value in 'z':
+        baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
+        // evaluate the gradient of the current base function at the current quadrature point and save its value in
+        // 'returnGradient':
+        baseSet.jacobianAll(quadrature[quadraturePoint], inv, grad_phi_x);
+        // get gradient of old u_H:
+        old_u_H_loc.jacobian(quadrature[quadraturePoint], grad_old_u_H);
+        // evaluate diffusion operator in x(=global_point) and grad_old_u_H
+        A.diffusiveFlux(global_point, grad_old_u_H, diffusive_flux_in_grad_old_u_H);
+        for (int i = 0; i < numDofs; ++i)
         {
-          // local (barycentric) coordinates (with respect to entity)
-          const auto& local_point = quadrature.point(quadraturePoint);
-          const DomainType global_point = geometry.global(local_point);
-
-          const double det = geometry.integrationElement(local_point);
-          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-          f.evaluate(global_point, f_x);
-          // evaluate the current base function at the current quadrature point and save its value in 'z':
-          baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-          // evaluate the gradient of the current base function at the current quadrature point and save its value in
-          // 'returnGradient':
-          baseSet.jacobian(i, quadrature[quadraturePoint], grad_phi_x);
-          // Bis jetzt nur der Gradient auf dem Referenzelement!!!!!!! Es muss noch transformiert werden, um den
-          // Gradienten auf dem echten Element zu bekommen! Das passiert folgendermassen:
-          const FieldMatrix< double, dimension, dimension >& inv
-            = geometry.jacobianInverseTransposed(local_point);
-          // multiply with transpose of jacobian inverse
-          grad_phi_x[0] = FMatrixHelp::mult(inv, grad_phi_x[0]);
-          // get gradient of old u_H:
-          old_u_H_loc.jacobian(quadrature[quadraturePoint], grad_old_u_H);
-          // evaluate diffusion operator in x(=global_point) and grad_old_u_H
-          A.diffusiveFlux(global_point, grad_old_u_H, diffusive_flux_in_grad_old_u_H);
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x);
+          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x[i]);
           elementOfRHS[i] -= det * quadrature.weight(quadraturePoint)
-                             * (diffusive_flux_in_grad_old_u_H[0] * grad_phi_x[0]);
+                             * (diffusive_flux_in_grad_old_u_H[0] * grad_phi_x[i][0]);
         }
       }
     }
