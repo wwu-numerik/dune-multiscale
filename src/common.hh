@@ -17,7 +17,6 @@
 #endif
 
 #define USE_TWISTFREE_MAPPER
-#define VERBOSE false
 
 #include <iostream>
 #include <sstream>

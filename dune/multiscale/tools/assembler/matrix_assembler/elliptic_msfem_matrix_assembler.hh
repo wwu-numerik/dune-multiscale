@@ -9,7 +9,6 @@
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localproblemsolver.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-
 #include <dune/stuff/fem/functions/checks.hh>
 
 namespace Dune {

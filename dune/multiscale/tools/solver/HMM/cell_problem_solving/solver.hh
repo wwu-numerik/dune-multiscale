@@ -2,10 +2,15 @@
 #define DUNEMS_HMM_CELL_SOLVER_HH
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/common/math.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/solver/oemsolver.hh>
 #include <dune/fem/misc/l2error.hh>
+#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+
 
 //! --------------------- the essential cell problem solver class ----------------------------------
 namespace Dune {
@@ -48,6 +53,7 @@ public:
     template< class M >
     struct Adapter
     {
+      //!TODO this works only with ISTL present
       typedef Dune::LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
     };
   };

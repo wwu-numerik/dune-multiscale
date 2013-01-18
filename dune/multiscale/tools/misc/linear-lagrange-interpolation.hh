@@ -14,6 +14,7 @@
 #define DUNE_LINEARLAGRANGEINTERPOLATION_HH
 
 #include <dune/fem/function/common/function.hh>
+#include <dune/stuff/common/logging.hh>
 
 namespace Dune {
 // 2D:

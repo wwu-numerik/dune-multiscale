@@ -5,6 +5,10 @@
 #include <vector>
 
 #include <dune/stuff/common/ranges.hh>
+#include <dune/fem/function/common/discretefunction.hh>
+#include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
 template <class HMMTraits>
 struct HMMResult {

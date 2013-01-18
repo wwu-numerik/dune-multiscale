@@ -14,7 +14,6 @@
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
-
 #include <dune/stuff/fem/functions/checks.hh>
 
 // / done
@@ -29,11 +28,11 @@ public:
   MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space,
                           DiscreteFunctionSpaceType& fine_scale_space)
     : coarse_scale_space_(coarse_scale_space)
-      , fine_scale_space_(fine_scale_space)
-      , coarse_level_fine_level_difference_( fine_scale_space.gridPart().grid().maxLevel()
-                                             - coarse_scale_space.gridPart().grid().maxLevel() )
-      , number_of_level_host_entities_( coarse_scale_space.gridPart().grid().size(0 /*codim*/) )
-      , number_of_layers(number_of_level_host_entities_, 0)
+    , fine_scale_space_(fine_scale_space)
+    , coarse_level_fine_level_difference_( fine_scale_space.gridPart().grid().maxLevel()
+                                           - coarse_scale_space.gridPart().grid().maxLevel() )
+    , number_of_level_host_entities_( coarse_scale_space.gridPart().grid().size(0 /*codim*/) )
+    , number_of_layers(number_of_level_host_entities_, 0)
   {}
 
   // get number of coarse grid entities
@@ -699,7 +698,7 @@ public:
     }
     //! --- end boundary treatment ---
 
-    const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/);
+    const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true);
     msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;

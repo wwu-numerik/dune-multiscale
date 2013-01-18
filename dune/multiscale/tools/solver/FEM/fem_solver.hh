@@ -209,7 +209,7 @@ public:
     }
     // --- end boundary treatment ---
 
-    InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, true /*VERBOSE*/);
+    InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, true);
     fem_biCGStab(fem_rhs, solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;

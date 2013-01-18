@@ -1,6 +1,11 @@
 #ifndef DUNE_MULTISCALE_IMPROVED_L2ERROR_HH
 #define DUNE_MULTISCALE_IMPROVED_L2ERROR_HH
 
+#include <dune/common/exceptions.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
+
 namespace Dune {
 
 //! KLASSE IST NUR FUER DEN 2D FALL UND DIE VERWENDUNG VON EINER SIMPLIZIALEN TRIANGULIERUNG, SONST FUNKTIONIERT DAS

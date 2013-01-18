@@ -3,6 +3,7 @@
 
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
 
 //!NOTE: 'ErrorEstimator' requires an access to the 'ModelProblemData' class (typically defined in
 // problem_specification.hh), which provides us with infomration about epsilon, delta, etc.
@@ -269,7 +270,6 @@ public:
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
-    Problem::ModelProblemData model_info;
     const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
     EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order
@@ -506,7 +506,6 @@ public:
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
-    const Problem::ModelProblemData model_info;
     const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
     const EntityQuadratureType entityQuadrature(entity, 0);    // 0 = polynomial order

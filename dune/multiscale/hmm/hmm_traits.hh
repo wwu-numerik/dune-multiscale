@@ -9,9 +9,9 @@
 
 #include <dune/common/tuples.hh>
 
+#include <dune/multiscale/grids/periodicgridpart/periodicgridpart.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/numbering.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
-
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_hmm_matrix_assembler.hh>
 #include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>

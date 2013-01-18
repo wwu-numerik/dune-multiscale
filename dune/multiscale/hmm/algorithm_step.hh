@@ -17,6 +17,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
@@ -290,7 +291,7 @@ void solve_hmm_problem_linear(const typename HMM::PeriodicDiscreteFunctionSpaceT
   // set Dirichlet Boundary to zero
   boundaryTreatment(hmm_newton_rhs);
 
-  typename HMM::InverseFEMMatrix hmm_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, VERBOSE);
+  typename HMM::InverseFEMMatrix hmm_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
   hmm_biCGStab(hmm_newton_rhs, hmm_solution);
   DSC_LOG_INFO << seperator_line << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl;
 }
@@ -315,7 +316,7 @@ bool process_hmm_newton_residual(typename HMM::RangeType& relative_newton_error,
   {
     hmm_newton_residual.clear();
     const typename HMM::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,
-                                           1e-8, hmm_biCG_tolerance, 20000, VERBOSE);
+                                           1e-8, hmm_biCG_tolerance, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
 
     hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
 

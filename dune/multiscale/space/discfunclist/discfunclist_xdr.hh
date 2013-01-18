@@ -9,6 +9,7 @@
 
 #include "discfunclistinterface.hh"
 #include <dune/fem/io/file/iointerface.hh>
+#include <dune/stuff/common/logging.hh>
 
 namespace Dune {
 namespace Multiscale {

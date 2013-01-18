@@ -87,7 +87,7 @@ void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer, 
   // set Dirichlet Boundary to zero
   boundaryTreatment(hom_rhs);
 
-  const typename FEM::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, VERBOSE);
+  const typename FEM::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
   hom_biCGStab(hom_rhs, homogenized_solution);
   
   // write FEM solution to a file and produce a VTK output

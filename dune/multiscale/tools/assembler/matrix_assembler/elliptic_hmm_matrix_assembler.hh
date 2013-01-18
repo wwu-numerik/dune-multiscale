@@ -9,7 +9,7 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
-
+#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
 
 namespace Dune {
 // Imp stands for Implementation

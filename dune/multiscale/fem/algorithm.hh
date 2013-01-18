@@ -120,7 +120,7 @@ void solve(typename FEM::DiscreteFunctionType& solution,
     // set Dirichlet Boundary to zero
     boundaryTreatment(system_rhs);
 
-    const typename FEM::InverseFEMMatrix fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000, VERBOSE);
+    const typename FEM::InverseFEMMatrix fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
     fem_biCGStab(system_rhs, solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;

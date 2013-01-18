@@ -526,7 +526,7 @@ public:
     RhsAssembler::template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_1, rhs_1);
     // solve the linear systems (with Bi-CG):
 
-    const InverseFEMMatrix fembiCG(lhsMatrix, 1e-8, 1e-8, 20000, VERBOSE);
+    const InverseFEMMatrix fembiCG(lhsMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
 
     fembiCG(rhs_0, cellSolution_0);
     fembiCG(rhs_1, cellSolution_1);

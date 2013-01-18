@@ -10,12 +10,15 @@
 #include <dune/subgrid/subgrid.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
+#include <dune/fem/space/lagrangespace.hh>
+#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/aliases.hh>
-
-// / done
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
 
 namespace Dune {
 //! container for cell problem subgrids
