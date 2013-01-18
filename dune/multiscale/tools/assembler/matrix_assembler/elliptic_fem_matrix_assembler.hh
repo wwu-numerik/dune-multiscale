@@ -237,20 +237,9 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = geometry.jacobianInverseTransposed(local_point);
-
-      for (unsigned int i = 0; i < numBaseFunctions; ++i)
-      {
-        // jacobian of the base functions, with respect to the reference element
-        typename BaseFunctionSet::JacobianRangeType gradient_phi_ref_element;
-        baseSet.jacobian(i, quadrature[quadraturePoint], gradient_phi_ref_element);
-
-        // multiply it with transpose of jacobian inverse to obtain the jacobian with respect to the real entity
-        inverse_jac.mv(gradient_phi_ref_element[0], gradient_phi[i][0]);
-
-        baseSet.evaluate(i, quadrature[quadraturePoint], phi[i]);
-      }
+      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
+      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {

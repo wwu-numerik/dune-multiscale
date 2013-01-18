@@ -591,20 +591,23 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
       JacobianRangeType diffusion_in_e;
       diffusion_operator_.diffusiveFlux(global_point, e, diffusion_in_e);
       baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      std::vector< std::vector<RangeType> > phi_values(sub_grid_entity_corner_is_relevant.size());
+      for(auto j : DSC::valueRange(sub_grid_entity_corner_is_relevant.size())) {
+        baseSet.evaluateAll(geometry.local(geometry.corner(sub_grid_entity_corner_is_relevant[j])), phi_values[j]);
+      }
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         bool zero_entry = false;
         for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
         {
-          RangeType value_phi_i(0.0);
-          baseSet.evaluate(i, geometry.local(geometry.corner(sub_grid_entity_corner_is_relevant[sgec])), value_phi_i);
+          const auto& value_phi_i = phi_values[sgec][i];
           if ( value_phi_i == 1.0 )
           {
             zero_entry = true;
           }
         }
-        if ( zero_entry == false )
+        if (!zero_entry)
           elementOfRHS[i] -= weight * (diffusion_in_e[0] * gradient_phi[i][0]);
         else
           elementOfRHS[i] = 0.0;
