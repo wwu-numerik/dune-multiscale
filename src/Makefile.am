@@ -4,15 +4,17 @@ SUBDIRS =
 GRIDTYPE=ALBERTAGRID
 GRIDDIM=2
 PROBLEM_NAMES= Toy One Two Three Four Five Six Seven Eight Nine Ten
-FEM_PROBLEM=One
+FEM_PROBLEM=Three
 HMM_PROBLEM=One
 MSFEM_PROBLEM=Nine
+MSFEM_RIGOROUS_PROBLEM=One
 DEFAULT_PROBLEM=One
 
-noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem
-SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem
+noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
+SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
 elliptic_hmm_SOURCES = elliptic_hmm.cc
 elliptic_msfem_SOURCES = elliptic_msfem.cc
+elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc
 elliptic_fem_SOURCES = elliptic_fem.cc
 elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc
 
@@ -26,6 +28,7 @@ CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	
 elliptic_hmm_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(HMM_PROBLEM)
 elliptic_msfem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(MSFEM_PROBLEM)
+elliptic_rigorous_msfem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(MSFEM_RIGOROUS_PROBLEM)
 elliptic_fem_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(FEM_PROBLEM)
 elliptic_hom_fem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(DEFAULT_PROBLEM)
 

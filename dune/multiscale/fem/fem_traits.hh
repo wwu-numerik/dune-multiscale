@@ -80,8 +80,8 @@ typedef Dune::SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionTyp
    * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
    ****ones. GMRES seems to be more stable, but is extremely slow!
    */
-typedef Dune::OEMBICGSQOp
-//  OEMBICGSTABOp
+typedef //Dune::OEMBICGSQOp
+  Dune::OEMBICGSTABOp
 //  OEMGMRESOp
   < DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
