@@ -156,7 +156,7 @@ private:
 	      {
                 //! not an effective search algorithm (should be improved eventually):
                 bool node_contained = false;
-                for (int cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
+                for (size_t cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
 	          {
                     // hard coding - 2d case:
                     if ( (coarse_node_store_[father_index][ cn ][ 0 ] == coarse_father->geometry().corner(c)[0])

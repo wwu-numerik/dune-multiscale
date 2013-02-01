@@ -490,8 +490,7 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
       projected_hmm_solution.clear();
       Dune::Stuff::HeterogenousProjection<Dune::Stuff::InlevelSearchStrategy>::project( hmm_solution/*source*/, projected_hmm_solution/*target*/ );
 
-      Dune::L2Error< typename HMM::DiscreteFunctionType > l2error;
-      typename HMM::RangeType hmm_error = l2error.template norm2< hmm_polorder >(projected_hmm_solution, reference_solution);
+      const auto hmm_error = l2error.template norm2< hmm_polorder >(projected_hmm_solution, reference_solution);
       
       // old (expensive) hack to deal with discrete functions, defined on different grids
       // (should do the same as the heterogenous projection above - could therefore be used for comparison)

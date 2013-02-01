@@ -403,7 +403,7 @@ public:
       baseSet.jacobianAll(quadrature[0], inv, gradientPhi);
 
       PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
-      for (int i = 0; i < numBaseFunctions; ++i)
+      for (size_t i = 0; i < numBaseFunctions; ++i)
       {
         correctorPhi_i.clear();
 

@@ -291,7 +291,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
     std::vector< int > sub_grid_entity_corner_is_relevant;
     for ( int c = 0; c < sub_grid_geometry.corners(); ++c )
     {
-      for ( int coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+      for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
        {
 	 // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
 	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
@@ -325,7 +325,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
       baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
-      for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+      for ( size_t sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
       {
         baseSet.evaluateAll(sub_grid_geometry.local(sub_grid_geometry.corner(sub_grid_entity_corner_is_relevant[sgec])), value_phi);
         for (unsigned int i = 0; i < numBaseFunctions; ++i)
@@ -552,7 +552,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     std::vector< int > sub_grid_entity_corner_is_relevant;
     for ( int c = 0; c < geometry.corners(); ++c )
     {
-      for ( int coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+      for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
        {
 	 // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
 	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
@@ -599,7 +599,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         bool zero_entry = false;
-        for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+        for ( size_t sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
         {
           const auto& value_phi_i = phi_values[sgec][i];
           if ( value_phi_i == 1.0 )
