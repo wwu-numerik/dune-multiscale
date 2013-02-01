@@ -2,6 +2,7 @@
 #define SUBGRIDLIST_HH
 
 #include <boost/noncopyable.hpp>
+#include <boost/multi_array.hpp>
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
@@ -62,6 +63,7 @@ public:
 
   typedef std::vector< DomainType> CoarseNodeVectorType;
   typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
+  typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
   
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
@@ -115,7 +117,7 @@ private:
                   shared_ptr<SubGridType> subGrid,
                   EntityPointerCollectionType& entities_sharing_same_node,
                   int& layer,
-                  bool***& enriched) {
+                  EnrichmentMatrixType& enriched) {
     // difference in levels between coarse and fine grid
     const int level_difference = specifier_.getLevelDifference();
     HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
@@ -290,27 +292,8 @@ public:
     }
     // -----------------------------------------------------------
     
-    
-    // initialize the vector 'enriched' for a later usage
-    // -----------------------------------------------------------
-    bool*** enriched = new bool**[number_of_coarse_grid_entities];
-    for (int k = 0; k < number_of_coarse_grid_entities; k += 1)
-    {
-      enriched[k] = new bool*[hostGrid.size(0 /*codim*/)];
-      for (int m = 0; m < hostGrid.size(0 /*codim*/); m += 1)
-      {
-        enriched[k][m] = new bool[max_num_layers + 1];
-      }
-    }
-    for (int k = 0; k < number_of_coarse_grid_entities; k += 1)
-    {
-      for (int m = 0; m < hostGrid.size(0 /*codim*/); m += 1)
-      {
-        for (int l = 0; l < max_num_layers + 1; l += 1)
-          enriched[k][m][l] = false;
-      }
-    }
-    // -----------------------------------------------------------
+    EnrichmentMatrixType enriched(boost::extents[number_of_coarse_grid_entities][hostGrid.size(0)][max_num_layers + 1]);
+    std::fill( enriched.data(), enriched.data() + enriched.num_elements(), false );
     
     DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
     DSC_PROFILER.startTiming("msfem.subgrid_list.create");
