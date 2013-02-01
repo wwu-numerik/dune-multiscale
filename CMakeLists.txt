@@ -59,7 +59,7 @@ SET( GRIDDIM
 	"GRIDDIM" )
 
 SET( ALUGRID_BASE_PATH
-	"/opt/dune/modules/alugrid/alugrid-1.50" CACHE STRING
+	"/opt/dune/modules/alugrid/alugrid-1.52" CACHE STRING
 	"ALUGRID_BASE_PATH" )
 SET( ALBERTA_GRID_BASE_PATH
 	"/opt/dune/modules/alberta/alberta-3.0" CACHE STRING
