@@ -254,11 +254,11 @@ public:
       }
     }      
 
-//    subGridList_ = SubGridStorageType();
+
     //! ----------- create subgrids --------------------
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-
+    const int
     // loop to initialize subgrids (and to initialize the coarse node vector):
     // -----------------------------------------------------------
     for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)

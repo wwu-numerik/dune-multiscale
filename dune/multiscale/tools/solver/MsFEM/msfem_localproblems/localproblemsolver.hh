@@ -223,7 +223,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
@@ -304,7 +304,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     std::vector<RangeType> value_phi(numBaseFunctions);
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -468,7 +468,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
@@ -568,7 +568,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
@@ -965,7 +965,7 @@ public:
       SubLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
       HostLocalFunctionType host_loc_value = host_func.localFunction(host_entity);
 
-      const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
+      const auto numBaseFunctions = sub_loc_value.baseFunctionSet().size();
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         host_loc_value[i] = sub_loc_value[i];

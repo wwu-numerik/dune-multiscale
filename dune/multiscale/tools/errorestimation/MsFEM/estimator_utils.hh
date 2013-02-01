@@ -22,7 +22,7 @@ struct EstimatorUtils {
       for (std::array<int, 1>::size_type j = 0; j < N; ++j) {
         const auto sub_loc_value = sub_funcs[j].localFunction(sub_entity);
         auto host_loc_value = host_funcs[j]->localFunction(host_entity);
-        const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
+        const auto numBaseFunctions = sub_loc_value.baseFunctionSet().size();
         for (unsigned int i = 0; i < numBaseFunctions; ++i)
         {
           host_loc_value[i] = sub_loc_value[i];

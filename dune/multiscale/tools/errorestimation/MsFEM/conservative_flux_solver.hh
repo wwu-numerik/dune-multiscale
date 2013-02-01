@@ -202,7 +202,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
     const SubGridBaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     const IntersectionIterator iend = discreteFunctionSpace_.gridPart().iend(*host_entity_pointer);
     for (IntersectionIterator iit = discreteFunctionSpace_.gridPart().ibegin(*host_entity_pointer); iit != iend; ++iit)
@@ -399,7 +399,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     SubGridLocalFunction elementOfRHS = rhs_flux_problem.localFunction(local_grid_entity);
 
     const SubGridBaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     SubGridQuadrature quadrature(local_grid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
@@ -665,7 +665,7 @@ public:
       SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
       HostLocalFunctionType host_loc_value = host_func.localFunction(host_entity);
 
-      const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
+      const auto numBaseFunctions = sub_loc_value.baseFunctionSet().size();
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         host_loc_value[i] = sub_loc_value[i];
