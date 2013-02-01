@@ -1,7 +1,12 @@
+if( NOT CMAKE_BUILD_TYPE )
+	message( STATUS "No build type selected, setting default build type 'Debug'" )
+	set( CMAKE_BUILD_TYPE "DEBUG" CACHE STRING "DEBUG/RELEASE")
+endif( NOT CMAKE_BUILD_TYPE )
+
 PROJECT(dune_multiscale)
 
 #set minimum cmake version
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 set(ENABLE_MPI "0" CACHE STRING "set to 1 to enable mpi")
 
