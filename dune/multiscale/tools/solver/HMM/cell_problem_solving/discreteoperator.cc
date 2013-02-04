@@ -21,7 +21,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
   // x_T is the barycenter of the macro grid element T
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
-  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+  const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   global_matrix.reserve();
   global_matrix.clear();
@@ -99,7 +99,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
   const PeriodicDiscreteFunctionImp& old_fine_function,
   MatrixType& global_matrix) const
 {
-  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+  const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
   typedef typename PeriodicDiscreteFunctionImp::LocalFunctionType
@@ -281,7 +281,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
   cell_problem_RHS.clear();
 
   // get edge length of cell:
-  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+  const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
@@ -357,7 +357,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
   cell_problem_RHS.clear();
 
   // get edge length of cell:
-  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+  const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
@@ -448,7 +448,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_
   // set entries of right hand side to zero:
   jac_corrector_cell_problem_RHS.clear();
 
-  const double delta = DSC_CONFIG_GET("problem.delta", 1.0f);
+  const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );

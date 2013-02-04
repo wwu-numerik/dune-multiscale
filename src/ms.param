@@ -7,7 +7,7 @@
 epsilon = 0.05
 
 # linear or nonlinear problem?
-linear = 1
+linear = 0
 # NOTE: nonlinear problems ONLY for HMM and standard FEM!
 
 # do you want a stochastic perturbation of the diffusion operator?
@@ -23,7 +23,7 @@ reference_solution = 0
 
 # file where the reference solution is stored
 # (momentan ausgehend Pfad 'global.datadir')
-rs_file = ../../../../dune/multiscale/problems/elliptic_problems/one/fem_eps_0.05_refLevel_16
+rs_file = ../../../../dune/multiscale/problems/elliptic_problems/three/fem_eps_0.05_refLevel_16
 
 # a saved/precomputed solution located at 'rs_file' is must be computed with the following refinement level:
 #   (grid refinement level for which the reference was computed)
@@ -34,7 +34,8 @@ rs_grid_level = 16
 [global]
 
 # directory to save the data output
-datadir = data/MsFEM/oversampling
+datadir = data/TEST
+#HMM/test_three_NEW_NEW
 
 # VTK output for the solutions of the local problems
 local_solution_vtk_output = 1
@@ -72,7 +73,7 @@ fine_grid_level = 6
 oversampling_layers = 10
 
 # oversampling strategy 1, 2 or 3.
-oversampling_strategy = 3
+oversampling_strategy = 1
 # stratgey 1: local problems are solved in the full fine space
 # strategy 2: local problems are solved in the full fine space
 #             without the 3 basis functions belonging to the the 3 coarse nodes
@@ -86,7 +87,7 @@ oversampling_strategy = 3
 petrov_galerkin = 1
 
 # compute the estimated error?
-error_estimation = 1
+error_estimation = 0
 
 # use error estimation and adaptive mesh refinement?
 adaptivity = 0
@@ -105,14 +106,14 @@ fem_comparison = 1
 epsilon_guess = 0.05
 
 # oversampling parameter
-delta = 0.05
+delta = 0.1
 #     NOTE that (delta/epsilon_guess) needs to be a positive integer!
 
 # initial coarse level
-coarse_grid_level = 2
+coarse_grid_level = 4
 
 # resolution level for the grid for the unit cube Y
-cell_grid_level = 2
+cell_grid_level = 6
 # 'effective fine grid level' = 'delta' * 'cell grid size'
 
 # use the MsFEM in Petrov-Galerkin (unsymmetric) formulation

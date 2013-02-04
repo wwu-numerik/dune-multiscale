@@ -8,7 +8,7 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
-
+#include <dune/fem/operator/lagrangeinterpolation.hh>
 
 // to display data with ParaView:
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
@@ -20,6 +20,7 @@
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/h1norm.hh>
+#include <dune/fem/space/reducedbasisspace/reducedbasisspace.hh>
 
 #include <dune/stuff/common/filesystem.hh>
 //! local (dune-multiscale) includes
@@ -33,14 +34,17 @@
 #include <dune/multiscale/tools/improved_l2error.hh>
 #include <dune/multiscale/tools/errorestimation/MsFEM/msfem_elliptic_error_estimator.hh>
 
-//!-----------------------------------------------------------------------------
+//#include <dune/multiscale/space/ownbasisspace/reducedbasisspace.hh>
 
-#include <dune/multiscale/msfem/msfem_traits.hh>
+
+//!-----------------------------------------------------------------------------
 
 #include "msfem_globals.hh"
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/msfem/rigorous_msfem_traits.hh>
+
+
 
 #if 0
 
@@ -325,21 +329,16 @@ bool error_estimation(const Dune::MsfemTraits::DiscreteFunctionType& msfem_solut
   return DSC_CONFIG_GET("adaptive", false)
       ? total_estimated_H1_error > DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) : false;
 }
+#endif
 
+
+#if 1
 //! algorithm
 bool algorithm(const std::string& macroGridName,
-               const int loop_number,
                int& total_refinement_level_,
                int& coarse_grid_level_,
-               int& number_of_layers_,
-               std::vector<Dune::MsfemTraits::RangeVectorVector*>& locals,
-               std::vector<Dune::MsfemTraits::RangeVector*>& totals,
-               Dune::MsfemTraits::RangeVector& total_estimated_H1_error_) {
+               int& number_of_layers_ ) {
   using namespace Dune;
-  bool local_indicators_available_ = false;
-
-  if (DSC_CONFIG_GET("adaptive", false))
-    DSC_LOG_INFO << "------------------ run " << loop_number + 1 << " --------------------" << std::endl << std::endl;
 
   DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
   // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
@@ -363,11 +362,6 @@ bool algorithm(const std::string& macroGridName,
   MsfemTraits::GridPartType gridPart_coarse(*macro_grid_pointer_coarse);
   MsfemTraits::GridType& grid_coarse = gridPart_coarse.grid();
 
-  // strategy for adaptivity:
-  if (DSC_CONFIG_GET("adaptive", false) && local_indicators_available_)
-    adapt(grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_,
-          number_of_layers_, locals, totals, total_estimated_H1_error_);
-
   grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
 
   //! ------------------------- discrete function spaces -----------------------------------
@@ -382,11 +376,28 @@ bool algorithm(const std::string& macroGridName,
   // define (first) source term:
   const MsfemTraits::FirstSourceType f; // standard source f
 
+
+/// NEW RB TEST AREA
+#if 1
+  
+  RigorousMsfemTraits::RBSpace rb_space( discreteFunctionSpace_coarse );
+
+  //! (stiffness) matrix
+  RigorousMsfemTraits::RBMatrix system_matrix(rb_space, rb_space, "RB stiffness matrix");
+
+  //! right hand side vector
+  RigorousMsfemTraits::RBFunction system_rhs("RB rhs", rb_space);
+  system_rhs.clear();
+
+  
+#endif
+  
+#if 0
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
   Dune::myDataOutputParameters outputparam;
-  data_output(gridPart, discreteFunctionSpace_coarse, outputparam, loop_number);
-
+  data_output(gridPart, discreteFunctionSpace_coarse, outputparam, loop_number );
+  
   //! ---------------------- solve MsFEM problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
@@ -435,7 +446,6 @@ bool algorithm(const std::string& macroGridName,
       local_indicators_available_ = true;
     }
   }
-
 
   //! ---------------------- solve FEM problem with same (fine) resolution ---------------------------
   //! solution vector
@@ -509,12 +519,16 @@ bool algorithm(const std::string& macroGridName,
 
     DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
   }
+  
   //! -------------------------------------------------------
   if (DSC_CONFIG_GET("adaptive", false)) {
     DSC_LOG_INFO << std::endl << std::endl;
     DSC_LOG_INFO << "---------------------------------------------" << std::endl;
   }
   return repeat_algorithm;
+  
+#endif
+  return true;
 } // function algorithm
 
 #endif
@@ -564,79 +578,31 @@ int main(int argc, char** argv) {
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
 
-#if 0
+
     DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
               << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
     if (DSC_CONFIG_GET("msfem.uniform", true)) {
       if ( DSC_CONFIG_GET("msfem.petrov_galerkin", true) )
-        DSC_LOG_INFO << "Use MsFEM in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;
+        DSC_LOG_INFO << "Use New Rigorous MsFEM in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;
       else
-        DSC_LOG_INFO << "Use MsFEM in classical (symmetric) formulation with an uniform computation, i.e.:" << std::endl;      
+        DSC_LOG_INFO << "Use New Rigorous MsFEM in classical (symmetric) formulation with an uniform computation, i.e.:" << std::endl;      
       DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
       DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
       DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
       DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
       DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-      DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
+      //DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
       DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
       if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
        { DSC_LOG_INFO << std::endl << "Comparison with standard FEM computation on the MsFEM Fine Grid, i.e. on Refinement Level " << total_refinement_level_ << std::endl; }
       DSC_LOG_INFO << std::endl << std::endl;
     } else {
-      if ( DSC_CONFIG_GET("msfem.petrov_galerkin", true) )
-        DSC_LOG_INFO << "Use MsFEM in Petrov-Galerkin formulation with an adaptive computation, i.e.:" << std::endl;
-      else
-        DSC_LOG_INFO << "Use MsFEM in classical (symmetric) formulation with an adaptive computation, i.e.:" << std::endl;  
-      DSC_LOG_INFO << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
-      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-      DSC_LOG_INFO << "Error tolerance = " << DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) << std::endl << std::endl;
-      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
-      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-      DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
-      DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
-      if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
-      { DSC_LOG_INFO << std::endl << "Comparison with a standard FEM computation on the MsFEM Fine Grid." << std::endl; }
-      DSC_LOG_INFO << std::endl << std::endl;
+      std::cout << "No adaptive version available!" << std :: endl;
+      abort();
     }
 
-    //! ---------------------- local error indicators --------------------------------
-    // ----- local error indicators (for each coarse grid element T) -------------
-    const int max_loop_number = 10;
-    // local coarse residual, i.e. H ||f||_{L^2(T)}
-    Dune::MsfemTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
-    // local coarse grid jumps (contribute to the total coarse residual)
-    Dune::MsfemTraits::RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
-    // local projection error (we project to get a globaly continous approximation)
-    Dune::MsfemTraits::RangeVectorVector loc_projection_error_(max_loop_number);
-    // local jump in the conservative flux
-    Dune::MsfemTraits::RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
-    // local approximation error
-    Dune::MsfemTraits::RangeVectorVector loc_approximation_error_(max_loop_number);
-    // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
-    Dune::MsfemTraits::RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
+    algorithm(macroGridName, total_refinement_level_, coarse_grid_level_, number_of_layers_ );
 
-    Dune::MsfemTraits::RangeVector total_coarse_residual_(max_loop_number);
-    Dune::MsfemTraits::RangeVector total_projection_error_(max_loop_number);
-    Dune::MsfemTraits::RangeVector total_coarse_grid_jumps_(max_loop_number);
-    Dune::MsfemTraits::RangeVector total_conservative_flux_jumps_(max_loop_number);
-    Dune::MsfemTraits::RangeVector total_approximation_error_(max_loop_number);
-    Dune::MsfemTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
-    Dune::MsfemTraits::RangeVector total_estimated_H1_error_(max_loop_number);
-
-    //! TODO put these into something like a named tuple/class
-    std::vector<Dune::MsfemTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_,
-                                                             &loc_projection_error_, &loc_conservative_flux_jumps_,
-                                                             &loc_approximation_error_, &loc_fine_grid_jumps_}};
-    std::vector<Dune::MsfemTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_,
-                                                      &total_coarse_grid_jumps_, &total_conservative_flux_jumps_,
-                                                      &total_approximation_error_, &total_fine_grid_jumps_ }};
-
-    unsigned int loop_number = 0;
-    while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_,
-                     number_of_layers_, locals, totals, total_estimated_H1_error_))
-    {}
-#endif
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
     //normal
     // macro problem
