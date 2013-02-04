@@ -129,7 +129,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
     LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
@@ -221,7 +221,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
     LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.numBaseFunctions();
+    const auto numBaseFunctions = baseSet.numBaseFunctions();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
@@ -342,7 +342,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
     LocalFunction local_disc_function = disc_func.localFunction(entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:

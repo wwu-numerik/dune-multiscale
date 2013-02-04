@@ -2,6 +2,7 @@
 #define SUBGRIDLIST_HH
 
 #include <boost/noncopyable.hpp>
+#include <boost/multi_array.hpp>
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
@@ -15,6 +16,7 @@
 #include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/logging.hh>
@@ -62,6 +64,7 @@ public:
 
   typedef std::vector< DomainType> CoarseNodeVectorType;
   typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
+  typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
   
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
@@ -115,7 +118,7 @@ private:
                   shared_ptr<SubGridType> subGrid,
                   EntityPointerCollectionType& entities_sharing_same_node,
                   int& layer,
-                  bool***& enriched) {
+                  EnrichmentMatrixType& enriched) {
     // difference in levels between coarse and fine grid
     const int level_difference = specifier_.getLevelDifference();
     HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
@@ -154,7 +157,7 @@ private:
 	      {
                 //! not an effective search algorithm (should be improved eventually):
                 bool node_contained = false;
-                for (int cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
+                for (size_t cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
 	          {
                     // hard coding - 2d case:
                     if ( (coarse_node_store_[father_index][ cn ][ 0 ] == coarse_father->geometry().corner(c)[0])
@@ -199,6 +202,7 @@ public:
     DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
     DSC_PROFILER.startTiming("msfem.subgrid_list.identify");
     DSC_LOG_INFO << "Starting creation of subgrids." << std::endl << std::endl;
+
 
     const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
 
@@ -252,11 +256,13 @@ public:
       }
     }      
 
-//    subGridList_ = SubGridStorageType();
+
     //! ----------- create subgrids --------------------
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-
+    const int oversampling_strategy = DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 );
+    EnrichmentMatrixType enriched(boost::extents[number_of_coarse_grid_entities][hostGrid.size(0)][max_num_layers + 1]);
+    std::fill( enriched.data(), enriched.data() + enriched.num_elements(), false );
     // loop to initialize subgrids (and to initialize the coarse node vector):
     // -----------------------------------------------------------
     for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
@@ -265,7 +271,7 @@ public:
       subGridList_.push_back(make_shared<SubGridType>(hostGrid));
       subGridList_[coarse_index]->createBegin();
       
-      if ( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3) )
+      if ( (oversampling_strategy == 2) || (oversampling_strategy == 3) )
        {
         for (int c = 0; c < coarse_it->geometry().corners(); ++c )
           coarse_node_store_[coarse_index].push_back( coarse_it->geometry().corner(c) );
@@ -290,27 +296,6 @@ public:
     }
     // -----------------------------------------------------------
     
-    
-    // initialize the vector 'enriched' for a later usage
-    // -----------------------------------------------------------
-    bool*** enriched = new bool**[number_of_coarse_grid_entities];
-    for (int k = 0; k < number_of_coarse_grid_entities; k += 1)
-    {
-      enriched[k] = new bool*[hostGrid.size(0 /*codim*/)];
-      for (int m = 0; m < hostGrid.size(0 /*codim*/); m += 1)
-      {
-        enriched[k][m] = new bool[max_num_layers + 1];
-      }
-    }
-    for (int k = 0; k < number_of_coarse_grid_entities; k += 1)
-    {
-      for (int m = 0; m < hostGrid.size(0 /*codim*/); m += 1)
-      {
-        for (int l = 0; l < max_num_layers + 1; l += 1)
-          enriched[k][m][l] = false;
-      }
-    }
-    // -----------------------------------------------------------
     
     DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
     DSC_PROFILER.startTiming("msfem.subgrid_list.create");
@@ -364,13 +349,14 @@ public:
 
       if (layers > 0)
       {
+        DSC::Profiler::ScopedTiming st("msfem.subgrid_list.enrichment");
         HostEntityPointerType hep(*host_it);
         enrichment(hep, level_father_entity, father_index, hostGridPart,
                    subGridList_[father_index], entities_sharing_same_node, layers, enriched);
       }
     }
 
-    DSC_PROFILER.stopTiming("msfem.subgrid_list.create");
+
     DSC_PROFILER.startTiming("msfem.subgrid_list.create.finalize");
     for (int i = 0; i < number_of_coarse_grid_entities; ++i)
     {
@@ -405,7 +391,7 @@ public:
       }
     }
     DSC_PROFILER.stopTiming("msfem.subgrid_list.create.finalize");
-
+    DSC_PROFILER.stopTiming("msfem.subgrid_list.create");
     //! ----------- end create subgrids --------------------
   }
 

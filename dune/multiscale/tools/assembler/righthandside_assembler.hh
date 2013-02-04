@@ -58,6 +58,7 @@ private:
   // need a virtual base to work around local classes not being allowed in templated scopes
   struct FunctorBase {
     virtual RangeType operator()(const DomainType& global_quad_point, const JacobianRangeType& gradientPhi) const = 0;
+    virtual ~FunctorBase(){}
   };
 
   template< class FirstSourceType >

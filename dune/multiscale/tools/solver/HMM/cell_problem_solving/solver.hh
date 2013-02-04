@@ -396,14 +396,14 @@ public:
       const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
       // number of base functions on entity
-      const int numBaseFunctions = baseSet.size();
+      const auto numBaseFunctions = baseSet.size();
 
       // calc Jacobian inverse before volume is evaluated
       const auto& inv = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
       baseSet.jacobianAll(quadrature[0], inv, gradientPhi);
 
       PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
-      for (int i = 0; i < numBaseFunctions; ++i)
+      for (size_t i = 0; i < numBaseFunctions; ++i)
       {
         correctorPhi_i.clear();
 

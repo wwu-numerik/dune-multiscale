@@ -193,7 +193,7 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
     LocalGridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
     FineLocalFunction host_loc_value = host_func.localFunction(host_entity);
 
-    const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
+    const auto numBaseFunctions = sub_loc_value.baseFunctionSet().numBaseFunctions();
     for (unsigned int i = 0; i < numBaseFunctions; ++i)
     {
       host_loc_value[i] = sub_loc_value[i];

@@ -223,7 +223,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
@@ -291,7 +291,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
     std::vector< int > sub_grid_entity_corner_is_relevant;
     for ( int c = 0; c < sub_grid_geometry.corners(); ++c )
     {
-      for ( int coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+      for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
        {
 	 // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
 	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
@@ -304,7 +304,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     std::vector<RangeType> value_phi(numBaseFunctions);
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -325,7 +325,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
       baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
-      for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+      for ( size_t sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
       {
         baseSet.evaluateAll(sub_grid_geometry.local(sub_grid_geometry.corner(sub_grid_entity_corner_is_relevant[sgec])), value_phi);
         for (unsigned int i = 0; i < numBaseFunctions; ++i)
@@ -468,7 +468,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
@@ -552,7 +552,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     std::vector< int > sub_grid_entity_corner_is_relevant;
     for ( int c = 0; c < geometry.corners(); ++c )
     {
-      for ( int coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+      for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
        {
 	 // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
 	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
@@ -568,7 +568,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
@@ -599,7 +599,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         bool zero_entry = false;
-        for ( int sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+        for ( size_t sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
         {
           const auto& value_phi_i = phi_values[sgec][i];
           if ( value_phi_i == 1.0 )
@@ -965,7 +965,7 @@ public:
       SubLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
       HostLocalFunctionType host_loc_value = host_func.localFunction(host_entity);
 
-      const unsigned int numBaseFunctions = sub_loc_value.baseFunctionSet().size();
+      const auto numBaseFunctions = sub_loc_value.baseFunctionSet().size();
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         host_loc_value[i] = sub_loc_value[i];

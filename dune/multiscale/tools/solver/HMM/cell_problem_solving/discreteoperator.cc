@@ -43,7 +43,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
     LocalMatrix local_matrix = global_matrix.localMatrix(cell_grid_entity, cell_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
@@ -298,7 +298,7 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
     LocalFunction elementOfRHS = cell_problem_RHS.localFunction(cell_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
