@@ -11,7 +11,7 @@
   #include <dune/grid/alugrid.hh>
 //#endif
 #include <dune/grid/sgrid.hh>
-//#include <dune/subgrid/subgrid.hh>
+#include <dune/subgrid/subgrid.hh>
 #include <boost/filesystem/fstream.hpp>
 
 #include <dune/stuff/aliases.hh>
@@ -63,20 +63,19 @@ namespace Dune {
     ALUGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
     ALUGRID_IO_FUNCTION_PAIR(ALUCubeGrid,2)
     ALUGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,3)
-    ALUGRID_IO_FUNCTION_PAIR(ALUConformGrid,3)
     ALUGRID_IO_FUNCTION_PAIR(ALUCubeGrid,3)
 #undef ALUGRID_IO_FUNCTION_PAIR
 
-#define ALUGRID_IO_FUNCTION_PAIR(classname) \
-    template<class E, class C> bool writeHostGrid(classname<E,C>& hostgrid, std::string filename) \
-    { return writeAlugrid(hostgrid, filename); }\
-    \
-    template<class E, class C> bool readHostGrid(classname<E,C>& hostgrid, std::string filename) \
-    { return readAlugrid(hostgrid, filename); }
+//#define ALUGRID_IO_FUNCTION_PAIR(classname) \
+//    template<class E, class C> bool writeHostGrid(classname<E,C>& hostgrid, std::string filename) \
+//    { return writeAlugrid(hostgrid, filename); }\
+//    \
+//    template<class E, class C> bool readHostGrid(classname<E,C>& hostgrid, std::string filename) \
+//    { return readAlugrid(hostgrid, filename); }
 
-    ALUGRID_IO_FUNCTION_PAIR(ALU3dGrid)
-    ALUGRID_IO_FUNCTION_PAIR(ALU2dGrid)
-#undef ALUGRID_IO_FUNCTION_PAIR
+//    ALUGRID_IO_FUNCTION_PAIR(ALU3dGrid)
+//    ALUGRID_IO_FUNCTION_PAIR(ALU2dGrid)
+//#undef ALUGRID_IO_FUNCTION_PAIR
 
 }
 

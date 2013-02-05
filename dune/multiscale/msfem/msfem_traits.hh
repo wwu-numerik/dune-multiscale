@@ -3,6 +3,7 @@
 
 #include <dune/multiscale/tools/errorestimation/MsFEM/msfem_elliptic_error_estimator.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
+#include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/subgrid/subgrid.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/fem/io/file/dataoutput.hh>

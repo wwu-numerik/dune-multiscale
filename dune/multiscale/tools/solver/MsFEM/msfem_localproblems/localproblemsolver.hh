@@ -15,6 +15,7 @@
 #define LOCPROBLEMSOLVER_VERBOSE false
 
 // dune-subgrid include:
+#include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/subgrid/subgrid.hh>
 
 // dune-fem includes:
