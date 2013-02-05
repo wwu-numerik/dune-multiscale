@@ -6,7 +6,7 @@
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
 
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
+//#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
@@ -188,7 +188,7 @@ public:
   // #########################################
 
 //! UNDER CONSTRUCTION!!!
-#if 1
+#if 0
   /** assemble right hand side (if there is only one source - f):
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation 
    *  rhsVector is the output parameter (kind of return value)

@@ -3,10 +3,10 @@
 
 #include <dune/fem/space/reducedbasisspace/reducedbasisspace.hh>
 
-#include <dune/multiscale/tools/errorestimation/MsFEM/msfem_elliptic_error_estimator.hh>
-#include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
-#include <dune/subgrid/subgrid.hh>
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
+//#include <dune/multiscale/tools/errorestimation/MsFEM/msfem_elliptic_error_estimator.hh>
+//#include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
+//#include <dune/subgrid/subgrid.hh>
+//#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/fem/io/file/dataoutput.hh>
 
 namespace Dune {
@@ -250,6 +250,7 @@ struct RigorousMsfemTraits {
     AdaptationManagerType;
   //!---------------------------------------------------------------------------------------
 
+#if 0
   typedef Dune::MacroMicroGridSpecifier< DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
   typedef Dune::SubGrid< GridType::dimension, GridType >                                      SubGridType;
   typedef Dune::SubGridList< DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
@@ -262,7 +263,7 @@ struct RigorousMsfemTraits {
                                SubGridListType >
   MsFEMErrorEstimatorType;
   //! -----------------------------------------------------------------------------
-
+#endif
   //! ------------------ typedefs and classes for data output ---------------------
   typedef Dune::tuple< const DiscreteFunctionType* >      IOTupleType;
   typedef Dune::DataOutput< GridType, IOTupleType > DataOutputType;
@@ -292,13 +293,17 @@ struct RigorousMsfemTraits {
      };
    };
   
-  typedef Dune::SparseRowMatrixObject< RBSpace, RBSpace, RBMatrixTraits > RBMatrix;
+   
+  //typedef Dune::SparseRowMatrixObject< RBSpace, RBSpace, RBMatrixTraits > RBMatrix;
+  //typedef Dune::SparseRowMatrix< double > RBMatrix;
+  //Dune::Matrix< double > RBMatrix;
   
+#if 0
   typedef //Dune::OEMBICGSQOp
           Dune::OEMBICGSTABOp
           //  OEMGMRESOp
           < RBFunction, RBMatrix > InverseRBMatrix;
-
+#endif
 #endif
 
 };
