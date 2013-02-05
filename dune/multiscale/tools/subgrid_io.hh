@@ -15,6 +15,7 @@
 #include <boost/filesystem/fstream.hpp>
 
 #include <dune/stuff/aliases.hh>
+#include <dune/stuff/common/type_utils.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
@@ -26,15 +27,15 @@ namespace Dune {
     bool readHostGrid(HostGridType& hostgrid, std::string filename);
 
     template <class HostgridType, class SubgridType>
-    std::string subgridKeygen(const HostgridType& hostgrid, const SubgridType& subgrid, const int subgrid_idx)
+    std::string subgridKeygen(const HostgridType& /*hostgrid*/, const SubgridType& subgrid, const int subgrid_idx)
     {
         boost::format key("%s_%s_s%d");
-        key % hostgrid.name() % subgrid.name() % subgrid_idx;
+        key % DSC::Typename<HostgridType>::value() % subgrid.name() % subgrid_idx;
         return key.str();
     }
 
-    template<class AlugridType>
-    bool writeAlugrid(const AlugridType& grid, const std::string filename)
+    template<class HostgridType>
+    bool writeHostgridCommon(const HostgridType& grid, const std::string filename)
     {
         if (boost::filesystem::exists(filename))
             return true;
@@ -42,8 +43,8 @@ namespace Dune {
         return true;
     }
 
-    template<class AlugridType>
-    bool readAlugrid(AlugridType& grid, const std::string filename)
+    template<class HostgridType>
+    bool readHostgridCommon(HostgridType& grid, const std::string filename)
     {
         if (grid.size(0))
             return true;
@@ -52,30 +53,39 @@ namespace Dune {
         return true;
     }
 
-#define ALUGRID_IO_FUNCTION_PAIR(classname,dim) \
+
+#define HOSTGRID_IO_FUNCTION_PAIR(classname,dim) \
     template<> bool writeHostGrid(classname<dim,dim>& hostgrid, std::string filename) \
-    { return writeAlugrid(hostgrid, filename); }\
+    { return writeHostgridCommon(hostgrid, filename); }\
     \
     template<> bool readHostGrid(classname<dim,dim>& hostgrid, std::string filename) \
-    { return readAlugrid(hostgrid, filename); }
+    { return readHostgridCommon(hostgrid, filename); }
 
-    ALUGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,2)
-    ALUGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
-    ALUGRID_IO_FUNCTION_PAIR(ALUCubeGrid,2)
-    ALUGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,3)
-    ALUGRID_IO_FUNCTION_PAIR(ALUCubeGrid,3)
-#undef ALUGRID_IO_FUNCTION_PAIR
+    //! careful, this only works when using grid selector
+    #if USED_ALBERTAGRID_GRIDTYPE
+        HOSTGRID_IO_FUNCTION_PAIR(AlbertaGrid,2)
+    #else
+        HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,2)
+        HOSTGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
+        HOSTGRID_IO_FUNCTION_PAIR(ALUCubeGrid,2)
+        HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,3)
+        HOSTGRID_IO_FUNCTION_PAIR(ALUCubeGrid,3)
+    #endif
+#undef HOSTGRID_IO_FUNCTION_PAIR
 
-//#define ALUGRID_IO_FUNCTION_PAIR(classname) \
+    // dune > 2.3 stuff
+//#define HOSTGRID_IO_FUNCTION_PAIR(classname) \
 //    template<class E, class C> bool writeHostGrid(classname<E,C>& hostgrid, std::string filename) \
-//    { return writeAlugrid(hostgrid, filename); }\
+//    { return writeHOSTGRID(hostgrid, filename); }\
 //    \
 //    template<class E, class C> bool readHostGrid(classname<E,C>& hostgrid, std::string filename) \
-//    { return readAlugrid(hostgrid, filename); }
+//    { return readHOSTGRID(hostgrid, filename); }
 
-//    ALUGRID_IO_FUNCTION_PAIR(ALU3dGrid)
-//    ALUGRID_IO_FUNCTION_PAIR(ALU2dGrid)
-//#undef ALUGRID_IO_FUNCTION_PAIR
+//    HOSTGRID_IO_FUNCTION_PAIR(ALU3dGrid)
+//    HOSTGRID_IO_FUNCTION_PAIR(ALU2dGrid)
+//#undef HOSTGRID_IO_FUNCTION_PAIR
+
+
 
 }
 
