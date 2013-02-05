@@ -275,7 +275,7 @@ struct RigorousMsfemTraits {
 /// NEW RB TEST AREA
 #if 1
 
-  typedef SineReducedBasisSpace< DiscreteFunctionSpaceType, 1000 > RBSpace;
+  typedef SineReducedBasisSpace< DiscreteFunctionSpaceType, 4 > RBSpace;
   typedef AdaptiveDiscreteFunction< RBSpace > RBFunction;
   
   struct RBMatrixTraits

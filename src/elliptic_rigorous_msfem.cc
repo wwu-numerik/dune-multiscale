@@ -389,7 +389,15 @@ bool algorithm(const std::string& macroGridName,
   RigorousMsfemTraits::RBFunction system_rhs("RB rhs", rb_space);
   system_rhs.clear();
 
-  
+  std::cout << "Anzahl Zeilen: " << system_matrix.rows() << std::endl;
+  std::cout << "Anzahl Spalten: " << system_matrix.columns() << std::endl;  
+
+  system_matrix.clear();
+  system_matrix.set( 0, 0 , 1.0 );
+  system_matrix.set( 2, 1 , 1.0 );
+  system_matrix.set( 2, 2 , 1.0 );
+  system_matrix.set( 3, 3 , 1.0 );
+  abort();
 #endif
   
 #if 0
