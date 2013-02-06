@@ -9,6 +9,8 @@ class MacroMicroGridSpecifier
 {
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
 
+  enum { faceCodim = 1 };
+  
 public:
   MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space,
                           DiscreteFunctionSpaceType& fine_scale_space)
@@ -18,7 +20,7 @@ public:
                                            - coarse_scale_space.gridPart().grid().maxLevel() )
     , number_of_level_host_entities_( coarse_scale_space.gridPart().grid().size(0 /*codim*/) )
     , number_of_layers(number_of_level_host_entities_, 0)
-  {}
+  { boundary_nodes_identified_ = false; }
 
   // get number of coarse grid entities
   int getNumOfCoarseEntities() const {
@@ -174,7 +176,63 @@ public:
     }
     return loc_fine_grid_jumps_[index];
   } // get_loc_fine_grid_jumps
+  
+  void identify_coarse_boundary_nodes()
+  {
+    is_boundary_node_.resize( coarse_scale_space_.size() );
+    
+    number_of_coarse_boundary_nodes_ = 0;
+    
+    const auto endit = coarse_scale_space_.end();
+    for (auto it = coarse_scale_space_.begin(); it != endit; ++it)
+    {
 
+      auto intersection_it = coarse_scale_space_.gridPart().ibegin(*it);
+      const auto endiit = coarse_scale_space_.gridPart().iend(*it);
+      for ( ; intersection_it != endiit; ++intersection_it)
+      {
+
+        if ( (*intersection_it).boundary() == false )
+          continue;
+
+        const auto& lagrangePointSet
+          = coarse_scale_space_.lagrangePointSet(*it);
+
+        const int face = (*intersection_it).indexInInside();
+
+        auto faceIterator
+          = lagrangePointSet.template beginSubEntity< faceCodim >(face);
+        const auto faceEndIterator
+          = lagrangePointSet.template endSubEntity< faceCodim >(face);
+        for ( ; faceIterator != faceEndIterator; ++faceIterator)
+          is_boundary_node_[coarse_scale_space_.mapToGlobal(*it, *faceIterator )] = true;
+
+      }
+
+    }
+
+    for ( int i = 0; i < is_boundary_node_.size(); ++i )
+      {
+        if ( is_boundary_node_[i] )
+	  number_of_coarse_boundary_nodes_ += 1;
+      }
+    
+    boundary_nodes_identified_ = true;
+
+  }
+  
+  int get_number_of_coarse_boundary_nodes() const
+  {
+    assert( boundary_nodes_identified_ );
+    return number_of_coarse_boundary_nodes_;
+  }
+  
+  bool is_coarse_boundary_node( int global_index ) const
+  {
+    assert( boundary_nodes_identified_ );
+    return is_boundary_node_[global_index];
+  }
+  
 private:
   DiscreteFunctionSpaceType& coarse_scale_space_;
   DiscreteFunctionSpaceType& fine_scale_space_;
@@ -190,6 +248,15 @@ private:
   
   // layers for each coarse grid entity
   std::vector< int > number_of_layers;
+  
+  // have the boundary nodes been identified?
+  bool boundary_nodes_identified_;
+  
+  // is a given coarse node a boundary node of the coarse grid? true/false
+  std::vector< bool > is_boundary_node_;
+
+  // number of coarse grid boundary nodes
+  int number_of_coarse_boundary_nodes_;
 
   // ----- local error indicators (for each coarse grid element T) -------------
 

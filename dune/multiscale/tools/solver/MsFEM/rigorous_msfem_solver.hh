@@ -395,7 +395,95 @@ public:
   }
   // ------------------------------------------------------------------------------------
 #endif
+
+  //! create standard coarse grid basis functions as discrete functions defined on the fine grid
+  // ------------------------------------------------------------------------------------
+  template< class MsFEMBasisFunctionType >
+  void add_coarse_basis_contribution( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+				       std::map<int,int>& global_id_to_internal_id,
+                                      MsFEMBasisFunctionType& msfem_basis_function_list ) const
+  {
+    
+    DSC_LOG_INFO << "Create standard coarse grid basis functions as discrete functions on the fine grid... ";
+    
+    typedef typename HostEntity::template Codim< 2 >::EntityPointer HostNodePointer;
+    typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
+    typedef typename DiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
   
+    const HostGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
+
+    for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
+    {
+      typedef typename HostEntity::template Codim< 0 >::EntityPointer
+      HostEntityPointer;
+      HostEntityPointer coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                 HostEntityPointer(*it),
+                                                                 specifier.getLevelDifference());
+    
+      const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().baseFunctionSet( *coarse_father );
+      const auto numBaseFunctions = coarseBaseSet.size();
+      
+      const auto& lagrangepoint_set = specifier.coarseSpace().lagrangePointSet(*coarse_father);
+      const auto& coarse_geometry = (*coarse_father).geometry();
+      
+      const auto number_of_points = lagrangepoint_set.nop();
+      
+      std::vector< RangeType > phi( numBaseFunctions );
+      //! TODO swich loops for more efficiency
+      for(int loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number ) {
+      
+        int global_dof_number = specifier.coarseSpace().mapToGlobal(*coarse_father, loc_basis_number );
+	if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
+	{ continue; }
+
+        int global_interior_dof_number = global_id_to_internal_id[ global_dof_number ];
+ 
+	// only implemented for 3 Lagrange Points, i.e. piecewise linear functions
+	assert( number_of_points == 3 );
+        std::vector< RangeType > phi_i( number_of_points );
+        std::vector< DomainType > corners( number_of_points );
+	
+        for(int loc_point = 0; loc_point < number_of_points ; ++loc_point ) {
+
+          coarseBaseSet.evaluateAll( lagrangepoint_set.point( loc_point ) , phi );
+          phi_i[ loc_point ] = phi[ loc_basis_number ]; 
+          corners[ loc_point ] = coarse_geometry.global(lagrangepoint_set.point( loc_point ) );
+        }
+
+        LinearLagrangeFunction2D< DiscreteFunctionSpace > coarse_basis_interpolation
+          ( corners[0], phi_i[0], corners[1], phi_i[1], corners[2], phi_i[2] );
+       
+        LocalFunction loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
+      
+        const int number_of_nodes_in_fine_entity = (*it).template count< 2 >();
+        if ( !( number_of_nodes_in_fine_entity == int( loc_coarse_basis_function.baseFunctionSet().size() ) ) )
+         { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
+      
+        for (int i = 0; i < number_of_nodes_in_fine_entity; i += 1)
+         {
+           const HostNodePointer node = (*it).template subEntity< 2 >(i);
+
+           const DomainType coordinates_of_node = node->geometry().corner(0);
+           if ( !( coordinates_of_node == it->geometry().corner(i) ) )
+            { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
+
+           RangeType coarse_value(0.0);
+           coarse_basis_interpolation.evaluate(coordinates_of_node, coarse_value);
+
+           // int global_index_node = gridPart.indexSet().index( *node );
+           loc_coarse_basis_function[i] = coarse_value;
+        }
+      
+      }
+
+    }
+
+    DSC_LOG_INFO << " done." << std::endl;
+  }
+  // ------------------------------------------------------------------------------------
+
+
+
   // - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   // then:
   // A --> diffusion operator ('DiffusionOperatorType')
@@ -421,7 +509,34 @@ public:
     specifier.setOversamplingStrategy( 3 ); // for rigorous MsFEM!
    
     DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
+    DiscreteFunctionSpace& fine_space = specifier.fineSpace();
     
+    specifier.identify_coarse_boundary_nodes();
+
+    int number_of_internal_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_boundary_nodes();
+
+    // mapper: global_id_of_node -> new_id_of_node
+    // ('new' means that we only count the internal nodes, boundary nodes do not receive an id)
+    std::map<int,int> global_id_to_internal_id;
+    int internal_id = 0;
+    for (int global_id = 0; global_id < coarse_space.size(); global_id += 1 )
+    {
+      if ( specifier.is_coarse_boundary_node(global_id) == false )
+      {
+	global_id_to_internal_id[ global_id ] = internal_id;
+	internal_id += 1;
+      }
+    }
+
+    typedef std::vector< shared_ptr<DiscreteFunction> > MsFEMBasisFunctionType;
+    MsFEMBasisFunctionType msfem_basis_function;
+    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+      msfem_basis_function.push_back(make_shared<DiscreteFunction>("MsFEM basis function", fine_space));
+
+    add_coarse_basis_contribution( specifier, global_id_to_internal_id, msfem_basis_function );
+
+    // VTK Output...
+
     // 0. Set up ID Mapper (identifiziere nicht-boundary LagrangePoints und verpasse diesen eine eigene Nummerierung)
     //    (in zwei Walks erledigen: 1. Walk: nur die Boundary Nodes sammeln, 2. Walk: den Rest identifizieren)
     //    eventuell einen Walk (oder sogar beide) in den Specifier stecken
@@ -645,12 +760,9 @@ public:
 #endif
   }
 
-  
-  abort();
-  
-
 #endif
 
+    std::abort();
     
   } // solve_dirichlet_zero
 
