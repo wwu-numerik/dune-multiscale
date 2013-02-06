@@ -16,190 +16,11 @@
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
+#include <dune/multiscale/tools/solver/MsFEM/msfem_grid_specifier.hh>
+
 // / done
 
 namespace Dune {
-template< class DiscreteFunctionSpaceType >
-class MacroMicroGridSpecifier
-{
-  typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
-
-public:
-  MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space,
-                          DiscreteFunctionSpaceType& fine_scale_space)
-    : coarse_scale_space_(coarse_scale_space)
-    , fine_scale_space_(fine_scale_space)
-    , coarse_level_fine_level_difference_( fine_scale_space.gridPart().grid().maxLevel()
-                                           - coarse_scale_space.gridPart().grid().maxLevel() )
-    , number_of_level_host_entities_( coarse_scale_space.gridPart().grid().size(0 /*codim*/) )
-    , number_of_layers(number_of_level_host_entities_, 0)
-  {}
-
-  // get number of coarse grid entities
-  int getNumOfCoarseEntities() const {
-    return number_of_level_host_entities_;
-  }
-
-  void setLayer(int i, int number_of_layers_for_entity) {
-    if (i < number_of_level_host_entities_)
-    { number_of_layers[i] = number_of_layers_for_entity; } else {
-      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
-    }
-  } // setLayer
-
-  int getLayer(int i) const {
-    if (i < number_of_level_host_entities_)
-    { return number_of_layers[i]; } else {
-      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
-    }
-    return 0;
-  } // getLayer
-
-  // difference between coarse and fine level
-  int getLevelDifference() const {
-    return coarse_level_fine_level_difference_;
-  }
-
-  //! the coarse space
-  const DiscreteFunctionSpaceType& coarseSpace() const {
-    return coarse_scale_space_;
-  }
-  //! the coarse space
-  DiscreteFunctionSpaceType& coarseSpace() {
-    return coarse_scale_space_;
-  }
-
-  //! the fine space
-  const DiscreteFunctionSpaceType& fineSpace() const {
-    return fine_scale_space_;
-  }
-  //! the fine space
-  DiscreteFunctionSpaceType& fineSpace() {
-    return fine_scale_space_;
-  }
-
-  void initialize_local_error_manager() {
-    //!TODO previous imp would append number_of_level_host_entities_ many zeroes every time it was called
-    loc_coarse_residual_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
-    loc_projection_error_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
-    loc_coarse_grid_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
-    loc_conservative_flux_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
-    loc_approximation_error_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
-    loc_fine_grid_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
-  } // initialize_local_error_manager
-
-  void set_loc_coarse_residual(int index, const RangeType& loc_coarse_residual) {
-    loc_coarse_residual_[index] = loc_coarse_residual;
-  }
-
-  void set_loc_coarse_grid_jumps(int index, const RangeType& loc_coarse_grid_jumps) {
-    loc_coarse_grid_jumps_[index] = loc_coarse_grid_jumps;
-  }
-
-  void set_loc_projection_error(int index, const RangeType& loc_projection_error) {
-    loc_projection_error_[index] = loc_projection_error;
-  }
-
-  void set_loc_conservative_flux_jumps(int index, const RangeType& loc_conservative_flux_jumps) {
-    loc_conservative_flux_jumps_[index] = loc_conservative_flux_jumps;
-  }
-
-  void set_loc_approximation_error(int index, const RangeType& loc_approximation_error) {
-    loc_approximation_error_[index] = loc_approximation_error;
-  }
-
-  void set_loc_fine_grid_jumps(int index, const RangeType& loc_fine_grid_jumps) {
-    loc_fine_grid_jumps_[index] = loc_fine_grid_jumps;
-  }
-
-  RangeType get_loc_coarse_residual(int index) const {
-    if (loc_coarse_residual_.size() == 0)
-    {
-      DUNE_THROW(Dune::InvalidStateException,
-                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
-    }
-    return loc_coarse_residual_[index];
-  } // get_loc_coarse_residual
-
-  RangeType get_loc_coarse_grid_jumps(int index) const {
-    if (loc_coarse_grid_jumps_.size() == 0)
-    {
-      DUNE_THROW(Dune::InvalidStateException,
-                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
-    }
-    return loc_coarse_grid_jumps_[index];
-  } // get_loc_coarse_grid_jumps
-
-  RangeType get_loc_projection_error(int index) const {
-    if (loc_projection_error_.size() == 0)
-    {
-      DUNE_THROW(Dune::InvalidStateException,
-                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
-    }
-    return loc_projection_error_[index];
-  } // get_loc_projection_error
-
-  RangeType get_loc_conservative_flux_jumps(int index) const {
-    if (loc_conservative_flux_jumps_.size() == 0)
-    {
-      DUNE_THROW(Dune::InvalidStateException,
-                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
-    }
-    return loc_conservative_flux_jumps_[index];
-  } // get_loc_conservative_flux_jumps
-
-  RangeType get_loc_approximation_error(int index) const {
-    if (loc_approximation_error_.size() == 0)
-    {
-      DUNE_THROW(Dune::InvalidStateException,
-                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
-    }
-    return loc_approximation_error_[index];
-  } // get_loc_approximation_error
-
-  RangeType get_loc_fine_grid_jumps(int index) const {
-    if (loc_fine_grid_jumps_.size() == 0)
-    {
-      DUNE_THROW(Dune::InvalidStateException,
-                 "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
-    }
-    return loc_fine_grid_jumps_[index];
-  } // get_loc_fine_grid_jumps
-
-private:
-  DiscreteFunctionSpaceType& coarse_scale_space_;
-  DiscreteFunctionSpaceType& fine_scale_space_;
-
-  // level difference bettween coarse grid level and fine grid level
-  const int coarse_level_fine_level_difference_;
-
-  // number of coarse grid entities
-  const int number_of_level_host_entities_;
-
-  // layers for each coarse grid entity
-  std::vector< int > number_of_layers;
-
-  // ----- local error indicators (for each coarse grid element T) -------------
-
-  // local coarse residual, i.e. H ||f||_{L^2(T)}
-  typedef std::vector< RangeType > RangeTypeVector;
-  RangeTypeVector loc_coarse_residual_;
-
-  // local coarse grid jumps (contribute to the total coarse residual)
-  RangeTypeVector loc_coarse_grid_jumps_;
-
-  // local projection error (we project to get a globaly continous approximation)
-  RangeTypeVector loc_projection_error_;
-
-  // local jump in the conservative flux
-  RangeTypeVector loc_conservative_flux_jumps_;
-
-  // local approximation error
-  RangeTypeVector loc_approximation_error_;
-
-  // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
-  RangeTypeVector loc_fine_grid_jumps_;
-};
 
 template< class DiscreteFunctionType >
 class Elliptic_MsFEM_Solver
@@ -450,7 +271,7 @@ public:
 
     // if the oversampling strategy is 1 or 2, we need identify the entities that share a certain node
     // (because a 'conforming projection' operator is required - for stragey 3, we directly get a conforming approximation)
-    if ( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) )
+    if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) )
      {
        for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
        {
@@ -519,13 +340,13 @@ public:
       // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e0 );
       
       // oversampling strategy 3: just sum up the local correctors:
-      if ( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3) )
+      if ( (specifier.getOversamplingStrategy() == 3) )
        {
         subgrid_to_hostrid_projection(local_problem_solution_e0, correction_on_U_T);
        }
 
       // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming projection:
-      if ( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) )
+      if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) )
        {
        
         if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() )

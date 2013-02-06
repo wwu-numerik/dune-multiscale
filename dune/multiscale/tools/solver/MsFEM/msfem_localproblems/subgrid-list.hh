@@ -151,7 +151,7 @@ private:
 
 	  // get the corners of the father of the fine grid entity 'entities_sharing_same_node[global_index_node][j]'
 	  // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
-          if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 )
+          if ( specifier_.getOversamplingStrategy() == 3 )
            {
               HostEntityPointerType coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                              entities_sharing_same_node[global_index_node][j],
@@ -247,7 +247,7 @@ public:
 
     // the number of coarse grid entities (of codim 0).
     const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
-    const int oversampling_strategy = DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 );
+    const int oversampling_strategy = specifier_.getOversamplingStrategy();
     DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
     if ( (oversampling_strategy == 2) || (oversampling_strategy == 3) )
@@ -419,7 +419,7 @@ public:
   // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
   const CoarseNodeVectorType& getCoarseNodeVector(int i) const {
     const int size = specifier_.getNumOfCoarseEntities();
-    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1 )
+    if ( specifier_.getOversamplingStrategy() == 1 )
       DUNE_THROW(Dune::InvalidStateException, "Method 'getCoarseNodeVector' of class 'SubGridList' should not be used in combination with oversampling strategy 1. Check your implementation!");
     if (i >= size)
     {

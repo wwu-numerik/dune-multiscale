@@ -188,7 +188,7 @@ public:
   // #########################################
 
 //! UNDER CONSTRUCTION!!!
-#if 0
+#if 1
   /** assemble right hand side (if there is only one source - f):
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation 
    *  rhsVector is the output parameter (kind of return value)

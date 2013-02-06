@@ -117,6 +117,7 @@ public:
     // direction 'e'
     const JacobianRangeType& e,
     const CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
+    const int& oversampling_strategy,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
     
@@ -514,6 +515,7 @@ template< class CoarseNodeVectorType >
 void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
       ::assemble_local_RHS(const JacobianRangeType &e, // direction 'e'
                            const CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+                           const int& oversampling_strategy,
                            // rhs local msfem problem:
                            DiscreteFunction& local_problem_RHS) const {
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
@@ -542,7 +544,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     const Geometry& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
-    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 )
+    if ( oversampling_strategy == 3 )
       {
         // the first three elements of the 'coarse_node_vector' are the corners of the relevant coarse grid entity
         // (the coarse grid entity that was the starting entity to create the current subgrid that was constructed by enrichment)
@@ -806,10 +808,10 @@ public:
     // the result.
     
     // assemble the stiffness matrix
-    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1 )
+    if ( specifier_.getOversamplingStrategy() == 1 )
       { local_problem_op.assemble_matrix(locprob_system_matrix); }
-    else if ( ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 ) ||
-              ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 ) )
+    else if ( ( specifier_.getOversamplingStrategy() == 2 ) ||
+              ( specifier_.getOversamplingStrategy() == 3 ) )
       { if ( coarse_index < 0 )
           DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
         local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) ); }
@@ -867,13 +869,13 @@ public:
 
 
     // assemble right hand side of algebraic local msfem problem
-    if ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1 )
+    if ( specifier_.getOversamplingStrategy() == 1 )
       { local_problem_op.assemble_local_RHS(e, local_problem_rhs); }
-    else if ( ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2 ) ||
-              ( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 3 ) )
+    else if ( ( specifier_.getOversamplingStrategy() == 2 ) ||
+              ( specifier_.getOversamplingStrategy() == 3 ) )
       { if ( coarse_index < 0 )
           DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-	local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector( coarse_index ), local_problem_rhs ); }
+	local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector( coarse_index ), specifier_.getOversamplingStrategy(), local_problem_rhs ); }
     else
       DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
     //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );

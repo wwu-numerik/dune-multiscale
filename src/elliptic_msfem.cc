@@ -405,6 +405,7 @@ bool algorithm(const std::string& macroGridName,
   {
     specifier.setLayer(i, number_of_layers_);
   }
+  specifier.setOversamplingStrategy( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) );
 
   //default to false, error_estimation might change it
   bool repeat_algorithm = false;
