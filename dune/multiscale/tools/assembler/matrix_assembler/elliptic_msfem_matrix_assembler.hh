@@ -239,6 +239,7 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
 
   for (const CoarseEntity& coarse_grid_entity : coarseDiscreteFunctionSpace_)
   {
+
     const CoarseGeometry& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
