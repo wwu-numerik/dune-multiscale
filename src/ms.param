@@ -101,13 +101,13 @@ fem_comparison = 1
 [rigorous_msfem]
 
 # initial coarse grid level
-coarse_grid_level = 6
+coarse_grid_level = 8
 
 # initial fine grid level 
-fine_grid_level = 6
+fine_grid_level = 14
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 2
+oversampling_layers = 10
 
 # default: 'oversampling strategy 3'.
 

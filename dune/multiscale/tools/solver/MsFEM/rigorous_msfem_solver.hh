@@ -38,6 +38,8 @@ public:
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
 
+  typedef CachingQuadrature< GridPart, 0 > CoarseQuadrature;
+  
   typedef typename DiscreteFunctionSpace::GridType HostGrid;
 
   typedef typename HostGrid::Traits::LeafIndexSet HostGridLeafIndexSet;
@@ -142,7 +144,40 @@ public:
     stream << " ] " << std::endl;
   } // oneLinePrint
 
-#if 0
+#if 1
+  // vtk visualization of msfem basis functions 
+  template< class MsFEMBasisFunctionType >                                      
+  void vtk_output( MsFEMBasisFunctionType& msfem_basis_function_list ) const
+  {
+
+    // general output parameters
+    Dune::myDataOutputParameters outputparam;
+  
+    typedef typename MsfemTraits::IOTupleType IOTType;
+    const auto& gridPart = msfem_basis_function_list[0]->space().gridPart();
+  
+    for ( int i = 0; i < msfem_basis_function_list.size(); i+=1 )
+    {
+    
+      IOTType msfem_basis_series( &(*msfem_basis_function_list[i]) );
+    
+      const std::string ls_name_s = (boost::format("/msfem_basis_function_%d") % i).str();
+      outputparam.set_prefix(ls_name_s);
+    
+      std::string outstring = "msfem_basis_function";
+    
+      MsfemTraits::DataOutputType msfem_basis_dataoutput(
+	  gridPart.grid(), msfem_basis_series, outputparam );
+      msfem_basis_dataoutput.writeData( 1.0 /*dummy*/, outstring );
+  
+    }
+    
+    std::cout << "VTK Output for MsFEM basis functions successful." << std::endl << std::endl; 
+
+  }
+#endif 
+ 
+
   // create a hostgrid function from a subgridfunction (projection for global continuity)
   // Note: the maximum gride levels for both underlying grids must be the same
   void subgrid_to_hostrid_projection(const SubgridDiscreteFunction& sub_func, DiscreteFunction& host_func) const {
@@ -174,7 +209,7 @@ public:
     }
   } // subgrid_to_hostrid_projection
 
-  
+#if 0  
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
   // ------------------------------------------------------------------------------------
   void identify_coarse_scale_part( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
@@ -454,7 +489,7 @@ public:
           ( corners[0], phi_i[0], corners[1], phi_i[1], corners[2], phi_i[2] );
        
         LocalFunction loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
-      
+
         const int number_of_nodes_in_fine_entity = (*it).template count< 2 >();
         if ( !( number_of_nodes_in_fine_entity == int( loc_coarse_basis_function.baseFunctionSet().size() ) ) )
          { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
@@ -483,6 +518,104 @@ public:
   // ------------------------------------------------------------------------------------
 
 
+
+  //! add corrector part to MsFEM basis functions
+  // ------------------------------------------------------------------------------------
+  template< class MsFEMBasisFunctionType, class SubGridListType >
+  void add_corrector_contribution( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+                                   std::map<int,int>& global_id_to_internal_id,
+                                   SubGridListType& subgrid_list,
+                                   MsFEMBasisFunctionType& msfem_basis_function_list ) const
+  {
+    
+    DSC_LOG_INFO << "Add global corrector to create MsFEM basis functions from standard FEM basis functions... ";
+
+    const HostGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
+
+    typedef typename DiscreteFunctionSpace::IteratorType CoarseIterator;
+    typedef typename CoarseIterator::Entity CoarseEntity;
+    typedef typename CoarseEntity::Geometry CoarseGeometry;
+    
+    typedef typename DiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
+    
+    std::vector< JacobianRangeType > gradient_Phi(
+       specifier.coarseSpace().mapper().maxNumDofs() );
+    
+    for (const CoarseEntity& coarse_grid_entity : specifier.coarseSpace())
+    {
+      
+      const CoarseGeometry& coarse_grid_geometry = coarse_grid_entity.geometry();
+      assert(coarse_grid_entity.partitionType() == InteriorEntity);
+
+      const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
+      
+      const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().baseFunctionSet( coarse_grid_entity );
+      const auto numBaseFunctions = coarseBaseSet.size();
+      
+      // the sub grid U(T) that belongs to the coarse_grid_entity T
+      SubGridType& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
+      SubGridPart subGridPart(sub_grid_U_T);
+      
+      const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
+      
+      SubgridDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
+      local_problem_solution_e0.clear();
+
+      SubgridDiscreteFunction local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
+      local_problem_solution_e1.clear();
+
+      // --------- load local solutions -------
+      // the file/place, where we saved the solutions of the cell problems
+      const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
+                                                  % index).str();
+      // reader for the cell problem data file:
+      DiscreteFunctionReader discrete_function_reader(local_solution_location);
+      discrete_function_reader.read(0, local_problem_solution_e0);
+      discrete_function_reader.read(1, local_problem_solution_e1);
+
+      // 1 point quadrature!! We only need the gradient of the base function,
+      // which is constant on the whole entity.
+      const CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
+
+      // the barycenter of the macro_grid_entity
+      const typename CoarseQuadrature::CoordinateType& local_coarse_point
+        = one_point_quadrature.point(0 /*=quadraturePoint*/);
+
+      // transposed of the the inverse jacobian
+      const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
+      coarseBaseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi);
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+        int global_dof_number = specifier.coarseSpace().mapToGlobal( coarse_grid_entity , i );
+        if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
+        { continue; }
+
+        int global_interior_dof_number = global_id_to_internal_id[ global_dof_number ];
+
+        DiscreteFunction correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
+
+        correction_on_U_T.clear();
+        subgrid_to_hostrid_projection(local_problem_solution_e0, correction_on_U_T);
+        correction_on_U_T *= gradient_Phi[i][0][0];
+        (*(msfem_basis_function_list[global_interior_dof_number])) += correction_on_U_T;
+
+        correction_on_U_T.clear();
+        subgrid_to_hostrid_projection(local_problem_solution_e1, correction_on_U_T);
+        correction_on_U_T *= gradient_Phi[i][0][1];
+        (*(msfem_basis_function_list[global_interior_dof_number])) += correction_on_U_T;
+
+      }
+     
+    }
+
+    DSC_LOG_INFO << " done." << std::endl;
+  }
+  // ------------------------------------------------------------------------------------
+
+
+  
+  
 
   // - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   // then:
@@ -515,6 +648,21 @@ public:
 
     int number_of_internal_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_boundary_nodes();
 
+    // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
+    typedef DiscreteEllipticMsFEMOperator< DiscreteFunction /*type of coarse space*/,
+                                           MacroMicroGridSpecifier< DiscreteFunctionSpace >,
+                                           DiscreteFunction /*type of fine space*/,
+                                           DiffusionOperator > EllipticMsFEMOperatorType;
+
+    // define the discrete (elliptic) operator that describes our problem
+    //! assemble all local problems (within constructor!)
+    const EllipticMsFEMOperatorType elliptic_msfem_op(specifier,
+                                                      coarse_space,
+                                                      subgrid_list,
+                                                      diffusion_op);
+    // elliptic_msfem_op is no more required for the remaining code!
+    // It is only used to assemle the local problems
+    
     // mapper: global_id_of_node -> new_id_of_node
     // ('new' means that we only count the internal nodes, boundary nodes do not receive an id)
     std::map<int,int> global_id_to_internal_id;
@@ -531,11 +679,16 @@ public:
     typedef std::vector< shared_ptr<DiscreteFunction> > MsFEMBasisFunctionType;
     MsFEMBasisFunctionType msfem_basis_function;
     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+     {
       msfem_basis_function.push_back(make_shared<DiscreteFunction>("MsFEM basis function", fine_space));
+      msfem_basis_function[internal_id]->clear();
+     }
 
     add_coarse_basis_contribution( specifier, global_id_to_internal_id, msfem_basis_function );
+    add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, msfem_basis_function );
+    
+    vtk_output( msfem_basis_function );
 
-    // VTK Output...
 
     // 0. Set up ID Mapper (identifiziere nicht-boundary LagrangePoints und verpasse diesen eine eigene Nummerierung)
     //    (in zwei Walks erledigen: 1. Walk: nur die Boundary Nodes sammeln, 2. Walk: den Rest identifizieren)
@@ -546,13 +699,6 @@ public:
     // 4. assembliere und loese das LGS
     
 #if 0
-    // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
-    typedef DiscreteEllipticMsFEMOperator< DiscreteFunction /*type of coarse space*/,
-                                           MacroMicroGridSpecifier< DiscreteFunctionSpace >,
-                                           DiscreteFunction /*type of fine space*/,
-                                           DiffusionOperator > EllipticMsFEMOperatorType;
-
-
 
     // ------------------------------------------------------------
 
@@ -563,13 +709,7 @@ public:
     // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
     typedef RightHandSideAssembler< DiscreteFunction > RhsAssembler;
 
-    //! define the discrete (elliptic) operator that describes our problem
-    // ( effect of the discretized differential operator on a certain discrete function )
-    const EllipticMsFEMOperatorType elliptic_msfem_op(specifier,
-                                                coarse_space,
-                                                subgrid_list,
-                                                diffusion_op);
-    // discrete elliptic operator (corresponds with FEM Matrix)
+
 
     //! (stiffness) matrix
     MsFEMMatrix msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
