@@ -1,6 +1,6 @@
 if( NOT CMAKE_BUILD_TYPE )
 	message( STATUS "No build type selected, setting default build type 'Debug'" )
-	set( CMAKE_BUILD_TYPE "DEBUG" CACHE STRING "DEBUG/RELEASE")
+	set( CMAKE_BUILD_TYPE "RELEASE" CACHE STRING "DEBUG/RELEASE")
 endif( NOT CMAKE_BUILD_TYPE )
 
 PROJECT(dune_multiscale)
@@ -163,6 +163,10 @@ set_target_properties(elliptic_hom_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=$
 ADD_EXECUTABLE(elliptic_fem src/elliptic_fem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 set_target_properties(elliptic_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
+
+ADD_EXECUTABLE(elliptic_rigorous_msfem src/elliptic_rigorous_msfem.cc ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(elliptic_rigorous_msfem ${COMMON_LIBS} )
+set_target_properties(elliptic_rigorous_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
