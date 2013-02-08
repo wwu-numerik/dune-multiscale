@@ -155,8 +155,8 @@ public:
   {
 
     // general output parameters
-    Dune::myDataOutputParameters outputparam;
-  
+    Dune::myDataOutputParameters outputparam(DSC_CONFIG_GET("global.datadir", "data") + "/msfem_basis");
+
     typedef typename MsfemTraits::IOTupleType IOTType;
     const auto& gridPart = msfem_basis_function_list[0]->space().gridPart();
   
@@ -164,7 +164,7 @@ public:
     {
     
       IOTType msfem_basis_series( &(*msfem_basis_function_list[i]) );
-    
+      
       const std::string ls_name_s = (boost::format("/msfem_basis_function_%d") % i).str();
       outputparam.set_prefix(ls_name_s);
     
@@ -349,15 +349,13 @@ public:
       // --------- load local solutions -------
       // the file/place, where we saved the solutions of the cell problems
       const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
-                                                  % index).str();
+                                                  % global_index_entity).str();
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
-      std::cout<< "... reading local problem solution " << global_index_entity << "/" << 0 << std::endl;
+      // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 0 << std::endl;
       discrete_function_reader.read(0, local_problem_solution_e0);
-      std::cout<< "... done." << std::endl;
-      std::cout<< "... reading local problem solution " << global_index_entity << "/" << 1 << std::endl;
+      // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 1 << std::endl;
       discrete_function_reader.read(1, local_problem_solution_e1);
-      std::cout<< "... done." << std::endl;
       
       // 1 point quadrature!! We only need the gradient of the base function,
       // which is constant on the whole entity.
@@ -616,6 +614,10 @@ public:
       msfem_basis_function[internal_id]->clear();
      }
 
+    //! TODO for each MsFEM basis function save the support,
+    //! i.e. a vector of entity points that describe the support of the basis
+    //! function. This will save a lot of computational time when assembling the system matrix!
+     
     MsFEMBasisFunctionType standard_basis_function;
     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {

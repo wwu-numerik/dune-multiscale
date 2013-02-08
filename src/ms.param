@@ -64,16 +64,16 @@ file =
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 6
+coarse_grid_level = 2
 
 # initial fine grid level 
-fine_grid_level = 10
+fine_grid_level = 6
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 5
+oversampling_layers = 0
 
 # oversampling strategy 1 or 2.
-oversampling_strategy = 2
+oversampling_strategy = 1
 # stratgey 1: local problems are solved in the full fine space
 # strategy 2: local problems are solved in the full fine space
 #             without the 3 basis functions belonging to the the 3 coarse nodes
@@ -81,8 +81,7 @@ oversampling_strategy = 2
 #             without the coarse grid nodes -> use rigorous MsFEM below!)
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
-# !!! key not yet activated !!!
-petrov_galerkin = 0
+petrov_galerkin = 1
 
 # compute the estimated error?
 error_estimation = 0
@@ -101,18 +100,17 @@ fem_comparison = 1
 [rigorous_msfem]
 
 # initial coarse grid level
-coarse_grid_level = 6
+coarse_grid_level = 2
 
 # initial fine grid level 
-fine_grid_level = 10
+fine_grid_level = 6
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 5
+oversampling_layers = 0
 
 # default: 'oversampling strategy 3'.
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
-# !!! key not yet activated !!!
 petrov_galerkin = 0
 
 # error tolerance for the iterative solver for the final macro problem 
@@ -126,7 +124,7 @@ fem_comparison = 1
 #   (fem resolution = fine_grid_level of MsFEM)
 
 #vtk output for MsFEM basis functions
-msfem_basis_vtk_output = 0
+msfem_basis_vtk_output = 1
 
 [hmm]
 
@@ -145,7 +143,6 @@ cell_grid_level = 6
 # 'effective fine grid level' = 'delta' * 'cell grid size'
 
 # use the MsFEM in Petrov-Galerkin (unsymmetric) formulation
-# !!! key not yet activated !!!
 petrov_galerkin = 1
 
 # use error estimation and adaptive mesh refinement?

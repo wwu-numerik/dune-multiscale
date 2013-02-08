@@ -185,10 +185,8 @@ public:
   }  // end method
 
   // /############################
-  // #########################################
 
-//! UNDER CONSTRUCTION!!!
-#if 1
+
   /** assemble right hand side (if there is only one source - f):
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation 
    *  rhsVector is the output parameter (kind of return value)
@@ -233,7 +231,7 @@ public:
       LocalDiscreteFunction local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
       local_problem_solution_e1.clear();
       
-      // --------- load local solutions -------
+      // -- load local solutions --
       // the file/place, where we saved the solutions of the cell problems
       const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
                                                   % global_index_entity).str();
@@ -242,6 +240,7 @@ public:
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
       
+      // --------- add standard contribution of right hand side -------------------------
       const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd);   // 0 --> codim 0
       const int numDofs = elementOfRHS.numDofs();
       std::vector<RangeType> phi_x_vec(numDofs);
@@ -259,6 +258,10 @@ public:
           elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x_vec[i]);
         }
       }
+      // ----------------------------------------------------------------------------------
+      
+
+      // --------- add corrector contribution of right hand side --------------------------
       
       // 1 point quadrature!! We only need the gradient of the base function,
       // which is constant on the whole entity.
@@ -328,122 +331,23 @@ public:
             localized_local_problem_solution_e0.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e0);
             localized_local_problem_solution_e1.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e1);
 
-#if 0
+            corrector_phi_x = 0.0;
+            corrector_phi_x += gradient_Phi_vec[i][0][0] * loc_sol_e0;
+            corrector_phi_x += gradient_Phi_vec[i][0][1] * loc_sol_e1;
+	    
+            f.evaluate( global_point_in_U_T , f_x);
 
+            elementOfRHS[i] += weight_local_quadrature * (f_x * corrector_phi_x);
 
-
-
-
-            // Q( Phi_H ) = ∂_x1 Phi_H * Q( e_1 ) + ∂_x2 Phi_H * Q( e_2 )
-            JacobianRangeType direction_of_diffusion(0.0);
-            for (int k = 0; k < dimension; ++k)
-            {
-              direction_of_diffusion[0][k] += gradient_Phi[i][0][0] * grad_loc_sol_e0[0][k];
-              direction_of_diffusion[0][k] += gradient_Phi[i][0][1] * grad_loc_sol_e1[0][k];
-              direction_of_diffusion[0][k] += gradient_Phi[i][0][k];
-            }
-
-            JacobianRangeType diffusive_flux(0.0);
-            diffusion_operator_.diffusiveFlux(global_point_in_U_T, direction_of_diffusion, diffusive_flux);
-
-            // if not Petrov-Galerkin MsFEM:
-            if ( !DSC_CONFIG_GET("msfem.petrov_galerkin", true ) )
-	    {
-              JacobianRangeType reconstruction_grad_phi_j(0.0);
-              for (int k = 0; k < dimension; ++k)
-              {
-               reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][0] * grad_loc_sol_e0[0][k];
-               reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][1] * grad_loc_sol_e1[0][k];
-               reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][k];
-              }
-
-              local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstruction_grad_phi_j[0]);
-	    }
-            else // if Petrov-Galerkin MsFEM
-            {
-              local_integral += weight_local_quadrature * (diffusive_flux[0] * gradient_Phi[j][0]);
-	    }
-          }
-#endif
         }
 
 	}
-#if 0
-        const int numQuadraturePoints = quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
-        {
-
-          const double det
-            = coarse_grid_geometry.integrationElement( quadrature.point(quadraturePoint) );
-          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-          f.evaluate(coarse_grid_geometry.global( quadrature.point(quadraturePoint) ), f_x);
-          // evaluate the current base function at the current quadrature point and save its value in 'z':
-          coarse_grid_baseSet.evaluate(i, quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-          // evaluate the gradient of the current base function at the current quadrature point and save its value in
-          // 'returnGradient':
-          coarse_grid_baseSet.jacobian(i, quadrature[quadraturePoint], gradientPhi); //grad on reference element
-          const FieldMatrix< double, dimension, dimension >& inv
-            = coarse_grid_geometry.jacobianInverseTransposed( quadrature.point(quadraturePoint) );
-          // multiply with transpose of jacobian inverse
-          gradientPhi[0] = FMatrixHelp::mult(inv, gradientPhi[0]); //real gradient of basis function
-
-        }
-#endif
       }
       
     }
     
-#if 0
-
-
-  for (const CoarseEntity& coarse_grid_entity : coarseDiscreteFunctionSpace_)
-  {
-
-
-    // const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.size();
-
-
-
-
-
-
-
-
-
-
-
-    for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
-    {
-      for (unsigned int j = 0; j < numMacroBaseFunctions; ++j)
-      {
-        RangeType local_integral = 0.0;
-
-        // iterator for the micro grid ( grid for the reference element T_0 )
-        const LocalGridIterator local_grid_end = localDiscreteFunctionSpace.end();
-        for (LocalGridIterator local_grid_it = localDiscreteFunctionSpace.begin();
-             local_grid_it != local_grid_end;
-             ++local_grid_it)
-        {
-	  
-	  
-	  
-	  
-	  
-
-
-
-
-
-        // add entries
-        local_matrix.add(j, i, local_integral);
-      }
-    }
-  }
-#endif
-    
   }  // end method
-#endif
-///!!!!!!!!!!!!!!!!!!!!!!!!!!!! -> END - UNDER CONSTRUCTION
+
  
   /**
    * The rhs-assemble()-methods for non-linear elliptic problems
