@@ -12,7 +12,7 @@
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
+#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_rigorous_msfem_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
@@ -151,7 +151,7 @@ public:
 
   // vtk visualization of msfem basis functions 
   template< class MsFEMBasisFunctionType >                                      
-  void vtk_output( MsFEMBasisFunctionType& msfem_basis_function_list ) const
+  void vtk_output( MsFEMBasisFunctionType& msfem_basis_function_list, std::string basis_name = "msfem_basis_function" ) const
   {
 
     // general output parameters
@@ -165,10 +165,10 @@ public:
     
       IOTType msfem_basis_series( &(*msfem_basis_function_list[i]) );
       
-      const std::string ls_name_s = (boost::format("/msfem_basis_function_%d") % i).str();
+      const std::string ls_name_s = "/" + basis_name + (boost::format("_%d") % i).str();
       outputparam.set_prefix(ls_name_s);
     
-      std::string outstring = "msfem_basis_function";
+      std::string outstring = basis_name;
     
       MsfemTraits::DataOutputType msfem_basis_dataoutput(
 	  gridPart.grid(), msfem_basis_series, outputparam );
@@ -246,7 +246,7 @@ public:
       const auto number_of_points = lagrangepoint_set.nop();
       
       std::vector< RangeType > phi( numBaseFunctions );
-      //! TODO swich loops for more efficiency
+      //! TODO switch loops for more efficiency
       for(int loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number ) {
       
         int global_dof_number = specifier.coarseSpace().mapToGlobal(*coarse_father, loc_basis_number );
@@ -494,7 +494,7 @@ public:
 #else
    for (int row = 0; row != system_matrix.N(); ++row)
      for (int col = 0; col != system_matrix.M(); ++col) 
-       system_matrix[row][col] 
+       system_matrix[col][row] 
          = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]) );
 
 #endif
@@ -578,21 +578,6 @@ public:
 
     int number_of_internal_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_boundary_nodes();
 
-    // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
-    typedef DiscreteEllipticMsFEMOperator< DiscreteFunction /*type of coarse space*/,
-                                           MacroMicroGridSpecifier< DiscreteFunctionSpace >,
-                                           DiscreteFunction /*type of fine space*/,
-                                           DiffusionOperator > EllipticMsFEMOperatorType;
-
-    // define the discrete (elliptic) operator that describes our problem
-    //! assemble all local problems (within constructor!)
-    const EllipticMsFEMOperatorType elliptic_msfem_op(specifier,
-                                                      coarse_space,
-                                                      subgrid_list,
-                                                      diffusion_op);
-    // elliptic_msfem_op is no more required for the remaining code!
-    // It is only used to assemle the local problems
-    
     // mapper: global_id_of_node -> new_id_of_node
     // ('new' means that we only count the internal nodes, boundary nodes do not receive an id)
     std::map<int,int> global_id_to_internal_id;
@@ -628,10 +613,43 @@ public:
     add_coarse_basis_contribution( specifier, global_id_to_internal_id, msfem_basis_function );
     add_coarse_basis_contribution( specifier, global_id_to_internal_id, standard_basis_function );
     
+    
+    // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
+    typedef DiscreteEllipticRigMsFEMOperator< DiscreteFunction /*type of coarse space*/,
+                                           MacroMicroGridSpecifier< DiscreteFunctionSpace >,
+                                           DiscreteFunction /*type of fine space*/,
+                                           DiffusionOperator, MsFEMBasisFunctionType > EllipticRigMsFEMOperatorType;
+
+    // define the discrete (elliptic) operator that describes our problem
+    //! assemble all local problems (within constructor!)
+    const EllipticRigMsFEMOperatorType elliptic_msfem_op(specifier,
+                                                         coarse_space,
+                                                         subgrid_list,
+                                                         diffusion_op,
+                                                         standard_basis_function,
+                                                         global_id_to_internal_id );
+    // elliptic_msfem_op is no more required for the remaining code!
+    // It is only used to assemle the local problems
+        
     add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, msfem_basis_function );
     
+    #if 0
+    MsFEMBasisFunctionType corrector_basis_function;
+    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+     {
+      corrector_basis_function.push_back(make_shared<DiscreteFunction>("Corrector basis function", fine_space));
+      corrector_basis_function[internal_id]->clear();
+     }
+     
+    add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, corrector_basis_function );
+    vtk_output( corrector_basis_function, "corrector_basis_function" );
+    #endif
+    
     if ( DSC_CONFIG_GET("rigorous_msfem.msfem_basis_vtk_output", 0) )
+    {
        vtk_output( msfem_basis_function );
+       vtk_output( standard_basis_function, "standard_basis_function" );
+    }
 
     //! (stiffness) matrix
     MatrixType system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
@@ -708,12 +726,12 @@ public:
 
   template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType >
   void solve() {
-    DSC_LOG_ERROR << "No implemented!" << std::endl;
+    DSC_LOG_ERROR << "Not implemented!" << std::endl;
   }
 
   template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType, class SecondSourceTermType >
   void solve() {
-    DSC_LOG_ERROR << "No implemented!" << std::endl;
+    DSC_LOG_ERROR << "Not implemented!" << std::endl;
   }
 };
 }

@@ -471,14 +471,15 @@ bool algorithm(const std::string& macroGridName,
     H1Error< MsfemTraits::DiscreteFunctionType > h1error;
 
     const MsfemTraits::ExactSolutionType u;
-
+    int order_quadrature_rule = 13;
+    
     MsfemTraits::RangeType msfem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
                                                               msfem_solution,
-                                                              2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
+                                                              order_quadrature_rule );
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
 
     MsfemTraits::RangeType h1_msfem_error(0.0);
-    h1_msfem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, msfem_solution);
+    h1_msfem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, msfem_solution, order_quadrature_rule);
     h1_msfem_error += msfem_error;
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
 
@@ -486,13 +487,13 @@ bool algorithm(const std::string& macroGridName,
     {
       MsfemTraits::RangeType fem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
                                                             fem_solution,
-                                                            2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
+                                                            order_quadrature_rule );
 
       DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
 
       MsfemTraits::RangeType h1_fem_error(0.0);
 
-      h1_fem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, fem_solution);
+      h1_fem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, fem_solution, order_quadrature_rule);
       h1_fem_error += fem_error;
       DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
     }
@@ -543,8 +544,7 @@ int main(int argc, char** argv) {
     {
       case 1: break;
       case 2: break;
-      case 3: break;
-      default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3.");
+      default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
     }
       //if (!( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) ))
      

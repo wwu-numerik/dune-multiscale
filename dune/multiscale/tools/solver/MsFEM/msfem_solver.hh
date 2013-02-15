@@ -481,7 +481,7 @@ public:
     // assemble the MsFEM stiffness matrix
     elliptic_msfem_op.assemble_matrix(msfem_matrix);   // einbinden!
     DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-
+    
     // assemble right hand side
     if ( DSC_CONFIG_GET("msfem.petrov_galerkin", 1 ) )
     { RhsAssembler::template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs); }

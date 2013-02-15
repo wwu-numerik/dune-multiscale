@@ -18,10 +18,13 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
+#include <dune/fem/misc/h1norm.hh>
+
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/misc/h1error.hh>
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
@@ -285,6 +288,31 @@ void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,   // gri
   // write FEM solution to a file and produce a VTK output
   write_discrete_function<FEM>(discrete_solution);
   
+  //! ----------------- compute L2- and H1- errors -------------------
+  if (Problem::ModelProblemData::has_exact_solution)
+  {
+
+    DSC_LOG_INFO << std::endl << "The L2 and H1 error:" << std::endl << std::endl;
+    H1Error< typename FEM::DiscreteFunctionType > h1error;
+    L2Error< typename FEM::DiscreteFunctionType > l2error;
+  
+    const typename FEM::ExactSolutionType u;
+    
+    typedef typename FEM::ExactSolutionType ExactSolution;
+    
+    int order_quadrature_rule = 13;
+    
+    typename FEM::RangeType fem_error = l2error.template norm< ExactSolution >
+       (u, discrete_solution, order_quadrature_rule /* * FEM::DiscreteFunctionSpaceType::polynomialOrder */ );
+    DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
+
+    typename FEM::RangeType h1_fem_error(0.0);
+    h1_fem_error = h1error.template semi_norm < ExactSolution >(u, discrete_solution, order_quadrature_rule);
+    h1_fem_error += fem_error;
+    DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
+
+  }
+
 }
 
 #endif // DUNE_FEM_ALGORITHM_HH

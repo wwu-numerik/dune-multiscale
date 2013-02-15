@@ -241,7 +241,7 @@ public:
       discrete_function_reader.read(1, local_problem_solution_e1);
       
       // --------- add standard contribution of right hand side -------------------------
-      const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd);   // 0 --> codim 0
+      const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
       const int numDofs = elementOfRHS.numDofs();
       std::vector<RangeType> phi_x_vec(numDofs);
       RangeType f_x;

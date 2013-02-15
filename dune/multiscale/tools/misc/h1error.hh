@@ -42,8 +42,8 @@ public:
   // H1 error:
   template< class FunctionType >
   RangeType semi_norm(const FunctionType& function,
-                      const DiscreteFunctionType& disc_function) const {
-    const int polOrd = (2 * spacePolOrd + 2);
+                      const DiscreteFunctionType& disc_function,
+                      const int polOrd = (2 * spacePolOrd + 2) ) const {
 
     RangeType y(0.0); // return value
 

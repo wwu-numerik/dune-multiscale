@@ -26,6 +26,9 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
+#include <dune/multiscale/tools/misc/uzawa.hh>
+#include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
+
 namespace Dune {
 /** \brief define output parameters for local problems
  *  appends "local_problems" for path
@@ -64,6 +67,8 @@ public:
   typedef typename DiscreteFunctionSpace::JacobianRangeType
   JacobianRangeType;
 
+
+  
 protected:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
@@ -292,16 +297,17 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
 
     std::vector< int > sub_grid_entity_corner_is_relevant;
     for ( int c = 0; c < sub_grid_geometry.corners(); ++c )
-    {
-      for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
-       {
+      {
+        for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+        {
 	 // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
 	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
          if ( (coarse_node_vector[coarse_node_local_id] == sub_grid_geometry.corner(c)) 
 	     && (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) == sub_grid_entity_corner_is_relevant.end()) )
 	     { sub_grid_entity_corner_is_relevant.push_back(c); }
-       }
-    }
+        }
+      }
+
     
     LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
@@ -506,7 +512,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
 
 
 // assemble method for the case of a linear diffusion operator
-// in a constraint space, for oversampling strategy 2
+// in a constraint space, for oversampling strategy 2 and 3
 
 // we compute the following entries for each fine-scale base function phi_h_i:
 // - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
@@ -544,6 +550,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
     const Geometry& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
+    // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
     if ( oversampling_strategy == 3 )
       {
         // the first three elements of the 'coarse_node_vector' are the corners of the relevant coarse grid entity
@@ -551,12 +558,19 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
         if ( !(point_is_in_element( coarse_node_vector[0], coarse_node_vector[1], coarse_node_vector[2], geometry.center() )) )
 	   continue;
       }
+  
+    // 'oversampling_strategy == 3' means that we use the rigorous MsFEM
+    bool clement = false;
+    if (oversampling_strategy == 3)
+     clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
     
     std::vector< int > sub_grid_entity_corner_is_relevant;
-    for ( int c = 0; c < geometry.corners(); ++c )
+    if (!clement)
     {
-      for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
-       {
+      for ( int c = 0; c < geometry.corners(); ++c )
+      {
+        for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+        {
 	 // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
 	 // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
          if ( (coarse_node_vector[coarse_node_local_id] == geometry.corner(c)) 
@@ -565,9 +579,9 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
          //std :: cout << std ::endl << "geometry.corner(" << c << ") = " << geometry.corner(c) << " is relevant." << std ::endl;         
 
 	    }
-       }
+        }
+      }
     }
-
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
@@ -585,7 +599,7 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
       const DomainType global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
-
+      
       // transposed of the the inverse jacobian
       const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
 
@@ -631,7 +645,8 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
 template< class HostDiscreteFunctionType,
           class SubGridListType,
           class MacroMicroGridSpecifierType,
-          class DiffusionOperatorType >
+          class DiffusionOperatorType,
+          class CoarseBasisFunctionListType >
 class MsFEMLocalProblemSolver
 {
 public:
@@ -678,6 +693,9 @@ public:
 
   //! type of grid
   typedef typename SubGridListType::SubGridType SubGridType;
+  
+  //! vector of points (type DomainType) that describes the coarse nodes 
+  typedef typename SubGridListType::CoarseNodeVectorType CoarseNodeVectorType;
 
   //! type of grid part
   typedef LeafGridPart< SubGridType > SubGridPartType;
@@ -739,12 +757,28 @@ public:
   // discrete elliptic operator describing the elliptic local msfem problems
   typedef LocalProblemOperator< SubDiscreteFunctionType, DiffusionOperatorType > LocalProblemOperatorType;
 
+  typedef SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
+      WeightedClementMatrixObjectTraits;                                       
+
+  typedef WeightedClementOp< SubDiscreteFunctionType, HostDiscreteFunctionType, WeightedClementMatrixObjectTraits, CoarseNodeVectorType, CoarseBasisFunctionListType > 
+            WeightedClementOperatorType;
+  
+  // saddle point problem solver:
+  typedef UzawaInverseOp< SubDiscreteFunctionType, 
+                          HostDiscreteFunctionType,
+                          InverseLocProbFEMMatrix, 
+                          WeightedClementOperatorType >
+     InverseUzawaOperatorType;
+     
 private:
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
   const MacroMicroGridSpecifierType& specifier_;
   SubGridListType& subgrid_list_;
 
+  const CoarseBasisFunctionListType* coarse_basis_;
+  const std::map<int,int>* global_id_to_internal_id_;
+  
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
@@ -760,6 +794,20 @@ public:
       , subgrid_list_(subgrid_list)
   {}
 
+  MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
+                          const MacroMicroGridSpecifierType& specifier,
+                          SubGridListType& subgrid_list,
+                          const DiffusionOperatorType& diffusion_operator,
+                          const CoarseBasisFunctionListType& coarse_basis,
+                          const std::map<int,int>& global_id_to_internal_id )
+    : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
+      , diffusion_(diffusion_operator)
+      , specifier_(specifier)
+      , subgrid_list_(subgrid_list)
+      , coarse_basis_( &coarse_basis )
+      , global_id_to_internal_id_( &global_id_to_internal_id )
+  {}
+  
   template< class Stream >
   void oneLinePrint(Stream& stream, const SubDiscreteFunctionType& func) const {
     typedef typename SubDiscreteFunctionType::ConstDofIteratorType
@@ -807,17 +855,35 @@ public:
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
     
+    switch ( specifier_.getOversamplingStrategy() )
+    {
+      case 1: break;
+      case 2: break;
+      case 3: break;
+      default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
+    }
+    
     // assemble the stiffness matrix
     if ( specifier_.getOversamplingStrategy() == 1 )
       { local_problem_op.assemble_matrix(locprob_system_matrix); }
-    else if ( ( specifier_.getOversamplingStrategy() == 2 ) ||
-              ( specifier_.getOversamplingStrategy() == 3 ) )
+      
+    if ( specifier_.getOversamplingStrategy() == 2 )
       { if ( coarse_index < 0 )
           DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-        local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) ); }
-    else
-      DUNE_THROW( Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
+        local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
+      }
 
+    if ( specifier_.getOversamplingStrategy() == 3 )
+      { 
+        if ( coarse_index < 0 )
+          DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
+        bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
+       
+        if ( clement )
+        { local_problem_op.assemble_matrix( locprob_system_matrix ); }
+        else
+        { local_problem_op.assemble_matrix( locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) ); }
+      }
 // can be deleted (just to check the coarse node vector)
 /*
     for ( int coarse_node_local_id = 0; coarse_node_local_id < subgrid_list_.getCoarseNodeVector( coarse_index ).size(); ++coarse_node_local_id )
@@ -936,7 +1002,37 @@ public:
       DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
     } else {
       InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, LOCPROBLEMSOLVER_VERBOSE);
-      locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
+      
+      bool clement = false;
+      if ( specifier_.getOversamplingStrategy() == 3 )
+       { clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ); }
+
+      if ( clement )
+      {
+
+         HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
+         zero.clear();
+         const double dummy = 12345.67890;
+         double solverEps = 1e-8 ;
+         int maxIterations = 1000;
+
+         WeightedClementOperatorType clement_interpolation_op( subDiscreteFunctionSpace,
+                                                               specifier_.coarseSpace(),
+                                                               subgrid_list_.getCoarseNodeVector( coarse_index ),
+                                                               *coarse_basis_, *global_id_to_internal_id_, specifier_ );
+
+         //clement_interpolation_op.print();
+
+         HostDiscreteFunctionType lagrange_multiplier("lagrange multiplier", specifier_.coarseSpace() );
+         lagrange_multiplier.clear();
+    
+         // create inverse operator
+         InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
+         uzawa( local_problem_rhs, zero, local_problem_solution, lagrange_multiplier );
+
+       }
+      else
+       { locprob_fem_biCGStab(local_problem_rhs, local_problem_solution); }
     }
 
     if ( !( local_problem_solution.dofsValid() ) )

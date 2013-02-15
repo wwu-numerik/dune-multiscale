@@ -1,13 +1,14 @@
 
 SUBDIRS =
 
-GRIDTYPE=ALBERTAGRID
+#GRIDTYPE=ALBERTAGRID
+GRIDTYPE=ALUGRID_CONFORM
 GRIDDIM=2
 PROBLEM_NAMES= Toy One Two Three Four Five Six Seven Eight Nine Ten
-FEM_PROBLEM=Three
+FEM_PROBLEM=Nine
 HMM_PROBLEM=Three
-MSFEM_PROBLEM=One
-MSFEM_RIGOROUS_PROBLEM=One
+MSFEM_PROBLEM=Nine
+MSFEM_RIGOROUS_PROBLEM=Nine
 DEFAULT_PROBLEM=One
 
 noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem

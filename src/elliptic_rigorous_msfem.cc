@@ -251,28 +251,39 @@ void algorithm(const std::string& macroGridName,
     H1Error< MsfemTraits::DiscreteFunctionType > h1error;
 
     const MsfemTraits::ExactSolutionType u;
-
+    int order_quadrature_rule = 13;
+    
     MsfemTraits::RangeType msfem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
                                                               msfem_solution,
-                                                              2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
+                                                              order_quadrature_rule );
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
 
     MsfemTraits::RangeType h1_msfem_error(0.0);
-    h1_msfem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, msfem_solution);
+    h1_msfem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, msfem_solution, order_quadrature_rule);
     h1_msfem_error += msfem_error;
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
 
     if ( DSC_CONFIG_GET("rigorous_msfem.fem_comparison",false) )
     {
+      
+      MsfemTraits::RangeType approx_msfem_error = l2error.norm2< 2* MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
+                                                                                                      msfem_solution);
+      DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
+      H1Norm< MsfemTraits::GridPartType > h1norm(gridPart);
+      MsfemTraits::RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
+
+      DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
+    
+      
       MsfemTraits::RangeType fem_error = l2error.norm< MsfemTraits::ExactSolutionType >(u,
                                                             fem_solution,
-                                                            2 * MsfemTraits::DiscreteFunctionSpaceType::polynomialOrder + 2);
+                                                            order_quadrature_rule);
 
       DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
 
       MsfemTraits::RangeType h1_fem_error(0.0);
 
-      h1_fem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, fem_solution);
+      h1_fem_error = h1error.semi_norm< MsfemTraits::ExactSolutionType >(u, fem_solution, order_quadrature_rule);
       h1_fem_error += fem_error;
       DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
     }
@@ -315,6 +326,12 @@ int main(int argc, char** argv) {
     // syntax: info_from_par_file / default
     int number_of_layers_ = DSC_CONFIG_GET("rigorous_msfem.oversampling_layers", 4);
     
+    
+    if ( !(( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ) 
+      || ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Lagrange" ) ))
+    { DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 'Lagrange' or 'Clement'."); }
+
+
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
     const Problem::ModelProblemData info;
@@ -341,6 +358,7 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
     //DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", 1 ) << std::endl;
     DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
+    DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) << std::endl;
     if ( DSC_CONFIG_GET("rigorous_msfem.fem_comparison",false) )
        { DSC_LOG_INFO << std::endl << "Comparison with standard FEM computation on the MsFEM Fine Grid, i.e. on Refinement Level " << total_refinement_level_ << std::endl; }
     DSC_LOG_INFO << std::endl << std::endl;

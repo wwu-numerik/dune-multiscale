@@ -514,17 +514,19 @@ HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
     // L2 errors with exact solution
     if (HMM::ModelProblemDataType::has_exact_solution)
     {
+      int order_quadrature_rule = 13;
+      
       const typename HMM::ExactSolutionType u;
       const typename HMM::RangeType exact_hmm_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
                                                                     hmm_solution,
-                                                                    2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
+                                                                    order_quadrature_rule );
 
       DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
       if (DSC_CONFIG_GET("problem.reference_solution", false))
       {
         typename HMM::RangeType reference_sol_error = l2error.template norm< typename HMM::ExactSolutionType >(u,
                                                                         reference_solution,
-                                                                        2 * HMM::DiscreteFunctionSpaceType::polynomialOrder + 2);
+                                                                        order_quadrature_rule );
 
         DSC_LOG_INFO << "|| u_reference - u_exact ||_L2 =  " << reference_sol_error << std::endl << std::endl;
       }
