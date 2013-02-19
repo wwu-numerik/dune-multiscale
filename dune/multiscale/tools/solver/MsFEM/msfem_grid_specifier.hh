@@ -211,11 +211,11 @@ public:
 
     }
 
-    for ( int i = 0; i < is_boundary_node_.size(); ++i )
-      {
-        if ( is_boundary_node_[i] )
-	  number_of_coarse_boundary_nodes_ += 1;
-      }
+    for ( size_t i = 0; i < is_boundary_node_.size(); ++i )
+    {
+      if ( is_boundary_node_[i] )
+        number_of_coarse_boundary_nodes_ += 1;
+    }
     
     boundary_nodes_identified_ = true;
 

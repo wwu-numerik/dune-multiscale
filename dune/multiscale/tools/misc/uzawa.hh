@@ -217,7 +217,7 @@ namespace Dune
      */
     UzawaInverseOp( const AType &A,
                     const BType &B,
-                    double redEps,
+                    double /*redEps*/,
                     double absLimit,
                     int maxIter,
                     bool verbose )
@@ -235,7 +235,7 @@ namespace Dune
      */
     UzawaInverseOp( const AType &A,
                     const BType &B,
-                    double redEps,
+                    double /*redEps*/,
                     double absLimit,
                     int maxIter = std::numeric_limits< int >::max() )
     : A_( A ),
@@ -255,10 +255,10 @@ namespace Dune
       solver_.solve( A_, B_, arg1, arg2, dest1, dest2 );
     }
 
-    virtual void operator() ( const DiscreteVelocityFunctionType &arg1,
-                              DiscreteVelocityFunctionType &dest1) const
+    virtual void operator() ( const DiscreteVelocityFunctionType &/*arg1*/,
+                              DiscreteVelocityFunctionType &/*dest1*/) const
     {
-
+      DUNE_THROW(NotImplemented, "");
     }
 
     

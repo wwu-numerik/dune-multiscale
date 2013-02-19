@@ -256,7 +256,7 @@ namespace Dune
 
       }
 
-      for ( int c = 0; c < coff.size(); ++c )
+      for ( size_t c = 0; c < coff.size(); ++c )
       {
         if ( coff[c] != 0.0 )
           coff[c] = 1.0 / coff[c];
@@ -303,7 +303,7 @@ namespace Dune
             coarse_baseSet.evaluateAll( coarse_lagrangepoint_set.point( 1 ) , coarse_phi_corner_1 );
             coarse_baseSet.evaluateAll( coarse_lagrangepoint_set.point( 2 ) , coarse_phi_corner_2 );
 	    
-            for(int loc_point = 0; loc_point < coarse_numBaseFunctions ; ++loc_point ) {
+            for(size_t loc_point = 0; loc_point < coarse_numBaseFunctions ; ++loc_point ) {
                coarse_corners[ loc_point ] = coarse_geometry.global(coarse_lagrangepoint_set.point( loc_point ) );
             }
 

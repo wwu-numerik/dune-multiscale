@@ -14,6 +14,7 @@
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_rigorous_msfem_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
+#include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
 #include <dune/multiscale/tools/solver/MsFEM/msfem_grid_specifier.hh>
@@ -160,7 +161,7 @@ public:
     typedef typename MsfemTraits::IOTupleType IOTType;
     const auto& gridPart = msfem_basis_function_list[0]->space().gridPart();
   
-    for ( int i = 0; i < msfem_basis_function_list.size(); i+=1 )
+    for ( size_t i = 0; i < msfem_basis_function_list.size(); i+=1 )
     {
     
       IOTType msfem_basis_series( &(*msfem_basis_function_list[i]) );
@@ -247,9 +248,9 @@ public:
       
       std::vector< RangeType > phi( numBaseFunctions );
       //! TODO switch loops for more efficiency
-      for(int loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number ) {
+      for(size_t loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number ) {
       
-        int global_dof_number = specifier.coarseSpace().mapToGlobal(*coarse_father, loc_basis_number );
+        const int global_dof_number = specifier.coarseSpace().mapToGlobal(*coarse_father, loc_basis_number );
 	if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
 	{ continue; }
 
@@ -260,7 +261,7 @@ public:
         std::vector< RangeType > phi_i( number_of_points );
         std::vector< DomainType > corners( number_of_points );
 	
-        for(int loc_point = 0; loc_point < number_of_points ; ++loc_point ) {
+        for(size_t loc_point = 0; loc_point < number_of_points ; ++loc_point ) {
 
           coarseBaseSet.evaluateAll( lagrangepoint_set.point( loc_point ) , phi );
           phi_i[ loc_point ] = phi[ loc_basis_number ]; 
@@ -476,24 +477,23 @@ public:
                         MsFEMBasisFunctionType& msfem_basis_function_list_2,
                         MatrixImp& system_matrix ) const
   {
-    
-   for (int row = 0; row != system_matrix.N(); ++row)
-     for (int col = 0; col != system_matrix.M(); ++col)
-       system_matrix[row][col] = 0.0;
-     
+    for (size_t row = 0; row != system_matrix.N(); ++row)
+      for (size_t col = 0; col != system_matrix.M(); ++col)
+        system_matrix[row][col] = 0.0;
+         
 #ifdef SYMMETRIC_DIFFUSION_MATRIX
-   for (int row = 0; row != system_matrix.N(); ++row)
-    for (int col = 0; col <= row; ++col)
+   for (size_t row = 0; row != system_matrix.N(); ++row)
+    for (size_t col = 0; col <= row; ++col)
       system_matrix[row][col] 
         = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]) );
 
-   for (int col = 0; col != system_matrix.N(); ++col )
-    for (int row = 0; row < col; ++row)
+   for (size_t col = 0; col != system_matrix.N(); ++col )
+    for (size_t row = 0; row < col; ++row)
       system_matrix[row][col] = system_matrix[col][row];
     
 #else
-   for (int row = 0; row != system_matrix.N(); ++row)
-     for (int col = 0; col != system_matrix.M(); ++col) 
+   for (size_t row = 0; row != system_matrix.N(); ++row)
+     for (size_t col = 0; col != system_matrix.M(); ++col)
        system_matrix[col][row] 
          = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]) );
 
@@ -508,10 +508,10 @@ public:
                      VectorImp& rhs ) const
   {
     
-    for (int col = 0; col != rhs.N(); ++col)
+    for (size_t col = 0; col != rhs.N(); ++col)
       rhs[col] = 0.0;
      
-    for (int col = 0; col != rhs.N(); ++col)
+    for (size_t col = 0; col != rhs.N(); ++col)
     {
       int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
       for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
@@ -687,7 +687,7 @@ public:
     
     Dune::InverseOperatorResult result_data;
     VectorType solution_vector( number_of_internal_coarse_nodes );
-    for (int col = 0; col != solution_vector.N(); ++col)
+    for (size_t col = 0; col != solution_vector.N(); ++col)
       solution_vector[col] = 0.0;
       
 #ifdef SYMMETRIC_DIFFUSION_MATRIX
@@ -711,14 +711,14 @@ public:
 #endif
  
     coarse_scale_part.clear();
-    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+    for (size_t internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
        (*(standard_basis_function[internal_id])) *= solution_vector[internal_id];
        coarse_scale_part += (*(standard_basis_function[internal_id]));
      }
      
     solution.clear();
-    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+    for (size_t internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
        (*(msfem_basis_function[internal_id])) *= solution_vector[internal_id];
        solution += (*(msfem_basis_function[internal_id]));
