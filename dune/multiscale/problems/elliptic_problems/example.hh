@@ -93,8 +93,6 @@
 
 //!##################### Elliptic Example Problem ###################
 
-// AB HIER WEITER UEBERARBEITEN
-
 namespace Problem {
 namespace Example {
 // default value for epsilon (=0.05)

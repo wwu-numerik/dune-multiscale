@@ -14,7 +14,7 @@
 namespace Dune {
 
 /**
- * \todo warum ist das nen operator?
+ * \todo warum ist das nen operator? Stammt noch aus ner alten Implementierung und ist inzwischen überflüssig.
  */
 template< class CoarseDiscreteFunctionImp, class MacroMicroGridSpecifierImp, class FineDiscreteFunctionImp,
           class DiffusionImp >
