@@ -2,6 +2,7 @@
 
 [problem]
 # problem specifications
+# note that the grid is specified in '../multiscale/problems/elliptic_problems/XX.hh'
 
 # characteristic size of the micro structure
 epsilon = 0.05
@@ -35,8 +36,6 @@ rs_grid_level = 16
 
 # directory to save the data output
 #datadir = data/MsFEM/Model_Problem_9/Coarse_8_Fine_16_Layers_10
-#datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_6_Fine_12_Layers_0
-#datadir = data/FEM/Model_Problem_9/Ref_16
 datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_6_Fine_16_Layers_30
 
 
@@ -57,10 +56,6 @@ file = ms.log
 # logging directory relative to datadir
 # data will be saved under 'datadir/dir'
 dir = logdata
-
-[grid]
-
-file =
 
 
 # method specifications for MsFEM and HMM #
@@ -101,6 +96,8 @@ fem_comparison = 1
 
 
 [rigorous_msfem]
+
+# no error estimation implemented
 
 # initial coarse grid level
 coarse_grid_level = 6

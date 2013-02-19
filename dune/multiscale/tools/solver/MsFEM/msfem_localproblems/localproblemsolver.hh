@@ -1016,10 +1016,18 @@ public:
          double solverEps = 1e-8 ;
          int maxIterations = 1000;
 
+         // we want to solve the local problem with the constraint that the weighted Clement interpoltion
+         // of the local problem solution is zero
+
+         // implementation of a weighted Clement interpolation operator for our purpose:
          WeightedClementOperatorType clement_interpolation_op( subDiscreteFunctionSpace,
                                                                specifier_.coarseSpace(),
                                                                subgrid_list_.getCoarseNodeVector( coarse_index ),
                                                                *coarse_basis_, *global_id_to_internal_id_, specifier_ );
+         //! NOTE TODO: implementation is not yet optimal, because the weighted Clement maps a function 
+         //! defined on the local subgrid to a function defined on the whole(!) coarse space.
+         //! It would be better to implement a mapping to a localized coarse space, since
+         //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence). 
 
          //clement_interpolation_op.print();
 
@@ -1027,8 +1035,9 @@ public:
          lagrange_multiplier.clear();
     
          // create inverse operator
+         // saddle point problem solver with uzawa algorithm:
          InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
-         uzawa( local_problem_rhs, zero, local_problem_solution, lagrange_multiplier );
+         uzawa( local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier );
 
        }
       else

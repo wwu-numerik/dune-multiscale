@@ -599,7 +599,7 @@ public:
       msfem_basis_function[internal_id]->clear();
      }
 
-    //! TODO for each MsFEM basis function save the support,
+    //! NOTE TODO for each MsFEM basis function save the support,
     //! i.e. a vector of entity points that describe the support of the basis
     //! function. This will save a lot of computational time when assembling the system matrix!
      
@@ -650,7 +650,14 @@ public:
        vtk_output( msfem_basis_function );
        vtk_output( standard_basis_function, "standard_basis_function" );
     }
-
+    
+    DSC_LOG_INFO << "Start assembling the stiffness matrix of the global problems.." << std::endl;
+  
+    DSC_LOG_INFO << "WARNING! Assembling the stiffness matrix of the global problems extremely expensive! Implementation is not yet efficient!" << std::endl;
+    //! NOTE TODO for each MsFEM basis function save the support,
+    //! i.e. a vector of entity points that describe the support of the basis
+    //! function. This will save a lot of computational time when assembling the system matrix!
+     
     //! (stiffness) matrix
     MatrixType system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
   
@@ -659,8 +666,11 @@ public:
     else
     { assemble_matrix( diffusion_op, msfem_basis_function, msfem_basis_function, system_matrix); }
 
+    DSC_LOG_INFO << ".. assembling of the stiffness matrix done." << std::endl;
+  
     //print_matrix( system_matrix );
     
+    //! NOTE TODO: Assembling of right hand side is also quite expensive!
     VectorType rhs( number_of_internal_coarse_nodes );
     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
     { assemble_rhs( f, standard_basis_function, rhs ); }
