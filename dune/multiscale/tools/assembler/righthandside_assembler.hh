@@ -193,36 +193,30 @@ public:
    **/
   template< int polOrd, class FirstSourceType, class MacroMicroGridSpecifierType, class SubGridListType >
   static void assemble_for_MsFEM_symmetric(const FirstSourceType& f, MacroMicroGridSpecifierType& specifier, SubGridListType& subgrid_list,
-                                           DiscreteFunctionType& rhsVector) {
-    
+                                           DiscreteFunctionType& rhsVector)
+  {
     // set rhsVector to zero:
     rhsVector.clear();
     
     const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
-    
     for (const auto& coarse_grid_entity : rhsVector.space())
     {
 
       const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
     
       const GeometryType& coarse_grid_geometry = coarse_grid_entity.geometry();
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(coarse_grid_entity); 
+      auto elementOfRHS = rhsVector.localFunction(coarse_grid_entity);
 
       const BaseFunctionSetType coarse_grid_baseSet = specifier.coarseSpace().baseFunctionSet(coarse_grid_entity);
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
-      typedef typename SubGridListType::SubGridType SubGridType;
       typedef typename SubGridListType::SubGridPartType SubGridPartType;
       typedef typename SubGridListType::SubGridDiscreteFunctionSpace LocalDiscreteFunctionSpace;
       typedef typename SubGridListType::SubGridDiscreteFunction LocalDiscreteFunction;
-      typedef typename LocalDiscreteFunctionSpace::IteratorType LocalGridIterator;
-      typedef typename LocalGridIterator::Entity LocalGridEntity;
-      typedef typename LocalGridEntity::Geometry LocalGridGeometry;
       typedef CachingQuadrature< SubGridPartType, 0 > LocalGridQuadrature;
       
-      SubGridType& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
-      SubGridPartType subGridPart(sub_grid_U_T);
-      
+      auto& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
+      SubGridPartType subGridPart(sub_grid_U_T);      
       LocalDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
 
       LocalDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
@@ -276,55 +270,46 @@ public:
       std::vector<JacobianRangeType> gradient_Phi_vec(numDofs);
       coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_vec);
 
-      for (int i = 0; i < numDofs; ++i) 
-      {    
+      for (int i = 0; i < numDofs; ++i)
+      {
         // iterator for the micro grid ( grid for the reference element T_0 )
-        const LocalGridIterator local_grid_end = localDiscreteFunctionSpace.end();
-        for (LocalGridIterator local_grid_it = localDiscreteFunctionSpace.begin();
-             local_grid_it != local_grid_end;
-             ++local_grid_it)
+        for (const auto& local_grid_entity : localDiscreteFunctionSpace)
         {
-          const LocalGridEntity& local_grid_entity = *local_grid_it;
-
           // check if "local_grid_entity" (which is an entity of U(T)) is in T:
           // -------------------------------------------------------------------
 
-          auto father_of_loc_grid_ent =
+          const auto father_of_loc_grid_ent =
               Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                   localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity),
-                                   specifier.getLevelDifference());
+                                       localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity),
+                                       specifier.getLevelDifference());
           if (!Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
           {
             continue;
           }
           // -------------------------------------------------------------------
           
-          const LocalGridGeometry& local_grid_geometry = local_grid_entity.geometry();
+          const auto& local_grid_geometry = local_grid_entity.geometry();
           assert(local_grid_entity.partitionType() == InteriorEntity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
           LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
-          const size_t numQuadraturePoints = local_grid_quadrature.nop();
-
-          for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint)
+          for (size_t localQuadraturePoint = 0; localQuadraturePoint < local_grid_quadrature.nop(); ++localQuadraturePoint)
           {
-
             RangeType f_x, corrector_phi_x;
 
             // local (barycentric) coordinates (with respect to entity)
             const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
-              localQuadraturePoint);
-
-            DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
+                                                                                        localQuadraturePoint);
+            const auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
 
             const double weight_local_quadrature
-              = local_grid_quadrature.weight(localQuadraturePoint)
-                * local_grid_geometry.integrationElement(local_subgrid_point);
+                = local_grid_quadrature.weight(localQuadraturePoint)
+                  * local_grid_geometry.integrationElement(local_subgrid_point);
 
-            auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
-              local_grid_entity);
-            auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
-              local_grid_entity);
+            const auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
+                                                               local_grid_entity);
+            const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
+                                                               local_grid_entity);
 
             // local corrector for e_0 and e_1
             RangeType loc_sol_e0, loc_sol_e1;
@@ -334,18 +319,14 @@ public:
             corrector_phi_x = 0.0;
             corrector_phi_x += gradient_Phi_vec[i][0][0] * loc_sol_e0;
             corrector_phi_x += gradient_Phi_vec[i][0][1] * loc_sol_e1;
-	    
+
             f.evaluate( global_point_in_U_T , f_x);
 
             elementOfRHS[i] += weight_local_quadrature * (f_x * corrector_phi_x);
-
+          }
         }
-
-	}
       }
-      
     }
-    
   }  // end method
 
  
@@ -363,10 +344,9 @@ public:
 
     for (const auto& entity : rhsVector.space())
     {
-      const GeometryType& geometry = entity.geometry();
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity);
-      const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = rhsVector.space().baseFunctionSet(entity);
+      const auto& geometry = entity.geometry();
+      auto elementOfRHS = rhsVector.localFunction(entity);
+      const auto baseSet = rhsVector.space().baseFunctionSet(entity);
 
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
@@ -386,7 +366,7 @@ public:
       {
         // local (barycentric) coordinates (with respect to entity)
         const auto& local_point = quadrature.point(quadraturePoint);
-        const DomainType global_point = geometry.global(local_point);
+        const auto global_point = geometry.global(local_point);
         const double det = geometry.integrationElement(local_point);
         const auto& inv = geometry.jacobianInverseTransposed(local_point);
         // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
@@ -424,9 +404,6 @@ public:
                                       const PeriodicDiscreteFunctionType& dummy_func,
                                       DiscreteFunctionType& rhsVector)
   {
-    typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
-      PeriodicDiscreteFunctionSpaceType;
-
     typedef typename PeriodicDiscreteFunctionType::LocalFunctionType
       PeriodicLocalFunctionType;
 
@@ -442,10 +419,8 @@ public:
     const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
     const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
-    const DiscreteFunctionSpaceType& discreteFunctionSpace
-      = rhsVector.space();
-    const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace
-      = dummy_func.space();
+    const DiscreteFunctionSpaceType& discreteFunctionSpace = rhsVector.space();
+    const auto& periodicDiscreteFunctionSpace = dummy_func.space();
 
     // set rhsVector to zero:
     rhsVector.clear();
@@ -456,27 +431,21 @@ public:
     for (auto macro_grid_it = discreteFunctionSpace.begin(); macro_grid_it != macro_grid_endit; ++macro_grid_it)
     {
       // it* Pointer auf ein Element der Entity
-      const GeometryType& macro_grid_geometry = (*macro_grid_it).geometry(); // Referenz auf Geometrie
-
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(*macro_grid_it);
+      const auto& macro_grid_geometry = (*macro_grid_it).geometry(); // Referenz auf Geometrie
+      auto elementOfRHS = rhsVector.localFunction(*macro_grid_it);
 
       const BaseFunctionSetType macro_grid_baseSet
         = discreteFunctionSpace.baseFunctionSet(*macro_grid_it);
-
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
-
       // for \int_{\Omega} f \Phi
       const Quadrature macro_quadrature(*macro_grid_it, polOrd);
-
       // for - \int_{\Omega} \in_Y A^{\epsilon}( gradient reconstruction ) \nabla \Phi
       const Quadrature one_point_macro_quadrature(*macro_grid_it, 0);
       // the fine scale reconstructions are only available for the barycenter of the macro grid entity (=> only
       // available for the canonical one point quadrature on this element)
-
-      const typename Quadrature::CoordinateType& local_macro_point = one_point_macro_quadrature.point(0 /*=quadraturePoint*/);
-
+      const auto& local_macro_point = one_point_macro_quadrature.point(0 /*=quadraturePoint*/);
       // barycenter of macro grid entity
-      const DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
+      const auto macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
 
       const double macro_entity_volume = one_point_macro_quadrature.weight(0 /*=quadraturePoint*/)
                                          * macro_grid_geometry.integrationElement(local_macro_point);
@@ -522,7 +491,7 @@ public:
           // local (barycentric) coordinates (with respect to entity)
           const typename Quadrature::CoordinateType& local_point = macro_quadrature.point(quadraturePoint);
 
-          const DomainType global_point = macro_grid_geometry.global(local_point);
+          const auto global_point = macro_grid_geometry.global(local_point);
 
           const double quad_weight
             = macro_grid_geometry.integrationElement(local_point) * macro_quadrature.weight(quadraturePoint);
@@ -547,16 +516,11 @@ public:
             typename EntityType::EntityPointer entity_ptr(macro_grid_it);
             discrete_function_reader_baseSet.read(cp_num_manager.get_number_of_cell_problem(entity_ptr, i)
                                                   , corrector_Phi_i);
-          }
+        }
 
         RangeType fine_scale_contribution = 0.0;
-
-        const auto micro_grid_end = periodicDiscreteFunctionSpace.end();
-        for (auto micro_grid_it = periodicDiscreteFunctionSpace.begin();
-             micro_grid_it != micro_grid_end;
-             ++micro_grid_it)
+        for (const auto& micro_grid_entity : periodicDiscreteFunctionSpace)
         {
-          const EntityType& micro_grid_entity = *micro_grid_it;
           const GeometryType& micro_grid_geometry = micro_grid_entity.geometry();
           assert(micro_grid_entity.partitionType() == InteriorEntity);
 
