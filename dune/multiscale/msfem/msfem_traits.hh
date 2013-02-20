@@ -4,11 +4,13 @@
 #include <dune/multiscale/tools/errorestimation/MsFEM/msfem_elliptic_error_estimator.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
 #include <dune/multiscale/tools/subgrid_io.hh>
-#include <dune/subgrid/subgrid.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
+#include <dune/subgrid/subgrid.hh>
 #include <dune/fem/io/file/dataoutput.hh>
 
 namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
 
 template < class T >
 class MacroMicroGridSpecifier;
@@ -65,12 +67,12 @@ struct MsfemTraits {
     AdaptationManagerType;
   //!---------------------------------------------------------------------------------------
 
-  typedef Dune::MacroMicroGridSpecifier< DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifier< DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
   typedef Dune::SubGrid< GridType::dimension, GridType >                                      SubGridType;
   typedef Dune::SubGridList< DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
 
   //! -------------------------- MsFEM error estimator ----------------------------
-  typedef Dune::MsFEMErrorEstimator< DiscreteFunctionType,
+  typedef MsFEMErrorEstimator< DiscreteFunctionType,
                                DiffusionType,
                                FirstSourceType,
                                MacroMicroGridSpecifierType,
@@ -86,6 +88,9 @@ struct MsfemTraits {
   // just for the discretized exact solution (in case it is available)
   typedef Dune::DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 };
-} //namespace DUNE
+
+} //namespace MsFEM {
+} //namespace Multiscale {
+} //namespace Dune {}
 
 #endif // MSFEM_TRAITS_HH

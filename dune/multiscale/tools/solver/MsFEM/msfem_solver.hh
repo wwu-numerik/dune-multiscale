@@ -18,9 +18,9 @@
 
 #include <dune/multiscale/tools/solver/MsFEM/msfem_grid_specifier.hh>
 
-// / done
-
 namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
 
 template< class DiscreteFunctionType >
 class Elliptic_MsFEM_Solver
@@ -554,6 +554,9 @@ public:
     DSC_LOG_ERROR << "No implemented!" << std::endl;
   }
 };
-}
+
+} //namespace MsFEM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // #ifndef Elliptic_MSEM_Solver_HH

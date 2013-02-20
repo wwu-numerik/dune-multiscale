@@ -20,6 +20,10 @@
 #include <dune/multiscale/tools/errorestimation/MsFEM/conservative_flux_solver.hh>
 #include "estimator_utils.hh"
 
+namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
+
 template < class DiscreteFunctionPointerPair,
            class EntityPointer,
            class GridPartType,
@@ -54,7 +58,7 @@ struct FluxContainer {
   }
 };
 
-namespace Dune {
+
 template< class DiscreteFunctionImp,
           class DiffusionImp,
           class SourceImp,
@@ -671,6 +675,8 @@ public:
 }; // end of class MsFEMErrorEstimator
 
 
-} // end namespace
+} //namespace MsFEM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // ifndef DUNE_MSFEM_ERRORESTIMATOR_HH

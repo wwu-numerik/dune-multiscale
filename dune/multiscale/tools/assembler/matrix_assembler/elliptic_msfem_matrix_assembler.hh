@@ -12,6 +12,8 @@
 #include <dune/stuff/fem/functions/checks.hh>
 
 namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
 
 /**
  * \todo warum ist das nen operator? Stammt noch aus ner alten Implementierung und ist inzwischen überflüssig.
@@ -405,6 +407,9 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
     }
   }
 } // assemble_matrix
-}
+
+} //namespace MsFEM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // #ifndef DiscreteElliptic_HH

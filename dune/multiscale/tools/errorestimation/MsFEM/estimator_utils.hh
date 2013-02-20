@@ -4,6 +4,8 @@
 #include <dune/multiscale/tools/misc.hh>
 
 namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
 
 template < class EstimatorType >
 struct EstimatorUtils {
@@ -210,6 +212,9 @@ struct EstimatorUtils {
   }
 
 };
-} //namespace DUne
+
+} //namespace MsFEM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // ESTIMATOR_UTILS_HH

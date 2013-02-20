@@ -1,8 +1,9 @@
 #ifndef MSFEM_GRID_SPECIFIER_HH
 #define MSFEM_GRID_SPECIFIER_HH
 
-
 namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
 
 template< class DiscreteFunctionSpaceType >
 class MacroMicroGridSpecifier
@@ -279,6 +280,9 @@ private:
   // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
   RangeTypeVector loc_fine_grid_jumps_;
 };
-}
+
+} //namespace MsFEM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif
