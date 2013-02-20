@@ -16,7 +16,7 @@ template < class T >
 class MacroMicroGridSpecifier;
 
 //! --------- typedefs for the coefficient and data functions ------------------
-struct MsfemTraits {
+struct MsFEMTraits {
   //! ----- typedefs for the macro grid and the corresponding discrete space -----
   typedef Dune::GridSelector::GridType
   GridType;

@@ -85,31 +85,31 @@ int main(int argc, char** argv) {
     // ----- local error indicators (for each coarse grid element T) -------------
     const int max_loop_number = 10;
     // local coarse residual, i.e. H ||f||_{L^2(T)}
-    MsfemTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
+    MsFEMTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
     // local coarse grid jumps (contribute to the total coarse residual)
-    MsfemTraits::RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
+    MsFEMTraits::RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
     // local projection error (we project to get a globaly continous approximation)
-    MsfemTraits::RangeVectorVector loc_projection_error_(max_loop_number);
+    MsFEMTraits::RangeVectorVector loc_projection_error_(max_loop_number);
     // local jump in the conservative flux
-    MsfemTraits::RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
+    MsFEMTraits::RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
     // local approximation error
-    MsfemTraits::RangeVectorVector loc_approximation_error_(max_loop_number);
+    MsFEMTraits::RangeVectorVector loc_approximation_error_(max_loop_number);
     // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
-    MsfemTraits::RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
+    MsFEMTraits::RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
 
-    MsfemTraits::RangeVector total_coarse_residual_(max_loop_number);
-    MsfemTraits::RangeVector total_projection_error_(max_loop_number);
-    MsfemTraits::RangeVector total_coarse_grid_jumps_(max_loop_number);
-    MsfemTraits::RangeVector total_conservative_flux_jumps_(max_loop_number);
-    MsfemTraits::RangeVector total_approximation_error_(max_loop_number);
-    MsfemTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
-    MsfemTraits::RangeVector total_estimated_H1_error_(max_loop_number);
+    MsFEMTraits::RangeVector total_coarse_residual_(max_loop_number);
+    MsFEMTraits::RangeVector total_projection_error_(max_loop_number);
+    MsFEMTraits::RangeVector total_coarse_grid_jumps_(max_loop_number);
+    MsFEMTraits::RangeVector total_conservative_flux_jumps_(max_loop_number);
+    MsFEMTraits::RangeVector total_approximation_error_(max_loop_number);
+    MsFEMTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
+    MsFEMTraits::RangeVector total_estimated_H1_error_(max_loop_number);
 
     //! TODO put these into something like a named tuple/class
-    std::vector<MsfemTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_,
+    std::vector<MsFEMTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_,
                                                              &loc_projection_error_, &loc_conservative_flux_jumps_,
                                                              &loc_approximation_error_, &loc_fine_grid_jumps_}};
-    std::vector<MsfemTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_,
+    std::vector<MsFEMTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_,
                                                       &total_coarse_grid_jumps_, &total_conservative_flux_jumps_,
                                                       &total_approximation_error_, &total_fine_grid_jumps_ }};
 

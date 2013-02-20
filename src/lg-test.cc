@@ -84,47 +84,47 @@ void algorithm(const std::string& macroGridName) {
   // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
   // for the parameters:
   // create a grid pointer for the DGF file belongig to the macro grid:
-  MsfemTraits::GridPointerType macro_grid_pointer(macroGridName);
+  MsFEMTraits::GridPointerType macro_grid_pointer(macroGridName);
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine(coarse_grid_level_);
   //! ---- tools ----
 
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for MsFEM-macro-problem
-  MsfemTraits::GridPartType gridPart(*macro_grid_pointer);
-  MsfemTraits::GridType& grid = gridPart.grid();
+  MsFEMTraits::GridPartType gridPart(*macro_grid_pointer);
+  MsFEMTraits::GridType& grid = gridPart.grid();
   //! --------------------------------------------------------------------------------------
 
   // coarse grid
-  MsfemTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
+  MsFEMTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
   macro_grid_pointer_coarse->globalRefine(coarse_grid_level_);
-  MsfemTraits::GridPartType gridPart_coarse(*macro_grid_pointer_coarse);
-  MsfemTraits::GridType& grid_coarse = gridPart_coarse.grid();
+  MsFEMTraits::GridPartType gridPart_coarse(*macro_grid_pointer_coarse);
+  MsFEMTraits::GridType& grid_coarse = gridPart_coarse.grid();
 
   grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
 
   //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
-  MsfemTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
-  MsfemTraits::DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
+  MsFEMTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  MsFEMTraits::DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
 
   //! ---------------------- solve MsFEM problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  MsfemTraits::DiscreteFunctionType msfem_solution(filename_ + " MsFEM Solution", discreteFunctionSpace);
+  MsFEMTraits::DiscreteFunctionType msfem_solution(filename_ + " MsFEM Solution", discreteFunctionSpace);
   msfem_solution.clear();
 
-  MsfemTraits::DiscreteFunctionType coarse_part_msfem_solution(filename_ + " Coarse Part MsFEM Solution", discreteFunctionSpace);
+  MsFEMTraits::DiscreteFunctionType coarse_part_msfem_solution(filename_ + " Coarse Part MsFEM Solution", discreteFunctionSpace);
   coarse_part_msfem_solution.clear();
 
-  MsfemTraits::DiscreteFunctionType fine_part_msfem_solution(filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace);
+  MsFEMTraits::DiscreteFunctionType fine_part_msfem_solution(filename_ + " Fine Part MsFEM Solution", discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
   const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
   const int coarse_level_fine_level_difference = grid.maxLevel() - grid_coarse.maxLevel();
 
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-  MsfemTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
+  MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
   for (int i = 0; i < number_of_level_host_entities; i += 1)
   {
     specifier.setLayer(i, number_of_layers_);
@@ -133,18 +133,18 @@ void algorithm(const std::string& macroGridName) {
   //! --------------------------- coefficient functions ------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const MsfemTraits::DiffusionType diffusion_op;
+  const MsFEMTraits::DiffusionType diffusion_op;
   // define (first) source term:
-  const MsfemTraits::FirstSourceType f; // standard source f
+  const MsFEMTraits::FirstSourceType f; // standard source f
 
   //! create subgrids:
   const bool silence = false;
   {
-    MsfemTraits::SubGridListType subgrid_list(specifier, silence);
+    MsFEMTraits::SubGridListType subgrid_list(specifier, silence);
 
     auto walk = DSG::make_gridwalk(grid.leafView());
     //! GridWalk functor that refines all entitites above given volume
-    LGFunctor<MsfemTraits::DiscreteFunctionSpaceType> fun(discreteFunctionSpace);
+    LGFunctor<MsFEMTraits::DiscreteFunctionSpaceType> fun(discreteFunctionSpace);
     walk(fun);
   }
   //! -------------------------- writing data output FEM Solution ----------
