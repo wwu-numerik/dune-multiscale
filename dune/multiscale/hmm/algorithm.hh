@@ -14,6 +14,10 @@
 #include <dune/stuff/common/logging.hh>
 #include "algorithm_step.hh"
 
+namespace Dune {
+namespace Multiscale {
+namespace HMM {
+
 //! \todo DOCME
 template< class Stream, class DiscFunc >
 void oneLinePrint(Stream& stream, const DiscFunc& func) {
@@ -117,7 +121,7 @@ void print_info(ProblemDataType info, std::ostream& out)
   out << std::endl << std::endl;
 }
 
-bool adapt(const HMMResult<HMMTraits>& result,
+bool adapt(const HMMResult& result,
            const int loop_cycle,
            const double error_tolerance_,
            const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
@@ -332,5 +336,9 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
   } // end while (repeat) of repeat loop (for the adaptive cicles)
   //! ******************** End of assembling and solving the HMM problem ***************************
 }
+
+} //namespace HMM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // DUNE_MS_HMM_ALGORITHM_HH

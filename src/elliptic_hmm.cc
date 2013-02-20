@@ -26,6 +26,8 @@ int main(int argc, char** argv) {
     init(argc, argv);
     check_config();
 
+    using namespace Dune::Multiscale::HMM;
+
     DSC_PROFILER.startTiming("total_cpu");
 
     const std::string path = DSC_CONFIG_GET("global.datadir", "data/");

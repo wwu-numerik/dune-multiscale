@@ -20,6 +20,10 @@
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/io/file/dataoutput.hh>
 
+namespace Dune {
+namespace Multiscale {
+namespace HMM {
+
 struct HMMTraits {
 //! --------- typedefs for the macro grid and the corresponding discrete space -------------
 typedef Dune::GridSelector::GridType
@@ -146,5 +150,8 @@ typedef Dune::AdaptationManager< GridType, RestrictProlongOperatorType > Adaptat
 static const int assembler_order = 2* DiscreteFunctionSpaceType::polynomialOrder + 2;
 }; // struct  HMMTraits
 
+} //namespace HMM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // DUNE_MS_HMM_TYPES_HH

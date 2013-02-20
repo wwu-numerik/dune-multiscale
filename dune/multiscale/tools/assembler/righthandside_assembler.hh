@@ -295,7 +295,7 @@ public:
           LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
           for (size_t localQuadraturePoint = 0; localQuadraturePoint < local_grid_quadrature.nop(); ++localQuadraturePoint)
           {
-            RangeType f_x, corrector_phi_x;
+            RangeType corrector_phi_x;
 
             // local (barycentric) coordinates (with respect to entity)
             const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
