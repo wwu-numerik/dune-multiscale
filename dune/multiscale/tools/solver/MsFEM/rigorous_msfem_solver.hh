@@ -633,7 +633,8 @@ public:
         
     add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, msfem_basis_function );
     
-    #if 0
+    // just for VTK output for the basis function correctors
+    /*
     MsFEMBasisFunctionType corrector_basis_function;
     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
@@ -643,7 +644,7 @@ public:
      
     add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, corrector_basis_function );
     vtk_output( corrector_basis_function, "corrector_basis_function" );
-    #endif
+    */
     
     if ( DSC_CONFIG_GET("rigorous_msfem.msfem_basis_vtk_output", 0) )
     {

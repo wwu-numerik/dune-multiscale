@@ -36,7 +36,7 @@ rs_grid_level = 16
 
 # directory to save the data output
 #datadir = data/MsFEM/Model_Problem_9/Coarse_8_Fine_16_Layers_10
-datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_6_Fine_16_Layers_30
+datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_6_Fine_12_Layers_16
 
 
 
@@ -103,10 +103,10 @@ fem_comparison = 1
 coarse_grid_level = 6
 
 # initial fine grid level 
-fine_grid_level = 16
+fine_grid_level = 12
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 30
+oversampling_layers = 16
 
 # oversampling strategy 3 'Lagrange' or 'Clement'.
 oversampling_strategy = Clement

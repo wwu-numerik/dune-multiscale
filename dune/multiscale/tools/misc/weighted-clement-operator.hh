@@ -262,7 +262,6 @@ namespace Dune
           coff[c] = 1.0 / coff[c];
       }
 
-#if 1
       for(CoarseIteratorType coarse_it = coarse_space_.begin(); coarse_it != coarse_end; ++coarse_it)
       {
          CoarseEntityType& coarse_entity = *coarse_it;
@@ -364,100 +363,6 @@ namespace Dune
          }
       }
 
-#endif
-
-#if 0
-      // apply local matrix assembler on each element
-      IteratorType end = space.end();
-      for(IteratorType it = space.begin(); it != end; ++it)
-      {
-        EntityType& entity = *it;
-
-        // cache geometry of entity 
-        const GeometryType geometry = entity.geometry();
-
-        assert(entity.partitionType() == InteriorEntity);
-
-        std::vector< RangeType > phi( space.mapper().maxNumDofs() );
-
-        // get base function set 
-        const BaseFunctionSetType &baseSet = space.baseFunctionSet( entity );
-        const auto numBaseFunctions = baseSet.size();
-        
-        // create quadrature of appropriate order 
-        QuadratureType quadrature( entity, 2 * polynomialOrder + 2 );
-
-        // loop over all quadrature points
-        const size_t numQuadraturePoints = quadrature.nop();
-        for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
-        {
-          const typename QuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
-
-          const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
-
-          baseSet.evaluateAll( quadrature[quadraturePoint], phi );
-
-          for (unsigned int j = 0; j < numBaseFunctions; ++j)
-           {
-             int global_dof_number = space.mapToGlobal( entity, j );
-
-             for(CoarseIteratorType coarse_it = coarse_space_.begin(); coarse_it != coarse_end; ++coarse_it)
-             {
-
-               CoarseEntityType& coarse_entity = *coarse_it;
-               // get local matrix from matrix object
-               LocalMatrixType localMatrix = linearOperator_.localMatrix( entity, coarse_entity );
-#if 0     
-               // cache geometry of entity 
-               const CoarseGeometryType coarse_geometry = coarse_entity.geometry();
-               std::vector< RangeType > coarse_phi( coarse_space_.mapper().maxNumDofs() );
-#endif	       
-               // get base function set 
-               const CoarseBaseFunctionSetType &coarse_baseSet = coarse_space_.baseFunctionSet( coarse_entity );
-               const auto coarse_numBaseFunctions = coarse_baseSet.size();
-
-               // create quadrature of appropriate order 
-               CoarseQuadratureType coarse_quadrature( coarse_entity, 2 * polynomialOrder + 2 );
-
-               // loop over all quadrature points
-               const size_t coarse_numQuadraturePoints = coarse_quadrature.nop();
-               for (size_t coarse_quadraturePoint = 0; coarse_quadraturePoint < coarse_numQuadraturePoints; ++coarse_quadraturePoint)
-               {
-                 const typename CoarseQuadratureType::CoordinateType& coarse_local_point
-                       = coarse_quadrature.point(coarse_quadraturePoint);
-
-                 const double coarse_weight = coarse_quadrature.weight(coarse_quadraturePoint)
-		      * coarse_geometry.integrationElement(coarse_local_point);
-
-                 coarse_baseSet.evaluateAll( coarse_quadrature[coarse_quadraturePoint], coarse_phi );
- 
-                 for (unsigned int i = 0; i < coarse_numBaseFunctions; ++i)
-                 {
-                    int coarse_global_dof_number = coarse_space_.mapToGlobal( coarse_entity, i );
-                    if ( specifier_.is_coarse_boundary_node( coarse_global_dof_number ) == true )
-                      { continue; }
-                      
-                    int global_interior_dof_number = global_id_to_internal_id_[ coarse_global_dof_number ];
-
-                    
-(*(coarse_basis[global_interior_dof_number]))
-
-                    localMatrix.add( i, j, weight /*!?*/* coff[coarse_global_dof_number] * coarse_phi[i] * phi[j] );
-	     
-	         }
-
-               }
-	     
-             }
-
-           }
-
-	}
-
-      }
-#endif
-      //!boundaryTreatment();
-
       // get elapsed time 
       const double assemblyTime = timer.elapsed();
       // in verbose mode print times 
@@ -467,53 +372,6 @@ namespace Dune
       // get grid sequence number from space (for adaptive runs)    /*@LST0S@*/
       sequence_ = dofManager_.sequence();
 
-    }
-
-    // make boundry treament
-    void boundaryTreatment () const
-    {
-      typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
-      typedef typename IteratorType :: Entity EntityType;
-
-      const DiscreteFunctionSpaceType &dfSpace = discreteFunctionSpace();
-      typedef typename DiscreteFunctionSpaceType::LagrangePointSetType LagrangePointSetType;
-      
-      const GridPartType &gridPart = dfSpace.gridPart();
-      
-      const int faceCodim = 1;
-      typedef typename GridPartType :: IntersectionIteratorType
-        IntersectionIteratorType;
-      typedef typename LagrangePointSetType
-        :: template Codim< faceCodim > :: SubEntityIteratorType
-        FaceDofIteratorType;
-
-      const IteratorType end = dfSpace.end();
-      for( IteratorType it = dfSpace.begin(); it != end; ++it )
-      {
-        const EntityType &entity = *it;
-        // if entity has boundary intersections 
-        if( entity.hasBoundaryIntersections() )
-        {
-          // get local matrix from matrix object 
-          LocalMatrixType localMatrix = linearOperator_.localMatrix( entity, entity );
-          const LagrangePointSetType& lagrangePointSet = dfSpace.lagrangePointSet(entity);
-      
-          const IntersectionIteratorType endiit = gridPart.iend( entity );
-          for( IntersectionIteratorType iit = gridPart.ibegin( entity );
-               iit != endiit ; ++iit )
-          {
-
-            if ( iit->neighbor() ) // if there is a neighbor entity
-             continue;
-
-            const int face = (*iit).indexInInside();
-            const FaceDofIteratorType fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-            for (FaceDofIteratorType fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
-              localMatrix.unitRow(*fdit);
-          }
-        }
-      }
-      
     }
 
   protected:
