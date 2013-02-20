@@ -431,7 +431,6 @@ void step_data_output(const typename HMM::GridPartType& gridPart,
 //!-------------------------------------------------------------
 }
 
-template < class HMMTraits >
 HMMResult<HMMTraits> single_step( typename HMMTraits::GridPartType& gridPart,
         typename HMMTraits::GridPartType& gridPartFine,
         typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,

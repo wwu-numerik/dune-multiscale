@@ -31,7 +31,6 @@ public:
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/solver/HMM/reconstruction_manager/elliptic/reconstructionintegrator.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
-#include <dune/multiscale/hmm/hmm_traits.hh>
 
 void check_config();
 
@@ -106,7 +105,7 @@ int main(int argc, char** argv) {
     Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(unitCubeName.string());
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
-    algorithm<HMMTraits> (macro_grid_pointer, fine_macro_grid_pointer,
+    algorithm(macro_grid_pointer, fine_macro_grid_pointer,
               periodic_grid_pointer, filename_);
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
     //normal
@@ -121,20 +120,17 @@ int main(int argc, char** argv) {
   return 1;
 } // main
 
-/** \brief contains non-transformed macro stuff that might contain logic
- * \todo use config instead
- **/
+//! \brief sanity checks for our configuration
 void check_config()
 {
   if ( !DSC_CONFIG_GET("hmm.error_estimation", false) && DSC_CONFIG_GET("hmm.adaptivity", false) )
     DUNE_THROW(Dune::InvalidStateException, "Error estimation must be activated to use adaptivity.");
 
-#ifdef RESUME_TO_BROKEN_COMPUTATION
-// last HMM Newton step that was succesfully carried out, saving the iterate afterwards
- #define HMM_NEWTON_ITERATION_STEP 2
-#else // ifdef RESUME_TO_BROKEN_COMPUTATION
-      // default: we need a full computation. start with step 1:
- #define HMM_NEWTON_ITERATION_STEP 0
-#endif // ifdef RESUME_TO_BROKEN_COMPUTATION
+  if (DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)) {
+    DSC_CONFIG.set("HMM_NEWTON_ITERATION_STEP", 2);
+  }
+  else {
+    DSC_CONFIG.set("HMM_NEWTON_ITERATION_STEP", 0);
+  }
 
 }
