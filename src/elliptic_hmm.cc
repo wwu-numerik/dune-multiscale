@@ -14,18 +14,6 @@
 // all the multiscale code requires an access to the 'ModelProblemData' class
 // (typically defined in the specification file for the model problem)
 
-namespace Multiscale {
-// parameters for the current realization of the HMM
-class HMMParameters
-{
-public:
-  // Constructor for ModelProblemData
-  inline explicit HMMParameters()
-  {}
-
-};
-}
-
 //! local (dune-multiscale) includes
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>

@@ -513,31 +513,25 @@ public:
      
     for (size_t col = 0; col != rhs.N(); ++col)
     {
-      int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
-      for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
-      {
-        typedef typename HostEntity::template Codim< 0 >::EntityPointer
-        HostEntityPointer;
+      const int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
+      for (const auto& entity : discreteFunctionSpace_)
+      {    
+        const auto& geometry = entity.geometry();
       
-        LocalFunction loc_func = (*(msfem_basis_function_list[col])).localFunction(*it);
-      
-        const auto& geometry = (*it).geometry();
-      
-        const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
+        const auto local_func = msfem_basis_function_list[col]->localFunction(entity);
+        const CachingQuadrature< GridPart, 0 > quadrature( entity, polOrder);
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
         {
           DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
 	
-	  //weight
-          double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
-	  weight *= quadrature.weight(quadraturePoint);
+          const double weight = geometry.integrationElement( quadrature.point(quadraturePoint) )
+                                * quadrature.weight(quadraturePoint);
 
           // gradients of func1 and func2
           RangeType func_in_x;
-          loc_func.evaluate( quadrature[quadraturePoint], func_in_x );
+          local_func.evaluate( quadrature[quadraturePoint], func_in_x );
 
-	  // f(x)
           RangeType f_x(0.0);
           f.evaluate( global_point, f_x);
 
@@ -576,28 +570,27 @@ public:
     
     specifier.identify_coarse_boundary_nodes();
 
-    int number_of_internal_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_boundary_nodes();
+    const int number_of_internal_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_boundary_nodes();
 
     // mapper: global_id_of_node -> new_id_of_node
     // ('new' means that we only count the internal nodes, boundary nodes do not receive an id)
     std::map<int,int> global_id_to_internal_id;
-    int internal_id = 0;
-    for (int global_id = 0; global_id < coarse_space.size(); global_id += 1 )
+    for (int internal_id = 0, global_id = 0; global_id < coarse_space.size(); ++global_id)
     {
-      if ( specifier.is_coarse_boundary_node(global_id) == false )
+      if ( !specifier.is_coarse_boundary_node(global_id) )
       {
-	global_id_to_internal_id[ global_id ] = internal_id;
-	internal_id += 1;
+        global_id_to_internal_id[ global_id ] = internal_id;
+        ++internal_id;
       }
     }
 
     typedef std::vector< shared_ptr<DiscreteFunction> > MsFEMBasisFunctionType;
     MsFEMBasisFunctionType msfem_basis_function;
-    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
-     {
-      msfem_basis_function.push_back(make_shared<DiscreteFunction>("MsFEM basis function", fine_space));
+    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; ++internal_id)
+    {
+      msfem_basis_function.emplace_back(new DiscreteFunction("MsFEM basis function", fine_space));
       msfem_basis_function[internal_id]->clear();
-     }
+    }
 
     //! NOTE TODO for each MsFEM basis function save the support,
     //! i.e. a vector of entity points that describe the support of the basis
@@ -606,7 +599,7 @@ public:
     MsFEMBasisFunctionType standard_basis_function;
     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
-      standard_basis_function.push_back(make_shared<DiscreteFunction>("Standard basis function", fine_space));
+      standard_basis_function.emplace_back(new DiscreteFunction("Standard basis function", fine_space));
       standard_basis_function[internal_id]->clear();
      }
      
@@ -638,7 +631,7 @@ public:
     MsFEMBasisFunctionType corrector_basis_function;
     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
-      corrector_basis_function.push_back(make_shared<DiscreteFunction>("Corrector basis function", fine_space));
+      corrector_basis_function.emplace_back(new DiscreteFunction("Corrector basis function", fine_space));
       corrector_basis_function[internal_id]->clear();
      }
      
@@ -712,24 +705,21 @@ public:
 #endif
  
     coarse_scale_part.clear();
-    for (size_t internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
-       (*(standard_basis_function[internal_id])) *= solution_vector[internal_id];
-       coarse_scale_part += (*(standard_basis_function[internal_id]));
+       *(standard_basis_function[internal_id]) *= solution_vector[internal_id];
+       coarse_scale_part += *(standard_basis_function[internal_id]);
      }
      
     solution.clear();
-    for (size_t internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
-       (*(msfem_basis_function[internal_id])) *= solution_vector[internal_id];
-       solution += (*(msfem_basis_function[internal_id]));
+       *(msfem_basis_function[internal_id]) *= solution_vector[internal_id];
+       solution += *(msfem_basis_function[internal_id]);
      }
      
-    fine_scale_part.clear();
-    fine_scale_part += solution;
+    fine_scale_part.assign(solution);
     fine_scale_part -= coarse_scale_part;
-    
-
   } // solve_dirichlet_zero
 
   //! the following methods are not yet implemented, however note that the required tools are

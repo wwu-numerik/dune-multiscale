@@ -255,9 +255,8 @@ namespace Dune
           coff[c] = 1.0 / coff[c];
       }
 
-      for(CoarseIteratorType coarse_it = coarse_space_.begin(); coarse_it != coarse_end; ++coarse_it)
+      for(const auto& coarse_entity : coarse_space_)
       {
-         CoarseEntityType& coarse_entity = *coarse_it;
          const auto& coarseGridLeafIndexSet = coarse_space_.gridPart().grid().leafIndexSet();
   
          IteratorType end = space.end();
@@ -365,6 +364,53 @@ namespace Dune
       // get grid sequence number from space (for adaptive runs)    /*@LST0S@*/
       sequence_ = dofManager_.sequence();
 
+    }
+
+    // make boundry treament
+    void boundaryTreatment () const
+    {
+      typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
+      typedef typename IteratorType :: Entity EntityType;
+
+      const DiscreteFunctionSpaceType &dfSpace = discreteFunctionSpace();
+      typedef typename DiscreteFunctionSpaceType::LagrangePointSetType LagrangePointSetType;
+      
+      const GridPartType &gridPart = dfSpace.gridPart();
+      
+      const int faceCodim = 1;
+      typedef typename GridPartType :: IntersectionIteratorType
+        IntersectionIteratorType;
+      typedef typename LagrangePointSetType
+        :: template Codim< faceCodim > :: SubEntityIteratorType
+        FaceDofIteratorType;
+
+      const IteratorType end = dfSpace.end();
+      for( IteratorType it = dfSpace.begin(); it != end; ++it )
+      {
+        const EntityType &entity = *it;
+        // if entity has boundary intersections 
+        if( entity.hasBoundaryIntersections() )
+        {
+          // get local matrix from matrix object 
+          LocalMatrixType localMatrix = linearOperator_.localMatrix( entity, entity );
+          const LagrangePointSetType& lagrangePointSet = dfSpace.lagrangePointSet(entity);
+      
+          const IntersectionIteratorType endiit = gridPart.iend( entity );
+          for( IntersectionIteratorType iit = gridPart.ibegin( entity );
+               iit != endiit ; ++iit )
+          {
+
+            if ( iit->neighbor() ) // if there is a neighbor entity
+             continue;
+
+            const int face = (*iit).indexInInside();
+            const FaceDofIteratorType fdend = lagrangePointSet.template endSubEntity< 1 >(face);
+            for (FaceDofIteratorType fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+              localMatrix.unitRow(*fdit);
+          }
+        }
+      }
+      
     }
 
   protected:

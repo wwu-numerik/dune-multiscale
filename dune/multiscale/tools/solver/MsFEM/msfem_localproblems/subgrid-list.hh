@@ -141,34 +141,33 @@ private:
         {
           subGrid->insertPartial(*entities_sharing_same_node[global_index_node][j]);
 
-	  // get the corners of the father of the fine grid entity 'entities_sharing_same_node[global_index_node][j]'
-	  // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
+          // get the corners of the father of the fine grid entity 'entities_sharing_same_node[global_index_node][j]'
+          // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
           if ( specifier_.getOversamplingStrategy() == 3 )
-           {
-              HostEntityPointerType coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                                                             entities_sharing_same_node[global_index_node][j],
-                                                                             level_difference);
-              for (int c = 0; c < coarse_father->geometry().corners(); ++c )
-	      {
-                //! not an effective search algorithm (should be improved eventually):
-                bool node_contained = false;
-                for (size_t cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
-	          {
-                    // hard coding - 2d case:
-                    if ( (coarse_node_store_[father_index][ cn ][ 0 ] == coarse_father->geometry().corner(c)[0])
-		       && (coarse_node_store_[father_index][ cn ][ 1 ] == coarse_father->geometry().corner(c)[1] ) )
-		      { node_contained = true; }
-		  }
-                if ( node_contained == false )
-                 { coarse_node_store_[father_index].push_back( coarse_father->geometry().corner(c) ); }
-	      }
+          {
+            HostEntityPointerType coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                                                                           entities_sharing_same_node[global_index_node][j],
+                                                                           level_difference);
+            for (int c = 0; c < coarse_father->geometry().corners(); ++c )
+            {
+              //! not an effective search algorithm (should be improved eventually):
+              bool node_contained = false;
+              for (size_t cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
+              {
+                // hard coding - 2d case:
+                if ( (coarse_node_store_[father_index][ cn ][ 0 ] == coarse_father->geometry().corner(c)[0])
+                     && (coarse_node_store_[father_index][ cn ][ 1 ] == coarse_father->geometry().corner(c)[1] ) )
+                { node_contained = true; }
+              }
+              if ( node_contained == false )
+              { coarse_node_store_[father_index].emplace_back( coarse_father->geometry().corner(c) ); }
             }
-
+          }
         }
 
         if (layer > 0)
         {
-          HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+          const HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                   entities_sharing_same_node[global_index_node][j],
                                                                   level_difference);
           if ( !(father == level_father_it) )
@@ -204,7 +203,7 @@ public:
     // the fine grid part
     const HostGridPartType& hostGridPart = hostSpace_.gridPart();
 
-    // the fine grid
+    // the fine grid (subgrid needs non-const ref
     HostGridType& hostGrid = hostSpace_.gridPart().grid();
 
     const int number_of_nodes = hostGrid.size(2 /*codim*/);    
@@ -214,15 +213,15 @@ public:
     std::vector< std::vector< HostEntityPointerType > > entities_sharing_same_node(number_of_nodes);
 
     // determine the entities that share a common global node with a given index
-    for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it)
+    for (const auto& host_entity : hostSpace_)
     {
-      int number_of_nodes_in_entity = (*it).template count< 2 >();
+      int number_of_nodes_in_entity = host_entity.template count< 2 >();
       for (int i = 0; i < number_of_nodes_in_entity; i += 1)
       {
-        const HostNodePointer node = (*it).template subEntity< 2 >(i);
-        int global_index_node = hostGridPart.indexSet().index(*node);
+        const HostNodePointer node = host_entity.template subEntity< 2 >(i);
+        const int global_index_node = hostGridPart.indexSet().index(*node);
 
-        entities_sharing_same_node[global_index_node].push_back( HostEntityPointerType(*it) );
+        entities_sharing_same_node[global_index_node].emplace_back(host_entity);
       }
     }
 
@@ -230,8 +229,7 @@ public:
     int max_num_layers = 0;
     for (int i = 0; i < specifier_.getNumOfCoarseEntities(); i += 1)
     {
-      if (specifier_.getLayer(i) > max_num_layers)
-      { max_num_layers = specifier_.getLayer(i); }
+      max_num_layers = std::max(max_num_layers, specifier_.getLayer(i));
     }
 
     // the difference in levels between coarse and fine grid
@@ -244,11 +242,7 @@ public:
 
     if ( (oversampling_strategy == 2) || (oversampling_strategy == 3) )
     {
-      for (int i = 0; i < number_of_coarse_grid_entities; ++i )
-      {
-         CoarseNodeVectorType coarse_node_vector;
-         coarse_node_store_.push_back( coarse_node_vector );
-      }
+      coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
     }      
 
 
@@ -262,13 +256,13 @@ public:
     for (const auto& coarse_entity : coarseSpace)
     {
       const int coarse_index = coarseGridLeafIndexSet.index(coarse_entity);
-      subGridList_.push_back(make_shared<SubGridType>(hostGrid));
+      subGridList_.emplace_back(new SubGridType(hostGrid));
       subGridList_[coarse_index]->createBegin();
       
       if ( (oversampling_strategy == 2) || (oversampling_strategy == 3) )
        {
         for (int c = 0; c < coarse_entity.geometry().corners(); ++c )
-          coarse_node_store_[coarse_index].push_back( coarse_entity.geometry().corner(c) );
+          coarse_node_store_[coarse_index].emplace_back( coarse_entity.geometry().corner(c) );
        }
     }
 
@@ -285,7 +279,7 @@ public:
         const HostNodePointer node = (*it).template subEntity< 2 >(i);
         const int global_index_node = hostGridPart.indexSet().index(*node);
 
-        entities_sharing_same_node[global_index_node].push_back( HostEntityPointerType(*it) );
+        entities_sharing_same_node[global_index_node].emplace_back(*it);
       }
     }
     // -----------------------------------------------------------
@@ -294,17 +288,12 @@ public:
     DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
     DSC_PROFILER.startTiming("msfem.subgrid_list.create");
 
-    // a fine grid iterator for the codim 0 hostgrid entities:
-    const HostGridEntityIteratorType host_endit = hostSpace_.end();
-    for (HostGridEntityIteratorType host_it = hostSpace_.begin();
-         host_it != host_endit;
-         ++host_it)
+    for (const auto& host_entity : hostSpace_)
     {
-      const HostEntityType& host_entity = *host_it;
       // Dune::Stuff::Grid::printEntity(host_entity);
 
       // get the coarse-grid-father of host_entity (which is a maxlevel entity)
-      HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+      const HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                            HostEntityPointerType(host_entity),
                                                                            level_difference);
       const int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
@@ -323,7 +312,7 @@ public:
         {
           // check if the neighbor entity is in the subgrid
           const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-          HostEntityPointerType level_father_neighbor_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+          const HostEntityPointerType level_father_neighbor_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                                         neighborHostEntityPointer,
                                                                                         level_difference);
           if ( !(level_father_neighbor_entity == level_father_entity) )
@@ -344,7 +333,7 @@ public:
       if (layers > 0)
       {
         DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
-        HostEntityPointerType hep(*host_it);
+        const HostEntityPointerType hep(host_entity);
         enrichment(hep, level_father_entity, father_index, hostGridPart,
                    subGridList_[father_index], entities_sharing_same_node, layers, enriched);
       }

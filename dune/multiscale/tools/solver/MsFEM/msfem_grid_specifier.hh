@@ -192,7 +192,7 @@ public:
       for ( ; intersection_it != endiit; ++intersection_it)
       {
 
-        if ( (*intersection_it).boundary() == false )
+        if ( !(*intersection_it).boundary() )
           continue;
 
         const auto& lagrangePointSet

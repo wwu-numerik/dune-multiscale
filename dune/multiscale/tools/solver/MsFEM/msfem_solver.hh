@@ -281,7 +281,7 @@ public:
            const typename HostEntity::template Codim< 2 >::EntityPointer node = (*it).template subEntity< 2 >(i);
            const int global_index_node = gridPart.indexSet().index(*node);
 
-           entities_sharing_same_node[global_index_node].push_back( HostEntityPointer(*it) );
+           entities_sharing_same_node[global_index_node].emplace_back(*it);
          }
        }
      }

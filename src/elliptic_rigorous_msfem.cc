@@ -23,22 +23,17 @@
 //#include <dune/fem/space/reducedbasisspace/reducedbasisspace.hh>
 
 #include <dune/stuff/common/filesystem.hh>
-//! local (dune-multiscale) includes
+
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 #include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
-
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/solver/MsFEM/rigorous_msfem_solver.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-
-//!-----------------------------------------------------------------------------
-
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
-
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
 
