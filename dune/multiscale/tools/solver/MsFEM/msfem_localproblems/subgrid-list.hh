@@ -34,41 +34,33 @@ public:
   //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
-
   typedef HostDiscreteFunctionImp HostDiscreteFunctionType;
-
   //! type of discrete function space
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType
-  HostDiscreteFunctionSpaceType;
+    HostDiscreteFunctionSpaceType;
+  //! type of grid partition
+  typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
+
+  //! type of grid
+private:
+  typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
+  typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
+  typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
+  typedef typename HostGridEntityIteratorType::Entity HostEntityType;
+  typedef typename HostEntityType::EntityPointer HostEntityPointerType;
+  typedef typename HostEntityType::template Codim< 2 >::EntityPointer HostNodePointer;
+  typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
 
   //! type of domain
   typedef typename FunctionSpaceType::DomainType DomainType;
-  
-  //! type of grid partition
-  typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
-
-  //! type of grid
-  typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
-
-  typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
-
-  typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
-
-  typedef typename HostGridEntityIteratorType::Entity HostEntityType;
-
-  typedef typename HostEntityType::EntityPointer HostEntityPointerType;
-
-  typedef typename HostEntityType::template Codim< 2 >::EntityPointer HostNodePointer;
-
-  typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
-
-  typedef std::vector< DomainType> CoarseNodeVectorType;
+  typedef std::vector< DomainType > CoarseNodeVectorType;
   typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
   typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
-  
+
+public:
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 

@@ -25,7 +25,7 @@ namespace Dune {
 template< class DiscreteFunctionType >
 class Elliptic_MsFEM_Solver
 {
-public:
+private:
   typedef DiscreteFunctionType DiscreteFunction;
 
   typedef typename DiscreteFunction::FunctionSpaceType FunctionSpace;

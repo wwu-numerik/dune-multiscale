@@ -25,7 +25,7 @@ namespace Dune
     // needs to be friend for conversion check 
     friend class Conversion<ThisType,OEMSolver::PreconditionInterface>;
     
-  public:
+  private:
     //! type of discrete functions
     typedef DiscreteFunction DiscreteFunctionType;
     
@@ -34,10 +34,8 @@ namespace Dune
     //! type of this LaplaceFEOp
     typedef WeightedClementOp< DiscreteFunctionType, CoarseDiscreteFunction, MatrixTraits, CoarseBasisFunctionList > WeightedClementOpType;
 
-  private:
     typedef WeightedClementOpType ThisType;
 
-  public:
     //! type of discrete function space
     typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
       DiscreteFunctionSpaceType;
@@ -63,7 +61,6 @@ namespace Dune
 
     typedef typename CoarseDiscreteFunctionSpaceType :: GridPartType CoarseGridPartType;
     
-  protected:
     //! type of jacobian
     typedef typename DiscreteFunctionSpaceType :: JacobianRangeType
       JacobianRangeType;
@@ -76,7 +73,6 @@ namespace Dune
       
     enum{dimRange = GridType::dimension};
 
-  public:
     //! polynomial order of base functions
     enum { polynomialOrder = DiscreteFunctionSpaceType :: polynomialOrder };
 
@@ -95,12 +91,7 @@ namespace Dune
     typedef typename LinearOperatorType :: LocalMatrixType LocalMatrixType;
     typedef typename LinearOperatorType :: PreconditionMatrixType PreconditionMatrixType;
     typedef typename LinearOperatorType :: MatrixType MatrixType;
-
-  public:
-    // types for boundary treatment
-    // ----------------------------
     typedef typename DiscreteFunctionSpaceType :: MapperType MapperType;
-  protected:
     typedef std::vector<DomainType> CoarseNodeVectorType;
 
     // type of DofManager
@@ -131,7 +122,7 @@ namespace Dune
         
   private:
     // prohibit copying
-    WeightedClementOp ( const ThisType & );
+    WeightedClementOp ( const ThisType & ) = delete;
 
   public:                                                           /*@LST0S@*/
     //! apply the operator

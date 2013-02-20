@@ -649,43 +649,26 @@ template< class HostDiscreteFunctionType,
           class CoarseBasisFunctionListType >
 class MsFEMLocalProblemSolver
 {
-public:
+private:
   //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
   //! type of discrete function space
-  typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType
-  HostDiscreteFunctionSpaceType;
-
+  typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
   //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
-
-  //! type of grid partition
   typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
-
-  //! type of grid
   typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
-
-  //! type of range vectors
   typedef typename HostDiscreteFunctionSpaceType::RangeType RangeType;
-
   //! type of value of a gradient of a function
   typedef typename HostDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  //! type of range vectors
   typedef typename HostDiscreteFunctionSpaceType::DomainType DomainType;
 
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
-
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
-
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
-
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
-
   typedef typename HostGridType::template Codim< 0 >::Geometry HostGridEntityGeometry;
-
   typedef typename HostDiscreteFunctionType::LocalFunctionType HostLocalFunctionType;
-
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
@@ -695,33 +678,22 @@ public:
   typedef typename SubGridListType::SubGridType SubGridType;
   //! type of grid part
   typedef LeafGridPart< SubGridType > SubGridPartType;
-
   //! type of subgrid discrete function space
   typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1 >  // 1=POLORDER
-  SubDiscreteFunctionSpaceType;
+    SubDiscreteFunctionSpaceType;
 
   //! type of subgrid discrete function
   typedef AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
-
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
-
   typedef typename SubgridIteratorType::Entity SubgridEntityType;
-
   typedef typename SubgridEntityType::EntityPointer SubgridEntityPointerType;
-
   typedef typename SubDiscreteFunctionType::LocalFunctionType SubLocalFunctionType;
-
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SGLagrangePointSetType;
-
-  //!-----------------------------------------------------------------------------------------
-
-  //! ------------------ Matrix Traits for the local Problems ---------------------
-
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
 
   enum { faceCodim = 1 };
   typedef typename SubgridLagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType
-  SubgridFaceDofIteratorType;
+    SubgridFaceDofIteratorType;
 
   //! polynomial order of base functions
   enum { polynomialOrder = SubDiscreteFunctionSpaceType::polynomialOrder };
@@ -766,7 +738,6 @@ public:
                           WeightedClementOperatorType >
      InverseUzawaOperatorType;
      
-private:
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
   const MacroMicroGridSpecifierType& specifier_;
