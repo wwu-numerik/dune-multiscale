@@ -14,7 +14,7 @@
 namespace Dune
 {
 
-  template< class DiscreteFunction, class CoarseDiscreteFunction, class MatrixTraits, class CoarseNodeVectorType, class CoarseBasisFunctionList >
+  template< class DiscreteFunction, class CoarseDiscreteFunction, class MatrixTraits, class CoarseBasisFunctionList >
   class WeightedClementOp 
   : public Operator< typename DiscreteFunction :: RangeFieldType,
                      typename CoarseDiscreteFunction :: RangeFieldType,
@@ -32,7 +32,7 @@ namespace Dune
     typedef CoarseDiscreteFunction CoarseDiscreteFunctionType;
 
     //! type of this LaplaceFEOp
-    typedef WeightedClementOp< DiscreteFunctionType, CoarseDiscreteFunction, MatrixTraits, CoarseNodeVectorType, CoarseBasisFunctionList > WeightedClementOpType;
+    typedef WeightedClementOp< DiscreteFunctionType, CoarseDiscreteFunction, MatrixTraits, CoarseBasisFunctionList > WeightedClementOpType;
 
   private:
     typedef WeightedClementOpType ThisType;
@@ -101,6 +101,8 @@ namespace Dune
     // ----------------------------
     typedef typename DiscreteFunctionSpaceType :: MapperType MapperType;
   protected:
+    typedef std::vector<DomainType> CoarseNodeVectorType;
+
     // type of DofManager
     typedef DofManager< GridType > DofManagerType;
 

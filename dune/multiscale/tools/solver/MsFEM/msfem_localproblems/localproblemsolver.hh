@@ -693,10 +693,6 @@ public:
 
   //! type of grid
   typedef typename SubGridListType::SubGridType SubGridType;
-  
-  //! vector of points (type DomainType) that describes the coarse nodes 
-  typedef typename SubGridListType::CoarseNodeVectorType CoarseNodeVectorType;
-
   //! type of grid part
   typedef LeafGridPart< SubGridType > SubGridPartType;
 
@@ -760,7 +756,7 @@ public:
   typedef SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
       WeightedClementMatrixObjectTraits;                                       
 
-  typedef WeightedClementOp< SubDiscreteFunctionType, HostDiscreteFunctionType, WeightedClementMatrixObjectTraits, CoarseNodeVectorType, CoarseBasisFunctionListType > 
+  typedef WeightedClementOp< SubDiscreteFunctionType, HostDiscreteFunctionType, WeightedClementMatrixObjectTraits, CoarseBasisFunctionListType >
             WeightedClementOperatorType;
   
   // saddle point problem solver:
