@@ -29,10 +29,6 @@
 #include <dune/common/exceptions.hh> // We use exceptions
 #include <dune/common/unused.hh>
 
-#if HAVE_GRAPE
- #include <dune/grid/io/visual/grapedatadisplay.hh>
-#endif
-
 // to display data with ParaView:
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
@@ -54,6 +50,7 @@
 #include <dune/stuff/common/misc.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/aliases.hh>
 
 
 void init(int argc, char** argv) {

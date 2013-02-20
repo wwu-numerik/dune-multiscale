@@ -1,34 +1,32 @@
 #ifndef DUNE_FEM_ALGORITHM_HH
 #define DUNE_FEM_ALGORITHM_HH
 
-#ifdef HAVE_CMAKE_CONFIG
- #include "cmake_config.h"
-#elif defined (HAVE_CONFIG_H)
- #include <config.h>
-#endif // ifdef HAVE_CMAKE_CONFIG
-
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-
 #include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
+#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/misc/h1error.hh>
+
+#include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/logging.hh>
-
-#include <string>
-#include <fstream>
-
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/h1norm.hh>
 
-#include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/common/profiler.hh>
+#include <string>
+#include <fstream>
 
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
-#include <dune/multiscale/tools/misc/h1error.hh>
+#include "fem_traits.hh"
 
 namespace {
   const std::string seperator_line = "---------------------------------------------------------------------------------\n";
 }
+
+namespace Dune {
+namespace Multiscale {
+namespace FEM {
 
 //! set the dirichlet points to zero
 template< class DiscreteFunctionType >
@@ -55,8 +53,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 
 
 // write discrete function to a file + VTK Output
-template <class FEM>
-void write_discrete_function(typename FEM::DiscreteFunctionType& discrete_solution )
+void write_discrete_function(typename FEMTraits::DiscreteFunctionType& discrete_solution )
  {
   // write the final (discrete) solution to a file
   std::string solution_file = (boost::format("/fem_solution_refLevel_%d")
@@ -68,9 +65,9 @@ void write_discrete_function(typename FEM::DiscreteFunctionType& discrete_soluti
   Dune::myDataOutputParameters outputparam;
 
   // create and initialize output class
-  typename FEM::IOTupleType fem_solution_series(&discrete_solution);
+  typename FEMTraits::IOTupleType fem_solution_series(&discrete_solution);
   outputparam.set_prefix((boost::format("/fem_solution")).str());
-  typename FEM::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
+  typename FEMTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
                                                  fem_solution_series, outputparam);
   // write data
   if (DSC_CONFIG_GET("problem.linear", true))
@@ -80,27 +77,26 @@ void write_discrete_function(typename FEM::DiscreteFunctionType& discrete_soluti
  }
 
 
-template <class FEM>
-void solve(typename FEM::DiscreteFunctionType& solution,
-                 const typename FEM::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
-                 const typename FEM::EllipticOperatorType& discrete_elliptic_op,
+void solve(typename FEMTraits::DiscreteFunctionType& solution,
+                 const typename FEMTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
+                 const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
                  const std::string& filename,
-                 const Dune::RightHandSideAssembler< typename FEM::DiscreteFunctionType >& rhsassembler)
+                 const Dune::RightHandSideAssembler< typename FEMTraits::DiscreteFunctionType >& rhsassembler)
 {
-  static const int fem_polorder = 2* FEM::DiscreteFunctionSpaceType::polynomialOrder + 2;
+  static const int fem_polorder = 2* FEMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
 
   //! *************************** Assembling the problem ****************************
 
   //! (stiffness) matrix
-  typename FEM::FEMMatrix system_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
+  typename FEMTraits::FEMMatrix system_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
 
   //! right hand side vector
   // right hand side for the finite element method with Newton solver:
   // ( also right hand side for the finer discrete function space )
-  typename FEM::DiscreteFunctionType system_rhs("fem newton rhs", finerDiscreteFunctionSpace);
+  typename FEMTraits::DiscreteFunctionType system_rhs("fem newton rhs", finerDiscreteFunctionSpace);
   system_rhs.clear();
 
-  const typename FEM::FirstSourceType f;   // standard source f
+  const typename FEMTraits::FirstSourceType f;   // standard source f
 
   if (DSC_CONFIG_GET("problem.linear", true))
   {
@@ -123,7 +119,7 @@ void solve(typename FEM::DiscreteFunctionType& solution,
     // set Dirichlet Boundary to zero
     boundaryTreatment(system_rhs);
 
-    const typename FEM::InverseFEMMatrix fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+    const typename FEMTraits::InverseFEMMatrix fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
     fem_biCGStab(system_rhs, solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
@@ -138,11 +134,11 @@ void solve(typename FEM::DiscreteFunctionType& solution,
     Dune::Timer assembleTimer;
     //! residual vector
     // current residual
-    typename FEM::DiscreteFunctionType residual(filename + "FEM Newton Residual", finerDiscreteFunctionSpace);
+    typename FEMTraits::DiscreteFunctionType residual(filename + "FEM Newton Residual", finerDiscreteFunctionSpace);
     residual.clear();
 
-    typename FEM::RangeType relative_newton_error_finescale = 10000.0;
-    typename FEM::RangeType rhs_L2_norm = 10000.0;
+    typename FEMTraits::RangeType relative_newton_error_finescale = 10000.0;
+    typename FEMTraits::RangeType rhs_L2_norm = 10000.0;
 
     int iteration_step = 1;
     // the Newton step for the FEM reference problem (solved with Newton Method):
@@ -160,13 +156,13 @@ void solve(typename FEM::DiscreteFunctionType& solution,
                    << stepAssembleTimer.elapsed() << "s" << std::endl;
 
       // assemble right hand side
-      const typename FEM::DiffusionType diffusion_op;
+      const typename FEMTraits::DiffusionType diffusion_op;
       rhsassembler.template assemble_for_Newton_method< fem_polorder >(f,
                                                                        diffusion_op,
                                                                        solution,
                                                                        system_rhs);
 
-      const Dune::L2Norm< typename FEM::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
+      const Dune::L2Norm< typename FEMTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);
       if (rhs_L2_norm < 1e-10)
       {
@@ -178,7 +174,7 @@ void solve(typename FEM::DiscreteFunctionType& solution,
       // set Dirichlet Boundary to zero
       boundaryTreatment(system_rhs);
 
-      const typename FEM::InverseFEMMatrix fem_newton_biCGStab(system_matrix, 1e-8, 1e-8, 20000, true);
+      const typename FEMTraits::InverseFEMMatrix fem_newton_biCGStab(system_matrix, 1e-8, 1e-8, 20000, true);
       fem_newton_biCGStab(system_rhs, residual);
 
       if ( residual.dofsValid() )
@@ -246,73 +242,163 @@ void print_info(ProblemDataType info, std::ostream& out)
 
 
 //! the main FEM computation
-template < class FEMTraits >
 void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
                const std::string filename) {
-  typedef FEMTraits FEM;
   using namespace Dune;
 
-  const typename FEM::ModelProblemDataType problem_data;
+  const typename FEMTraits::ModelProblemDataType problem_data;
   print_info(problem_data, DSC_LOG_INFO);
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for the finite element problem
-  typename FEM::GridPartType gridPart(*macro_grid_pointer);
+  typename FEMTraits::GridPartType gridPart(*macro_grid_pointer);
   //! --------------------------------------------------------------------------------------
 
   //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
-  typename FEM::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  typename FEMTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
   //! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const typename FEM::DiffusionType diffusion_op;
+  const typename FEMTraits::DiffusionType diffusion_op;
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  Dune::RightHandSideAssembler< typename FEM::DiscreteFunctionType > rhsassembler;
-  const typename FEM::FirstSourceType f;   // standard source f
+  Dune::RightHandSideAssembler< typename FEMTraits::DiscreteFunctionType > rhsassembler;
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
-  const typename FEM::EllipticOperatorType discrete_elliptic_op(discreteFunctionSpace, diffusion_op);
+  const typename FEMTraits::EllipticOperatorType discrete_elliptic_op(discreteFunctionSpace, diffusion_op);
 
   //! solution vector
   // - By solution, we denote the "discrete solution" determined with FEM in the linear case or FEM-Newton (nonlinear case)
   //    ( if the elliptic problem is linear, the 'solution' is determined without the Newton method )
   // - solution of the finite element method, where we use the Newton method to solve the non-linear system of equations
-  typename FEM::DiscreteFunctionType discrete_solution(filename + " FEM(-Newton) Solution", discreteFunctionSpace);
+  typename FEMTraits::DiscreteFunctionType discrete_solution(filename + " FEM(-Newton) Solution", discreteFunctionSpace);
   discrete_solution.clear();
 
-  solve<FEM>(discrete_solution, discreteFunctionSpace, discrete_elliptic_op, filename, rhsassembler);
+  solve(discrete_solution, discreteFunctionSpace, discrete_elliptic_op, filename, rhsassembler);
   
   // write FEM solution to a file and produce a VTK output
-  write_discrete_function<FEM>(discrete_solution);
+  write_discrete_function(discrete_solution);
   
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
 
     DSC_LOG_INFO << std::endl << "The L2 and H1 error:" << std::endl << std::endl;
-    H1Error< typename FEM::DiscreteFunctionType > h1error;
-    L2Error< typename FEM::DiscreteFunctionType > l2error;
+    H1Error< typename FEMTraits::DiscreteFunctionType > h1error;
+    L2Error< typename FEMTraits::DiscreteFunctionType > l2error;
   
-    const typename FEM::ExactSolutionType u;
+    const typename FEMTraits::ExactSolutionType u;
     
-    typedef typename FEM::ExactSolutionType ExactSolution;
+    typedef typename FEMTraits::ExactSolutionType ExactSolution;
     
-    int order_quadrature_rule = 13;
+    const int order_quadrature_rule = 13;
     
-    typename FEM::RangeType fem_error = l2error.template norm< ExactSolution >
-       (u, discrete_solution, order_quadrature_rule /* * FEM::DiscreteFunctionSpaceType::polynomialOrder */ );
+    typename FEMTraits::RangeType fem_error = l2error.template norm< ExactSolution >
+       (u, discrete_solution, order_quadrature_rule /* * FEMTraits::DiscreteFunctionSpaceType::polynomialOrder */ );
     DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
 
-    typename FEM::RangeType h1_fem_error(0.0);
+    typename FEMTraits::RangeType h1_fem_error(0.0);
     h1_fem_error = h1error.template semi_norm < ExactSolution >(u, discrete_solution, order_quadrature_rule);
     h1_fem_error += fem_error;
     DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
-
   }
+}
+
+void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
+                       const std::string filename) {
+  using namespace Dune;
+
+  const typename FEMTraits::ModelProblemDataType problem_data;
+  print_info(problem_data, DSC_LOG_INFO);
+  //! ---------------------------- grid parts ----------------------------------------------
+  // grid part for the global function space, required for the finite element problem
+  typename FEMTraits::GridPartType gridPart(*macro_grid_pointer);
+  //! --------------------------------------------------------------------------------------
+
+  //! ------------------------- discrete function spaces -----------------------------------
+  // the global-problem function space:
+  typename FEMTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  //! --------------------------------------------------------------------------------------
+
+  // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
+  const typename FEMTraits::DiffusionType diffusion_op;
+
+  //! define the right hand side assembler tool
+  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
+  Dune::RightHandSideAssembler< typename FEMTraits::DiscreteFunctionType > rhsassembler;
+  const typename FEMTraits::FirstSourceType f;   // standard source f
+
+  //! define the discrete (elliptic) operator that describes our problem
+  // ( effect of the discretized differential operator on a certain discrete function )
+  const typename FEMTraits::EllipticOperatorType discrete_elliptic_op(discreteFunctionSpace, diffusion_op);
+
+  // unit cube grid for the computations of cell problems
+  const std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
+  // descretized homogenizer:
+
+  typedef Dune::Homogenizer< typename FEMTraits::GridType, typename FEMTraits::DiffusionType > HomogenizerType;
+
+  // to create an empty diffusion matrix that can be filled with constant values
+  typedef Problem::ConstantDiffusionMatrix< typename FEMTraits::FunctionSpaceType, typename HomogenizerType::HomTensorType >
+     HomDiffusionType;
+
+  const HomogenizerType disc_homogenizer(unit_cell_location);
+  const typename HomogenizerType::HomTensorType A_hom = disc_homogenizer.getHomTensor(diffusion_op);
+  const HomDiffusionType hom_diffusion_op(A_hom);
+
+  //!TODO check: hatte nur 2 tmp parameter, Masse hinzugefUGT
+  typedef DiscreteEllipticOperator< typename FEMTraits::DiscreteFunctionType,
+                                    HomDiffusionType, typename FEMTraits::MassTermType > HomEllipticOperatorType;
+
+  HomEllipticOperatorType hom_discrete_elliptic_op( discreteFunctionSpace, hom_diffusion_op);
+
+  typename FEMTraits::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
+
+  typename FEMTraits::DiscreteFunctionType hom_rhs("homogenized rhs", discreteFunctionSpace);
+  hom_rhs.clear();
+
+  //! solution vector
+  // - By solution, we denote the (discrete) homogenized solution determined with FEM on the coarse scale and FEM for the cell problems
+  typename FEMTraits::DiscreteFunctionType homogenized_solution(filename + " Homogenized Solution", discreteFunctionSpace);
+  homogenized_solution.clear();
+  hom_discrete_elliptic_op.assemble_matrix(hom_stiff_matrix);
+
+  constexpr int hmm_polorder = 2* FEMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
+  rhsassembler.template assemble < hmm_polorder >(f, hom_rhs);
+
+  // set Dirichlet Boundary to zero
+  boundaryTreatment(hom_rhs);
+
+  const typename FEMTraits::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+  hom_biCGStab(hom_rhs, homogenized_solution);
+
+  // write FEM solution to a file and produce a VTK output
+  // ---------------------------------------------------------------------------------
+
+  // write the final (discrete) solution to a file
+  std::string solution_file = (boost::format("/homogenized_solution_macro_refLevel_%d")
+                                % DSC_CONFIG_GET("fem.grid_level", 4) ).str();
+  DiscreteFunctionWriter(solution_file).append(homogenized_solution);
+
+  // writing paraview data output
+  // general output parameters
+  Dune::myDataOutputParameters outputparam;
+
+  // create and initialize output class
+  typename FEMTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);
+  outputparam.set_prefix((boost::format("/homogenized_solution")).str());
+  typename FEMTraits::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
+                                                    hom_fem_solution_series, outputparam);
+  homfemsol_dataoutput.writeData( 1.0 /*dummy*/, "homogenized-solution" );
+
+  // ---------------------------------------------------------------------------------
 
 }
+
+} //namespace FEM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // DUNE_FEM_ALGORITHM_HH

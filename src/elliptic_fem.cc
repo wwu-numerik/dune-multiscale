@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
 
-    namespace DSC = Dune::Stuff::Common;
+    using namespace Dune::Multiscale::FEM;
 
     DSC_PROFILER.startTiming("total_cpu");
 
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     // refine the grid 'starting_refinement_level' times:
     grid_pointer->globalRefine(refinement_level);
 
-    algorithm<FEMTraits> (grid_pointer, filename_);
+    algorithm(grid_pointer, filename_);
 
     const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;

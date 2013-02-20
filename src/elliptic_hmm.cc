@@ -1,5 +1,4 @@
 #include "common.hh"
-#include "hmm_config.hh"
 
 #include <dune/multiscale/hmm/algorithm.hh>
 
@@ -26,7 +25,6 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
     check_config();
-    namespace DSC = Dune::Stuff::Common;
 
     DSC_PROFILER.startTiming("total_cpu");
 
