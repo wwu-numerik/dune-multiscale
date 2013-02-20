@@ -139,6 +139,7 @@ public:
     : discreteFunctionSpace_(discreteFunctionSpace)
   {}
 
+private:
   template< class Stream >
   void oneLinePrint(Stream& stream, const DiscreteFunction& func) {
     typedef typename DiscreteFunction::ConstDofIteratorType
@@ -415,7 +416,8 @@ public:
   }
   // ------------------------------------------------------------------------------------
 
-  
+public:
+
   // - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   // then:
   // A --> diffusion operator ('DiffusionOperatorType')
@@ -423,7 +425,6 @@ public:
   // c --> reaction part ('ReactionTermType')
   // f --> 'first' source term, scalar ('SourceTermType')
   // G --> 'second' source term, vector valued ('SecondSourceTermType')
-
   // homogenous Dirchilet boundary condition!:
   template< class DiffusionOperator, class SourceTerm, class SubGridListType >
   void solve_dirichlet_zero(const DiffusionOperator& diffusion_op,
@@ -540,19 +541,6 @@ public:
     solution += coarse_scale_part;
     solution += fine_scale_part;
   } // solve_dirichlet_zero
-
-  //! the following methods are not yet implemented, however note that the required tools are
-  //! already available via 'righthandside_assembler.hh' and 'elliptic_fem_matrix_assembler.hh'!
-
-  template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType >
-  void solve() {
-    DSC_LOG_ERROR << "No implemented!" << std::endl;
-  }
-
-  template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType, class SecondSourceTermType >
-  void solve() {
-    DSC_LOG_ERROR << "No implemented!" << std::endl;
-  }
 };
 
 } //namespace MsFEM {

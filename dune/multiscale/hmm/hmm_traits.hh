@@ -127,16 +127,16 @@ typedef Dune::DiscreteEllipticHMMOperator< DiscreteFunctionType, PeriodicDiscret
 //! --------------------------------------------------------------------------------------
 
 //! --------------- ERROR ESTIMATOR NOT YET IMPLEMENTED ------------------------
-typedef Dune::ErrorEstimator< PeriodicDiscreteFunctionType,
+typedef ErrorEstimator< PeriodicDiscreteFunctionType,
                         DiscreteFunctionType,
                         DiffusionType > ErrorEstimatorType;
 
 //! --------- typedefs and classes for data output -----------------------------------------
-typedef Dune::tuple< DiscreteFunctionType* >      IOTupleType;
+typedef std::tuple< DiscreteFunctionType* >      IOTupleType;
 typedef Dune::DataOutput< GridType, IOTupleType > DataOutputType;
 
 // just for the discretized exact solution (in case it is available)
-typedef Dune::tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
+typedef std::tuple< DiscreteExactSolutionType* > ExSolIOTupleType;
 // just for the discretized exact solution (in case it is available)
 typedef Dune::DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 

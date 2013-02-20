@@ -66,6 +66,7 @@ template< class DiscreteFunctionImp,
           class SubGridListImp >
 class MsFEMErrorEstimator
 {
+private:
   typedef MsFEMErrorEstimator< DiscreteFunctionImp,
               DiffusionImp,
               SourceImp,

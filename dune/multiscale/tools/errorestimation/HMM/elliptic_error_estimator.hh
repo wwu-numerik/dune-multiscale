@@ -11,6 +11,9 @@
 //! ------------------------- nonlinear elliptic ------------------------------------------
 
 namespace Dune {
+namespace Multiscale {
+namespace HMM {
+
 template< class PeriodicDiscreteFunctionImp,
           class DiscreteFunctionImp,
           class DiffusionImp >
@@ -20,6 +23,7 @@ template< class PeriodicDiscreteFunctionImp,
 // sind.
 class ErrorEstimator
 {
+private:
   typedef DiffusionImp DiffusionOperatorType;
 
   //! Necessary typedefs for the PeriodicDiscreteFunctionImp:
@@ -1242,6 +1246,9 @@ public:
     return local_indicator;
   } // end of method
 }; // end of class ErrorEstimater
-} // end namespace
+
+} //namespace HMM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // ifndef DUNE_ERRORESTIMATER_HH

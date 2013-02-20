@@ -114,7 +114,6 @@ private:
 
   //! ----------------------------------------------------------------------------------------
 
-private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
 
 
@@ -123,7 +122,7 @@ public:
     : discreteFunctionSpace_(discreteFunctionSpace)
   {}
 
-
+private:
   template< class Stream >
   void oneLinePrint(Stream& stream, const DiscreteFunction& func) {
     typedef typename DiscreteFunction::ConstDofIteratorType
@@ -218,7 +217,7 @@ public:
   // ------------------------------------------------------------------------------------
   template< class MsFEMBasisFunctionType >
   void add_coarse_basis_contribution( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
-				       std::map<int,int>& global_id_to_internal_id,
+                                      std::map<int,int>& global_id_to_internal_id,
                                       MsFEMBasisFunctionType& msfem_basis_function_list ) const
   {
     
@@ -227,17 +226,17 @@ public:
     typedef typename HostEntity::template Codim< 2 >::EntityPointer HostNodePointer;
     typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
     typedef typename DiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
-  
+
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
 
     for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
     {
       typedef typename HostEntity::template Codim< 0 >::EntityPointer
-      HostEntityPointer;
+          HostEntityPointer;
       HostEntityPointer coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                  HostEntityPointer(*it),
                                                                  specifier.getLevelDifference());
-    
+
       const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().baseFunctionSet( *coarse_father );
       const auto numBaseFunctions = coarseBaseSet.size();
       
@@ -249,53 +248,50 @@ public:
       std::vector< RangeType > phi( numBaseFunctions );
       //! TODO switch loops for more efficiency
       for(size_t loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number ) {
-      
+
         const int global_dof_number = specifier.coarseSpace().mapToGlobal(*coarse_father, loc_basis_number );
-	if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
-	{ continue; }
+        if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
+        { continue; }
 
         int global_interior_dof_number = global_id_to_internal_id[ global_dof_number ];
- 
-	// only implemented for 3 Lagrange Points, i.e. piecewise linear functions
-	assert( number_of_points == 3 );
+
+        // only implemented for 3 Lagrange Points, i.e. piecewise linear functions
+        assert( number_of_points == 3 );
         std::vector< RangeType > phi_i( number_of_points );
         std::vector< DomainType > corners( number_of_points );
-	
+
         for(size_t loc_point = 0; loc_point < number_of_points ; ++loc_point ) {
 
           coarseBaseSet.evaluateAll( lagrangepoint_set.point( loc_point ) , phi );
-          phi_i[ loc_point ] = phi[ loc_basis_number ]; 
+          phi_i[ loc_point ] = phi[ loc_basis_number ];
           corners[ loc_point ] = coarse_geometry.global(lagrangepoint_set.point( loc_point ) );
         }
 
         LinearLagrangeFunction2D< DiscreteFunctionSpace > coarse_basis_interpolation
-          ( corners[0], phi_i[0], corners[1], phi_i[1], corners[2], phi_i[2] );
-       
+            ( corners[0], phi_i[0], corners[1], phi_i[1], corners[2], phi_i[2] );
+
         LocalFunction loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
 
         const int number_of_nodes_in_fine_entity = (*it).template count< 2 >();
         if ( !( number_of_nodes_in_fine_entity == int( loc_coarse_basis_function.baseFunctionSet().size() ) ) )
-         { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
-      
+        { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
+
         for (int i = 0; i < number_of_nodes_in_fine_entity; i += 1)
-         {
-           const HostNodePointer node = (*it).template subEntity< 2 >(i);
+        {
+          const HostNodePointer node = (*it).template subEntity< 2 >(i);
 
-           const DomainType coordinates_of_node = node->geometry().corner(0);
-           if ( !( coordinates_of_node == it->geometry().corner(i) ) )
-            { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
+          const DomainType coordinates_of_node = node->geometry().corner(0);
+          if ( !( coordinates_of_node == it->geometry().corner(i) ) )
+          { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
 
-           RangeType coarse_value(0.0);
-           coarse_basis_interpolation.evaluate(coordinates_of_node, coarse_value);
+          RangeType coarse_value(0.0);
+          coarse_basis_interpolation.evaluate(coordinates_of_node, coarse_value);
 
-           // int global_index_node = gridPart.indexSet().index( *node );
-           loc_coarse_basis_function[i] = coarse_value;
+          // int global_index_node = gridPart.indexSet().index( *node );
+          loc_coarse_basis_function[i] = coarse_value;
         }
-      
       }
-
     }
-
     DSC_LOG_INFO << " done." << std::endl;
   }
   // ------------------------------------------------------------------------------------
@@ -434,7 +430,7 @@ public:
     for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
     {
       typedef typename HostEntity::template Codim< 0 >::EntityPointer
-      HostEntityPointer;
+          HostEntityPointer;
       
       LocalFunction loc_func_1 = func1.localFunction(*it);
       LocalFunction loc_func_2 = func2.localFunction(*it);
@@ -446,17 +442,17 @@ public:
       for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
       {
         DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
-	
-	//weight
-        double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
-	weight *= quadrature.weight(quadraturePoint);
 
-	// gradients of func1 and func2
+        //weight
+        double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
+        weight *= quadrature.weight(quadraturePoint);
+
+        // gradients of func1 and func2
         JacobianRangeType grad_func_1, grad_func_2;
         loc_func_1.jacobian( quadrature[quadraturePoint], grad_func_1);
         loc_func_2.jacobian( quadrature[quadraturePoint], grad_func_2);
 
-	// A \nabla func1
+        // A \nabla func1
         JacobianRangeType diffusive_flux(0.0);
         diffusion_op.diffusiveFlux( global_point, grad_func_1, diffusive_flux);
 
@@ -466,9 +462,7 @@ public:
     }
     return value;
   }
-  
-
-  
+    
   
   // ------------------------------------------------------------------------------------
   template< class DiffusionOperator, class MsFEMBasisFunctionType, class MatrixImp >
@@ -541,6 +535,7 @@ public:
     }
   }
 
+public:
   // - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   // then:
   // A --> diffusion operator ('DiffusionOperatorType')
@@ -548,7 +543,6 @@ public:
   // c --> reaction part ('ReactionTermType')
   // f --> 'first' source term, scalar ('SourceTermType')
   // G --> 'second' source term, vector valued ('SecondSourceTermType')
-
   // homogenous Dirchilet boundary condition!:
   template< class DiffusionOperator, class SourceTerm, class SubGridListType >
   void solve_dirichlet_zero(const DiffusionOperator& diffusion_op,
@@ -721,19 +715,6 @@ public:
     fine_scale_part.assign(solution);
     fine_scale_part -= coarse_scale_part;
   } // solve_dirichlet_zero
-
-  //! the following methods are not yet implemented, however note that the required tools are
-  //! already available via 'righthandside_assembler.hh' and 'elliptic_fem_matrix_assembler.hh'!
-
-  template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType >
-  void solve() {
-    DSC_LOG_ERROR << "Not implemented!" << std::endl;
-  }
-
-  template< class DiffusionOperatorType, class ReactionTermType, class SourceTermType, class SecondSourceTermType >
-  void solve() {
-    DSC_LOG_ERROR << "Not implemented!" << std::endl;
-  }
 };
 
 } //namespace MsFEM {

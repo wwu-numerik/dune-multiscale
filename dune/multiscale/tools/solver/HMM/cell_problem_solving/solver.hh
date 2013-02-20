@@ -17,7 +17,7 @@ namespace Dune {
 template< class PeriodicDiscreteFunctionImp, class DiffusionImp >
 class CellProblemSolver
 {
-public:
+private:
   //! type of discrete functions
   typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
 

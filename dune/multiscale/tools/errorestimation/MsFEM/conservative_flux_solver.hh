@@ -30,9 +30,10 @@
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/stuff/common/profiler.hh>
 
-// / done
-
 namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
+
 /** \brief define output parameters for local problems
  *  appends "local_problems" for path
  **/
@@ -56,7 +57,7 @@ class ConservativeFluxOperator
   typedef ConservativeFluxOperator< SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
                                     MacroMicroGridSpecifierType > This;
 
-public:
+private:
   typedef SubGridDiscreteFunctionType SubGridDiscreteFunction;
   typedef DiscreteFunctionType        DiscreteFunction;
   typedef DiffusionOperatorType       DiffusionModel;
@@ -74,9 +75,8 @@ public:
   typedef typename DiscreteFunctionSpace::DomainType     DomainType;
   typedef typename DiscreteFunctionSpace::RangeType      RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType
-  JacobianRangeType;
+    JacobianRangeType;
 
-protected:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
@@ -128,7 +128,7 @@ public:
   {}
 
 private:
-  ConservativeFluxOperator(const This&);
+  ConservativeFluxOperator(const This&) = delete;
 
 public:
   // dummy operator
@@ -450,7 +450,7 @@ template< class SubGridDiscreteFunctionType,
           class MacroMicroGridSpecifierImp >
 class ConservativeFluxProblemSolver
 {
-public:
+private:
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
 
   //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
@@ -804,6 +804,9 @@ public:
 
   } // solve_all
 }; // end class
-} // end namespace Dune
+
+} //namespace MsFEM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // #ifndef DiscreteEllipticMsFEMLocalProblem_HH

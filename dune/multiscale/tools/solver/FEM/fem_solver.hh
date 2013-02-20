@@ -19,14 +19,12 @@ template< class FunctionSpaceImp >
 class DummyMass
   : public Dune::Fem::Function< FunctionSpaceImp, DummyMass< FunctionSpaceImp > >
 {
-public:
+private:
   typedef FunctionSpaceImp FunctionSpaceType;
 
-private:
   typedef DummyMass< FunctionSpaceType >                     ThisType;
   typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
-public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType  RangeType;
 
@@ -55,7 +53,7 @@ public:
 template< class DiscreteFunctionType >
 class Elliptic_FEM_Solver
 {
-public:
+private:
   typedef DiscreteFunctionType DiscreteFunction;
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;

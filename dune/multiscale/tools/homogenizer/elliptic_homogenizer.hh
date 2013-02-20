@@ -88,15 +88,14 @@ template< class FunctionSpaceImp, class TensorImp >
 class TransformTensor
   : public Fem::Function< FunctionSpaceImp, TransformTensor< FunctionSpaceImp, TensorImp > >
 {
-public:
+private:
   typedef FunctionSpaceImp FunctionSpaceType;
   typedef TensorImp        TensorType;
 
-private:
+
   typedef TransformTensor< FunctionSpaceType, TensorImp > ThisType;
   typedef Fem::Function< FunctionSpaceType, ThisType >         BaseType;
 
-public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
   typedef typename FunctionSpaceType::RangeType         RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
@@ -108,7 +107,6 @@ public:
 
   static const int dimDomain = DomainType::dimension;
 
-protected:
   const TensorType& tensor_;
 
 public:
@@ -154,16 +152,14 @@ template< class FunctionSpaceImp, class TensorImp >
 class CellSource
   : public Fem::Function< FunctionSpaceImp, CellSource< FunctionSpaceImp, TensorImp > >
 {
-public:
+private:
   typedef TensorImp TensorType;
 
   typedef FunctionSpaceImp FunctionSpaceType;
 
-private:
   typedef CellSource< FunctionSpaceType, TensorImp > ThisType;
   typedef Fem::Function< FunctionSpaceType, ThisType >    BaseType;
 
-public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
   typedef typename FunctionSpaceType::RangeType         RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
@@ -171,11 +167,12 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
-public:
+
   const FunctionSpaceType& functionSpace_;
   const TensorType& tensor_;
   const int& j_;
 
+public:
   inline explicit CellSource(const FunctionSpaceType& functionSpace, const TensorType& tensor, const int& j)
     : functionSpace_(functionSpace)
       , tensor_(tensor)
@@ -213,14 +210,12 @@ template< class FunctionSpaceImp >
 class DefaultDummyAdvection
   : public Fem::Function< FunctionSpaceImp, DefaultDummyAdvection< FunctionSpaceImp > >
 {
-public:
+private:
   typedef FunctionSpaceImp FunctionSpaceType;
 
-private:
   typedef DefaultDummyAdvection< FunctionSpaceType > ThisType;
   typedef Fem::Function< FunctionSpaceType, ThisType >    BaseType;
 
-public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType  RangeType;
 
@@ -230,8 +225,6 @@ public:
   typedef DomainFieldType TimeType;
 
   const FunctionSpaceType* functionSpace_;
-
-protected:
   const double epsilon_;
 
 public:
@@ -298,6 +291,7 @@ public:
 template< class GridImp, class TensorImp >
 class Homogenizer
 {
+private:
   typedef GridImp GridType;
   enum { dimension = GridType::dimension };
 

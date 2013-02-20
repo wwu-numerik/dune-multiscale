@@ -31,7 +31,7 @@ class LocalProblemOperator
 {
   typedef LocalProblemOperator< SubDiscreteFunctionType, DiffusionOperatorType > This;
 
-public:
+private:
   typedef SubDiscreteFunctionType DiscreteFunction;
   typedef DiffusionOperatorType   DiffusionModel;
 
@@ -44,11 +44,8 @@ public:
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType  RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType
-  JacobianRangeType;
+    JacobianRangeType;
 
-
-
-protected:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
@@ -74,7 +71,7 @@ public:
   {}
 
 private:
-  LocalProblemOperator(const This&);
+  LocalProblemOperator(const This&) = delete;
 
 public:
   // dummy operator

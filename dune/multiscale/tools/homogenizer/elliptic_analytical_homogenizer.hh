@@ -19,6 +19,7 @@ namespace Dune {
 template< class GridImp, class TensorImp >
 class AnalyticalHomogenizer
 {
+private:
   typedef GridImp GridType;
 
   typedef LeafGridPart< GridType > GridPartType;

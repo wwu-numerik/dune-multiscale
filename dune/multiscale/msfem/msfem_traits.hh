@@ -69,7 +69,7 @@ struct MsFEMTraits {
 
   typedef MacroMicroGridSpecifier< DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
   typedef Dune::SubGrid< GridType::dimension, GridType >                                      SubGridType;
-  typedef Dune::SubGridList< DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
+  typedef SubGridList< DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
 
   //! -------------------------- MsFEM error estimator ----------------------------
   typedef MsFEMErrorEstimator< DiscreteFunctionType,
@@ -77,14 +77,14 @@ struct MsFEMTraits {
                                FirstSourceType,
                                MacroMicroGridSpecifierType,
                                SubGridListType >
-  MsFEMErrorEstimatorType;
+    MsFEMErrorEstimatorType;
   //! -----------------------------------------------------------------------------
 
   //! ------------------ typedefs and classes for data output ---------------------
-  typedef Dune::tuple< const DiscreteFunctionType* >      IOTupleType;
+  typedef std::tuple< const DiscreteFunctionType* >      IOTupleType;
   typedef Dune::DataOutput< GridType, IOTupleType > DataOutputType;
   // just for the discretized exact solution (in case it is available)
-  typedef Dune::tuple< const DiscreteExactSolutionType* > ExSolIOTupleType;
+  typedef std::tuple< const DiscreteExactSolutionType* > ExSolIOTupleType;
   // just for the discretized exact solution (in case it is available)
   typedef Dune::DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 };

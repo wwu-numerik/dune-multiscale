@@ -31,7 +31,7 @@ class DiscreteCellProblemOperator
 {
   typedef DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp > This;
 
-public:
+private:
   typedef PeriodicDiscreteFunctionImp DiscreteFunction;
   typedef DiffusionImp                DiffusionModel;
 
@@ -46,7 +46,6 @@ public:
   typedef typename DiscreteFunctionSpace::JacobianRangeType
   JacobianRangeType;
 
-protected:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 

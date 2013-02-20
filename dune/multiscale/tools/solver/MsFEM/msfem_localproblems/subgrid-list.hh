@@ -26,6 +26,9 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
 namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
+
 //! container for cell problem subgrids
 template< class HostDiscreteFunctionImp, class SubGridImp, class MacroMicroGridSpecifierImp >
 class SubGridList : boost::noncopyable
@@ -425,6 +428,8 @@ public:
   {}
 };
 
-} //namespace Dune
+} //namespace MsFEM {
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // #ifndef SUBGRIDLIST_HH

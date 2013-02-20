@@ -92,7 +92,7 @@ struct entity_compare
 template< class DiscreteFunctionSpaceType >
 class CellProblemNumberingManager
 {
-public:
+private:
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   typedef typename GridPartType::GridType                  GridType;
 
@@ -116,6 +116,7 @@ public:
   CellNumMapType cell_numbering_map_;
   CellNumMapNLType cell_numbering_map_NL_;
 
+public:
   /** simpliefied: in general we need CellNumMapType for the cell problem numering in the linear setting (entity and
    * local number of base function) and in the nonlinear case we need CellNumMapNLType (NL stands for nonlinear).
    * CellNumMapType is also required in the nonlinear case if we use test function reconstruction (TFR)

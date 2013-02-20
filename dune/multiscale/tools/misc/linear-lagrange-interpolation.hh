@@ -27,14 +27,12 @@ template< class FunctionSpaceImp >
 class LinearLagrangeFunction2D
   : public Dune::Fem::Function< FunctionSpaceImp, LinearLagrangeFunction2D< FunctionSpaceImp > >
 {
-public:
+private:
   typedef FunctionSpaceImp FunctionSpaceType;
 
-private:
   typedef LinearLagrangeFunction2D< FunctionSpaceType >      ThisType;
   typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
-public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType  RangeType;
 
@@ -48,7 +46,6 @@ public:
 
   typedef DomainFieldType TimeType;
 
-protected:
   // three values that determine the linear polynom in 2D
   DomainType a_0_;
   RangeType p_a_0_; // p(a_0) = p_a_0
@@ -59,7 +56,6 @@ protected:
   DomainType a_2_;
   RangeType p_a_2_;
 
-private:
   EntityPointerType* it_;
 
 public:
