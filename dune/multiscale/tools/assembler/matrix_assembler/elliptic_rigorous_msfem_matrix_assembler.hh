@@ -256,7 +256,8 @@ void DiscreteEllipticRigMsFEMOperator< CoarseDiscreteFunctionImp,
 
     const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
-    LocalMatrix local_matrix = global_matrix.localMatrix(coarse_grid_entity, coarse_grid_entity);
+    DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity, 1e-12);
+
 
     const CoarseBaseFunctionSet& coarse_grid_baseSet = local_matrix.domainBaseFunctionSet();
     const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.size();

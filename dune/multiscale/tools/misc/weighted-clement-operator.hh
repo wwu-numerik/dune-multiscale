@@ -9,7 +9,7 @@
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -242,7 +242,7 @@ public:                                                           /*@LST0S@*/
 
         for (unsigned int i = 0; i < numBaseFunctions; ++i)
          {
-           int global_dof_number = coarse_space_.mapToGlobal( entity, i );
+           const int global_dof_number = coarse_space_.mapToGlobal( entity, i );
            coff[ global_dof_number ] += weight * phi[i];
          }
       }
@@ -270,7 +270,7 @@ public:                                                           /*@LST0S@*/
           if (!Stuff::Grid::entities_identical(coarse_entity, *father_of_loc_grid_ent))
             continue;
 
-          LocalMatrixType localMatrix = linearOperator_.localMatrix( entity, coarse_entity );
+          DSFe::LocalMatrixProxy<LinearOperatorType> localMatrix(linearOperator_, entity, coarse_entity, 1e-12);
 
           const CoarseGeometryType coarse_geometry = coarse_entity.geometry();
 

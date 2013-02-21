@@ -29,6 +29,7 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -200,7 +201,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
     assert(sub_grid_entity.partitionType() == InteriorEntity);
 
-    LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
+    DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
     const SubGridBaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.size();
