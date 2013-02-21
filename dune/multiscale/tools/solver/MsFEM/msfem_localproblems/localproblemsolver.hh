@@ -396,9 +396,11 @@ public:
 
         // create inverse operator
         // saddle point problem solver with uzawa algorithm:
-        InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
-        uzawa( local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier );
-
+        {
+          DSC::Profiler::ScopedTiming st("uzawa");
+          InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
+          uzawa( local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier );
+        }
       }
       else
       { locprob_fem_biCGStab(local_problem_rhs, local_problem_solution); }
