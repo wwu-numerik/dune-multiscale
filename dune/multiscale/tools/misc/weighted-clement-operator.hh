@@ -1,19 +1,100 @@
 #ifndef DUNE_DIVERGENCE_HH
 #define DUNE_DIVERGENCE_HH
 
-//- Dune includes
+#include <unordered_map>
+#include <unordered_set>
+
 #include <dune/common/fmatrix.hh>
 #include <dune/common/timer.hh>
-
 #include <dune/fem/storage/array.hh>
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 
+
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
+template < class FunctionSpaceTraits >
+std::vector<int> mapEach(const Dune::DiscreteFunctionSpaceInterface<FunctionSpaceTraits>& space,
+                         const typename Dune::DiscreteFunctionSpaceInterface<FunctionSpaceTraits>::EntityType& entity)
+{
+  const auto& mapper = space.mapper();
+  std::vector<int> ret(mapper.numDofs(entity));
+  auto add = [&](int localDof, int globalDof){ ret[localDof] = globalDof; };
+  mapper.mapEach(entity, add);
+  return ret;
+}
+
+template <class IndexSetType>
+struct EntityPointerHash {
+  const IndexSetType& index_set_;
+
+  EntityPointerHash(const IndexSetType& index_set)
+    :index_set_(index_set)
+  {}
+
+  template <class... Args>
+  std::size_t operator() (const Dune::EntityPointer<Args...>& ptr) const
+  {
+    return index_set_.index(*ptr);
+  }
+};
+
+template<class DomainSpace, class RangeSpace>
+class ClemementPattern : public DSLC::SparsityPatternDefault {
+  typedef DSLC::SparsityPatternDefault BaseType;
+  typedef typename DomainSpace::EntityType::EntityPointer DomainEntityPointerType;
+  typedef typename RangeSpace::EntityType::EntityPointer RangeEntityPointerType;
+  typedef std::unordered_set<RangeEntityPointerType,
+                             EntityPointerHash<typename RangeSpace::IndexSetType> >
+    FineEntitySetType;
+  typedef std::unordered_map<DomainEntityPointerType,
+                             FineEntitySetType,
+                             EntityPointerHash<typename DomainSpace::IndexSetType> >
+    SupportMapType;
+  SupportMapType support_map_;
+public:
+  //! creates an entity/neighbor pattern with domainSpace.size() == #rows sets
+  ClemementPattern(const DomainSpace& domainSpace,
+                   const RangeSpace& rangeSpace,
+                   const MacroMicroGridSpecifier< RangeSpace >& specifier)
+    : BaseType(domainSpace.size())
+    , support_map_(domainSpace.gridPart().grid().size(0),
+                   typename SupportMapType::hasher(domainSpace.indexSet()))
+  {
+
+    for (const auto& domain_entity : domainSpace) {
+      const auto globalI_vec = mapEach(domainSpace, domain_entity);
+      FineEntitySetType range_set(specifier.getLevelDifference()*3,
+                                 typename FineEntitySetType::hasher(rangeSpace.indexSet()));
+      const auto father_of_loc_grid_ent =
+        Stuff::Grid::make_father(rangeSpace.gridPart().grid().leafIndexSet(),
+                                 domainSpace.grid().template getHostEntity< 0 >(domain_entity),
+                                 specifier.getLevelDifference());
+      for(const auto& range_entity : rangeSpace)
+      {
+        if (!Stuff::Grid::entities_identical(range_entity, *father_of_loc_grid_ent))
+          continue;
+        range_set.insert(RangeEntityPointerType(range_entity));
+        for (const auto i : globalI_vec) {
+          const auto globalJ_vec = mapEach(rangeSpace,range_entity);
+          auto& columns = BaseType::set(i);
+          for (const auto j : globalJ_vec) {
+            columns.insert(j);
+          }
+        }
+      }
+      support_map_.insert(std::make_pair(DomainEntityPointerType(domain_entity), range_set));
+    }
+  }
+
+  const SupportMapType& support() const {
+    return support_map_;
+  }
+};
 
 template< class DiscreteFunction, class CoarseDiscreteFunction, class MatrixTraits, class CoarseBasisFunctionList >
 class WeightedClementOp
