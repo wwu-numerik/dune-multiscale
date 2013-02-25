@@ -11,7 +11,7 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
-
+#include <dune/stuff/la/container/pattern.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -196,7 +196,7 @@ public:
     dofManager_( DofManagerType :: instance( space.grid() ) ),
     specifier_( specifier )
     , sparsity_pattern_(discreteFunctionSpace_, coarse_space_, specifier_)
-    , linearOperator_( discreteFunctionSpace_, coarse_space_, sparsity_pattern_ ),
+    , linearOperator_( discreteFunctionSpace_, coarse_space_ ),
     sequence_( -1 ),
     gradCache_( discreteFunctionSpace_.mapper().maxNumDofs() ),
     values_( discreteFunctionSpace_.mapper().maxNumDofs() )
