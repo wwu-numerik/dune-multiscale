@@ -11,7 +11,7 @@ class MacroMicroGridSpecifier
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
 
   enum { faceCodim = 1 };
-  
+
 public:
   MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space,
                           DiscreteFunctionSpaceType& fine_scale_space)
@@ -89,7 +89,7 @@ public:
     }
     return oversampling_strategy_;
   }
-  
+
   void initialize_local_error_manager() {
     //!TODO previous imp would append number_of_level_host_entities_ many zeroes every time it was called
     loc_coarse_residual_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
@@ -177,13 +177,13 @@ public:
     }
     return loc_fine_grid_jumps_[index];
   } // get_loc_fine_grid_jumps
-  
+
   void identify_coarse_boundary_nodes()
   {
     is_boundary_node_.resize( coarse_scale_space_.size() );
-    
+
     number_of_coarse_boundary_nodes_ = 0;
-    
+
     const auto endit = coarse_scale_space_.end();
     for (auto it = coarse_scale_space_.begin(); it != endit; ++it)
     {
@@ -206,7 +206,7 @@ public:
         const auto faceEndIterator
           = lagrangePointSet.template endSubEntity< faceCodim >(face);
         for ( ; faceIterator != faceEndIterator; ++faceIterator)
-          is_boundary_node_[coarse_scale_space_.mapToGlobal(*it, *faceIterator )] = true;
+          is_boundary_node_[coarse_scale_space_.mapper().mapToGlobal(*it, *faceIterator )] = true;
 
       }
 
@@ -217,23 +217,23 @@ public:
       if ( is_boundary_node_[i] )
         number_of_coarse_boundary_nodes_ += 1;
     }
-    
+
     boundary_nodes_identified_ = true;
 
   }
-  
+
   int get_number_of_coarse_boundary_nodes() const
   {
     assert( boundary_nodes_identified_ );
     return number_of_coarse_boundary_nodes_;
   }
-  
+
   bool is_coarse_boundary_node( int global_index ) const
   {
     assert( boundary_nodes_identified_ );
     return is_boundary_node_[global_index];
   }
-  
+
 private:
   DiscreteFunctionSpaceType& coarse_scale_space_;
   DiscreteFunctionSpaceType& fine_scale_space_;
@@ -246,13 +246,13 @@ private:
 
   // oversampling strategy - 1, 2 or 3. (1 and 2 for MsFEM and 3 for Rigorous MsFEM)
   int oversampling_strategy_;
-  
+
   // layers for each coarse grid entity
   std::vector< int > number_of_layers;
-  
+
   // have the boundary nodes been identified?
   bool boundary_nodes_identified_;
-  
+
   // is a given coarse node a boundary node of the coarse grid? true/false
   std::vector< bool > is_boundary_node_;
 

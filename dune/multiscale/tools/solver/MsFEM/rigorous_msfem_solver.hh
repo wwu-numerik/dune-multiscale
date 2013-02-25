@@ -40,7 +40,7 @@ private:
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
 
   typedef CachingQuadrature< GridPart, 0 > CoarseQuadrature;
-  
+
   typedef typename DiscreteFunctionSpace::GridType HostGrid;
 
   typedef typename HostGrid::Traits::LeafIndexSet HostGridLeafIndexSet;
@@ -149,8 +149,8 @@ private:
   } // oneLinePrint
 
 
-  // vtk visualization of msfem basis functions 
-  template< class MsFEMBasisFunctionType >                                      
+  // vtk visualization of msfem basis functions
+  template< class MsFEMBasisFunctionType >
   void vtk_output( MsFEMBasisFunctionType& msfem_basis_function_list, std::string basis_name = "msfem_basis_function" ) const
   {
 
@@ -159,27 +159,27 @@ private:
 
     typedef typename MsFEMTraits::IOTupleType IOTType;
     const auto& gridPart = msfem_basis_function_list[0]->space().gridPart();
-  
+
     for ( size_t i = 0; i < msfem_basis_function_list.size(); i+=1 )
     {
-    
+
       IOTType msfem_basis_series( &(*msfem_basis_function_list[i]) );
-      
+
       const std::string ls_name_s = "/" + basis_name + (boost::format("_%d") % i).str();
       outputparam.set_prefix(ls_name_s);
-    
+
       std::string outstring = basis_name;
-    
+
       MsFEMTraits::DataOutputType msfem_basis_dataoutput(
-	  gridPart.grid(), msfem_basis_series, outputparam );
+    gridPart.grid(), msfem_basis_series, outputparam );
       msfem_basis_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
     }
-    
-    std::cout << "VTK Output for MsFEM basis functions successful." << std::endl << std::endl; 
+
+    std::cout << "VTK Output for MsFEM basis functions successful." << std::endl << std::endl;
 
   }
- 
+
 
   // create a hostgrid function from a subgridfunction (projection for global continuity)
   // Note: the maximum gride levels for both underlying grids must be the same
@@ -220,9 +220,9 @@ private:
                                       std::map<int,int>& global_id_to_internal_id,
                                       MsFEMBasisFunctionType& msfem_basis_function_list ) const
   {
-    
+
     DSC_LOG_INFO << "Create standard coarse grid basis functions as discrete functions on the fine grid... ";
-    
+
     typedef typename HostEntity::template Codim< 2 >::EntityPointer HostNodePointer;
     typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
     typedef typename DiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
@@ -239,17 +239,17 @@ private:
 
       const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().baseFunctionSet( *coarse_father );
       const auto numBaseFunctions = coarseBaseSet.size();
-      
+
       const auto& lagrangepoint_set = specifier.coarseSpace().lagrangePointSet(*coarse_father);
       const auto& coarse_geometry = (*coarse_father).geometry();
-      
+
       const auto number_of_points = lagrangepoint_set.nop();
-      
+
       std::vector< RangeType > phi( numBaseFunctions );
       //! TODO switch loops for more efficiency
       for(size_t loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number ) {
 
-        const int global_dof_number = specifier.coarseSpace().mapToGlobal(*coarse_father, loc_basis_number );
+        const int global_dof_number = specifier.coarseSpace().mapper().mapToGlobal(*coarse_father, loc_basis_number );
         if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
         { continue; }
 
@@ -306,7 +306,7 @@ private:
                                    SubGridListType& subgrid_list,
                                    MsFEMBasisFunctionType& msfem_basis_function_list ) const
   {
-    
+
     DSC_LOG_INFO << "Add global corrector to create MsFEM basis functions from standard FEM basis functions... ";
 
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
@@ -314,29 +314,29 @@ private:
     typedef typename DiscreteFunctionSpace::IteratorType CoarseIterator;
     typedef typename CoarseIterator::Entity CoarseEntity;
     typedef typename CoarseEntity::Geometry CoarseGeometry;
-    
+
     typedef typename DiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
-    
+
     std::vector< JacobianRangeType > gradient_Phi(
        specifier.coarseSpace().mapper().maxNumDofs() );
-    
+
     for (const CoarseEntity& coarse_grid_entity : specifier.coarseSpace())
     {
-      
+
       const CoarseGeometry& coarse_grid_geometry = coarse_grid_entity.geometry();
       assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
       const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
-      
+
       const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().baseFunctionSet( coarse_grid_entity );
       const auto numBaseFunctions = coarseBaseSet.size();
-      
+
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       SubGridType& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
       SubGridPart subGridPart(sub_grid_U_T);
-      
+
       const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
-      
+
       SubgridDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
       local_problem_solution_e0.clear();
 
@@ -353,7 +353,7 @@ private:
       discrete_function_reader.read(0, local_problem_solution_e0);
       // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 1 << std::endl;
       discrete_function_reader.read(1, local_problem_solution_e1);
-      
+
       // 1 point quadrature!! We only need the gradient of the base function,
       // which is constant on the whole entity.
       const CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
@@ -368,7 +368,7 @@ private:
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
-        int global_dof_number = specifier.coarseSpace().mapToGlobal( coarse_grid_entity , i );
+        int global_dof_number = specifier.coarseSpace().mapper().mapToGlobal( coarse_grid_entity , i );
         if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
         { continue; }
 
@@ -387,56 +387,56 @@ private:
         (*(msfem_basis_function_list[global_interior_dof_number])) += correction_on_U_T;
 
       }
-     
+
     }
 
     DSC_LOG_INFO << " done." << std::endl;
   }
   // ------------------------------------------------------------------------------------
 
-  
+
   template< class MatrixImp >
   void print_matrix( MatrixImp& system_matrix ) const
   {
-   std::cout << "---------------------------" << std::endl;     
-   std::cout << "Matrix:" << std::endl << std::endl; 
+   std::cout << "---------------------------" << std::endl;
+   std::cout << "Matrix:" << std::endl << std::endl;
    for (int row = 0; row != system_matrix.N(); ++row) {
      for (int col = 0; col != system_matrix.M(); ++col) {
        std::cout << system_matrix[row][col] << "  ";}
        std::cout << std::endl;
    }
-   std::cout << "---------------------------" << std::endl; 
+   std::cout << "---------------------------" << std::endl;
    std::cout << std::endl << std::endl;
   }
-  
+
   template< class VectorImp >
   void print_vector( VectorImp& vector ) const
   {
-   std::cout << "---------------------------" << std::endl;     
-   std::cout << "Vector:" << std::endl << std::endl; 
+   std::cout << "---------------------------" << std::endl;
+   std::cout << "Vector:" << std::endl << std::endl;
    for (int col = 0; col != vector.N(); ++col) {
        std::cout << vector[col] << "  ";
    }
-   std::cout << std::endl << "---------------------------" << std::endl; 
+   std::cout << std::endl << "---------------------------" << std::endl;
    std::cout << std::endl << std::endl;
   }
-  
+
   template< class DiffusionOperator >
   RangeType evaluate_bilinear_form( const DiffusionOperator& diffusion_op, const DiscreteFunction& func1, const DiscreteFunction& func2 ) const
   {
     RangeType value = 0.0;
-    
+
     int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
     for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
     {
       typedef typename HostEntity::template Codim< 0 >::EntityPointer
           HostEntityPointer;
-      
+
       LocalFunction loc_func_1 = func1.localFunction(*it);
       LocalFunction loc_func_2 = func2.localFunction(*it);
-      
+
       const auto& geometry = (*it).geometry();
-      
+
       const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
       const int numQuadraturePoints = quadrature.nop();
       for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
@@ -462,8 +462,8 @@ private:
     }
     return value;
   }
-    
-  
+
+
   // ------------------------------------------------------------------------------------
   template< class DiffusionOperator, class MsFEMBasisFunctionType, class MatrixImp >
   void assemble_matrix( const DiffusionOperator& diffusion_op,
@@ -474,26 +474,26 @@ private:
     for (size_t row = 0; row != system_matrix.N(); ++row)
       for (size_t col = 0; col != system_matrix.M(); ++col)
         system_matrix[row][col] = 0.0;
-         
+
 #ifdef SYMMETRIC_DIFFUSION_MATRIX
    for (size_t row = 0; row != system_matrix.N(); ++row)
     for (size_t col = 0; col <= row; ++col)
-      system_matrix[row][col] 
+      system_matrix[row][col]
         = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]) );
 
    for (size_t col = 0; col != system_matrix.N(); ++col )
     for (size_t row = 0; row < col; ++row)
       system_matrix[row][col] = system_matrix[col][row];
-    
+
 #else
    for (size_t row = 0; row != system_matrix.N(); ++row)
      for (size_t col = 0; col != system_matrix.M(); ++col)
-       system_matrix[col][row] 
+       system_matrix[col][row]
          = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]) );
 
 #endif
   }
-  
+
 
   // ------------------------------------------------------------------------------------
   template< class SourceTerm, class MsFEMBasisFunctionType, class VectorImp >
@@ -501,24 +501,24 @@ private:
                      MsFEMBasisFunctionType& msfem_basis_function_list,
                      VectorImp& rhs ) const
   {
-    
+
     for (size_t col = 0; col != rhs.N(); ++col)
       rhs[col] = 0.0;
-     
+
     for (size_t col = 0; col != rhs.N(); ++col)
     {
       const int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
       for (const auto& entity : discreteFunctionSpace_)
-      {    
+      {
         const auto& geometry = entity.geometry();
-      
+
         const auto local_func = msfem_basis_function_list[col]->localFunction(entity);
         const CachingQuadrature< GridPart, 0 > quadrature( entity, polOrder);
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
         {
           DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
-	
+
           const double weight = geometry.integrationElement( quadrature.point(quadraturePoint) )
                                 * quadrature.weight(quadraturePoint);
 
@@ -556,12 +556,12 @@ public:
                             DiscreteFunction& solution) const
   {
     DSC::Profiler::ScopedTiming st("msfem.Elliptic_Rigorous_MsFEM_Solver.solve_dirichlet_zero");
-    
+
     specifier.setOversamplingStrategy( 3 ); // for rigorous MsFEM!
-   
+
     DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
     DiscreteFunctionSpace& fine_space = specifier.fineSpace();
-    
+
     specifier.identify_coarse_boundary_nodes();
 
     const int number_of_internal_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_boundary_nodes();
@@ -589,18 +589,18 @@ public:
     //! NOTE TODO for each MsFEM basis function save the support,
     //! i.e. a vector of entity points that describe the support of the basis
     //! function. This will save a lot of computational time when assembling the system matrix!
-     
+
     MsFEMBasisFunctionType standard_basis_function;
     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
       standard_basis_function.emplace_back(new DiscreteFunction("Standard basis function", fine_space));
       standard_basis_function[internal_id]->clear();
      }
-     
+
     add_coarse_basis_contribution( specifier, global_id_to_internal_id, msfem_basis_function );
     add_coarse_basis_contribution( specifier, global_id_to_internal_id, standard_basis_function );
-    
-    
+
+
     // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
     typedef DiscreteEllipticRigMsFEMOperator< DiscreteFunction /*type of coarse space*/,
                                            MacroMicroGridSpecifier< DiscreteFunctionSpace >,
@@ -617,9 +617,9 @@ public:
                                                          global_id_to_internal_id );
     // elliptic_msfem_op is no more required for the remaining code!
     // It is only used to assemle the local problems
-        
+
     add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, msfem_basis_function );
-    
+
     // just for VTK output for the basis function correctors
     /*
     MsFEMBasisFunctionType corrector_basis_function;
@@ -628,36 +628,36 @@ public:
       corrector_basis_function.emplace_back(new DiscreteFunction("Corrector basis function", fine_space));
       corrector_basis_function[internal_id]->clear();
      }
-     
+
     add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, corrector_basis_function );
     vtk_output( corrector_basis_function, "corrector_basis_function" );
     */
-    
+
     if ( DSC_CONFIG_GET("rigorous_msfem.msfem_basis_vtk_output", 0) )
     {
        vtk_output( msfem_basis_function );
        vtk_output( standard_basis_function, "standard_basis_function" );
     }
-    
+
     DSC_LOG_INFO << "Start assembling the stiffness matrix of the global problems.." << std::endl;
-  
+
     DSC_LOG_INFO << "WARNING! Assembling the stiffness matrix of the global problems extremely expensive! Implementation is not yet efficient!" << std::endl;
     //! NOTE TODO for each MsFEM basis function save the support,
     //! i.e. a vector of entity points that describe the support of the basis
     //! function. This will save a lot of computational time when assembling the system matrix!
-     
+
     //! (stiffness) matrix
     MatrixType system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
-  
+
     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
     { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function, system_matrix); }
     else
     { assemble_matrix( diffusion_op, msfem_basis_function, msfem_basis_function, system_matrix); }
 
     DSC_LOG_INFO << ".. assembling of the stiffness matrix done." << std::endl;
-  
+
     //print_matrix( system_matrix );
-    
+
     //! NOTE TODO: Assembling of right hand side is also quite expensive!
     VectorType rhs( number_of_internal_coarse_nodes );
     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
@@ -668,16 +668,16 @@ public:
     //print_vector( rhs );
 
     double tol = DSC_CONFIG_GET("rigorous_msfem.macro_solver_tolerance", 1e-10 );
-    int num_iterations = DSC_CONFIG_GET("rigorous_msfem.macro_solver_iterations", 10000 ); 
-    
+    int num_iterations = DSC_CONFIG_GET("rigorous_msfem.macro_solver_iterations", 10000 );
+
     MatrixOperatorType matrix_op( system_matrix );
-    PreconditionerType preconditioner( system_matrix, 100, 0.9 ); 
-    
+    PreconditionerType preconditioner( system_matrix, 100, 0.9 );
+
     Dune::InverseOperatorResult result_data;
     VectorType solution_vector( number_of_internal_coarse_nodes );
     for (size_t col = 0; col != solution_vector.N(); ++col)
       solution_vector[col] = 0.0;
-      
+
 #ifdef SYMMETRIC_DIFFUSION_MATRIX
     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
     {
@@ -693,25 +693,25 @@ public:
     }
 #else
     typedef Dune::BiCGSTABSolver< VectorType > SolverType;
-    
+
     SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
     solver.apply( solution_vector, rhs, result_data);
 #endif
- 
+
     coarse_scale_part.clear();
     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
        *(standard_basis_function[internal_id]) *= solution_vector[internal_id];
        coarse_scale_part += *(standard_basis_function[internal_id]);
      }
-     
+
     solution.clear();
     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
      {
        *(msfem_basis_function[internal_id]) *= solution_vector[internal_id];
        solution += *(msfem_basis_function[internal_id]);
      }
-     
+
     fine_scale_part.assign(solution);
     fine_scale_part -= coarse_scale_part;
   } // solve_dirichlet_zero

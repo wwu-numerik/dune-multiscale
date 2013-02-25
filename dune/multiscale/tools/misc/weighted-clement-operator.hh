@@ -112,9 +112,10 @@ public:
     coarse_nodes_( coarse_nodes ),
     coarse_basis_( coarse_basis ),
     global_id_to_internal_id_( global_id_to_internal_id ),
-    specifier_( specifier ),
     dofManager_( DofManagerType :: instance( space.grid() ) ),
-    linearOperator_( discreteFunctionSpace_, coarse_space_ ),
+    specifier_( specifier )
+    , sparsity_pattern_(discreteFunctionSpace_, coarse_space_, specifier_)
+    , linearOperator_( discreteFunctionSpace_, coarse_space_, sparsity_pattern_ ),
     sequence_( -1 ),
     gradCache_( discreteFunctionSpace_.mapper().maxNumDofs() ),
     values_( discreteFunctionSpace_.mapper().maxNumDofs() )
@@ -206,9 +207,7 @@ public:                                                           /*@LST0S@*/
     typedef typename CoarseEntityType :: Geometry CoarseGeometryType;
 
     // coefficients in the matrix that describes the weighted Clement interpolation
-    std::vector<double> coff( coarse_space_.size() );
-    for(int c = 0; c < coarse_space_.size(); ++c)
-      coff[c] = 0;
+    std::vector<double> coff( coarse_space_.size(), 0.0 );
 
     CoarseIteratorType coarse_end = coarse_space_.end();
     for(CoarseIteratorType it = coarse_space_.begin(); it != coarse_end; ++it)
@@ -242,7 +241,7 @@ public:                                                           /*@LST0S@*/
 
         for (unsigned int i = 0; i < numBaseFunctions; ++i)
          {
-           const int global_dof_number = coarse_space_.mapToGlobal( entity, i );
+           const int global_dof_number = coarse_space_.mapper().mapToGlobal( entity, i );
            coff[ global_dof_number ] += weight * phi[i];
          }
       }
@@ -254,23 +253,16 @@ public:                                                           /*@LST0S@*/
         coff[c] = 1.0 / coff[c];
     }
 
-    for(const auto& coarse_entity : coarse_space_)
+    for(const auto& sp_it : sparsity_pattern_.support())
     {
-       const auto& coarseGridLeafIndexSet = coarse_space_.gridPart().grid().leafIndexSet();
+      const auto& entity = *sp_it.first;
 
-       IteratorType end = space.end();
-       for(IteratorType it = space.begin(); it != end; ++it)
+       for(const auto& coarse_entity_ptr : sp_it.second)
        {
-          EntityType& entity = *it;
 
-          auto father_of_loc_grid_ent =
-            Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                     space.grid().template getHostEntity< 0 >(entity),
-                                     specifier_.getLevelDifference());
-          if (!Stuff::Grid::entities_identical(coarse_entity, *father_of_loc_grid_ent))
-            continue;
-
-          DSFe::LocalMatrixProxy<LinearOperatorType> localMatrix(linearOperator_, entity, coarse_entity, 1e-12);
+         const auto& coarse_entity = *coarse_entity_ptr;
+//          DSFe::LocalMatrixProxy<LinearOperatorType> localMatrix(linearOperator_, entity, coarse_entity, 1e-12);
+          auto localMatrix = linearOperator_.localMatrix(entity, coarse_entity);
 
           const CoarseGeometryType coarse_geometry = coarse_entity.geometry();
 
@@ -333,7 +325,7 @@ public:                                                           /*@LST0S@*/
              {
                for (unsigned int i = 0; i < coarse_numBaseFunctions; ++i)
                {
-                  int coarse_global_dof_number = coarse_space_.mapToGlobal( coarse_entity, i );
+                  int coarse_global_dof_number = coarse_space_.mapper().mapToGlobal( coarse_entity, i );
                   if ( specifier_.is_coarse_boundary_node( coarse_global_dof_number ) == true )
                     { continue; }
 
@@ -415,14 +407,13 @@ protected:
   const CoarseDiscreteFunctionSpaceType& coarse_space_;
   const DofManagerType &dofManager_;
 
-  //! pointer to the system matrix
+  const MacroMicroGridSpecifier< CoarseDiscreteFunctionSpaceType >& specifier_;
+  ClemementPattern<DiscreteFunctionSpaceType,CoarseDiscreteFunctionSpaceType> sparsity_pattern_;
   mutable LinearOperatorType linearOperator_;
 
   const CoarseNodeVectorType& coarse_nodes_;
   const CoarseBasisFunctionList& coarse_basis_;
   const std::map<int,int>& global_id_to_internal_id_;
-
-  const MacroMicroGridSpecifier< CoarseDiscreteFunctionSpaceType >& specifier_;
 
   //! flag indicating whether the system matrix has been assembled
   mutable int sequence_;

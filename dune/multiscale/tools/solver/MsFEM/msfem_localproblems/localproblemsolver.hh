@@ -130,7 +130,7 @@ private:
                           InverseLocProbFEMMatrix, 
                           WeightedClementOperatorType >
      InverseUzawaOperatorType;
-     
+
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
   const MacroMicroGridSpecifierType& specifier_;
@@ -138,7 +138,7 @@ private:
 
   const CoarseBasisFunctionListType* coarse_basis_;
   const std::map<int,int>* global_id_to_internal_id_;
-  
+
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
@@ -167,7 +167,7 @@ public:
       , coarse_basis_( &coarse_basis )
       , global_id_to_internal_id_( &global_id_to_internal_id )
   {}
-  
+
   template< class Stream >
   void oneLinePrint(Stream& stream, const SubDiscreteFunctionType& func) const {
     typedef typename SubDiscreteFunctionType::ConstDofIteratorType
@@ -214,7 +214,7 @@ public:
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    
+
     switch ( specifier_.getOversamplingStrategy() )
     {
     case 1: break;
@@ -222,7 +222,7 @@ public:
     case 3: break;
     default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
     }
-    
+
     // assemble the stiffness matrix
     if ( specifier_.getOversamplingStrategy() == 1 )
     { local_problem_op.assemble_matrix(locprob_system_matrix); }
@@ -251,7 +251,7 @@ public:
          std::cout << coarse_node_local_id+1 << " : " << subgrid_list_.getCoarseNodeVector( coarse_index )[coarse_node_local_id] << std :: endl << std :: endl << std :: endl;
        }
 */
-    
+
     //! boundary treatment:
     typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
 
@@ -305,7 +305,7 @@ public:
     else
       DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
     //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
-    
+
     // zero boundary condition for 'cell problems':
     // set Dirichlet Boundary to zero
     for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
