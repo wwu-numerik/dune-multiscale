@@ -16,7 +16,6 @@
 //! local (dune-multiscale) includes
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-#include <dune/multiscale/tools/solver/HMM/reconstruction_manager/elliptic/reconstructionintegrator.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 
 void check_config();
@@ -63,7 +62,7 @@ int main(int argc, char** argv) {
     if (DSC_CONFIG_GET("problem.reference_solution", false)) // if there is a refernce solution
       refinement_level_referenceprob_ = DSC_CONFIG_GET("problem.rs_grid_level", 0);
     // (typically this is a very high level so that we get a very fine grid)
-      
+
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
     DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
