@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 /**
    *  \file discretefunctionwriter.hh
    *  \brief  write a bunch of discrete functions to one file and retrieve 'em

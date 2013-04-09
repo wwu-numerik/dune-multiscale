@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 // das alles klappt momentan nur in 2-D!!! Es laesst sich aber sehr einfach verallgemeinern.
 // Implementierung funktioniert unter folgenden Voraussetzungen an den (Diffusions-)Tensor:
 // 1. Elliptizitätsbedingung

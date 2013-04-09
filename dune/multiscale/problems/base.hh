@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_MS_PROBLEMS_BASE_HH
 #define DUNE_MS_PROBLEMS_BASE_HH
 
