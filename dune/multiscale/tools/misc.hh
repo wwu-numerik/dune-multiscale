@@ -10,8 +10,8 @@ namespace Stuff {
 namespace Grid {
 
 //!
-template < class GridImp, class IteratorImp, class IndexSetImp, class IndexTypeImp >
-EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet< GridImp, IndexSetImp, IndexTypeImp >& index_set,
+template < class GridImp, class IteratorImp, class... IndexSetArgs>
+EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet<IndexSetArgs...>& index_set,
                 EntityPointer< const GridImp, IteratorImp > entity )
 {
   bool father_found = false;
@@ -34,8 +34,8 @@ EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet< GridImp,
 }
 
 
-template < class GridImp, class IteratorImp, class IndexSetImp, class IndexTypeImp >
-EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet< GridImp, IndexSetImp, IndexTypeImp >& index_set,
+template < class GridImp, class IteratorImp, class... IndexSetArgs>
+EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet<IndexSetArgs...>& index_set,
                  EntityPointer< const GridImp, IteratorImp > entity,
                  int level_difference)
 {

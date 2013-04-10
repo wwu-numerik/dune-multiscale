@@ -9,6 +9,7 @@
 #include <dune/grid/yaspgrid.hh>
 //#ifdef HAVE_ALUGRID
   #include <dune/grid/alugrid.hh>
+  #include <dune/grid/spgrid.hh>
 //#endif
 #include <dune/grid/sgrid.hh>
 #include <dune/subgrid/subgrid.hh>
@@ -64,6 +65,12 @@ namespace Dune {
     //! careful, this only works when using grid selector
     #if USED_ALBERTAGRID_GRIDTYPE
         HOSTGRID_IO_FUNCTION_PAIR(AlbertaGrid,2)
+    #elif USED_SPGRID_GRIDTYPE
+        template<> bool writeHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
+        { return writeHostgridCommon(hostgrid, filename); }
+        \
+        template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
+        { return readHostgridCommon(hostgrid, filename); }
     #else
         HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,2)
         HOSTGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
@@ -87,6 +94,6 @@ namespace Dune {
 
 
 
-}
+} // namespace Dune
 
 #endif // SUBGRID_IO_HH

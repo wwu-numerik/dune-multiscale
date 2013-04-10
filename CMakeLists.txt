@@ -124,7 +124,7 @@ ENDIF( ${GRIDTYPE} MATCHES "ALBERTAGRID" )
 
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
 
-ADD_DUNE_MODULES( common istl grid fem geometry localfunctions subgrid stuff )
+ADD_DUNE_MODULES( common istl grid fem geometry localfunctions subgrid stuff spgrid)
 ADD_CXX_FLAGS( "${CUSTOM_FLAGS} -DGRIDTYPE=${GRIDTYPE} -DHAVE_CMAKE_CONFIG -DHAVE_CONFIG_H" )
 
 LINK_DIRECTORIES( "/usr/lib" "${ALUGRID_BASE_PATH}/lib" )
