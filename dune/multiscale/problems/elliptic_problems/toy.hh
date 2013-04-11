@@ -7,6 +7,9 @@
 
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 
+namespace Problem {
+/** \addtogroup problem_0 Problem::Toy
+ * @{ **/
 // --------- TOY PROBLEM FOR SIMPLE TESTS --------------
 //! ------------ Elliptic Problem 0 --------------------
 // an epsilon-indepent linear elliptic toy model problem
@@ -24,8 +27,6 @@
 #define SYMMETRIC_DIFFUSION_MATRIX
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
-
-namespace Problem {
 namespace Toy {
 // default value for epsilon (not required for this toy problem)
 CONSTANTSFUNCTION( 1.0 )
@@ -54,14 +55,14 @@ struct ModelProblemData
   inline bool problemIsPeriodic() const {
     return true; // = problem is periodic
   }
-  
+
   // does the problem allow a stochastic perturbation of the coefficients?
   inline bool problemAllowsStochastics() const {
     return false; // = problem does not allow stochastic perturbations
     // (if you want it, you must add the 'perturb' method provided
     // by 'constants.hh' - see model problems 4 to 7 for examples )
   }
-  
+
 };
 
 //! ----------------- Definition of ' f ' ------------------------
@@ -70,7 +71,7 @@ template< class FunctionSpaceImp >
 class FirstSource
   : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
 {
-  
+
 public:
   typedef FunctionSpaceImp FunctionSpaceType;
 
@@ -259,7 +260,8 @@ public:
 };
 //! ----------------- End Definition of ' u ' ------------------------
 
-} // namespace Toy {
+} //! @} namespace Toy {
+
 }
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_TOY

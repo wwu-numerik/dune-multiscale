@@ -5,12 +5,12 @@
 #include <dune/stuff/common/logging.hh>
 
 namespace Dune {
-// 2D:
-// easy way to obtain a linear function by either steting 3 point and associated values
-// or giving a picewiese linear discrete function on an entity.
-// this class provides a general evaluate method
 
-// NOTE if you want to use the method with the 'entity-Version' FunctionSpaceImp needs to be a DiscreteFunctionSpaceImp
+//! 2D:
+//! easy way to obtain a linear function by either steting 3 point and associated values
+//! or giving a picewiese linear discrete function on an entity.
+//! this class provides a general evaluate method
+//! NOTE if you want to use the method with the 'entity-Version' FunctionSpaceImp needs to be a DiscreteFunctionSpaceImp
 template< class FunctionSpaceImp >
 class LinearLagrangeFunction2D
   : public Dune::Fem::Function< FunctionSpaceImp, LinearLagrangeFunction2D< FunctionSpaceImp > >

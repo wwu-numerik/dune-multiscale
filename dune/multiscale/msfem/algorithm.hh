@@ -39,6 +39,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+//! \TODO docme
 void adapt(MsFEMTraits::GridType& grid,
            MsFEMTraits::GridType& grid_coarse,
            const int loop_number,
@@ -167,6 +168,7 @@ void adapt(MsFEMTraits::GridType& grid,
   }
 }
 
+//! \TODO docme
 void solution_output(const MsFEMTraits::DiscreteFunctionType& msfem_solution,
                      const MsFEMTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const MsFEMTraits::DiscreteFunctionType& fine_part_msfem_solution,
@@ -234,6 +236,7 @@ void solution_output(const MsFEMTraits::DiscreteFunctionType& msfem_solution,
   //! --------------------------------------------------------------------
 }
 
+//! \TODO docme
 void data_output(const MsFEMTraits::GridPartType& gridPart,
                  const MsFEMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
                  Dune::myDataOutputParameters& outputparam,
@@ -275,6 +278,7 @@ void data_output(const MsFEMTraits::GridPartType& gridPart,
   //! --------------------------------------------------------------------------------------
 }
 
+//! \TODO docme
 bool error_estimation(const MsFEMTraits::DiscreteFunctionType& msfem_solution,
                       const MsFEMTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                       const MsFEMTraits::DiscreteFunctionType& fine_part_msfem_solution,

@@ -28,6 +28,6 @@ using namespace Problem::PROBLEM_NAME;
 static const std::string name = std::string(STRIN(PROBLEM_NAME));
 #undef STR
 #undef STRIN
-} // namespace Problem
+} //! @} namespace Problem
 
 #endif // DUNE_MS_PROBLEMS_SELECTOR_HH

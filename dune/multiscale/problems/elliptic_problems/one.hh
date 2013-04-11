@@ -5,6 +5,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Problem {
+/** \addtogroup problem_1 Problem::One
+ * @{ **/
 //! ------------ Elliptic Problem 1 -------------------
 
 // linear elliptic model problem - periodic setting
@@ -18,7 +21,6 @@
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 
-namespace Problem {
 namespace One {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
@@ -47,14 +49,14 @@ struct ModelProblemData
   inline bool problemIsPeriodic() const {
     return true; // = problem is periodic
   }
-  
+
   // does the problem allow a stochastic perturbation of the coefficients?
   inline bool problemAllowsStochastics() const {
     return false; // = problem does not allow stochastic perturbations
     // (if you want it, you must add the 'perturb' method provided
     // by 'constants.hh' - see model problems 4 to 7 for examples )
   }
-  
+
 };
 
 //! ----------------- Definition of ' f ' ----------------------------

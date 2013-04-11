@@ -60,6 +60,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
   }
 } // boundaryTreatment
 
+//! \TODO docme
 void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                                    const typename HMMTraits::DiffusionType& diffusion_op,
                                    typename HMMTraits::DiscreteFunctionType& hmm_solution,
@@ -244,6 +245,7 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
     }
 } //solve_cell_problems_nonlinear
 
+//! \TODO docme
 void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                               const typename HMMTraits::DiffusionType& diffusion_op,
                               typename HMMTraits::DiscreteFunctionType& hmm_solution,
@@ -297,6 +299,7 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
   DSC_LOG_INFO << seperator_line << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl;
 }
 
+//! \TODO docme
 bool process_hmm_newton_residual(typename HMMTraits::RangeType& relative_newton_error,
                                  typename HMMTraits::DiscreteFunctionType& hmm_solution,
                                  const typename HMMTraits::FEMMatrix& hmm_newton_matrix,
@@ -383,6 +386,7 @@ bool process_hmm_newton_residual(typename HMMTraits::RangeType& relative_newton_
   return true;
 }
 
+//! \TODO docme
 void step_data_output(const typename HMMTraits::GridPartType& gridPart,
                       const typename HMMTraits::GridPartType& gridPartFine,
                       typename HMMTraits::DiscreteFunctionType& hmm_solution,
@@ -430,6 +434,7 @@ void step_data_output(const typename HMMTraits::GridPartType& gridPart,
 //!-------------------------------------------------------------
 }
 
+//! \TODO docme
 HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
         typename HMMTraits::GridPartType& gridPartFine,
         typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
@@ -461,7 +466,7 @@ HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
     else //for a given loop cycle of the Newton scheme:
       solve_hmm_problem_nonlinear(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution,
                                        cp_num_manager, discreteFunctionSpace, rhsassembler, loop_cycle);
-      
+
     const auto errors = estimate_error(gridPart, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                    diffusion_op, cp_num_manager, hmm_solution);
 
@@ -473,9 +478,9 @@ HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
     }
 
     DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
-    
+
     //! ----------------- compute L2-errors -------------------
-    
+
     // L2 error with reference solution
     if (DSC_CONFIG_GET("problem.reference_solution", false))
     {
@@ -489,7 +494,7 @@ HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
       Dune::Stuff::HeterogenousProjection<Dune::Stuff::InlevelSearchStrategy>::project( hmm_solution/*source*/, projected_hmm_solution/*target*/ );
 
       const auto hmm_error = l2error.template norm2< hmm_polorder >(projected_hmm_solution, reference_solution);
-      
+
       // old (expensive) hack to deal with discrete functions, defined on different grids
       // (should do the same as the heterogenous projection above - could therefore be used for comparison)
       /*
@@ -497,7 +502,7 @@ HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
       typename HMMTraits::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
         hmm_solution,
         reference_solution);
-        
+
       const auto timeadapt = DSC_PROFILER.stopTiming("hmm.timeadapt") / 1000.f;
       // if it took longer then 1 minute to compute the error:
       if (timeadapt > 60)
@@ -505,15 +510,15 @@ HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
         DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
       }
       */
-        
+
       DSC_LOG_INFO << "|| u_hmm - u_reference ||_L2 =  " << hmm_error << std::endl << std::endl;
     }
-    
+
     // L2 errors with exact solution
     if (HMMTraits::ModelProblemDataType::has_exact_solution)
     {
       int order_quadrature_rule = 13;
-      
+
       const typename HMMTraits::ExactSolutionType u;
       const typename HMMTraits::RangeType exact_hmm_error = l2error.template norm< typename HMMTraits::ExactSolutionType >(u,
                                                                     hmm_solution,

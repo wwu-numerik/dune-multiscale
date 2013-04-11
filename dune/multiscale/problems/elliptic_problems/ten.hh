@@ -5,6 +5,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Problem {
+/** \addtogroup problem_10 Problem::Ten
+ * @{ **/
 //! ------------ Elliptic Problem 10 -------------------
 
 // linear elliptic model problem - heterogeneous setting
@@ -17,7 +20,6 @@
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 
-namespace Problem {
 namespace Ten {
 // description see below 0.05
 CONSTANTSFUNCTION( 0.05 )
@@ -48,14 +50,14 @@ struct ModelProblemData
   inline bool problemIsPeriodic() const {
     return false; // = problem is not periodic
   }
-  
+
   // does the problem allow a stochastic perturbation of the coefficients?
   inline bool problemAllowsStochastics() const {
     return false; // = problem does not allow stochastic perturbations
     // (if you want it, you must add the 'perturb' method provided
     // by 'constants.hh' - see model problems 4 to 7 for examples )
   }
-  
+
 };
 
 

@@ -13,6 +13,7 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
+//! Type constructions for the FEM problem
 struct FEMTraits {
   //! --------- typedefs for the grid and the corresponding discrete space -------------
   typedef Dune::GridSelector::GridType

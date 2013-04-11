@@ -5,12 +5,13 @@
 #include <utility>
 
 namespace Problem {
+
+//! struct to wrap config parameters with common validation and naming scheme
 struct Constants
 {
   const double epsilon;
-  Constants(double def_epsilon /*, double def_dummy, .. */)
+  Constants(double def_epsilon)
     : epsilon( DSC_CONFIG_GET("problem.epsilon", def_epsilon) )
-      // , dummy( DSC_CONFIG_GET("problem.dummy", def_dummy) ) ..
   {}
 
   template< typename T, class Validator = Dune::Stuff::Common::ValidateAny< T > >

@@ -5,6 +5,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Problem {
+/** \addtogroup problem_6 Problem::Six
+ * @{ **/
 //! ------------ Elliptic Problem 6 -------------------
 
 // linear elliptic model problem - periodic setting
@@ -17,7 +20,6 @@
 #define SYMMETRIC_DIFFUSION_MATRIX
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
-namespace Problem {
 namespace Six {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
@@ -28,7 +30,7 @@ struct ModelProblemData
 {
 
   static const bool has_exact_solution = false;
-  
+
   ModelProblemData()
     : IModelProblemData(constants()) {
       assert( constants_.epsilon != 0.0);
@@ -46,12 +48,12 @@ struct ModelProblemData
   inline bool problemIsPeriodic() const {
     return true; // = problem is periodic
   }
-  
+
   // does the problem allow a stochastic perturbation of the coefficients?
   inline bool problemAllowsStochastics() const {
     return true; // = problem allows stochastic perturbations
   }
-  
+
 };
 
 //! ----------------- Definition of ' f ' ------------------------

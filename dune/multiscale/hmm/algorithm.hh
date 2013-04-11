@@ -31,7 +31,7 @@ void oneLinePrint(Stream& stream, const DiscFunc& func) {
   stream << " ] " << std::endl;
 } // oneLinePrint
 
-
+//! loads a reference solution from disk
 void load_reference(typename HMMTraits::DiscreteFunctionType& reference_solution)
 {
 
@@ -53,15 +53,13 @@ void load_reference(typename HMMTraits::DiscreteFunctionType& reference_solution
 //! \todo replace me with Stuff::something
 template < class DiscreteFunctionSpaceType >
 typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctionSpaceType& discreteFunctionSpace) {
-  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-  IteratorType endit = discreteFunctionSpace.end();
   typename DiscreteFunctionSpaceType::RangeType size_of_domain = 0.0;
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+  for (const auto& en : discreteFunctionSpace)
   {
     typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-    Dune::CachingQuadrature< GridPartType, 0 > entityQuadrature(*it, 0);
+    Dune::CachingQuadrature< GridPartType, 0 > entityQuadrature(en, 0);
     // get geoemetry of entity
-    const typename GridPartType::GridType::template Codim< 0 >::Geometry& geometry = it->geometry();
+    const auto& geometry = en.geometry();
     const double volumeEntity = entityQuadrature.weight(0)
                                 * geometry.integrationElement( entityQuadrature.point(0) );
     size_of_domain += volumeEntity;
@@ -69,6 +67,7 @@ typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctio
   return size_of_domain;
 } // get_size_of_domain
 
+//! outputs Problem info to output stream
 template <class ProblemDataType>
 void print_info(ProblemDataType info, std::ostream& out)
 {
@@ -121,6 +120,7 @@ void print_info(ProblemDataType info, std::ostream& out)
   out << std::endl << std::endl;
 }
 
+//! \TODO docme
 bool adapt(const HMMResult& result,
            const int loop_cycle,
            const double error_tolerance_,
@@ -323,7 +323,7 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
     const auto result = single_step(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                 diffusion_op, rhsassembler, hmm_solution, reference_solution, loop_cycle);
     // call of 'single_step': 'reference_solution' only required for error computation
-    
+
     if ( !DSC_CONFIG_GET("hmm.adaptivity", false) )
       break;
 

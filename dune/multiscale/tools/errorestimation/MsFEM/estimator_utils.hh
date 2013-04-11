@@ -7,6 +7,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+//! \TODO docme
 template < class EstimatorType >
 struct EstimatorUtils {
   //! create N hostgrid functions from N subgridfunctions

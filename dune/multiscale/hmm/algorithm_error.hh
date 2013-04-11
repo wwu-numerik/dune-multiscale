@@ -15,6 +15,7 @@ namespace Dune {
 namespace Multiscale {
 namespace HMM {
 
+//! data container for all the different types of numerical errors in a HMM simulation
 struct HMMResult {
     typename HMMTraits::RangeType estimated_source_error;
     typename HMMTraits::RangeType estimated_approximation_error;
@@ -47,7 +48,7 @@ struct HMMResult {
 };
 
 
-//! ---------- Error Estimation ----------
+//! Error Estimation
 HMMResult estimate_error(
         const typename HMMTraits::GridPartType& gridPart,
         const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,

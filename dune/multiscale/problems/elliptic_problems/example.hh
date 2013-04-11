@@ -5,10 +5,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
-//! Example for an Elliptic Problem Specification
-
 /**
- *
+ * \addtogroup Problem
+ *  @{
  * in general we regard problems of the following type:
 
  * - div ( A (x, ∇u(x) ) ) + m(x) u(x) = f(x) - div G(x)
@@ -57,14 +56,8 @@
  *   evaluate G( x )         --> evaluate
  *
  *
-**/
 
-// Note that in the following, 'Imp' abbreviates 'Implementation'
-
-// The following example is implemented:
-
-/*
-
+ The following example is implemented:
  * Find u with zero boundary condition and
  !! - div ( ( 1 /(8π²) ) ∇u(x) ) = sin( 2 π x_1 ) · sin( 2 π x_2 )
 
@@ -90,9 +83,6 @@
  *  u( x_1, x_2 ) = sin( 2 π x_1 ) · sin( 2 π x_2 )
 
 */
-
-//!##################### Elliptic Example Problem ###################
-
 namespace Problem {
 namespace Example {
 // default value for epsilon (=0.05)
@@ -118,13 +108,13 @@ struct ModelProblemData
   inline std::string getMacroGridFile() const {
     return("../dune/multiscale/grids/macro_grids/elliptic/cube_one.dgf"); // a standard 2d-cube
   }
-  
+
   // are the coefficients periodic? (e.g. A=A(x/eps))
   // this method is only relevant if you want to use a standard homogenizer
   inline bool problemIsPeriodic() const {
     return false; // = problem is not periodic
   }
-  
+
   // does the problem allow a stochastic perturbation of the coefficients?
   inline bool problemAllowsStochastics() const {
     return false; // = problem does not allow stochastic perturbations
@@ -135,10 +125,13 @@ struct ModelProblemData
 };
 
 
-//! ----------------- Definition of ' f ' ------------------------
-
+/**
+ FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
+ The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'.
+ That means 'y := f(x)' and 'y' is returned. It is only important that 'FirstSource' knows the function space ('FunctionSpaceImp') that it
+ is part from. (f \in FunctionSpace)
+*/
 template< class FunctionSpaceImp >
-// define the (first) source term 'f'
 class FirstSource
   : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
 {
@@ -163,17 +156,8 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FirstSource(){}
-
-  /**
-   FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
-   The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'.
-   That means 'y := f(x)' and 'y' is returned. It is only important that 'FirstSource' knows the function space ('FunctionSpaceImp') that it
-   is part from. (f \in FunctionSpace)
-  */
-
-  // evaluate f, i.e. return y=f(x) for a given x
-  // the following method defines 'f':
+  //! evaluate f, i.e. return y=f(x) for a given x
+  //! the following method defines 'f':
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
 
@@ -184,25 +168,12 @@ public:
 
 };
 
-//! ----------------- End Definition of ' f ' ------------------------
+/** \brief default class for the second source term G.
+ * Realization: set G(x) = 0: **/
+NULLFUNCTION(SecondSource)
 
-
-
-//! ----------------- Definition of ' G ' ------------------------
-
-  /** \brief default class for the second source term G.
-   * Realization: set G(x) = 0: **/
-  NULLFUNCTION(SecondSource)
-
-//! ----------------- End Definition of ' G ' ------------------------
-
-
-
-//! ----------------- Definition of ' A ' ------------------------
-
-// the (non-linear) diffusion operator A(x,\xi)
-// A : \Omega × R² -> R²
-
+//! the (non-linear) diffusion operator A(x,\xi)
+//! A : \Omega × R² -> R²
 template< class FunctionSpaceImp >
 class Diffusion
   : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
@@ -227,12 +198,11 @@ public:
 public:
     Diffusion(){}
 
-  // in the linear setting, we have the structure
-  // A(x,\xi) = ( A_1(x,\xi), A_2(x,\xi) ) with
-  //              A_i(x,\xi) ) = A_{i1}(x) \xi_1 + A_{i2}(x) \xi_2
-
-  // (diffusive) flux = A ( x , direction )
-  // (typically direction is some 'gradient_of_a_function')
+  //! in the linear setting, we have the structure
+  //! A(x,\xi) = ( A_1(x,\xi), A_2(x,\xi) ) with
+  //!              A_i(x,\xi) ) = A_{i1}(x) \xi_1 + A_{i2}(x) \xi_2
+  //! (diffusive) flux = A ( x , direction )
+  //! (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& direction,
                      JacobianRangeType& flux) const {
@@ -248,8 +218,8 @@ public:
       the jacobian matrix (JA) of the diffusion operator A with respect to the direction,
       we evaluate (JA)(x,.) at the position "\nabla v" in direction "nabla w", i.e.
       jacobian diffusiv flux = JA(x,\nabla v) nabla w:
-  */
-  // jacobianDiffusiveFlux = JA( x , position_gradient ) direction_gradient
+      jacobianDiffusiveFlux = JA( x , position_gradient ) direction_gradient
+    */
   void jacobianDiffusiveFlux(const DomainType& /*x*/,
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
@@ -271,21 +241,14 @@ public:
   }
 };
 
-//! ----------------- End Definition of ' A ' ------------------------
-
-
 //! ----------------- Definition of ' m ' ----------------------------
 CONSTANTFUNCTION(MassTerm,  0.0)
-//! ----------------- End Definition of ' m ' ------------------------
-
 
 //! ----------------- Definition of some dummy -----------------------
 NULLFUNCTION(DefaultDummyFunction)
-//! ----------------- End Definition of some dummy -------------------
-
 
 //! ----------------- Definition of ' u ' ----------------------------
-// Exact solution (typically it is unknown)
+//! Exact solution (typically it is unknown)
 template< class FunctionSpaceImp >
 class ExactSolution
   : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
@@ -306,16 +269,16 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
+  //! essentially: 'DomainFieldType' is the type of an entry of a domain-element.
+  //! But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
+  //! This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
+  //! entry of a domain-element.
   typedef DomainFieldType TimeType;
-  // essentially: 'DomainFieldType' is the type of an entry of a domain-element.
-  // But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  // This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
-  // entry of a domain-element.
 
 public:
   ExactSolution(){}
 
-  // evaluate 'u(x)'
+  //! evaluate 'u(x)'
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
     // u( x_1, x_2 ) = sin( 2 π x_1 ) · sin( 2 π x_2 )
@@ -323,14 +286,14 @@ public:
 
   } // evaluate
 
-  // evaluate '∇u(x)'
+  //! evaluate '∇u(x)'
   inline void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const {
     grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
   } // evaluateJacobian
 
-  // in case 'u' has a time-dependency use the following method:
-  // (some classes might require this as a default implementation)
+  //! in case 'u' has a time-dependency use the following method:
+  //! (some classes might require this as a default implementation)
   inline void evaluate(const DomainType& x,
                        const TimeType& /*timedummy*/,
                        RangeType& y) const {
@@ -338,8 +301,6 @@ public:
   }
 
 };
-//! ----------------- End Definition of ' u ' ------------------------
-
 
 //! ------ Definition of an empty homogenized diffusion matrix -------
 template< class FunctionSpaceImp, class FieldMatrixImp >
@@ -368,17 +329,15 @@ public:
   const FieldMatrixType& A_hom_;
 
 public:
-  // fill the matrix with given values
+  //! fill the matrix with given values
   inline explicit HomDiffusion(const FieldMatrixType& A_hom)
     : A_hom_(A_hom)
   {}
 
-  // in the linear setting, use the structure
-  // A^0_i(x,\xi) = A^0_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
-
-  // instantiate all possible cases of the evaluate-method:
-
-  // (diffusive) flux = A^0( x , gradient_of_a_function )
+  //! in the linear setting, use the structure
+  //! A^0_i(x,\xi) = A^0_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
+  //! instantiate all possible cases of the evaluate-method:
+  //! (diffusive) flux = A^0( x , gradient_of_a_function )
   void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
@@ -394,11 +353,10 @@ public:
     }
   } // diffusiveFlux
 
-  // the jacobian matrix (JA^0) of the diffusion operator A^0 at the position "\nabla v" in direction
-  // "nabla w", i.e.
-  // jacobian diffusiv flux = JA^0(\nabla v) nabla w:
-
-  // jacobianDiffusiveFlux = A^0( x , position_gradient ) direction_gradient
+  //! the jacobian matrix (JA^0) of the diffusion operator A^0 at the position "\nabla v" in direction
+  //! "nabla w", i.e.
+  //! jacobian diffusiv flux = JA^0(\nabla v) nabla w:
+  //! jacobianDiffusiveFlux = A^0( x , position_gradient ) direction_gradient
   void jacobianDiffusiveFlux(const DomainType& /*x*/,
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& /*direction_gradient*/,
@@ -417,9 +375,10 @@ public:
     DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   }
 };
-//! ---- End definition of an empty homogenized diffusion matrix -------
+
 
 } // namespace Example {
 }
+//! @} End of Doxygen Groups
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EXAMPLE

@@ -15,7 +15,7 @@ namespace MsFEM {
 template < class T >
 class MacroMicroGridSpecifier;
 
-//! --------- typedefs for the coefficient and data functions ------------------
+//! type construction for the MSFEM code
 struct MsFEMTraits {
   //! ----- typedefs for the macro grid and the corresponding discrete space -----
   typedef Dune::GridSelector::GridType

@@ -51,8 +51,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 } // boundaryTreatment
 
 
-
-// write discrete function to a file + VTK Output
+//! write discrete function to a file + VTK Output
 void write_discrete_function(typename FEMTraits::DiscreteFunctionType& discrete_solution )
  {
   // write the final (discrete) solution to a file
@@ -76,12 +75,12 @@ void write_discrete_function(typename FEMTraits::DiscreteFunctionType& discrete_
     femsol_dataoutput.writeData( 1.0 /*dummy*/, "fem-newton-solution" );
  }
 
-
+//! \TODO docme
 void solve(typename FEMTraits::DiscreteFunctionType& solution,
-                 const typename FEMTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
-                 const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
-                 const std::string& filename,
-                 const Dune::RightHandSideAssembler< typename FEMTraits::DiscreteFunctionType >& rhsassembler)
+           const typename FEMTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
+           const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
+           const std::string& filename,
+           const Dune::RightHandSideAssembler< typename FEMTraits::DiscreteFunctionType >& rhsassembler)
 {
   static const int fem_polorder = 2* FEMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
 
@@ -215,7 +214,7 @@ void solve(typename FEMTraits::DiscreteFunctionType& solution,
   //! ********************** End of assembling the reference problem ***************************
 }
 
-
+//! outputs Problem info to output stream
 template <class ProblemDataType>
 void print_info(ProblemDataType info, std::ostream& out)
 {
@@ -242,7 +241,7 @@ void print_info(ProblemDataType info, std::ostream& out)
 
 
 //! the main FEM computation
-void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
+void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,
                const std::string filename) {
   using namespace Dune;
 
@@ -277,10 +276,10 @@ void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,   // gri
   discrete_solution.clear();
 
   solve(discrete_solution, discreteFunctionSpace, discrete_elliptic_op, filename, rhsassembler);
-  
+
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(discrete_solution);
-  
+
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
@@ -288,13 +287,13 @@ void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,   // gri
     DSC_LOG_INFO << std::endl << "The L2 and H1 error:" << std::endl << std::endl;
     H1Error< typename FEMTraits::DiscreteFunctionType > h1error;
     L2Error< typename FEMTraits::DiscreteFunctionType > l2error;
-  
+
     const typename FEMTraits::ExactSolutionType u;
-    
+
     typedef typename FEMTraits::ExactSolutionType ExactSolution;
-    
+
     const int order_quadrature_rule = 13;
-    
+
     typename FEMTraits::RangeType fem_error = l2error.template norm< ExactSolution >
        (u, discrete_solution, order_quadrature_rule /* * FEMTraits::DiscreteFunctionSpaceType::polynomialOrder */ );
     DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
@@ -306,7 +305,8 @@ void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,   // gri
   }
 }
 
-void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
+//! \TODO docme
+void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer,
                        const std::string filename) {
   using namespace Dune;
 

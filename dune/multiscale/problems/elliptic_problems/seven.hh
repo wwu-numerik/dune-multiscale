@@ -5,6 +5,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Problem {
+/** \addtogroup problem_1 Problem::Seven
+ * @{ **/
 //! ------------ Elliptic Problem 7 -------------------
 
 // nonlinear elliptic model problem - periodic setting - allows stochastics
@@ -15,7 +18,6 @@
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 
-namespace Problem {
 namespace Seven {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
@@ -32,7 +34,7 @@ struct ModelProblemData
         DUNE_THROW(Dune::InvalidStateException, "Problem seven is entirely nonlinear, but problem.linear was true.");
       assert( constants_.epsilon != 0.0);
       if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
-         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");      
+         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
     }
 
   //! \copydoc IModelProblemData::getMacroGridFile()
@@ -45,12 +47,12 @@ struct ModelProblemData
   inline bool problemIsPeriodic() const {
     return true; // = problem is periodic
   }
-  
+
   // does the problem allow a stochastic perturbation of the coefficients?
   inline bool problemAllowsStochastics() const {
     return true; // = problem allows stochastic perturbations
   }
-  
+
 };
 
 //! ----------------- Definition of ' f ' ------------------------
@@ -189,7 +191,7 @@ public:
 };
 //! ----------------- End Definition of ' u ' ------------------------
 
-} // namespace Seven {
+} //! @} namespace Seven {
 }
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SEVEN

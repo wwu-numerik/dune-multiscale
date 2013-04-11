@@ -1,9 +1,3 @@
-// das alles klappt (mathematisch) nur in 2-D!!! Für Tensoren, die:
-// 1. irgendwelche Elliptizitätsbedingungen erfüllen
-// 2. A(x,y) = A(y)
-// 3. a_i_j(y) = a_i_j(y_1,y_2) = a_i_j(y_1)
-// 4. symmetrisch
-
 #ifndef DUNE_ANALYTICALHOMOGENIZER_HH
 #define DUNE_ANALYTICALHOMOGENIZER_HH
 
@@ -16,6 +10,12 @@
 #include <dune/grid/io/file/dgfparser/gridptr.hh>
 
 namespace Dune {
+
+//! das alles klappt (mathematisch) nur in 2-D!!! Für Tensoren, die:
+//! 1. irgendwelche Elliptizitätsbedingungen erfüllen
+//! 2. A(x,y) = A(y)
+//! 3. a_i_j(y) = a_i_j(y_1,y_2) = a_i_j(y_1)
+//! 4. symmetrisch
 template< class GridImp, class TensorImp >
 class AnalyticalHomogenizer
 {
