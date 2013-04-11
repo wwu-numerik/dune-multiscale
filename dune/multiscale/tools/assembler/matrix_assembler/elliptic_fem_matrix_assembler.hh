@@ -16,7 +16,8 @@
 #include <dune/stuff/common/ranges.hh>
 
 namespace Dune {
-// Imp stands for Implementation
+
+//! \TODO docme
 template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
 class DiscreteEllipticOperator
   : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,

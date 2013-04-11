@@ -36,7 +36,7 @@
 #include <dune/fem/io/parameter.hh>
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/multiscale/grids/periodicgridpart/periodicgridpart.hh>
+#include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>

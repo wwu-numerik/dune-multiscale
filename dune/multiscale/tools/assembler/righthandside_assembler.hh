@@ -11,9 +11,9 @@
 #include <dune/stuff/fem/functions/checks.hh>
 
 namespace Dune {
-// Assembler for right rand side
-// We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
-// we call f the first Source and G the second Source
+//! Assembler for right rand side
+//! We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
+//! we call f the first Source and G the second Source
 template< class DiscreteFunctionImp >
 class RightHandSideAssembler
 {
@@ -184,11 +184,9 @@ public:
     assemble_common(f, functor, polOrd, rhsVector);
   }  // end method
 
-  // /############################
-
 
   /** assemble right hand side (if there is only one source - f):
-   *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation 
+   *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)
    **/
   template< int polOrd, class FirstSourceType, class MacroMicroGridSpecifierType, class SubGridListType >
@@ -197,13 +195,13 @@ public:
   {
     // set rhsVector to zero:
     rhsVector.clear();
-    
+
     const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
     for (const auto& coarse_grid_entity : rhsVector.space())
     {
 
       const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
-    
+
       const GeometryType& coarse_grid_geometry = coarse_grid_entity.geometry();
       auto elementOfRHS = rhsVector.localFunction(coarse_grid_entity);
 
@@ -214,9 +212,9 @@ public:
       typedef typename SubGridListType::SubGridDiscreteFunctionSpace LocalDiscreteFunctionSpace;
       typedef typename SubGridListType::SubGridDiscreteFunction LocalDiscreteFunction;
       typedef CachingQuadrature< SubGridPartType, 0 > LocalGridQuadrature;
-      
+
       auto& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
-      SubGridPartType subGridPart(sub_grid_U_T);      
+      SubGridPartType subGridPart(sub_grid_U_T);
       LocalDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
 
       LocalDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
@@ -224,7 +222,7 @@ public:
 
       LocalDiscreteFunction local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
       local_problem_solution_e1.clear();
-      
+
       // -- load local solutions --
       // the file/place, where we saved the solutions of the cell problems
       const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
@@ -233,7 +231,7 @@ public:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
-      
+
       // --------- add standard contribution of right hand side -------------------------
       const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
       const int numDofs = elementOfRHS.numDofs();
@@ -253,10 +251,10 @@ public:
         }
       }
       // ----------------------------------------------------------------------------------
-      
+
 
       // --------- add corrector contribution of right hand side --------------------------
-      
+
       // 1 point quadrature!! We only need the gradient of the base function,
       // which is constant on the whole entity.
       const CachingQuadrature< GridPartType, 0 > one_point_quadrature(coarse_grid_entity, 0);
@@ -287,7 +285,7 @@ public:
             continue;
           }
           // -------------------------------------------------------------------
-          
+
           const auto& local_grid_geometry = local_grid_entity.geometry();
           assert(local_grid_entity.partitionType() == InteriorEntity);
 
@@ -329,7 +327,7 @@ public:
     }
   }  // end method
 
- 
+
   /**
    * The rhs-assemble()-methods for non-linear elliptic problems
    * if there is a first source f and a second source G:
@@ -351,7 +349,7 @@ public:
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
 
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)    
+      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
       const int numQuadraturePoints = quadrature.nop();
       // the return values:
       RangeType f_x;
@@ -390,7 +388,7 @@ public:
     }
   }  // end method
 
-   
+
   //! The rhs-assemble()-methods for non-linear elliptic problems, solved with the heterogenous multiscale method
   // ( requires reconstruction of old_u_H and local fine scale averages )
   template< int polOrd, class FirstSourceType, class DiffusionOperatorType, class PeriodicDiscreteFunctionType,

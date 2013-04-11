@@ -85,7 +85,7 @@ public:
       const EntityType& entity = *it;
 
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
@@ -113,7 +113,7 @@ public:
       const EntityType& entity = *it;
 
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
@@ -147,7 +147,7 @@ public:
       const EntityType& entity = *it;
 
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();

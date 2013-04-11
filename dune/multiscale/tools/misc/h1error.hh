@@ -6,6 +6,8 @@
 #include <dune/fem/misc/l2error.hh>
 
 namespace Dune {
+
+//! \TODO docme
 template< class DiscreteFunctionType, int n = 0 >
 class H1Error
 {

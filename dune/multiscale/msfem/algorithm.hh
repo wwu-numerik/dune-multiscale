@@ -33,8 +33,6 @@
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
-#include "msfem_globals.hh"
-
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {

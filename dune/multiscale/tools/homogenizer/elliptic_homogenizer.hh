@@ -7,7 +7,7 @@
 #define DUNE_HOMOGENIZER_HH
 
 #include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/grids/periodicgridpart/periodicgridpart.hh>
+#include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
 
 // for data output:
 #include <dune/fem/io/file/dataoutput.hh>
@@ -18,7 +18,8 @@
 #include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
 
 namespace Dune {
-// define output traits
+
+//! define output traits
 struct CellDataOutputParameters
   : public DataOutputParameters
 {
@@ -55,6 +56,7 @@ public:
 
 NULLFUNCTION(ZeroFunction)
 
+//! \TODO docme
 template< class FunctionSpaceImp >
 class MassWeight
   : public Dune::Stuff::Fem::ConstantFunction< FunctionSpaceImp >
@@ -135,7 +137,7 @@ public:
   }
 };
 
-// the following class is comparable to a SecondSource-Class (some kind of -div G )
+//! the following class is comparable to a SecondSource-Class (some kind of -div G )
 template< class FunctionSpaceImp, class TensorImp >
 class CellSource
   : public Fem::Function< FunctionSpaceImp, CellSource< FunctionSpaceImp, TensorImp > >
@@ -194,6 +196,7 @@ public:
   } // evaluate
 };
 
+//! \TODO docme
 template< class FunctionSpaceImp >
 class DefaultDummyAdvection
   : public Fem::Function< FunctionSpaceImp, DefaultDummyAdvection< FunctionSpaceImp > >
@@ -276,6 +279,7 @@ public:
   }
 };
 
+//! \TODO docme
 template< class GridImp, class TensorImp >
 class Homogenizer
 {

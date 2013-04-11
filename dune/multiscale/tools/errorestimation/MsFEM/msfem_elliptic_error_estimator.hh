@@ -24,6 +24,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+//! \TODO docme
 template < class DiscreteFunctionPointerPair,
            class EntityPointer,
            class GridPartType,
@@ -58,7 +59,7 @@ struct FluxContainer {
   }
 };
 
-
+//! \TODO docme
 template< class DiscreteFunctionImp,
           class DiffusionImp,
           class SourceImp,

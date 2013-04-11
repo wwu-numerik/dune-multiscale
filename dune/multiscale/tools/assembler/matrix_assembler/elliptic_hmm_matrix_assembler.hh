@@ -12,7 +12,7 @@
 #include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
 
 namespace Dune {
-// Imp stands for Implementation
+//! \TODO docme
 template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
           class CellProblemNumberingManagerImp >
 class DiscreteEllipticHMMOperator
@@ -100,8 +100,8 @@ private:
   const std::string filename_;
 };
 
-// dummy implementation of "operator()"
-// 'w' = effect of the discrete operator on 'u'
+//! dummy implementation of "operator()"
+//! 'w' = effect of the discrete operator on 'u'
 template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
           class CellProblemNumberingManagerImp >
 void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
