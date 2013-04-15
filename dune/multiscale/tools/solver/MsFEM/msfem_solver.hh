@@ -492,7 +492,7 @@ public:
     // oneLinePrint( DSC_LOG_DEBUG, fem_rhs );
 
     //! --- boundary treatment ---
-    // set the dirichlet points to zero (in righ hand side of the fem problem)
+    // set the dirichlet points to zero (in right hand side of the fem problem)
     const HostgridIterator endit = coarse_space.end();
     for (HostgridIterator it = coarse_space.begin(); it != endit; ++it)
     {
