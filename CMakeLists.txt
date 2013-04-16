@@ -9,10 +9,6 @@ PROJECT(dune_multiscale)
 cmake_minimum_required(VERSION 2.8)
 
 set(ENABLE_MPI "0" CACHE STRING "set to 1 to enable mpi")
-
-SET( BOOST_ROOT
-	"/opt/boost-1.48" CACHE STRING
-	"" )
 	
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../dune-stuff/cmake )
 include(DuneUtils)
@@ -132,14 +128,10 @@ LINK_DIRECTORIES( "/usr/lib" "${ALUGRID_BASE_PATH}/lib" )
 FILE( GLOB_RECURSE header "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh" )
 FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	SET(BOOST_LIBS "boost_date_time-mt" "boost_filesystem-mt" "boost_system-mt" "boost_timer-mt")
-ELSE(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	SET(BOOST_LIBS "boost_date_time" "boost_filesystem" "boost_system" "boost_timer")
-ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+SET(BOOST_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_DATE_TIME_LIBRARY} )
 
 
-set( COMMON_LIBS "dunefem" "dunegrid" "dunecommon" "dunegeometry"
+set( COMMON_LIBS "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
     ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
     ${BOOST_LIBS})
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
@@ -147,10 +139,18 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
 ADD_DEFINITIONS( ${MY_CXX_FLAGS} )
 
-ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
+add_subdirectory(doc)
+add_subdirectory(dune)
+
+set( HMM_SOURCES 
+        dune/multiscale/hmm/algorithm.cc
+        dune/multiscale/hmm/algorithm_error.cc
+        dune/multiscale/hmm/algorithm_step.cc
+    )
+
+ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${HMM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
 set_target_properties(elliptic_hmm PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${HMM_PROBLEM})
-
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
@@ -174,8 +174,6 @@ TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(lg-test ${COMMON_LIBS} )
 
-add_subdirectory(doc)
-add_subdirectory(dune)
 
 HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
