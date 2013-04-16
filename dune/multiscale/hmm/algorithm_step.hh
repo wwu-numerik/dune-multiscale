@@ -43,26 +43,28 @@ bool process_hmm_newton_residual(typename HMMTraits::RangeType& relative_newton_
                                  const double hmm_tolerance );
 
 //! set the dirichlet points to zero
-template< class DiscreteFunctionType >
-void boundaryTreatment(DiscreteFunctionType& rhs) {
-  using namespace Dune::Stuff;
-  const auto& discreteFunctionSpace = rhs.space();
-  static const unsigned int faceCodim = 1;
-  for (const auto& entity : discreteFunctionSpace)
-  {
-    for (const auto& intersection
-         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
+struct BoundaryTreatment {
+  template< class DiscreteFunctionType >
+  static void apply(DiscreteFunctionType& rhs) {
+    using namespace Dune::Stuff;
+    const auto& discreteFunctionSpace = rhs.space();
+    static const unsigned int faceCodim = 1;
+    for (const auto& entity : discreteFunctionSpace)
     {
-      if ( !intersection.boundary() )
-        continue;
-      auto rhsLocal = rhs.localFunction(entity);
-      const auto face = intersection.indexInInside();
-      for(auto point
-          : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
-        rhsLocal[point] = 0;
+      for (const auto& intersection
+           : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
+      {
+        if ( !intersection.boundary() )
+          continue;
+        auto rhsLocal = rhs.localFunction(entity);
+        const auto face = intersection.indexInInside();
+        for(auto point
+            : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
+          rhsLocal[point] = 0;
+      }
     }
   }
-} // boundaryTreatment
+}; // boundaryTreatment
 
 //! \TODO docme
 void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
@@ -207,7 +209,7 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
       }
 
       // set Dirichlet Boundary to zero
-      boundaryTreatment(hmm_newton_rhs);
+      BoundaryTreatment::apply(hmm_newton_rhs);
 
       if (!process_hmm_newton_residual(relative_newton_error, hmm_solution, hmm_newton_matrix, hmm_newton_rhs,
                                   hmm_iteration_step, loop_cycle, hmm_tolerance)) {
@@ -296,7 +298,7 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
   rhsassembler.template assemble< 2* HMMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(f, hmm_newton_rhs);
 
   // set Dirichlet Boundary to zero
-  boundaryTreatment(hmm_newton_rhs);
+  BoundaryTreatment::apply(hmm_newton_rhs);
 
   typename HMMTraits::InverseFEMMatrix hmm_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
   hmm_biCGStab(hmm_newton_rhs, hmm_solution);
