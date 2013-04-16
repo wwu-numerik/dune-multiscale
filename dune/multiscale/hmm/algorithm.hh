@@ -5,7 +5,7 @@
 #ifndef DUNE_MS_HMM_ALGORITHM_HH
 #define DUNE_MS_HMM_ALGORITHM_HH
 
-#include <dune/multiscale/hmm/hmm_traits.hh>
+#include <dune/multiscale/common/traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -17,15 +17,15 @@ struct HMMResult;
 bool adapt(const HMMResult& result,
            const int loop_cycle,
            const double error_tolerance_,
-           const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-           typename HMMTraits::AdaptationManagerType& adaptationManager
+           const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+           typename CommonTraits::AdaptationManagerType& adaptationManager
            );
 
 //! the main hmm computation
-void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
-               typename HMMTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
+void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
+               typename CommonTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
                                                            // reference computations)
-               typename HMMTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
+               typename CommonTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
                const std::string filename);
 
 } //namespace HMM {

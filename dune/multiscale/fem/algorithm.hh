@@ -56,7 +56,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 
 
 //! write discrete function to a file + VTK Output
-void write_discrete_function(typename FEMTraits::DiscreteFunctionType& discrete_solution )
+void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discrete_solution )
  {
   // write the final (discrete) solution to a file
   std::string solution_file = (boost::format("/fem_solution_refLevel_%d")
@@ -68,9 +68,9 @@ void write_discrete_function(typename FEMTraits::DiscreteFunctionType& discrete_
   Dune::myDataOutputParameters outputparam;
 
   // create and initialize output class
-  typename FEMTraits::IOTupleType fem_solution_series(&discrete_solution);
+  typename CommonTraits::IOTupleType fem_solution_series(&discrete_solution);
   outputparam.set_prefix((boost::format("/fem_solution")).str());
-  typename FEMTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
+  typename CommonTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
                                                  fem_solution_series, outputparam);
   // write data
   if (DSC_CONFIG_GET("problem.linear", true))
@@ -80,13 +80,13 @@ void write_discrete_function(typename FEMTraits::DiscreteFunctionType& discrete_
  }
 
 //! \TODO docme
-void solve(typename FEMTraits::DiscreteFunctionType& solution,
-           const typename FEMTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
+void solve(typename CommonTraits::DiscreteFunctionType& solution,
+           const typename CommonTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
            const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
            const std::string& filename,
-           const Dune::RightHandSideAssembler< typename FEMTraits::DiscreteFunctionType >& rhsassembler)
+           const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler)
 {
-  static const int fem_polorder = 2* FEMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
+  static const int fem_polorder = 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
 
   //! *************************** Assembling the problem ****************************
 
@@ -96,10 +96,10 @@ void solve(typename FEMTraits::DiscreteFunctionType& solution,
   //! right hand side vector
   // right hand side for the finite element method with Newton solver:
   // ( also right hand side for the finer discrete function space )
-  typename FEMTraits::DiscreteFunctionType system_rhs("fem newton rhs", finerDiscreteFunctionSpace);
+  typename CommonTraits::DiscreteFunctionType system_rhs("fem newton rhs", finerDiscreteFunctionSpace);
   system_rhs.clear();
 
-  const typename FEMTraits::FirstSourceType f;   // standard source f
+  const typename CommonTraits::FirstSourceType f;   // standard source f
 
   if (DSC_CONFIG_GET("problem.linear", true))
   {
@@ -117,7 +117,7 @@ void solve(typename FEMTraits::DiscreteFunctionType& solution,
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.template assemble< fem_polorder >(f, system_rhs);
+    rhsassembler.assemble< fem_polorder >(f, system_rhs);
 
     // set Dirichlet Boundary to zero
     boundaryTreatment(system_rhs);
@@ -137,11 +137,11 @@ void solve(typename FEMTraits::DiscreteFunctionType& solution,
     Dune::Timer assembleTimer;
     //! residual vector
     // current residual
-    typename FEMTraits::DiscreteFunctionType residual(filename + "FEM Newton Residual", finerDiscreteFunctionSpace);
+    typename CommonTraits::DiscreteFunctionType residual(filename + "FEM Newton Residual", finerDiscreteFunctionSpace);
     residual.clear();
 
-    typename FEMTraits::RangeType relative_newton_error_finescale = 10000.0;
-    typename FEMTraits::RangeType rhs_L2_norm = 10000.0;
+    typename CommonTraits::RangeType relative_newton_error_finescale = 10000.0;
+    typename CommonTraits::RangeType rhs_L2_norm = 10000.0;
 
     int iteration_step = 1;
     // the Newton step for the FEM reference problem (solved with Newton Method):
@@ -159,13 +159,13 @@ void solve(typename FEMTraits::DiscreteFunctionType& solution,
                    << stepAssembleTimer.elapsed() << "s" << std::endl;
 
       // assemble right hand side
-      const typename FEMTraits::DiffusionType diffusion_op;
-      rhsassembler.template assemble_for_Newton_method< fem_polorder >(f,
+      const typename CommonTraits::DiffusionType diffusion_op;
+      rhsassembler.assemble_for_Newton_method< fem_polorder >(f,
                                                                        diffusion_op,
                                                                        solution,
                                                                        system_rhs);
 
-      const Dune::L2Norm< typename FEMTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
+      const Dune::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);
       if (rhs_L2_norm < 1e-10)
       {
@@ -245,28 +245,28 @@ void print_info(ProblemDataType info, std::ostream& out)
 
 
 //! the main FEM computation
-void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,
+void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
                const std::string filename) {
   using namespace Dune;
 
-  const typename FEMTraits::ModelProblemDataType problem_data;
+  const typename CommonTraits::ModelProblemDataType problem_data;
   print_info(problem_data, DSC_LOG_INFO);
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for the finite element problem
-  typename FEMTraits::GridPartType gridPart(*macro_grid_pointer);
+  typename CommonTraits::GridPartType gridPart(*macro_grid_pointer);
   //! --------------------------------------------------------------------------------------
 
   //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
-  typename FEMTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  typename CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
   //! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const typename FEMTraits::DiffusionType diffusion_op;
+  const typename CommonTraits::DiffusionType diffusion_op;
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  Dune::RightHandSideAssembler< typename FEMTraits::DiscreteFunctionType > rhsassembler;
+  Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType > rhsassembler;
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -276,7 +276,7 @@ void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,
   // - By solution, we denote the "discrete solution" determined with FEM in the linear case or FEM-Newton (nonlinear case)
   //    ( if the elliptic problem is linear, the 'solution' is determined without the Newton method )
   // - solution of the finite element method, where we use the Newton method to solve the non-linear system of equations
-  typename FEMTraits::DiscreteFunctionType discrete_solution(filename + " FEM(-Newton) Solution", discreteFunctionSpace);
+  typename CommonTraits::DiscreteFunctionType discrete_solution(filename + " FEM(-Newton) Solution", discreteFunctionSpace);
   discrete_solution.clear();
 
   solve(discrete_solution, discreteFunctionSpace, discrete_elliptic_op, filename, rhsassembler);
@@ -289,50 +289,50 @@ void algorithm(typename FEMTraits::GridPointerType& macro_grid_pointer,
   {
 
     DSC_LOG_INFO << std::endl << "The L2 and H1 error:" << std::endl << std::endl;
-    H1Error< typename FEMTraits::DiscreteFunctionType > h1error;
-    L2Error< typename FEMTraits::DiscreteFunctionType > l2error;
+    H1Error< typename CommonTraits::DiscreteFunctionType > h1error;
+    L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
 
-    const typename FEMTraits::ExactSolutionType u;
+    const typename CommonTraits::ExactSolutionType u;
 
-    typedef typename FEMTraits::ExactSolutionType ExactSolution;
+    typedef typename CommonTraits::ExactSolutionType ExactSolution;
 
     const int order_quadrature_rule = 13;
 
-    typename FEMTraits::RangeType fem_error = l2error.template norm< ExactSolution >
-       (u, discrete_solution, order_quadrature_rule /* * FEMTraits::DiscreteFunctionSpaceType::polynomialOrder */ );
+    typename CommonTraits::RangeType fem_error = l2error.norm< ExactSolution >
+       (u, discrete_solution, order_quadrature_rule /* * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder */ );
     DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
 
-    typename FEMTraits::RangeType h1_fem_error(0.0);
-    h1_fem_error = h1error.template semi_norm < ExactSolution >(u, discrete_solution, order_quadrature_rule);
+    typename CommonTraits::RangeType h1_fem_error(0.0);
+    h1_fem_error = h1error.semi_norm < ExactSolution >(u, discrete_solution, order_quadrature_rule);
     h1_fem_error += fem_error;
     DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
   }
 }
 
 //! \TODO docme
-void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer,
+void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointer,
                        const std::string filename) {
   using namespace Dune;
 
-  const typename FEMTraits::ModelProblemDataType problem_data;
+  const typename CommonTraits::ModelProblemDataType problem_data;
   print_info(problem_data, DSC_LOG_INFO);
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for the finite element problem
-  typename FEMTraits::GridPartType gridPart(*macro_grid_pointer);
+  typename CommonTraits::GridPartType gridPart(*macro_grid_pointer);
   //! --------------------------------------------------------------------------------------
 
   //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
-  typename FEMTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  typename CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
   //! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const typename FEMTraits::DiffusionType diffusion_op;
+  const typename CommonTraits::DiffusionType diffusion_op;
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  Dune::RightHandSideAssembler< typename FEMTraits::DiscreteFunctionType > rhsassembler;
-  const typename FEMTraits::FirstSourceType f;   // standard source f
+  Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType > rhsassembler;
+  const typename CommonTraits::FirstSourceType f;   // standard source f
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -342,10 +342,10 @@ void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer,
   const std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
   // descretized homogenizer:
 
-  typedef Dune::Homogenizer< typename FEMTraits::GridType, typename FEMTraits::DiffusionType > HomogenizerType;
+  typedef Dune::Homogenizer< typename CommonTraits::GridType, typename CommonTraits::DiffusionType > HomogenizerType;
 
   // to create an empty diffusion matrix that can be filled with constant values
-  typedef Problem::ConstantDiffusionMatrix< typename FEMTraits::FunctionSpaceType, typename HomogenizerType::HomTensorType >
+  typedef Problem::ConstantDiffusionMatrix< typename CommonTraits::FunctionSpaceType, typename HomogenizerType::HomTensorType >
      HomDiffusionType;
 
   const HomogenizerType disc_homogenizer(unit_cell_location);
@@ -353,24 +353,24 @@ void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer,
   const HomDiffusionType hom_diffusion_op(A_hom);
 
   //!TODO check: hatte nur 2 tmp parameter, Masse hinzugefUGT
-  typedef DiscreteEllipticOperator< typename FEMTraits::DiscreteFunctionType,
-                                    HomDiffusionType, typename FEMTraits::MassTermType > HomEllipticOperatorType;
+  typedef DiscreteEllipticOperator< typename CommonTraits::DiscreteFunctionType,
+                                    HomDiffusionType, typename CommonTraits::MassTermType > HomEllipticOperatorType;
 
   HomEllipticOperatorType hom_discrete_elliptic_op( discreteFunctionSpace, hom_diffusion_op);
 
   typename FEMTraits::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
 
-  typename FEMTraits::DiscreteFunctionType hom_rhs("homogenized rhs", discreteFunctionSpace);
+  typename CommonTraits::DiscreteFunctionType hom_rhs("homogenized rhs", discreteFunctionSpace);
   hom_rhs.clear();
 
   //! solution vector
   // - By solution, we denote the (discrete) homogenized solution determined with FEM on the coarse scale and FEM for the cell problems
-  typename FEMTraits::DiscreteFunctionType homogenized_solution(filename + " Homogenized Solution", discreteFunctionSpace);
+  typename CommonTraits::DiscreteFunctionType homogenized_solution(filename + " Homogenized Solution", discreteFunctionSpace);
   homogenized_solution.clear();
   hom_discrete_elliptic_op.assemble_matrix(hom_stiff_matrix);
 
-  constexpr int hmm_polorder = 2* FEMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
-  rhsassembler.template assemble < hmm_polorder >(f, hom_rhs);
+  constexpr int hmm_polorder = 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
+  rhsassembler.assemble < hmm_polorder >(f, hom_rhs);
 
   // set Dirichlet Boundary to zero
   boundaryTreatment(hom_rhs);
@@ -391,9 +391,9 @@ void algorithm_hom_fem(typename FEMTraits::GridPointerType& macro_grid_pointer,
   Dune::myDataOutputParameters outputparam;
 
   // create and initialize output class
-  typename FEMTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);
+  typename CommonTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);
   outputparam.set_prefix((boost::format("/homogenized_solution")).str());
-  typename FEMTraits::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
+  typename CommonTraits::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
                                                     hom_fem_solution_series, outputparam);
   homfemsol_dataoutput.writeData( 1.0 /*dummy*/, "homogenized-solution" );
 

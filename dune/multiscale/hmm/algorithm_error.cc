@@ -16,19 +16,19 @@ namespace Multiscale {
 namespace HMM {
 
 HMMResult estimate_error(
-        const typename HMMTraits::GridPartType& gridPart,
-        const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+        const typename CommonTraits::GridPartType& gridPart,
+        const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-        const typename HMMTraits::DiffusionType& diffusion_op,
+        const typename CommonTraits::DiffusionType& diffusion_op,
         const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
-        const typename HMMTraits::DiscreteFunctionType& hmm_solution
+        const typename CommonTraits::DiscreteFunctionType& hmm_solution
          )
 {
   using namespace Dune::Stuff;
   // auxiliary grid part for the periodic function space, required for HMM-cell-problems
-  typename HMMTraits::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridPart().grid());
+  typename CommonTraits::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridPart().grid());
   // and the corresponding auxiliary one:
-  typename HMMTraits::DiscreteFunctionSpaceType auxiliaryDiscreteFunctionSpace(auxiliaryGridPart);
+  typename CommonTraits::DiscreteFunctionSpaceType auxiliaryDiscreteFunctionSpace(auxiliaryGridPart);
     // auxiliaryGridPart for the error estimator (the auxiliaryGridPart yields an intersection iterator, which can not be
     // done by the periodicGridPart)
   // Notation: u_H = hmm_solution
@@ -47,7 +47,7 @@ HMMResult estimate_error(
                                      diffusion_op);
 
   HMMResult result(discreteFunctionSpace.grid().size(0));
-  const typename HMMTraits::FirstSourceType f;   // standard source f
+  const typename CommonTraits::FirstSourceType f;   // standard source f
   int element_number = 0;
   for (const auto& entity : discreteFunctionSpace)
   {
@@ -60,13 +60,13 @@ HMMResult estimate_error(
       typename HMMTraits::PeriodicDiscreteFunctionType corrector_of_base_func("Corrector of macro base function",
                                                           periodicDiscreteFunctionSpace);
       corrector_of_base_func.clear();
-      typename HMMTraits::DiscreteFunctionType::LocalFunctionType local_hmm_solution = hmm_solution.localFunction(entity);
-      const typename HMMTraits::BaseFunctionSetType& baseSet = discreteFunctionSpace.baseFunctionSet(entity);
+      typename CommonTraits::DiscreteFunctionType::LocalFunctionType local_hmm_solution = hmm_solution.localFunction(entity);
+      const typename CommonTraits::BaseFunctionSetType& baseSet = discreteFunctionSpace.baseFunctionSet(entity);
       const unsigned int numMacroBaseFunctions = baseSet.size();
       std::vector<int> cell_problem_id(numMacroBaseFunctions);
       for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
       {
-        const typename HMMTraits::EntityType::EntityPointer p(entity);
+        const typename CommonTraits::EntityType::EntityPointer p(entity);
         cell_problem_id[i] = cp_num_manager.get_number_of_cell_problem(p, i);
         discrete_function_reader_baseSet.read(cell_problem_id[i], corrector_of_base_func);
         corrector_of_base_func *= local_hmm_solution[i];
@@ -79,11 +79,11 @@ HMMResult estimate_error(
     }
 
     // contribution of the local source error
-    typename HMMTraits::RangeType local_source_indicator = error_estimator.indicator_f(f, entity);
+    typename CommonTraits::RangeType local_source_indicator = error_estimator.indicator_f(f, entity);
     result.estimated_source_error += local_source_indicator;
 
     // contribution of the local approximation error
-    typename HMMTraits::RangeType local_approximation_indicator = error_estimator.indicator_app_1(entity,
+    typename CommonTraits::RangeType local_approximation_indicator = error_estimator.indicator_app_1(entity,
                                                                               hmm_solution,
                                                                               corrector_u_H_on_entity);
 
@@ -91,7 +91,7 @@ HMMResult estimate_error(
     result.estimated_approximation_error += local_approximation_indicator;
 
     // contribution of the local residual error
-    typename HMMTraits::RangeType local_residual_indicator = error_estimator.indicator_res_T(entity, hmm_solution, corrector_u_H_on_entity);
+    typename CommonTraits::RangeType local_residual_indicator = error_estimator.indicator_res_T(entity, hmm_solution, corrector_u_H_on_entity);
     result.estimated_residual_error_micro_jumps += local_residual_indicator;
 
     for (const auto& intersection : Dune::Stuff::Common::intersectionRange(gridPart,entity))
@@ -102,8 +102,8 @@ HMMResult estimate_error(
         typename HMMTraits::PeriodicDiscreteFunctionType corrector_u_H_on_neighbor_entity("Corrector of u_H", periodicDiscreteFunctionSpace);
         corrector_u_H_on_neighbor_entity.clear();
 
-        typename HMMTraits::EntityPointerType it_outside = intersection.outside();
-        const typename HMMTraits::EntityType& entity_outside = *it_outside;
+        typename CommonTraits::EntityPointerType it_outside = intersection.outside();
+        const typename CommonTraits::EntityType& entity_outside = *it_outside;
 
         // in the linear case, we still need to compute the corrector of u_H:
         if (DSC_CONFIG_GET("problem.linear", true)) {
@@ -111,9 +111,9 @@ HMMResult estimate_error(
                                                                        periodicDiscreteFunctionSpace);
           corrector_of_base_func_neighbor.clear();
 
-          typename HMMTraits::DiscreteFunctionType::LocalFunctionType local_hmm_solution_neighbor = hmm_solution.localFunction(entity_outside);
+          typename CommonTraits::DiscreteFunctionType::LocalFunctionType local_hmm_solution_neighbor = hmm_solution.localFunction(entity_outside);
 
-          const typename HMMTraits::BaseFunctionSetType& baseSet_neighbor = discreteFunctionSpace.baseFunctionSet(entity_outside);
+          const typename CommonTraits::BaseFunctionSetType& baseSet_neighbor = discreteFunctionSpace.baseFunctionSet(entity_outside);
           const unsigned int numMacroBaseFunctions_neighbor = baseSet_neighbor.size();
           std::vector<int> cell_problem_id_neighbor(numMacroBaseFunctions_neighbor);
           for (unsigned int i = 0; i < numMacroBaseFunctions_neighbor; ++i)
@@ -130,7 +130,7 @@ HMMResult estimate_error(
           discrete_function_reader_discFunc.read(neighbor_element_number, corrector_u_H_on_neighbor_entity);
         }
 
-        typename HMMTraits::RangeType val = error_estimator.indicator_res_E(intersection,
+        typename CommonTraits::RangeType val = error_estimator.indicator_res_E(intersection,
                                                         hmm_solution,
                                                         corrector_u_H_on_entity,
                                                         corrector_u_H_on_neighbor_entity);
@@ -142,7 +142,7 @@ HMMResult estimate_error(
     result.estimated_residual_error += local_residual_indicator;
 
     // tfr = test function reconstruction ( = non-Petrov-Galerkin )
-    typename HMMTraits::RangeType local_tfr_indicator(0);
+    typename CommonTraits::RangeType local_tfr_indicator(0);
     if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
       // use 'indicator_effective_tfr' or 'indicator_tfr_1'
       // contribution of the local tfr error:

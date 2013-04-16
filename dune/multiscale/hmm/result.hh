@@ -5,7 +5,7 @@
 #ifndef DUNE_MULTISCALE_HMM_RESULT_HH
 #define DUNE_MULTISCALE_HMM_RESULT_HH
 
-#include <dune/multiscale/hmm/hmm_traits.hh>
+#include <dune/multiscale/common/traits.hh>
 #include <vector>
 
 namespace Dune {
@@ -14,17 +14,17 @@ namespace HMM {
 
 //! data container for all the different types of numerical errors in a HMM simulation
 struct HMMResult {
-    typename HMMTraits::RangeType estimated_source_error;
-    typename HMMTraits::RangeType estimated_approximation_error;
-    typename HMMTraits::RangeType estimated_residual_error;
-    typename HMMTraits::RangeType estimated_residual_error_micro_jumps;
-    typename HMMTraits::RangeType estimated_residual_error_macro_jumps;
-    typename HMMTraits::RangeType estimated_tfr_error;
-    std::vector<typename HMMTraits::RangeType> local_error_indicator;
-    typename HMMTraits::RangeType minimal_loc_indicator;
-    typename HMMTraits::RangeType maximal_loc_indicator;
-    typename HMMTraits::RangeType average_loc_indicator;
-    typename HMMTraits::RangeType estimated_error;
+    typename CommonTraits::RangeType estimated_source_error;
+    typename CommonTraits::RangeType estimated_approximation_error;
+    typename CommonTraits::RangeType estimated_residual_error;
+    typename CommonTraits::RangeType estimated_residual_error_micro_jumps;
+    typename CommonTraits::RangeType estimated_residual_error_macro_jumps;
+    typename CommonTraits::RangeType estimated_tfr_error;
+    std::vector<typename CommonTraits::RangeType> local_error_indicator;
+    typename CommonTraits::RangeType minimal_loc_indicator;
+    typename CommonTraits::RangeType maximal_loc_indicator;
+    typename CommonTraits::RangeType average_loc_indicator;
+    typename CommonTraits::RangeType estimated_error;
     double max_variation;
     double min_variation;
     HMMResult(std::size_t codim0_count)

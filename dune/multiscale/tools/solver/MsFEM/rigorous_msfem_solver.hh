@@ -161,7 +161,7 @@ private:
     // general output parameters
     Dune::myDataOutputParameters outputparam(DSC_CONFIG_GET("global.datadir", "data") + "/msfem_basis");
 
-    typedef typename MsFEMTraits::IOTupleType IOTType;
+    typedef typename CommonTraits::IOTupleType IOTType;
     const auto& gridPart = msfem_basis_function_list[0]->space().gridPart();
 
     for ( size_t i = 0; i < msfem_basis_function_list.size(); i+=1 )
@@ -174,7 +174,7 @@ private:
 
       std::string outstring = basis_name;
 
-      MsFEMTraits::DataOutputType msfem_basis_dataoutput(
+      CommonTraits::DataOutputType msfem_basis_dataoutput(
     gridPart.grid(), msfem_basis_series, outputparam );
       msfem_basis_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 

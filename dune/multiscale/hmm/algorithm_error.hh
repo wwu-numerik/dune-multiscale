@@ -6,6 +6,7 @@
 #define ALGORITHM_ERROR_HH
 
 #include <dune/multiscale/hmm/hmm_traits.hh>
+#include <dune/multiscale/common/traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -15,12 +16,12 @@ struct HMMResult;
 
 //! Error Estimation
 HMMResult estimate_error(
-        const typename HMMTraits::GridPartType& gridPart,
-        const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+        const typename CommonTraits::GridPartType& gridPart,
+        const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-        const typename HMMTraits::DiffusionType& diffusion_op,
+        const typename CommonTraits::DiffusionType& diffusion_op,
         const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
-        const typename HMMTraits::DiscreteFunctionType& hmm_solution
+        const typename CommonTraits::DiscreteFunctionType& hmm_solution
          );
 
 } //namespace HMM {

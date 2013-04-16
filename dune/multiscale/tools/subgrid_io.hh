@@ -13,7 +13,7 @@
 #include <dune/grid/yaspgrid.hh>
 //#ifdef HAVE_ALUGRID
   #include <dune/grid/alugrid.hh>
-  #include <dune/grid/spgrid.hh>
+//  #include <dune/grid/spgrid.hh>
 //#endif
 #include <dune/grid/sgrid.hh>
 #include <dune/subgrid/subgrid.hh>

@@ -4,6 +4,7 @@
 
 #include "common.hh"
 
+#include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/hmm/algorithm.hh>
 
 // the solutions of the cell problems are always determined in a pre-process
@@ -29,6 +30,7 @@ int main(int argc, char** argv) {
     init(argc, argv);
     check_config();
 
+    using namespace Dune::Multiscale;
     using namespace Dune::Multiscale::HMM;
 
     DSC_PROFILER.startTiming("total_cpu");
@@ -75,13 +77,13 @@ int main(int argc, char** argv) {
     // for the parameters:
 
     // create a grid pointer for the DGF file belongig to the macro grid:
-    HMMTraits::GridPointerType macro_grid_pointer(macroGridName);
+    CommonTraits::GridPointerType macro_grid_pointer(macroGridName);
     // refine the grid 'starting_refinement_level' times:
     macro_grid_pointer->globalRefine(refinement_level_macrogrid_);
 
     // create a finer GridPart for either the homogenized or the fine-scale problem.
     // this shall be used to compute an approximation of the exact solution.
-    HMMTraits::GridPointerType fine_macro_grid_pointer(macroGridName);
+    CommonTraits::GridPointerType fine_macro_grid_pointer(macroGridName);
     // refine the grid 'starting_refinement_level_reference' times:
     fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
 
@@ -93,7 +95,7 @@ int main(int argc, char** argv) {
     // to solve the cell problems, we always need a periodic gridPart.
     // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated
     // on such a grid )
-    Dune::GridPtr< HMMTraits::GridType > periodic_grid_pointer(unitCubeName.string());
+    Dune::GridPtr< CommonTraits::GridType > periodic_grid_pointer(unitCubeName.string());
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
     algorithm(macro_grid_pointer, fine_macro_grid_pointer,

@@ -1,4 +1,5 @@
 #include <dune/multiscale/hmm/algorithm.hh>
+
 #include <dune/multiscale/hmm/algorithm_step.hh>
 #include <dune/multiscale/hmm/result.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
@@ -24,7 +25,7 @@ void oneLinePrint(Stream& stream, const DiscFunc& func) {
 } // oneLinePrint
 
 //! loads a reference solution from disk
-void load_reference(typename HMMTraits::DiscreteFunctionType& reference_solution)
+void load_reference(typename CommonTraits::DiscreteFunctionType& reference_solution)
 {
   reference_solution.clear();
 
@@ -115,8 +116,8 @@ void print_info(ProblemDataType info, std::ostream& out)
 bool adapt(const HMMResult& result,
            const int loop_cycle,
            const double error_tolerance_,
-           const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-           typename HMMTraits::AdaptationManagerType& adaptationManager
+           const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+           typename CommonTraits::AdaptationManagerType& adaptationManager
            )
 {
   bool repeat = true;
@@ -239,42 +240,42 @@ bool adapt(const HMMResult& result,
 }
 
 //! the main hmm computation
-void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
-               typename HMMTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
+void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
+               typename CommonTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
                                                            // reference computations)
-               typename HMMTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
+               typename CommonTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
                const std::string filename) {
   using namespace Dune;
 
-  const typename HMMTraits::ModelProblemDataType problem_data;
+  const typename CommonTraits::ModelProblemDataType problem_data;
   print_info(problem_data, DSC_LOG_INFO);
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
-  typename HMMTraits::GridPartType gridPart(*macro_grid_pointer);
+  typename CommonTraits::GridPartType gridPart(*macro_grid_pointer);
   // grid part for the periodic function space, required for HMM-cell-problems
   typename HMMTraits::PeriodicGridPartType periodicGridPart(*periodic_grid_pointer);
   // grid part for the global function space, required for the detailed fine-scale computation (very high resolution)
-  typename HMMTraits::GridPartType gridPartFine(*fine_macro_grid_pointer);
+  typename CommonTraits::GridPartType gridPartFine(*fine_macro_grid_pointer);
 
-  typename HMMTraits::GridType& grid = gridPart.grid();
+  typename CommonTraits::GridType& grid = gridPart.grid();
   //! --------------------------------------------------------------------------------------
 
   //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
-  typename HMMTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  typename CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
   // the global-problem function space for the reference computation:
-  typename HMMTraits::DiscreteFunctionSpaceType finerDiscreteFunctionSpace(gridPartFine);
+  typename CommonTraits::DiscreteFunctionSpaceType finerDiscreteFunctionSpace(gridPartFine);
   // the local-problem function space (containing periodic functions):
   typename HMMTraits::PeriodicDiscreteFunctionSpaceType periodicDiscreteFunctionSpace(periodicGridPart);
   //! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const typename HMMTraits::DiffusionType diffusion_op;
+  const typename CommonTraits::DiffusionType diffusion_op;
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType > rhsassembler;
-  const typename HMMTraits::FirstSourceType f;   // standard source f
+  Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType > rhsassembler;
+  const typename CommonTraits::FirstSourceType f;   // standard source f
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -287,7 +288,7 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
   // - if the elliptic problem is nonlinear, the reference was most likely determined with a finite element method on the fine scale,
   //   where we used the Newton method to solve the non-linear system of equations
   // - in general 'reference_solution' will be an accurate approximation of the exact solution, that is why we it also called reference solution
-  typename HMMTraits::DiscreteFunctionType reference_solution(filename + " Reference Solution", finerDiscreteFunctionSpace);
+  typename CommonTraits::DiscreteFunctionType reference_solution(filename + " Reference Solution", finerDiscreteFunctionSpace);
   reference_solution.clear();
 
   if (DSC_CONFIG_GET("problem.reference_solution", false))
@@ -306,11 +307,11 @@ void algorithm(typename HMMTraits::GridPointerType& macro_grid_pointer,   // gri
     //! solution vector
     // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the
     // non-linear system of equations
-    typename HMMTraits::DiscreteFunctionType hmm_solution(" HMM (+Newton) Solution", discreteFunctionSpace);
+    typename CommonTraits::DiscreteFunctionType hmm_solution(" HMM (+Newton) Solution", discreteFunctionSpace);
     hmm_solution.clear();
 
-    typename HMMTraits::RestrictProlongOperatorType rp(hmm_solution);
-    typename HMMTraits::AdaptationManagerType adaptationManager(grid, rp);
+    typename CommonTraits::RestrictProlongOperatorType rp(hmm_solution);
+    typename CommonTraits::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                 diffusion_op, rhsassembler, hmm_solution, reference_solution, loop_cycle);
     // call of 'single_step': 'reference_solution' only required for error computation

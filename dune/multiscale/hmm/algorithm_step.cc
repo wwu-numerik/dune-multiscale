@@ -55,18 +55,18 @@ struct BoundaryTreatment {
 
 //! \TODO docme
 void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                                   const typename HMMTraits::DiffusionType& diffusion_op,
-                                   typename HMMTraits::DiscreteFunctionType& hmm_solution,
+                                   const typename CommonTraits::DiffusionType& diffusion_op,
+                                   typename CommonTraits::DiscreteFunctionType& hmm_solution,
                                    const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
-                                   const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-                                   const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& rhsassembler,
+                                   const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+                                   const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
                                    const int loop_cycle) {
     // the nonlinear case
     // solve cell problems in a preprocess
 
     //! -------------- solve and save the cell problems for the macroscopic base function set
     const Dune::CellProblemSolver< typename HMMTraits::PeriodicDiscreteFunctionType,
-        typename HMMTraits::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+        typename CommonTraits::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
     const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
     DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
       // generate directory for cell problem data output
@@ -75,7 +75,7 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
       // -------------- solve cell problems for the macro basefunction set ------------------------------
       // save the solutions of the cell problems for the set of macroscopic base functions
 
-      cell_problem_solver.template saveTheSolutions_baseSet< typename HMMTraits::DiscreteFunctionType >(discreteFunctionSpace,
+      cell_problem_solver.saveTheSolutions_baseSet< typename CommonTraits::DiscreteFunctionType >(discreteFunctionSpace,
                                                                            cp_num_manager);
 
       DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
@@ -93,8 +93,8 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
     dummy_periodic_func.clear();
 
 
-    typename HMMTraits::RangeType relative_newton_error = 10000.0;
-    typename HMMTraits::RangeType hmm_rhs_L2_norm = 10000.0;
+    typename CommonTraits::RangeType relative_newton_error = 10000.0;
+    typename CommonTraits::RangeType hmm_rhs_L2_norm = 10000.0;
 
     // number of HMM Newton step (1 = first step)
     // HMM_NEWTON_ITERATION_STEP' Netwon steps have been already performed,
@@ -138,8 +138,8 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
       DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
 
       // solve cell problems for the solution of the last iteration step
-      cell_problem_solver.template saveTheSolutions_discFunc< typename HMMTraits::DiscreteFunctionType >(hmm_solution);
-      cell_problem_solver.template saveTheJacCorSolutions_baseSet_discFunc< typename HMMTraits::DiscreteFunctionType >(hmm_solution,
+      cell_problem_solver.saveTheSolutions_discFunc< typename CommonTraits::DiscreteFunctionType >(hmm_solution);
+      cell_problem_solver.saveTheJacCorSolutions_baseSet_discFunc< typename CommonTraits::DiscreteFunctionType >(hmm_solution,
                                                                                           cp_num_manager);
 
       // to assemble the computational time
@@ -155,11 +155,11 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
 
       //! right hand side vector
       // right hand side for the hm finite element method with Newton solver:
-      typename HMMTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
+      typename CommonTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
       hmm_newton_rhs.clear();
 
-      const typename HMMTraits::FirstSourceType f;   // standard source f
-      rhsassembler.template assemble_for_HMM_Newton_method< HMMTraits::assembler_order >(
+      const typename CommonTraits::FirstSourceType f;   // standard source f
+      rhsassembler.assemble_for_HMM_Newton_method< CommonTraits::assembler_order >(
         f,
         diffusion_op,
         hmm_solution,
@@ -178,11 +178,11 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
       }
 
       // starting value for the Newton method
-      typename HMMTraits::DiscreteFunctionType zero_func_coarse( " constant zero function coarse ", discreteFunctionSpace);
+      typename CommonTraits::DiscreteFunctionType zero_func_coarse( " constant zero function coarse ", discreteFunctionSpace);
       zero_func_coarse.clear();
 
-      const Dune::L2Error< typename HMMTraits::DiscreteFunctionType > l2error;
-      hmm_rhs_L2_norm = l2error.template norm2< HMMTraits::assembler_order >(zero_func_coarse, hmm_newton_rhs);
+      const Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
+      hmm_rhs_L2_norm = l2error.norm2< CommonTraits::assembler_order >(zero_func_coarse, hmm_newton_rhs);
 
       DSC_LOG_INFO << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
       DSC_LOG_INFO << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
@@ -241,20 +241,20 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
 
 //! \TODO docme
 void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                              const typename HMMTraits::DiffusionType& diffusion_op,
-                              typename HMMTraits::DiscreteFunctionType& hmm_solution,
+                              const typename CommonTraits::DiffusionType& diffusion_op,
+                              typename CommonTraits::DiscreteFunctionType& hmm_solution,
                               const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
-                              const typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-                              const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& rhsassembler) {
+                              const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+                              const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler) {
 
   //! -------------- solve and save the cell problems for the base function set --------------------------------------
   const Dune::CellProblemSolver< typename HMMTraits::PeriodicDiscreteFunctionType,
-      typename HMMTraits::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+      typename CommonTraits::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
   const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
   DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
   // -------------- solve cell problems for the macro basefunction set ------------------------------
   // save the solutions of the cell problems for the set of macroscopic base functions
-  cell_problem_solver.template saveTheSolutions_baseSet< typename HMMTraits::DiscreteFunctionType >(discreteFunctionSpace,
+  cell_problem_solver.saveTheSolutions_baseSet< typename CommonTraits::DiscreteFunctionType >(discreteFunctionSpace,
                                                                        cp_num_manager);
   // ------------- end solving and saving cell problems for the macro basefunction set --------------
   //! --------------- end solving and saving cell problems -----------------------------------------
@@ -279,11 +279,11 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
 
   // assemble right hand side
   //! right hand side vector
-  const typename HMMTraits::FirstSourceType f;   // standard source f
+  const typename CommonTraits::FirstSourceType f;   // standard source f
   // right hand side for the hm finite element method with Newton solver:
-  typename HMMTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
+  typename CommonTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
   hmm_newton_rhs.clear();
-  rhsassembler.template assemble< 2* HMMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(f, hmm_newton_rhs);
+  rhsassembler.assemble< 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(f, hmm_newton_rhs);
 
   // set Dirichlet Boundary to zero
   BoundaryTreatment::apply(hmm_newton_rhs);
@@ -295,16 +295,16 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
 
 
 //! \TODO docme
-bool process_hmm_newton_residual(typename HMMTraits::RangeType& relative_newton_error,
-                                 typename HMMTraits::DiscreteFunctionType& hmm_solution,
+bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newton_error,
+                                 typename CommonTraits::DiscreteFunctionType& hmm_solution,
                                  const typename HMMTraits::FEMMatrix& hmm_newton_matrix,
-                                 const typename HMMTraits::DiscreteFunctionType& hmm_newton_rhs,
+                                 const typename CommonTraits::DiscreteFunctionType& hmm_newton_rhs,
                                  const int hmm_iteration_step,
                                  const int loop_cycle,
                                  const double hmm_tolerance ) {
   //! residual vector
   // current residual
-  typename HMMTraits::DiscreteFunctionType hmm_newton_residual("HMM Newton Residual", hmm_solution.space());
+  typename CommonTraits::DiscreteFunctionType hmm_newton_residual("HMM Newton Residual", hmm_solution.space());
   hmm_newton_residual.clear();
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("grid.refinement_level_macrogrid", 0);
 
@@ -352,16 +352,16 @@ bool process_hmm_newton_residual(typename HMMTraits::RangeType& relative_newton_
     Dune::myDataOutputParameters outputparam;
 
     // create and initialize output class
-    typename HMMTraits::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
+    typename CommonTraits::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
     outputparam.set_prefix((boost::format("/hmm_solution_%d_NewtonStep_%d") % loop_cycle % hmm_iteration_step).str());
-    typename HMMTraits::DataOutputType hmmsol_dataoutput(hmm_solution.space().gridPart().grid(),
+    typename CommonTraits::DataOutputType hmmsol_dataoutput(hmm_solution.space().gridPart().grid(),
                                                    hmm_solution_newton_step_series, outputparam);
     // write data
     hmmsol_dataoutput.writeData( 1.0 /*dummy*/, "hmm-solution-NewtonStep" );
   }
 
   // || u^(n+1) - u^(n) ||_L2
-  const Dune::L2Norm< typename HMMTraits::DiscreteFunctionType::GridPartType > l2norm(hmm_newton_residual.gridPart());
+  const Dune::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(hmm_newton_residual.gridPart());
   relative_newton_error = l2norm.norm(hmm_newton_residual);
   // || u^(n+1) - u^(n) ||_L2 / || u^(n+1) ||_L2
   relative_newton_error = relative_newton_error / l2norm.norm(hmm_solution);
@@ -382,9 +382,9 @@ bool process_hmm_newton_residual(typename HMMTraits::RangeType& relative_newton_
 }
 
 //! \TODO docme
-void step_data_output(const typename HMMTraits::GridPartType& gridPart,
-                      const typename HMMTraits::GridPartType& gridPartFine,
-                      typename HMMTraits::DiscreteFunctionType& hmm_solution,
+void step_data_output(const typename CommonTraits::GridPartType& gridPart,
+                      const typename CommonTraits::GridPartType& gridPartFine,
+                      typename CommonTraits::DiscreteFunctionType& hmm_solution,
                       const int loop_cycle) {
   //! --------------- writing data output ---------------------
   // general output parameters
@@ -396,28 +396,28 @@ void step_data_output(const typename HMMTraits::GridPartType& gridPart,
   // --------- data output hmm solution --------------
 
   // create and initialize output class
-  typename HMMTraits::IOTupleType hmm_solution_series(&hmm_solution);
+  typename CommonTraits::IOTupleType hmm_solution_series(&hmm_solution);
   if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
     outputparam.set_prefix((boost::format("/hmm_solution_%d") % loop_cycle).str());
   }
   else {
     outputparam.set_prefix("/hmm_solution");
   }
-  typename HMMTraits::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
+  typename CommonTraits::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
 
   // write data
   hmmsol_dataoutput.writeData( 1.0 /*dummy*/, "hmm-solution" );
   // -------------------------------------------------------
 
-  if (HMMTraits::ModelProblemDataType::has_exact_solution) {
+  if (CommonTraits::ModelProblemDataType::has_exact_solution) {
     // --------- data output discrete exact solution --------------
 
     // create and initialize output class
-    typename HMMTraits::ExactSolutionType u;
-    typename HMMTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
-    typename HMMTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+    typename CommonTraits::ExactSolutionType u;
+    typename CommonTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
+    typename CommonTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("/exact_solution");
-    typename HMMTraits::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
+    typename CommonTraits::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
 
     // write data
     outstring << "exact-solution";
@@ -430,26 +430,26 @@ void step_data_output(const typename HMMTraits::GridPartType& gridPart,
 }
 
 //! \TODO docme
-HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
-        typename HMMTraits::GridPartType& gridPartFine,
-        typename HMMTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
+        typename CommonTraits::GridPartType& gridPartFine,
+        typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-        const typename HMMTraits::DiffusionType& diffusion_op,
-        const Dune::RightHandSideAssembler< typename HMMTraits::DiscreteFunctionType >& rhsassembler,
-        typename HMMTraits::DiscreteFunctionType& hmm_solution,
-        const typename HMMTraits::DiscreteFunctionType& reference_solution,
+        const typename CommonTraits::DiffusionType& diffusion_op,
+        const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
+        typename CommonTraits::DiscreteFunctionType& hmm_solution,
+        const typename CommonTraits::DiscreteFunctionType& reference_solution,
         const int loop_cycle ) {
-    typedef HMMTraits HMM;
+    typedef CommonTraits HMM;
     DSC_LOG_INFO << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
               << " unkowns and polynomial order "
-              << HMMTraits::DiscreteFunctionSpaceType::polynomialOrder << "."
+              << CommonTraits::DiscreteFunctionSpaceType::polynomialOrder << "."
               << std::endl << std::endl;
 
     // if we have some additional source term (-div G), define:
-    const typename HMMTraits::SecondSourceType G;
+    const typename CommonTraits::SecondSourceType G;
     // - div ( A^{\epsilon} \nabla u^{\epsilon} ) = f - div G
 
-    const Dune::L2Error< typename HMMTraits::DiscreteFunctionType > l2error;
+    const Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
 
     // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
     typename HMMTraits::CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
@@ -481,20 +481,20 @@ HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
     {
       DSC_PROFILER.startTiming("hmm.timeadapt");
 
-      static const int hmm_polorder = 2* HMMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
+      static const int hmm_polorder = 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
 
       // project HMM solution in finer discrete function space
-      typename HMMTraits::DiscreteFunctionType projected_hmm_solution("HMM Solution Projection", reference_solution.space());
+      typename CommonTraits::DiscreteFunctionType projected_hmm_solution("HMM Solution Projection", reference_solution.space());
       projected_hmm_solution.clear();
       Dune::Stuff::HeterogenousProjection<Dune::Stuff::InlevelSearchStrategy>::project( hmm_solution/*source*/, projected_hmm_solution/*target*/ );
 
-      const auto hmm_error = l2error.template norm2< hmm_polorder >(projected_hmm_solution, reference_solution);
+      const auto hmm_error = l2error.norm2< hmm_polorder >(projected_hmm_solution, reference_solution);
 
       // old (expensive) hack to deal with discrete functions, defined on different grids
       // (should do the same as the heterogenous projection above - could therefore be used for comparison)
       /*
-      Dune::ImprovedL2Error< typename HMMTraits::DiscreteFunctionType > impL2error;
-      typename HMMTraits::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
+      Dune::ImprovedL2Error< typename CommonTraits::DiscreteFunctionType > impL2error;
+      typename CommonTraits::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
         hmm_solution,
         reference_solution);
 
@@ -510,19 +510,19 @@ HMMResult single_step( typename HMMTraits::GridPartType& gridPart,
     }
 
     // L2 errors with exact solution
-    if (HMMTraits::ModelProblemDataType::has_exact_solution)
+    if (CommonTraits::ModelProblemDataType::has_exact_solution)
     {
       int order_quadrature_rule = 13;
 
-      const typename HMMTraits::ExactSolutionType u;
-      const typename HMMTraits::RangeType exact_hmm_error = l2error.template norm< typename HMMTraits::ExactSolutionType >(u,
+      const typename CommonTraits::ExactSolutionType u;
+      const typename CommonTraits::RangeType exact_hmm_error = l2error.norm< typename CommonTraits::ExactSolutionType >(u,
                                                                     hmm_solution,
                                                                     order_quadrature_rule );
 
       DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
       if (DSC_CONFIG_GET("problem.reference_solution", false))
       {
-        typename HMMTraits::RangeType reference_sol_error = l2error.template norm< typename HMMTraits::ExactSolutionType >(u,
+        typename CommonTraits::RangeType reference_sol_error = l2error.norm< typename CommonTraits::ExactSolutionType >(u,
                                                                         reference_solution,
                                                                         order_quadrature_rule );
 

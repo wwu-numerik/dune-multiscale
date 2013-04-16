@@ -143,12 +143,13 @@ add_subdirectory(doc)
 add_subdirectory(dune)
 
 set( HMM_SOURCES 
+        src/elliptic_hmm.cc 
         dune/multiscale/hmm/algorithm.cc
         dune/multiscale/hmm/algorithm_error.cc
         dune/multiscale/hmm/algorithm_step.cc
     )
 
-ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${HMM_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
 set_target_properties(elliptic_hmm PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${HMM_PROBLEM})
 

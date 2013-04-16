@@ -480,7 +480,7 @@ public:
     std::string local_path = DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/";
     Dune::Stuff::Common::testCreateDirectory(local_path);
 
-    enum { dimension = MsFEMTraits::GridType::dimension };
+    enum { dimension = CommonTraits::GridType::dimension };
     enum { maxnumOfBaseFct = 100 };
 
     JacobianRangeType e[dimension];
