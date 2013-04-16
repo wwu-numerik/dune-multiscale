@@ -64,13 +64,9 @@ SET( UGGRID_BASE_PATH
 	"/share/dune/Modules/modules_x86_64/ug" CACHE STRING
 	"UGGRID_BASE_PATH" )
 
-SET(PROBLEM_NAMES "Easy" "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" INTERNAL )
+SET(PROBLEM_NAMES "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" INTERNAL )
 
-SET( HMM_PROBLEM
-	"Nine" CACHE STRING
-	"HMM_PROBLEM NAME" )
-
-SET( MSFEM_PROBLEM
+SET( PROBLEM_NAME
 	"Nine" CACHE STRING
 	"MSFEM_PROBLEM NAME" )
 
@@ -137,7 +133,7 @@ set( COMMON_LIBS "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry"
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
-ADD_DEFINITIONS( ${MY_CXX_FLAGS} )
+ADD_DEFINITIONS( ${MY_CXX_FLAGS} -DPROBLEM_NAME=${PROBLEM_NAME} )
 
 add_subdirectory(doc)
 add_subdirectory(dune)
@@ -166,27 +162,23 @@ set( FEM_SOURCES
     
 set( RIGOROUS_MSFEM_SOURCES
         src/elliptic_rigorous_msfem.cc
+        dune/multiscale/msfem/rigorous.cc
     )
     
 ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
-set_target_properties(elliptic_hmm PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${HMM_PROBLEM})
 
 ADD_EXECUTABLE(elliptic_msfem ${MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
-set_target_properties(elliptic_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
 ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
-set_target_properties(elliptic_hom_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
 ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
-set_target_properties(elliptic_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
 ADD_EXECUTABLE(elliptic_rigorous_msfem ${RIGOROUS_MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_rigorous_msfem ${COMMON_LIBS} )
-set_target_properties(elliptic_rigorous_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
