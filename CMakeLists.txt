@@ -149,23 +149,42 @@ set( HMM_SOURCES
         dune/multiscale/hmm/algorithm_step.cc
     )
 
+set( MSFEM_SOURCES
+        src/elliptic_msfem.cc
+        dune/multiscale/msfem/algorithm.cc
+    )
+
+set( HOM_FEM_SOURCES
+        src/elliptic_hom_fem.cc
+        dune/multiscale/fem/algorithm.cc
+    )
+    
+set( FEM_SOURCES
+        src/elliptic_fem.cc
+        dune/multiscale/fem/algorithm.cc
+    )
+    
+set( RIGOROUS_MSFEM_SOURCES
+        src/elliptic_rigorous_msfem.cc
+    )
+    
 ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
 set_target_properties(elliptic_hmm PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${HMM_PROBLEM})
 
-ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_msfem ${MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
 set_target_properties(elliptic_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
-ADD_EXECUTABLE(elliptic_hom_fem src/elliptic_hom_fem.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
 set_target_properties(elliptic_hom_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
-ADD_EXECUTABLE(elliptic_fem src/elliptic_fem.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 set_target_properties(elliptic_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
-ADD_EXECUTABLE(elliptic_rigorous_msfem src/elliptic_rigorous_msfem.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_rigorous_msfem ${RIGOROUS_MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_rigorous_msfem ${COMMON_LIBS} )
 set_target_properties(elliptic_rigorous_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 

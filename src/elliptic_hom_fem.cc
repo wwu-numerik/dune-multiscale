@@ -30,7 +30,8 @@ int main(int argc, char** argv) {
 
     if ( !DSC_CONFIG_GET("problem.linear", 1 ) )
      DUNE_THROW(Dune::InvalidStateException, "Problem is declared to be nonlinear. Homogenizers are only available for linear homogenization problems.");
-     
+
+    using namespace Dune::Multiscale;
     using namespace Dune::Multiscale::FEM;
 
     DSC_PROFILER.startTiming("total_cpu");
@@ -63,7 +64,7 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO << "loading dgf: " << gridName << std::endl;
 
     // create a grid pointer for the DGF file belongig to the macro grid:
-    FEMTraits::GridPointerType grid_pointer(gridName);
+    CommonTraits::GridPointerType grid_pointer(gridName);
 
     // refine the grid 'starting_refinement_level' times:
     grid_pointer->globalRefine(refinement_level);

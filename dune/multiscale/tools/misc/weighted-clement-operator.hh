@@ -17,6 +17,10 @@
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/la/container/pattern.hh>
 
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/tools/solver/MsFEM/msfem_grid_specifier.hh>
+
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {

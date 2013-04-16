@@ -84,18 +84,6 @@ namespace Dune {
     #endif
 #undef HOSTGRID_IO_FUNCTION_PAIR
 
-    // dune > 2.3 stuff
-//#define HOSTGRID_IO_FUNCTION_PAIR(classname) \
-//    template<class E, class C> bool writeHostGrid(classname<E,C>& hostgrid, std::string filename) \
-//    { return writeHOSTGRID(hostgrid, filename); }\
-//    \
-//    template<class E, class C> bool readHostGrid(classname<E,C>& hostgrid, std::string filename) \
-//    { return readHOSTGRID(hostgrid, filename); }
-
-//    HOSTGRID_IO_FUNCTION_PAIR(ALU3dGrid)
-//    HOSTGRID_IO_FUNCTION_PAIR(ALU2dGrid)
-//#undef HOSTGRID_IO_FUNCTION_PAIR
-
 
 
 } // namespace Dune
