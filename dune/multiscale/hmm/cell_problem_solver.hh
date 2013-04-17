@@ -9,7 +9,7 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/math.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
+#include <dune/multiscale/hmm/discrete_cell_operator.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/solver/oemsolver.hh>
 #include <dune/fem/misc/l2error.hh>

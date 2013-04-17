@@ -3,11 +3,11 @@
 #include <string>
 #include <fstream>
 
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/righthandside_assembler.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/hmm/result.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>
-#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
+#include <dune/multiscale/hmm/cell_problem_solver.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>

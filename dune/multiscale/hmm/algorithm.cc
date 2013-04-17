@@ -3,8 +3,8 @@
 #include <dune/multiscale/hmm/algorithm_step.hh>
 #include <dune/multiscale/hmm/result.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/hmm/cell_problem_solver.hh>
+#include <dune/multiscale/tools/righthandside_assembler.hh>
 
 
 namespace Dune {

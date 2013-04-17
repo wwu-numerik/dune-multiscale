@@ -19,7 +19,7 @@
 // (typically defined in the specification file for the model problem)
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/righthandside_assembler.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 

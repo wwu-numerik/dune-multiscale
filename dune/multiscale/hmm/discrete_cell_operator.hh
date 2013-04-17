@@ -188,6 +188,6 @@ private:
 
 } //namespace Dune
 
-#include "discreteoperator.cc"
+#include "discrete_cell_operator.cc"
 
 #endif // #ifndef DiscreteElliptic_HH

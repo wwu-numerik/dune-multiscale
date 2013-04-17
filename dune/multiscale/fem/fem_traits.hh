@@ -8,8 +8,8 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/common/tuples.hh>
 
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/tools/righthandside_assembler.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/io/file/dataoutput.hh>

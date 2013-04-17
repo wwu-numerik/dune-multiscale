@@ -14,13 +14,13 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_msfem_matrix_assembler.hh>
+#include <dune/multiscale/tools/righthandside_assembler.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
-#include <dune/multiscale/tools/solver/MsFEM/msfem_grid_specifier.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -199,16 +199,16 @@ private:
     }
   } // subgrid_to_hostrid_projection
 
-  
+
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
   // ------------------------------------------------------------------------------------
   void identify_coarse_scale_part( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
                                    const DiscreteFunction& coarse_msfem_solution,
                                    DiscreteFunction& coarse_scale_part ) const
   {
-    
+
     DSC_LOG_INFO << "Indentifying coarse scale part of the MsFEM solution... ";
-    
+
     coarse_scale_part.clear();
     typedef typename HostEntity::template Codim< 2 >::EntityPointer HostNodePointer;
     typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
@@ -251,7 +251,7 @@ private:
   }
   // ------------------------------------------------------------------------------------
 
-  
+
 
 
   //! identify fine scale part of MsFEM solution (including the projection!)
@@ -267,10 +267,10 @@ private:
 
     const HostGrid& grid = discreteFunctionSpace_.gridPart().grid();
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-    
+
     DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
-    
+
     const int number_of_nodes = grid.size(2 /*codim*/);
     std::vector< std::vector< HostEntityPointer > > entities_sharing_same_node(number_of_nodes);
 
@@ -297,7 +297,7 @@ private:
     {
       // the coarse entity 'T': *coarse_it
 
-      // only required for oversampling strategy 1 and 2, where we need to identify the correction for each 
+      // only required for oversampling strategy 1 and 2, where we need to identify the correction for each
       DiscreteFunction correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
       correction_on_U_T.clear();
 
@@ -343,7 +343,7 @@ private:
       local_problem_solution_e0 += local_problem_solution_e1;
 
       // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e0 );
-      
+
       // oversampling strategy 3: just sum up the local correctors:
       if ( (specifier.getOversamplingStrategy() == 3) )
        {
@@ -353,7 +353,7 @@ private:
       // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming projection:
       if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) )
        {
-       
+
         if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() )
         { DSC_LOG_ERROR << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl; }
 
@@ -411,9 +411,9 @@ private:
 
             host_loc_value[i] = ( sub_loc_value[i] / coarse_entities.size() );
           }
-	}
+    }
        }
-       
+
       fine_scale_part += correction_on_U_T;
     }
     DSC_LOG_INFO << " done." << std::endl;
@@ -486,7 +486,7 @@ public:
     // assemble the MsFEM stiffness matrix
     elliptic_msfem_op.assemble_matrix(msfem_matrix);   // einbinden!
     DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
-    
+
     // assemble right hand side
     if ( DSC_CONFIG_GET("msfem.petrov_galerkin", 1 ) )
     { RhsAssembler::template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs); }

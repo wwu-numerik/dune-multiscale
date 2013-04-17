@@ -10,7 +10,7 @@
 #ifndef DUNE_HOMOGENIZER_HH
 #define DUNE_HOMOGENIZER_HH
 
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
 
 // for data output:
@@ -19,7 +19,7 @@
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/righthandside_assembler.hh>
 
 namespace Dune {
 

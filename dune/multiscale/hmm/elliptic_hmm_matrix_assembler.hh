@@ -12,8 +12,8 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
-#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
+#include <dune/multiscale/hmm/discrete_cell_operator.hh>
+#include <dune/multiscale/hmm/cell_problem_solver.hh>
 
 namespace Dune {
 //! \TODO docme

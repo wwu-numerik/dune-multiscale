@@ -8,7 +8,7 @@
 // - Dune includes
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/solver.hh>
+#include <dune/multiscale/hmm/cell_problem_solver.hh>
 
 //#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc.hh>

@@ -22,9 +22,9 @@
 #include <dune/fem/misc/h1norm.hh>
 
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
-#include <dune/multiscale/tools/solver/FEM/fem_solver.hh>
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
-#include <dune/multiscale/tools/solver/MsFEM/rigorous_msfem_solver.hh>
+#include <dune/multiscale/fem/fem_solver.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/rigorous_msfem_solver.hh>
 
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>

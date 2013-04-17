@@ -14,8 +14,8 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/tools/righthandside_assembler.hh>
+#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 
 namespace Dune {
 // define a dummy mass term:

@@ -20,7 +20,7 @@
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/localoperator.hh>
+#include <dune/multiscale/msfem/localproblems/localoperator.hh>
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
 
@@ -123,15 +123,15 @@ private:
   typedef LocalProblemOperator< SubDiscreteFunctionType, DiffusionOperatorType > LocalProblemOperatorType;
 
   typedef SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
-      WeightedClementMatrixObjectTraits;                                       
+      WeightedClementMatrixObjectTraits;
 
   typedef WeightedClementOp< SubDiscreteFunctionType, HostDiscreteFunctionType, WeightedClementMatrixObjectTraits, CoarseBasisFunctionListType >
             WeightedClementOperatorType;
-  
+
   // saddle point problem solver:
-  typedef UzawaInverseOp< SubDiscreteFunctionType, 
+  typedef UzawaInverseOp< SubDiscreteFunctionType,
                           HostDiscreteFunctionType,
-                          InverseLocProbFEMMatrix, 
+                          InverseLocProbFEMMatrix,
                           WeightedClementOperatorType >
      InverseUzawaOperatorType;
 
@@ -366,7 +366,7 @@ public:
       DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
     } else {
       InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("LOCPROBLEMSOLVER_VERBOSE", false));
-      
+
       bool clement = false;
       if ( specifier_.getOversamplingStrategy() == 3 )
       { clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ); }

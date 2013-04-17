@@ -8,10 +8,10 @@
 #include <dune/multiscale/common/traits.hh>
 
 #include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
-#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/numbering.hh>
-#include <dune/multiscale/tools/solver/HMM/cell_problem_solving/discreteoperator.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_hmm_matrix_assembler.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
+#include <dune/multiscale/hmm/discrete_cell_operator.hh>
+#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/hmm/elliptic_hmm_matrix_assembler.hh>
 #include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
