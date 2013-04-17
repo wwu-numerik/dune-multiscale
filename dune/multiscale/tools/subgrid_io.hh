@@ -27,9 +27,9 @@
 namespace Dune {
 
     template <typename HostGridType>
-    bool writeHostGrid(HostGridType& hostgrid, std::string filename);
+    static bool writeHostGrid(HostGridType& hostgrid, std::string filename);
     template <typename HostGridType>
-    bool readHostGrid(HostGridType& hostgrid, std::string filename);
+    static bool readHostGrid(HostGridType& hostgrid, std::string filename);
 
     template <class HostgridType, class SubgridType>
     std::string subgridKeygen(const HostgridType& /*hostgrid*/, const SubgridType& subgrid, const int subgrid_idx)
