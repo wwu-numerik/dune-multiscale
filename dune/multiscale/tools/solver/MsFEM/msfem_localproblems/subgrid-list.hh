@@ -92,13 +92,13 @@ private:
     bool patch_in_subgrid_ = true;
 
     // loop over the nodes of the enity
-    for (int i = 0; i < (*hit).template count< 2 >(); i += 1)
+    for (int i = 0; i < (*hit).template count< 2 >(); ++i)
     {
       const HostNodePointer node = (*hit).template subEntity< 2 >(i);
 
       const int global_index_node = hostGridPart.indexSet().index(*node);
 
-      for (int j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1)
+      for (int j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j)
       {
         if ( !( subGrid.template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
         {
@@ -129,20 +129,20 @@ private:
 
     const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
 
-    for (int l = 0; l <= layer; l += 1)
+    for (int l = 0; l <= layer; ++l)
     {
       enriched[father_index][hostGridLeafIndexSet.index(*hit)][l] = true;
     }
 
     layer -= 1;
 
-    // loop over the nodes of the fine grid enity
-    for (int i = 0; i < (*hit).template count< 2 >(); i += 1)
+    // loop over the nodes of the fine grid entity
+    for (int i = 0; i < (*hit).template count< 2 >(); ++i)
     {
       const HostNodePointer node = (*hit).template subEntity< 2 >(i);
       int global_index_node = hostGridPart.indexSet().index(*node);
 
-      for (size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); j += 1)
+      for (size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j)
       {
         if ( !( subGrid->template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
         {
@@ -177,11 +177,10 @@ private:
           const HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                   entities_sharing_same_node[global_index_node][j],
                                                                   level_difference);
-          if ( !(father == level_father_it) )
+          if ( father != level_father_it )
           {
             const auto& tmp_entity_ptr = entities_sharing_same_node[global_index_node][j];
-            if (!enriched[father_index][hostGridLeafIndexSet
-                .index(*tmp_entity_ptr)][layer])
+            if (!enriched[father_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer])
             {
               enrichment(tmp_entity_ptr, level_father_it,
                          /*specifier,*/ father_index,
@@ -223,7 +222,7 @@ public:
     for (const auto& host_entity : hostSpace_)
     {
       int number_of_nodes_in_entity = host_entity.template count< 2 >();
-      for (int i = 0; i < number_of_nodes_in_entity; i += 1)
+      for (int i = 0; i < number_of_nodes_in_entity; ++i)
       {
         const HostNodePointer node = host_entity.template subEntity< 2 >(i);
         const int global_index_node = hostGridPart.indexSet().index(*node);
@@ -232,20 +231,20 @@ public:
       }
     }
 
+    // the number of coarse grid entities (of codim 0).
+    const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+    const int oversampling_strategy = specifier_.getOversamplingStrategy();
+    DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
+
     // determine the maximum number of oversampling layers
     int max_num_layers = 0;
-    for (int i = 0; i < specifier_.getNumOfCoarseEntities(); i += 1)
+    for (int i = 0; i < number_of_coarse_grid_entities; ++i)
     {
       max_num_layers = std::max(max_num_layers, specifier_.getLayer(i));
     }
 
     // the difference in levels between coarse and fine grid
     const int level_difference = specifier_.getLevelDifference();
-
-    // the number of coarse grid entities (of codim 0).
-    const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
-    const int oversampling_strategy = specifier_.getOversamplingStrategy();
-    DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
     if ( (oversampling_strategy == 2) || (oversampling_strategy == 3) )
     {
@@ -310,7 +309,7 @@ public:
       
       // check the neighbor entities and look if they belong to the same father
       // if yes, continue
-      // if not, enrichement with 'n(T)'-layers
+      // if not, enrichment with 'n(T)'-layers
       bool all_neighbors_have_same_father = true;
       const HostIntersectionIterator iend = hostGridPart.iend(host_entity);
       for (HostIntersectionIterator iit = hostGridPart.ibegin(host_entity); iit != iend; ++iit)
@@ -322,12 +321,11 @@ public:
           const HostEntityPointerType level_father_neighbor_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                                         neighborHostEntityPointer,
                                                                                         level_difference);
-          if ( !(level_father_neighbor_entity == level_father_entity) )
+          if ( level_father_neighbor_entity != level_father_entity )
           {
             all_neighbors_have_same_father = false;
           }
-        }
-        else {
+        } else {
           all_neighbors_have_same_father = false;
         }
       }
