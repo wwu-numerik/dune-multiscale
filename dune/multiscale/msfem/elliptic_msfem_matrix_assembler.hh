@@ -2,8 +2,8 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef DiscreteEllipticMSFEMOperator_HH
-#define DiscreteEllipticMSFEMOperator_HH
+#ifndef MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
+#define MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
 
 #include <dune/common/fmatrix.hh>
 
@@ -11,14 +11,34 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/stuff/fem/functions/checks.hh>
+
+#include <type_traits>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+//struct MsFEMTraits {
+//  typedef MacroMicroGridSpecifier< typename CommonTraits::DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
+//  typedef Dune::SubGrid< CommonTraits::GridType::dimension, typename CommonTraits::GridType >                  SubGridType;
+//  typedef SubGridList< typename CommonTraits::DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
+
+//  //! -------------------------- MsFEM error estimator ----------------------------
+//  typedef MsFEMErrorEstimator< typename CommonTraits::DiscreteFunctionType,
+//                               typename CommonTraits::DiffusionType,
+//                               typename CommonTraits::FirstSourceType,
+//                               MacroMicroGridSpecifierType,
+//                               SubGridListType >
+//    MsFEMErrorEstimatorType;
+//  //! -----------------------------------------------------------------------------
+//};
+
+//struct MsFEMTraits;
 /**
  * \todo warum ist das nen operator? Stammt noch aus ner alten Implementierung und ist inzwischen überflüssig.
  */
@@ -57,6 +77,7 @@ private:
 
   typedef SubGrid< FineGrid::dimensionworld, FineGrid >  SubGridType;
   typedef SubGridList< FineDiscreteFunction, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
+
 
   typedef MsFEMLocalProblemSolver< FineDiscreteFunction, SubGridListType, MacroMicroGridSpecifierType,
                                    DiffusionModel,Dummy > MsFEMLocalProblemSolverType;
@@ -134,6 +155,10 @@ public:
       specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_);
 
     loc_prob_solver.assemble_all(silence);
+//    typedef Dune::Multiscale::MsFEM::
+    typedef     MsFEMTraits Blah;
+        typedef Blah::SubGridListType KO;
+    static_assert(std::is_same<KO, SubGridListType>::value, "fail");
   }
 
   template< class MatrixType >
@@ -416,4 +441,4 @@ void DiscreteEllipticMsFEMOperator< CoarseDiscreteFunctionImp,
 } //namespace Multiscale {
 } //namespace Dune {
 
-#endif // #ifndef DiscreteElliptic_HH
+#endif // #ifndef MSFEM_ELLIPTIC_DiscreteElliptic_HH

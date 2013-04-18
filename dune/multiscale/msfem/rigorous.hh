@@ -10,19 +10,22 @@
 
 namespace Dune {
 namespace Multiscale {
+
+class OutputParameters;
+
 namespace MsFEM {
 
 //! \TODO docme
 void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                     Dune::myDataOutputParameters& outputparam,
+                     Dune::Multiscale::OutputParameters& outputparam,
                      int& total_refinement_level_,
                      int& coarse_grid_level_);
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
-                 Dune::myDataOutputParameters& outputparam );
+                 Dune::Multiscale::OutputParameters& outputparam );
 
 //! \TODO docme
 void algorithm(const std::string& macroGridName,

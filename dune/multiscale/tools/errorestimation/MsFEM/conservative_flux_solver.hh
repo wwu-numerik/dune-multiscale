@@ -43,11 +43,11 @@ namespace MsFEM {
  *  appends "local_problems" for path
  **/
 struct ConFluxProblemDataOutputParameters
-  : public myDataOutputParameters
+  : public OutputParameters
 {
 public:
   explicit ConFluxProblemDataOutputParameters()
-    : myDataOutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/cf_problems/")
+    : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/cf_problems/")
   {}
 };
 

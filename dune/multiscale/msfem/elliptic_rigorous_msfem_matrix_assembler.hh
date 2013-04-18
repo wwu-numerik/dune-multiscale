@@ -58,6 +58,7 @@ private:
 
   typedef SubGrid< FineGrid::dimensionworld, FineGrid >  SubGridType;
   typedef SubGridList< FineDiscreteFunction, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
+  static_assert(std::is_same<MsFEMTraits::SubGridListType, SubGridListType>::value, "fail");
 
   typedef MsFEMLocalProblemSolver< FineDiscreteFunction, SubGridListType, MacroMicroGridSpecifierType,
                                    DiffusionModel, CoarseBasisFunctionListType > MsFEMLocalProblemSolverType;

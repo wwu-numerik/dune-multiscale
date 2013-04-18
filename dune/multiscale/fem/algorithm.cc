@@ -64,7 +64,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discre
 
   // writing paraview data output
   // general output parameters
-  Dune::myDataOutputParameters outputparam;
+  Dune::Multiscale::OutputParameters outputparam;
 
   // create and initialize output class
   typename CommonTraits::IOTupleType fem_solution_series(&discrete_solution);
@@ -387,7 +387,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
 
   // writing paraview data output
   // general output parameters
-  Dune::myDataOutputParameters outputparam;
+  Dune::Multiscale::OutputParameters outputparam;
 
   // create and initialize output class
   typename CommonTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);

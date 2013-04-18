@@ -349,7 +349,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
 
     // writing paraview data output
     // general output parameters
-    Dune::myDataOutputParameters outputparam;
+    Dune::Multiscale::OutputParameters outputparam;
 
     // create and initialize output class
     typename CommonTraits::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
@@ -388,7 +388,7 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
                       const int loop_cycle) {
   //! --------------- writing data output ---------------------
   // general output parameters
-  Dune::myDataOutputParameters outputparam;
+  Dune::Multiscale::OutputParameters outputparam;
 
   // sequence stamp
   std::stringstream outstring;

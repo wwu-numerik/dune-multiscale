@@ -42,7 +42,7 @@ namespace MsFEM {
 void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                     Dune::myDataOutputParameters& outputparam,
+                     Dune::Multiscale::OutputParameters& outputparam,
                      int& total_refinement_level_,
                      int& coarse_grid_level_)
 {
@@ -89,7 +89,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
-                 Dune::myDataOutputParameters& outputparam )
+                 Dune::Multiscale::OutputParameters& outputparam )
 {
   using namespace Dune;
   // sequence stamp
@@ -173,7 +173,7 @@ void algorithm(const std::string& macroGridName,
 
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
-  Dune::myDataOutputParameters outputparam;
+  Dune::Multiscale::OutputParameters outputparam;
   data_output(gridPart, discreteFunctionSpace_coarse, outputparam );
 
   //! ---------------------- solve MsFEM problem ---------------------------

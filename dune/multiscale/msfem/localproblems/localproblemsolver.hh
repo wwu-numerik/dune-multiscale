@@ -32,11 +32,11 @@ namespace MsFEM {
  *  appends "local_problems" for path
  **/
 struct LocalProblemDataOutputParameters
-  : public myDataOutputParameters
+  : public OutputParameters
 {
 public:
   explicit LocalProblemDataOutputParameters()
-    : myDataOutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/")
+    : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/")
   {}
 };
 

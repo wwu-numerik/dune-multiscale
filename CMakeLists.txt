@@ -144,6 +144,10 @@ ADD_DEFINITIONS( ${MY_CXX_FLAGS} -DPROBLEM_NAME=${PROBLEM_NAME} )
 add_subdirectory(doc)
 add_subdirectory(dune)
 
+set( COMMON_SOURCES 
+        dune/multiscale/tools/misc/outputparameter.cc
+    )
+
 set( HMM_SOURCES 
         src/elliptic_hmm.cc 
         dune/multiscale/hmm/algorithm.cc
@@ -171,25 +175,25 @@ set( RIGOROUS_MSFEM_SOURCES
         dune/multiscale/msfem/rigorous.cc
     )
     
-ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_msfem ${MSFEM_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_msfem ${MSFEM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_rigorous_msfem ${RIGOROUS_MSFEM_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_rigorous_msfem ${RIGOROUS_MSFEM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_rigorous_msfem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(lg-test ${COMMON_LIBS} )
 
 

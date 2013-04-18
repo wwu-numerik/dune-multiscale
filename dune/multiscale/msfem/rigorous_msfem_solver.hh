@@ -159,7 +159,7 @@ private:
   {
 
     // general output parameters
-    Dune::myDataOutputParameters outputparam(DSC_CONFIG_GET("global.datadir", "data") + "/msfem_basis");
+    Dune::Multiscale::OutputParameters outputparam(DSC_CONFIG_GET("global.datadir", "data") + "/msfem_basis");
 
     typedef typename CommonTraits::IOTupleType IOTType;
     const auto& gridPart = msfem_basis_function_list[0]->space().gridPart();

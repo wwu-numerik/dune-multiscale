@@ -1,12 +1,6 @@
 #ifndef DUNE_MULTISCALE_CONFIG_H
 #define DUNE_MULTISCALE_CONFIG_H
 
-#undef COMMIT
-
-#undef SHARED_PTR_NAMESPACE
-#define HAVE_NULLPTR 1
-#define HAVE_DUNE_GEOMETRY 1
-
 /* the git tag / commit we build from */
 #define COMMIT "@COMMIT@"
 
@@ -19,9 +13,7 @@
 #cmakedefine @ENABLE_ABERTA@
 #define ENABLE_MPI @ENABLE_MPI@
 
-#define DUNE_ISTL_WITH_CHECKING 1
 #define DUNE_COMMON_FIELDVECTOR_SIZE_IS_METHOD 1
-
 #include <config.h>
 
 #ifdef NDEBUG
