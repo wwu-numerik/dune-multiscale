@@ -51,7 +51,10 @@ struct HMMTraits {
 
   //! --------------- the discrete operators (standard FEM and HMM) ------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)
-  typedef Dune::DiscreteEllipticOperator< typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType, typename CommonTraits::MassTermType > EllipticOperatorType;
+  typedef Dune::Multiscale::FEM::DiscreteEllipticOperator< typename CommonTraits::DiscreteFunctionType,
+                                                           typename CommonTraits::DiffusionType,
+                                                           typename CommonTraits::MassTermType >
+    EllipticOperatorType;
   // discrete elliptic HMM operator (corresponds with HMM (or HMFEM) Matrix)
   typedef Dune::DiscreteEllipticHMMOperator< typename CommonTraits::DiscreteFunctionType, PeriodicDiscreteFunctionType, typename CommonTraits::DiffusionType,
                                        CellProblemNumberingManagerType > EllipticHMMOperatorType;

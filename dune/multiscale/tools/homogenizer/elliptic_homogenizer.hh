@@ -355,7 +355,7 @@ private:
   typedef OEMBICGSTABOp< PeriodicDiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
   // discrete elliptic operator (corresponds with FEM Matrix)
-  typedef DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType,
+  typedef Multiscale::FEM::DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType,
                                     MassWeightType > EllipticOperatorType;
 
   typedef typename FunctionSpaceType::DomainType DomainType;

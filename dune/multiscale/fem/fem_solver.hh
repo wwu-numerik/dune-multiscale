@@ -16,6 +16,7 @@
 
 #include <dune/multiscale/tools/righthandside_assembler.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/fem/fem_traits.hh>
 
 namespace Dune {
 // define a dummy mass term:
@@ -153,7 +154,7 @@ public:
 
     //! define the discrete (elliptic) operator that describes our problem
     // ( effect of the discretized differential operator on a certain discrete function )
-    DiscreteEllipticOperator< DiscreteFunction, DiffusionOperator, DummyMassType > discrete_elliptic_op(
+    Multiscale::FEM::DiscreteEllipticOperator< DiscreteFunction, DiffusionOperator, DummyMassType > discrete_elliptic_op(
       discreteFunctionSpace_,
       diffusion_op);
     // discrete elliptic operator (corresponds with FEM Matrix)
