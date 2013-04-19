@@ -299,14 +299,17 @@ public:
 
 
     // assemble right hand side of algebraic local msfem problem
-    if ( specifier_.getOversamplingStrategy() == 1 )
-    { local_problem_op.assemble_local_RHS(e, local_problem_rhs); }
-    else if ( ( specifier_.getOversamplingStrategy() == 2 ) ||
-              ( specifier_.getOversamplingStrategy() == 3 ) )
-    { if ( coarse_index < 0 )
+    if ( specifier_.getOversamplingStrategy() == 1 ) {
+      local_problem_op.assemble_local_RHS(e, local_problem_rhs);
+    } else
+    if ( ( specifier_.getOversamplingStrategy() == 2 ) || ( specifier_.getOversamplingStrategy() == 3 ) ) {
+      if ( coarse_index < 0 )
         DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-      local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector( coarse_index ), specifier_.getOversamplingStrategy(), local_problem_rhs ); }
-    else
+      local_problem_op.assemble_local_RHS(e,
+              subgrid_list_.getCoarseNodeVector( coarse_index ),
+              specifier_.getOversamplingStrategy(),
+              local_problem_rhs );
+    } else
       DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
     //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
 
@@ -406,12 +409,12 @@ public:
           uzawa( local_problem_rhs, zero *//*interpolation is zero*//*, local_problem_solution, lagrange_multiplier );
         }*/
       }
-      else
-      { locprob_fem_biCGStab(local_problem_rhs, local_problem_solution); }
+      else {
+        locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
+      }
     }
 
-    if ( !( local_problem_solution.dofsValid() ) )
-    {
+    if ( !( local_problem_solution.dofsValid() ) ) {
       DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
     }
 
