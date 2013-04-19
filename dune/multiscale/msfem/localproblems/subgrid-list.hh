@@ -43,8 +43,7 @@ public:
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
   typedef HostDiscreteFunctionImp HostDiscreteFunctionType;
   //! type of discrete function space
-  typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType
-    HostDiscreteFunctionSpaceType;
+  typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
   //! type of grid partition
   typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
 
@@ -66,6 +65,10 @@ private:
   typedef std::vector< DomainType > CoarseNodeVectorType;
   typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
   typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
+  //! @todo this should eventually be changed to the type of the coarse space
+  typedef typename HostGridPartType::template Codim<0>::EntityType::Geometry::LocalCoordinate LocalCoordinateType;
+  typedef GenericReferenceElements< typename  LocalCoordinateType::value_type,  LocalCoordinateType::dimension >
+          CoarseRefElementType;
 
 public:
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
@@ -82,119 +85,7 @@ public:
 
   //! type of subgrid discrete function
   typedef AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpace > SubGridDiscreteFunction;
-  
-private:
-  template< typename EntityPointerCollectionType >
-  bool entity_patch_in_subgrid(const HostEntityPointerType& hit,
-                               const HostGridPartType& hostGridPart,
-                               shared_ptr<const SubGridType> subGrid,
-                               const EntityPointerCollectionType& entities_sharing_same_node) const {
-    bool patch_in_subgrid_ = true;
 
-    // loop over the nodes of the enity
-    for (int i = 0; i < (*hit).template count< 2 >(); ++i)
-    {
-      const HostNodePointer node = (*hit).template subEntity< 2 >(i);
-
-      const int global_index_node = hostGridPart.indexSet().index(*node);
-
-      for (int j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j)
-      {
-        if ( !( subGrid.template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
-        {
-          patch_in_subgrid_ = false;
-        }
-      }
-    }
-    return patch_in_subgrid_;
-  } // entity_patch_in_subgrid
-
-  /**
-   * \note called in SubGridList constructor only
-   */
-  template< typename EntityPointerCollectionType >
-  void enrichment(const HostEntityPointerType& hit,
-                  const HostEntityPointerType& level_father_it,
-                  const int& father_index, // father_index = index/number of current subgrid
-                  const HostGridPartType& hostGridPart,
-                  shared_ptr<SubGridType> subGrid,
-                  EntityPointerCollectionType& entities_sharing_same_node,
-                  int& layer,
-                  EnrichmentMatrixType& enriched) {
-    // difference in levels between coarse and fine grid
-    const int level_difference = specifier_.getLevelDifference();
-    HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
-
-    const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-
-    const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
-
-    for (int l = 0; l <= layer; ++l)
-    {
-      enriched[father_index][hostGridLeafIndexSet.index(*hit)][l] = true;
-    }
-
-    layer -= 1;
-
-    // loop over the nodes of the fine grid entity
-    for (int i = 0; i < (*hit).template count< 2 >(); ++i)
-    {
-      const HostNodePointer node = (*hit).template subEntity< 2 >(i);
-      int global_index_node = hostGridPart.indexSet().index(*node);
-
-      for (size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j)
-      {
-        if ( !( subGrid->template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
-        {
-          subGrid->insertPartial(*entities_sharing_same_node[global_index_node][j]);
-
-          // get the corners of the father of the fine grid entity 'entities_sharing_same_node[global_index_node][j]'
-          // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
-          if ( specifier_.getOversamplingStrategy() == 3 )
-          {
-            HostEntityPointerType coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                                                           entities_sharing_same_node[global_index_node][j],
-                                                                           level_difference);
-            for (int c = 0; c < coarse_father->geometry().corners(); ++c )
-            {
-              //! not an effective search algorithm (should be improved eventually):
-              bool node_contained = false;
-              for (size_t cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
-              {
-                // hard coding - 2d case:
-                if ( (coarse_node_store_[father_index][ cn ][ 0 ] == coarse_father->geometry().corner(c)[0])
-                     && (coarse_node_store_[father_index][ cn ][ 1 ] == coarse_father->geometry().corner(c)[1] ) )
-                { node_contained = true; }
-              }
-              if ( node_contained == false )
-              { coarse_node_store_[father_index].emplace_back( coarse_father->geometry().corner(c) ); }
-            }
-          }
-        }
-
-        if (layer > 0)
-        {
-          const HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                                                  entities_sharing_same_node[global_index_node][j],
-                                                                  level_difference);
-          if ( father != level_father_it )
-          {
-            const auto& tmp_entity_ptr = entities_sharing_same_node[global_index_node][j];
-            if (!enriched[father_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer])
-            {
-              enrichment(tmp_entity_ptr, level_father_it,
-                         /*specifier,*/ father_index,
-                         hostGridPart, subGrid, entities_sharing_same_node, layer, enriched);
-
-              layer += 1;
-            }
-          }
-        }
-      }
-    }
-  } // enrichment
-
-public:
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true)
     : hostSpace_( specifier.fineSpace() )
       , specifier_(specifier)
@@ -253,7 +144,6 @@ public:
 
 
     //! ----------- create subgrids --------------------
-
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
     EnrichmentMatrixType enriched(boost::extents[number_of_coarse_grid_entities][hostGrid.size(0)][max_num_layers + 1]);
     std::fill( enriched.data(), enriched.data() + enriched.num_elements(), false );
@@ -274,39 +164,81 @@ public:
     }
 
     // -----------------------------------------------------------
-    
     // initialize and fill a vector 'entities_sharing_same_node' that tells you for
     // a given node 'i' which fine grid entities intersect with 'i' 
     // -----------------------------------------------------------
     for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it)
     {
-      const int number_of_nodes_in_entity = (*it).template count< 2 >();
+      const auto& localEntity = *it;
+      const int number_of_nodes_in_entity = localEntity.template count< 2 >();
       for (int i = 0; i < number_of_nodes_in_entity; i += 1)
       {
-        const HostNodePointer node = (*it).template subEntity< 2 >(i);
+        const HostNodePointer node = localEntity.template subEntity< 2 >(i);
         const int global_index_node = hostGridPart.indexSet().index(*node);
 
-        entities_sharing_same_node[global_index_node].emplace_back(*it);
+        entities_sharing_same_node[global_index_node].emplace_back(localEntity);
       }
     }
     // -----------------------------------------------------------
-    
-    
+
     DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
     DSC_PROFILER.startTiming("msfem.subgrid_list.create");
 
+    // loop over all host entities and assign them to a macro cell
+    auto macroCellIterator = coarseSpace.begin();
+    auto lastIt = macroCellIterator;
     for (const auto& host_entity : hostSpace_)
     {
-      // Dune::Stuff::Grid::printEntity(host_entity);
-
-      // get the coarse-grid-father of host_entity (which is a maxlevel entity)
+      // get the coarse-grid-father of host_entity (which is a maxlevel entity)...
       const HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                            HostEntityPointerType(host_entity),
                                                                            level_difference);
-      const int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
+//      // ... and its index
+//      //! @todo This is a bug: if the host level-0 index set and the coarse leaf index set don't match, the following
+//      //!       does not work!
+//      const int father_index = coarseGridLeafIndexSet.index(*level_father_entity);
+//      // if the subgrid for the given macro cell does not yet contain the host cell, add it.
+//      if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) ) {
+//        subGridList_[father_index]->insertPartial(host_entity);
+//      }
 
-      if ( !( subGridList_[father_index]->template contains< 0 >(host_entity) ) )
-      { subGridList_[father_index]->insertPartial(host_entity); }
+      bool resetIt = true;
+      int macroCellIndex;
+      for (; macroCellIterator != coarseSpace.end(); ++macroCellIterator) {
+        const auto& macroGeo = macroCellIterator->geometry();
+        const auto& refElement = CoarseRefElementType::general(macroGeo.type());
+        const auto baryCenter = host_entity.geometry().center();
+//        DSC_LOG_INFO << "bary center: " << baryCenter << std::endl;
+        bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
+        if (hostEnIsInMacroCell) {
+          macroCellIndex = coarseGridLeafIndexSet.index(*macroCellIterator);
+          subGridList_[macroCellIndex]->insertPartial(host_entity);
+          resetIt = false;
+          lastIt = macroCellIterator;
+          break;
+        }
+      }
+      if (resetIt) {
+        for (macroCellIterator =coarseSpace.begin(); macroCellIterator != lastIt; ++macroCellIterator) {
+          const auto& macroGeo = macroCellIterator->geometry();
+          const auto& refElement = CoarseRefElementType::general(macroGeo.type());
+          const auto baryCenter = host_entity.geometry().center();
+//          DSC_LOG_INFO << "bary center: " << baryCenter << std::endl;
+          bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
+          if (hostEnIsInMacroCell) {
+            macroCellIndex = coarseGridLeafIndexSet.index(*macroCellIterator);
+            subGridList_[macroCellIndex]->insertPartial(host_entity);
+            resetIt = false;
+            lastIt = macroCellIterator;
+            break;
+          }
+        }
+        if (resetIt) {
+          DSC_LOG_INFO << "Warning: Host grid entity was not in any coarse grid cell!\n";
+          // if host entity was not found to be in any coarse cell, we just continue
+          continue;
+        }
+      }
       
       // check the neighbor entities and look if they belong to the same father
       // if yes, continue
@@ -322,8 +254,7 @@ public:
           const HostEntityPointerType level_father_neighbor_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                                         neighborHostEntityPointer,
                                                                                         level_difference);
-          if ( level_father_neighbor_entity != level_father_entity )
-          {
+          if ( level_father_neighbor_entity != level_father_entity ) {
             all_neighbors_have_same_father = false;
           }
         } else {
@@ -340,8 +271,8 @@ public:
       {
         DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
         const HostEntityPointerType hep(host_entity);
-        enrichment(hep, level_father_entity, father_index, hostGridPart,
-                   subGridList_[father_index], entities_sharing_same_node, layers, enriched);
+        enrichment(hep, level_father_entity, macroCellIndex, hostGridPart,
+                   subGridList_[macroCellIndex], entities_sharing_same_node, layers, enriched);
       }
     }
 
@@ -421,6 +352,116 @@ public:
   } // getSubGrid
 
 private:
+  template< typename EntityPointerCollectionType >
+  bool entity_patch_in_subgrid(const HostEntityPointerType& hit,
+          const HostGridPartType& hostGridPart,
+          shared_ptr<const SubGridType> subGrid,
+          const EntityPointerCollectionType& entities_sharing_same_node) const {
+    bool patch_in_subgrid_ = true;
+
+    // loop over the nodes of the enity
+    for (int i = 0; i < (*hit).template count< 2 >(); ++i)
+    {
+      const HostNodePointer node = (*hit).template subEntity< 2 >(i);
+
+      const int global_index_node = hostGridPart.indexSet().index(*node);
+
+      for (int j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j)
+      {
+        if ( !( subGrid.template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
+        {
+          patch_in_subgrid_ = false;
+        }
+      }
+    }
+    return patch_in_subgrid_;
+  } // entity_patch_in_subgrid
+
+  /**
+   * \note called in SubGridList constructor only
+   */
+  template< typename EntityPointerCollectionType >
+  void enrichment(const HostEntityPointerType& hit,
+          const HostEntityPointerType& level_father_it,
+          const int& father_index, // father_index = index/number of current subgrid
+          const HostGridPartType& hostGridPart,
+          shared_ptr<SubGridType> subGrid,
+          EntityPointerCollectionType& entities_sharing_same_node,
+          int& layer,
+          EnrichmentMatrixType& enriched) {
+    // difference in levels between coarse and fine grid
+    const int level_difference = specifier_.getLevelDifference();
+    HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
+
+    const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+
+    const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
+
+    for (int l = 0; l <= layer; ++l)
+    {
+      enriched[father_index][hostGridLeafIndexSet.index(*hit)][l] = true;
+    }
+
+    layer -= 1;
+
+    // loop over the nodes of the fine grid entity
+    for (int i = 0; i < (*hit).template count< 2 >(); ++i)
+    {
+      const HostNodePointer node = (*hit).template subEntity< 2 >(i);
+      int global_index_node = hostGridPart.indexSet().index(*node);
+
+      for (size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j)
+      {
+        if ( !( subGrid->template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
+        {
+          subGrid->insertPartial(*entities_sharing_same_node[global_index_node][j]);
+
+          // get the corners of the father of the fine grid entity 'entities_sharing_same_node[global_index_node][j]'
+          // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
+          if ( specifier_.getOversamplingStrategy() == 3 )
+          {
+            HostEntityPointerType coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                    entities_sharing_same_node[global_index_node][j],
+                    level_difference);
+            for (int c = 0; c < coarse_father->geometry().corners(); ++c )
+            {
+              //! not an effective search algorithm (should be improved eventually):
+              bool node_contained = false;
+              for (size_t cn = 0; cn < coarse_node_store_[father_index].size(); ++cn )
+              {
+                // hard coding - 2d case:
+                if ( (coarse_node_store_[father_index][ cn ][ 0 ] == coarse_father->geometry().corner(c)[0])
+                        && (coarse_node_store_[father_index][ cn ][ 1 ] == coarse_father->geometry().corner(c)[1] ) )
+                { node_contained = true; }
+              }
+              if ( !node_contained )
+              { coarse_node_store_[father_index].emplace_back( coarse_father->geometry().corner(c) ); }
+            }
+          }
+        }
+
+        if (layer > 0)
+        {
+          const HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+                  entities_sharing_same_node[global_index_node][j],
+                  level_difference);
+          if ( father != level_father_it )
+          {
+            const auto& tmp_entity_ptr = entities_sharing_same_node[global_index_node][j];
+            if (!enriched[father_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer])
+            {
+              enrichment(tmp_entity_ptr, level_father_it,
+                      /*specifier,*/ father_index,
+                      hostGridPart, subGrid, entities_sharing_same_node, layer, enriched);
+
+              layer += 1;
+            }
+          }
+        }
+      }
+    }
+  } // enrichment
+
   const HostDiscreteFunctionSpaceType& hostSpace_;
   MacroMicroGridSpecifierType& specifier_;
 

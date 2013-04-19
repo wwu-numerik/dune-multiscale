@@ -210,47 +210,47 @@ private:
     DSC_LOG_INFO << "Indentifying coarse scale part of the MsFEM solution... ";
 
     coarse_scale_part.clear();
-    typedef typename HostEntity::template Codim< 2 >::EntityPointer HostNodePointer;
+    Dune::Stuff::HeterogenousProjection<> projection;
+    projection.project(coarse_msfem_solution, coarse_scale_part);
+    /*typedef typename HostEntity::template Codim< 2 >::EntityPointer HostNodePointer;
     typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarse_msfem_solution.space().gridPart().grid().leafIndexSet();
-
-    for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
-    {
-      typedef typename HostEntity::template Codim< 0 >::EntityPointer
-      HostEntityPointer;
+    */
+    /*for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it) {
+      typedef typename HostEntity::template Codim< 0 >::EntityPointer HostEntityPointer;
       HostEntityPointer coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                  HostEntityPointer(*it),
                                                                  specifier.getLevelDifference());
 
-      LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse(coarse_father);
+      LinearLagrangeFunction2D< DiscreteFunctionSpace > interpolation_coarse(specifier.coarseSpace(), coarse_father);
 
       interpolation_coarse.set_corners(coarse_msfem_solution);
 
       LocalFunction host_loc_value = coarse_scale_part.localFunction(*it);
 
       const int number_of_nodes = (*it).template count< 2 >();
-      if ( !( number_of_nodes == int( host_loc_value.baseFunctionSet().size() ) ) )
-      { DSC_LOG_ERROR << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl; }
+      if ( number_of_nodes != int( host_loc_value.baseFunctionSet().size() ) ) {
+        DSC_LOG_ERROR << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl;
+      }
 
-      for (int i = 0; i < number_of_nodes; i += 1)
+      for (int i = 0; i < number_of_nodes; ++i)
       {
         const HostNodePointer node = (*it).template subEntity< 2 >(i);
 
         const DomainType coordinates_of_node = node->geometry().corner(0);
-        if ( !( coordinates_of_node == it->geometry().corner(i) ) )
-        { DSC_LOG_ERROR << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl; }
+        if ( coordinates_of_node != it->geometry().corner(i) ) {
+          DSC_LOG_ERROR << "Error! Inconsistency in 'msfem_solver.hh'." << std::endl;
+        }
 
         RangeType coarse_value(0.0);
         interpolation_coarse.evaluate(coordinates_of_node, coarse_value);
 
-        // int global_index_node = gridPart.indexSet().index( *node );
         host_loc_value[i] = coarse_value;
       }
-    }
+    }*/
     DSC_LOG_INFO << " done." << std::endl;
   }
   // ------------------------------------------------------------------------------------
-
 
 
 
@@ -297,7 +297,7 @@ private:
     {
       // the coarse entity 'T': *coarse_it
 
-      // only required for oversampling strategy 1 and 2, where we need to identify the correction for each
+      // only required for oversampling strategy 1 and 2, where we need to identify the correction for each 
       DiscreteFunction correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
       correction_on_U_T.clear();
 
