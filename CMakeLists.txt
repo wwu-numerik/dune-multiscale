@@ -47,7 +47,7 @@ SET( USE_ISTL
 	"Use fem-wrapped istl matrix" )
 		
 SET( GRIDTYPE
-	"ALUGRID_CONFORM" CACHE STRING
+        "SPGRID" CACHE STRING
 	"GRIDTYPE" )
 
 SET( GRIDDIM
@@ -55,7 +55,7 @@ SET( GRIDDIM
 	"GRIDDIM" )
 
 SET( ALUGRID_BASE_PATH
-	"/opt/dune/modules/alugrid/alugrid-1.52" CACHE STRING
+	"/Users/svenkaulmann/dune_modules/ALUGrid-1.52_clang" CACHE STRING
 	"ALUGRID_BASE_PATH" )
 SET( ALBERTA_GRID_BASE_PATH
 	"/opt/dune/modules/alberta/alberta-3.0" CACHE STRING
@@ -76,6 +76,12 @@ CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURR
 INCLUDE_DIR( ${dune_multiscale_BINARY_DIR} )
 INCLUDE_DIR( ${dune_multiscale_SOURCE_DIR} )
 INCLUDE_DIR( ${dune_multiscale_SOURCE_DIR}/.. )
+
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+#	INCLUDE_SYS_DIR( opt/local/include )
+#	INCLUDE_SYS_DIR( opt/local/include/openmpi )
+  LINK_DIRECTORIES( /opt/local/lib/ )
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
 IF( ${GRIDTYPE} STREQUAL "UGGRID" )
 	ADD_CXX_FLAGS( -DENABLE_UG )
@@ -187,6 +193,6 @@ ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(lg-test ${COMMON_LIBS} )
 
 
-HEADERCHECK( ${header} ${dune} )
-DEPENDENCYCHECK( ${header} ${dune} )
-ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
+# HEADERCHECK( ${header} ${dune} )
+# DEPENDENCYCHECK( ${header} ${dune} )
+# ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})

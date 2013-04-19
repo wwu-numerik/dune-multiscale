@@ -2,7 +2,7 @@
 SUBDIRS =
 
 #GRIDTYPE=ALBERTAGRID
-GRIDTYPE=ALUGRID_CONFORM
+GRIDTYPE=SPGRID
 GRIDDIM=2
 PROBLEM_NAMES= Toy One Two Three Four Five Six Seven Eight Nine Ten
 FEM_PROBLEM=Nine
@@ -44,7 +44,7 @@ LDADD = \
 	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
 	$(UG_LDFLAGS) $(UG_LIBS) $(BOOST_LDFLAGS) \
 	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_TIMER_LIB) $(BOOST_CHRONO_LIB) \
-	-lboost_filesystem -lboost_system -lboost_timer -lboost_chrono \
+	-lboost_filesystem-libc++ -lboost_system-libc++ -lboost_timer-libc++ -lboost_chrono-libc++ \
 	$(DUNEMPILIBS)	\
 	$(DUNE_LDADD)
 LDFLAGS = $(AM_LDFLAGS) \

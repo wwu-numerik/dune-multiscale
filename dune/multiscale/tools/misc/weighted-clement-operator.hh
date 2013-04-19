@@ -362,6 +362,7 @@ public:                                                           /*@LST0S@*/
           const auto& coarse_lagrangepoint_set = specifier_.coarseSpace().lagrangePointSet(coarse_entity);
 
           // only implemented for 3 Lagrange Points, i.e. piecewise linear functions
+         //! @todo Attention: 2D simplex only
           assert( coarse_numBaseFunctions == 3 );
           std::vector< RangeType > coarse_phi_corner_0( coarse_numBaseFunctions );
           std::vector< RangeType > coarse_phi_corner_1( coarse_numBaseFunctions );

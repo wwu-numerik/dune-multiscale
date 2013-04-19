@@ -32,22 +32,35 @@ public:
     return number_of_level_host_entities_;
   }
 
-  void setLayer(int i, int number_of_layers_for_entity) {
-    if (i < number_of_level_host_entities_)
-    { number_of_layers[i] = number_of_layers_for_entity; } else {
+  /** Set the number of overlay layers for each coarse element.
+  *
+  * @param[in] i The number of the coarse element
+  * @param[in] number_of_layers_for_entity The number of overlay layers that shall be provided for the given coarse
+  * element
+  */
+  void setNoOfLayers(int i, int number_of_layers_for_entity) {
+    if (i < number_of_level_host_entities_) {
+        number_of_layers[i] = number_of_layers_for_entity;
+    } else {
       DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
     }
-  } // setLayer
+  } // setNoOfLayers
 
-  int getLayer(int i) const {
-    if (i < number_of_level_host_entities_)
-    { return number_of_layers[i]; } else {
+  /** Get the number of overlay layers for a given coarse element.
+  *
+  * @param[in] i The number of the coarse element
+  * @return Returns the number of overlay layers for the given coarse element.
+  */
+  int getNoOfLayers(int i) const {
+    if (i < number_of_level_host_entities_) {
+        return number_of_layers[i];
+    } else {
       DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
     }
     return 0;
-  } // getLayer
+  } // getNoOfLayers
 
-  // difference between coarse and fine level
+  //! Get the difference between coarse and fine level
   int getLevelDifference() const {
     return coarse_level_fine_level_difference_;
   }
@@ -242,7 +255,7 @@ private:
   DiscreteFunctionSpaceType& coarse_scale_space_;
   DiscreteFunctionSpaceType& fine_scale_space_;
 
-  // level difference bettween coarse grid level and fine grid level
+  // level difference between coarse grid level and fine grid level
   const int coarse_level_fine_level_difference_;
 
   // number of coarse grid entities

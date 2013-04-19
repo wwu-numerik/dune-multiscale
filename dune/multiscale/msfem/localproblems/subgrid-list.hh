@@ -209,7 +209,7 @@ public:
     // the fine grid part
     const HostGridPartType& hostGridPart = hostSpace_.gridPart();
 
-    // the fine grid (subgrid needs non-const ref
+    // the fine grid (subgrid needs non-const ref)
     HostGridType& hostGrid = hostSpace_.gridPart().grid();
 
     const int number_of_nodes = hostGrid.size(2 /*codim*/);    
@@ -240,7 +240,7 @@ public:
     int max_num_layers = 0;
     for (int i = 0; i < number_of_coarse_grid_entities; ++i)
     {
-      max_num_layers = std::max(max_num_layers, specifier_.getLayer(i));
+      max_num_layers = std::max(max_num_layers, specifier_.getNoOfLayers(i));
     }
 
     // the difference in levels between coarse and fine grid
@@ -263,13 +263,14 @@ public:
     {
       const int coarse_index = coarseGridLeafIndexSet.index(coarse_entity);
       subGridList_.emplace_back(new SubGridType(hostGrid));
-      subGridList_[coarse_index]->createBegin();
+      subGridList_.back()->createBegin();
       
-      if ( (oversampling_strategy == 2) || (oversampling_strategy == 3) )
-       {
-        for (int c = 0; c < coarse_entity.geometry().corners(); ++c )
+      if ( (oversampling_strategy == 2) || (oversampling_strategy == 3) ) {
+        assert(coarse_index > 0 && coarse_index < coarse_node_store_.size()
+               && "Index set is not suitable for the current implementation!");
+        for ( int c = 0; c < coarse_entity.geometry().corners(); ++c )
           coarse_node_store_[coarse_index].emplace_back( coarse_entity.geometry().corner(c) );
-       }
+      }
     }
 
     // -----------------------------------------------------------
@@ -331,9 +332,9 @@ public:
       }
 
       if (all_neighbors_have_same_father)
-      { continue; }
+        continue;
 
-      int layers = specifier_.getLayer(father_index);
+      int layers = specifier_.getNoOfLayers(macroCellIndex);
 
       if (layers > 0)
       {
@@ -350,13 +351,18 @@ public:
     {
       assert(int(subGridList_.size()) > i);
       assert(subGridList_[i]);
+
+      // finish the creation of each subgrid
       subGridList_[i]->createEnd();
+
+      // report some infos about the subgrids if desired
       if (!silent_)
       {
         DSC_LOG_INFO << "Subgrid " << i << ":" << std::endl;
         subGridList_[i]->report();
       }
 
+      // error handling
       if (subGridList_[i]->size(2) == 0)
       {
         DSC_LOG_ERROR << "Error." << std::endl
