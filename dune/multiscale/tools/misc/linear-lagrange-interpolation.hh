@@ -7,6 +7,7 @@
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/memory.hh>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <dune/fem/function/localfunction/temporarylocalfunction.hh>
 
@@ -40,7 +41,7 @@ private:
   typedef typename EntityType::EntityPointer               EntityPointerType;
 
   typedef DomainFieldType TimeType;
-  typedef Fem::TemporaryLocalFunction<DiscreteFunctionSpaceType> LocalFunctionType;
+  typedef std::unique_ptr<Fem::TemporaryLocalFunction<DiscreteFunctionSpaceType>> LocalFunctionType;
   // three values that determine the linear polynomial in 2D
   DomainType a_0_;
   RangeType p_a_0_; // p(a_0) = p_a_0
@@ -83,6 +84,7 @@ public:
       , a_2_(a_2)
       , p_a_2_(p_a_2)
       , entity_(nullptr)
+      , localFunc_(nullptr)
   {
     DUNE_THROW(NotImplemented, "This constructor is not implemented, yet!");
     check_dofs();
@@ -90,7 +92,7 @@ public:
 
   // Constructor for LinearLagrangeFunction2D
   inline explicit LinearLagrangeFunction2D(DiscreteFunctionSpaceType& dfSpace, EntityPointerType& entity)
-  : localFunc_(dfSpace, *entity)
+    : localFunc_(DSC::make_unique(dfSpace, *entity))
   {}
   /*: a_0_( entity->geometry().corner(0) )
       , p_a_0_(0.0)
@@ -103,7 +105,8 @@ public:
 */
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-    localFunc_.evaluate(x, y);
+    assert(localFunc_);
+    localFunc_->evaluate(x, y);
 
     /*RangeType lambda_1;
     RangeType lambda_0;
@@ -147,14 +150,11 @@ public:
 
   template< typename DiscreteFunctionType >
   inline void set_corners(const DiscreteFunctionType& disc_func) {
-    typedef typename DiscreteFunctionType::LocalFunctionType        LocalFunctionType;
-    typedef typename EntityType::template Codim< 2 >::EntityPointer NodePointerType;
-
-    LocalFunctionType loc_func = disc_func.localFunction( *(*entity_) );
-    const int baseSetSize = localFunc_.baseFunctionSet().size();
+    auto loc_func = disc_func.localFunction( *(*entity_) );
+    const int baseSetSize = localFunc_->baseFunctionSet().size();
     assert( baseSetSize == loc_func.baseFunctionSet().size());
     for (int i=0; i<baseSetSize; ++i) {
-      localFunc_[i] = loc_func[i];
+      (*localFunc_)[i] = loc_func[i];
     }
 
     /*const int number_of_nodes = ( *(*entity_) ).template count< 2 >();
