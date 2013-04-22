@@ -34,6 +34,7 @@
 #include <dune/multiscale/tools/improved_l2error.hh>
 #include <dune/multiscale/tools/errorestimation/MsFEM/msfem_elliptic_error_estimator.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
@@ -406,7 +407,7 @@ bool algorithm(const std::string& macroGridName,
   MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
   for (int i = 0; i < number_of_level_host_entities; i += 1)
   {
-    specifier.setLayer(i, number_of_layers_);
+    specifier.setNoOfLayers(i, number_of_layers_);
   }
   specifier.setOversamplingStrategy( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) );
 

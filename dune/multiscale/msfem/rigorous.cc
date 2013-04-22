@@ -202,7 +202,7 @@ void algorithm(const std::string& macroGridName,
   MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
   for (int i = 0; i < number_of_level_host_entities; i += 1)
   {
-    specifier.setLayer(i, number_of_layers_);
+    specifier.setNoOfLayers(i, number_of_layers_);
   }
   specifier.setOversamplingStrategy( 3 ); //! Important!
 

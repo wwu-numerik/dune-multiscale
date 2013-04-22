@@ -157,6 +157,7 @@ set( HMM_SOURCES
 set( MSFEM_SOURCES
         src/elliptic_msfem.cc
         dune/multiscale/msfem/algorithm.cc
+        dune/multiscale/msfem/msfem_solver.cc
     )
 
 set( HOM_FEM_SOURCES
