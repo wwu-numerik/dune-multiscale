@@ -18,6 +18,7 @@
 #include <dune/fem/space/common/adaptmanager.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
 
 
 namespace Dune {

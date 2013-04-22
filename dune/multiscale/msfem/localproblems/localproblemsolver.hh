@@ -228,33 +228,27 @@ public:
     }
 
     // assemble the stiffness matrix
-    if ( specifier_.getOversamplingStrategy() == 1 )
-    { local_problem_op.assemble_matrix(locprob_system_matrix); }
+    if ( specifier_.getOversamplingStrategy() == 1 ) {
+      local_problem_op.assemble_matrix(locprob_system_matrix);
+    }
 
-    if ( specifier_.getOversamplingStrategy() == 2 )
-    { if ( coarse_index < 0 )
+    if ( specifier_.getOversamplingStrategy() == 2 ) {
+      if ( coarse_index < 0 )
         DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
       local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
     }
 
-    if ( specifier_.getOversamplingStrategy() == 3 )
-    {
+    if ( specifier_.getOversamplingStrategy() == 3 ) {
       if ( coarse_index < 0 )
         DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
       bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
 
-      if ( clement )
-      { local_problem_op.assemble_matrix( locprob_system_matrix ); }
-      else
-      { local_problem_op.assemble_matrix( locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) ); }
+      if ( clement ) {
+        local_problem_op.assemble_matrix( locprob_system_matrix );
+      } else {
+        local_problem_op.assemble_matrix( locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
+      }
     }
-    // can be deleted (just to check the coarse node vector)
-    /*
-    for ( int coarse_node_local_id = 0; coarse_node_local_id < subgrid_list_.getCoarseNodeVector( coarse_index ).size(); ++coarse_node_local_id )
-       {
-         std::cout << coarse_node_local_id+1 << " : " << subgrid_list_.getCoarseNodeVector( coarse_index )[coarse_node_local_id] << std :: endl << std :: endl << std :: endl;
-       }
-*/
 
     //! boundary treatment:
     typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
@@ -488,11 +482,12 @@ public:
 
     JacobianRangeType e[dimension];
     for (int i = 0; i < dimension; ++i)
-      for (int j = 0; j < dimension; ++j)
-      {
-        if (i == j)
-        { e[i][0][j] = 1.0; } else
-        { e[i][0][j] = 0.0; }
+      for (int j = 0; j < dimension; ++j) {
+        if (i == j) {
+          e[i][0][j] = 1.0;
+        } else {
+          e[i][0][j] = 0.0;
+        }
       }
 
     // number of coarse grid entities (of codim 0).
