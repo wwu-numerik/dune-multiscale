@@ -24,9 +24,10 @@
 #include <dune/stuff/common/filesystem.hh>
 //! local (dune-multiscale) includes
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
-#include <dune/multiscale/fem/fem_solver.hh>
+#include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
+#include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
@@ -418,7 +419,7 @@ bool algorithm(const std::string& macroGridName,
     MsFEMTraits::SubGridListType subgrid_list(specifier, silence);
 
     // just for Dirichlet zero-boundary condition
-    Elliptic_MsFEM_Solver< CommonTraits::DiscreteFunctionType > msfem_solver(discreteFunctionSpace);
+    Elliptic_MsFEM_Solver msfem_solver(discreteFunctionSpace);
     msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
                                       coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
 
@@ -447,18 +448,19 @@ bool algorithm(const std::string& macroGridName,
   if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
   {
     // just for Dirichlet zero-boundary condition
-    const Elliptic_FEM_Solver< CommonTraits::DiscreteFunctionType > fem_solver(discreteFunctionSpace);
+    typedef Dune::Multiscale::Elliptic_FEM_Solver KOP;
+    const KOP fem_solver(discreteFunctionSpace);
     fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
 
-  //! ----------------------------------------------------------------------
-  DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
-  //! -------------------------- writing data output FEM Solution ----------
+    //! ----------------------------------------------------------------------
+    DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
+    //! -------------------------- writing data output FEM Solution ----------
 
-  // ------------- VTK data output for FEM solution --------------
-  // create and initialize output class
-  CommonTraits::IOTupleType fem_solution_series(&fem_solution);
-  outputparam.set_prefix("/fem_solution");
-  CommonTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
+    // ------------- VTK data output for FEM solution --------------
+    // create and initialize output class
+    CommonTraits::IOTupleType fem_solution_series(&fem_solution);
+    outputparam.set_prefix("/fem_solution");
+    CommonTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
     // write data
     fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );

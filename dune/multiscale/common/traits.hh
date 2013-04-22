@@ -12,14 +12,30 @@
 #endif // ifdef HAVE_CMAKE_CONFIG
 
 #include <dune/common/tuples.hh>
-#include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/fem/space/common/adaptmanager.hh>
-#include <dune/fem/io/file/dataoutput.hh>
-
+#include <dune/fem/space/common/functionspace.hh>
+#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
+#include <dune/fem/space/lagrangespace/lagrangespace.hh>
+#include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
+#include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
 
 namespace Dune {
+
+template <class T>
+class GridPtr;
+template <class T, class R>
+class GridFunctionAdapter;
+template <class T>
+class LagrangeParallelMatrixAdapter;
+template <class T>
+class ParallelScalarProduct;
+template <class T, class R>
+class DataOutput;
+template <bool T>
+class LagrangeMatrixSetup;
+template <class T, class R>
+class AdaptationManager;
+
 namespace Multiscale {
 
 //! type construction for the HMM algorithm

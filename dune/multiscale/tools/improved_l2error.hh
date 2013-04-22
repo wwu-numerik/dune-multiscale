@@ -9,6 +9,7 @@
 #include <dune/stuff/common/logging.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
 namespace Dune {
 

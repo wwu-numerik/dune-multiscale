@@ -5,8 +5,8 @@
 #ifndef DUNE_MULTISCALE_MSFEM_ALGORITHM_HH
 #define DUNE_MULTISCALE_MSFEM_ALGORITHM_HH
 
-#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {

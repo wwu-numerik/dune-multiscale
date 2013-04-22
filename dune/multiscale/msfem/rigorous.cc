@@ -1,8 +1,15 @@
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+#ifdef HAVE_CMAKE_CONFIG
+ #include "cmake_config.h"
+#elif defined (HAVE_CONFIG_H)
+ #include <config.h>
+#endif // ifdef HAVE_CMAKE_CONFIG
 
 #include "rigorous.hh"
+
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
@@ -22,7 +29,7 @@
 #include <dune/fem/misc/h1norm.hh>
 
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
-#include <dune/multiscale/fem/fem_solver.hh>
+#include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/rigorous_msfem_solver.hh>
 
@@ -32,7 +39,8 @@
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+
 
 namespace Dune {
 namespace Multiscale {
@@ -204,7 +212,7 @@ void algorithm(const std::string& macroGridName,
     MsFEMTraits::SubGridListType subgrid_list(specifier, silence);
 
     // just for Dirichlet zero-boundary condition
-    Elliptic_Rigorous_MsFEM_Solver< CommonTraits::DiscreteFunctionType > msfem_solver(discreteFunctionSpace);
+    Elliptic_Rigorous_MsFEM_Solver msfem_solver(discreteFunctionSpace);
     msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
                                       coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
 
@@ -223,7 +231,7 @@ void algorithm(const std::string& macroGridName,
   if ( DSC_CONFIG_GET("rigorous_msfem.fem_comparison",false) )
   {
     // just for Dirichlet zero-boundary condition
-    const Elliptic_FEM_Solver< CommonTraits::DiscreteFunctionType > fem_solver(discreteFunctionSpace);
+    const Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
     fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
 
     //! ----------------------------------------------------------------------

@@ -133,9 +133,7 @@ FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 SET(BOOST_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_DATE_TIME_LIBRARY} )
 
 
-set( COMMON_LIBS "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
-    ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
-    ${BOOST_LIBS})
+
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
@@ -146,6 +144,7 @@ add_subdirectory(dune)
 
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
+        dune/multiscale/msfem/fem_solver.cc
     )
 
 set( HMM_SOURCES 
@@ -173,27 +172,34 @@ set( FEM_SOURCES
 set( RIGOROUS_MSFEM_SOURCES
         src/elliptic_rigorous_msfem.cc
         dune/multiscale/msfem/rigorous.cc
+        dune/multiscale/msfem/rigorous_msfem_solver.cc
     )
     
-ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
+    
+ADD_LIBRARY(multiscale_common ${COMMON_SOURCES})
+set( COMMON_LIBS multiscale_common "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
+    ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
+    ${BOOST_LIBS})
+    
+ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_msfem ${MSFEM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_msfem ${MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_rigorous_msfem ${RIGOROUS_MSFEM_SOURCES} ${COMMON_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_rigorous_msfem ${RIGOROUS_MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_rigorous_msfem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(lg-test ${COMMON_LIBS} )
 
 

@@ -26,10 +26,11 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-template< class DiscreteFunctionType >
+
 class Elliptic_MsFEM_Solver
 {
 private:
+  typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
   typedef DiscreteFunctionType DiscreteFunction;
 
   typedef typename DiscreteFunction::FunctionSpaceType FunctionSpace;

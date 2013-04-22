@@ -7,6 +7,7 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/fem/operator/common/operator.hh>
 
 namespace Dune {
 namespace Multiscale {
