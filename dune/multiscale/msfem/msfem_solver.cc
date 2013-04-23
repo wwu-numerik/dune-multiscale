@@ -100,7 +100,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier< D
    }
 
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
-  // iterator ueber coarse space
+  // traverse coarse space
   for (HostgridIterator coarse_it = coarse_space.begin(); coarse_it != coarse_space.end(); ++coarse_it)
   {
     // the coarse entity 'T': *coarse_it
@@ -111,7 +111,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier< D
 
     const int index = coarseGridLeafIndexSet.index(*coarse_it);
 
-    // the sub grid U(T) that belongs to the coarse_grid_entity T
+    // the sub-grid U(T) that belongs to the coarse_grid_entity T
     SubGridType& sub_grid_U_T = subgrid_list.getSubGrid(index);
     SubGridPart subGridPart(sub_grid_U_T);
 
@@ -159,11 +159,11 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier< D
      }
 
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming projection:
-    if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) )
-     {
+    if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) ) {
 
-      if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() )
-      { DSC_LOG_ERROR << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl; }
+      if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() ) {
+        DSC_LOG_ERROR << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl;
+      }
 
       correction_on_U_T.clear();
 
@@ -182,8 +182,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier< D
         HostEntityPointer father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                             fine_host_entity_pointer,
                                                             specifier.getLevelDifference());
-        if (!Stuff::Grid::entities_identical(*father,*coarse_it))
-        {
+        if (!Stuff::Grid::entities_identical(*father,*coarse_it)) {
           continue;
         }
 

@@ -36,7 +36,7 @@ struct ModelProblemData
 
   ModelProblemData()
     : IModelProblemData(constants()) {
-    assert(!constants_.epsilon != 0.0);
+    assert(constants_.epsilon == 0.0);
     if (!constants().get("linear", true))
       DUNE_THROW(Dune::InvalidStateException, "problem ten is entirely linear, but problem.linear was false");
     if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
