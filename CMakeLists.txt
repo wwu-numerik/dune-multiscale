@@ -145,6 +145,7 @@ add_subdirectory(dune)
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
+        dune/multiscale/hmm/cell_problem_numbering.cc
     )
 
 set( HMM_SOURCES 

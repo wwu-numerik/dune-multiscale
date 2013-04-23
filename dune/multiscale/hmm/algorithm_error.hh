@@ -9,6 +9,9 @@
 #include <dune/multiscale/common/traits.hh>
 
 namespace Dune {
+
+class CellProblemNumberingManager;
+
 namespace Multiscale {
 namespace HMM {
 
@@ -20,7 +23,7 @@ HMMResult estimate_error(
         const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename CommonTraits::DiffusionType& diffusion_op,
-        const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
+        const CellProblemNumberingManager& cp_num_manager,
         const typename CommonTraits::DiscreteFunctionType& hmm_solution
          );
 

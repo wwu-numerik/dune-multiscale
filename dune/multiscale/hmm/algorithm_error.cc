@@ -9,18 +9,18 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/hmm/result.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 
 
 namespace Dune {
 namespace Multiscale {
 namespace HMM {
 
-HMMResult estimate_error(
-        const typename CommonTraits::GridPartType& gridPart,
+HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
         const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename CommonTraits::DiffusionType& diffusion_op,
-        const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
+        const CellProblemNumberingManager& cp_num_manager,
         const typename CommonTraits::DiscreteFunctionType& hmm_solution
          )
 {

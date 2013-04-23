@@ -8,6 +8,8 @@
 #include <boost/noncopyable.hpp>
 #include <memory>
 
+
+#include <dune/multiscale/hmm/hmm_traits.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
@@ -16,22 +18,20 @@
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
 
 namespace Dune {
+namespace Multiscale {
+namespace HMM {
+
 //! \TODO docme
-template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
-          class CellProblemNumberingManagerImp >
 class DiscreteEllipticHMMOperator
-  : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
-                     DiscreteFunctionImp, DiscreteFunctionImp >
+  : public Operator< typename CommonTraits::DiscreteFunctionType::RangeFieldType, typename CommonTraits::DiscreteFunctionType::RangeFieldType,
+                     CommonTraits::DiscreteFunctionType, CommonTraits::DiscreteFunctionType >
     , boost::noncopyable
 {
-  typedef DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
-                                       CellProblemNumberingManagerImp > This;
 
 private:
-  typedef DiscreteFunctionImp            DiscreteFunction;
-  typedef PeriodicDiscreteFunctionImp    PeriodicDiscreteFunction;
-  typedef DiffusionImp                   DiffusionModel;
-  typedef CellProblemNumberingManagerImp CellProblemNumberingManager;
+  typedef CommonTraits::DiscreteFunctionType DiscreteFunction;
+  typedef HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunction;
+  typedef CommonTraits::DiffusionType DiffusionModel;
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType         DiscreteFunctionSpace;
   typedef typename PeriodicDiscreteFunction::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpace;
@@ -49,7 +49,7 @@ private:
   JacobianRangeType;
 
   //!only used in adhoc computation
-  typedef CellProblemSolver< PeriodicDiscreteFunction, DiffusionImp > CellProblemSolverType;
+  typedef CellProblemSolver< PeriodicDiscreteFunction, DiffusionModel > CellProblemSolverType;
 
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
@@ -106,19 +106,14 @@ private:
 
 //! dummy implementation of "operator()"
 //! 'w' = effect of the discrete operator on 'u'
-template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
-          class CellProblemNumberingManagerImp >
-void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
-                                  CellProblemNumberingManagerImp >::operator()(const DiscreteFunction& /*u*/,
+void DiscreteEllipticHMMOperator::operator()(const DiscreteFunction& /*u*/,
                                                                                DiscreteFunction& /*w*/) const {
   DUNE_THROW(Dune::NotImplemented,"the ()-operator of the DiscreteEllipticHMMOperator class is not yet implemented and still a dummy.");
 }
 
-template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
-          class CellProblemNumberingManagerImp >
+
 template< class MatrixType >
-void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
-                                  CellProblemNumberingManagerImp >::boundary_treatment(MatrixType& global_matrix) const {
+void DiscreteEllipticHMMOperator::boundary_treatment(MatrixType& global_matrix) const {
   const GridPart& gridPart = discreteFunctionSpace_.gridPart();
   for (const Entity& entity : discreteFunctionSpace_)
   {
@@ -144,11 +139,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
   }
 }
 
-template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
-          class CellProblemNumberingManagerImp >
 template< class MatrixType >
-void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
-                                  CellProblemNumberingManagerImp >::assemble_matrix(MatrixType& global_matrix) const {
+void DiscreteEllipticHMMOperator::assemble_matrix(MatrixType& global_matrix) const {
   // if test function reconstruction
   if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) )
     DSC_LOG_INFO << "Assembling classical (non-Petrov-Galerkin) HMM Matrix." << std::endl;
@@ -301,12 +293,9 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
   boundary_treatment(global_matrix);
 } // assemble_matrix
 
-// assemble stiffness matrix for HMM with Newton Method
-template< class DiscreteFunctionImp, class PeriodicDiscreteFunctionImp, class DiffusionImp,
-          class CellProblemNumberingManagerImp >
+//! assemble stiffness matrix for HMM with Newton Method
 template< class MatrixType >
-void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionImp, DiffusionImp,
-                                  CellProblemNumberingManagerImp >
+void DiscreteEllipticHMMOperator
       ::assemble_jacobian_matrix(DiscreteFunction& old_u_H /*u_H^(n-1)*/,
                                  MatrixType& global_matrix) const
 {
@@ -534,8 +523,8 @@ void DiscreteEllipticHMMOperator< DiscreteFunctionImp, PeriodicDiscreteFunctionI
   boundary_treatment(global_matrix);
 } // assemble_jacobian_matrix
 
-//! ------------------------------------------------------------------------------------------------
-//! ------------------------------------------------------------------------------------------------
-}
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // #ifndef DiscreteElliptic_HH

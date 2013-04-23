@@ -8,13 +8,16 @@
 #include <dune/multiscale/hmm/result.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
+#include <dune/multiscale/hmm/elliptic_hmm_matrix_assembler.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/multiscale/tools/misc/outputparameter.hh>
+
 
 #include "algorithm_error.hh"
 
@@ -57,7 +60,7 @@ struct BoundaryTreatment {
 void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                                    const typename CommonTraits::DiffusionType& diffusion_op,
                                    typename CommonTraits::DiscreteFunctionType& hmm_solution,
-                                   const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
+                                   const CellProblemNumberingManager& cp_num_manager,
                                    const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
                                    const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
                                    const int loop_cycle) {
@@ -126,7 +129,7 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
     typename HMMTraits::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
     //! define the elliptic hmm operator that describes our 'homogenized' macro problem
     // ( effect of the elliptic hmm operator on a certain discrete function )
-    const typename HMMTraits::EllipticHMMOperatorType discrete_elliptic_hmm_op(discreteFunctionSpace,
+    const DiscreteEllipticHMMOperator discrete_elliptic_hmm_op(discreteFunctionSpace,
                                                      periodicDiscreteFunctionSpace,
                                                      diffusion_op,
                                                      cp_num_manager);
@@ -243,7 +246,7 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
 void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                               const typename CommonTraits::DiffusionType& diffusion_op,
                               typename CommonTraits::DiscreteFunctionType& hmm_solution,
-                              const typename HMMTraits::CellProblemNumberingManagerType& cp_num_manager,
+                              const CellProblemNumberingManager& cp_num_manager,
                               const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
                               const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler) {
 
@@ -267,7 +270,7 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
 
   //! matrix
   typename HMMTraits::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
-  const typename HMMTraits::EllipticHMMOperatorType discrete_elliptic_hmm_op(discreteFunctionSpace,
+  const DiscreteEllipticHMMOperator discrete_elliptic_hmm_op(discreteFunctionSpace,
                                                    periodicDiscreteFunctionSpace,
                                                    diffusion_op,
                                                    cp_num_manager);
@@ -452,7 +455,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
     const Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
 
     // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
-    typename HMMTraits::CellProblemNumberingManagerType cp_num_manager(discreteFunctionSpace);
+    CellProblemNumberingManager cp_num_manager(discreteFunctionSpace);
 
 
     if (DSC_CONFIG_GET("problem.linear", true))

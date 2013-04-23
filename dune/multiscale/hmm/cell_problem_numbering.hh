@@ -8,95 +8,17 @@
 #include <utility>
 #include <map>
 
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/hmm/entity_compare.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
 namespace Dune {
-//! comparison class for the CellProblemNumberingManager:
-template< class GridPartType, class DomainType, class EntityPointerType >
-struct classcomp
-{
-  bool operator()(const std::pair< EntityPointerType, int >& left_entity_pair,
-                  const std::pair< EntityPointerType, int >& right_entity_pair) const {
-    // compare the barycenteres of the entities with the lexicographic order, than compare the int's (number of local
-    // base function)
-    typedef Fem::CachingQuadrature< GridPartType, 0 > Quadrature;
-
-    // ------ right element
-    const auto& geometry_right = ( *(right_entity_pair.first) ).geometry();
-    const Quadrature quadrature_right( ( *(right_entity_pair.first) ), 0 );
-
-    // local barycenter (with respect to entity)
-    const auto& local_point_right = quadrature_right.point(0);
-    const DomainType barycenter_right_entity = geometry_right.global(local_point_right);
-
-    // ------ left element
-    const auto& geometry_left = ( *(left_entity_pair.first) ).geometry();
-    const Quadrature quadrature_left( ( *(left_entity_pair.first) ), 0 );
-
-    // local barycenter (with respect to entity)
-    const auto& local_point_left = quadrature_left.point(0);
-    const DomainType barycenter_left_entity = geometry_left.global(local_point_left);
-
-    int current_axis = GridPartType::GridType::dimension - 1;
-
-    while (current_axis >= 0)
-    {
-      if (barycenter_left_entity[current_axis] < barycenter_right_entity[current_axis])
-      { return true; } else if (barycenter_left_entity[current_axis] > barycenter_right_entity[current_axis])
-      { return false; }
-
-      current_axis -= 1;
-    }
-
-    return left_entity_pair.second < right_entity_pair.second;
-  } // ()
-};
-
-//! comparison class for the CellProblemNumberingManager (just comparison of two entities!)
-template< class GridPartType, class DomainType, class EntityPointerType >
-struct entity_compare
-{
-  bool operator()(EntityPointerType left_entity,
-                  EntityPointerType right_entity) const {
-    // compare the barycenteres of the entities with the lexicographic order
-    typedef Fem::CachingQuadrature< GridPartType, 0 > Quadrature;
-
-    // ------ right element
-    const typename EntityPointerType::Entity::Geometry& geometry_right = (*right_entity).geometry();
-    const Quadrature quadrature_right(*right_entity, 0);
-
-    // local barycenter (with respect to entity)
-    const typename Quadrature::CoordinateType& local_point_right = quadrature_right.point(0);
-    const DomainType barycenter_right_entity = geometry_right.global(local_point_right);
-
-    // ------ left element
-    const typename EntityPointerType::Entity::Geometry& geometry_left = (*left_entity).geometry();
-    const Quadrature quadrature_left(*left_entity, 0);
-
-    // local barycenter (with respect to entity)
-    const typename Quadrature::CoordinateType& local_point_left = quadrature_left.point(0);
-    const DomainType barycenter_left_entity = geometry_left.global(local_point_left);
-
-    int current_axis = GridPartType::GridType::dimension - 1;
-    while (current_axis >= 0)
-    {
-      if (barycenter_left_entity[current_axis] < barycenter_right_entity[current_axis]) {
-        return true;
-      } else if (barycenter_left_entity[current_axis] > barycenter_right_entity[current_axis]) {
-        return false;
-      }
-      current_axis--;
-    }
-
-    return false;
-  } // ()
-};
 
 //! only for the combination entity + number of local base function on entity
-template< class DiscreteFunctionSpaceType >
 class CellProblemNumberingManager
 {
 private:
+  typedef Multiscale::CommonTraits::DiscreteFunctionSpaceType  DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   typedef typename GridPartType::GridType                  GridType;
 
@@ -125,45 +47,17 @@ public:
    * local number of base function) and in the nonlinear case we need CellNumMapNLType (NL stands for nonlinear).
    * CellNumMapType is also required in the nonlinear case if we use test function reconstruction (TFR)
    **/
-  inline explicit CellProblemNumberingManager(const DiscreteFunctionSpaceType& discreteFunctionSpace)
-  {
-    int counter = 0;
-    int number_of_entity = 0;
-    for (const auto& entity : discreteFunctionSpace)
-    {
-      EntityPointerType ep(entity);
-      cell_numbering_map_NL_.insert( std::make_pair(ep, number_of_entity) );
-      const int numBaseFunctions = discreteFunctionSpace.baseFunctionSet(entity).size();
-      for (int i = 0; i < numBaseFunctions; ++i)
-      {
-        const std::pair< EntityPointerType, int > idPair(ep, i);
-        cell_numbering_map_.insert( std::make_pair(idPair, counter) );
-        counter++;
-      }
-      number_of_entity++;
-    }
-  }
+  explicit CellProblemNumberingManager(const DiscreteFunctionSpaceType& discreteFunctionSpace);
 
   //! use 'cp_num_manager.get_number_of_cell_problem( it, i )'
-  inline int get_number_of_cell_problem(const EntityPointerType& ent, const int& numOfBaseFunction) const {
-    const typename CellNumMapType::key_type idPair(ent, numOfBaseFunction);
-    const auto it = cell_numbering_map_.find(idPair);
-    if (it != cell_numbering_map_.end() )
-      return it->second;
-    else
-      DUNE_THROW(Dune::RangeError, "no number for entity");
-  }
+  int get_number_of_cell_problem(const EntityPointerType& ent, const int& numOfBaseFunction) const;
 
   /** use 'cp_num_manager.get_number_of_cell_problem( it )'
    * \attention 'get_number_of_cell_problem( it )' is NOT equal to 'get_number_of_cell_problem( it , 0 )'!
    **/
-  inline int get_number_of_cell_problem(const EntityPointerType& ent) const {
-    const auto it = cell_numbering_map_NL_.find(ent);
-    if (it != cell_numbering_map_NL_.end() )
-      return it->second;
-    else
-      DUNE_THROW(Dune::RangeError, "no number for entity");
-  }
+  int get_number_of_cell_problem(const EntityPointerType& ent) const;
 };
+
 } //namespace Dune {
+
 #endif // DUNEMS_HMM_CELL_NUMBERING_HH

@@ -6,15 +6,12 @@
 #define DUNE_MS_HMM_TYPES_HH
 
 #include <dune/multiscale/common/traits.hh>
-
-#include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/hmm/discrete_cell_operator.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/hmm/elliptic_hmm_matrix_assembler.hh>
 #include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
 
+#include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/io/file/dataoutput.hh>
 
@@ -31,10 +28,6 @@ struct HMMTraits {
     PeriodicDiscreteFunctionSpaceType;
   typedef Dune::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
   //!-----------------------------------------------------------------------------------------
-
-  //! ------------ cell problem solver and numbering manager -----------------------------------------
-  typedef Dune::CellProblemNumberingManager< typename CommonTraits::DiscreteFunctionSpaceType > CellProblemNumberingManagerType;
-
 
   //! --------------------- type of fem stiffness matrix -----------------------------------
   typedef Dune::SparseRowMatrixOperator< typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiscreteFunctionType, typename CommonTraits::MatrixTraits > FEMMatrix;
@@ -55,9 +48,7 @@ struct HMMTraits {
                                                            typename CommonTraits::DiffusionType,
                                                            typename CommonTraits::MassTermType >
     EllipticOperatorType;
-  // discrete elliptic HMM operator (corresponds with HMM (or HMFEM) Matrix)
-  typedef Dune::DiscreteEllipticHMMOperator< typename CommonTraits::DiscreteFunctionType, PeriodicDiscreteFunctionType, typename CommonTraits::DiffusionType,
-                                       CellProblemNumberingManagerType > EllipticHMMOperatorType;
+
   //! --------------------------------------------------------------------------------------
 
 
