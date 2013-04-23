@@ -23,6 +23,7 @@
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
+#include <dune/stuff/common/profiler.hh>
 
 namespace Dune {
 namespace Multiscale {
