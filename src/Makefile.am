@@ -13,11 +13,27 @@ DEFAULT_PROBLEM=One
 
 noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
 SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
-elliptic_hmm_SOURCES = elliptic_hmm.cc
-elliptic_msfem_SOURCES = elliptic_msfem.cc
-elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc
-elliptic_fem_SOURCES = elliptic_fem.cc
-elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc
+
+COMMON_SOURCES=../dune/multiscale/tools/misc/outputparameter.cc \
+        ../dune/multiscale/msfem/fem_solver.cc \
+        ../dune/multiscale/hmm/cell_problem_numbering.cc \
+        ../dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
+
+elliptic_hmm_SOURCES = elliptic_hmm.cc \
+	../dune/multiscale/hmm/algorithm.cc \
+        ../dune/multiscale/hmm/algorithm_error.cc \
+        ../dune/multiscale/hmm/algorithm_step.cc \
+        ../dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc $(COMMON_SOURCES)
+elliptic_msfem_SOURCES = elliptic_msfem.cc \
+        ../dune/multiscale/msfem/algorithm.cc \
+        ../dune/multiscale/msfem/msfem_solver.cc $(COMMON_SOURCES)
+elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc \
+	../dune/multiscale/fem/algorithm.cc $(COMMON_SOURCES)
+elliptic_fem_SOURCES = elliptic_fem.cc \
+	../dune/multiscale/fem/algorithm.cc $(COMMON_SOURCES)
+elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc \
+	../dune/multiscale/msfem/rigorous.cc \
+        ../dune/multiscale/msfem/rigorous_msfem_solver.cc $(COMMON_SOURCES)
 
 CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS) \
@@ -44,7 +60,6 @@ LDADD = \
 	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) \
 	$(UG_LDFLAGS) $(UG_LIBS) $(BOOST_LDFLAGS) \
 	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_TIMER_LIB) $(BOOST_CHRONO_LIB) \
-	-lboost_filesystem-libc++ -lboost_system-libc++ -lboost_timer-libc++ -lboost_chrono-libc++ \
 	$(DUNEMPILIBS)	\
 	$(DUNE_LDADD)
 LDFLAGS = $(AM_LDFLAGS) \
