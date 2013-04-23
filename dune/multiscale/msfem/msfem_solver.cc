@@ -11,7 +11,7 @@
 #include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
-
+#include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 
 namespace Dune {
@@ -238,15 +238,8 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
                           DiscreteFunction& solution) const
 {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero");
-  // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
-  typedef DiscreteEllipticMsFEMOperator< DiscreteFunction /*type of coarse space*/,
-                                         MacroMicroGridSpecifier< DiscreteFunctionSpace >,
-                                         DiscreteFunction /*type of fine space*/,
-                                         CommonTraits::DiffusionType> EllipticMsFEMOperatorType;
 
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
-
-  // ------------------------------------------------------------
 
   DiscreteFunction coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
   coarse_msfem_solution.clear();
@@ -256,8 +249,9 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   typedef RightHandSideAssembler< DiscreteFunction > RhsAssembler;
 
   //! define the discrete (elliptic) operator that describes our problem
+  // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
   // ( effect of the discretized differential operator on a certain discrete function )
-  const EllipticMsFEMOperatorType elliptic_msfem_op(specifier,
+  const DiscreteEllipticMsFEMOperator elliptic_msfem_op(specifier,
                                               coarse_space,
                                               subgrid_list,
                                               diffusion_op);
