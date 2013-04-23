@@ -90,7 +90,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
   //! *************************** Assembling the problem ****************************
 
   //! (stiffness) matrix
-  typename FEMTraits::FEMMatrix system_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
+  typename CommonTraits::FEMMatrix system_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace, finerDiscreteFunctionSpace);
 
   //! right hand side vector
   // right hand side for the finite element method with Newton solver:
@@ -357,7 +357,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
 
   HomEllipticOperatorType hom_discrete_elliptic_op( discreteFunctionSpace, hom_diffusion_op);
 
-  typename FEMTraits::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
+  typename CommonTraits::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
 
   typename CommonTraits::DiscreteFunctionType hom_rhs("homogenized rhs", discreteFunctionSpace);
   hom_rhs.clear();

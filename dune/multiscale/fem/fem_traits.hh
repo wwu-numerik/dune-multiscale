@@ -21,8 +21,6 @@ namespace FEM {
 //! Type constructions for the FEM problem
 struct FEMTraits {
 
-  //! --------------------- type of fem stiffness matrix -----------------------------------
-  typedef Dune::SparseRowMatrixOperator< typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiscreteFunctionType, typename CommonTraits::MatrixTraits > FEMMatrix;
 
   /** \brief --------------- solver for the linear system of equations ----------------------------
      * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
@@ -31,7 +29,7 @@ struct FEMTraits {
   typedef //Dune::OEMBICGSQOp
     Dune::OEMBICGSTABOp
   //  OEMGMRESOp
-    < typename CommonTraits::DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
+    < typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix > InverseFEMMatrix;
 
   //! --------------- the discrete operators (standard FEM) ----------------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)

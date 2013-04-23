@@ -27,10 +27,6 @@ struct HMMTraits {
   typedef Dune::LagrangeDiscreteFunctionSpace< typename CommonTraits::FunctionSpaceType, PeriodicGridPartType, 1 > // 1 =POLORDER
     PeriodicDiscreteFunctionSpaceType;
   typedef Dune::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
-  //!-----------------------------------------------------------------------------------------
-
-  //! --------------------- type of fem stiffness matrix -----------------------------------
-  typedef Dune::SparseRowMatrixOperator< typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiscreteFunctionType, typename CommonTraits::MatrixTraits > FEMMatrix;
 
   /** \brief --------------- solver for the linear system of equations ----------------------------
      * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
@@ -40,7 +36,7 @@ struct HMMTraits {
     OEMBICGSQOp
   //  OEMBICGSTABOp
   //    OEMGMRESOp
-    < typename CommonTraits::DiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
+    < typename CommonTraits::DiscreteFunctionType, CommonTraits::FEMMatrix > InverseFEMMatrix;
 
   //! --------------- the discrete operators (standard FEM and HMM) ------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)

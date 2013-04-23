@@ -126,7 +126,7 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
                                   : 1e-05;
 
     //! matrix
-    typename HMMTraits::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
+    typename CommonTraits::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
     //! define the elliptic hmm operator that describes our 'homogenized' macro problem
     // ( effect of the elliptic hmm operator on a certain discrete function )
     const DiscreteEllipticHMMOperator discrete_elliptic_hmm_op(discreteFunctionSpace,
@@ -269,7 +269,7 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
   Dune::Timer hmmAssembleTimer;
 
   //! matrix
-  typename HMMTraits::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
+  typename CommonTraits::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
   const DiscreteEllipticHMMOperator discrete_elliptic_hmm_op(discreteFunctionSpace,
                                                    periodicDiscreteFunctionSpace,
                                                    diffusion_op,
@@ -300,7 +300,7 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
 //! \TODO docme
 bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newton_error,
                                  typename CommonTraits::DiscreteFunctionType& hmm_solution,
-                                 const typename HMMTraits::FEMMatrix& hmm_newton_matrix,
+                                 const typename CommonTraits::FEMMatrix& hmm_newton_matrix,
                                  const typename CommonTraits::DiscreteFunctionType& hmm_newton_rhs,
                                  const int hmm_iteration_step,
                                  const int loop_cycle,

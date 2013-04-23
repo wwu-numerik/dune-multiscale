@@ -35,6 +35,8 @@ template <bool T>
 class LagrangeMatrixSetup;
 template <class T, class R>
 class AdaptationManager;
+template <class T, class R, class S>
+class SparseRowMatrixOperator;
 
 namespace Multiscale {
 
@@ -129,6 +131,9 @@ struct CommonTraits {
   typedef std::vector< RangeVector > RangeVectorVector;
 
   static const int assembler_order = 2* DiscreteFunctionSpaceType::polynomialOrder + 2;
+
+  typedef Dune::SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, MatrixTraits > FEMMatrix;
+
 };
 
 } // namespace Multiscale

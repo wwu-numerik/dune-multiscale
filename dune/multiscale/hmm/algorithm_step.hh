@@ -19,7 +19,7 @@ struct HMMResult;
  **/
 bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newton_error,
                                  typename CommonTraits::DiscreteFunctionType& hmm_solution,
-                                 const typename HMMTraits::FEMMatrix& hmm_newton_matrix,
+                                 const typename CommonTraits::FEMMatrix& hmm_newton_matrix,
                                  const typename CommonTraits::DiscreteFunctionType& hmm_newton_rhs,
                                  const int hmm_iteration_step,
                                  const int loop_cycle,

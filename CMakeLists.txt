@@ -153,6 +153,7 @@ set( HMM_SOURCES
         dune/multiscale/hmm/algorithm.cc
         dune/multiscale/hmm/algorithm_error.cc
         dune/multiscale/hmm/algorithm_step.cc
+        dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc
     )
 
 set( MSFEM_SOURCES
