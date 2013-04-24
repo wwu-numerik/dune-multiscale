@@ -25,8 +25,8 @@ void DiscreteEllipticHMMOperator::boundary_treatment(CommonTraits::FEMMatrix& gl
         continue;
 
       const int face = intersection.indexInInside();
-      const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-      for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+      const auto fdend = lagrangePointSet.endSubEntity< 1 >(face);
+      for (auto fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
         local_matrix.unitRow(*fdit);
     }
   }

@@ -82,7 +82,7 @@ void Elliptic_Rigorous_MsFEM_Solver::subgrid_to_hostrid_projection(
     {
       const SubgridEntity& sub_entity = *sub_it;
 
-      const HostEntityPointer host_entity_pointer = subGrid.template getHostEntity< 0 >(*sub_it);
+      const HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >(*sub_it);
       const HostEntity& host_entity = *host_entity_pointer;
 
       const SubgridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
@@ -139,7 +139,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
 
   DSC_LOG_INFO << "Create standard coarse grid basis functions as discrete functions on the fine grid... ";
 
-  typedef typename HostEntity::template Codim< 2 >::EntityPointer HostNodePointer;
+  typedef typename HostEntity::Codim< 2 >::EntityPointer HostNodePointer;
   typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
   typedef typename DiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
 
@@ -147,7 +147,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
 
   for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
   {
-    typedef typename HostEntity::template Codim< 0 >::EntityPointer
+    typedef typename HostEntity::Codim< 0 >::EntityPointer
         HostEntityPointer;
     HostEntityPointer coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
                                                                HostEntityPointer(*it),
@@ -188,13 +188,13 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
 
       LocalFunction loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
 
-      const int number_of_nodes_in_fine_entity = (*it).template count< 2 >();
+      const int number_of_nodes_in_fine_entity = it->count< 2 >();
       if ( !( number_of_nodes_in_fine_entity == int( loc_coarse_basis_function.baseFunctionSet().size() ) ) )
       { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
 
       for (int i = 0; i < number_of_nodes_in_fine_entity; i += 1)
       {
-        const HostNodePointer node = (*it).template subEntity< 2 >(i);
+        const HostNodePointer node = it->subEntity< 2 >(i);
 
         const DomainType coordinates_of_node = node->geometry().corner(0);
         if ( !( coordinates_of_node == it->geometry().corner(i) ) )

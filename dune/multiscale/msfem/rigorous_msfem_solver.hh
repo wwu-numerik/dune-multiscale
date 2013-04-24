@@ -69,10 +69,6 @@ private:
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
-  typedef typename LagrangePointSet::template Codim< faceCodim >
-    ::SubEntityIteratorType
-  FaceDofIterator;
-
   // --------------------------- subgrid typedefs ------------------------------------
 
   typedef MsFEMTraits::SubGridType SubGridType;
@@ -97,10 +93,6 @@ private:
 
   typedef typename SubgridDiscreteFunctionSpace::LagrangePointSetType
   CoarseGridLagrangePointSet;
-
-  typedef typename CoarseGridLagrangePointSet::template Codim< faceCodim >
-    ::SubEntityIteratorType
-  CoarseGridFaceDofIterator;
 
   //!-----------------------------------------------------------------------------------------
 
