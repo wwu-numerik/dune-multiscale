@@ -22,8 +22,8 @@ private:
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   typedef typename GridPartType::GridType                  GridType;
 
-  typedef typename GridType::template Codim< 0 >::Entity         EntityType;
-  typedef typename GridType::template  Codim< 0 >::EntityPointer EntityPointerType;
+  typedef typename GridType::Codim< 0 >::Entity         EntityType;
+  typedef typename GridType::Codim< 0 >::EntityPointer EntityPointerType;
 
   typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;

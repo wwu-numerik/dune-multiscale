@@ -70,7 +70,7 @@ private:
   typedef typename FineDiscreteFunction::LocalFunctionType FineLocalFunction;
   typedef typename FineDiscreteFunctionSpace::BaseFunctionSetType                   FineBaseFunctionSet;
   typedef typename FineDiscreteFunctionSpace::LagrangePointSetType                  FineLagrangePointSet;
-  typedef typename FineLagrangePointSet::template Codim< 1 >::SubEntityIteratorType FineFaceDofIterator;
+  typedef typename FineLagrangePointSet::Codim< 1 >::SubEntityIteratorType FineFaceDofIterator;
   typedef typename FineGrid::Traits::LeafIndexSet FineGridLeafIndexSet;
   typedef typename FineDiscreteFunctionSpace::IteratorType FineIterator;
   typedef typename FineIterator::Entity                    FineEntity;
@@ -86,7 +86,7 @@ private:
   typedef typename CoarseDiscreteFunction::LocalFunctionType CoarseLocalFunction;
   typedef typename CoarseDiscreteFunctionSpace::BaseFunctionSetType                   CoarseBaseFunctionSet;
   typedef typename CoarseDiscreteFunctionSpace::LagrangePointSetType                  CoarseLagrangePointSet;
-  typedef typename CoarseLagrangePointSet::template Codim< 1 >::SubEntityIteratorType CoarseFaceDofIterator;
+  typedef typename CoarseLagrangePointSet::Codim< 1 >::SubEntityIteratorType CoarseFaceDofIterator;
   typedef typename CoarseDiscreteFunctionSpace::IteratorType CoarseIterator;
   typedef typename CoarseGrid::Traits::LeafIndexSet          CoarseGridLeafIndexSet;
   typedef typename CoarseIterator::Entity CoarseEntity;

@@ -37,7 +37,7 @@ void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteF
   {
     const SubgridEntity& sub_entity = *sub_it;
 
-    const HostEntityPointer host_entity_pointer = subGrid.template getHostEntity< 0 >(*sub_it);
+    const HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >(*sub_it);
     const HostEntity& host_entity = *host_entity_pointer;
 
     const SubgridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
@@ -88,10 +88,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier< D
    {
      for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
      {
-       const int number_of_nodes_in_entity = (*it).template count< 2 >();
+       const int number_of_nodes_in_entity = it-> count< 2 >();
        for (int i = 0; i < number_of_nodes_in_entity; i += 1)
        {
-         const typename HostEntity::template Codim< 2 >::EntityPointer node = (*it).template subEntity< 2 >(i);
+         const typename HostEntity::Codim< 2 >::EntityPointer node = it->subEntity< 2 >(i);
          const int global_index_node = gridPart.indexSet().index(*node);
 
          entities_sharing_same_node[global_index_node].emplace_back(*it);
@@ -176,7 +176,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier< D
       {
         const SubgridEntity& sub_entity = *sub_it;
 
-        const HostEntityPointer fine_host_entity_pointer = sub_grid_U_T.template getHostEntity< 0 >(*sub_it);
+        const HostEntityPointer fine_host_entity_pointer = sub_grid_U_T.getHostEntity< 0 >(*sub_it);
         const HostEntity& fine_host_entity = *fine_host_entity_pointer;
 
         HostEntityPointer father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
@@ -189,11 +189,11 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier< D
         const SubgridLocalFunction sub_loc_value = local_problem_solution_e0.localFunction(sub_entity);
         LocalFunction host_loc_value = correction_on_U_T.localFunction(fine_host_entity);
 
-        int number_of_nodes_entity = (*sub_it).template count< 2 >();
+        int number_of_nodes_entity = sub_it->count< 2 >();
         for (int i = 0; i < number_of_nodes_entity; i += 1)
         {
-          const typename HostEntity::template Codim< 2 >::EntityPointer node =
-              fine_host_entity.template subEntity< 2 >(i);
+          const typename HostEntity::Codim< 2 >::EntityPointer node =
+              fine_host_entity.subEntity< 2 >(i);
 
           const int global_index_node = gridPart.indexSet().index(*node);
 
@@ -279,9 +279,9 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
 
   // assemble right hand side
   if ( DSC_CONFIG_GET("msfem.petrov_galerkin", 1 ) )
-  { RhsAssembler::template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs); }
+  { RhsAssembler::assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs); }
   else
-  { RhsAssembler::template assemble_for_MsFEM_symmetric< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, specifier, subgrid_list, msfem_rhs); }
+  { RhsAssembler::assemble_for_MsFEM_symmetric< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, specifier, subgrid_list, msfem_rhs); }
 
   // oneLinePrint( DSC_LOG_DEBUG, fem_rhs );
 
@@ -304,10 +304,10 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
 
       const int face = (*iit).indexInInside();
 
-      FaceDofIterator faceIterator
-        = lagrangePointSet.template beginSubEntity< faceCodim >(face);
-      const FaceDofIterator faceEndIterator
-        = lagrangePointSet.template endSubEntity< faceCodim >(face);
+      auto faceIterator
+        = lagrangePointSet.beginSubEntity< faceCodim >(face);
+      const auto faceEndIterator
+        = lagrangePointSet.endSubEntity< faceCodim >(face);
       for ( ; faceIterator != faceEndIterator; ++faceIterator)
         rhsLocal[*faceIterator] = 0;
     }

@@ -104,7 +104,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.template assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, fem_rhs);
+    rhsassembler.assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, fem_rhs);
 
     // oneLinePrint( DSC_LOG_DEBUG , fem_rhs );
 
@@ -127,10 +127,10 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
 
             const int face = (*iit).indexInInside();
 
-            FaceDofIterator faceIterator
-                    = lagrangePointSet.template beginSubEntity< faceCodim >(face);
-            const FaceDofIterator faceEndIterator
-                    = lagrangePointSet.template endSubEntity< faceCodim >(face);
+            auto faceIterator
+                    = lagrangePointSet.beginSubEntity< faceCodim >(face);
+            const auto faceEndIterator
+                    = lagrangePointSet.endSubEntity< faceCodim >(face);
             for ( ; faceIterator != faceEndIterator; ++faceIterator)
                 rhsLocal[*faceIterator] = 0;
         }

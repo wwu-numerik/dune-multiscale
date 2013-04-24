@@ -68,10 +68,6 @@ private:
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
-  typedef typename LagrangePointSet::template Codim< faceCodim >
-    ::SubEntityIteratorType
-  FaceDofIterator;
-
   // --------------------------- subgrid typedefs ------------------------------------
 
   typedef SubGrid< HostGrid::dimension, HostGrid > SubGridType;
@@ -97,9 +93,6 @@ private:
   typedef typename SubgridDiscreteFunctionSpace::LagrangePointSetType
   CoarseGridLagrangePointSet;
 
-  typedef typename CoarseGridLagrangePointSet::template Codim< faceCodim >
-    ::SubEntityIteratorType
-  CoarseGridFaceDofIterator;
 
   //!-----------------------------------------------------------------------------------------
 

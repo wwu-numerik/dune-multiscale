@@ -43,7 +43,7 @@ void DiscreteEllipticMsFEMOperator::subgrid_to_hostrid_function(const LocalDiscr
   {
     const LocalGridEntity& sub_entity = *sub_it;
 
-    auto host_entity_pointer = subGrid.template getHostEntity< 0 >(*sub_it);
+    auto host_entity_pointer = subGrid.getHostEntity< 0 >(*sub_it);
     const FineEntity& host_entity = *host_entity_pointer;
 
     LocalGridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);

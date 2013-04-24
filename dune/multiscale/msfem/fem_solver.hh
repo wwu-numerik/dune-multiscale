@@ -34,10 +34,6 @@ private:
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
-  typedef typename LagrangePointSet::template Codim< faceCodim >
-    ::SubEntityIteratorType
-  FaceDofIterator;
-
   typedef DummyMass< DiscreteFunctionSpace > DummyMassType;
 
   //! --------------------- the standard matrix traits -------------------------------------
