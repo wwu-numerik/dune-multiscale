@@ -12,28 +12,29 @@
 #endif // ifdef HAVE_CMAKE_CONFIG
 
 #include <dune/common/fmatrix.hh>
+#include <boost/noncopyable.hpp>
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 
-// artificical mass coefficient to guarantee uniqueness and existence of the cell problem solution
-// (should be as small as possible)
-#define CELL_MASS_WEIGHT 0.0000001
-
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/hmm/cell_problem_solver.hh>
+#include <dune/multiscale/hmm/hmm_traits.hh>
 
 namespace Dune {
+namespace Multiscale {
+namespace HMM {
 
-// Imp stands for Implementation
-template< class PeriodicDiscreteFunctionImp, class DiffusionImp >
+
 class DiscreteCellProblemOperator
-  : public Operator< typename PeriodicDiscreteFunctionImp::RangeFieldType,
-                     typename PeriodicDiscreteFunctionImp::RangeFieldType, PeriodicDiscreteFunctionImp,
-                     PeriodicDiscreteFunctionImp >
+  : public Operator< typename HMMTraits::PeriodicDiscreteFunctionType::RangeFieldType,
+                     typename HMMTraits::PeriodicDiscreteFunctionType::RangeFieldType, typename HMMTraits::PeriodicDiscreteFunctionType,
+                     typename HMMTraits::PeriodicDiscreteFunctionType >
+    , boost::noncopyable
 {
-  typedef DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp > This;
+  typedef typename HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionImp;
+  typedef typename CommonTraits::DiffusionType DiffusionImp;
 
 private:
   typedef PeriodicDiscreteFunctionImp DiscreteFunction;
@@ -75,9 +76,6 @@ public:
       , diffusion_operator_(diffusion_op)
   {}
 
-private:
-  DiscreteCellProblemOperator(const This&);
-
 public:
   /**
    * @brief dummy implementation of "operator()"
@@ -96,8 +94,7 @@ public:
    for the problem with periodic boundary condition.
    This is an alternative to the 'average zero' condition.)
   **/
-  template< class MatrixType >
-  void assemble_matrix(const DomainType& x_T, MatrixType& global_matrix) const;
+  void assemble_matrix(const DomainType& x_T, typename CellProblemSolver::CellFEMMatrix& global_matrix) const;
 
   /**
    *  ! stiffness matrix for a non linear elliptic diffusion operator
@@ -119,11 +116,10 @@ public:
    * \param old_fine_function the microscopic function (fine-scale correction) from the last iteration step of the Newton method
    * \param grad_coarse_function the gradient of the macroscopic function (that we want to reconstruct) evaluated in x_T
    */
-  template< class MatrixType >
   void assemble_jacobian_matrix(const DomainType& x_T,
                                 const JacobianRangeType& grad_coarse_function,
                                 const DiscreteFunction& old_fine_function,
-                                MatrixType& global_matrix) const;
+                                typename CellProblemSolver::CellFEMMatrix& global_matrix) const;
 
   // begin group the "right hand side assembler methods"
   /**
@@ -186,8 +182,9 @@ private:
   const DiffusionModel& diffusion_operator_;
 };
 
-} //namespace Dune
+} //namespace HMM {
+} //namespace Multiscale {
+} //namespace Dune {
 
-#include "discrete_cell_operator.cc"
 
 #endif // #ifndef DiscreteElliptic_HH

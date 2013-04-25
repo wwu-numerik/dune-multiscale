@@ -1,5 +1,7 @@
 #include "cell_problem_solver.hh"
 
+#include <dune/multiscale/hmm/discrete_cell_operator.hh>
+
 namespace Dune {
 namespace Multiscale {
 namespace HMM {
@@ -28,7 +30,7 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
 
   //! define the discrete (elliptic) cell problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
-  CellProblemOperatorType cell_problem_op(periodicDiscreteFunctionSpace_, diffusion_);
+  DiscreteCellProblemOperator cell_problem_op(periodicDiscreteFunctionSpace_, diffusion_);
   // we are looking for the derivative of the operator in \nabla_x u_H^{(n-1)})(x_T) + \nabla_y Q_h( u_H^{(n-1)})(y)
   // and in direction of the macroscopic base function
 
@@ -92,7 +94,7 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
 
   //! define the discrete (elliptic) cell problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
-  const CellProblemOperatorType cell_problem_op(periodicDiscreteFunctionSpace_, diffusion_);
+  const DiscreteCellProblemOperator cell_problem_op(periodicDiscreteFunctionSpace_, diffusion_);
 
   //! right hand side vector of the algebraic cell problem
   // (in the non-linear setting it changes for every iteration step)

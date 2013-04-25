@@ -148,6 +148,7 @@ set( COMMON_SOURCES
         dune/multiscale/hmm/cell_problem_numbering.cc
         dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
         dune/multiscale/hmm/cell_problem_solver.cc
+        dune/multiscale/hmm/discrete_cell_operator.cc
     )
 
 set( HMM_SOURCES 

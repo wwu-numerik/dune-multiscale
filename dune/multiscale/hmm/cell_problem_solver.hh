@@ -17,7 +17,6 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-#include <dune/multiscale/hmm/discrete_cell_operator.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 
 //! --------------------- the essential cell problem solver class ----------------------------------
@@ -69,15 +68,12 @@ private:
       typedef Dune::LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
     };
   };
-
+public:
   typedef SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType,
                                    CellMatrixTraits > CellFEMMatrix;
-
+private:
   //! OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
   typedef OEMBICGSTABOp< PeriodicDiscreteFunctionType, CellFEMMatrix > InverseCellFEMMatrix;
-
-  //! discrete elliptic operator describing the elliptic cell problems
-  typedef DiscreteCellProblemOperator< PeriodicDiscreteFunctionType, DiffusionType > CellProblemOperatorType;
 
 private:
   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_; // Referenz &, wenn & verwendet, dann unten:
@@ -85,6 +81,7 @@ private:
   static const std::string subdir_; /*"cell_problems"*/
 
 public:
+
   //! constructor - with diffusion operator A^{\epsilon}(x)
   CellProblemSolver(const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                     const DiffusionType& diffusion_operator)

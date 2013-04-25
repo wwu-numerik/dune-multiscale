@@ -2,29 +2,31 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
+#include "discrete_cell_operator.hh"
+
 #include <dune/multiscale/problems/elliptic_problems/selector.hh>
+
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
-namespace Dune {
+// artificical mass coefficient to guarantee uniqueness and existence of the cell problem solution
+// (should be as small as possible)
+#define CELL_MASS_WEIGHT 0.0000001
 
-template< class DiscreteFunctionImp, class DiffusionImp >
-void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const DiscreteFunction&/* u*/,
+namespace Dune {
+namespace Multiscale {
+namespace HMM {
+
+void DiscreteCellProblemOperator::operator()(const DiscreteFunction&/* u*/,
                                                                                   DiscreteFunction& /*w*/) const {
   std::cout << "the ()-operator of the DiscreteCellProblemOperator class is not yet implemented and still a dummy."
             << std::endl;
-  std::abort();
+  DUNE_THROW(Dune::Exception, "not implemented");
 }
 
-template< class PeriodicDiscreteFunctionImp, class DiffusionImp >
-template< class MatrixType >
-void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::assemble_matrix(
-  const DomainType& x_T,
-  MatrixType&
-  global_matrix) const
+//!// x_T is the barycenter of the macro grid element T
+void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
+  CellProblemSolver::CellFEMMatrix &global_matrix) const
 {
-  // x_T is the barycenter of the macro grid element T
-  typedef typename MatrixType::LocalMatrixType LocalMatrix;
-
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   global_matrix.reserve();
@@ -44,7 +46,7 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
     const Geometry& cell_grid_geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
-    LocalMatrix local_matrix = global_matrix.localMatrix(cell_grid_entity, cell_grid_entity);
+    auto local_matrix = global_matrix.localMatrix(cell_grid_entity, cell_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -95,19 +97,13 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
   }
 } // assemble_matrix
 
-template< class PeriodicDiscreteFunctionImp, class DiffusionImp >
-template< class MatrixType >
-void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::assemble_jacobian_matrix(
+void DiscreteCellProblemOperator::assemble_jacobian_matrix(
   const DomainType& x_T,
   const JacobianRangeType& grad_coarse_function,
-  const PeriodicDiscreteFunctionImp& old_fine_function,
-  MatrixType& global_matrix) const
+  const DiscreteFunction& old_fine_function,
+  CellProblemSolver::CellFEMMatrix& global_matrix) const
 {
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
-
-  typedef typename MatrixType::LocalMatrixType LocalMatrix;
-  typedef typename PeriodicDiscreteFunctionImp::LocalFunctionType
-  LocalFunction;
 
   global_matrix.reserve();
   global_matrix.clear();
@@ -126,8 +122,8 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
     const Geometry& cell_grid_geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
-    LocalMatrix local_matrix = global_matrix.localMatrix(cell_grid_entity, cell_grid_entity);
-    LocalFunction local_fine_function = old_fine_function.localFunction(cell_grid_entity);
+    auto local_matrix = global_matrix.localMatrix(cell_grid_entity, cell_grid_entity);
+    auto local_fine_function = old_fine_function.localFunction(cell_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
@@ -195,11 +191,11 @@ void DiscreteCellProblemOperator< PeriodicDiscreteFunctionImp, DiffusionImp >::a
   }
 } // assemble_jacobian_matrix
 
-template< class DiscreteFunctionImp, class DiffusionImp >
-void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::printCellRHS(const DiscreteFunctionImp& rhs) const {
-  typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+void DiscreteCellProblemOperator::printCellRHS(const DiscreteFunction& rhs) const
+{
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
-  typedef typename DiscreteFunctionImp::LocalFunctionType         LocalFunctionType;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunctionType;
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace
     = rhs.space();
@@ -217,14 +213,15 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::printCell
   }
 }  // end method
 
-template< class DiscreteFunctionImp, class DiffusionImp >
-double DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(const DiscreteFunctionImp& rhs) const {
+
+double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const
+{
   double norm = 0.0;
 
-  typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
   typedef typename IteratorType::Entity                           EntityType;
-  typedef typename DiscreteFunctionImp::LocalFunctionType         LocalFunctionType;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunctionType;
   typedef typename DiscreteFunctionSpaceType::GridPartType        GridPartType;
   typedef typename DiscreteFunctionSpaceType::GridType            GridType;
   typedef typename GridType::template Codim< 0 >::Geometry
@@ -263,11 +260,11 @@ double DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS
   return norm;
 }  // end method
 
-template< class DiscreteFunctionImp, class DiffusionImp >
-// template< class MatrixType >
-void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleCellRHS_linear(const DomainType& x_T,
+
+void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T,
   const JacobianRangeType& gradient_PHI_H,
-  DiscreteFunctionImp& cell_problem_RHS) const {
+  DiscreteFunction& cell_problem_RHS) const
+{
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
@@ -340,11 +337,12 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
   }
 } // assembleCellRHS_linear
 
-template< class DiscreteFunctionImp, class DiffusionImp >
-void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleCellRHS_nonlinear(const DomainType& x_T,
+
+void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_T,
   const JacobianRangeType& grad_coarse_function,
-  const DiscreteFunctionImp& old_fine_function,
-  DiscreteFunctionImp& cell_problem_RHS) const {
+  const DiscreteFunction& old_fine_function,
+  DiscreteFunction& cell_problem_RHS) const
+{
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
@@ -421,18 +419,19 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assembleC
 } // assembleCellRHS_nonlinear
 
 
-template< class DiscreteFunctionImp, class DiffusionImp >
-void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_jacobian_corrector_cell_prob_RHS
+
+void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS
   ( // the global quadrature point in the macro grid element T
   const DomainType& x_T, // barycenter of macro entity T
   // gradient of the old coarse function (old means last iteration step)
   const JacobianRangeType& grad_old_coarse_function, // \nabla_x u_H^{(n-1)}(x_T)
   // gradient of the corrector of the old coarse function
-  const DiscreteFunctionImp& corrector_of_old_coarse_function, /*Q_h(u_H^{(n-1)})*/
+  const DiscreteFunction& corrector_of_old_coarse_function, /*Q_h(u_H^{(n-1)})*/
   // gradient of the current macroscopic base function
   const JacobianRangeType& grad_coarse_base_function, // \nabla_x \Phi_H(x_T)
   // rhs cell problem:
-  DiscreteFunctionImp& jac_corrector_cell_problem_RHS) const {
+  DiscreteFunction& jac_corrector_cell_problem_RHS) const
+{
   // ! typedefs for the (discrete) periodic micro space:
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
@@ -526,5 +525,8 @@ void DiscreteCellProblemOperator< DiscreteFunctionImp, DiffusionImp >::assemble_
   }
 } // assemble_jacobian_corrector_cell_prob_RHS
 
-} // namespace Dune
+} //namespace HMM {
+} //namespace Multiscale {
+} //namespace Dune {
+
 
