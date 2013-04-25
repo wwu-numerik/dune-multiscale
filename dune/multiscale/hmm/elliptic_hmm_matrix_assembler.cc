@@ -95,11 +95,6 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
       corrector_Phi[i] = PeriodicDiscreteFunctionPointer(new PeriodicDiscreteFunction("Corrector Function of Phi",
                                                                      periodicDiscreteFunctionSpace_));
       corrector_Phi[i]->clear();
-      /* // if the cell problems are not precomputed, we might use:
-        CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace_, diffusion_operator_);
-        cell_problem_solver.template solvecellproblem< JacobianRangeType >
-          ( gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]) );
-      */
       discrete_function_reader.read( cell_problem_id[i], *(corrector_Phi[i]) );
     }
 
@@ -264,10 +259,6 @@ void DiscreteEllipticHMMOperator
     PeriodicDiscreteFunction corrector_old_u_H("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace_);
     corrector_old_u_H.clear();
 
-    /* // if the cell problems are not precomputed, we might use:
-      cell_problem_solver.template solvecellproblem< JacobianRangeType >
-        (grad_old_u_H, macro_entity_barycenter, corrector_old_u_H);
-    */
     discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
 
     std::vector<std::unique_ptr<PeriodicDiscreteFunction> > corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
@@ -286,10 +277,6 @@ void DiscreteEllipticHMMOperator
         corrector_Phi[i] = std::unique_ptr<PeriodicDiscreteFunction>(
                              new PeriodicDiscreteFunction("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_));
         corrector_Phi[i]->clear();
-        /* // if the cell problems are not precomputed, we might use:
-          cell_problem_solver.template solvecellproblem< JacobianRangeType >
-            (gradient_Phi[i], macro_entity_barycenter, *(corrector_Phi[i]));
-        */
         discrete_function_reader_baseSet.read( cell_problem_id[i], *(corrector_Phi[i]) );
       }
     }
@@ -305,14 +292,6 @@ void DiscreteEllipticHMMOperator
                                                                 periodicDiscreteFunctionSpace_);
       jacobian_corrector_old_u_H_Phi_i.clear();
 
-      /* // if the cell problems are not precomputed, we might use:
-        cell_problem_solver.template solve_jacobiancorrector_cellproblem< JacobianRangeType >
-          (gradient_Phi[i],
-          grad_old_u_H,
-          corrector_old_u_H,
-          macro_entity_barycenter,
-          jacobian_corrector_old_u_H_Phi_i);
-      */
       discrete_function_reader_jac_cor.read(cell_problem_id[i], jacobian_corrector_old_u_H_Phi_i);
 
       for (unsigned int j = 0; j < numMacroBaseFunctions; ++j)

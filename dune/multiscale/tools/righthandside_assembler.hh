@@ -468,15 +468,6 @@ public:
       corrector_old_u_H.clear();
 
       PeriodicDiscreteFunctionType corrector_Phi_i("Corrector of Phi_i", periodicDiscreteFunctionSpace);
-      /* // if the cell problems are not precomputed, we might use:
-        CellProblemSolverType cell_problem_solver(periodicDiscreteFunctionSpace, A);
-        cell_problem_solver.template solvecellproblem< JacobianRangeType >
-          (grad_old_u_H_x, macro_entity_barycenter, corrector_old_u_H);
-        if (DSC_CONFIG_GET("TFR", false))
-          cell_problem_solver.template solvecellproblem< JacobianRangeType >
-            (grad_Phi_x, macro_entity_barycenter, corrector_Phi_i);
-
-      */
       discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
       macro_grid_baseSet.jacobianAll(one_point_macro_quadrature[0], inv, grad_Phi_x_vec);
 
