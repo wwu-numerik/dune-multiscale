@@ -57,10 +57,8 @@ private:
   JacobianRangeType;
 
   typedef SubGrid< FineGrid::dimensionworld, FineGrid >  SubGridType;
-  typedef SubGridList< FineDiscreteFunction, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
-  static_assert(std::is_same<MsFEMTraits::SubGridListType, SubGridListType>::value, "fail");
 
-  typedef MsFEMLocalProblemSolver< FineDiscreteFunction, SubGridListType, MacroMicroGridSpecifierType,
+  typedef MsFEMLocalProblemSolver< FineDiscreteFunction, SubGridList, MacroMicroGridSpecifierType,
                                    DiffusionModel, CoarseBasisFunctionListType > MsFEMLocalProblemSolverType;
 
   static const int dimension = FineGridPart::GridType::dimension;
@@ -122,7 +120,7 @@ public:
                                 const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
                                 // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                                 // n(T)-layers:
-                                SubGridListType& subgrid_list,
+                                SubGridList& subgrid_list,
                                 const DiffusionModel& diffusion_op,
                                 const CoarseBasisFunctionListType& coarse_basis,
                                 const std::map<int,int>& global_id_to_internal_id )
@@ -171,7 +169,7 @@ private:
   MacroMicroGridSpecifierType& specifier_;
 
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
-  SubGridListType& subgrid_list_;
+  SubGridList& subgrid_list_;
   const DiffusionModel& diffusion_operator_;
   const CoarseBasisFunctionListType& coarse_basis_;
   const std::map<int,int>& global_id_to_internal_id_;

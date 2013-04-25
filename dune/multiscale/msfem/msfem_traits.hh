@@ -18,7 +18,6 @@ namespace MsFEM {
 
 template < class T >
 class MacroMicroGridSpecifier;
-template < class T, class R, class S >
 class SubGridList;
 template < class T, class R, class S, class G, class H >
 class MsFEMErrorEstimator;
@@ -28,7 +27,7 @@ struct MsFEMTraits {
 
   typedef MacroMicroGridSpecifier< typename CommonTraits::DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
   typedef Dune::SubGrid< CommonTraits::GridType::dimension, typename CommonTraits::GridType >                  SubGridType;
-  typedef SubGridList< typename CommonTraits::DiscreteFunctionType, SubGridType, MacroMicroGridSpecifierType > SubGridListType;
+  typedef SubGridList SubGridListType;
 
   //! -------------------------- MsFEM error estimator ----------------------------
   typedef MsFEMErrorEstimator< typename CommonTraits::DiscreteFunctionType,

@@ -20,6 +20,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/tools/misc.hh>
 
 namespace Dune {
 namespace Multiscale {
