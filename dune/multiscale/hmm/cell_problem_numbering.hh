@@ -13,6 +13,8 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
 namespace Dune {
+namespace Multiscale {
+namespace HMM {
 
 //! only for the combination entity + number of local base function on entity
 class CellProblemNumberingManager
@@ -58,6 +60,8 @@ public:
   int get_number_of_cell_problem(const EntityPointerType& ent) const;
 };
 
+} //namespace HMM {
+} //namespace Multiscale {
 } //namespace Dune {
 
 #endif // DUNEMS_HMM_CELL_NUMBERING_HH

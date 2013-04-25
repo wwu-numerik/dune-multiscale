@@ -6,8 +6,6 @@
 #define DUNE_MS_HMM_TYPES_HH
 
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
 
 #include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
@@ -17,7 +15,15 @@
 
 namespace Dune {
 namespace Multiscale {
+
+namespace FEM{
+template <class R, class T, class S>
+class DiscreteEllipticOperator;
+}
 namespace HMM {
+
+template <class R, class T, class S>
+class ErrorEstimator;
 
 //! type construction for the HMM algorithm
 struct HMMTraits {

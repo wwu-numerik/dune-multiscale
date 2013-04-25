@@ -13,7 +13,7 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-// used mith multiple typ combinations
+// used mith multiple type combinations
 
 //! \TODO docme
 template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >

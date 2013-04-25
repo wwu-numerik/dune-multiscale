@@ -63,28 +63,26 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
                                    const CellProblemNumberingManager& cp_num_manager,
                                    const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
                                    const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
-                                   const int loop_cycle) {
-    // the nonlinear case
-    // solve cell problems in a preprocess
+                                   const int loop_cycle)
+{
+  // the nonlinear case
+  // solve cell problems in a preprocess
+  //! -------------- solve and save the cell problems for the macroscopic base function set
+  const CellProblemSolver cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+  const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
+  DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
+    // generate directory for cell problem data output
+  // only for the case with test function reconstruction (=non-Petrov-Galerkin):
+  if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
+    // -------------- solve cell problems for the macro basefunction set ------------------------------
+    // save the solutions of the cell problems for the set of macroscopic base functions
 
-    //! -------------- solve and save the cell problems for the macroscopic base function set
-    const Dune::CellProblemSolver< typename HMMTraits::PeriodicDiscreteFunctionType,
-        typename CommonTraits::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
-    const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
-    DSC_LOG_INFO << "Start solving cell problems for " << number_of_grid_elements << " leaf entities..." << std::endl;
-      // generate directory for cell problem data output
-    // only for the case with test function reconstruction (=non-Petrov-Galerkin):
-    if ( !DSC_CONFIG_GET("hmm.petrov_galerkin", true ) ) {
-      // -------------- solve cell problems for the macro basefunction set ------------------------------
-      // save the solutions of the cell problems for the set of macroscopic base functions
+    cell_problem_solver.saveTheSolutions_baseSet(discreteFunctionSpace, cp_num_manager);
 
-      cell_problem_solver.saveTheSolutions_baseSet< typename CommonTraits::DiscreteFunctionType >(discreteFunctionSpace,
-                                                                           cp_num_manager);
-
-      DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
-      // end solving and saving cell problems
-    }
-    //! --------------- end solving and saving cell problems -----------------------------------------
+    DSC_LOG_INFO << "Solving the cell problems for the base function set succeeded." << std::endl;
+    // end solving and saving cell problems
+  }
+  //! --------------- end solving and saving cell problems -----------------------------------------
 
     DSC_LOG_INFO << "Solving nonlinear HMM problem with Newton method." << std::endl;
     DSC_LOG_INFO << seperator_line << std::endl;
@@ -141,9 +139,8 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
       DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
 
       // solve cell problems for the solution of the last iteration step
-      cell_problem_solver.saveTheSolutions_discFunc< typename CommonTraits::DiscreteFunctionType >(hmm_solution);
-      cell_problem_solver.saveTheJacCorSolutions_baseSet_discFunc< typename CommonTraits::DiscreteFunctionType >(hmm_solution,
-                                                                                          cp_num_manager);
+      cell_problem_solver.saveTheSolutions_discFunc(hmm_solution);
+      cell_problem_solver.saveTheJacCorSolutions_baseSet_discFunc(hmm_solution, cp_num_manager);
 
       // to assemble the computational time
       Dune::Timer stepHmmAssembleTimer;
@@ -248,19 +245,19 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
                               typename CommonTraits::DiscreteFunctionType& hmm_solution,
                               const CellProblemNumberingManager& cp_num_manager,
                               const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-                              const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler) {
-
-  //! -------------- solve and save the cell problems for the base function set --------------------------------------
-  const Dune::CellProblemSolver< typename HMMTraits::PeriodicDiscreteFunctionType,
-      typename CommonTraits::DiffusionType> cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
-  const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
-  DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
-  // -------------- solve cell problems for the macro basefunction set ------------------------------
-  // save the solutions of the cell problems for the set of macroscopic base functions
-  cell_problem_solver.saveTheSolutions_baseSet< typename CommonTraits::DiscreteFunctionType >(discreteFunctionSpace,
-                                                                       cp_num_manager);
-  // ------------- end solving and saving cell problems for the macro basefunction set --------------
-  //! --------------- end solving and saving cell problems -----------------------------------------
+                              const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler)
+{
+  {
+    //! -------------- solve and save the cell problems for the base function set --------------------------------------
+    const CellProblemSolver cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op );
+    const int number_of_grid_elements = periodicDiscreteFunctionSpace.grid().size(0);
+    DSC_LOG_INFO << "Solving cell problems for " << number_of_grid_elements << " leaf entities." << std::endl;
+    // -------------- solve cell problems for the macro basefunction set ------------------------------
+    // save the solutions of the cell problems for the set of macroscopic base functions
+    cell_problem_solver.saveTheSolutions_baseSet(discreteFunctionSpace, cp_num_manager);
+    // ------------- end solving and saving cell problems for the macro basefunction set --------------
+    //! --------------- end solving and saving cell problems -----------------------------------------
+  }
 
   DSC_LOG_INFO << "Solving linear HMM problem." << std::endl;
   DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;

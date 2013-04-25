@@ -1,6 +1,8 @@
 #include "elliptic_hmm_matrix_assembler.hh"
 
+
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
 namespace Dune {
 namespace Multiscale {

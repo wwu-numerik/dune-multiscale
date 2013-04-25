@@ -9,6 +9,10 @@
 #include <dune/multiscale/common/traits.hh>
 
 namespace Dune {
+
+template< class R>
+class RightHandSideAssembler;
+
 namespace Multiscale {
 namespace HMM {
 

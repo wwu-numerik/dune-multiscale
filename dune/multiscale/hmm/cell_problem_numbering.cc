@@ -1,6 +1,8 @@
 #include "cell_problem_numbering.hh"
 
 namespace Dune {
+namespace Multiscale {
+namespace HMM {
 
 CellProblemNumberingManager::CellProblemNumberingManager(const DiscreteFunctionSpaceType& discreteFunctionSpace)
 {
@@ -38,4 +40,6 @@ int CellProblemNumberingManager::get_number_of_cell_problem(const EntityPointerT
     DUNE_THROW(Dune::RangeError, "no number for entity");
 }
 
-} // namespace Dune {
+} //namespace HMM {
+} //namespace Multiscale {
+} //namespace Dune {

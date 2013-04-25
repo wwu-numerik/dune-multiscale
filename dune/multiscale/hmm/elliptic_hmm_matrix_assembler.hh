@@ -16,11 +16,10 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 namespace Dune {
-
-class CellProblemNumberingManager;
-
 namespace Multiscale {
 namespace HMM {
+
+class CellProblemNumberingManager;
 
 //! \TODO docme
 class DiscreteEllipticHMMOperator
@@ -48,9 +47,6 @@ private:
   typedef typename DiscreteFunctionSpace::RangeType      RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType
   JacobianRangeType;
-
-  //!only used in adhoc computation
-  typedef CellProblemSolver< PeriodicDiscreteFunction, DiffusionModel > CellProblemSolverType;
 
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;

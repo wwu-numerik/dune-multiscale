@@ -138,7 +138,8 @@ public:
   template< int polOrd, class FirstSourceType, class SecondSourceType >
   static void assemble(const FirstSourceType& f,
                 const SecondSourceType& _G,
-                DiscreteFunctionType& rhsVector) {
+                DiscreteFunctionType& rhsVector)
+  {
     struct Functor : public FunctorBase {
       const SecondSourceType& G;
       Functor(const SecondSourceType& __G)
@@ -166,7 +167,8 @@ public:
   static void assemble(const FirstSourceType& f,
                 const SecondSourceType& G,
                 const TimeType& t,
-                DiscreteFunctionType& rhsVector)  {
+                DiscreteFunctionType& rhsVector)
+  {
     struct Functor : public FunctorBase {
       const SecondSourceType& G;
       const TimeType& t;
@@ -409,7 +411,7 @@ public:
     typedef typename PeriodicDiscreteFunctionType::LocalFunctionType
       PeriodicLocalFunctionType;
 
-    typedef CellProblemSolver< PeriodicDiscreteFunctionType, DiffusionOperatorType > CellProblemSolverType;
+    typedef Multiscale::HMM::CellProblemSolver CellProblemSolverType;
     const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
     const std::string cell_solution_location_discFunc ="/cell_problems/_cellSolutions_discFunc";
 

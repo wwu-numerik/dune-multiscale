@@ -26,6 +26,7 @@
 #include <dune/fem/function/adaptivefunction.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
+#include <dune/stuff/common/ranges.hh>
 #include <boost/filesystem/path.hpp>
 
 /**
