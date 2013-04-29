@@ -245,6 +245,13 @@ void algorithm(const std::string& macroGridName,
     const MsFEMTraits::ExactSolutionType u;
     int order_quadrature_rule = 13;
 
+    H1Norm< MsFEMTraits::GridPartType > h1norm_z(gridPart);
+    MsFEMTraits::DiscreteFunctionType zero_foo("Zero", discreteFunctionSpace);
+    zero_foo.clear();
+    MsFEMTraits::RangeType h1_norm_fine_part = h1norm_z.distance(zero_foo, fine_part_msfem_solution);
+
+    DSC_LOG_INFO << "|| FINE_PART( u_msfem ) ||_H1 =  " << h1_norm_fine_part << std::endl << std::endl << std::endl << std::endl;
+    
     MsFEMTraits::RangeType msfem_error = l2error.norm< MsFEMTraits::ExactSolutionType >(u,
                                                               msfem_solution,
                                                               order_quadrature_rule );

@@ -491,6 +491,21 @@ bool algorithm(const std::string& macroGridName,
       h1_fem_error = h1error.semi_norm< MsFEMTraits::ExactSolutionType >(u, fem_solution, order_quadrature_rule);
       h1_fem_error += fem_error;
       DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
+      
+      MsFEMTraits::RangeType approx_msfem_error = l2error.norm2< 2* MsFEMTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
+                                                                                                      msfem_solution);
+      DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
+      H1Norm< MsFEMTraits::GridPartType > h1norm(gridPart);
+      MsFEMTraits::RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
+
+      DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl << std::endl;
+      
+      MsFEMTraits::DiscreteFunctionType zero_foo("Zero", discreteFunctionSpace);
+      zero_foo.clear();
+      MsFEMTraits::RangeType h1_norm_fine_part = h1norm.distance(zero_foo, fine_part_msfem_solution);
+
+      DSC_LOG_INFO << "|| FINE_PART( u_msfem ) ||_H1 =  " << h1_norm_fine_part << std::endl << std::endl << std::endl;
+      
     }
   } else if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
   {

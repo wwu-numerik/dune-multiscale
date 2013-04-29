@@ -36,8 +36,8 @@ struct EntityPointerHash {
     :index_set_(index_set)
   {}
 
-  template <class... Args>
-  std::size_t operator() (const Dune::EntityPointer<Args...>& ptr) const
+  template < class GridImp, class IteratorImp >
+  std::size_t operator() (const Dune::EntityPointer< GridImp, IteratorImp >& ptr) const
   {
     return index_set_.index(*ptr);
   }
