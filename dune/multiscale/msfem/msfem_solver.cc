@@ -274,7 +274,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   Dune::Timer assembleTimer;
 
   // assemble the MsFEM stiffness matrix
-  elliptic_msfem_op.assemble_matrix(msfem_matrix);   // einbinden!
+  elliptic_msfem_op.assemble_matrix(msfem_matrix);
   DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
   // assemble right hand side
@@ -288,12 +288,10 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   //! --- boundary treatment ---
   // set the dirichlet points to zero (in right hand side of the fem problem)
   const HostgridIterator endit = coarse_space.end();
-  for (HostgridIterator it = coarse_space.begin(); it != endit; ++it)
-  {
+  for (HostgridIterator it = coarse_space.begin(); it != endit; ++it) {
     IntersectionIterator iit = coarse_space.gridPart().ibegin(*it);
     const IntersectionIterator endiit = coarse_space.gridPart().iend(*it);
-    for ( ; iit != endiit; ++iit)
-    {
+    for ( ; iit != endiit; ++iit) {
       if ( !(*iit).boundary() )
         continue;
 
@@ -313,7 +311,6 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
     }
   }
   //! --- end boundary treatment ---
-
   const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true);
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
 

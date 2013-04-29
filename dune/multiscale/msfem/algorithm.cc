@@ -8,7 +8,7 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
-
+#include <dune/grid/common/gridinfo.hh>
 
 // to display data with ParaView:
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
@@ -353,10 +353,13 @@ bool algorithm(const std::string& macroGridName,
   //! ---- tools ----
   L2Error< CommonTraits::DiscreteFunctionType > l2error;
 
+  CommonTraits::GridType& grid = *macro_grid_pointer;
+  grid.loadBalance();
+  gridinfo(grid);
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for MsFEM-macro-problem
-  CommonTraits::GridPartType gridPart(*macro_grid_pointer);
-  CommonTraits::GridType& grid = gridPart.grid();
+  CommonTraits::GridPartType gridPart(grid);
+
   //! --------------------------------------------------------------------------------------
 
   // coarse grid
