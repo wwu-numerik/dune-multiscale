@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_THREE
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_THREE
 
@@ -5,6 +9,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Problem {
+/** \addtogroup problem_3 Problem::Three
+ * @{ **/
 //! ------------ Elliptic Problem 3 -------------------
 
 // nonlinear elliptic model problem - heterogeneous setting
@@ -12,7 +19,6 @@
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 
-namespace Problem {
 namespace Three {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
@@ -22,7 +28,7 @@ struct ModelProblemData
   : public IModelProblemData
 {
   static const bool has_exact_solution = false;
-  
+
   ModelProblemData()
     : IModelProblemData(constants()){
       assert( constants_.epsilon != 0.0);
@@ -49,7 +55,7 @@ struct ModelProblemData
     // (if you want it, you must add the 'perturb' method provided
     // by 'constants.hh' - see model problems 4 to 7 for examples )
   }
-  
+
 };
 
 //! ----------------- Definition of ' f ' ------------------------
@@ -144,7 +150,7 @@ public:
 
     flux[0][0] = coefficient * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
     flux[0][1] = coefficient * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
- 
+
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -247,7 +253,7 @@ public:
 };
 //! ----------------- End Definition of ' u ' ------------------------
 
-} // namespace Three {
+} //! @} namespace Three {
 }
 
 

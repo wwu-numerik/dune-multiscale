@@ -1,14 +1,6 @@
-/**************************************************************************
-  **       Title: L2Error class
-  **    $RCSfile$
-  **   $Revision: 1723 $$Name$
-  **       $Date: 2007-06-20 15:20:54 +0000 (Wed, 20 Jun 2007) $
-  **   Copyright: GPL $Author: dune community $
-  ** Description: L2 error class, which computes the error between a function
-  **              and a discrete function. Extracted class from
-  **              Roberts poisson-example
-  **
-  **************************************************************************/
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
 // das alles klappt momentan nur in 2-D!!! Es laesst sich aber sehr einfach verallgemeinern.
 // Implementierung funktioniert unter folgenden Voraussetzungen an den (Diffusions-)Tensor:
@@ -18,8 +10,8 @@
 #ifndef DUNE_HOMOGENIZER_HH
 #define DUNE_HOMOGENIZER_HH
 
-#include <dune/multiscale/tools/assembler/matrix_assembler/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/grids/periodicgridpart/periodicgridpart.hh>
+#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
+#include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
 
 // for data output:
 #include <dune/fem/io/file/dataoutput.hh>
@@ -27,10 +19,11 @@
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
-#include <dune/multiscale/tools/assembler/righthandside_assembler.hh>
+#include <dune/multiscale/tools/righthandside_assembler.hh>
 
 namespace Dune {
-// define output traits
+
+//! define output traits
 struct CellDataOutputParameters
   : public DataOutputParameters
 {
@@ -67,6 +60,7 @@ public:
 
 NULLFUNCTION(ZeroFunction)
 
+//! \TODO docme
 template< class FunctionSpaceImp >
 class MassWeight
   : public Dune::Stuff::Fem::ConstantFunction< FunctionSpaceImp >
@@ -147,7 +141,7 @@ public:
   }
 };
 
-// the following class is comparable to a SecondSource-Class (some kind of -div G )
+//! the following class is comparable to a SecondSource-Class (some kind of -div G )
 template< class FunctionSpaceImp, class TensorImp >
 class CellSource
   : public Fem::Function< FunctionSpaceImp, CellSource< FunctionSpaceImp, TensorImp > >
@@ -206,6 +200,7 @@ public:
   } // evaluate
 };
 
+//! \TODO docme
 template< class FunctionSpaceImp >
 class DefaultDummyAdvection
   : public Fem::Function< FunctionSpaceImp, DefaultDummyAdvection< FunctionSpaceImp > >
@@ -288,6 +283,7 @@ public:
   }
 };
 
+//! \TODO docme
 template< class GridImp, class TensorImp >
 class Homogenizer
 {
@@ -359,7 +355,7 @@ private:
   typedef OEMBICGSTABOp< PeriodicDiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
   // discrete elliptic operator (corresponds with FEM Matrix)
-  typedef DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType,
+  typedef Multiscale::FEM::DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType,
                                     MassWeightType > EllipticOperatorType;
 
   typedef typename FunctionSpaceType::DomainType DomainType;

@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_MULTISCALE_SRC_COMMON_HH
 #define DUNE_MULTISCALE_SRC_COMMON_HH
 
@@ -36,7 +40,7 @@
 #include <dune/fem/io/parameter.hh>
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/multiscale/grids/periodicgridpart/periodicgridpart.hh>
+#include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>

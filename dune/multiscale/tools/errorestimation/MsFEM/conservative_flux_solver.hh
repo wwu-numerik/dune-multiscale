@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DiscreteEllipticMsFEMConservativeFluxSolver_HH
 #define DiscreteEllipticMsFEMConservativeFluxSolver_HH
 
@@ -39,14 +43,15 @@ namespace MsFEM {
  *  appends "local_problems" for path
  **/
 struct ConFluxProblemDataOutputParameters
-  : public myDataOutputParameters
+  : public OutputParameters
 {
 public:
   explicit ConFluxProblemDataOutputParameters()
-    : myDataOutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/cf_problems/")
+    : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/cf_problems/")
   {}
 };
-// Imp stands for Implementation
+
+//! \TODO docme
 template< class SubGridDiscreteFunctionType, class DiscreteFunctionType, class DiffusionOperatorType,
           class MacroMicroGridSpecifierType >
 class ConservativeFluxOperator
@@ -159,8 +164,8 @@ private:
   const MacroMicroGridSpecifierType& specifier_;
 };
 
-// dummy implementation of "operator()"
-// 'w' = effect of the discrete operator on 'u'
+//! dummy implementation of "operator()"
+//! 'w' = effect of the discrete operator on 'u'
 template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp >
 void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
@@ -444,7 +449,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 } // assemble_RHS
 
 
-//! --------------------- the essential local msfem problem solver class ---------------------------
+//! the essential local msfem problem solver class
 template< class SubGridDiscreteFunctionType,
           class HostDiscreteFunctionType,
           class DiffusionOperatorType,

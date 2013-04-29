@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef H1_ERROR_HH
 #define H1_ERROR_HH
 
@@ -6,6 +10,8 @@
 #include <dune/fem/misc/l2error.hh>
 
 namespace Dune {
+
+//! \TODO docme
 template< class DiscreteFunctionType, int n = 0 >
 class H1Error
 {

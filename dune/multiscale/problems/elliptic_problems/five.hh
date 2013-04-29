@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FIVE
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FIVE
 
@@ -5,6 +9,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Problem {
+/** \addtogroup problem_5 Problem::Five
+ * @{ **/
 //! ------------ Elliptic Problem 5 -------------------
 
 // nonlinear elliptic model problem - periodic setting
@@ -13,10 +20,8 @@
 //! For more further details about the implementation see '../base.hh'
 //! For details on the classes, see 'example.hh'
 
-// Note that in the following, 'Imp' abbreviates 'Implementation'
-
-namespace Problem {
 namespace Five {
+
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
 
@@ -26,7 +31,7 @@ struct ModelProblemData
 {
 
   static const bool has_exact_solution = false;
-  
+
   ModelProblemData()
     : IModelProblemData(constants()) {
       assert( constants_.epsilon != 0.0);
@@ -41,17 +46,13 @@ struct ModelProblemData
     return("../dune/multiscale/grids/macro_grids/elliptic/corner_singularity.dgf");
   }
 
-  // are the coefficients periodic? (e.g. A=A(x/eps))
-  // this method is only relevant if you want to use a standard homogenizer
   inline bool problemIsPeriodic() const {
     return true; // = problem is periodic
   }
-  
-  // does the problem allow a stochastic perturbation of the coefficients?
+
   inline bool problemAllowsStochastics() const {
     return true; // = problem allows stochastic perturbations
   }
-  
 };
 
 //! ----------------- Definition of ' f ' ------------------------
@@ -78,7 +79,6 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FirstSource(){}
 
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
@@ -97,19 +97,13 @@ public:
     evaluate(x, y);
   }
 };
-//! ----------------- End Definition of ' f ' ------------------------
-
 
 //! ----------------- Definition of ' G ' ----------------------------
 NULLFUNCTION(SecondSource)
-//! ----------------- End Definition of ' G ' ------------------------
-
 
 //! ----------------- Definition of ' A ' ------------------------
-
-// the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-// A^{\epsilon} : \Omega × R² -> R²
-
+//! the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
+//! A^{\epsilon} : \Omega × R² -> R²
 template< class FunctionSpaceImp >
 class Diffusion
   : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
@@ -165,7 +159,7 @@ public:
                    * ( 1.0 + pow(position_gradient[0][0], 2.0) );
     flux[0][1] = coeff.second * direction_gradient[0][1]
                    * ( 1.0 + pow(position_gradient[0][1], 2.0) );
-    
+
   } // jacobianDiffusiveFlux
 
   /** \deprecated throws Dune::NotImplemented exception **/
@@ -240,7 +234,7 @@ public:
 };
 //! ----------------- End Definition of ' u ' ------------------------
 
-} // namespace Five {
+} //! @} namespace Five {
 }
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FIVE

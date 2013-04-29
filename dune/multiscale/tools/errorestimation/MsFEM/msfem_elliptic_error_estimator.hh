@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_MSFEM_ERRORESTIMATOR_HH
 #define DUNE_MSFEM_ERRORESTIMATOR_HH
 
@@ -24,6 +28,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+//! \TODO docme
 template < class DiscreteFunctionPointerPair,
            class EntityPointer,
            class GridPartType,
@@ -58,7 +63,7 @@ struct FluxContainer {
   }
 };
 
-
+//! \TODO docme
 template< class DiscreteFunctionImp,
           class DiffusionImp,
           class SourceImp,

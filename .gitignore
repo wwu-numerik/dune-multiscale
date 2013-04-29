@@ -1,41 +1,99 @@
+# user
 build-*
-*~
-*.log
-src/old_versions/*
-*.deps*
-*.libs*
-*/.*
-src/data/test*
-src/data/Model_Problem_1/*
-src/data/Model_Problem_3/*
-src/data/Model_Problem_2/*cell_problems*
-src/data/Model_Problem_4/*
-src/data/*
-src/*.o
-src/elliptic_hmm
-src/dune_multiscale
-src/op
-*.svn*
-*.pc
-*.o*
-autom4te.cache*
-config.*
-configure
-aclocal.m4
-depcomp
-dependencies.m4
-*Makefile.in*
-*Makefile
-*Makefile/*
-missing
-libtool
-ltmain.sh
-am*
-install-sh 
-doc/doxygen/Doxyfile
+
+# CMake
 CMakeCache.txt
 CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
-*.gch
+# http://www.gnu.org/software/automake
+
+Makefile.in
+
+# http://www.gnu.org/software/autoconf
+
+/autom4te.cache
+/aclocal.m4
+/compile
+/configure
+/depcomp
+/install-sh
+/missing
+/libtool
+/ltmain.sh
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# CTest artefacts
+CTestTestfile.cmake
+
+
+# C++ objects and libs
+
+*.slo
+*.lo
+*.o
+*.a
+*.la
+*.lai
+*.so
+*.dll
+*.dylib
+
+# Qt-es
+
+*.pro.user
+*.pro.user.*
+moc_*.cpp
+qrc_*.cpp
+Makefile
+*-build-*
+CMakeLists.txt.user
+Makefile.am.user
+
+.*
+!.gitignore
+*~
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+.elc
+auto-save-list
+tramp
+.\#*
+
+# Org-mode
+.org-id-locations
+*_archive
+# SublimeText project files
+*.sublime-workspace
+.*.s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+# DUNE
+/dune-*.pc
+/config.guess
+/config.h
+/config.h.in
+/config.log
+/config.lt
+/config.status
+/config.sub
+/dependencies.m4
+/am

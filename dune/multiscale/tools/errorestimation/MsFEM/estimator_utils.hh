@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef ESTIMATOR_UTILS_HH
 #define ESTIMATOR_UTILS_HH
 
@@ -7,6 +11,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+//! \TODO docme
 template < class EstimatorType >
 struct EstimatorUtils {
   //! create N hostgrid functions from N subgridfunctions

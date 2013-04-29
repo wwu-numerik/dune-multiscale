@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_MS_PROBLEMS_SELECTOR_HH
 #define DUNE_MS_PROBLEMS_SELECTOR_HH
 
@@ -28,6 +32,6 @@ using namespace Problem::PROBLEM_NAME;
 static const std::string name = std::string(STRIN(PROBLEM_NAME));
 #undef STR
 #undef STRIN
-} // namespace Problem
+} //! @} namespace Problem
 
 #endif // DUNE_MS_PROBLEMS_SELECTOR_HH

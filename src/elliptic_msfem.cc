@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #include "common.hh"
 
 #include <dune/multiscale/msfem/algorithm.hh>
@@ -5,6 +9,7 @@
 int main(int argc, char** argv) {
   try {
     init(argc, argv);
+    using namespace Dune::Multiscale;
     using namespace Dune::Multiscale::MsFEM;
 
     //!TODO include base in config
@@ -85,31 +90,31 @@ int main(int argc, char** argv) {
     // ----- local error indicators (for each coarse grid element T) -------------
     const int max_loop_number = 10;
     // local coarse residual, i.e. H ||f||_{L^2(T)}
-    MsFEMTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
+    CommonTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
     // local coarse grid jumps (contribute to the total coarse residual)
-    MsFEMTraits::RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
+    CommonTraits::RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
     // local projection error (we project to get a globaly continous approximation)
-    MsFEMTraits::RangeVectorVector loc_projection_error_(max_loop_number);
+    CommonTraits::RangeVectorVector loc_projection_error_(max_loop_number);
     // local jump in the conservative flux
-    MsFEMTraits::RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
+    CommonTraits::RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
     // local approximation error
-    MsFEMTraits::RangeVectorVector loc_approximation_error_(max_loop_number);
+    CommonTraits::RangeVectorVector loc_approximation_error_(max_loop_number);
     // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
-    MsFEMTraits::RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
+    CommonTraits::RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
 
-    MsFEMTraits::RangeVector total_coarse_residual_(max_loop_number);
-    MsFEMTraits::RangeVector total_projection_error_(max_loop_number);
-    MsFEMTraits::RangeVector total_coarse_grid_jumps_(max_loop_number);
-    MsFEMTraits::RangeVector total_conservative_flux_jumps_(max_loop_number);
-    MsFEMTraits::RangeVector total_approximation_error_(max_loop_number);
-    MsFEMTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
-    MsFEMTraits::RangeVector total_estimated_H1_error_(max_loop_number);
+    CommonTraits::RangeVector total_coarse_residual_(max_loop_number);
+    CommonTraits::RangeVector total_projection_error_(max_loop_number);
+    CommonTraits::RangeVector total_coarse_grid_jumps_(max_loop_number);
+    CommonTraits::RangeVector total_conservative_flux_jumps_(max_loop_number);
+    CommonTraits::RangeVector total_approximation_error_(max_loop_number);
+    CommonTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
+    CommonTraits::RangeVector total_estimated_H1_error_(max_loop_number);
 
     //! TODO put these into something like a named tuple/class
-    std::vector<MsFEMTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_,
+    std::vector<CommonTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_,
                                                              &loc_projection_error_, &loc_conservative_flux_jumps_,
                                                              &loc_approximation_error_, &loc_fine_grid_jumps_}};
-    std::vector<MsFEMTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_,
+    std::vector<CommonTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_,
                                                       &total_coarse_grid_jumps_, &total_conservative_flux_jumps_,
                                                       &total_approximation_error_, &total_fine_grid_jumps_ }};
 

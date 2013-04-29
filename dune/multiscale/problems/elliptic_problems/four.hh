@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
 
@@ -5,6 +9,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Problem {
+/** \addtogroup problem_4 Problem::Four
+ * @{ **/
 //! ------------ Elliptic Problem 4 -------------------
 
 // linear elliptic model problem - periodic setting
@@ -17,7 +24,6 @@
 #define SYMMETRIC_DIFFUSION_MATRIX
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
-namespace Problem {
 namespace Four {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
@@ -28,7 +34,7 @@ struct ModelProblemData
 {
 
   static const bool has_exact_solution = false;
-  
+
   ModelProblemData()
     : IModelProblemData(constants()) {
       assert( constants_.epsilon != 0.0);
@@ -46,12 +52,12 @@ struct ModelProblemData
   inline bool problemIsPeriodic() const {
     return true; // = problem is periodic
   }
-  
+
   // does the problem allow a stochastic perturbation of the coefficients?
   inline bool problemAllowsStochastics() const {
     return true; // = problem allows stochastic perturbations
   }
-  
+
 };
 
 //! ----------------- Definition of ' f ' ------------------------
@@ -165,7 +171,7 @@ public:
 
     flux[0][0] = coeff.first * direction_gradient[0][0];
     flux[0][1] = coeff.second * direction_gradient[0][1];
-    
+
   } // jacobianDiffusiveFlux
 
   /** \deprecated throws Dune::NotImplemented exception **/
@@ -240,7 +246,7 @@ public:
 };
 //! ----------------- End Definition of ' u ' ------------------------
 
-} // namespace Four {
+} //! @} namespace Four {
 }
 
 

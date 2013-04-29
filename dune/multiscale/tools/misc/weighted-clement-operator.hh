@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_DIVERGENCE_HH
 #define DUNE_DIVERGENCE_HH
 
@@ -12,6 +16,11 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/la/container/pattern.hh>
+
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/tools/misc.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -354,6 +363,7 @@ public:                                                           /*@LST0S@*/
           const auto& coarse_lagrangepoint_set = specifier_.coarseSpace().lagrangePointSet(coarse_entity);
 
           // only implemented for 3 Lagrange Points, i.e. piecewise linear functions
+         //! @todo Attention: 2D simplex only
           assert( coarse_numBaseFunctions == 3 );
           std::vector< RangeType > coarse_phi_corner_0( coarse_numBaseFunctions );
           std::vector< RangeType > coarse_phi_corner_1( coarse_numBaseFunctions );

@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_ERRORESTIMATER_HH
 #define DUNE_ERRORESTIMATER_HH
 
@@ -14,13 +18,13 @@ namespace Dune {
 namespace Multiscale {
 namespace HMM {
 
+//! NOTE: das zweite Argument DiscreteFunctionImp sobald wie moeglich wieder loeschen. Alle 'Ableitungen' und Variablen
+//! von DiscreteFunctionImp ebenfalls loeschen und die zugehörigen von PeriodicDiscreteFunctionImp ersetzen. Aktuell ist
+//! es nur da, weil verschiedene Dinge wie der IntersectionIterator für das periodic Gridpart noch nicht implementiert
+//! sind.
 template< class PeriodicDiscreteFunctionImp,
           class DiscreteFunctionImp,
           class DiffusionImp >
-// NOTE: das zweite Argument DiscreteFunctionImp sobald wie moeglich wieder loeschen. Alle 'Ableitungen' und Variablen
-// von DiscreteFunctionImp ebenfalls loeschen und die zugehörigen von PeriodicDiscreteFunctionImp ersetzen. Aktuell ist
-// es nur da, weil verschiedene Dinge wie der IntersectionIterator für das periodic Gridpart noch nicht implementiert
-// sind.
 class ErrorEstimator
 {
 private:

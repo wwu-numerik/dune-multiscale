@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 /**
    *  \file discretefunctionwriter.hh
    *  \brief  write a bunch of discrete functions to one file and retrieve 'em
@@ -22,6 +26,7 @@
 #include <dune/fem/function/adaptivefunction.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
+#include <dune/stuff/common/ranges.hh>
 #include <boost/filesystem/path.hpp>
 
 /**
@@ -73,30 +78,21 @@ public:
     return file_->is_open();
   }
 
-  template< class DFType >
-  void append(const DFType& df) {
+  template < class DiscreteFunctionTraits >
+  void append(const Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
     assert( file_->is_open() );
-    typedef typename DFType::DomainFieldType
-    Field;
-    typedef typename DFType::ConstDofIteratorType
-    Iter;
-    Iter end = df.dend();
-    for (Iter it = df.dbegin(); it != end; ++it)
+    typedef typename Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >::DomainFieldType
+      Field;
+    for (const Field d : df)
     {
-      double d = *it;
-      file_->write( reinterpret_cast< char* >(&d), sizeof(Field) );
+      file_->write( reinterpret_cast< const char* >(&d), sizeof(Field) );
     }
   } // append
 
-  template< class DFType >
-  void append(const std::vector< DFType >& df_vec) {
-    typedef typename std::vector< DFType >::const_iterator
-    Iter;
-    Iter end = df_vec.end();
-    for (Iter it = df_vec.begin(); it != end; ++it)
-    {
-      append(*it);
-    }
+  template < class DiscreteFunctionTraits >
+  void append(const std::vector<const Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >>& df_vec)  {
+    for (const auto& df : df_vec)
+      append(df);
   } // append
 
 private:
@@ -159,12 +155,13 @@ public:
     return size_;
   }
 
-  template< class DFType >
-  void read(const unsigned long index, DFType& df) {
+  template < class DiscreteFunctionTraits >
+  void read(const unsigned long index,
+            Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
     if(!is_open())
       DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for reading") % filename_ % dir_ );
-    typedef typename DFType::DomainFieldType
-    Field;
+    typedef typename Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >::DomainFieldType
+      Field;
     const unsigned long bytes = df.size() * sizeof(Field);
 
     assert( file_->is_open() );

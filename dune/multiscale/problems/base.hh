@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_MS_PROBLEMS_BASE_HH
 #define DUNE_MS_PROBLEMS_BASE_HH
 
@@ -7,6 +11,8 @@
 
 namespace Problem {
 /**
+ * \addtogroup Problem
+ * @{
  *
  * in general we regard problems of the following type:
 
@@ -97,14 +103,14 @@ public:
    * \todo paths need to be relative to binary
    */
   virtual std::string getMacroGridFile() const = 0;
-  
+
   // are the coefficients periodic? (e.g. A=A(x/eps))
   // this method is only relevant if you want to use a standard homogenizer
   virtual bool problemIsPeriodic() const = 0;
 
   // does the problem allow a stochastic perturbation of the coefficients?
-  virtual bool problemAllowsStochastics() const = 0;  
-  
+  virtual bool problemAllowsStochastics() const = 0;
+
 };
 
 // linear constant diffusion operator that can be filled with given values
@@ -162,6 +168,6 @@ public:
   }
 };
 
-}
+} //! @} namespace Problem
 
 #endif // DUNE_MS_PROBLEMS_BASE_HH

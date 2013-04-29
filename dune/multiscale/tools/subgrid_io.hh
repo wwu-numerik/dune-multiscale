@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_MULTISCALE_SUBGRID_IO_HH
 #define DUNE_MULTISCALE_SUBGRID_IO_HH
 
@@ -9,6 +13,7 @@
 #include <dune/grid/yaspgrid.hh>
 //#ifdef HAVE_ALUGRID
   #include <dune/grid/alugrid.hh>
+//  #include <dune/grid/spgrid.hh>
 //#endif
 #include <dune/grid/sgrid.hh>
 #include <dune/subgrid/subgrid.hh>
@@ -22,9 +27,9 @@
 namespace Dune {
 
     template <typename HostGridType>
-    bool writeHostGrid(HostGridType& hostgrid, std::string filename);
+    static bool writeHostGrid(HostGridType& hostgrid, std::string filename);
     template <typename HostGridType>
-    bool readHostGrid(HostGridType& hostgrid, std::string filename);
+    static bool readHostGrid(HostGridType& hostgrid, std::string filename);
 
     template <class HostgridType, class SubgridType>
     std::string subgridKeygen(const HostgridType& /*hostgrid*/, const SubgridType& subgrid, const int subgrid_idx)
@@ -64,6 +69,12 @@ namespace Dune {
     //! careful, this only works when using grid selector
     #if USED_ALBERTAGRID_GRIDTYPE
         HOSTGRID_IO_FUNCTION_PAIR(AlbertaGrid,2)
+    #elif USED_SPGRID_GRIDTYPE
+        template<> bool writeHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
+        { return writeHostgridCommon(hostgrid, filename); }
+        \
+        template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
+        { return readHostgridCommon(hostgrid, filename); }
     #else
         HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,2)
         HOSTGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
@@ -73,20 +84,8 @@ namespace Dune {
     #endif
 #undef HOSTGRID_IO_FUNCTION_PAIR
 
-    // dune > 2.3 stuff
-//#define HOSTGRID_IO_FUNCTION_PAIR(classname) \
-//    template<class E, class C> bool writeHostGrid(classname<E,C>& hostgrid, std::string filename) \
-//    { return writeHOSTGRID(hostgrid, filename); }\
-//    \
-//    template<class E, class C> bool readHostGrid(classname<E,C>& hostgrid, std::string filename) \
-//    { return readHOSTGRID(hostgrid, filename); }
-
-//    HOSTGRID_IO_FUNCTION_PAIR(ALU3dGrid)
-//    HOSTGRID_IO_FUNCTION_PAIR(ALU2dGrid)
-//#undef HOSTGRID_IO_FUNCTION_PAIR
 
 
-
-}
+} // namespace Dune
 
 #endif // SUBGRID_IO_HH

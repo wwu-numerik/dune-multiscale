@@ -1,8 +1,6 @@
-// das alles klappt (mathematisch) nur in 2-D!!! Für Tensoren, die:
-// 1. irgendwelche Elliptizitätsbedingungen erfüllen
-// 2. A(x,y) = A(y)
-// 3. a_i_j(y) = a_i_j(y_1,y_2) = a_i_j(y_1)
-// 4. symmetrisch
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
 #ifndef DUNE_ANALYTICALHOMOGENIZER_HH
 #define DUNE_ANALYTICALHOMOGENIZER_HH
@@ -16,6 +14,12 @@
 #include <dune/grid/io/file/dgfparser/gridptr.hh>
 
 namespace Dune {
+
+//! das alles klappt (mathematisch) nur in 2-D!!! Für Tensoren, die:
+//! 1. irgendwelche Elliptizitätsbedingungen erfüllen
+//! 2. A(x,y) = A(y)
+//! 3. a_i_j(y) = a_i_j(y_1,y_2) = a_i_j(y_1)
+//! 4. symmetrisch
 template< class GridImp, class TensorImp >
 class AnalyticalHomogenizer
 {
@@ -85,7 +89,7 @@ public:
       const EntityType& entity = *it;
 
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
@@ -113,7 +117,7 @@ public:
       const EntityType& entity = *it;
 
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
@@ -147,7 +151,7 @@ public:
       const EntityType& entity = *it;
 
       // create quadrature for given geometry type
-      CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();

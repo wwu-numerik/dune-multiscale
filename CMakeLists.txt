@@ -9,10 +9,6 @@ PROJECT(dune_multiscale)
 cmake_minimum_required(VERSION 2.8)
 
 set(ENABLE_MPI "0" CACHE STRING "set to 1 to enable mpi")
-
-SET( BOOST_ROOT
-	"/opt/boost-1.48" CACHE STRING
-	"" )
 	
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../dune-stuff/cmake )
 include(DuneUtils)
@@ -51,7 +47,7 @@ SET( USE_ISTL
 	"Use fem-wrapped istl matrix" )
 		
 SET( GRIDTYPE
-	"ALUGRID_CONFORM" CACHE STRING
+        "SPGRID" CACHE STRING
 	"GRIDTYPE" )
 
 SET( GRIDDIM
@@ -59,7 +55,7 @@ SET( GRIDDIM
 	"GRIDDIM" )
 
 SET( ALUGRID_BASE_PATH
-	"/opt/dune/modules/alugrid/alugrid-1.52" CACHE STRING
+	"/Users/svenkaulmann/dune_modules/ALUGrid-1.52_clang" CACHE STRING
 	"ALUGRID_BASE_PATH" )
 SET( ALBERTA_GRID_BASE_PATH
 	"/opt/dune/modules/alberta/alberta-3.0" CACHE STRING
@@ -68,13 +64,9 @@ SET( UGGRID_BASE_PATH
 	"/share/dune/Modules/modules_x86_64/ug" CACHE STRING
 	"UGGRID_BASE_PATH" )
 
-SET(PROBLEM_NAMES "Easy" "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" INTERNAL )
+SET(PROBLEM_NAMES "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" INTERNAL )
 
-SET( HMM_PROBLEM
-	"Nine" CACHE STRING
-	"HMM_PROBLEM NAME" )
-
-SET( MSFEM_PROBLEM
+SET( PROBLEM_NAME
 	"Nine" CACHE STRING
 	"MSFEM_PROBLEM NAME" )
 
@@ -84,6 +76,12 @@ CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURR
 INCLUDE_DIR( ${dune_multiscale_BINARY_DIR} )
 INCLUDE_DIR( ${dune_multiscale_SOURCE_DIR} )
 INCLUDE_DIR( ${dune_multiscale_SOURCE_DIR}/.. )
+
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+#	INCLUDE_SYS_DIR( opt/local/include )
+#	INCLUDE_SYS_DIR( opt/local/include/openmpi )
+  LINK_DIRECTORIES( /opt/local/lib/ )
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
 IF( ${GRIDTYPE} STREQUAL "UGGRID" )
 	ADD_CXX_FLAGS( -DENABLE_UG )
@@ -124,7 +122,7 @@ ENDIF( ${GRIDTYPE} MATCHES "ALBERTAGRID" )
 
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
 
-ADD_DUNE_MODULES( common istl grid fem geometry localfunctions subgrid stuff )
+ADD_DUNE_MODULES( common istl grid fem geometry localfunctions subgrid stuff spgrid)
 ADD_CXX_FLAGS( "${CUSTOM_FLAGS} -DGRIDTYPE=${GRIDTYPE} -DHAVE_CMAKE_CONFIG -DHAVE_CONFIG_H" )
 
 LINK_DIRECTORIES( "/usr/lib" "${ALUGRID_BASE_PATH}/lib" )
@@ -132,41 +130,78 @@ LINK_DIRECTORIES( "/usr/lib" "${ALUGRID_BASE_PATH}/lib" )
 FILE( GLOB_RECURSE header "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh" )
 FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	SET(BOOST_LIBS "boost_date_time-mt" "boost_filesystem-mt" "boost_system-mt" "boost_timer-mt")
-ELSE(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	SET(BOOST_LIBS "boost_date_time" "boost_filesystem" "boost_system" "boost_timer")
-ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+SET(BOOST_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_CHRONO_LIBRARY})
 
 
-set( COMMON_LIBS "dunefem" "dunegrid" "dunecommon" "dunegeometry"
-    ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
-    ${BOOST_LIBS})
+
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
-ADD_DEFINITIONS( ${MY_CXX_FLAGS} )
+ADD_DEFINITIONS( ${MY_CXX_FLAGS} -DPROBLEM_NAME=${PROBLEM_NAME} )
 
-ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
+add_subdirectory(doc)
+add_subdirectory(dune)
+
+set( COMMON_SOURCES 
+        dune/multiscale/tools/misc/outputparameter.cc
+        dune/multiscale/msfem/fem_solver.cc
+        dune/multiscale/hmm/cell_problem_numbering.cc
+        dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
+        dune/multiscale/hmm/cell_problem_solver.cc
+        dune/multiscale/hmm/discrete_cell_operator.cc
+        dune/multiscale/msfem/localproblems/subgrid-list.cc
+    )
+
+set( HMM_SOURCES 
+        src/elliptic_hmm.cc 
+        dune/multiscale/hmm/algorithm.cc
+        dune/multiscale/hmm/algorithm_error.cc
+        dune/multiscale/hmm/algorithm_step.cc
+        dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc
+    )
+
+set( MSFEM_SOURCES
+        src/elliptic_msfem.cc
+        dune/multiscale/msfem/algorithm.cc
+        dune/multiscale/msfem/msfem_solver.cc
+    )
+
+set( HOM_FEM_SOURCES
+        src/elliptic_hom_fem.cc
+        dune/multiscale/fem/algorithm.cc
+    )
+    
+set( FEM_SOURCES
+        src/elliptic_fem.cc
+        dune/multiscale/fem/algorithm.cc
+    )
+    
+set( RIGOROUS_MSFEM_SOURCES
+        src/elliptic_rigorous_msfem.cc
+        dune/multiscale/msfem/rigorous.cc
+        dune/multiscale/msfem/rigorous_msfem_solver.cc
+    )
+    
+    
+ADD_LIBRARY(multiscale_common ${COMMON_SOURCES})
+set( COMMON_LIBS multiscale_common "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
+    ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
+    ${BOOST_LIBS})
+    
+ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
-set_target_properties(elliptic_hmm PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${HMM_PROBLEM})
 
-
-ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_msfem ${MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
-set_target_properties(elliptic_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
-ADD_EXECUTABLE(elliptic_hom_fem src/elliptic_hom_fem.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
-set_target_properties(elliptic_hom_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
-ADD_EXECUTABLE(elliptic_fem src/elliptic_fem.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
-set_target_properties(elliptic_fem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
-ADD_EXECUTABLE(elliptic_rigorous_msfem src/elliptic_rigorous_msfem.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_rigorous_msfem ${RIGOROUS_MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_rigorous_msfem ${COMMON_LIBS} )
-set_target_properties(elliptic_rigorous_msfem PROPERTIES COMPILE_FLAGS -DPROBLEM_NAME=${MSFEM_PROBLEM})
 
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
@@ -174,9 +209,7 @@ TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(lg-test ${COMMON_LIBS} )
 
-add_subdirectory(doc)
-add_subdirectory(dune)
 
-HEADERCHECK( ${header} ${dune} )
-DEPENDENCYCHECK( ${header} ${dune} )
-ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
+# HEADERCHECK( ${header} ${dune} )
+# DEPENDENCYCHECK( ${header} ${dune} )
+# ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})

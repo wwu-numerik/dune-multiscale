@@ -1,14 +1,6 @@
-/**************************************************************************
-  **       Title: L2Error class
-  **    $RCSfile$
-  **   $Revision: 1723 $$Name$
-  **       $Date: 2007-06-20 15:20:54 +0000 (Wed, 20 Jun 2007) $
-  **   Copyright: GPL $Author: dune community $
-  ** Description: L2 error class, which computes the error between a function
-  **              and a discrete function. Extracted class from
-  **              Roberts poisson-example
-  **
-  **************************************************************************/
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
 #ifndef DUNE_MS_MEANVALUE_HH
 #define DUNE_MS_MEANVALUE_HH

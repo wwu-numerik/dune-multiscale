@@ -63,10 +63,10 @@ dir = logdata
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 4
+coarse_grid_level = 0
 
 # initial fine grid level 
-fine_grid_level = 6
+fine_grid_level = 1
 
 # number of oversampling layers (layers of fine grid elements)
 oversampling_layers = 0

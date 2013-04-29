@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EIGHT
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EIGHT
 
@@ -5,6 +9,9 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Problem {
+/** \addtogroup problem_8 Problem::Eight
+ * @{ **/
 //! ------------ Elliptic Problem 8 -------------------
 
 // a nonlinear model problem - periodic setting
@@ -12,7 +19,6 @@
 // For details, see 'example.hh'
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
-namespace Problem {
 namespace Eight {
 // description see below
 
@@ -39,13 +45,13 @@ struct ModelProblemData
   inline std::string getMacroGridFile() const {
     return ("../dune/multiscale/grids/macro_grids/elliptic/unit_cube.dgf");
   }
-  
+
   // are the coefficients periodic? (e.g. A=A(x/eps))
   // this method is only relevant if you want to use a standard homogenizer
   inline bool problemIsPeriodic() const {
     return false; // = problem is not periodic
   }
-  
+
   // does the problem allow a stochastic perturbation of the coefficients?
   inline bool problemAllowsStochastics() const {
     return false; // = problem does not allow stochastic perturbations
@@ -98,25 +104,13 @@ public:
   }
 };
 
-//! ----------------- End Definition of ' f ' ------------------------
+/** \brief default class for the second source term G.
+ * Realization: set G(x) = 0: **/
+NULLFUNCTION(SecondSource)
 
 
-
-//! ----------------- Definition of ' G ' ------------------------
-
-  /** \brief default class for the second source term G.
-   * Realization: set G(x) = 0: **/
-  NULLFUNCTION(SecondSource)
-
-//! ----------------- End Definition of ' G ' ------------------------
-
-
-
-//! ----------------- Definition of ' A ' ------------------------
-
-// the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-// A^{\epsilon} : \Omega × R² -> R²
-
+//! the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
+//! A^{\epsilon} : \Omega × R² -> R²
 template< class FunctionSpaceImp >
 class Diffusion
   : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
@@ -138,10 +132,9 @@ public:
 
   typedef DomainFieldType TimeType;
 
-public:
-  Diffusion(){}
+private:
 
-  // to simplify evaluate
+  //! to simplify evaluate
   double additivePart(const DomainType& x, const int i, const int j) const {
     double y = 0.0;
 
@@ -166,6 +159,7 @@ public:
 
   // instantiate all possible cases of the evaluate-method:
 
+public:
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
@@ -208,18 +202,11 @@ public:
   }
 };
 
-//! ----------------- End Definition of ' A ' ------------------------
-
-
 //! ----------------- Definition of ' m ' ----------------------------
 CONSTANTFUNCTION(MassTerm,  0.0)
-//! ----------------- End Definition of ' m ' ------------------------
-
 
 //! ----------------- Definition of some dummy -----------------------
 NULLFUNCTION(DefaultDummyFunction)
-//! ----------------- End Definition of some dummy -------------------
-
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
@@ -270,9 +257,8 @@ public:
     DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
   }
 };
-//! ----------------- End Definition of ' u ' ------------------------
 
-} // namespace Eight {
+} //! @} namespace Eight {
 }
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EIGHT

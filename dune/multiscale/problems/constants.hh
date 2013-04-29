@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_MODEL_PROBLEM_ALL_HH
 #define DUNE_MODEL_PROBLEM_ALL_HH
 
@@ -5,12 +9,13 @@
 #include <utility>
 
 namespace Problem {
+
+//! struct to wrap config parameters with common validation and naming scheme
 struct Constants
 {
   const double epsilon;
-  Constants(double def_epsilon /*, double def_dummy, .. */)
+  Constants(double def_epsilon)
     : epsilon( DSC_CONFIG_GET("problem.epsilon", def_epsilon) )
-      // , dummy( DSC_CONFIG_GET("problem.dummy", def_dummy) ) ..
   {}
 
   template< typename T, class Validator = Dune::Stuff::Common::ValidateAny< T > >

@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #include "common.hh"
 
 // The following FEM code requires an access to the 'ModelProblemData' class,
@@ -11,6 +15,7 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
 
+    using namespace Dune::Multiscale;
     using namespace Dune::Multiscale::FEM;
 
     DSC_PROFILER.startTiming("total_cpu");
@@ -36,7 +41,7 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO << "loading dgf: " << gridName << std::endl;
 
     // create a grid pointer for the DGF file belongig to the macro grid:
-    FEMTraits::GridPointerType grid_pointer(gridName);
+    CommonTraits::GridPointerType grid_pointer(gridName);
 
     // refine the grid 'starting_refinement_level' times:
     grid_pointer->globalRefine(refinement_level);

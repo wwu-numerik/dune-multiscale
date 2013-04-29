@@ -1,3 +1,7 @@
+// dune-multiscale
+// Copyright Holders: Patrick Henning, Rene Milk
+// License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+
 #ifndef DUNE_MULTISCALE_IMPROVED_L2ERROR_HH
 #define DUNE_MULTISCALE_IMPROVED_L2ERROR_HH
 
@@ -5,6 +9,7 @@
 #include <dune/stuff/common/logging.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
 namespace Dune {
 
