@@ -360,12 +360,8 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
 
 
   //! assemble all local problems (within constructor!)
-  MsFEMLocalProblemSolver< DiscreteFunction, SubGridList,
-                                         MacroMicroGridSpecifier,
-                                         CommonTraits::DiffusionType, MsFEMBasisFunctionType >
-      loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, diffusion_op,
-                       standard_basis_function, global_id_to_internal_id );
-
+  MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, diffusion_op,
+                                           standard_basis_function, global_id_to_internal_id );
   loc_prob_solver.assemble_all(/*silence=*/false);
 
   // define the discrete (elliptic) operator that describes our problem

@@ -151,6 +151,7 @@ set( COMMON_SOURCES
         dune/multiscale/hmm/discrete_cell_operator.cc
         dune/multiscale/msfem/localproblems/subgrid-list.cc
         dune/multiscale/msfem/msfem_grid_specifier.cc
+        dune/multiscale/msfem/localproblems/localproblemsolver.cc
     )
 
 set( HMM_SOURCES 

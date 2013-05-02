@@ -23,6 +23,7 @@
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
 
@@ -61,8 +62,7 @@ private:
   typedef typename FineDiscreteFunctionSpace::JacobianRangeType
     JacobianRangeType;
 
-  typedef MsFEMLocalProblemSolver< FineDiscreteFunction, MsFEMTraits::SubGridListType, MacroMicroGridSpecifierType,
-                                   DiffusionModel,Dummy > MsFEMLocalProblemSolverType;
+  typedef MsFEMLocalProblemSolver MsFEMLocalProblemSolverType;
 
   static const int dimension = FineGridPart::GridType::dimension;
   static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
