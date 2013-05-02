@@ -5,41 +5,31 @@ SUBDIRS =
 GRIDTYPE=ALUGRID_SIMPLEX
 GRIDDIM=2
 PROBLEM_NAMES= Toy One Two Three Four Five Six Seven Eight Nine Ten
-FEM_PROBLEM=Nine
-HMM_PROBLEM=Three
-MSFEM_PROBLEM=Nine
-MSFEM_RIGOROUS_PROBLEM=Nine
-DEFAULT_PROBLEM=One
+PROBLEM=Nine
 
+noinst_LTLIBRARIES = libmultiscale_common.la
 noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
 SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
 
-COMMON_SOURCES=../dune/multiscale/tools/misc/outputparameter.cc \
-        ../dune/multiscale/hmm/cell_problem_numbering.cc \
-        ../dune/multiscale/hmm/cell_problem_solver.cc \
-        ../dune/multiscale/hmm/discrete_cell_operator.cc \
+libmultiscale_common_la_SOURCES=../dune/multiscale/tools/misc/outputparameter.cc \
         ../dune/multiscale/msfem/fem_solver.cc \
-        ../dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc \
-        ../dune/multiscale/msfem/localproblems/subgrid-list.cc \
-        ../dune/multiscale/msfem/msfem_grid_specifier.cc\
-        ../dune/multiscale/msfem/localproblems/localoperator.cc \
-        ../dune/multiscale/msfem/localproblems/localproblemsolver.cc 
+        ../dune/multiscale/hmm/cell_problem_numbering.cc \
+        ../dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
 
 elliptic_hmm_SOURCES = elliptic_hmm.cc \
-		../dune/multiscale/hmm/algorithm.cc \
+	../dune/multiscale/hmm/algorithm.cc \
         ../dune/multiscale/hmm/algorithm_error.cc \
         ../dune/multiscale/hmm/algorithm_step.cc \
-        ../dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc $(COMMON_SOURCES)
+        ../dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc
 elliptic_msfem_SOURCES = elliptic_msfem.cc \
         ../dune/multiscale/msfem/algorithm.cc \
-        ../dune/multiscale/msfem/msfem_solver.cc $(COMMON_SOURCES)
+        ../dune/multiscale/msfem/msfem_solver.cc
 elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc \
-	    ../dune/multiscale/msfem/rigorous.cc \
-        ../dune/multiscale/msfem/rigorous_msfem_solver.cc $(COMMON_SOURCES)
+	../dune/multiscale/fem/algorithm.cc 
 elliptic_fem_SOURCES = elliptic_fem.cc \
-	    ../dune/multiscale/fem/algorithm.cc $(COMMON_SOURCES)
+	../dune/multiscale/fem/algorithm.cc
 elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc \
-	    ../dune/multiscale/msfem/rigorous.cc \
+	../dune/multiscale/msfem/rigorous.cc \
         ../dune/multiscale/msfem/rigorous_msfem_solver.cc $(COMMON_SOURCES)
 
 CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
@@ -48,13 +38,13 @@ CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
 	$(AMIRAMESH_CPPFLAGS) \
 	$(ALBERTA_CPPFLAGS) $(BOOST_CPPFLAGS) $(DUNE_CPPFLAGS) \
 	$(ALUGRID_CPPFLAGS)  \
-	-DGRIDDIM=$(GRIDDIM) -DGRIDTYPE=$(GRIDTYPE) -DWORLDDIM=$(GRIDDIM)
+	-DGRIDDIM=$(GRIDDIM) -DGRIDTYPE=$(GRIDTYPE) -DWORLDDIM=$(GRIDDIM) -DPROBLEM_NAME=$(PROBLEM)
 	
-elliptic_hmm_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(HMM_PROBLEM)
-elliptic_msfem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(MSFEM_PROBLEM)
-elliptic_rigorous_msfem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(MSFEM_RIGOROUS_PROBLEM)
-elliptic_fem_CPPFLAGS=$(common_CPPFLAGS) -DPROBLEM_NAME=$(FEM_PROBLEM)
-elliptic_hom_fem_CPPFLAGS = $(common_CPPFLAGS) -DPROBLEM_NAME=$(DEFAULT_PROBLEM)
+#elliptic_hmm_CPPFLAGS=$(common_CPPFLAGS) 
+#elliptic_msfem_CPPFLAGS = $(common_CPPFLAGS)
+#elliptic_rigorous_msfem_CPPFLAGS = $(common_CPPFLAGS)
+#elliptic_fem_CPPFLAGS=$(common_CPPFLAGS)
+#elliptic_hom_fem_CPPFLAGS = $(common_CPPFLAGS)
 
 # The libraries have to be given in reverse order (most basic libraries
 # last).  Also, due to some misunderstanding, a lot of libraries include the
@@ -68,7 +58,7 @@ LDADD = \
 	$(UG_LDFLAGS) $(UG_LIBS) $(BOOST_LDFLAGS) \
 	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_TIMER_LIB) $(BOOST_CHRONO_LIB) \
 	$(DUNEMPILIBS)	\
-	$(DUNE_LDADD)
+	$(DUNE_LDADD) -lmultiscale_common
 LDFLAGS = $(AM_LDFLAGS) \
 	$(DUNEMPILDFLAGS) \
 	$(UG_LDFLAGS) \
