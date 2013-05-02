@@ -12,15 +12,15 @@
 #include <dune/multiscale/hmm/error_estimator.hh>
 
 //! (very restrictive) homogenizer
-#include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
-#include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
+#include <dune/multiscale/common/elliptic_analytical_homogenizer.hh>
+#include <dune/multiscale/common/elliptic_homogenizer.hh>
 
 // all the multiscale code requires an access to the 'ModelProblemData' class
 // (typically defined in the specification file for the model problem)
 
 //! local (dune-multiscale) includes
-#include <dune/multiscale/tools/righthandside_assembler.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 
 void check_config();

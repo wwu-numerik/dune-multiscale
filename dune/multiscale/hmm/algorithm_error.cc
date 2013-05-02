@@ -7,11 +7,11 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/hmm/result.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/hmm/error_estimator.hh>
-
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 namespace Dune {
 namespace Multiscale {

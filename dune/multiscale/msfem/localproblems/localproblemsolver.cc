@@ -12,12 +12,13 @@
 #include <dune/stuff/common/profiler.hh>
 
 #include <dune/multiscale/tools/subgrid_io.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 namespace Dune {
 namespace Multiscale {

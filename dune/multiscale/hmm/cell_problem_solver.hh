@@ -16,7 +16,7 @@
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 
 //! --------------------- the essential cell problem solver class ----------------------------------

@@ -31,7 +31,7 @@
 
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 

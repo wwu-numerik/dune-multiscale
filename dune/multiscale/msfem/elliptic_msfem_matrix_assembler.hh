@@ -23,7 +23,8 @@
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
 

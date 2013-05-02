@@ -9,7 +9,7 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 
-#include <dune/multiscale/tools/righthandside_assembler.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/multiscale/common/traits.hh>

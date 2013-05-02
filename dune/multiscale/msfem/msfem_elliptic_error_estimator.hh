@@ -16,7 +16,7 @@
 #include <dune/stuff/grid/entity.hh>
 #include <dune/stuff/grid/intersection.hh>
 #include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>

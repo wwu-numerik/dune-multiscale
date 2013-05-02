@@ -20,8 +20,8 @@
 #include <dune/multiscale/fem/algorithm.hh>
 
 //! (very restrictive) homogenizer
-#include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>
-#include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
+#include <dune/multiscale/common/elliptic_analytical_homogenizer.hh>
+#include <dune/multiscale/common/elliptic_homogenizer.hh>
 
 
 int main(int argc, char** argv) {

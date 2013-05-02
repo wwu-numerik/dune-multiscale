@@ -2,7 +2,7 @@
 
 
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 namespace Dune {
 namespace Multiscale {

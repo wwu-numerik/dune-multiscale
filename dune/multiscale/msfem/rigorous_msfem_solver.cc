@@ -6,7 +6,7 @@
 
 #include "rigorous_msfem_solver.hh"
 
-#include <dune/multiscale/tools/righthandside_assembler.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>

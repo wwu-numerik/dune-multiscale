@@ -19,7 +19,7 @@
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
-#include <dune/multiscale/tools/righthandside_assembler.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
 
 namespace Dune {
 

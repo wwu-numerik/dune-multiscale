@@ -4,10 +4,10 @@
 
 #include "algorithm.hh"
 
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/tools/homogenizer/elliptic_homogenizer.hh>
-#include <dune/multiscale/tools/righthandside_assembler.hh>
+#include <dune/multiscale/common/elliptic_homogenizer.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
 
 #include <dune/stuff/common/ranges.hh>

@@ -34,7 +34,7 @@
 #include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/solver/MsFEM/msfem_solver.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>
 #include <dune/multiscale/tools/errorestimation/MsFEM/msfem_elliptic_error_estimator.hh>

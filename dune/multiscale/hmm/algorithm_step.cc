@@ -3,7 +3,7 @@
 #include <string>
 #include <fstream>
 
-#include <dune/multiscale/tools/righthandside_assembler.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/hmm/result.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>
