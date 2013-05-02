@@ -54,7 +54,7 @@ private:
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
-  typedef typename HostEntityType::template Codim< 2 >::EntityPointer HostNodePointer;
+  typedef typename HostEntityType::Codim< 2 >::EntityPointer HostNodePointer;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   //! type of (non-discrete )function space
@@ -66,7 +66,7 @@ private:
   typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
   typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
   //! @todo this should eventually be changed to the type of the coarse space
-  typedef typename HostGridPartType::template Codim<0>::EntityType::Geometry::LocalCoordinate LocalCoordinateType;
+  typedef typename HostGridPartType::Codim<0>::EntityType::Geometry::LocalCoordinate LocalCoordinateType;
   typedef GenericReferenceElements< typename  LocalCoordinateType::value_type,  LocalCoordinateType::dimension >
           CoarseRefElementType;
   typedef std::vector<std::vector<HostEntityPointerType>> EntityPointerCollectionType;
