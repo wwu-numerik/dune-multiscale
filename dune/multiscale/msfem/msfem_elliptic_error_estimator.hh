@@ -21,7 +21,7 @@
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
-#include <dune/multiscale/tools/errorestimation/MsFEM/conservative_flux_solver.hh>
+#include <dune/multiscale/msfem/conservative_flux_solver.hh>
 #include "estimator_utils.hh"
 
 namespace Dune {

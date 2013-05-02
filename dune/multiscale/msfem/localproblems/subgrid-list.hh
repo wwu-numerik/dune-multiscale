@@ -62,7 +62,11 @@ private:
 
   //! type of domain
   typedef typename FunctionSpaceType::DomainType DomainType;
+
+public:
   typedef std::vector< DomainType > CoarseNodeVectorType;
+
+private:
   typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
   typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
   //! @todo this should eventually be changed to the type of the coarse space

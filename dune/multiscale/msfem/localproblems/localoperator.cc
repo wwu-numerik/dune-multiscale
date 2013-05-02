@@ -2,25 +2,31 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
+#ifdef HAVE_CMAKE_CONFIG
+ #include "cmake_config.h"
+#elif defined (HAVE_CONFIG_H)
+ #include <config.h>
+#endif // ifdef HAVE_CMAKE_CONFIG
+
+#include "localoperator.hh"
+
 #include <dune/stuff/common/ranges.hh>
+
+#include <dune/multiscale/tools/misc/uzawa.hh>
+#include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-// dummy implementation of "operator()"
-// 'w' = effect of the discrete operator on 'u'
-template< class DiscreteFunctionImp, class DiffusionImp >
-void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::operator()(const DiscreteFunctionImp& /*u*/,
-                                                                           DiscreteFunctionImp& /*w*/) const {
-  DUNE_THROW(Dune::NotImplemented,"the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy.");
-}
-
+LocalProblemOperator::LocalProblemOperator(const DiscreteFunctionSpace& subDiscreteFunctionSpace,
+                                           const DiffusionModel& diffusion_op)
+  : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
+    , diffusion_operator_(diffusion_op)
+{}
 
 // is a given 'point' in the convex hull of corner 0, corner 1 and corner 2 (which forms a codim 0 entity)
-template< class SubDiscreteFunctionImp, class DiffusionImp >
-bool LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >
-    ::point_is_in_element( const DomainType& corner_0,
+bool LocalProblemOperator::point_is_in_element( const DomainType& corner_0,
                 const DomainType& corner_1,
                 const DomainType& corner_2,
                 const DomainType& point) const
@@ -71,15 +77,9 @@ bool LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >
 
 //! stiffness matrix for a linear elliptic diffusion operator
 // for oversampling strategy 1 (no constraints)
-template< class SubDiscreteFunctionImp, class DiffusionImp >
-template< class MatrixType >
-void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matrix(MatrixType& global_matrix) const
+void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrix& global_matrix) const
 // x_T is the barycenter of the macro grid element T
 {
-  typedef typename MatrixType::LocalMatrixType LocalMatrix;
-
-  Problem::ModelProblemData model_info;
-
   global_matrix.reserve();
   global_matrix.clear();
 
@@ -97,7 +97,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
     const Geometry& sub_grid_geometry = sub_grid_entity.geometry();
     assert(sub_grid_entity.partitionType() == InteriorEntity);
 
-    LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
+    auto local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -138,16 +138,11 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
 } // assemble_matrix
 
 
-
-
 //! stiffness matrix for a linear elliptic diffusion operator
-template< class SubDiscreteFunctionImp, class DiffusionImp >
-template< class MatrixType, class CoarseNodeVectorType >
-void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matrix(MatrixType& global_matrix, const CoarseNodeVectorType& coarse_node_vector ) const
+void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrix& global_matrix,
+                                           const SubGridList::CoarseNodeVectorType& coarse_node_vector ) const
 // x_T is the barycenter of the macro grid element T
 {
-  typedef typename MatrixType::LocalMatrixType LocalMatrix;
-
   global_matrix.reserve();
   global_matrix.clear();
 
@@ -178,8 +173,7 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
         }
       }
 
-
-    LocalMatrix local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
+    auto local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -235,11 +229,10 @@ void LocalProblemOperator< SubDiscreteFunctionImp, DiffusionImp >::assemble_matr
   }
 } // assemble_matrix
 
-template< class DiscreteFunctionImp, class DiffusionImp >
-void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS(const DiscreteFunctionImp& rhs) const {
-  typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+void LocalProblemOperator::printLocalRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
-  typedef typename DiscreteFunctionImp::LocalFunctionType         LocalFunctionType;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunctionType;
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace
     = rhs.space();
@@ -257,14 +250,13 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::printLocalRHS(co
   }
 }  // end method
 
-template< class DiscreteFunctionImp, class DiffusionImp >
-double LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(const DiscreteFunctionImp& rhs) const {
+double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
   double norm = 0.0;
 
-  typedef typename DiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
   typedef typename IteratorType::Entity                           EntityType;
-  typedef typename DiscreteFunctionImp::LocalFunctionType         LocalFunctionType;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunctionType;
   typedef typename DiscreteFunctionSpaceType::GridPartType        GridPartType;
   typedef typename DiscreteFunctionSpaceType::GridType            GridType;
   typedef typename GridType::template Codim< 0 >::Geometry
@@ -304,19 +296,11 @@ double LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >::normRHS(const 
   return norm;
 }  // end method
 
-// assemble the right hand side of a local problem (reconstruction problem on entity)
-// ----------------------------------------------
 
-// assemble method for the case of a linear diffusion operator
-
-// we compute the following entries for each fine-scale base function phi_h_i:
-// - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
-template< class DiscreteFunctionImp, class DiffusionImp >
-// template< class MatrixType >
-void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
+void LocalProblemOperator
       ::assemble_local_RHS(const JacobianRangeType &e, // direction 'e'
                             // rhs local msfem problem:
-                            DiscreteFunction& local_problem_RHS) const {
+                            LocalProblemOperator::DiscreteFunction& local_problem_RHS) const {
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
@@ -380,17 +364,9 @@ void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
 } // assemble_local_RHS
 
 
-
-// assemble method for the case of a linear diffusion operator
-// in a constraint space, for oversampling strategy 2 and 3
-
-// we compute the following entries for each fine-scale base function phi_h_i:
-// - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
-template< class DiscreteFunctionImp, class DiffusionImp >
-template< class CoarseNodeVectorType >
-void LocalProblemOperator< DiscreteFunctionImp, DiffusionImp >
+void LocalProblemOperator
       ::assemble_local_RHS(const JacobianRangeType &e, // direction 'e'
-                           const CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+                           const SubGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
                            const int& oversampling_strategy,
                            // rhs local msfem problem:
                            DiscreteFunction& local_problem_RHS) const {

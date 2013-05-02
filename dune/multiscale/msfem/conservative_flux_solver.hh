@@ -171,7 +171,7 @@ template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
 void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
                                MacroMicroGridSpecifierImp >
   ::operator()(const SubGridDiscreteFunctionImp& /*u*/, SubGridDiscreteFunctionImp& /*w*/) const {
-  DUNE_THROW(Dune::NotImplemented,"the ()-operator of the LocalProblemOperator class is not yet implemented and still a dummy.");
+  DUNE_THROW(Dune::NotImplemented,"the ()-operator of the ConservativeFluxOperator class is not yet implemented and still a dummy.");
 }
 
 //! assemble system matrix

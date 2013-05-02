@@ -144,13 +144,14 @@ add_subdirectory(dune)
 
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
-        dune/multiscale/msfem/fem_solver.cc
         dune/multiscale/hmm/cell_problem_numbering.cc
-        dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
         dune/multiscale/hmm/cell_problem_solver.cc
         dune/multiscale/hmm/discrete_cell_operator.cc
+        dune/multiscale/msfem/fem_solver.cc
+        dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
         dune/multiscale/msfem/localproblems/subgrid-list.cc
         dune/multiscale/msfem/msfem_grid_specifier.cc
+        dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
     )
 

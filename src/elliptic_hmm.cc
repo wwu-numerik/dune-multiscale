@@ -9,7 +9,7 @@
 
 // the solutions of the cell problems are always determined in a pre-process
 
-#include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
+#include <dune/multiscale/hmm/error_estimator.hh>
 
 //! (very restrictive) homogenizer
 #include <dune/multiscale/tools/homogenizer/elliptic_analytical_homogenizer.hh>

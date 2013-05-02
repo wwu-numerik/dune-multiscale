@@ -10,7 +10,7 @@
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/hmm/result.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/tools/errorestimation/HMM/elliptic_error_estimator.hh>
+#include <dune/multiscale/hmm/error_estimator.hh>
 
 
 namespace Dune {

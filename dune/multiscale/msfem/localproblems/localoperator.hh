@@ -14,26 +14,19 @@
 #include <dune/subgrid/subgrid.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
-#include <dune/multiscale/tools/subgrid_io.hh>
-#include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
-#include <dune/multiscale/tools/misc/outputparameter.hh>
+
+#include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
+#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-// Imp stands for Implementation
-template< class SubDiscreteFunctionType, class DiffusionOperatorType >
 class LocalProblemOperator
-  : public Operator< typename SubDiscreteFunctionType::RangeFieldType,
-                     typename SubDiscreteFunctionType::RangeFieldType,
-                     SubDiscreteFunctionType,
-                     SubDiscreteFunctionType >
 {
-  typedef LocalProblemOperator< SubDiscreteFunctionType, DiffusionOperatorType > This;
+  typedef MsFEMLocalProblemSolver::SubDiscreteFunctionType SubDiscreteFunctionType;
+  typedef CommonTraits::DiffusionType DiffusionOperatorType;
 
 private:
   typedef SubDiscreteFunctionType DiscreteFunction;
@@ -69,39 +62,33 @@ private:
   typedef CachingQuadrature< GridPart, 0 > Quadrature;
 
 public:
-  LocalProblemOperator(const DiscreteFunctionSpace& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op)
-    : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
-      , diffusion_operator_(diffusion_op)
-  {}
+  LocalProblemOperator(const DiscreteFunctionSpace& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
-private:
-  LocalProblemOperator(const This&) = delete;
+  //! assemble stiffness matrix for local problems (oversampling strategy 1)
+  void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrix& global_matrix) const;
 
-public:
-  // dummy operator
-  virtual void operator()(const DiscreteFunction& u, DiscreteFunction& w) const;
+  //! assemble stiffness matrix for local problems (oversampling strategy 2 and 3)
+  void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrix& global_matrix,
+                       const SubGridList::CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
 
-  // assemble stiffness matrix for local problems (oversampling strategy 1)
-  template< class MatrixType >
-  void assemble_matrix(MatrixType& global_matrix) const;
-
-  // assemble stiffness matrix for local problems (oversampling strategy 2 and 3)
-  template< class MatrixType, class CoarseNodeVectorType >
-  void assemble_matrix(MatrixType& global_matrix, const CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
-
-  // the right hand side assembler methods
+  //! assemble the right hand side of a local problem (reconstruction problem on entity)
+    //! assemble method for the case of a linear diffusion operator
+  //! we compute the following entries for each fine-scale base function phi_h_i:
+  //! - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
   void assemble_local_RHS(
     // direction 'e'
     const JacobianRangeType& e,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
 
-  // the right hand side assembler methods
-  template< class CoarseNodeVectorType >
+  //! assemble method for the case of a linear diffusion operator
+  //! in a constraint space, for oversampling strategy 2 and 3
+  //! we compute the following entries for each fine-scale base function phi_h_i:
+  //! - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
   void assemble_local_RHS(
     // direction 'e'
     const JacobianRangeType& e,
-    const CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
+    const SubGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
     const int& oversampling_strategy,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
@@ -121,7 +108,5 @@ private:
 } //namespace MsFEM {
 } //namespace Multiscale {
 } //namespace Dune {
-
-#include "localoperator.cc"
 
 #endif // LOCALOPERATOR_HH

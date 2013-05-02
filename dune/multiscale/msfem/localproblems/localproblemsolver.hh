@@ -74,7 +74,9 @@ private:
     SubDiscreteFunctionSpaceType;
 
   //! type of subgrid discrete function
+public:
   typedef AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
+private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
   typedef typename SubgridIteratorType::Entity SubgridEntityType;
   typedef typename SubgridEntityType::EntityPointer SubgridEntityPointerType;
@@ -103,9 +105,10 @@ private:
     };
   };
 
+public:
   typedef SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType,
                                    LocProbMatrixTraits > LocProbFEMMatrix;
-
+private:
   #ifdef SYMMETRIC_DIFFUSION_MATRIX
   typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrix;
   #else

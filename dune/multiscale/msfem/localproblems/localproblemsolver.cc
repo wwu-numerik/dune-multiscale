@@ -15,6 +15,7 @@
 #include <dune/multiscale/tools/disc_func_writer/discretefunctionwriter.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
+
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
 
@@ -56,8 +57,6 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpace
 void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
                        SubDiscreteFunctionType& local_problem_solution,
                        const int coarse_index /*= -1*/ ) const {
-    // discrete elliptic operator describing the elliptic local msfem problems
-    typedef LocalProblemOperator< SubDiscreteFunctionType, DiffusionOperatorType > LocalProblemOperatorType;
 
     typedef SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
         WeightedClementMatrixObjectTraits;
@@ -85,7 +84,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
 
   //! define the discrete (elliptic) local MsFEM problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
-  LocalProblemOperatorType local_problem_op(subDiscreteFunctionSpace, diffusion_);
+  LocalProblemOperator local_problem_op(subDiscreteFunctionSpace, diffusion_);
 
   const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
 
