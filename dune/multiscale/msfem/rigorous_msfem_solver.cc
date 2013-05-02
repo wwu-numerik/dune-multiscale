@@ -8,7 +8,6 @@
 
 #include <dune/multiscale/tools/righthandside_assembler.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/elliptic_rigorous_msfem_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 
@@ -133,7 +132,7 @@ void Elliptic_Rigorous_MsFEM_Solver::vtk_output(
 
 //! create standard coarse grid basis functions as discrete functions defined on the fine grid
 // ------------------------------------------------------------------------------------
-void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGridSpecifier& specifier,
                                     std::map<int,int>& global_id_to_internal_id,
                                     Elliptic_Rigorous_MsFEM_Solver::MsFEMBasisFunctionType& msfem_basis_function_list ) const
 {
@@ -213,7 +212,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
 }
 
 //! add corrector part to MsFEM basis functions
-void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridSpecifier& specifier,
                                  std::map<int,int>& global_id_to_internal_id,
                                  MsFEMTraits::SubGridListType& subgrid_list,
                                  Elliptic_Rigorous_MsFEM_Solver::MsFEMBasisFunctionType& msfem_basis_function_list ) const
@@ -309,7 +308,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
                           const CommonTraits::FirstSourceType& f,
                           // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                           // n(T)-layers.
-                          MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+                          MacroMicroGridSpecifier& specifier,
                           MsFEMTraits::SubGridListType& subgrid_list,
                           Elliptic_Rigorous_MsFEM_Solver::DiscreteFunction& coarse_scale_part,
                           Elliptic_Rigorous_MsFEM_Solver::DiscreteFunction& fine_scale_part,
@@ -362,7 +361,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
 
   //! assemble all local problems (within constructor!)
   MsFEMLocalProblemSolver< DiscreteFunction, SubGridList,
-                                         MacroMicroGridSpecifier< DiscreteFunctionSpace >,
+                                         MacroMicroGridSpecifier,
                                          CommonTraits::DiffusionType, MsFEMBasisFunctionType >
       loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, diffusion_op,
                        standard_basis_function, global_id_to_internal_id );

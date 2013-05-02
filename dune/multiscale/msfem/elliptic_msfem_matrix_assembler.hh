@@ -41,7 +41,7 @@ class DiscreteEllipticMsFEMOperator
 private:
   typedef CommonTraits::DiscreteFunctionType  CoarseDiscreteFunction;
   typedef CommonTraits::DiscreteFunctionType  FineDiscreteFunction;
-  typedef MacroMicroGridSpecifier< typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType >
+  typedef MacroMicroGridSpecifier
     MacroMicroGridSpecifierType;
 
   typedef CommonTraits::DiffusionType DiffusionModel;
@@ -130,15 +130,7 @@ public:
   void assemble_matrix(SPMatrixObject& global_matrix) const;
 
 private:
-
-  /** create a hostgrid function from a subgridfunction
-   * Note: the maximum gride levels for both underlying grids must be the same
-   * \todo use function from estimator utils instead
-   **/
-  void subgrid_to_hostrid_function(const LocalDiscreteFunction& sub_func, FineDiscreteFunction& host_func);
-
   MacroMicroGridSpecifierType& specifier_;
-
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
   MsFEMTraits::SubGridListType& subgrid_list_;
   const DiffusionModel& diffusion_operator_;

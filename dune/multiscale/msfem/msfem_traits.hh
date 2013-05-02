@@ -16,7 +16,6 @@ class Subgrid;
 namespace Multiscale {
 namespace MsFEM {
 
-template < class T >
 class MacroMicroGridSpecifier;
 class SubGridList;
 template < class T, class R, class S, class G, class H >
@@ -25,7 +24,7 @@ class MsFEMErrorEstimator;
 //! type construction for the MSFEM code
 struct MsFEMTraits {
 
-  typedef MacroMicroGridSpecifier< typename CommonTraits::DiscreteFunctionSpaceType >                          MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifier                          MacroMicroGridSpecifierType;
   typedef Dune::SubGrid< CommonTraits::GridType::dimension, typename CommonTraits::GridType >                  SubGridType;
   typedef SubGridList SubGridListType;
 

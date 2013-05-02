@@ -150,6 +150,7 @@ set( COMMON_SOURCES
         dune/multiscale/hmm/cell_problem_solver.cc
         dune/multiscale/hmm/discrete_cell_operator.cc
         dune/multiscale/msfem/localproblems/subgrid-list.cc
+        dune/multiscale/msfem/msfem_grid_specifier.cc
     )
 
 set( HMM_SOURCES 
@@ -180,7 +181,6 @@ set( RIGOROUS_MSFEM_SOURCES
         src/elliptic_rigorous_msfem.cc
         dune/multiscale/msfem/rigorous.cc
         dune/multiscale/msfem/rigorous_msfem_solver.cc
-        dune/multiscale/msfem/elliptic_rigorous_msfem_matrix_assembler.cc
     )
     
     

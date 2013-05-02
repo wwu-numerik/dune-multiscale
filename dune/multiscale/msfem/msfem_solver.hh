@@ -142,14 +142,14 @@ private:
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
   // ------------------------------------------------------------------------------------
-  void identify_coarse_scale_part( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+  void identify_coarse_scale_part(MacroMicroGridSpecifier &specifier,
                                    const DiscreteFunction& coarse_msfem_solution,
                                    DiscreteFunction& coarse_scale_part ) const;
 
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   // ------------------------------------------------------------------------------------
-  void identify_fine_scale_part( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+  void identify_fine_scale_part(MacroMicroGridSpecifier &specifier,
                                                           MsFEMTraits::SubGridListType& subgrid_list,
                                                           const DiscreteFunction& coarse_msfem_solution,
                                                           DiscreteFunction& fine_scale_part ) const;
@@ -168,7 +168,7 @@ public:
                             const CommonTraits::FirstSourceType& f,
                             // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                             // n(T)-layers.
-                            MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+                            MacroMicroGridSpecifier &specifier,
                             MsFEMTraits::SubGridListType& subgrid_list,
                             DiscreteFunction& coarse_scale_part,
                             DiscreteFunction& fine_scale_part,

@@ -69,7 +69,7 @@ public:
   //! creates an entity/neighbor pattern with domainSpace.size() == #rows sets
   ClemementPattern(const DomainSpace& domainSpace,
                    const RangeSpace& rangeSpace,
-                   const MacroMicroGridSpecifier< RangeSpace >& specifier)
+                   const MacroMicroGridSpecifier& specifier)
     : BaseType(domainSpace.size())
     , support_map_(domainSpace.gridPart().grid().size(0),
                    typename SupportMapType::hasher(domainSpace.indexSet()))
@@ -196,7 +196,7 @@ public:
                               const CoarseNodeVectorType& coarse_nodes,
                               const CoarseBasisFunctionList& coarse_basis,
                               const std::map<int,int>& global_id_to_internal_id,
-                              const MacroMicroGridSpecifier< CoarseDiscreteFunctionSpaceType >& specifier )
+                              const MacroMicroGridSpecifier& specifier )
   : discreteFunctionSpace_( space ),
     coarse_space_( coarse_space ),
     coarse_nodes_( coarse_nodes ),
@@ -498,7 +498,7 @@ protected:
   const CoarseDiscreteFunctionSpaceType& coarse_space_;
   const DofManagerType &dofManager_;
 
-  const MacroMicroGridSpecifier< CoarseDiscreteFunctionSpaceType >& specifier_;
+  const MacroMicroGridSpecifier& specifier_;
   ClemementPattern<DiscreteFunctionSpaceType,CoarseDiscreteFunctionSpaceType> sparsity_pattern_;
   mutable LinearOperatorType linearOperator_;
 

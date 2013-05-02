@@ -126,13 +126,13 @@ private:
 
   //! create standard coarse grid basis functions as discrete functions defined on the fine grid
   // ------------------------------------------------------------------------------------
-  void add_coarse_basis_contribution( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+  void add_coarse_basis_contribution( MacroMicroGridSpecifier& specifier,
                                       std::map<int,int>& global_id_to_internal_id,
                                       MsFEMBasisFunctionType& msfem_basis_function_list ) const;
 
 
   //! add corrector part to MsFEM basis functions
-  void add_corrector_contribution( MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+  void add_corrector_contribution(MacroMicroGridSpecifier &specifier,
                                    std::map<int,int>& global_id_to_internal_id,
                                    MsFEMTraits::SubGridListType& subgrid_list,
                                    MsFEMBasisFunctionType& msfem_basis_function_list ) const;
@@ -266,7 +266,7 @@ public:
                             const CommonTraits::FirstSourceType& f,
                             // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                             // n(T)-layers.
-                            MacroMicroGridSpecifier< DiscreteFunctionSpace >& specifier,
+                            MacroMicroGridSpecifier &specifier,
                             MsFEMTraits::SubGridListType& subgrid_list,
                             DiscreteFunction& coarse_scale_part,
                             DiscreteFunction& fine_scale_part,
