@@ -10,6 +10,7 @@
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/elliptic_rigorous_msfem_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
+#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 
 #include <dune/common/fmatrix.hh>
 
@@ -359,23 +360,16 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, standard_basis_function );
 
 
-  // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
-  typedef DiscreteEllipticRigMsFEMOperator< DiscreteFunction /*type of coarse space*/,
+  //! assemble all local problems (within constructor!)
+  MsFEMLocalProblemSolver< DiscreteFunction, SubGridList,
                                          MacroMicroGridSpecifier< DiscreteFunctionSpace >,
-                                         DiscreteFunction /*type of fine space*/,
-                                         CommonTraits::DiffusionType, MsFEMBasisFunctionType > EllipticRigMsFEMOperatorType;
+                                         CommonTraits::DiffusionType, MsFEMBasisFunctionType >
+      loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, diffusion_op,
+                       standard_basis_function, global_id_to_internal_id );
+
+  loc_prob_solver.assemble_all(/*silence=*/false);
 
   // define the discrete (elliptic) operator that describes our problem
-  //! assemble all local problems (within constructor!)
-  const EllipticRigMsFEMOperatorType elliptic_msfem_op(specifier,
-                                                       coarse_space,
-                                                       subgrid_list,
-                                                       diffusion_op,
-                                                       standard_basis_function,
-                                                       global_id_to_internal_id );
-  // elliptic_msfem_op is no more required for the remaining code!
-  // It is only used to assemle the local problems
-
   add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, msfem_basis_function );
 
   // just for VTK output for the basis function correctors
