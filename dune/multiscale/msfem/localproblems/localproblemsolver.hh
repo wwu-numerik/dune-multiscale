@@ -58,7 +58,7 @@ private:
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
-  typedef typename HostGridType::template Codim< 0 >::Geometry HostGridEntityGeometry;
+  typedef typename HostGridType::Codim< 0 >::Geometry HostGridEntityGeometry;
   typedef typename HostDiscreteFunctionType::LocalFunctionType HostLocalFunctionType;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
@@ -85,7 +85,7 @@ private:
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
 
   enum { faceCodim = 1 };
-  typedef typename SubgridLagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType
+  typedef typename SubgridLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
     SubgridFaceDofIteratorType;
 
   //! polynomial order of base functions

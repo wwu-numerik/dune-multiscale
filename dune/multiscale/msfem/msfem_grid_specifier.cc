@@ -207,9 +207,9 @@ void MacroMicroGridSpecifier::identify_coarse_boundary_nodes()
             const int face = (*intersection_it).indexInInside();
 
             auto faceIterator
-                    = lagrangePointSet.template beginSubEntity< faceCodim >(face);
+                    = lagrangePointSet.beginSubEntity< faceCodim >(face);
             const auto faceEndIterator
-                    = lagrangePointSet.template endSubEntity< faceCodim >(face);
+                    = lagrangePointSet.endSubEntity< faceCodim >(face);
             for ( ; faceIterator != faceEndIterator; ++faceIterator)
                 is_boundary_node_[coarse_scale_space_.mapper().mapToGlobal(*it, *faceIterator )] = true;
 

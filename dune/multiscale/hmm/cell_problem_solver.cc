@@ -207,8 +207,8 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
 
       cell_problem_solution += cell_problem_residual;
 
-      relative_newton_error = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_residual, zero_func);
-      const RangeType norm_cell_solution = l2error.template norm2< (2* polynomialOrder) + 2 >(cell_problem_solution,
+      relative_newton_error = l2error.norm2< (2* polynomialOrder) + 2 >(cell_problem_residual, zero_func);
+      const RangeType norm_cell_solution = l2error.norm2< (2* polynomialOrder) + 2 >(cell_problem_solution,
                                                                                         zero_func);
       relative_newton_error = relative_newton_error / norm_cell_solution;
       cell_problem_residual.clear();
@@ -258,7 +258,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
   typedef typename DiscreteFunctionType::LocalFunctionType
   LocalFunctionType;
 
-  typedef typename GridType::template Codim< 0 >::Entity EntityType;
+  typedef typename GridType::Codim< 0 >::Entity EntityType;
   typedef typename EntityType::Geometry                  EntityGeometryType;
 
   typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
@@ -357,7 +357,7 @@ void CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFu
   typedef typename DiscreteFunctionType::LocalFunctionType
   LocalFunctionType;
 
-  typedef typename GridType::template Codim< 0 >::Entity EntityType;
+  typedef typename GridType::Codim< 0 >::Entity EntityType;
   typedef typename EntityType::Geometry                  EntityGeometryType;
 
   typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
@@ -443,7 +443,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
   typedef typename DiscreteFunctionType::LocalFunctionType
   LocalFunctionType;
 
-  typedef typename GridType::template Codim< 0 >::Entity EntityType;
+  typedef typename GridType::Codim< 0 >::Entity EntityType;
   typedef typename EntityType::EntityPointer
   EntityPointerType;
   typedef typename EntityType::Geometry EntityGeometryType;

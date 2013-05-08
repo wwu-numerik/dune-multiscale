@@ -224,7 +224,7 @@ double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunctionType;
   typedef typename DiscreteFunctionSpaceType::GridPartType        GridPartType;
   typedef typename DiscreteFunctionSpaceType::GridType            GridType;
-  typedef typename GridType::template Codim< 0 >::Geometry
+  typedef typename GridType::Codim< 0 >::Geometry
   EnGeometryType;
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace

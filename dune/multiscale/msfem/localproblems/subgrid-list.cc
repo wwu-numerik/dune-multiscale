@@ -27,9 +27,9 @@ bool SubGridList::entity_patch_in_subgrid(const HostEntityPointerType& hit,
   bool patch_in_subgrid = true;
 
   // loop over the nodes of the enity
-  for (int i = 0; i < (*hit).template count< 2 >(); ++i)
+  for (int i = 0; i < (*hit).count< 2 >(); ++i)
   {
-    const HostNodePointer node = (*hit).template subEntity< 2 >(i);
+    const HostNodePointer node = (*hit).subEntity< 2 >(i);
 
     const int global_index_node = hostGridPart.indexSet().index(*node);
 
@@ -68,14 +68,14 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
   layer -= 1;
 
   // loop over the nodes of the fine grid entity
-  for (int i = 0; i < (*hit).template count< 2 >(); ++i)
+  for (int i = 0; i < (*hit).count< 2 >(); ++i)
   {
-    const HostNodePointer node = (*hit).template subEntity< 2 >(i);
+    const HostNodePointer node = (*hit).subEntity< 2 >(i);
     int global_index_node = hostGridPart.indexSet().index(*node);
 
     for (size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j)
     {
-      if ( !( subGrid->template contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
+      if ( !( subGrid->contains< 0 >(*entities_sharing_same_node[global_index_node][j]) ) )
       {
         subGrid->insertPartial(*entities_sharing_same_node[global_index_node][j]);
 
@@ -150,10 +150,10 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
   // determine the entities that share a common global node with a given index
   for (const auto& host_entity : hostSpace_)
   {
-    int number_of_nodes_in_entity = host_entity.template count< 2 >();
+    int number_of_nodes_in_entity = host_entity.count< 2 >();
     for (int i = 0; i < number_of_nodes_in_entity; ++i)
     {
-      const HostNodePointer node = host_entity.template subEntity< 2 >(i);
+      const HostNodePointer node = host_entity.subEntity< 2 >(i);
       const int global_index_node = hostGridPart.indexSet().index(*node);
 
       entities_sharing_same_node[global_index_node].emplace_back(host_entity);
@@ -208,10 +208,10 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
   for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it)
   {
     const auto& localEntity = *it;
-    const int number_of_nodes_in_entity = localEntity.template count< 2 >();
+    const int number_of_nodes_in_entity = localEntity.count< 2 >();
     for (int i = 0; i < number_of_nodes_in_entity; i += 1)
     {
-      const HostNodePointer node = localEntity.template subEntity< 2 >(i);
+      const HostNodePointer node = localEntity.subEntity< 2 >(i);
       const int global_index_node = hostGridPart.indexSet().index(*node);
 
       entities_sharing_same_node[global_index_node].emplace_back(localEntity);

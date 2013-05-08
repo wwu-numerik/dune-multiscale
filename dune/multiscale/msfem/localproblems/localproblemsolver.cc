@@ -136,7 +136,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   //! boundary treatment:
   typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
 
-  typedef typename SGLagrangePointSetType::template Codim< faceCodim >::SubEntityIteratorType
+  typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
       FaceDofIteratorType;
 
   const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
@@ -146,7 +146,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   {
     const SubgridEntityType& subgrid_entity = *sg_it;
 
-    HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(subgrid_entity);
+    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
     const HostEntityType& host_entity = *host_entity_pointer;
 
     LocalMatrix local_matrix = locprob_system_matrix.localMatrix(subgrid_entity, subgrid_entity);
@@ -161,15 +161,15 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
         // check if the neighbor entity is in the subgrid
         const HostEntityPointerType neighborHostEntityPointer = iit->outside();
         const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
-        if ( subGrid.template contains< 0 >(neighborHostEntity) )
+        if ( subGrid.contains< 0 >(neighborHostEntity) )
         {
           continue;
         }
       }
 
       const int face = (*iit).indexInInside();
-      const FaceDofIteratorType fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-      for (FaceDofIteratorType fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+      const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< 1 >(face);
+      for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
         local_matrix.unitRow(*fdit);
     }
   }
@@ -196,7 +196,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   {
     const SubgridEntityType& subgrid_entity = *sg_it;
 
-    HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(subgrid_entity);
+    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
     const HostEntityType& host_entity = *host_entity_pointer;
 
     HostIntersectionIterator iit = hostGridPart.ibegin(host_entity);
@@ -209,7 +209,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
         const HostEntityPointerType neighborHostEntityPointer = iit->outside();
         const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
 
-        if ( subGrid.template contains< 0 >(neighborHostEntity) )
+        if ( subGrid.contains< 0 >(neighborHostEntity) )
         {
           continue;
         }
@@ -222,9 +222,9 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
       const int face = (*iit).indexInInside();
 
       FaceDofIteratorType faceIterator
-          = lagrangePointSet.template beginSubEntity< faceCodim >(face);
+          = lagrangePointSet.beginSubEntity< faceCodim >(face);
       const FaceDofIteratorType faceEndIterator
-          = lagrangePointSet.template endSubEntity< faceCodim >(face);
+          = lagrangePointSet.endSubEntity< faceCodim >(face);
       for ( ; faceIterator != faceEndIterator; ++faceIterator)
         rhsLocal[*faceIterator] = 0;
     }
@@ -308,7 +308,7 @@ void MsFEMLocalProblemSolver::subgrid_to_hostrid_function(const SubDiscreteFunct
   {
     const SubgridEntityType& sub_entity = *sub_it;
 
-    HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(*sub_it);
+    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(*sub_it);
     const HostEntityType& host_entity = *host_entity_pointer;
 
     SubLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
