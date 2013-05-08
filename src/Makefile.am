@@ -1,12 +1,6 @@
 
 SUBDIRS =
 
-#GRIDTYPE=ALBERTAGRID
-GRIDTYPE=ALUGRID_SIMPLEX
-GRIDDIM=2
-PROBLEM_NAMES= Toy One Two Three Four Five Six Seven Eight Nine Ten
-PROBLEM=Nine
-
 noinst_LTLIBRARIES = libmultiscale_common.la
 noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
 SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
@@ -16,30 +10,21 @@ libmultiscale_common_la_SOURCES=../dune/multiscale/tools/misc/outputparameter.cc
         ../dune/multiscale/hmm/cell_problem_numbering.cc \
         ../dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
 
-elliptic_hmm_SOURCES = elliptic_hmm.cc \
-	../dune/multiscale/hmm/algorithm.cc \
-        ../dune/multiscale/hmm/algorithm_error.cc \
-        ../dune/multiscale/hmm/algorithm_step.cc \
-        ../dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc
+elliptic_hmm_SOURCES = elliptic_hmm.cc 
+
 elliptic_msfem_SOURCES = elliptic_msfem.cc \
         ../dune/multiscale/msfem/algorithm.cc \
         ../dune/multiscale/msfem/msfem_solver.cc
-elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc \
-	../dune/multiscale/fem/algorithm.cc 
-elliptic_fem_SOURCES = elliptic_fem.cc \
-	../dune/multiscale/fem/algorithm.cc
+        
+elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc 
+	
+elliptic_fem_SOURCES = elliptic_fem.cc 
+
 elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc \
 	../dune/multiscale/msfem/rigorous.cc \
-        ../dune/multiscale/msfem/rigorous_msfem_solver.cc $(COMMON_SOURCES)
+        ../dune/multiscale/msfem/rigorous_msfem_solver.cc
 
-CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
-	$(DUNEMPICPPFLAGS) \
-	$(UG_CPPFLAGS) \
-	$(AMIRAMESH_CPPFLAGS) \
-	$(ALBERTA_CPPFLAGS) $(BOOST_CPPFLAGS) $(DUNE_CPPFLAGS) \
-	$(ALUGRID_CPPFLAGS)  \
-	-DGRIDDIM=$(GRIDDIM) -DGRIDTYPE=$(GRIDTYPE) -DWORLDDIM=$(GRIDDIM) -DPROBLEM_NAME=$(PROBLEM)
-	
+
 #elliptic_hmm_CPPFLAGS=$(common_CPPFLAGS) 
 #elliptic_msfem_CPPFLAGS = $(common_CPPFLAGS)
 #elliptic_rigorous_msfem_CPPFLAGS = $(common_CPPFLAGS)
@@ -58,7 +43,7 @@ LDADD = \
 	$(UG_LDFLAGS) $(UG_LIBS) $(BOOST_LDFLAGS) \
 	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_TIMER_LIB) $(BOOST_CHRONO_LIB) \
 	$(DUNEMPILIBS)	\
-	$(DUNE_LDADD) -lmultiscale_common
+	$(DUNE_LDADD) -lmultiscale_common -lmultiscale_hmm
 LDFLAGS = $(AM_LDFLAGS) \
 	$(DUNEMPILDFLAGS) \
 	$(UG_LDFLAGS) \

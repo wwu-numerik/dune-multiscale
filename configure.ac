@@ -25,6 +25,7 @@ AC_CONFIG_FILES([
   doc/doxygen/Doxyfile
   dune/Makefile
   dune/multiscale/Makefile
+  dune/multiscale/hmm/Makefile
   dune/multiscale/test/Makefile
   m4/Makefile
   dune-multiscale.pc

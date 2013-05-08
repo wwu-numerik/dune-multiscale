@@ -1,5 +1,5 @@
 #only list sudirs with seperate Makefile.am's here
-SUBDIRS = test
+SUBDIRS = test hmm
 
 multiscaleincludedir = $(includedir)/dune/multiscale
 
