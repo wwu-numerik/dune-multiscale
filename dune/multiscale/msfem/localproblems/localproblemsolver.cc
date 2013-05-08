@@ -250,8 +250,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
 
     if ( clement )
     {
-
-/*        HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
+      HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
       zero.clear();
       const double dummy = 12345.67890;
       double solverEps = 1e-8 ;
@@ -280,8 +279,8 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
       {
         DSC::Profiler::ScopedTiming st("uzawa");
         InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
-        uzawa( local_problem_rhs, zero *//*interpolation is zero*//*, local_problem_solution, lagrange_multiplier );
-      }*/
+        uzawa( local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier );
+      }
     }
     else {
       locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
