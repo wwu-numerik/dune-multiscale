@@ -15,12 +15,18 @@ noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elli
 SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
 
 COMMON_SOURCES=../dune/multiscale/tools/misc/outputparameter.cc \
-        ../dune/multiscale/msfem/fem_solver.cc \
         ../dune/multiscale/hmm/cell_problem_numbering.cc \
-        ../dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
+        ../dune/multiscale/hmm/cell_problem_solver.cc \
+        ../dune/multiscale/hmm/discrete_cell_operator.cc \
+        ../dune/multiscale/msfem/fem_solver.cc \
+        ../dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc \
+        ../dune/multiscale/msfem/localproblems/subgrid-list.cc \
+        ../dune/multiscale/msfem/msfem_grid_specifier.cc\
+        ../dune/multiscale/msfem/localproblems/localoperator.cc \
+        ../dune/multiscale/msfem/localproblems/localproblemsolver.cc 
 
 elliptic_hmm_SOURCES = elliptic_hmm.cc \
-	../dune/multiscale/hmm/algorithm.cc \
+		../dune/multiscale/hmm/algorithm.cc \
         ../dune/multiscale/hmm/algorithm_error.cc \
         ../dune/multiscale/hmm/algorithm_step.cc \
         ../dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc $(COMMON_SOURCES)
@@ -28,11 +34,12 @@ elliptic_msfem_SOURCES = elliptic_msfem.cc \
         ../dune/multiscale/msfem/algorithm.cc \
         ../dune/multiscale/msfem/msfem_solver.cc $(COMMON_SOURCES)
 elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc \
-	../dune/multiscale/fem/algorithm.cc $(COMMON_SOURCES)
+	    ../dune/multiscale/msfem/rigorous.cc \
+        ../dune/multiscale/msfem/rigorous_msfem_solver.cc $(COMMON_SOURCES)
 elliptic_fem_SOURCES = elliptic_fem.cc \
-	../dune/multiscale/fem/algorithm.cc $(COMMON_SOURCES)
+	    ../dune/multiscale/fem/algorithm.cc $(COMMON_SOURCES)
 elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc \
-	../dune/multiscale/msfem/rigorous.cc \
+	    ../dune/multiscale/msfem/rigorous.cc \
         ../dune/multiscale/msfem/rigorous_msfem_solver.cc $(COMMON_SOURCES)
 
 CPPFLAGS = $(ALL_PKG_CPPFLAGS) $(AM_CPPFLAGS) \
