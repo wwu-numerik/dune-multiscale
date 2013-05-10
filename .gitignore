@@ -76,6 +76,7 @@ auto-save-list
 tramp
 .\#*
 
+
 # Org-mode
 .org-id-locations
 *_archive
@@ -86,6 +87,8 @@ tramp
 Session.vim
 .netrwhist
 *~
+xcode
+
 # DUNE
 /dune-*.pc
 /config.guess
@@ -97,3 +100,5 @@ Session.vim
 /config.sub
 /dependencies.m4
 /am
+*.vtu
+*.pvtu
