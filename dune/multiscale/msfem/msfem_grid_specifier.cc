@@ -40,13 +40,18 @@ void MacroMicroGridSpecifier::setNoOfLayers(int i, int number_of_layers_for_enti
   * @return Returns the number of overlay layers for the given coarse element.
   */
 int MacroMicroGridSpecifier::getNoOfLayers(int i) const {
-    if (i < number_of_level_host_entities_) {
-        return number_of_layers[i];
-    } else {
-        DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
-    }
-    return 0;
+  if (i<0 || i>number_of_level_host_entities_)
+    DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
+
+  return number_of_layers[i];
 } // getNoOfLayers
+
+/** Get the maximum number of overlay layers for the whole coarse grid.
+* @return Returns the maximum number of overlay layers for the whole coarse grid.
+*/
+int MacroMicroGridSpecifier::maxNumberOverlayLayers() const {
+  return *std::max_element(number_of_layers.begin(), number_of_layers.end());
+}
 
 //! Get the difference between coarse and fine level
 int MacroMicroGridSpecifier::getLevelDifference() const {
