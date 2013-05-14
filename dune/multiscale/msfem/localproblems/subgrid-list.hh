@@ -105,11 +105,10 @@ private:
    * \note called in SubGridList constructor only
    */
   void enrichment(const HostEntityPointerType& hit,
-          const HostEntityPointerType& level_father_it,
+//          const HostEntityPointerType& level_father_it,
           const int& father_index, // father_index = index/number of current subgrid
           shared_ptr<SubGridType> subGrid,
           int& layer);
-
   bool entityPatchInSubgrid(const HostEntityPointerType& hit,
           const HostGridPartType& hostGridPart,
           shared_ptr<const SubGridType> subGrid,

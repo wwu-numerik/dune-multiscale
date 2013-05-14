@@ -40,7 +40,7 @@ bool SubGridList::entityPatchInSubgrid(const HostEntityPointerType& hit,
 } // entityPatchInSubgrid
 
 void SubGridList::enrichment(const HostEntityPointerType& hit,
-                             const HostEntityPointerType& level_father_it,
+//                             const HostEntityPointerType& level_father_it,
                              const int& father_index, // father_index = index/number of current subgrid
                              shared_ptr< SubGridType > subGrid,
                              int& layer)
@@ -93,15 +93,22 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
       }
 
       if (layer > 0) {
-        const HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                                                      entities_sharing_same_node_[global_index_node][j],
-                                                                      level_difference);
-        if (father != level_father_it) {
+//        const HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
+//                                                                      entities_sharing_same_node_[global_index_node][j],
+//                                                                      level_difference);
+        const int otherEnclosingCoarseCellIndex
+                = getEnclosingMacroCellIndex(entities_sharing_same_node_[global_index_node][j]);
+//        if (father != level_father_it) {
+//          const auto& tmp_entity_ptr = entities_sharing_same_node_[global_index_node][j];
+//          if (!enriched_[father_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer]) {
+//            enrichment(tmp_entity_ptr, level_father_it, father_index, subGrid, layer);
+//            ++layer;
+//          }
+        if (father_index!=otherEnclosingCoarseCellIndex) {
           const auto& tmp_entity_ptr = entities_sharing_same_node_[global_index_node][j];
           if (!enriched_[father_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer]) {
-            enrichment(tmp_entity_ptr, level_father_it, father_index, subGrid, layer);
-
-            layer += 1;
+            enrichment(tmp_entity_ptr, father_index, subGrid, layer);
+            ++layer;
           }
         }
       }
@@ -308,9 +315,9 @@ void SubGridList::createSubGrids() {
   auto lastIt = coarseSpace_.begin();
   for (const auto& host_entity : hostSpace_) {
     // get the coarse-grid-father of host_entity (which is a maxlevel entity)...
-    const HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet_,
-            HostEntityPointerType(host_entity),
-            specifier_.getLevelDifference());
+//    const HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet_,
+//            HostEntityPointerType(host_entity),
+//            specifier_.getLevelDifference());
     //// ... and its index
     int  macroCellIndex = getEnclosingMacroCellIndex(host_entity);
     subGridList_[macroCellIndex]->insertPartial(host_entity);
@@ -336,7 +343,7 @@ void SubGridList::createSubGrids() {
       if (layers > 0) {
         DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
         const HostEntityPointerType hep(host_entity);
-        enrichment(hep, level_father_entity, macroCellIndex, subGridList_[macroCellIndex], layers);
+        enrichment(hep, macroCellIndex, subGridList_[macroCellIndex], layers);
       }
     }
   }
