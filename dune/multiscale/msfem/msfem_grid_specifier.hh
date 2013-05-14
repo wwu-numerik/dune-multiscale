@@ -39,6 +39,12 @@ public:
   * @return Returns the number of overlay layers for the given coarse element.
   */
   int getNoOfLayers(int i) const;
+
+  /** Get the maximum number of overlay layers for the whole coarse grid.
+  * @return Returns the maximum number of overlay layers for the whole coarse grid.
+  */
+  int maxNumberOverlayLayers() const;
+
   //! Get the difference between coarse and fine level
   int getLevelDifference() const;
 
@@ -114,6 +120,7 @@ private:
 
   // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
   RangeTypeVector loc_fine_grid_jumps_;
+
 };
 
 } //namespace MsFEM {

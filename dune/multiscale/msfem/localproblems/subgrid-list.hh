@@ -92,6 +92,7 @@ public:
   typedef AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpace > SubGridDiscreteFunction;
 
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true);
+  ~SubGridList();
   SubGridType& getSubGrid(int i);
   const SubGridType& getSubGrid(int i) const;
 
@@ -126,9 +127,6 @@ private:
 
   CoarseGridNodeStorageType coarse_node_store_;  
 
-public:
-  ~SubGridList()
-  {}
 };
 
 } //namespace MsFEM {
