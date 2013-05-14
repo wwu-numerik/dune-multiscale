@@ -57,8 +57,8 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
     enriched_[father_index][hostGridLeafIndexSet.index(*hit)][l] = true;
   }
 
-  //! \todo What's the following line good for???
-  layer -= 1;
+  //! decrease the number of layers (needed for recursion)
+  --layer;
 
   // loop over the nodes of the fine grid entity
   for (int i = 0; i < (*hit).count< 2 >(); ++i) {
@@ -154,13 +154,12 @@ const SubGridList::SubGridType& SubGridList::getSubGrid(int i) const
 // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
 const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i) const
 {
-  const int size = specifier_.getNumOfCoarseEntities();
-
   if (specifier_.getOversamplingStrategy() == 1)
     DUNE_THROW(Dune::InvalidStateException,
-               "Method 'getCoarseNodeVector' of class 'SubGridList' should not be used in combination with oversampling strategy 1. Check your implementation!");
+               "Method 'getCoarseNodeVector' of class 'SubGridList' should not be used in\
+                combination with oversampling strategy 1. Check your implementation!");
 
-  if (i >= size) {
+  if (i >= specifier_.getNumOfCoarseEntities()) {
     DUNE_THROW(Dune::RangeError, "Error. Subgrid-Index too large.");
   }
   return coarse_node_store_[i];
@@ -327,15 +326,13 @@ void SubGridList::createSubGrids() {
       }
     }
 
-    if (all_neighbors_have_same_father)
-      continue;
-
-    int layers = specifier_.getNoOfLayers(macroCellIndex);
-
-    if (layers > 0) {
-      DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
-      const HostEntityPointerType hep(host_entity);
-      enrichment(hep, level_father_entity, macroCellIndex, subGridList_[macroCellIndex], layers);
+    if (!all_neighbors_have_same_father) {
+      int layers = specifier_.getNoOfLayers(macroCellIndex);
+      if (layers > 0) {
+        DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
+        const HostEntityPointerType hep(host_entity);
+        enrichment(hep, level_father_entity, macroCellIndex, subGridList_[macroCellIndex], layers);
+      }
     }
   }
   DSC_PROFILER.stopTiming("msfem.subgrid_list.create");

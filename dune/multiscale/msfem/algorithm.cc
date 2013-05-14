@@ -408,7 +408,7 @@ bool algorithm(const std::string& macroGridName,
 
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
-  for (int i = 0; i < number_of_level_host_entities; i += 1)
+  for (int i = 0; i < number_of_level_host_entities; ++i)
   {
     specifier.setNoOfLayers(i, number_of_layers_);
   }
