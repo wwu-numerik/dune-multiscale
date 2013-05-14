@@ -27,11 +27,10 @@ int MacroMicroGridSpecifier::getNumOfCoarseEntities() const {
   * element
   */
 void MacroMicroGridSpecifier::setNoOfLayers(int i, int number_of_layers_for_entity) {
-    if (i < number_of_level_host_entities_) {
-        number_of_layers[i] = number_of_layers_for_entity;
-    } else {
-        DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
-    }
+    if (i<0 || i >= number_of_level_host_entities_)
+      DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
+
+  number_of_layers[i] = number_of_layers_for_entity;
 } // setNoOfLayers
 
 /** Get the number of overlay layers for a given coarse element.
@@ -40,7 +39,7 @@ void MacroMicroGridSpecifier::setNoOfLayers(int i, int number_of_layers_for_enti
   * @return Returns the number of overlay layers for the given coarse element.
   */
 int MacroMicroGridSpecifier::getNoOfLayers(int i) const {
-  if (i<0 || i>number_of_level_host_entities_)
+  if (i<0 || i>=number_of_level_host_entities_)
     DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
 
   return number_of_layers[i];
