@@ -294,8 +294,7 @@ void SubGridList::createSubGrids() {
   DSC_PROFILER.startTiming("msfem.subgrid_list.create");
 
   // loop over all host entities and assign them to a macro cell
-  auto macroCellIterator = coarseSpace_.begin();
-  auto lastIt            = coarseSpace_.begin();
+  auto lastIt = coarseSpace_.begin();
   for (const auto& host_entity : hostSpace_) {
     // get the coarse-grid-father of host_entity (which is a maxlevel entity)...
     const HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet_,
@@ -314,13 +313,9 @@ void SubGridList::createSubGrids() {
       if (iit->neighbor()) {
         // if there is a neighbor entity
         // check if the neighbor entity is in the subgrid
-        const HostEntityPointerType neighborHostEntityPointer    = iit->outside();
-        const HostEntityPointerType level_father_neighbor_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet_,
-                                                                                            neighborHostEntityPointer,
-                                                                                            specifier_.getLevelDifference());
-        if (level_father_neighbor_entity != level_father_entity) {
+        int neighbourEnlosingMacroCellIndex = getEnclosingMacroCellIndex(iit->outside(), lastIt);
+        if (neighbourEnlosingMacroCellIndex!=macroCellIndex)
           all_neighbors_have_same_father = false;
-        }
       } else {
         all_neighbors_have_same_father = false;
       }
