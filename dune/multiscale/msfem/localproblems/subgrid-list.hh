@@ -100,33 +100,52 @@ public:
   const CoarseNodeVectorType& getCoarseNodeVector(int i) const;
 
 private:
+  typedef std::vector< std::shared_ptr<SubGridType> > SubGridStorageType;
   /**
    * \note called in SubGridList constructor only
    */
   void enrichment(const HostEntityPointerType& hit,
           const HostEntityPointerType& level_father_it,
           const int& father_index, // father_index = index/number of current subgrid
-          const HostGridPartType& hostGridPart,
           shared_ptr<SubGridType> subGrid,
-          EntityPointerCollectionType& entities_sharing_same_node,
-          int& layer,
-          EnrichmentMatrixType& enriched);
+          int& layer);
 
-  bool entity_patch_in_subgrid(const HostEntityPointerType& hit,
+  bool entityPatchInSubgrid(const HostEntityPointerType& hit,
           const HostGridPartType& hostGridPart,
           shared_ptr<const SubGridType> subGrid,
           const EntityPointerCollectionType& entities_sharing_same_node) const;
 
+  /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
+*
+* Given a fine cell, this method computes its barycentre. Using a grid run on the coarse
+* grid, it checks which (if any) coarse cell contains the barycentre.
+*
+* @tparam IteratorType The type of the grid iterator on the coarse grid.
+* @param[in] hostEntity The host entity.
+* @param[in,out] lastIterator The macro cell that was found in the last run. This should be set to
+*                             coarseGrid.begin<0>() in the first run. This iterator will then be
+*                             updated and set to the macro element used in this run.
+* @param[in] coarseGridLeafIndexSet The index set of the coarse grid.
+*
+*/
+  template<class IteratorType>
+  int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer,
+          IteratorType& lastIterator);
+
+  void identifySubGrids();
+  void createSubGrids();
+  void finalizeSubGrids();
+
   const HostDiscreteFunctionSpaceType& hostSpace_;
+  const HostDiscreteFunctionSpaceType& coarseSpace_;
   MacroMicroGridSpecifierType& specifier_;
-
   bool silent_;
-
-  typedef std::vector< std::shared_ptr<SubGridType> > SubGridStorageType;
   SubGridStorageType subGridList_;
-
-  CoarseGridNodeStorageType coarse_node_store_;  
-
+  CoarseGridNodeStorageType coarse_node_store_;
+  const HostGridLeafIndexSet& coarseGridLeafIndexSet_;
+  const HostGridPartType& hostGridPart_;
+  EntityPointerCollectionType entities_sharing_same_node_;
+  EnrichmentMatrixType enriched_;
 };
 
 } //namespace MsFEM {
