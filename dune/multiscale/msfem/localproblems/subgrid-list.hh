@@ -120,7 +120,6 @@ private:
 * Given a fine cell, this method computes its barycentre. Using a grid run on the coarse
 * grid, it checks which (if any) coarse cell contains the barycentre.
 *
-* @tparam IteratorType The type of the grid iterator on the coarse grid.
 * @param[in] hostEntity The host entity.
 * @param[in,out] lastIterator The macro cell that was found in the last run. This should be set to
 *                             coarseGrid.begin<0>() in the first run. This iterator will then be
@@ -128,9 +127,7 @@ private:
 * @param[in] coarseGridLeafIndexSet The index set of the coarse grid.
 *
 */
-  template<class IteratorType>
-  int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer,
-          IteratorType& lastIterator);
+  int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
 
   void identifySubGrids();
   void createSubGrids();
@@ -143,9 +140,11 @@ private:
   SubGridStorageType subGridList_;
   CoarseGridNodeStorageType coarse_node_store_;
   const HostGridLeafIndexSet& coarseGridLeafIndexSet_;
+  const HostGridLeafIndexSet& hostGridLeafIndexSet_;
   const HostGridPartType& hostGridPart_;
   EntityPointerCollectionType entities_sharing_same_node_;
   EnrichmentMatrixType enriched_;
+  std::map<int, int> fineToCoarseMap_;
 };
 
 } //namespace MsFEM {

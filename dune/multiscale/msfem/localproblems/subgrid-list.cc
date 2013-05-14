@@ -115,6 +115,7 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
     specifier_(specifier),
     silent_(silent),
     coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet()),
+    hostGridLeafIndexSet_(hostSpace_.gridPart().grid().leafIndexSet()),
     hostGridPart_(hostSpace_.gridPart()),
     entities_sharing_same_node_(hostGridPart_.grid().size(HostGridPartType::dimension)),
     enriched_(boost::extents[specifier.getNumOfCoarseEntities()][hostGridPart_.grid().size(0)][specifier.maxNumberOverlayLayers() + 1])
@@ -178,11 +179,17 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i)
 * @param[in] coarseGridLeafIndexSet_ The index set of the coarse grid.
 *
 */
-template<class IteratorType>
-int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer,
-        IteratorType& lastIterator) {
+int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer) {
+  static auto lastIterator = coarseSpace_.begin();
+  // first check, whether we looked for this host entity already
+  int hostEntityIndex = hostGridLeafIndexSet_.index(*hostEntityPointer);
+  auto itFound = fineToCoarseMap_.find(hostEntityIndex);
+  if (itFound!=fineToCoarseMap_.end()) {
+    // if so, return the index that was found last time
+    return itFound->second;
+  }
   const auto  baryCenter = hostEntityPointer->geometry().center();
-  IteratorType macroCellIterator = lastIterator;
+  auto macroCellIterator = lastIterator;
   for (; macroCellIterator != coarseSpace_.end(); ++macroCellIterator) {
     const auto& macroGeo   = macroCellIterator->geometry();
     const auto& refElement = CoarseRefElementType::general(macroGeo.type());
@@ -190,7 +197,9 @@ int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEnt
     bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
     if (hostEnIsInMacroCell) {
       lastIterator  = macroCellIterator;
-      return coarseGridLeafIndexSet_.index(*macroCellIterator);
+      int macroIndex = coarseGridLeafIndexSet_.index(*macroCellIterator);
+      fineToCoarseMap_[hostEntityIndex] = macroIndex;
+      return macroIndex;
     }
   }
   // if we came this far, we did not find the matching enclosing coarse cell for the given
@@ -201,7 +210,9 @@ int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEnt
     bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
     if (hostEnIsInMacroCell) {
       lastIterator = macroCellIterator;
-      return coarseGridLeafIndexSet_.index(*macroCellIterator);
+      int macroIndex = coarseGridLeafIndexSet_.index(*macroCellIterator);
+      fineToCoarseMap_[hostEntityIndex] = macroIndex;
+      return macroIndex;
     }
   }
   // if we came this far, we did not find an enclosing coarse cell at all, issue a warning
@@ -301,7 +312,7 @@ void SubGridList::createSubGrids() {
             HostEntityPointerType(host_entity),
             specifier_.getLevelDifference());
     //// ... and its index
-    int  macroCellIndex = getEnclosingMacroCellIndex(host_entity, lastIt);
+    int  macroCellIndex = getEnclosingMacroCellIndex(host_entity);
     subGridList_[macroCellIndex]->insertPartial(host_entity);
 
     // check the neighbor entities and look if they belong to the same father
@@ -313,8 +324,7 @@ void SubGridList::createSubGrids() {
       if (iit->neighbor()) {
         // if there is a neighbor entity
         // check if the neighbor entity is in the subgrid
-        int neighbourEnlosingMacroCellIndex = getEnclosingMacroCellIndex(iit->outside(), lastIt);
-        if (neighbourEnlosingMacroCellIndex!=macroCellIndex)
+        if (getEnclosingMacroCellIndex(iit->outside()) != macroCellIndex)
           all_neighbors_have_same_father = false;
       } else {
         all_neighbors_have_same_father = false;
