@@ -261,7 +261,7 @@ void SubGridList::identifySubGrids() {
     subGridList_.back()->createBegin();
 
     if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
-      assert(coarse_index > 0 && coarse_index < coarse_node_store_.size()
+      assert(coarse_index >= 0 && coarse_index < coarse_node_store_.size()
               && "Index set is not suitable for the current implementation!");
       for (int c = 0; c < coarse_entity.geometry().corners(); ++c)
         coarse_node_store_[coarse_index].emplace_back(coarse_entity.geometry().corner(c));
