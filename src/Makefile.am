@@ -59,7 +59,7 @@ elliptic_hmm_SOURCES = elliptic_hmm.cc
 elliptic_hmm_DEPENDENCIES = libmultiscale_common.la libmultiscale_hmm.la
 elliptic_hmm_CPPFLAGS=$(CPPFLAGS) 
 elliptic_hmm_LDFLAGS=$(LDFLAGS) 
-elliptic_hmm_LDADD=$(LDADD) -lmultiscale_common -lmultiscale_hmm
+elliptic_hmm_LDADD=-lmultiscale_hmm -lmultiscale_common $(LDADD)
 
 ######################################
 ##############  MSFEM  ###############
@@ -68,7 +68,7 @@ elliptic_msfem_SOURCES = elliptic_msfem.cc
 elliptic_msfem_DEPENDENCIES = libmultiscale_common.la libmultiscale_msfem.la
 elliptic_msfem_CPPFLAGS = $(CPPFLAGS)
 elliptic_msfem_LDPFLAGS = $(LDPFLAGS)
-elliptic_msfem_LDADD=$(LDADD) -lmultiscale_common -lmultiscale_msfem
+elliptic_msfem_LDADD=-lmultiscale_msfem -lmultiscale_common $(LDADD)
         
 ######################################
 #########  Rigorous MSFEM  ###########
@@ -79,7 +79,7 @@ elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc \
 elliptic_rigorous_msfem_DEPENDENCIES = libmultiscale_common.la libmultiscale_fem.la
 elliptic_rigorous_msfem_CPPFLAGS = $(CPPFLAGS)
 elliptic_rigorous_msfem_LDPFLAGS = $(LDPFLAGS)
-elliptic_rigorous_msfem_LDADD=$(LDADD) -lmultiscale_common -lmultiscale_fem
+elliptic_rigorous_msfem_LDADD=-lmultiscale_fem -lmultiscale_common $(LDADD)
 
 ######################################
 ##############  FEM  #################
@@ -88,7 +88,7 @@ elliptic_fem_SOURCES = elliptic_fem.cc
 elliptic_fem_DEPENDENCIES = libmultiscale_common.la libmultiscale_fem.la
 elliptic_fem_CPPFLAGS=$(CPPFLAGS) 
 elliptic_fem_LDFLAGS=$(LDFLAGS) 
-elliptic_fem_LDADD=$(LDADD) -lmultiscale_common -lmultiscale_fem
+elliptic_fem_LDADD=-lmultiscale_fem -lmultiscale_common $(LDADD)
 
 ######################################
 ############  HOM FEM  ###############
@@ -97,7 +97,7 @@ elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc
 elliptic_hom_fem_DEPENDENCIES = libmultiscale_common.la
 elliptic_hom_fem_CPPFLAGS = $(CPPFLAGS)
 elliptic_hom_fem_LDFLAGS=$(LDFLAGS) 
-elliptic_hom_fem_LDADD=$(LDADD) -lmultiscale_common -lmultiscale_fem
+elliptic_hom_fem_LDADD=-lmultiscale_fem -lmultiscale_common $(LDADD)
 
 ###############################################################################
 ##########################            Misc       ##############################
