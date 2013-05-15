@@ -1,10 +1,17 @@
 DGF
+
 Interval
-0.0 0.0              % first corner
-1.0 1.0              % second corner
-4   4                % 4 cells in both directions
+0 0   % first corner
+1 1   % second corner
+4 4   % 4 cells in each direction (x, y)
 #
-BOUNDARYDOMAIN
-default 1     % all other boundary segments have id 1
+
+BoundaryDomain
+default 1    % all boundaries have id 1
 #
-# square.dgf
+
+GridParameter
+overlap 1 1
+#
+
+# cube_three.dgf

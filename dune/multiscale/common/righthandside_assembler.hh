@@ -280,53 +280,51 @@ public:
         for (const auto& local_grid_entity : localDiscreteFunctionSpace)
         {
           // check if "local_grid_entity" (which is an entity of U(T)) is in T:
-          // -------------------------------------------------------------------
-
-          const auto father_of_loc_grid_ent =
-              Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                       localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity),
-                                       specifier.getLevelDifference());
-          if (!Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
+//          const auto father_of_loc_grid_ent =
+//                  Stuff::Grid::make_father(coarseGridLeafIndexSet,
+//                          localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity),
+//                          specifier.getLevelDifference());
+          const auto& hostCell = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity);
+          const int enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
+          if (enclosingCoarseCellIndex!=global_index_entity)
+//          if (Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
           {
-            continue;
-          }
-          // -------------------------------------------------------------------
+            const auto& local_grid_geometry = local_grid_entity.geometry();
+            assert(local_grid_entity.partitionType() == InteriorEntity);
 
-          const auto& local_grid_geometry = local_grid_entity.geometry();
-          assert(local_grid_entity.partitionType() == InteriorEntity);
+            // higher order quadrature, since A^{\epsilon} is highly variable
+            LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
+            for (size_t localQuadraturePoint = 0; localQuadraturePoint < local_grid_quadrature.nop(); ++localQuadraturePoint)
+            {
+              RangeType corrector_phi_x;
 
-          // higher order quadrature, since A^{\epsilon} is highly variable
-          LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
-          for (size_t localQuadraturePoint = 0; localQuadraturePoint < local_grid_quadrature.nop(); ++localQuadraturePoint)
-          {
-            RangeType corrector_phi_x;
+              // local (barycentric) coordinates (with respect to entity)
+              const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
+                      localQuadraturePoint);
+              const auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
 
-            // local (barycentric) coordinates (with respect to entity)
-            const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
-                                                                                        localQuadraturePoint);
-            const auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
+              const double weight_local_quadrature
+                      = local_grid_quadrature.weight(localQuadraturePoint)
+                              * local_grid_geometry.integrationElement(local_subgrid_point);
 
-            const double weight_local_quadrature
-                = local_grid_quadrature.weight(localQuadraturePoint)
-                  * local_grid_geometry.integrationElement(local_subgrid_point);
+              const auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
+                      local_grid_entity);
+              const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
+                      local_grid_entity);
 
-            const auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
-                                                               local_grid_entity);
-            const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
-                                                               local_grid_entity);
+              // local corrector for e_0 and e_1
+              RangeType loc_sol_e0, loc_sol_e1;
+              localized_local_problem_solution_e0.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e0);
+              localized_local_problem_solution_e1.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e1);
 
-            // local corrector for e_0 and e_1
-            RangeType loc_sol_e0, loc_sol_e1;
-            localized_local_problem_solution_e0.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e0);
-            localized_local_problem_solution_e1.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e1);
+              corrector_phi_x = 0.0;
+              corrector_phi_x += gradient_Phi_vec[i][0][0] * loc_sol_e0;
+              corrector_phi_x += gradient_Phi_vec[i][0][1] * loc_sol_e1;
 
-            corrector_phi_x = 0.0;
-            corrector_phi_x += gradient_Phi_vec[i][0][0] * loc_sol_e0;
-            corrector_phi_x += gradient_Phi_vec[i][0][1] * loc_sol_e1;
+              f.evaluate(global_point_in_U_T , f_x);
 
-            f.evaluate( global_point_in_U_T , f_x);
-
-            elementOfRHS[i] += weight_local_quadrature * (f_x * corrector_phi_x);
+              elementOfRHS[i] += weight_local_quadrature * (f_x * corrector_phi_x);
+            }
           }
         }
       }

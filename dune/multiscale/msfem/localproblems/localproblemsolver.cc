@@ -380,9 +380,10 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   }
 
 
-  const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
-  int slice = coarse_indices.size() / comm.size();
-  for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
+//  const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
+//  int slice = coarse_indices.size() / comm.size();
+//  for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
+  for (int gc=0; gc<coarse_indices.size(); ++gc)
   {
     const int coarse_index = coarse_indices[gc];
 
