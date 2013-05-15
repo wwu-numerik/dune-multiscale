@@ -99,6 +99,20 @@ public:
   // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
   const CoarseNodeVectorType& getCoarseNodeVector(int i) const;
 
+  /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
+*
+* Given a fine cell, this method computes its barycentre. Using a grid run on the coarse
+* grid, it checks which (if any) coarse cell contains the barycentre.
+*
+* @param[in] hostEntity The host entity.
+* @param[in,out] lastIterator The macro cell that was found in the last run. This should be set to
+*                             coarseGrid.begin<0>() in the first run. This iterator will then be
+*                             updated and set to the macro element used in this run.
+* @param[in] coarseGridLeafIndexSet The index set of the coarse grid.
+*
+*/
+  int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
+
 private:
   typedef std::vector< std::shared_ptr<SubGridType> > SubGridStorageType;
   /**
@@ -113,20 +127,6 @@ private:
           const HostGridPartType& hostGridPart,
           shared_ptr<const SubGridType> subGrid,
           const EntityPointerCollectionType& entities_sharing_same_node) const;
-
-  /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
-*
-* Given a fine cell, this method computes its barycentre. Using a grid run on the coarse
-* grid, it checks which (if any) coarse cell contains the barycentre.
-*
-* @param[in] hostEntity The host entity.
-* @param[in,out] lastIterator The macro cell that was found in the last run. This should be set to
-*                             coarseGrid.begin<0>() in the first run. This iterator will then be
-*                             updated and set to the macro element used in this run.
-* @param[in] coarseGridLeafIndexSet The index set of the coarse grid.
-*
-*/
-  int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
 
   void identifySubGrids();
   void createSubGrids();

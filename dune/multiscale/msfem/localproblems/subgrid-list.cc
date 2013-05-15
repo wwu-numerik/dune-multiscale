@@ -93,17 +93,8 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
       }
 
       if (layer > 0) {
-//        const HostEntityPointerType father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
-//                                                                      entities_sharing_same_node_[global_index_node][j],
-//                                                                      level_difference);
         const int otherEnclosingCoarseCellIndex
                 = getEnclosingMacroCellIndex(entities_sharing_same_node_[global_index_node][j]);
-//        if (father != level_father_it) {
-//          const auto& tmp_entity_ptr = entities_sharing_same_node_[global_index_node][j];
-//          if (!enriched_[father_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer]) {
-//            enrichment(tmp_entity_ptr, level_father_it, father_index, subGrid, layer);
-//            ++layer;
-//          }
         if (father_index!=otherEnclosingCoarseCellIndex) {
           const auto& tmp_entity_ptr = entities_sharing_same_node_[global_index_node][j];
           if (!enriched_[father_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer]) {
