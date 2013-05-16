@@ -204,6 +204,7 @@ void algorithm(const std::string& macroGridName,
   {
     specifier.setNoOfLayers(i, number_of_layers_);
   }
+  //! \todo Important why? (Sven)
   specifier.setOversamplingStrategy( 3 ); //! Important!
 
   //! create subgrids:

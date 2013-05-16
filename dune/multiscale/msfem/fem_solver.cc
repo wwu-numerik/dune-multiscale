@@ -114,26 +114,25 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     EntityIterator endit = discreteFunctionSpace_.end();
     for (EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it)
     {
-        IntersectionIterator iit = gridPart.ibegin(*it);
-        const IntersectionIterator endiit = gridPart.iend(*it);
-        for ( ; iit != endiit; ++iit)
-        {
-            if ( !(*iit).boundary() )
-                continue;
+      IntersectionIterator iit = gridPart.ibegin(*it);
+      const IntersectionIterator endiit = gridPart.iend(*it);
+      for ( ; iit != endiit; ++iit)
+      {
+        if ( iit->boundary() ) {
+          LocalFunction rhsLocal = fem_rhs.localFunction(*it);
+          const LagrangePointSet& lagrangePointSet
+                  = discreteFunctionSpace_.lagrangePointSet(*it);
 
-            LocalFunction rhsLocal = fem_rhs.localFunction(*it);
-            const LagrangePointSet& lagrangePointSet
-                    = discreteFunctionSpace_.lagrangePointSet(*it);
+          const int face = iit->indexInInside();
 
-            const int face = (*iit).indexInInside();
-
-            auto faceIterator
-                    = lagrangePointSet.beginSubEntity< faceCodim >(face);
-            const auto faceEndIterator
-                    = lagrangePointSet.endSubEntity< faceCodim >(face);
-            for ( ; faceIterator != faceEndIterator; ++faceIterator)
-                rhsLocal[*faceIterator] = 0;
+          auto faceIterator
+                  = lagrangePointSet.beginSubEntity< faceCodim >(face);
+          const auto faceEndIterator
+                  = lagrangePointSet.endSubEntity< faceCodim >(face);
+          for ( ; faceIterator != faceEndIterator; ++faceIterator)
+            rhsLocal[*faceIterator] = 0;
         }
+      }
     }
     // --- end boundary treatment ---
 

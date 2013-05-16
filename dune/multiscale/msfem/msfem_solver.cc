@@ -292,22 +292,21 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
     IntersectionIterator iit = coarse_space.gridPart().ibegin(*it);
     const IntersectionIterator endiit = coarse_space.gridPart().iend(*it);
     for ( ; iit != endiit; ++iit) {
-      if ( !(*iit).boundary() )
-        continue;
+      if ( iit->boundary() ) {
+        LocalFunction rhsLocal = msfem_rhs.localFunction(*it);
 
-      LocalFunction rhsLocal = msfem_rhs.localFunction(*it);
+        const LagrangePointSet& lagrangePointSet
+                = coarse_space.lagrangePointSet(*it);
 
-      const LagrangePointSet& lagrangePointSet
-        = coarse_space.lagrangePointSet(*it);
+        const int face = iit->indexInInside();
 
-      const int face = (*iit).indexInInside();
-
-      auto faceIterator
-        = lagrangePointSet.beginSubEntity< faceCodim >(face);
-      const auto faceEndIterator
-        = lagrangePointSet.endSubEntity< faceCodim >(face);
-      for ( ; faceIterator != faceEndIterator; ++faceIterator)
-        rhsLocal[*faceIterator] = 0;
+        auto faceIterator
+                = lagrangePointSet.beginSubEntity< faceCodim >(face);
+        const auto faceEndIterator
+                = lagrangePointSet.endSubEntity< faceCodim >(face);
+        for ( ; faceIterator != faceEndIterator; ++faceIterator)
+          rhsLocal[*faceIterator] = 0;
+      }
     }
   }
   //! --- end boundary treatment ---
