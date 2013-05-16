@@ -380,13 +380,14 @@ public:                                                           /*@LST0S@*/
              coarse_corners[ loc_point ] = coarse_geometry.global(coarse_lagrangepoint_set.point( loc_point ) );
           }
 
-          LinearLagrangeFunction2D< DiscreteFunctionSpaceType > coarse_basis_interpolation_0
+          // LinearLagrangeInterpolation2D should be eventually replaced by LinearLagrangeFunction2D
+          LinearLagrangeInterpolation2D< DiscreteFunctionSpaceType > coarse_basis_interpolation_0
              ( coarse_corners[0], coarse_phi_corner_0[0], coarse_corners[1], coarse_phi_corner_1[0], coarse_corners[2], coarse_phi_corner_2[0] );
 
-          LinearLagrangeFunction2D< DiscreteFunctionSpaceType > coarse_basis_interpolation_1
+          LinearLagrangeInterpolation2D< DiscreteFunctionSpaceType > coarse_basis_interpolation_1
              ( coarse_corners[0], coarse_phi_corner_0[1], coarse_corners[1], coarse_phi_corner_1[1], coarse_corners[2], coarse_phi_corner_2[1] );
 
-          LinearLagrangeFunction2D< DiscreteFunctionSpaceType > coarse_basis_interpolation_2
+          LinearLagrangeInterpolation2D< DiscreteFunctionSpaceType > coarse_basis_interpolation_2
              ( coarse_corners[0], coarse_phi_corner_0[2], coarse_corners[1], coarse_phi_corner_1[2], coarse_corners[2], coarse_phi_corner_2[2] );
 
           // cache geometry of entity

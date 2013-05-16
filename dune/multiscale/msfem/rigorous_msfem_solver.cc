@@ -183,7 +183,9 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
         corners[ loc_point ] = coarse_geometry.global(lagrangepoint_set.point( loc_point ) );
       }
 
-      LinearLagrangeFunction2D< DiscreteFunctionSpace > coarse_basis_interpolation
+      // LinearLagrangeInterpolation2D should be eventually replaced by
+      // LinearLagrangeFunction2D< DiscreteFunctionSpace > coarse_basis_interpolation
+      LinearLagrangeInterpolation2D< DiscreteFunctionSpace > coarse_basis_interpolation
           ( corners[0], phi_i[0], corners[1], phi_i[1], corners[2], phi_i[2] );
 
       LocalFunction loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
