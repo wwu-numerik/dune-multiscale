@@ -114,7 +114,7 @@ public:
   int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
 
 private:
-  typedef std::vector< std::shared_ptr<SubGridType> > SubGridStorageType;
+  typedef std::map<int, std::shared_ptr<SubGridType> > SubGridStorageType;
   /**
    * \note called in SubGridList constructor only
    */
