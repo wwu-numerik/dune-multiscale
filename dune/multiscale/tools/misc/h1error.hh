@@ -89,6 +89,9 @@ public:
       }
     }
 
+    // sum the result over all processes
+    y = MPIManager::comm().sum( y );
+
     return sqrt(y);
   } // end of method
 };

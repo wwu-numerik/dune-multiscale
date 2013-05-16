@@ -137,6 +137,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     // --- end boundary treatment ---
 
     InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, true);
+    fem_rhs.communicate();
     fem_biCGStab(fem_rhs, solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;

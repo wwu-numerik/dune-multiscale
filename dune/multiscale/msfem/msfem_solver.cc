@@ -309,6 +309,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
       }
     }
   }
+  msfem_rhs.communicate();
   //! --- end boundary treatment ---
   const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true);
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
