@@ -455,7 +455,6 @@ bool algorithm(const std::string& macroGridName,
     typedef Dune::Multiscale::Elliptic_FEM_Solver KOP;
     const KOP fem_solver(discreteFunctionSpace);
     fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
-
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
     //! -------------------------- writing data output FEM Solution ----------
@@ -480,38 +479,36 @@ bool algorithm(const std::string& macroGridName,
 
     const CommonTraits::ExactSolutionType u;
     int order_quadrature_rule = 13;
-
     CommonTraits::RangeType msfem_error = l2error.norm< CommonTraits::ExactSolutionType >(u,
                                                               msfem_solution,
                                                               order_quadrature_rule );
-    DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl << std::endl;
+    DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
 
     CommonTraits::RangeType h1_msfem_error(0.0);
     h1_msfem_error = h1error.semi_norm< CommonTraits::ExactSolutionType >(u, msfem_solution, order_quadrature_rule);
     h1_msfem_error += msfem_error;
+
     DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
 
-    if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
-    {
+    if ( DSC_CONFIG_GET("msfem.fem_comparison",false) ) {
       CommonTraits::RangeType fem_error = l2error.norm< CommonTraits::ExactSolutionType >(u,
                                                             fem_solution,
                                                             order_quadrature_rule );
 
-      DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
+      DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
 
       CommonTraits::RangeType h1_fem_error(0.0);
 
+      //! \todo This is actually not the h1 error
       h1_fem_error = h1error.semi_norm< CommonTraits::ExactSolutionType >(u, fem_solution, order_quadrature_rule);
       h1_fem_error += fem_error;
       DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
     }
-  } else if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
-  {
-    DSC_LOG_ERROR << "Exact solution not available. Errors between MsFEM and FEM approximations for the same fine grid resolution."
-                  << std::endl << std::endl;
+  }
+  if ( DSC_CONFIG_GET("msfem.fem_comparison",false) ) {
     CommonTraits::RangeType approx_msfem_error = l2error.norm2< 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
                                                                                                       msfem_solution);
-    DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl << std::endl;
+    DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
     H1Norm< CommonTraits::GridPartType > h1norm(gridPart);
     CommonTraits::RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
 
