@@ -234,7 +234,7 @@ void algorithm(const std::string& macroGridName,
     // just for Dirichlet zero-boundary condition
     const Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
     fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
-
+    fem_solution.communicate();
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
     //! -------------------------- writing data output FEM Solution ----------
