@@ -391,7 +391,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
                  << "Coarse index " << coarse_index << std::endl;
 
     const std::string locprob_solution_location =
-        (boost::format("local_problems/_localProblemSolutions_%d") % coarse_index).str();
+        (boost::format("local_problems/_localProblemSolutions_%d_%d") % coarse_index % MPIManager::rank()).str();
 
     DiscreteFunctionWriter dfw(locprob_solution_location);
 
@@ -454,7 +454,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     output_local_solution(coarse_index, 1, host_local_solution);
   } //for
 
-  const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all");
+  const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all")/1000.f;
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
   DSC_LOG_INFO << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."

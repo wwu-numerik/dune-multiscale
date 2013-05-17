@@ -184,8 +184,8 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
-    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
-                                                % global_index_entity).str();
+    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
+                                                % global_index_entity % MPIManager::rank()).str();
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
     discrete_function_reader.read(0, local_problem_solution_e0);
