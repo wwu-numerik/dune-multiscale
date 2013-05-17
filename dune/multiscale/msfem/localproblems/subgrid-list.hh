@@ -143,7 +143,7 @@ private:
   const HostGridPartType& hostGridPart_;
   EntityPointerCollectionType entities_sharing_same_node_;
   EnrichmentMatrixType enriched_;
-  std::map<int, int> fineToCoarseMap_;
+  std::vector<std::map<int, int> > fineToCoarseMap_;
 };
 
 } //namespace MsFEM {

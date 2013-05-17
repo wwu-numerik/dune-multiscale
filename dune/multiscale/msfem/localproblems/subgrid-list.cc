@@ -116,7 +116,8 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
     hostGridLeafIndexSet_(hostSpace_.gridPart().grid().leafIndexSet()),
     hostGridPart_(hostSpace_.gridPart()),
     entities_sharing_same_node_(hostGridPart_.grid().size(HostGridPartType::dimension)),
-    enriched_(boost::extents[specifier.getNumOfCoarseEntities()][hostGridPart_.grid().size(0)][specifier.maxNumberOverlayLayers() + 1])
+    enriched_(boost::extents[specifier.getNumOfCoarseEntities()][hostGridPart_.grid().size(0)][specifier.maxNumberOverlayLayers() + 1]),
+    fineToCoarseMap_(MPIManager::size())
 
 {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
@@ -138,9 +139,9 @@ SubGridList::~SubGridList(){}
 SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex)
 {
   auto found = subGridList_.find(coarseCellIndex);
-  assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!")
+  assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!");
 
-  return found->second;
+  return *(found->second);
 } // getSubGrid
 
 /** Get the subgrid belonging to a given coarse cell index.
@@ -151,9 +152,9 @@ SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex)
 const SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex) const
 {
   auto found = subGridList_.find(coarseCellIndex);
-  assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!")
+  assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!");
 
-  return found->second;
+  return *(found->second);
 } // getSubGrid
 
 // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
@@ -185,12 +186,13 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i)
 */
 int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer) {
   // first check, whether we looked for this host entity already
+  int myRank = MPIManager::rank();
   int hostEntityIndex = hostGridLeafIndexSet_.index(*hostEntityPointer);
-//  auto itFound = fineToCoarseMap_.find(hostEntityIndex);
-//  if (itFound!=fineToCoarseMap_.end()) {
-//    // if so, return the index that was found last time
-//    return itFound->second;
-//  }
+  auto itFound = fineToCoarseMap_[myRank].find(hostEntityIndex);
+  if (itFound!=fineToCoarseMap_[myRank].end()) {
+    // if so, return the index that was found last time
+    return itFound->second;
+  }
   static auto lastIterator = coarseSpace_.begin();
   const auto  baryCenter = hostEntityPointer->geometry().center();
   auto macroCellIterator = lastIterator;
@@ -203,7 +205,7 @@ int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEnt
       if (hostEnIsInMacroCell) {
         lastIterator  = macroCellIterator;
         int macroIndex = coarseGridLeafIndexSet_.index(*macroCellIterator);
-        fineToCoarseMap_[hostEntityIndex] = macroIndex;
+        fineToCoarseMap_[myRank][hostEntityIndex] = macroIndex;
         return macroIndex;
       }
     }
@@ -218,14 +220,14 @@ int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEnt
       if (hostEnIsInMacroCell) {
         lastIterator = macroCellIterator;
         int macroIndex = coarseGridLeafIndexSet_.index(*macroCellIterator);
-        fineToCoarseMap_[hostEntityIndex] = macroIndex;
+        fineToCoarseMap_[myRank][hostEntityIndex] = macroIndex;
         return macroIndex;
       }
     }
   }
   // if we came this far, we did not find an enclosing coarse cell at all, issue a warning
   // and return with error code
-  DSC_LOG_INFO << "Warning: Host grid entity was not in any coarse grid cell!\n";
+//  DSC_LOG_DEBUG << "Warning: Host grid entity was not in any coarse grid cell!\n";
   return -1;
 }
 
@@ -277,11 +279,11 @@ void SubGridList::identifySubGrids() {
   for (const auto& coarse_entity : coarseSpace_) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
-    assert(coarse_entity->partitionType()==Dune::InteriorEntity);
+    assert(coarse_entity.partitionType()==Dune::InteriorEntity);
     const int coarse_index = coarseGridLeafIndexSet_.index(coarse_entity);
     // make sure we did not create a subgrid for the current coarse entity so far
     assert(subGridList_.find(coarse_index)==subGridList_.end());
-    subGridList_[coarse_index]=(new SubGridType(hostGrid));
+    subGridList_[coarse_index] = make_shared<SubGridType>(hostGrid);
     subGridList_[coarse_index]->createBegin();
 
     if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
@@ -331,9 +333,6 @@ void SubGridList::createSubGrids() {
     // was not found. This may be the case if the host cell does not belong to the
     // grid part for the current process.
     if (macroCellIndex>=0) {
-      std::cout << "MacroCellIndex: " << macroCellIndex << " Contained? "
-                << (subGridList_.find(macroCellIndex)!=subGridList_.end()) << std::endl;
-      std::cout.flush();
       subGridList_[macroCellIndex]->insertPartial(host_entity);
 
       // check the neighbor entities and look if they belong to the same father
@@ -369,13 +368,10 @@ void SubGridList::createSubGrids() {
 
 void SubGridList::finalizeSubGrids() {
   DSC_PROFILER.startTiming("msfem.subgrid_list.create.finalize");
-//  const int numCoarseEntities = specifier_.getNumOfCoarseEntities();
-//  for (int i = 0; i < numCoarseEntities; ++i) {
-//    assert(int(subGridList_.size()) > i);
-//    assert(subGridList_[i]);
+  int i=0;
   for (auto subGridIt : subGridList_) {
     // finish the creation of each subgrid
-    subGridIt->second.createEnd();
+    subGridIt.second->createEnd();
 
     // report some infos about the subgrids if desired
     if (!silent_) {
@@ -384,18 +380,17 @@ void SubGridList::finalizeSubGrids() {
     }
 
     // error handling
-    if (subGridIt->second.size(2) == 0) {
+    if (subGridIt.second->size(2) == 0) {
       DSC_LOG_ERROR << "Error." << std::endl
               << "Error. Created Subgrid with 0 nodes." << std::endl;
 
-      for (auto coarse_it : coarseSpace_) {
-        const HostEntityType& coarse_entity = *coarse_it;
-        const int             index         = coarseGridLeafIndexSet_.index(coarse_entity);
-        if (subGridIt->first == index) {
+      for (const auto& coarse_it : coarseSpace_) {
+        const int             index         = coarseGridLeafIndexSet_.index(coarse_it);
+        if (subGridIt.first == index) {
           DSC_LOG_ERROR << "We have a problem with the following coarse-grid element:" << std::endl
-                  << "coarse element corner(0) = " << coarse_it->geometry().corner(0) << std::endl
-                  << "coarse element corner(1) = " << coarse_it->geometry().corner(1) << std::endl
-                  << "coarse element corner(2) = " << coarse_it->geometry().corner(2) << std::endl << std::endl;
+                  << "coarse element corner(0) = " << coarse_it.geometry().corner(0) << std::endl
+                  << "coarse element corner(1) = " << coarse_it.geometry().corner(1) << std::endl
+                  << "coarse element corner(2) = " << coarse_it.geometry().corner(2) << std::endl << std::endl;
         }
       }
       DUNE_THROW(Dune::InvalidStateException, "Created Subgrid with 0 nodes");
