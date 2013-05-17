@@ -376,7 +376,7 @@ void SubGridList::finalizeSubGrids() {
     // report some infos about the subgrids if desired
     if (!silent_) {
       DSC_LOG_INFO << "Subgrid " << i << ":" << std::endl;
-      subGridIt->second.report();
+      subGridIt.second->report();
     }
 
     // error handling
