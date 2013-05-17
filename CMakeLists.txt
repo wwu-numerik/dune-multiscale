@@ -209,9 +209,6 @@ TARGET_LINK_LIBRARIES(elliptic_rigorous_msfem ${COMMON_LIBS} )
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(lg-test src/lg-test.cc ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(lg-test ${COMMON_LIBS} )
-
 
 # HEADERCHECK( ${header} ${dune} )
 # DEPENDENCYCHECK( ${header} ${dune} )
