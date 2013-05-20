@@ -73,7 +73,7 @@ oversampling_layers = 0
 
 # oversampling strategy 1 or 2.
 oversampling_strategy = 1
-# stratgey 1: local problems are solved in the full fine space
+# strategy 1: local problems are solved in the full fine space
 # strategy 2: local problems are solved in the full fine space
 #             without the 3 basis functions belonging to the the 3 coarse nodes
 # See 'rigorous MsFEM for oversampling strategy 3 (a + b).
