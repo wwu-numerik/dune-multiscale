@@ -68,7 +68,8 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
     for (size_t j = 0; j < entities_sharing_same_node_[global_index_node].size(); ++j) {
       if (!(subGrid->contains< 0 >(*entities_sharing_same_node_[global_index_node][j]))) {
         subGrid->insertPartial(*entities_sharing_same_node_[global_index_node][j]);
-
+        fine_id_to_subgrid_ids_[hostGridLeafIndexSet.index( *entities_sharing_same_node_[global_index_node][j] )].push_back(father_index);
+      
         // get the corners of the father of the fine grid entity 'entities_sharing_same_node_[global_index_node][j]'
         // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
         if (specifier_.getOversamplingStrategy() == 3) {
@@ -122,9 +123,17 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
 {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
 
+  fine_id_to_subgrid_ids_.resize( hostGridPart_.grid().size(0) );
+  
+  // initialize the subgrids (no elements are added)
   identifySubGrids();
+  
+  // add fine grid elements to the subgrids
   createSubGrids();
+  
+  // finalize the subgrids
   finalizeSubGrids();
+
 }
 
 SubGridList::~SubGridList(){}
@@ -156,6 +165,14 @@ const SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex) con
 
   return *(found->second);
 } // getSubGrid
+
+
+// given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
+const std::vector< int >& SubGridList::getSubgridIDs_that_contain_entity (int host_enitity_index) const
+{
+  return fine_id_to_subgrid_ids_[ host_enitity_index ];
+}
+
 
 // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
 const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i) const
@@ -319,6 +336,8 @@ void SubGridList::identifySubGrids() {
 void SubGridList::createSubGrids() {
   DSC_PROFILER.startTiming("msfem.subgrid_list.create");
 
+  const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
+  
   // loop over all host entities and assign them to a macro cell
   auto lastIt = coarseSpace_.begin();
   for (const auto& host_entity : hostSpace_) {
@@ -330,11 +349,14 @@ void SubGridList::createSubGrids() {
 
     int  macroCellIndex = getEnclosingMacroCellIndex(host_entity);
     // if macroCellIndex is smaller than zero, the enclosing coarse cell was
-    // was not found. This may be the case if the host cell does not belong to the
+    // not found. This may be the case if the host cell does not belong to the
     // grid part for the current process.
     if (macroCellIndex>=0) {
+      // add host_entity to the subgrid with the index 'macroCellIndex'
       subGridList_[macroCellIndex]->insertPartial(host_entity);
-
+      // add the id of the subgrid to the vecor at position 'index of host grid element'
+      fine_id_to_subgrid_ids_[hostGridLeafIndexSet.index( host_entity )].push_back(macroCellIndex);
+      
       // check the neighbor entities and look if they belong to the same father
       // if yes, continue
       // if not, enrichment with 'n(T)' layers

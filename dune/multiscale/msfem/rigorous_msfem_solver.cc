@@ -258,8 +258,8 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
 
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
-    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
-                                                % global_index_entity).str();
+    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
+                                                % global_index_entity % MPIManager::rank()).str();
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
     // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 0 << std::endl;
@@ -338,7 +338,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
       ++internal_id;
     }
   }
-
+  
   MsFEMBasisFunctionType msfem_basis_function;
   for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; ++internal_id)
   {
@@ -346,6 +346,91 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
     msfem_basis_function[internal_id]->clear();
   }
 
+  //! Determine the support of each ms basis function and the intersection domain of two ms basis functions
+  // save the corresponding entity seeds in support_of_ms_basis_func_intersection
+  // ------------------------------------------------------------------------------------------------------
+
+  // the support of the interaction of two ms basis functions
+  std::vector< std::vector< std::vector< FineGridEntitySeed > > > support_of_ms_basis_func_intersection;
+  
+  support_of_ms_basis_func_intersection.resize( number_of_internal_coarse_nodes );
+  for ( int k = 0; k<number_of_internal_coarse_nodes ; ++k )
+    support_of_ms_basis_func_intersection[k].resize( number_of_internal_coarse_nodes );
+  
+  // for each subgrid, determine all ms basis functions that were constructed using the corresponding subgrid corrector 
+  // for each subgrid id, we save the vector of the (internal) id's of the corresponding ms basis functions 
+  std::vector< std::vector< int > > subgrid_id_to_ms_basis_func_ids;
+  subgrid_id_to_ms_basis_func_ids.resize( coarse_space.gridPart().grid().size(0) );
+  for (CoarsegridIterator it = coarse_space.begin(); it != coarse_space.end(); ++it)
+  {
+    const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
+    int subgrid_id = coarseGridLeafIndexSet.index( *it );
+    
+    auto intersection_it = coarse_space.gridPart().ibegin( *it );
+    const auto endiit = coarse_space.gridPart().iend(*it);
+    for ( ; intersection_it != endiit; ++intersection_it)
+      {
+
+        const auto& lagrangePointSet
+            = coarse_space.lagrangePointSet(*it);
+
+        const int face = (*intersection_it).indexInInside();
+
+        auto faceIterator = lagrangePointSet.beginSubEntity< faceCodim >(face);
+        const auto faceEndIterator = lagrangePointSet.endSubEntity< faceCodim >(face);
+        for ( ; faceIterator != faceEndIterator; ++faceIterator)
+        {
+          int global_id_node = coarse_space.mapper().mapToGlobal(*it, *faceIterator );
+          if ( specifier.is_coarse_boundary_node( global_id_node ) )
+            continue;
+
+          int internal_id_node = global_id_to_internal_id[ global_id_node ];
+          subgrid_id_to_ms_basis_func_ids[ subgrid_id ].push_back( internal_id_node );
+        }
+
+      }
+      
+  }
+  
+  const HostGridLeafIndexSet& hostGridLeafIndexSet = fine_space.gridPart().grid().leafIndexSet();
+  for (HostgridIterator it = fine_space.begin(); it != fine_space.end(); ++it)
+  {
+      
+    int fine_entity_id = hostGridLeafIndexSet.index( *it );
+
+    // IDs of the ms basis functions that containt the fine grid entity 'it'
+    std::vector< int > ms_basis_funcs_that_contain_entity;
+    
+    // first iterate of the subgrids that contain the fine grid entity
+    for (unsigned int m = 0; m < subgrid_list.getSubgridIDs_that_contain_entity( fine_entity_id ).size(); ++m)
+    {
+      int subgrid_id = subgrid_list.getSubgridIDs_that_contain_entity( fine_entity_id )[m];
+      
+      // now iterate over the ms basis functions that were assemble using a corrector that belongs to the current subgrid
+      for (unsigned int l = 0; l < subgrid_id_to_ms_basis_func_ids[ subgrid_id ].size(); ++l)
+      {
+         int ms_basis_func_id = subgrid_id_to_ms_basis_func_ids[ subgrid_id ][ l ];
+         if( std::find( ms_basis_funcs_that_contain_entity.begin(),
+                        ms_basis_funcs_that_contain_entity.end(),
+                        ms_basis_func_id ) == ms_basis_funcs_that_contain_entity.end() ) {
+          ms_basis_funcs_that_contain_entity.push_back( ms_basis_func_id ); }
+      }
+    }
+
+    for (unsigned int mid1 = 0; mid1 < ms_basis_funcs_that_contain_entity.size(); ++mid1)
+    {
+      int ms_basis_id_1 = ms_basis_funcs_that_contain_entity[ mid1 ];
+      for ( unsigned int mid2 = 0; mid2 < ms_basis_funcs_that_contain_entity.size(); ++mid2 )
+      {
+        int ms_basis_id_2 = ms_basis_funcs_that_contain_entity[ mid2 ];
+	support_of_ms_basis_func_intersection[ ms_basis_id_1 ][ ms_basis_id_2 ].push_back( (*it).seed() );
+      }
+    }
+ 
+  }
+
+  // ------------------------------------------------------------------------------------------------------
+  
   //! NOTE TODO for each MsFEM basis function save the support,
   //! i.e. a vector of entity points that describe the support of the basis
   //! function. This will save a lot of computational time when assembling the system matrix!
@@ -389,30 +474,30 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   }
 
   DSC_LOG_INFO << "Start assembling the stiffness matrix of the global problems.." << std::endl;
-
-  DSC_LOG_INFO << "WARNING! Assembling the stiffness matrix of the global problems extremely expensive! Implementation is not yet efficient!" << std::endl;
-  //! NOTE TODO for each MsFEM basis function save the support,
-  //! i.e. a vector of entity points that describe the support of the basis
-  //! function. This will save a lot of computational time when assembling the system matrix!
-
+  Dune::Timer assembleTimer;
+  
   //! (stiffness) matrix
   MatrixType system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
 
   if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-  { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function, system_matrix); }
+  { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function, support_of_ms_basis_func_intersection, system_matrix); }
   else
-  { assemble_matrix( diffusion_op, msfem_basis_function, msfem_basis_function, system_matrix); }
-
+  { assemble_matrix( diffusion_op, msfem_basis_function, msfem_basis_function, support_of_ms_basis_func_intersection, system_matrix); }
+  // NOTE: in the case that we use the Petrov Galerkin version of the method 'support_of_ms_basis_func_intersection'
+  // is not yet optimally assembled (it is a little larger as required, since we still determine the intersection of two ms basis functions,
+  // whereas the support of the classical basis function is typically smaller). It is correct, but not optimal!
+  
   DSC_LOG_INFO << ".. assembling of the stiffness matrix done." << std::endl;
+  DSC_LOG_INFO << "Time to assemble Rigorous MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
   //print_matrix( system_matrix );
 
   //! NOTE TODO: Assembling of right hand side is also quite expensive!
   VectorType rhs( number_of_internal_coarse_nodes );
   if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-  { assemble_rhs( f, standard_basis_function, rhs ); }
+  { assemble_rhs( f, standard_basis_function, support_of_ms_basis_func_intersection, rhs ); }
   else
-  { assemble_rhs( f, msfem_basis_function, rhs ); }
+  { assemble_rhs( f, msfem_basis_function, support_of_ms_basis_func_intersection, rhs ); }
 
   //print_vector( rhs );
 
@@ -447,6 +532,58 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   solver.apply( solution_vector, rhs, result_data);
 #endif
 
+  
+//! delete this:
+#if 0
+  
+  // just for VTK output for the basis function correctors
+  MsFEMBasisFunctionType corrector_basis_function;
+  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+   {
+    corrector_basis_function.emplace_back(new DiscreteFunction("Corrector basis function", fine_space));
+    corrector_basis_function[internal_id]->clear();
+   }
+
+  add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, corrector_basis_function );
+#if 1
+  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+   {
+     
+    std::cout << "support_of_ms_basis_func_intersection size = " << support_of_ms_basis_func_intersection[internal_id][internal_id].size() << std::endl;
+    for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[internal_id][internal_id].size(); ++it_id)
+    {
+//      typedef typename HostEntity::template Codim< 0 >::EntityPointer
+//          HostEntityPointer;
+
+      HostEntityPointer it = fine_space.grid().entityPointer( support_of_ms_basis_func_intersection[internal_id][internal_id][it_id] );
+ 
+      LocalFunction loc_func = (*corrector_basis_function[internal_id]).localFunction(*it);
+
+      const LagrangePointSet& lagrangePointSet = fine_space.lagrangePointSet(*it);
+
+      typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
+      HostIntersectionIterator iit = fine_space.gridPart().ibegin(*it);
+      const HostIntersectionIterator endiit = fine_space.gridPart().iend(*it);
+      for ( ; iit != endiit; ++iit) {
+        const int face = iit->indexInInside();
+
+        auto faceIterator
+                = lagrangePointSet.beginSubEntity< faceCodim >(face);
+        const auto faceEndIterator
+                = lagrangePointSet.endSubEntity< faceCodim >(face);
+        for ( ; faceIterator != faceEndIterator; ++faceIterator)
+          loc_func[*faceIterator] = 1.0; }
+    }
+    
+   }
+#endif
+  vtk_output( corrector_basis_function, "corrector_basis_function_cut" );
+  
+  
+#endif
+  
+  
+  
   coarse_scale_part.clear();
   for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
    {
