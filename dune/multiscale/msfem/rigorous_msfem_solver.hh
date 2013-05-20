@@ -57,10 +57,13 @@ private:
   // LevelEntityIteratorType;
 
   typedef typename DiscreteFunctionSpace::IteratorType HostgridIterator;
-
+  typedef HostgridIterator CoarsegridIterator;
+  
   typedef typename HostgridIterator::Entity HostEntity;
 
   typedef typename HostEntity::EntityPointer HostEntityPointer;
+  
+  typedef typename HostEntity::EntitySeed FineGridEntitySeed;
 
   // typedef typename HostGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
   // HostGridLevelEntityIterator;
@@ -83,16 +86,7 @@ private:
 
   typedef AdaptiveDiscreteFunction< SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
 
-  typedef typename SubgridDiscreteFunctionSpace::IteratorType CoarseGridIterator;
-
-  typedef typename CoarseGridIterator::Entity CoarseGridEntity;
-
-  typedef typename CoarseGridEntity::EntityPointer CoarseGridEntityPointer;
-
-  typedef typename SubgridDiscreteFunction::LocalFunctionType CoarseGridLocalFunction;
-
-  typedef typename SubgridDiscreteFunctionSpace::LagrangePointSetType
-  CoarseGridLagrangePointSet;
+  typedef typename SubgridDiscreteFunctionSpace::IteratorType SubGridIterator;
 
   //!-----------------------------------------------------------------------------------------
 
@@ -139,22 +133,26 @@ private:
 
 
 
-  template< class DiffusionOperator >
-  RangeType evaluate_bilinear_form( const DiffusionOperator& diffusion_op, const DiscreteFunction& func1, const DiscreteFunction& func2 ) const
+  template< class DiffusionOperator, class SeedSupportStorage >
+  RangeType evaluate_bilinear_form( const DiffusionOperator& diffusion_op,
+                                    const DiscreteFunction& func1, const DiscreteFunction& func2,
+                                    const SeedSupportStorage& support_of_ms_basis_func_intersection ) const
   {
     RangeType value = 0.0;
-
+#if 1
     int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
-    for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
+    for (int it_id = 0; it_id < support_of_ms_basis_func_intersection.size(); ++it_id)
     {
       typedef typename HostEntity::template Codim< 0 >::EntityPointer
           HostEntityPointer;
 
+      HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[it_id] );
+ 
       LocalFunction loc_func_1 = func1.localFunction(*it);
       LocalFunction loc_func_2 = func2.localFunction(*it);
 
       const auto& geometry = (*it).geometry();
-
+ 
       const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
       const int numQuadraturePoints = quadrature.nop();
       for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
@@ -178,15 +176,81 @@ private:
 
       }
     }
+#endif
+
+//! delete this soon -> just keep it for testing for the moment
+#if 0
+#if 0
+    std::vector< int > ids;
+    for (int it_id = 0; it_id < support_of_ms_basis_func_intersection.size(); ++it_id)
+    {
+      typedef typename HostEntity::template Codim< 0 >::EntityPointer
+          HostEntityPointer;
+
+      HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[it_id] );
+      
+      const HostGridLeafIndexSet& coarseGridLeafIndexSet = discreteFunctionSpace_.gridPart().grid().leafIndexSet();
+      int id = coarseGridLeafIndexSet.index( *it );
+      ids.push_back( id );
+
+    }
+#endif  
+
+    int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
+    for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
+    {
+      typedef typename HostEntity::template Codim< 0 >::EntityPointer
+          HostEntityPointer;
+
+#if 0
+      const HostGridLeafIndexSet& coarseGridLeafIndexSet = discreteFunctionSpace_.gridPart().grid().leafIndexSet();
+      int id = coarseGridLeafIndexSet.index( *it );
+#endif
+
+      LocalFunction loc_func_1 = func1.localFunction(*it);
+      LocalFunction loc_func_2 = func2.localFunction(*it);
+
+      const auto& geometry = (*it).geometry();
+ 
+      const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
+      const int numQuadraturePoints = quadrature.nop();
+      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+      {
+        DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
+
+        //weight
+        double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
+        weight *= quadrature.weight(quadraturePoint);
+
+        // gradients of func1 and func2
+        JacobianRangeType grad_func_1, grad_func_2;
+        loc_func_1.jacobian( quadrature[quadraturePoint], grad_func_1);
+        loc_func_2.jacobian( quadrature[quadraturePoint], grad_func_2);
+
+        // A \nabla func1
+        JacobianRangeType diffusive_flux(0.0);
+        diffusion_op.diffusiveFlux( global_point, grad_func_1, diffusive_flux);
+
+#if 0
+         if( std::find( ids.begin(), ids.end(), id ) != ids.end() ) {
+	   value += weight * ( diffusive_flux[0] * grad_func_2[0] );}
+	   //std::cout << "weight * ( diffusive_flux[0] * grad_func_2[0] ) = " << weight * ( diffusive_flux[0] * grad_func_2[0] ) << std::endl; }
+#endif
+        value += weight * ( diffusive_flux[0] * grad_func_2[0] );
+
+      }
+    }
+#endif
     return value;
   }
 
 
   // ------------------------------------------------------------------------------------
-  template< class DiffusionOperator, class MatrixImp >
+  template< class DiffusionOperator, class MatrixImp, class SeedSupportStorageList >
   void assemble_matrix( const DiffusionOperator& diffusion_op,
                         MsFEMBasisFunctionType& msfem_basis_function_list_1,
                         MsFEMBasisFunctionType& msfem_basis_function_list_2,
+                        SeedSupportStorageList& support_of_ms_basis_func_intersection,
                         MatrixImp& system_matrix ) const
   {
     for (size_t row = 0; row != system_matrix.N(); ++row)
@@ -195,9 +259,9 @@ private:
 
 #ifdef SYMMETRIC_DIFFUSION_MATRIX
    for (size_t row = 0; row != system_matrix.N(); ++row)
-    for (size_t col = 0; col <= row; ++col)
+    for (size_t col = 0; col <= row; ++col)    
       system_matrix[row][col]
-        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]) );
+        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
 
    for (size_t col = 0; col != system_matrix.N(); ++col )
     for (size_t row = 0; row < col; ++row)
@@ -207,16 +271,17 @@ private:
    for (size_t row = 0; row != system_matrix.N(); ++row)
      for (size_t col = 0; col != system_matrix.M(); ++col)
        system_matrix[col][row]
-         = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]) );
+         = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
 
 #endif
   }
 
 
   // ------------------------------------------------------------------------------------
-  template< class SourceTerm, class VectorImp >
+  template< class SourceTerm, class SeedSupportStorageList, class VectorImp >
   void assemble_rhs( const SourceTerm& f,
                      MsFEMBasisFunctionType& msfem_basis_function_list,
+                     SeedSupportStorageList& support_of_ms_basis_func_intersection,
                      VectorImp& rhs ) const
   {
 
@@ -225,9 +290,17 @@ private:
 
     for (size_t col = 0; col != rhs.N(); ++col)
     {
+      
+      typedef typename HostEntity::template Codim< 0 >::EntityPointer
+          HostEntityPointer;
+	  
       const int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
-      for (const auto& entity : discreteFunctionSpace_)
+      for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[col][col].size(); ++it_id)
+//      for (const auto& entity : discreteFunctionSpace_)
       {
+        HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[col][col][it_id] );
+        const HostEntity& entity = *it;
+
         const auto& geometry = entity.geometry();
 
         const auto local_func = msfem_basis_function_list[col]->localFunction(entity);

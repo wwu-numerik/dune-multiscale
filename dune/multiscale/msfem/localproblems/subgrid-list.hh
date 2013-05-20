@@ -95,7 +95,10 @@ public:
   ~SubGridList();
   SubGridType& getSubGrid(int i);
   const SubGridType& getSubGrid(int i) const;
-
+  
+  // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
+  const std::vector< int >& getSubgridIDs_that_contain_entity (int host_enitity_index) const;
+  
   // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
   const CoarseNodeVectorType& getCoarseNodeVector(int i) const;
 
@@ -144,6 +147,8 @@ private:
   EntityPointerCollectionType entities_sharing_same_node_;
   EnrichmentMatrixType enriched_;
   std::vector<std::map<int, int> > fineToCoarseMap_;
+  // given the id of a fine grid element, the vector returns the ids of all subgrids that share that element
+  std::vector < std::vector< int > > fine_id_to_subgrid_ids_;
 };
 
 } //namespace MsFEM {
