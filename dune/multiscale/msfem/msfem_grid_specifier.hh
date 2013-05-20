@@ -13,6 +13,8 @@ namespace MsFEM {
 
 class MacroMicroGridSpecifier
 {
+  //! \todo DiscreteFunctionSpaceType should be replaced be something like "CoarseDiscreteFunctionSpace" and
+  // "FineDiscreteFunctionSpace"
   typedef typename CommonTraits::DiscreteFunctionSpaceType  DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
 
