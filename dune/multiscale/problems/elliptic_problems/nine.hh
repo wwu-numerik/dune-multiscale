@@ -44,7 +44,7 @@ struct ModelProblemData
 
   //! \copydoc IModelProblemData::getMacroGridFile()
   inline std::string getMacroGridFile() const {
-    return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");
+    return("../dune/multiscale/grids/macro_grids/elliptic/msfem_cube_three.dgf");
   }
 
   // are the coefficients periodic? (e.g. A=A(x/eps))
