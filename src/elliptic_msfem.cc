@@ -5,6 +5,7 @@
 #include "common.hh"
 
 #include <dune/multiscale/msfem/algorithm.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 
 int main(int argc, char** argv) {
   try {

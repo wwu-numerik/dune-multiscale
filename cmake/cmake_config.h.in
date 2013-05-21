@@ -26,4 +26,8 @@
 	#define BOOST_HAS_RVALUE_REFS 1
 #endif
 
+#ifndef PROBLEM_NAME
+  #define PROBLEM_NAME Nine
+#endif
+
 #endif	/* DUNE_MULTISCALE_CONFIG_H */

@@ -7,8 +7,11 @@
 
 #include <string>
 #include <dune/multiscale/problems/constants.hh>
+#include <dune/multiscale/common/traits.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
 
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
 /**
  * \addtogroup Problem
@@ -115,16 +118,17 @@ public:
 
 // linear constant diffusion operator that can be filled with given values
 // (e.g. with the pre-computed values of a homogenzid matrix)
-template< class FunctionSpaceImp, class FieldMatrixImp >
+template< class FieldMatrixImp >
 class ConstantDiffusionMatrix
-  : public Dune::Fem::Function< FunctionSpaceImp, ConstantDiffusionMatrix< FunctionSpaceImp, FieldMatrixImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
+                                ConstantDiffusionMatrix< FieldMatrixImp > >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
   typedef FieldMatrixImp   FieldMatrixType;
 
 private:
-  typedef ConstantDiffusionMatrix< FunctionSpaceType, FieldMatrixType > ThisType;
+  typedef ConstantDiffusionMatrix< FieldMatrixType > ThisType;
   typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
 public:
@@ -169,5 +173,24 @@ public:
 };
 
 } //! @} namespace Problem
+} //namespace Multiscale {
+} //namespace Dune {
+
+#define MSCONSTANTFUNCTION(classname, constant) \
+  struct classname \
+    : public Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType > \
+  { classname() \
+      : Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType > \
+            (typename Dune::Multiscale::CommonTraits::FunctionSpaceType::RangeType(constant)) {} };
+
+#define MSNULLFUNCTION(classname) \
+  struct classname \
+    : public Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType > \
+  { classname(const double /*d*/, const Dune::Multiscale::CommonTraits::FunctionSpaceType &t, double = 0.0, double = 0.0) \
+      : Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType >(t) {} \
+    classname() \
+      : Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType >() {} \
+    classname(const Dune::Multiscale::CommonTraits::FunctionSpaceType &t) \
+      : Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType >(t) {} };
 
 #endif // DUNE_MS_PROBLEMS_BASE_HH

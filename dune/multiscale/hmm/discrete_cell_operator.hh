@@ -21,6 +21,7 @@
 
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
 #include <dune/multiscale/hmm/hmm_traits.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -34,9 +35,8 @@ class DiscreteCellProblemOperator
     , boost::noncopyable
 {
   typedef typename HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionImp;
-  typedef typename CommonTraits::DiffusionType DiffusionImp;
+  typedef typename Problem::Diffusion DiffusionImp;
 
-private:
   typedef PeriodicDiscreteFunctionImp DiscreteFunction;
   typedef DiffusionImp                DiffusionModel;
 

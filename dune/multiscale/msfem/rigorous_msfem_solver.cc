@@ -10,6 +10,8 @@
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/common/output_traits.hh>
 
 #include <dune/common/fmatrix.hh>
 
@@ -20,11 +22,9 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 
-
 #include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -105,7 +105,7 @@ void Elliptic_Rigorous_MsFEM_Solver::vtk_output(
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam(DSC_CONFIG_GET("global.datadir", "data") + "/msfem_basis");
 
-  typedef typename CommonTraits::IOTupleType IOTType;
+  typedef typename OutputTraits::IOTupleType IOTType;
   const auto& gridPart = msfem_basis_function_list[0]->space().gridPart();
 
   for ( size_t i = 0; i < msfem_basis_function_list.size(); i+=1 )
@@ -118,7 +118,7 @@ void Elliptic_Rigorous_MsFEM_Solver::vtk_output(
 
     std::string outstring = basis_name;
 
-    CommonTraits::DataOutputType msfem_basis_dataoutput(
+    OutputTraits::DataOutputType msfem_basis_dataoutput(
       gridPart.grid(), msfem_basis_series, outputparam );
     msfem_basis_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
