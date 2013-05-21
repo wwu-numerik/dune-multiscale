@@ -28,7 +28,7 @@
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/h1norm.hh>
 
-#include <dune/multiscale/problems/elliptic_problems/selector.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/rigorous_msfem_solver.hh>
@@ -38,9 +38,9 @@
 #include <dune/multiscale/tools/misc/h1error.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/problems/elliptic_problems/selector.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
-
+#include <dune/multiscale/common/output_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -58,32 +58,32 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   //! ----------------- writing data output MsFEM Solution -----------------
   // --------- VTK data output for MsFEM solution --------------------------
   // create and initialize output class
-  CommonTraits::IOTupleType msfem_solution_series(&msfem_solution);
+  OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
   const auto& gridPart = msfem_solution.space().gridPart();
   std::string outstring;
   outputparam.set_prefix("/msfem_solution");
   outstring = "msfem_solution";
 
-  CommonTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
+  OutputTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
   msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
   // create and initialize output class
-  CommonTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
+  OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
 
   outputparam.set_prefix("/coarse_part_msfem_solution");
   outstring = "coarse_part_msfem_solution";
 
-  CommonTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
+  OutputTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
   coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
   // create and initialize output class
-  CommonTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
+  OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
 
   outputparam.set_prefix("/fine_part_msfem_solution");
   // write data
   outstring = "fine_msfem_solution";
 
-  CommonTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
+  OutputTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
   fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring);
 
   // ----------------------------------------------------------------------
@@ -107,11 +107,11 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   if (Problem::ModelProblemData::has_exact_solution)
   {
     const CommonTraits::ExactSolutionType u;
-    const CommonTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
+    const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     // create and initialize output class
-    CommonTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+    OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("/exact_solution");
-    CommonTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
+    OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
     // write data
     exactsol_dataoutput.writeData( 1.0 /*dummy*/, "exact-solution" );
     // -------------------------------------------------------
@@ -124,11 +124,11 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   coarse_grid_visualization.clear();
   // -------------------------- data output -------------------------
   // create and initialize output class
-  CommonTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
+  OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
 
   const auto coarse_grid_fname = (boost::format("/coarse_grid_visualization_")).str();
   outputparam.set_prefix(coarse_grid_fname);
-  CommonTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
+  OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
   // write data
   coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, coarse_grid_fname );
   // -------------------------------------------------------
@@ -241,9 +241,9 @@ void algorithm(const std::string& macroGridName,
 
     // ------------- VTK data output for FEM solution --------------
     // create and initialize output class
-    CommonTraits::IOTupleType fem_solution_series(&fem_solution);
+    OutputTraits::IOTupleType fem_solution_series(&fem_solution);
     outputparam.set_prefix("/fem_solution");
-    CommonTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
+    OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
     // write data
     fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );

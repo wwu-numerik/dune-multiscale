@@ -9,6 +9,8 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
 /** \addtogroup problem_1 Problem::Seven
  * @{ **/
@@ -21,7 +23,6 @@ namespace Problem {
 //! For details on the classes, see 'example.hh'
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
-
 namespace Seven {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
@@ -32,56 +33,37 @@ struct ModelProblemData
 {
   static const bool has_exact_solution = false;
 
-  ModelProblemData()
-    : IModelProblemData(constants()) {
-      if (constants().get("linear", true))
-        DUNE_THROW(Dune::InvalidStateException, "Problem seven is entirely nonlinear, but problem.linear was true.");
-      assert( constants_.epsilon != 0.0);
-      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
-         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
-    }
+  ModelProblemData();
 
-  //! \copydoc IModelProblemData::getMacroGridFile()
-  inline std::string getMacroGridFile() const {
-    return("../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf");
-  }
+  //! \copydoc IModelProblemData::getMacroGridFile();
+  inline std::string getMacroGridFile() const;
 
-  // are the coefficients periodic? (e.g. A=A(x/eps))
-  // this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const {
-    return true; // = problem is periodic
-  }
+  //! are the coefficients periodic? (e.g. A=A(x/eps))
+  //! this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const;
 
-  // does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const {
-    return true; // = problem allows stochastic perturbations
-  }
-
+  //! does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const;
 };
 
 //! ----------------- Definition of ' f ' ------------------------
-CONSTANTFUNCTION(FirstSource, 1.0)
+MSCONSTANTFUNCTION(FirstSource, 1.0)
 //! ----------------- End Definition of ' f ' ------------------------
 
 
 //! ----------------- Definition of ' G ' ------------------------
-NULLFUNCTION(SecondSource)
+MSNULLFUNCTION(SecondSource)
 //! ----------------- End Definition of ' G ' ------------------------
 
 
 //! ----------------- Definition of ' A ' ------------------------
 // the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 // A^{\epsilon} : \Omega × R² -> R²
-template< class FunctionSpaceImp >
 class Diffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef Diffusion< FunctionSpaceType >                     ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
@@ -133,28 +115,23 @@ public:
 
 
 //! ----------------- Definition of ' m ' ----------------------------
-CONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm,  0.0)
 //! ----------------- End Definition of ' m ' ------------------------
 
 
 //! ----------------- Definition of some dummy -----------------------
-NULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- End Definition of some dummy -------------------
 
 
 // Exact solution is unknown:
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution is unknown for this model problem
-template< class FunctionSpaceImp >
 class ExactSolution
-  : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef ExactSolution< FunctionSpaceType >                 ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -197,5 +174,7 @@ public:
 
 } //! @} namespace Seven {
 }
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SEVEN

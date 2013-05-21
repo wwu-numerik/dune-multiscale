@@ -9,6 +9,8 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
 /** \addtogroup problem_9 Problem::Nine
  * @{ **/
@@ -23,8 +25,6 @@ namespace Problem {
 #define SYMMETRIC_DIFFUSION_MATRIX
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
-
-
 namespace Nine {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
@@ -33,48 +33,27 @@ struct ModelProblemData
   : public IModelProblemData
 {
   static const bool has_exact_solution = true;
+  ModelProblemData();
 
-  ModelProblemData()
-    : IModelProblemData(constants()) {
-      if (!constants().get("linear", true))
-        DUNE_THROW(Dune::InvalidStateException, "problem nine is entirely linear, but problem.linear was false");
-      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
-         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
-  }
+  //! \copydoc IModelProblemData::getMacroGridFile();
+  inline std::string getMacroGridFile() const;
 
-  //! \copydoc IModelProblemData::getMacroGridFile()
-  inline std::string getMacroGridFile() const {
-    return("../dune/multiscale/grids/macro_grids/elliptic/msfem_cube_three.dgf");
-  }
+  //! are the coefficients periodic? (e.g. A=A(x/eps))
+  //! this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const;
 
-  // are the coefficients periodic? (e.g. A=A(x/eps))
-  // this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const {
-    return true; // = problem is periodic
-  }
-
-  // does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const {
-    return false; // = problem does not allow stochastic perturbations
-    // (if you want it, you must add the 'perturb' method provided
-    // by 'constants.hh' - see model problems 4 to 7 for examples )
-  }
-
+  //! does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const;
 };
 
 //! ----------------- Definition of ' f ' ------------------------
 
-template< class FunctionSpaceImp >
-// define the (first) source term 'f'
 class FirstSource
-  : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
+                                FirstSource >
 {
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
 private:
-  typedef FirstSource< FunctionSpaceType >                   ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -90,8 +69,6 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FirstSource(){}
-
   // evaluate f, i.e. return y=f(x) for a given x
   // the following method defines 'f':
   inline void evaluate(const DomainType& x,
@@ -152,7 +129,7 @@ public:
 
   /** \brief default class for the second source term G.
    * Realization: set G(x) = 0: **/
-  NULLFUNCTION(SecondSource)
+  MSNULLFUNCTION(SecondSource)
 
 //! ----------------- End Definition of ' G ' ------------------------
 
@@ -163,16 +140,11 @@ public:
 // the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 // A^{\epsilon} : \Omega × R² -> R²
 
-template< class FunctionSpaceImp >
 class Diffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef Diffusion< FunctionSpaceType >                     ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
@@ -185,8 +157,6 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-    Diffusion(){}
-
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
 
@@ -230,27 +200,23 @@ public:
 
 
 //! ----------------- Definition of ' m ' ----------------------------
-CONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm,  0.0)
 //! ----------------- End Definition of ' m ' ------------------------
 
 
 //! ----------------- Definition of some dummy -----------------------
-NULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- End Definition of some dummy -------------------
 
 
 //! ----------------- Definition of ' u ' ----------------------------
 // Exact solution (typically it is unknown)
-template< class FunctionSpaceImp >
+
 class ExactSolution
-  : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef ExactSolution< FunctionSpaceType >                 ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -268,7 +234,6 @@ public:
   // entry of a domain-element.
 
 public:
-  ExactSolution(){}
 
   // evaluate 'u(x)'
   inline void evaluate(const DomainType& x,
@@ -283,7 +248,7 @@ public:
   } // evaluate
 
   // evaluate 'grad u(x)'
-  inline void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const {
+  inline void evaluateJacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const {
     grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
 
@@ -308,7 +273,8 @@ public:
 
 } //! @} namespace Nine {
 }
-
+} //namespace Multiscale {
+} //namespace Dune {
 
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE

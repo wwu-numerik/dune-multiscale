@@ -2,24 +2,31 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_THREE
-#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_THREE
+#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
+#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
-/** \addtogroup problem_3 Problem::Three
+/** \addtogroup problem_4 Problem::Four
  * @{ **/
-//! ------------ Elliptic Problem 3 -------------------
+//! ------------ Elliptic Problem 4 -------------------
 
-// nonlinear elliptic model problem - heterogeneous setting
+// linear elliptic model problem - periodic setting
 // no exact solution available!
 
-// Note that in the following, 'Imp' abbreviates 'Implementation'
+//! For more further details about the implementation see '../base.hh'
+//! For details on the classes, see 'example.hh'
 
-namespace Three {
+// if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
+#define SYMMETRIC_DIFFUSION_MATRIX
+
+// Note that in the following, 'Imp' abbreviates 'Implementation'
+namespace Four {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
 
@@ -29,46 +36,27 @@ struct ModelProblemData
 {
   static const bool has_exact_solution = false;
 
-  ModelProblemData()
-    : IModelProblemData(constants()){
-      assert( constants_.epsilon != 0.0);
-      if (constants().get("linear", true))
-         DUNE_THROW(Dune::InvalidStateException, "problem three is entirely nonlinear, but problem.linear was true");
-      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
-         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
-  }
+  ModelProblemData();
 
-  //! \copydoc IModelProblemData::getMacroGridFile()
-  inline std::string getMacroGridFile() const {
-    return("../dune/multiscale/grids/macro_grids/elliptic/earth.dgf");
-  }
+  //! \copydoc IModelProblemData::getMacroGridFile();
+  inline std::string getMacroGridFile() const;
 
-  // are the coefficients periodic? (e.g. A=A(x/eps))
-  // this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const {
-    return false; // = problem is not periodic
-  }
+  //! are the coefficients periodic? (e.g. A=A(x/eps))
+  //! this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const;
 
-  // does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const {
-    return false; // = problem does not allow stochastic perturbations
-    // (if you want it, you must add the 'perturb' method provided
-    // by 'constants.hh' - see model problems 4 to 7 for examples )
-  }
-
+  //! does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const;
 };
 
-//! ----------------- Definition of ' f ' ------------------------
-template< class FunctionSpaceImp >
-class FirstSource
-  : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
 
+//! ----------------- Definition of ' f ' ------------------------
+class FirstSource
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
+                                FirstSource >
+{
 private:
-  typedef FirstSource< FunctionSpaceType >                   ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -82,14 +70,15 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FirstSource(){}
-
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
-   if (x[1] >= 0.1)
-      { y = 1.0; }
-   else
-      { y = 0.1; }
+
+    // circle of radius 0.2 around the reentrant corner at (0.5,0.5)
+    double distance = sqrt( pow(x[0] - 0.5, 2.0) + pow(x[1] - 0.5, 2.0) );
+
+    if (distance < 0.2)
+    { y = 1.0; } else
+    { y = 0.1; }
   } // evaluate
 
   inline void evaluate(const DomainType& x,
@@ -101,26 +90,19 @@ public:
 //! ----------------- End Definition of ' f ' ------------------------
 
 
-//! ----------------- Definition of ' G ' ------------------------
-NULLFUNCTION(SecondSource)
+//! ----------------- Definition of ' G ' ----------------------------
+MSNULLFUNCTION(SecondSource)
 //! ----------------- End Definition of ' G ' ------------------------
 
 
 //! ----------------- Definition of ' A ' ------------------------
-
-// the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
+// the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 // A^{\epsilon} : \Omega × R² -> R²
-
-template< class FunctionSpaceImp >
 class Diffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef Diffusion< FunctionSpaceType >                     ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
@@ -135,22 +117,21 @@ public:
 public:
   Diffusion(){}
 
-  // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
+  // in the linear setting, use the structure
+  // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
+
+  // (diffusive) flux = A^{\epsilon}( x , direction )
+  // (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
-    double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / constants().epsilon) * sin(
-      2.0 * M_PI * pow(1.5 * x[1], 2.0) / constants().epsilon);
 
-    if ( (x[1] > 0.3) && (x[1] < 0.6) )
-      coefficient *= ( (-3.0) * x[1] + 1.9 );
+    // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
+    // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
+    const auto coeff = constants().coefficients_variant_A(x);
 
-    if (x[1] >= 0.6)
-      coefficient *= 0.1;
-
-    flux[0][0] = coefficient * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
-    flux[0][1] = coefficient * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
-
+    flux[0][0] = coeff.first * gradient[0][0];
+    flux[0][1] = coeff.second * gradient[0][1];
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -159,26 +140,17 @@ public:
 
   // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
   void jacobianDiffusiveFlux(const DomainType& x,
-                             const JacobianRangeType& position_gradient,
+                             const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
-    double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt( fabs(2.0 * x[0]) ) / constants().epsilon) * sin(
-      2.0 * M_PI * pow(1.5 * x[1], 2.0) / constants().epsilon);
 
-    if ( (x[1] > 0.3) && (x[1] < 0.6) )
-    {
-      coefficient *= ( (-3.0) * x[1] + 1.9 );
-    }
+    // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
+    // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
+    const auto coeff = constants().coefficients_variant_A(x);
 
-    if (x[1] >= 0.6)
-    {
-      coefficient *= 0.1;
-    }
+    flux[0][0] = coeff.first * direction_gradient[0][0];
+    flux[0][1] = coeff.second * direction_gradient[0][1];
 
-    flux[0][0] = coefficient * direction_gradient[0][0]
-                   * ( 1.0 + pow(position_gradient[0][0], 2.0) );
-    flux[0][1] = coefficient * direction_gradient[0][1]
-                   * ( 1.0 + pow(position_gradient[0][1], 2.0) );
   } // jacobianDiffusiveFlux
 
   /** \deprecated throws Dune::NotImplemented exception **/
@@ -192,27 +164,22 @@ public:
 
 
 //! ----------------- Definition of ' m ' ----------------------------
-CONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm,  0.0)
 //! ----------------- End Definition of ' m ' ------------------------
 
 
 //! ----------------- Definition of some dummy -----------------------
-NULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- End Definition of some dummy -------------------
 
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution is unknown for this model problem
-template< class FunctionSpaceImp >
 class ExactSolution
-  : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef ExactSolution< FunctionSpaceType >                 ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -230,7 +197,6 @@ public:
   // entry of a domain-element.
 
 public:
-  ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
   inline void evaluate(const DomainType& /*x*/,
@@ -253,8 +219,9 @@ public:
 };
 //! ----------------- End Definition of ' u ' ------------------------
 
-} //! @} namespace Three {
+} //! @} namespace Four {
 }
+} //namespace Multiscale {
+} //namespace Dune {
 
-
-#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_THREE
+#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_FOUR

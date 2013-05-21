@@ -8,6 +8,7 @@
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/common/traits.hh>
 
 /**
  * \addtogroup Problem
@@ -87,6 +88,8 @@
  *  u( x_1, x_2 ) = sin( 2 π x_1 ) · sin( 2 π x_2 )
 
 */
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
 namespace Example {
 // default value for epsilon (=0.05)
@@ -95,56 +98,38 @@ CONSTANTSFUNCTION( 0.05 ) // 0.05 is a dummy! no epsilon in our example
 
 // model problem information
 struct ModelProblemData
-  : public IModelProblemData
+  : public Dune::Multiscale::Problem::IModelProblemData
 {
-  // is there an exact solution available? true/false
-  // (if 'true' it must be implemented below in the ExactSolution class)
+  //! is there an exact solution available? true/false
+  //! (if 'true' it must be implemented below in the ExactSolution class)
   static const bool has_exact_solution = true;
 
-  ModelProblemData()
-    : IModelProblemData(constants()) {
-      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
-         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
-  }
+  ModelProblemData();
 
-  //! \copydoc IModelProblemData::getMacroGridFile()
-  // the computational grid in dgf format
-  inline std::string getMacroGridFile() const {
-    return("../dune/multiscale/grids/macro_grids/elliptic/cube_one.dgf"); // a standard 2d-cube
-  }
+  //! \copydoc IModelProblemData::getMacroGridFile();
+  inline std::string getMacroGridFile() const;
 
-  // are the coefficients periodic? (e.g. A=A(x/eps))
-  // this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const {
-    return false; // = problem is not periodic
-  }
+  //! are the coefficients periodic? (e.g. A=A(x/eps))
+  //! this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const;
 
-  // does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const {
-    return false; // = problem does not allow stochastic perturbations
-    // (if you want it, you must add the 'perturb' method provided
-    // by 'constants.hh' - see model problems 4 to 7 for examples )
-  }
-
+  //! does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const;
 };
 
 
 /**
  FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
  The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'.
- That means 'y := f(x)' and 'y' is returned. It is only important that 'FirstSource' knows the function space ('FunctionSpaceImp') that it
+ That means 'y := f(x)' and 'y' is returned. It is only important that 'FirstSource' knows the function space ('Dune::Multiscale::CommonTraits::FunctionSpaceType') that it
  is part from. (f \in FunctionSpace)
 */
-template< class FunctionSpaceImp >
 class FirstSource
-  : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
+                                FirstSource >
 {
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
 private:
-  typedef FirstSource< FunctionSpaceType >                   ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -174,20 +159,15 @@ public:
 
 /** \brief default class for the second source term G.
  * Realization: set G(x) = 0: **/
-NULLFUNCTION(SecondSource)
+MSNULLFUNCTION(SecondSource)
 
 //! the (non-linear) diffusion operator A(x,\xi)
 //! A : \Omega × R² -> R²
-template< class FunctionSpaceImp >
 class Diffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef Diffusion< FunctionSpaceType >                     ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
@@ -246,23 +226,18 @@ public:
 };
 
 //! ----------------- Definition of ' m ' ----------------------------
-CONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm,  0.0)
 
 //! ----------------- Definition of some dummy -----------------------
-NULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(DefaultDummyFunction)
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
-template< class FunctionSpaceImp >
 class ExactSolution
-  : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef ExactSolution< FunctionSpaceType >                 ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -280,8 +255,6 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  ExactSolution(){}
-
   //! evaluate 'u(x)'
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
@@ -306,83 +279,86 @@ public:
 
 };
 
-//! ------ Definition of an empty homogenized diffusion matrix -------
-template< class FunctionSpaceImp, class FieldMatrixImp >
-class HomDiffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, HomDiffusion< FunctionSpaceImp, FieldMatrixImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-  typedef FieldMatrixImp   FieldMatrixType;
+// seems completely unused
+////! ------ Definition of an empty homogenized diffusion matrix -------
+//template< class Dune::Multiscale::CommonTraits::FunctionSpaceType, class FieldMatrixImp >
+//class HomDiffusion
+//  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, HomDiffusion< Dune::Multiscale::CommonTraits::FunctionSpaceType, FieldMatrixImp > >
+//{
+//public:
+//  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+//  typedef FieldMatrixImp   FieldMatrixType;
 
-private:
-  typedef HomDiffusion< FunctionSpaceType, FieldMatrixType > ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+//private:
+//  typedef HomDiffusion< FunctionSpaceType, FieldMatrixType > ThisType;
+//  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
-public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+//public:
+//  typedef typename FunctionSpaceType::DomainType        DomainType;
+//  typedef typename FunctionSpaceType::RangeType         RangeType;
+//  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+//  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+//  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+//  typedef DomainFieldType TimeType;
 
-public:
-  const FieldMatrixType& A_hom_;
+//public:
+//  const FieldMatrixType& A_hom_;
 
-public:
-  //! fill the matrix with given values
-  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
-    : A_hom_(A_hom)
-  {}
+//public:
+//  //! fill the matrix with given values
+//  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
+//    : A_hom_(A_hom)
+//  {}
 
-  //! in the linear setting, use the structure
-  //! A^0_i(x,\xi) = A^0_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
-  //! instantiate all possible cases of the evaluate-method:
-  //! (diffusive) flux = A^0( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& /*x*/,
-                     const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const {
-    if ( constants().get("linear", true) )
-    {
-      flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
-      flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
-    } else {
-      flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
-      flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
-      //! TODO one of the the above is in the wrong branch
-      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
-    }
-  } // diffusiveFlux
+//  //! in the linear setting, use the structure
+//  //! A^0_i(x,\xi) = A^0_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
+//  //! instantiate all possible cases of the evaluate-method:
+//  //! (diffusive) flux = A^0( x , gradient_of_a_function )
+//  void diffusiveFlux(const DomainType& /*x*/,
+//                     const JacobianRangeType& gradient,
+//                     JacobianRangeType& flux) const {
+//    if ( constants().get("linear", true) )
+//    {
+//      flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
+//      flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
+//    } else {
+//      flux[0][0] = A_hom_[0][0] * gradient[0][0] + A_hom_[0][1] * gradient[0][1];
+//      flux[0][1] = A_hom_[1][0] * gradient[0][0] + A_hom_[1][1] * gradient[0][1];
+//      //! TODO one of the the above is in the wrong branch
+//      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
+//    }
+//  } // diffusiveFlux
 
-  //! the jacobian matrix (JA^0) of the diffusion operator A^0 at the position "\nabla v" in direction
-  //! "nabla w", i.e.
-  //! jacobian diffusiv flux = JA^0(\nabla v) nabla w:
-  //! jacobianDiffusiveFlux = A^0( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& /*x*/,
-                             const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& /*direction_gradient*/,
-                             JacobianRangeType& /*flux*/) const {
-    if ( constants().get("linear", true) )
-    {
-      DUNE_THROW(Dune::NotImplemented,"linear example not yet implemented.");
-    } else {
-      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
-    }
-  } // jacobianDiffusiveFlux
+//  //! the jacobian matrix (JA^0) of the diffusion operator A^0 at the position "\nabla v" in direction
+//  //! "nabla w", i.e.
+//  //! jacobian diffusiv flux = JA^0(\nabla v) nabla w:
+//  //! jacobianDiffusiveFlux = A^0( x , position_gradient ) direction_gradient
+//  void jacobianDiffusiveFlux(const DomainType& /*x*/,
+//                             const JacobianRangeType& /*position_gradient*/,
+//                             const JacobianRangeType& /*direction_gradient*/,
+//                             JacobianRangeType& /*flux*/) const {
+//    if ( constants().get("linear", true) )
+//    {
+//      DUNE_THROW(Dune::NotImplemented,"linear example not yet implemented.");
+//    } else {
+//      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
+//    }
+//  } // jacobianDiffusiveFlux
 
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
-};
+//  template < class... Args >
+//  void evaluate( Args... ) const
+//  {
+//    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
+//  }
+//};
 
 
 } // namespace Example {
 }
+} //namespace Multiscale {
+} //namespace Dune {
 //! @} End of Doxygen Groups
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EXAMPLE

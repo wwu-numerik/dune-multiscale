@@ -2,17 +2,19 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ONE
-#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ONE
+#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SIX
+#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SIX
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
 
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
-/** \addtogroup problem_1 Problem::One
+/** \addtogroup problem_6 Problem::Six
  * @{ **/
-//! ------------ Elliptic Problem 1 -------------------
+//! ------------ Elliptic Problem 6 -------------------
 
 // linear elliptic model problem - periodic setting
 // no exact solution available!
@@ -24,8 +26,7 @@ namespace Problem {
 #define SYMMETRIC_DIFFUSION_MATRIX
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
-
-namespace One {
+namespace Six {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION( 0.05 )
 
@@ -35,57 +36,37 @@ struct ModelProblemData
 {
   static const bool has_exact_solution = false;
 
-  ModelProblemData()
-    : IModelProblemData(constants()){
-      assert( constants_.epsilon != 0.0);
-      if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
-         DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
+  ModelProblemData();
 
-  }
+  //! \copydoc IModelProblemData::getMacroGridFile();
+  inline std::string getMacroGridFile() const;
 
-  //! \copydoc IModelProblemData::getMacroGridFile()
-  inline std::string getMacroGridFile() const {
-    return("../dune/multiscale/grids/macro_grids/elliptic/cube_two.dgf");
-  }
+  //! are the coefficients periodic? (e.g. A=A(x/eps))
+  //! this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const;
 
-  // are the coefficients periodic? (e.g. A=A(x/eps))
-  // this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const {
-    return true; // = problem is periodic
-  }
-
-  // does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const {
-    return false; // = problem does not allow stochastic perturbations
-    // (if you want it, you must add the 'perturb' method provided
-    // by 'constants.hh' - see model problems 4 to 7 for examples )
-  }
-
+  //! does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const;
 };
 
-//! ----------------- Definition of ' f ' ----------------------------
-CONSTANTFUNCTION(FirstSource, 1.0)
+//! ----------------- Definition of ' f ' ------------------------
+MSCONSTANTFUNCTION(FirstSource, 1.0)
 //! ----------------- End Definition of ' f ' ------------------------
 
 
 //! ----------------- Definition of ' G ' ----------------------------
-NULLFUNCTION(SecondSource)
+MSNULLFUNCTION(SecondSource)
 //! ----------------- End Definition of ' G ' ------------------------
 
 
 //! ----------------- Definition of ' A ' ------------------------
 // the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 // A^{\epsilon} : \Omega × R² -> R²
-template< class FunctionSpaceImp >
 class Diffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef Diffusion< FunctionSpaceType >                     ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
@@ -99,6 +80,7 @@ public:
 
 public:
   Diffusion(){}
+
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
 
@@ -108,11 +90,11 @@ public:
                      const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const {
 
-      const auto diffusion_coefficient = 2.0 + sin( 2.0 * M_PI * (x[0] / constants().epsilon) );
-
-      flux[0][0] = diffusion_coefficient * gradient[0][0];
-      flux[0][1] = diffusion_coefficient * gradient[0][1];
-
+    // coeff.first = 1.01 + cos( 2.0 * M_PI * (x[0] / epsilon) ) + stochastic perturbation
+    // coeff.second = 1.01 + cos( 2.0 * M_PI * (x[0] / epsilon) ) + stochastic perturbation
+    const auto coeff = constants().coefficients(x);
+    flux[0][0] = coeff.first * gradient[0][0];
+    flux[0][1] = coeff.second * gradient[0][1];
   } // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -125,10 +107,13 @@ public:
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const {
 
-      const auto diffusion_coefficient = 2.0 + sin( 2.0 * M_PI * (x[0] / constants().epsilon) );
+    // coeff.first = 1.01 + cos( 2.0 * M_PI * (x[0] / epsilon) ) + stochastic perturbation
+    // coeff.second = 1.01 + cos( 2.0 * M_PI * (x[0] / epsilon) ) + stochastic perturbation
+    const auto coeff = constants().coefficients(x);
 
-      flux[0][0] = diffusion_coefficient * direction_gradient[0][0];
-      flux[0][1] = diffusion_coefficient * direction_gradient[0][1];
+    flux[0][0] = coeff.first * direction_gradient[0][0];
+    flux[0][1] = coeff.second * direction_gradient[0][1];
+
   } // jacobianDiffusiveFlux
 
   template < class... Args >
@@ -137,32 +122,26 @@ public:
     DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
   }
 };
-
 //! ----------------- End Definition of ' A ' ------------------------
 
 
 //! ----------------- Definition of ' m ' ----------------------------
-CONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm,  0.0)
 //! ----------------- End Definition of ' m ' ------------------------
 
 
 //! ----------------- Definition of some dummy -----------------------
-NULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- End Definition of some dummy -------------------
 
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution is unknown for this model problem
-template< class FunctionSpaceImp >
 class ExactSolution
-  : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef ExactSolution< FunctionSpaceType >                 ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -203,7 +182,9 @@ public:
 };
 //! ----------------- End Definition of ' u ' ------------------------
 
-} //namespace One {
+} //namespace Six {
 }
+} //namespace Multiscale {
+} //namespace Dune {
 
-#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ONE
+#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SIX

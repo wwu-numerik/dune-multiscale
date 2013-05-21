@@ -8,7 +8,10 @@
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/common/traits.hh>
 
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
 /** \addtogroup problem_8 Problem::Eight
  * @{ **/
@@ -32,48 +35,29 @@ struct ModelProblemData
 {
   static const bool has_exact_solution = true;
 
-  ModelProblemData()
-    : IModelProblemData(constants()) {
-    if (constants().get("linear", true))
-      DUNE_THROW(Dune::InvalidStateException, "problem eight is entirely nonlinear, but problem.linear was true");
-    if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
-      DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
+  ModelProblemData();
 
-  }
+  //! \copydoc IModelProblemData::getMacroGridFile();
+  inline std::string getMacroGridFile() const;
 
-  //! \copydoc IModelProblemData::getMacroGridFile()
-  inline std::string getMacroGridFile() const {
-    return ("../dune/multiscale/grids/macro_grids/elliptic/unit_cube.dgf");
-  }
+  //! are the coefficients periodic? (e.g. A=A(x/eps))
+  //! this method is only relevant if you want to use a standard homogenizer
+  inline bool problemIsPeriodic() const;
 
-  // are the coefficients periodic? (e.g. A=A(x/eps))
-  // this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const {
-    return false; // = problem is not periodic
-  }
-
-  // does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const {
-    return false; // = problem does not allow stochastic perturbations
-    // (if you want it, you must add the 'perturb' method provided
-    // by 'constants.hh' - see model problems 4 to 7 for examples )
-  }
-
+  //! does the problem allow a stochastic perturbation of the coefficients?
+  inline bool problemAllowsStochastics() const;
 };
 
 
 //! ----------------- Definition of ' f ' ------------------------
 
-template< class FunctionSpaceImp >
-class FirstSource
-  : public Dune::Fem::Function< FunctionSpaceImp, FirstSource< FunctionSpaceImp > >
-{
-public:
-  typedef FunctionSpaceImp FunctionSpaceType;
 
+class FirstSource
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
+                                FirstSource >
+{
 private:
-  typedef FirstSource< FunctionSpaceType >                   ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -87,8 +71,6 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FirstSource(){}
-
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
     y = 0.0;
@@ -106,21 +88,17 @@ public:
 
 /** \brief default class for the second source term G.
  * Realization: set G(x) = 0: **/
-NULLFUNCTION(SecondSource)
+MSNULLFUNCTION(SecondSource)
 
 
 //! the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
 //! A^{\epsilon} : \Omega × R² -> R²
-template< class FunctionSpaceImp >
+//!
 class Diffusion
-  : public Dune::Fem::Function< FunctionSpaceImp, Diffusion< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef Diffusion< FunctionSpaceType >                     ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType        DomainType;
@@ -203,23 +181,18 @@ public:
 };
 
 //! ----------------- Definition of ' m ' ----------------------------
-CONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm,  0.0)
 
 //! ----------------- Definition of some dummy -----------------------
-NULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(DefaultDummyFunction)
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
-template< class FunctionSpaceImp >
 class ExactSolution
-  : public Dune::Fem::Function< FunctionSpaceImp, ExactSolution< FunctionSpaceImp > >
+  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
 {
 public:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-private:
-  typedef ExactSolution< FunctionSpaceType >                 ThisType;
-  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -235,7 +208,6 @@ public:
   // entry of a domain-element.
 
 public:
-  ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
   inline void evaluate(const DomainType& x,
@@ -253,12 +225,14 @@ public:
     evaluate(x, y);
   }
 
-  inline void evaluateJacobian(const DomainType& , typename BaseType::JacobianRangeType& ) const {
+  inline void evaluateJacobian(const DomainType& , typename FunctionSpaceType::JacobianRangeType& ) const {
     DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
   }
 };
 
 } //! @} namespace Eight {
 }
+} //namespace Multiscale {
+} //namespace Dune {
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EIGHT

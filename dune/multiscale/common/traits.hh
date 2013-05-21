@@ -17,7 +17,6 @@
 #include <dune/fem/space/lagrangespace/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/multiscale/problems/elliptic_problems/selector.hh>
 
 namespace Dune {
 
@@ -40,6 +39,18 @@ class SparseRowMatrixOperator;
 
 namespace Multiscale {
 
+namespace Problem {
+namespace PROBLEM_NAME {
+class ModelProblemData;
+class FirstSource;
+class SecondSource;
+class Diffusion;
+class MassTerm;
+class DefaultDummyFunction;
+class ExactSolution;
+} //namespace PROBLEM_NAME
+} //namespace Problem
+
 //! type construction for the HMM algorithm
 struct CommonTraits {
   //! --------- typedefs for the macro grid and the corresponding discrete space -------------
@@ -54,25 +65,23 @@ struct CommonTraits {
   //!-----------------------------------------------------------------------------------------
 
   //! --------- typedefs for the coefficient and data functions ------------------------------
-  typedef Problem::ModelProblemData ModelProblemDataType;
+  typedef Problem::PROBLEM_NAME::ModelProblemData ModelProblemDataType;
   // type of first source term (right hand side of differential equation or type of 'f')
-  typedef Problem::FirstSource< FunctionSpaceType > FirstSourceType;
+  typedef Problem::PROBLEM_NAME::FirstSource FirstSourceType;
   // type of second source term 'G' (second right hand side of differential equation 'div G')
-  typedef Problem::SecondSource< FunctionSpaceType > SecondSourceType;
+  typedef Problem::PROBLEM_NAME::SecondSource SecondSourceType;
   // type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
-  typedef Problem::Diffusion< FunctionSpaceType > DiffusionType;
+  typedef Problem::PROBLEM_NAME::Diffusion DiffusionType;
   // type of mass (or reaction) term (i.e. 'm' or 'c')
-  typedef Problem::MassTerm< FunctionSpaceType > MassTermType;
+  typedef Problem::PROBLEM_NAME::MassTerm MassTermType;
   // default type for any missing coefficient function (e.g. advection,...)
-  typedef Problem::DefaultDummyFunction< FunctionSpaceType > DefaultDummyFunctionType;
+  typedef Problem::PROBLEM_NAME::DefaultDummyFunction DefaultDummyFunctionType;
   //!-----------------------------------------------------------------------------------------
 
   //! ---------  typedefs for the standard discrete function space (macroscopic) -------------
 
   // type of exact solution (in general unknown)
-  typedef Problem::ExactSolution< FunctionSpaceType >            ExactSolutionType;
-  typedef Dune::GridFunctionAdapter< ExactSolutionType, GridPartType > DiscreteExactSolutionType;     // for data output with
-                                                                                                // paraview or grape
+  typedef Problem::PROBLEM_NAME::ExactSolution ExactSolutionType;
 
   typedef FunctionSpaceType::DomainType DomainType;
   //! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
@@ -111,14 +120,7 @@ struct CommonTraits {
   };
 
 
-  //! --------- typedefs and classes for data output -----------------------------------------
-  typedef std::tuple< const DiscreteFunctionType* >      IOTupleType;
-  typedef Dune::DataOutput< GridType, IOTupleType > DataOutputType;
 
-  // just for the discretized exact solution (in case it is available)
-  typedef std::tuple< const DiscreteExactSolutionType* > ExSolIOTupleType;
-  // just for the discretized exact solution (in case it is available)
-  typedef Dune::DataOutput< GridType, ExSolIOTupleType > ExSolDataOutputType;
 
   //!------------------------- for adaptive grid refinement ---------------------------------
   //! type of restrict-prolong operator
