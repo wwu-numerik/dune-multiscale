@@ -9,6 +9,7 @@
 #include <dune/multiscale/common/elliptic_homogenizer.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
+#include <dune/multiscale/common/output_traits.hh>
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
@@ -67,9 +68,9 @@ void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discre
   Dune::Multiscale::OutputParameters outputparam;
 
   // create and initialize output class
-  typename CommonTraits::IOTupleType fem_solution_series(&discrete_solution);
+  typename OutputTraits::IOTupleType fem_solution_series(&discrete_solution);
   outputparam.set_prefix((boost::format("/fem_solution")).str());
-  typename CommonTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
+  typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
                                                  fem_solution_series, outputparam);
   // write data
   if (DSC_CONFIG_GET("problem.linear", true))
@@ -344,7 +345,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
   typedef Dune::Homogenizer< typename CommonTraits::GridType, typename CommonTraits::DiffusionType > HomogenizerType;
 
   // to create an empty diffusion matrix that can be filled with constant values
-  typedef Problem::ConstantDiffusionMatrix< typename CommonTraits::FunctionSpaceType, typename HomogenizerType::HomTensorType >
+  typedef Problem::ConstantDiffusionMatrix< typename HomogenizerType::HomTensorType >
      HomDiffusionType;
 
   const HomogenizerType disc_homogenizer(unit_cell_location);
@@ -390,9 +391,9 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
   Dune::Multiscale::OutputParameters outputparam;
 
   // create and initialize output class
-  typename CommonTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);
+  typename OutputTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);
   outputparam.set_prefix((boost::format("/homogenized_solution")).str());
-  typename CommonTraits::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
+  typename OutputTraits::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
                                                     hom_fem_solution_series, outputparam);
   homfemsol_dataoutput.writeData( 1.0 /*dummy*/, "homogenized-solution" );
 

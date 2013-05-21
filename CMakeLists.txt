@@ -155,6 +155,20 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
     )
 
+set( PROBLEM_SOURCES
+	dune/multiscale/problems/elliptic/eight.cc
+	dune/multiscale/problems/elliptic/example.cc
+	dune/multiscale/problems/elliptic/five.cc
+	dune/multiscale/problems/elliptic/four.cc
+	dune/multiscale/problems/elliptic/nine.cc
+	dune/multiscale/problems/elliptic/one.cc
+	dune/multiscale/problems/elliptic/seven.cc
+	dune/multiscale/problems/elliptic/six.cc
+	dune/multiscale/problems/elliptic/ten.cc
+	dune/multiscale/problems/elliptic/three.cc
+	dune/multiscale/problems/elliptic/toy.cc
+	dune/multiscale/problems/elliptic/two.cc
+    )
 set( HMM_SOURCES 
         src/elliptic_hmm.cc 
         dune/multiscale/hmm/algorithm.cc
@@ -187,7 +201,8 @@ set( RIGOROUS_MSFEM_SOURCES
     
     
 ADD_LIBRARY(multiscale_common ${COMMON_SOURCES})
-set( COMMON_LIBS multiscale_common "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
+ADD_LIBRARY(multiscale_problem ${PROBLEM_SOURCES})
+set( COMMON_LIBS multiscale_problem multiscale_common "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
     ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
     ${BOOST_LIBS})
     

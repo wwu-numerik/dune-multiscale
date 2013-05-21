@@ -8,6 +8,8 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <utility>
 
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
 
 //! struct to wrap config parameters with common validation and naming scheme
@@ -113,6 +115,8 @@ struct Constants
     static Constants c( d /*,e,f*/ ); \
     return c; \
   }
-} // namespace Problem
 
+} // namespace Problem
+} //namespace Multiscale {
+} //namespace Dune {
 #endif // DUNE_MODEL_PROBLEM_ALL_HH
