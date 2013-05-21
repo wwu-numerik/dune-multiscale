@@ -4,7 +4,7 @@
 
 #include "discrete_cell_operator.hh"
 
-#include <dune/multiscale/problems/elliptic_problems/selector.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 

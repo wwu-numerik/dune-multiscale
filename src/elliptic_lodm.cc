@@ -6,6 +6,7 @@
 #include "common.hh"
 
 #include <dune/multiscale/msfem/rigorous.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 
 int main(int argc, char** argv) {
   try {
@@ -38,7 +39,7 @@ int main(int argc, char** argv) {
 
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
-    const Problem::ModelProblemData info;
+    const Dune::Multiscale::Problem::ModelProblemData info;
 
 
     // total_refinement_level denotes the (starting) grid refinement level for the global fine scale problem, i.e. it describes 'h'

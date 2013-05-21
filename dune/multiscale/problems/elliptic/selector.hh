@@ -5,6 +5,12 @@
 #ifndef DUNE_MS_PROBLEMS_SELECTOR_HH
 #define DUNE_MS_PROBLEMS_SELECTOR_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+ #include "cmake_config.h"
+#elif defined (HAVE_CONFIG_H)
+ #include <config.h>
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 //for i in $(ls *hh) ; do echo \#include \"${i}\" ; done
 #include "eight.hh"
 #include "example.hh"
@@ -19,13 +25,18 @@
 #include "toy.hh"
 #include "two.hh"
 
+namespace Dune {
+namespace Multiscale {
 namespace Problem {
 //this pulls everything from the subnamespace into Problem and should only be done for the "active" problem
-#ifndef PROBLEM_NAME
-  #define PROBLEM_NAME Nine
-#endif
-
-using namespace Problem::PROBLEM_NAME;
+//using namespace Dune::Multiscale::Problem::PROBLEM_NAME;
+typedef Dune::Multiscale::Problem::PROBLEM_NAME::Diffusion Diffusion;
+typedef Dune::Multiscale::Problem::PROBLEM_NAME::FirstSource FirstSource;
+typedef Dune::Multiscale::Problem::PROBLEM_NAME::SecondSource SecondSource;
+typedef Dune::Multiscale::Problem::PROBLEM_NAME::ExactSolution ExactSolution;
+typedef Dune::Multiscale::Problem::PROBLEM_NAME::DefaultDummyFunction DefaultDummyFunction;
+typedef Dune::Multiscale::Problem::PROBLEM_NAME::MassTerm MassTerm;
+typedef Dune::Multiscale::Problem::PROBLEM_NAME::ModelProblemData ModelProblemData;
 
 #define STRIN(x) #x
 #define STR(x) STRIN(x)
@@ -33,5 +44,7 @@ static const std::string name = std::string(STRIN(PROBLEM_NAME));
 #undef STR
 #undef STRIN
 } //! @} namespace Problem
+} // namespace Multiscale
+} // namespace Dune
 
 #endif // DUNE_MS_PROBLEMS_SELECTOR_HH

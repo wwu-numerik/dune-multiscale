@@ -25,6 +25,7 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
 

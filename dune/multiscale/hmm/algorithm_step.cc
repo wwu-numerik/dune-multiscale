@@ -11,6 +11,9 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/hmm/elliptic_hmm_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/common/output_traits.hh>
+
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
@@ -352,9 +355,9 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
     Dune::Multiscale::OutputParameters outputparam;
 
     // create and initialize output class
-    typename CommonTraits::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
+    typename OutputTraits::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
     outputparam.set_prefix((boost::format("/hmm_solution_%d_NewtonStep_%d") % loop_cycle % hmm_iteration_step).str());
-    typename CommonTraits::DataOutputType hmmsol_dataoutput(hmm_solution.space().gridPart().grid(),
+    typename OutputTraits::DataOutputType hmmsol_dataoutput(hmm_solution.space().gridPart().grid(),
                                                    hmm_solution_newton_step_series, outputparam);
     // write data
     hmmsol_dataoutput.writeData( 1.0 /*dummy*/, "hmm-solution-NewtonStep" );
@@ -396,14 +399,14 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
   // --------- data output hmm solution --------------
 
   // create and initialize output class
-  typename CommonTraits::IOTupleType hmm_solution_series(&hmm_solution);
+  typename OutputTraits::IOTupleType hmm_solution_series(&hmm_solution);
   if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
     outputparam.set_prefix((boost::format("/hmm_solution_%d") % loop_cycle).str());
   }
   else {
     outputparam.set_prefix("/hmm_solution");
   }
-  typename CommonTraits::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
+  typename OutputTraits::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
 
   // write data
   hmmsol_dataoutput.writeData( 1.0 /*dummy*/, "hmm-solution" );
@@ -414,10 +417,10 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
 
     // create and initialize output class
     typename CommonTraits::ExactSolutionType u;
-    typename CommonTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
-    typename CommonTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+    const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
+    typename OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("/exact_solution");
-    typename CommonTraits::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
+    typename OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
 
     // write data
     outstring << "exact-solution";
