@@ -2,6 +2,7 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
+// Implementation of the Local Orthogonal Decomposition Method (LODM)
 #include "common.hh"
 
 #include <dune/multiscale/msfem/rigorous.hh>
@@ -51,9 +52,9 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
               << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-        DSC_LOG_INFO << "Use New Rigorous MsFEM in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;
+        DSC_LOG_INFO << "Use Local Orthogonal Decomposition (LOD) Method in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;
     else
-        DSC_LOG_INFO << "Use New Rigorous MsFEM in classical (symmetric) formulation with an uniform computation, i.e.:" << std::endl;      
+        DSC_LOG_INFO << "Use Local Orthogonal Decomposition (LOD) Method in classical (symmetric) formulation with an uniform computation, i.e.:" << std::endl;      
     DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
     DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
     DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;

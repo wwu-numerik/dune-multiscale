@@ -353,6 +353,12 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   // the support of the interaction of two ms basis functions
   std::vector< std::vector< std::vector< FineGridEntitySeed > > > support_of_ms_basis_func_intersection;
   
+  // relevant constellations of two ms basis functions (i.e. when they have a non-empty intersection of their supports) 
+  std::vector < std::tuple< unsigned int, unsigned int > > relevant_constellations;
+  // we only store the tuples relevant_constellations[i][j] for 'j<=i' the rest is obtained by symmetry
+  // the reason for storing only the values for 'j<=i' is that we can use (if given) the symmetry of the diffusion matrix,
+  // in the sense that we only compute the entries of the stiffness matrix for 'j<=i' and then symmetrize the matrix
+  
   support_of_ms_basis_func_intersection.resize( number_of_internal_coarse_nodes );
   for ( int k = 0; k<number_of_internal_coarse_nodes ; ++k )
     support_of_ms_basis_func_intersection[k].resize( number_of_internal_coarse_nodes );
@@ -423,6 +429,13 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
       for ( unsigned int mid2 = 0; mid2 < ms_basis_funcs_that_contain_entity.size(); ++mid2 )
       {
         int ms_basis_id_2 = ms_basis_funcs_that_contain_entity[ mid2 ];
+        // check if the tuple was already added to the relevant_constellations-vector
+        if ( (support_of_ms_basis_func_intersection[ ms_basis_id_1 ][ ms_basis_id_2 ].size() == 0) && (ms_basis_id_2<=ms_basis_id_1) )
+	{
+          std::tuple< unsigned int, unsigned int > tup = make_tuple( ms_basis_id_1, ms_basis_id_2 );
+          relevant_constellations.push_back( tup );
+	}
+        // add the seed to the support of the insection between ms basis ms_basis_id_1 and ms_basis_id_2
 	support_of_ms_basis_func_intersection[ ms_basis_id_1 ][ ms_basis_id_2 ].push_back( (*it).seed() );
       }
     }
@@ -445,7 +458,63 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, msfem_basis_function );
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, standard_basis_function );
 
+//! just for testing - delete it!
+#if 0
+    DiscreteFunction dull_copy ("Dully", fine_space);
+    dull_copy.clear();
+    
+    std::vector< double > values_dull_copy;
+    values_dull_copy.resize(fine_space.size());
+    
+    for (HostgridIterator it = fine_space.begin(); it != fine_space.end(); ++it)
+    {
+      auto loc_func = dull_copy.localFunction( *it );
+      auto loc_func_2 = standard_basis_function[0]->localFunction( *it );
 
+      const int baseSetSize = loc_func.baseFunctionSet().size();
+       
+      for (int i=0; i<baseSetSize; ++i) {
+       loc_func[i] = loc_func_2[i];
+       const int global_dof_number = fine_space.mapper().mapToGlobal(*it, i );
+       values_dull_copy[ global_dof_number ] = loc_func_2[i];
+      }
+    }
+ 
+
+    for (auto it = fine_space.begin(); it != fine_space.end(); ++it)
+    {
+        auto intersection_it = fine_space.gridPart().ibegin(*it);
+        
+        auto loc_func = dull_copy.localFunction( *it );   
+        
+        const auto endiit = fine_space.gridPart().iend(*it);
+        for ( ; intersection_it != endiit; ++intersection_it)
+        {
+
+            const auto& lagrangePointSet
+                    = fine_space.lagrangePointSet(*it);
+
+            const int face = (*intersection_it).indexInInside();
+
+            auto faceIterator
+                    = lagrangePointSet.beginSubEntity< faceCodim >(face);
+            const auto faceEndIterator
+                    = lagrangePointSet.endSubEntity< faceCodim >(face);
+            for ( ; faceIterator != faceEndIterator; ++faceIterator)
+	    {
+	      
+	      if ( values_dull_copy[fine_space.mapper().mapToGlobal(*it, *faceIterator )] != loc_func[ *faceIterator ] )
+	      { std::cout << "Scheisse, Fehler!!!!!" << std::endl; }
+	    }
+
+        }
+
+    }
+std::cout << "Alles klaerchen!!" << std::endl;
+abort();
+       //const int global_dof_number = space.mapper().mapToGlobal(*it, loc_basis_number );
+#endif
+  
   //! assemble all local problems (within constructor!)
   MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, diffusion_op,
                                            standard_basis_function, global_id_to_internal_id );
@@ -480,9 +549,11 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   MatrixType system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
 
   if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-  { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function, support_of_ms_basis_func_intersection, system_matrix); }
+  { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function,
+                     support_of_ms_basis_func_intersection, relevant_constellations, system_matrix); }
   else
-  { assemble_matrix( diffusion_op, msfem_basis_function, msfem_basis_function, support_of_ms_basis_func_intersection, system_matrix); }
+  { assemble_matrix( diffusion_op, msfem_basis_function, msfem_basis_function,
+                     support_of_ms_basis_func_intersection, relevant_constellations, system_matrix); }
   // NOTE: in the case that we use the Petrov Galerkin version of the method 'support_of_ms_basis_func_intersection'
   // is not yet optimally assembled (it is a little larger as required, since we still determine the intersection of two ms basis functions,
   // whereas the support of the classical basis function is typically smaller). It is correct, but not optimal!

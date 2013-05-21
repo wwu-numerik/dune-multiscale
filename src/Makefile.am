@@ -49,8 +49,8 @@ libmultiscale_fem_la_CPPFLAGS=$(CPPFLAGS)
 ##########################        Executables    ##############################
 ###############################################################################
 
-noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
-SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_rigorous_msfem
+noinst_PROGRAMS = elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_lodm
+SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic_lodm
 
 ######################################
 ##############  HMM  #################
@@ -71,15 +71,15 @@ elliptic_msfem_LDPFLAGS = $(LDPFLAGS)
 elliptic_msfem_LDADD=-lmultiscale_msfem -lmultiscale_common $(LDADD)
         
 ######################################
-#########  Rigorous MSFEM  ###########
+###########  LOD Method  #############
 ######################################
-elliptic_rigorous_msfem_SOURCES = elliptic_rigorous_msfem.cc \
+elliptic_lodm_SOURCES = elliptic_lodm.cc \
         ../dune/multiscale/msfem/rigorous.cc \
         ../dune/multiscale/msfem/rigorous_msfem_solver.cc 
-elliptic_rigorous_msfem_DEPENDENCIES = libmultiscale_common.la libmultiscale_fem.la
-elliptic_rigorous_msfem_CPPFLAGS = $(CPPFLAGS)
-elliptic_rigorous_msfem_LDPFLAGS = $(LDPFLAGS)
-elliptic_rigorous_msfem_LDADD=-lmultiscale_fem -lmultiscale_common $(LDADD)
+elliptic_lodm_DEPENDENCIES = libmultiscale_common.la libmultiscale_fem.la
+elliptic_lodm_CPPFLAGS = $(CPPFLAGS)
+elliptic_lodm_LDPFLAGS = $(LDPFLAGS)
+elliptic_lodm_LDADD=-lmultiscale_fem -lmultiscale_common $(LDADD)
 
 ######################################
 ##############  FEM  #################
