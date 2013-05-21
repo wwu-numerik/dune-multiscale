@@ -246,11 +246,12 @@ private:
 
 
   // ------------------------------------------------------------------------------------
-  template< class DiffusionOperator, class MatrixImp, class SeedSupportStorageList >
+  template< class DiffusionOperator, class MatrixImp, class SeedSupportStorageList, class RelevantConstellationsList >
   void assemble_matrix( const DiffusionOperator& diffusion_op,
                         MsFEMBasisFunctionType& msfem_basis_function_list_1,
                         MsFEMBasisFunctionType& msfem_basis_function_list_2,
                         SeedSupportStorageList& support_of_ms_basis_func_intersection,
+                        RelevantConstellationsList& relevant_constellations,
                         MatrixImp& system_matrix ) const
   {
     for (size_t row = 0; row != system_matrix.N(); ++row)
@@ -258,20 +259,39 @@ private:
         system_matrix[row][col] = 0.0;
 
 #ifdef SYMMETRIC_DIFFUSION_MATRIX
+
+   for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
+   {
+      unsigned int row = get<0>(relevant_constellations[t]);
+      unsigned int col = get<1>(relevant_constellations[t]);
+      system_matrix[row][col]
+        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
+   }
+
+   /* old version without 'relevant_constellations'-vector
    for (size_t row = 0; row != system_matrix.N(); ++row)
     for (size_t col = 0; col <= row; ++col)    
       system_matrix[row][col]
         = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
-
+   */
+	
    for (size_t col = 0; col != system_matrix.N(); ++col )
     for (size_t row = 0; row < col; ++row)
       system_matrix[row][col] = system_matrix[col][row];
 
 #else
-   for (size_t row = 0; row != system_matrix.N(); ++row)
-     for (size_t col = 0; col != system_matrix.M(); ++col)
-       system_matrix[col][row]
-         = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
+     
+   for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
+   {
+      unsigned int row = get<0>(relevant_constellations[t]);
+      unsigned int col = get<1>(relevant_constellations[t]);
+      system_matrix[row][col]
+        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
+
+      if ( row != cole )
+      { system_matrix[col][row]
+        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[col]), *(msfem_basis_function_list_2[row]), support_of_ms_basis_func_intersection[col][row] ); }
+   }
 
 #endif
   }

@@ -242,8 +242,19 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     local_problem_solution.clear();
     DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
   } else {
+
     InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("LOCPROBLEMSOLVER_VERBOSE", false));
 
+//! temporal changes that should be moved to a new class exclusivly for the LODM.
+#if 1
+    
+    // solve the local problems without using the dune-fem structure.
+    // At the end: copy the solution vector into a dune-fem discrete function by using
+     //const int global_dof_number = space.mapper().mapToGlobal(*it, loc_basis_number );
+    
+#endif
+
+    
     bool clement = false;
     if ( specifier_.getOversamplingStrategy() == 3 )
     { clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ); }
