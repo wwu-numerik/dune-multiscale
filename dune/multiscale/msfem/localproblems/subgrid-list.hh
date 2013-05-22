@@ -95,7 +95,8 @@ public:
   ~SubGridList();
   SubGridType& getSubGrid(int i);
   const SubGridType& getSubGrid(int i) const;
-  
+  const int getNumberOfSubGrids() const;
+
   // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
   const std::vector< int >& getSubgridIDs_that_contain_entity (int host_enitity_index) const;
   
