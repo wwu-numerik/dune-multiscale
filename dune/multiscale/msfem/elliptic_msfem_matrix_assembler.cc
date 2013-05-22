@@ -10,12 +10,13 @@ DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(MacroMicroGridSpeci
                               // n(T)-layers:
                               MsFEMTraits::SubGridListType& subgrid_list,
                               const DiffusionModel& diffusion_op)
-  : specifier_(specifier)
-    , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
-    , subgrid_list_(subgrid_list)
-    , diffusion_operator_(diffusion_op) {
-  bool silence = false;
+  : specifier_(specifier),
+    coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace),
+    subgrid_list_(subgrid_list),
+    diffusion_operator_(diffusion_op),
+    petrovGalerkin_(DSC_CONFIG_GET("msfem.petrov_galerkin", true )){
 
+  bool silence = false;
   // coarseDiscreteFunctionSpace_ = specifier_.coarseSpace();
   // fineDiscreteFunctionSpace_ = specifier_.fineSpace();
   MsFEMLocalProblemSolverType loc_prob_solver(
@@ -23,6 +24,8 @@ DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(MacroMicroGridSpeci
 
   loc_prob_solver.assemble_all(silence);
 }
+
+
 
 } //namespace MsFEM {
 } //namespace Multiscale {
