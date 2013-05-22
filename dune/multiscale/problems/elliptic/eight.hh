@@ -38,14 +38,14 @@ struct ModelProblemData
   ModelProblemData();
 
   //! \copydoc IModelProblemData::getMacroGridFile();
-  inline std::string getMacroGridFile() const;
+  std::string getMacroGridFile() const;
 
   //! are the coefficients periodic? (e.g. A=A(x/eps))
   //! this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const;
+  bool problemIsPeriodic() const;
 
   //! does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const;
+  bool problemAllowsStochastics() const;
 };
 
 
@@ -71,6 +71,8 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
+  FirstSource(){}
+
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
     y = 0.0;
@@ -138,6 +140,8 @@ private:
   // instantiate all possible cases of the evaluate-method:
 
 public:
+  Diffusion(){}
+
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
@@ -208,6 +212,7 @@ public:
   // entry of a domain-element.
 
 public:
+  ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
   inline void evaluate(const DomainType& x,

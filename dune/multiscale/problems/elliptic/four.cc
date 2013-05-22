@@ -12,15 +12,15 @@ ModelProblemData::ModelProblemData()
        DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
 }
 
-inline std::string ModelProblemData::getMacroGridFile() const {
+std::string ModelProblemData::getMacroGridFile() const {
   return("../dune/multiscale/grids/macro_grids/elliptic/corner_singularity.dgf");
 }
 
-inline bool ModelProblemData::problemIsPeriodic() const {
+bool ModelProblemData::problemIsPeriodic() const {
   return true; // = problem is periodic
 }
 
-inline bool ModelProblemData::problemAllowsStochastics() const {
+bool ModelProblemData::problemAllowsStochastics() const {
   return true; // = problem allows stochastic perturbations
 }
 
