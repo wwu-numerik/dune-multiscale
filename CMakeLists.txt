@@ -193,7 +193,7 @@ set( FEM_SOURCES
         dune/multiscale/fem/algorithm.cc
     )
     
-set( RIGOROUS_MSFEM_SOURCES
+set( LODM_SOURCES
         src/elliptic_lodm.cc
         dune/multiscale/msfem/rigorous.cc
         dune/multiscale/msfem/rigorous_msfem_solver.cc
