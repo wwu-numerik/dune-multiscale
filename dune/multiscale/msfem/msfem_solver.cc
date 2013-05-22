@@ -278,10 +278,14 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
   // assemble right hand side
-  if ( DSC_CONFIG_GET("msfem.petrov_galerkin", 1 ) )
-  { RhsAssembler::assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs); }
-  else
-  { RhsAssembler::assemble_for_MsFEM_symmetric< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, specifier, subgrid_list, msfem_rhs); }
+  if ( DSC_CONFIG_GET("msfem.petrov_galerkin", 1 ) ) {
+    RhsAssembler::assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, msfem_rhs);
+  } else {
+    RhsAssembler::assemble_for_MsFEM_symmetric< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f,
+                                                                                                specifier,
+                                                                                                subgrid_list,
+                                                                                                msfem_rhs);
+  }
 
   // oneLinePrint( DSC_LOG_DEBUG, fem_rhs );
 
@@ -315,7 +319,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
   DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
   DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
-              << std::endl;
+               << std::endl;
 
   // oneLinePrint( DSC_LOG_DEBUG, solution );
   // copy coarse grid function (defined on the subgrid) into a fine grid function
