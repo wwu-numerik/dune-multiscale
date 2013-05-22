@@ -15,15 +15,15 @@ ModelProblemData::ModelProblemData()
 
 }
 
-inline std::string ModelProblemData::getMacroGridFile() const {
+std::string ModelProblemData::getMacroGridFile() const {
   return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");      // _strange_grid
 }
 
-inline bool ModelProblemData::problemIsPeriodic() const {
+bool ModelProblemData::problemIsPeriodic() const {
   return false; // = problem is not periodic
 }
 
-inline bool ModelProblemData::problemAllowsStochastics() const {
+bool ModelProblemData::problemAllowsStochastics() const {
   return false; // = problem does not allow stochastic perturbations
   // (if you want it, you must add the 'perturb' method provided
   // by 'constants.hh' - see model problems 4 to 7 for examples )

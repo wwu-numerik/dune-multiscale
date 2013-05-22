@@ -107,14 +107,14 @@ struct ModelProblemData
   ModelProblemData();
 
   //! \copydoc IModelProblemData::getMacroGridFile();
-  inline std::string getMacroGridFile() const;
+  std::string getMacroGridFile() const;
 
   //! are the coefficients periodic? (e.g. A=A(x/eps))
   //! this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const;
+  bool problemIsPeriodic() const;
 
   //! does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const;
+  bool problemAllowsStochastics() const;
 };
 
 
@@ -255,6 +255,8 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
+  ExactSolution(){}
+
   //! evaluate 'u(x)'
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {

@@ -40,14 +40,14 @@ struct ModelProblemData
   ModelProblemData();
 
   //! \copydoc IModelProblemData::getMacroGridFile();
-  inline std::string getMacroGridFile() const;
+  std::string getMacroGridFile() const;
 
   //! are the coefficients periodic? (e.g. A=A(x/eps))
   //! this method is only relevant if you want to use a standard homogenizer
-  inline bool problemIsPeriodic() const;
+  bool problemIsPeriodic() const;
 
   //! does the problem allow a stochastic perturbation of the coefficients?
-  inline bool problemAllowsStochastics() const;
+  bool problemAllowsStochastics() const;
 };
 
 //! ----------------- Definition of ' f ' ----------------------------
@@ -80,6 +80,7 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
+  Diffusion(){}
   // in the linear setting, use the structure
   // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
 
@@ -156,6 +157,7 @@ public:
   // entry of a domain-element.
 
 public:
+  ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
   inline void evaluate(const DomainType& /*x*/,
