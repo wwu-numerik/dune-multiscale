@@ -125,8 +125,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
-    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-                                                % index % MPIManager::rank()).str();
+    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
+                                                % index).str();
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
     discrete_function_reader.read(0, local_problem_solution_e0);
@@ -311,9 +311,8 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   }
   msfem_rhs.communicate();
   //! --- end boundary treatment ---
-  const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 20000, true);
+  const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true);
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
-
   DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
   DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
               << std::endl;
