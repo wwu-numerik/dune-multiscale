@@ -73,7 +73,7 @@ SOURCE_PREFIX=elliptic_hmm elliptic_msfem elliptic_fem elliptic_hom_fem elliptic
 ##############  HMM  #################
 ######################################
 elliptic_hmm_SOURCES = elliptic_hmm.cc 
-elliptic_hmm_DEPENDENCIES = libmultiscale_common.la libmultiscale_hmm.la
+elliptic_hmm_DEPENDENCIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_hmm.la
 elliptic_hmm_CPPFLAGS=$(CPPFLAGS) 
 elliptic_hmm_LDFLAGS=$(LDFLAGS) 
 elliptic_hmm_LDADD=-lmultiscale_hmm -lmultiscale_problems -lmultiscale_common $(LDADD)
@@ -82,7 +82,7 @@ elliptic_hmm_LDADD=-lmultiscale_hmm -lmultiscale_problems -lmultiscale_common $(
 ##############  MSFEM  ###############
 ######################################
 elliptic_msfem_SOURCES = elliptic_msfem.cc
-elliptic_msfem_DEPENDENCIES = libmultiscale_common.la libmultiscale_msfem.la
+elliptic_msfem_DEPENDENCIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_msfem.la
 elliptic_msfem_CPPFLAGS = $(CPPFLAGS)
 elliptic_msfem_LDPFLAGS = $(LDPFLAGS)
 elliptic_msfem_LDADD=-lmultiscale_msfem -lmultiscale_problems -lmultiscale_common $(LDADD)
@@ -91,7 +91,7 @@ elliptic_msfem_LDADD=-lmultiscale_msfem -lmultiscale_problems -lmultiscale_commo
 ###########  LOD Method  #############
 ######################################
 elliptic_lodm_SOURCES = elliptic_lodm.cc
-elliptic_lodm_DEPENDENCIES = libmultiscale_common.la libmultiscale_fem.la
+elliptic_lodm_DEPENDENCIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_fem.la
 elliptic_lodm_CPPFLAGS = $(CPPFLAGS)
 elliptic_lodm_LDPFLAGS = $(LDPFLAGS)
 elliptic_lodm_LDADD=-lmultiscale_fem -lmultiscale_problems -lmultiscale_common $(LDADD)
@@ -100,7 +100,7 @@ elliptic_lodm_LDADD=-lmultiscale_fem -lmultiscale_problems -lmultiscale_common $
 ##############  FEM  #################
 ######################################        
 elliptic_fem_SOURCES = elliptic_fem.cc 
-elliptic_fem_DEPENDENCIES = libmultiscale_common.la libmultiscale_fem.la
+elliptic_fem_DEPENDENCIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_fem.la
 elliptic_fem_CPPFLAGS=$(CPPFLAGS) 
 elliptic_fem_LDFLAGS=$(LDFLAGS) 
 elliptic_fem_LDADD=-lmultiscale_fem -lmultiscale_problems -lmultiscale_common $(LDADD)
@@ -109,7 +109,7 @@ elliptic_fem_LDADD=-lmultiscale_fem -lmultiscale_problems -lmultiscale_common $(
 ############  HOM FEM  ###############
 ######################################
 elliptic_hom_fem_SOURCES = elliptic_hom_fem.cc 
-elliptic_hom_fem_DEPENDENCIES = libmultiscale_common.la
+elliptic_hom_fem_DEPENDENCIES = libmultiscale_problems.la libmultiscale_common.la
 elliptic_hom_fem_CPPFLAGS = $(CPPFLAGS)
 elliptic_hom_fem_LDFLAGS=$(LDFLAGS) 
 elliptic_hom_fem_LDADD=-lmultiscale_fem -lmultiscale_problems -lmultiscale_common $(LDADD)
