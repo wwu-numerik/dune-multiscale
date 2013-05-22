@@ -231,8 +231,8 @@ public:
 
       // -- load local solutions --
       // the file/place, where we saved the solutions of the cell problems
-      const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
-                                                  % global_index_entity).str();
+      const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
+                                                  % global_index_entity % MPIManager::rank()).str();
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
       discrete_function_reader.read(0, local_problem_solution_e0);
@@ -289,6 +289,11 @@ public:
           if (enclosingCoarseCellIndex!=global_index_entity)
 //          if (Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
           {
+            const auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
+                    local_grid_entity);
+            const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
+                    local_grid_entity);
+
             const auto& local_grid_geometry = local_grid_entity.geometry();
             assert(local_grid_entity.partitionType() == InteriorEntity);
 
@@ -307,10 +312,7 @@ public:
                       = local_grid_quadrature.weight(localQuadraturePoint)
                               * local_grid_geometry.integrationElement(local_subgrid_point);
 
-              const auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
-                      local_grid_entity);
-              const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
-                      local_grid_entity);
+
 
               // local corrector for e_0 and e_1
               RangeType loc_sol_e0, loc_sol_e1;
