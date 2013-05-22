@@ -194,7 +194,7 @@ set( FEM_SOURCES
     )
     
 set( RIGOROUS_MSFEM_SOURCES
-        src/elliptic_rigorous_msfem.cc
+        src/elliptic_lodm.cc
         dune/multiscale/msfem/rigorous.cc
         dune/multiscale/msfem/rigorous_msfem_solver.cc
     )
