@@ -13,10 +13,12 @@ namespace Dune {
 namespace Stuff {
 namespace Grid {
 
-//!
-template < class GridImp, class IteratorImp, class IndexSetImp, class IndexTypeImp>
-EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet< GridImp, IndexSetImp, IndexTypeImp >& index_set,
-                EntityPointer< const GridImp, IteratorImp > entity )
+/** ConstGridImp is supposed to be identical to const GridImp, alas different grid managers
+ *  and different type deduction between gcc/clang make two different types necessary here
+ */
+template < class GridImp, class ConstGridImp, class IteratorImp, class IndexSetImp, class IndexTypeImp>
+EntityPointer< GridImp, IteratorImp > make_father(const IndexSet< ConstGridImp, IndexSetImp, IndexTypeImp >& index_set,
+                EntityPointer< GridImp, IteratorImp > entity )
 {
   bool father_found = false;
   auto test_entity = entity;
@@ -38,9 +40,9 @@ EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet< GridImp,
 }
 
 
-template < class GridImp, class IteratorImp, class IndexSetImp, class IndexTypeImp >
-EntityPointer< const GridImp, IteratorImp > make_father(const IndexSet< GridImp, IndexSetImp, IndexTypeImp >& index_set,
-                 EntityPointer< const GridImp, IteratorImp > entity,
+template < class GridImp, class ConstGridImp, class IteratorImp, class IndexSetImp, class IndexTypeImp >
+EntityPointer< GridImp, IteratorImp > make_father(const IndexSet< ConstGridImp, IndexSetImp, IndexTypeImp >& index_set,
+                 EntityPointer< GridImp, IteratorImp > entity,
                  int level_difference)
 {
     for (int lev = 0; lev < level_difference; ++lev)
