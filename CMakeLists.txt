@@ -193,7 +193,7 @@ set( FEM_SOURCES
         dune/multiscale/fem/algorithm.cc
     )
     
-set( RIGOROUS_MSFEM_SOURCES
+set( LODM_SOURCES
         src/elliptic_lodm.cc
         dune/multiscale/msfem/rigorous.cc
         dune/multiscale/msfem/rigorous_msfem_solver.cc
@@ -218,8 +218,8 @@ TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
 ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_lodm ${RIGOROUS_MSFEM_SOURCES} ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_rigorous_msfem ${COMMON_LIBS} )
+ADD_EXECUTABLE(elliptic_lodm ${LODM_SOURCES} ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(elliptic_lodm ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
