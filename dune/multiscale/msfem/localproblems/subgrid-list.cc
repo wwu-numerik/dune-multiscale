@@ -41,7 +41,7 @@ bool SubGridList::entityPatchInSubgrid(const HostEntityPointerType& hit,
 
 void SubGridList::enrichment(const HostEntityPointerType& hit,
 //                             const HostEntityPointerType& level_father_it,
-                             const int& father_index, // father_index = index/number of current subgrid
+                             const int& subgrid_index, // subgrid_index = father_index = index/number of current subgrid
                              shared_ptr< SubGridType > subGrid,
                              int& layer)
 {
@@ -54,7 +54,7 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
   const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
 
   for (int l = 0; l <= layer; ++l) {
-    enriched_[father_index][hostGridLeafIndexSet.index(*hit)][l] = true;
+    enriched_[subgrid_index][hostGridLeafIndexSet.index(*hit)][l] = true;
   }
 
   //! decrease the number of layers (needed for recursion)
@@ -65,29 +65,44 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
     const HostNodePointer node              = (*hit).subEntity< 2 >(i);
     int                   global_index_node = hostGridPart_.indexSet().index(*node);
 
+    // loop over the the fine grid entities that share the node
     for (size_t j = 0; j < entities_sharing_same_node_[global_index_node].size(); ++j) {
+      // if the subgrid does not yet contain the fine grid entity ..
       if (!(subGrid->contains< 0 >(*entities_sharing_same_node_[global_index_node][j]))) {
+        // .. add it to the subgrid
         subGrid->insertPartial(*entities_sharing_same_node_[global_index_node][j]);
-        fine_id_to_subgrid_ids_[hostGridLeafIndexSet.index( *entities_sharing_same_node_[global_index_node][j] )].push_back(father_index);
+        // also add the information that the fine grid element is contained in the subgrid
+        fine_id_to_subgrid_ids_[hostGridLeafIndexSet.index( *entities_sharing_same_node_[global_index_node][j] )].push_back(subgrid_index);
       
         // get the corners of the father of the fine grid entity 'entities_sharing_same_node_[global_index_node][j]'
-        // and add these corners to the vector 'coarse_node_store_[father_index]' (if they are not yet contained)
+        // and add these corners to the vector 'coarse_node_store_[subgrid_index]' (if they are not yet contained)
         if (specifier_.getOversamplingStrategy() == 3) {
+
+          HostEntityPointerType& current_fine_entity = entities_sharing_same_node_[global_index_node][j];
           HostEntityPointerType coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                                                                         entities_sharing_same_node_[global_index_node][j],
+                                                                         current_fine_entity,
                                                                          level_difference);
           for (int c = 0; c < coarse_father->geometry().corners(); ++c) {
-            // ! not an effective search algorithm (should be improved eventually):
-            bool node_contained = false;
-            for (size_t cn = 0; cn < coarse_node_store_[father_index].size(); ++cn) {
+            for (int c_fine = 0; c_fine < current_fine_entity->geometry().corners(); ++c_fine) {
+              // ! not an effective search algorithm (should be improved eventually):
+              
               // hard coding - 2d case:
-              if ((coarse_node_store_[father_index][cn][0] == coarse_father->geometry().corner(c)[0])
-                  && (coarse_node_store_[father_index][cn][1] == coarse_father->geometry().corner(c)[1])) { 
-                node_contained = true; 
+              // check if one of the corners of the fine entity is identical to one of the corners of the coarse father
+              // if we find such a corner, (and if it is not already contained) it must be added to the coarse_node_store_
+              if ( (current_fine_entity->geometry().corner(c_fine)[0] == coarse_father->geometry().corner(c)[0])
+                     && (current_fine_entity->geometry().corner(c_fine)[1] == coarse_father->geometry().corner(c)[1]) ) {
+
+                 bool node_contained = false; // check if node is already contained in the vector 'coarse_node_store_[subgrid_index]'
+                 for (size_t cn = 0; cn < coarse_node_store_[subgrid_index].size(); ++cn) {
+                    // hard coding - 2d case:
+                    if ((coarse_node_store_[subgrid_index][cn][0] == coarse_father->geometry().corner(c)[0])
+                        && (coarse_node_store_[subgrid_index][cn][1] == coarse_father->geometry().corner(c)[1])) { 
+                      node_contained = true; 
+                    }
+                 }
+                 if (!node_contained) { 
+                    coarse_node_store_[subgrid_index].emplace_back(coarse_father->geometry().corner(c));}
               }
-            }
-            if (!node_contained) { 
-              coarse_node_store_[father_index].emplace_back(coarse_father->geometry().corner(c)); 
             }
           }
         }
@@ -96,10 +111,10 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
       if (layer > 0) {
         const int otherEnclosingCoarseCellIndex
                 = getEnclosingMacroCellIndex(entities_sharing_same_node_[global_index_node][j]);
-        if (father_index!=otherEnclosingCoarseCellIndex) {
+        if (subgrid_index!=otherEnclosingCoarseCellIndex) {
           const auto& tmp_entity_ptr = entities_sharing_same_node_[global_index_node][j];
-          if (!enriched_[father_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer]) {
-            enrichment(tmp_entity_ptr, father_index, subGrid, layer);
+          if (!enriched_[subgrid_index][hostGridLeafIndexSet.index(*tmp_entity_ptr)][layer]) {
+            enrichment(tmp_entity_ptr, subgrid_index, subGrid, layer);
             ++layer;
           }
         }
@@ -175,6 +190,8 @@ const std::vector< int >& SubGridList::getSubgridIDs_that_contain_entity (int ho
 
 
 // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
+// for each given subgrid index return the vecor of coarse nodes (global coordinates) that are in the subgrid,
+// this also includes the coarse nodes on the boundary of U(T)
 const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i) const
 {
   if (specifier_.getOversamplingStrategy() == 1)
@@ -187,6 +204,12 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i)
   }
   return coarse_node_store_[i];
 } // getSubGrid
+
+// get number of sub grids
+const int SubGridList::getNumberOfSubGrids() const
+{
+  return specifier_.getNumOfCoarseEntities();
+}
 
 /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
 *
@@ -279,9 +302,6 @@ void SubGridList::identifySubGrids() {
 
   // determine the maximum number of oversampling layers
   int max_num_layers = specifier_.maxNumberOverlayLayers();
-
-  // the difference in levels between coarse and fine grid
-  const int level_difference = specifier_.getLevelDifference();
 
   if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
     coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
@@ -417,6 +437,7 @@ void SubGridList::finalizeSubGrids() {
       }
       DUNE_THROW(Dune::InvalidStateException, "Created Subgrid with 0 nodes");
     }
+    i+=1;
   }
   DSC_PROFILER.stopTiming("msfem.subgrid_list.create.finalize");
 

@@ -397,7 +397,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
       }
       
   }
-  
   const HostGridLeafIndexSet& hostGridLeafIndexSet = fine_space.gridPart().grid().leafIndexSet();
   for (HostgridIterator it = fine_space.begin(); it != fine_space.end(); ++it)
   {
@@ -441,13 +440,68 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
     }
  
   }
-
   // ------------------------------------------------------------------------------------------------------
   
-  //! NOTE TODO for each MsFEM basis function save the support,
-  //! i.e. a vector of entity points that describe the support of the basis
-  //! function. This will save a lot of computational time when assembling the system matrix!
 
+  //! Determine the index set (internal_coarse_nodes numbering) for the coarse nodes in the interior of U(T)
+  // when assembling the local clement operator for a given subgrid U(T), we need to know the standard coarse
+  // basis functions that belong to the interior(!) coarse nodes in U(T). Coarse nodes on the boundary of
+  // are not relevant.
+  // ------------------------------------------------------------------------------------------------------
+  
+#if 0
+  int number_of_subgrids = subgrid_list.getNumberOfSubGrids();
+  std::cout << "number_of_subgrids = " << number_of_subgrids << std::endl;
+  std::cout << "specifier.getNumOfCoarseEntities() = " << specifier.getNumOfCoarseEntities() << std::endl;
+  for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
+  {
+    std::cout << "sg_id = " << sg_id << std::endl;
+    SubGridType& subGrid = subgrid_list.getSubGrid( sg_id );
+    SubGridPart subGridPart( subGrid );
+    const SubgridDiscreteFunctionSpace subDiscreteFunctionSpace( subGridPart );
+    
+#if 0
+    
+  const SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
+  for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
+  {
+    const SubgridEntityType& subgrid_entity = *sg_it;
+
+    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
+    const HostEntityType& host_entity = *host_entity_pointer;
+
+    LocalMatrix local_matrix = locprob_system_matrix.localMatrix(subgrid_entity, subgrid_entity);
+
+    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);
+
+    const HostIntersectionIterator iend = hostGridPart.iend(host_entity);
+    for (HostIntersectionIterator iit = hostGridPart.ibegin(host_entity); iit != iend; ++iit)
+    {
+      if ( iit->neighbor() ) // if there is a neighbor entity
+      {
+        // check if the neighbor entity is in the subgrid
+        const HostEntityPointerType neighborHostEntityPointer = iit->outside();
+        const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+        if ( subGrid.contains< 0 >(neighborHostEntity) )
+        {
+          continue;
+        }
+      }
+
+      const int face = (*iit).indexInInside();
+      const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< 1 >(face);
+      for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+        local_matrix.unitRow(*fdit);
+    }
+  }
+    
+#endif      
+    
+  }
+
+#endif  
+  // ------------------------------------------------------------------------------------------------------  
+  
   MsFEMBasisFunctionType standard_basis_function;
   for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
    {

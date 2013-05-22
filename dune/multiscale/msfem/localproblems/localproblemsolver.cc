@@ -243,7 +243,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
   } else {
 
-    InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("LOCPROBLEMSOLVER_VERBOSE", false));
+    InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
 
 //! temporal changes that should be moved to a new class exclusivly for the LODM.
 #if 1
@@ -264,7 +264,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
       HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
       zero.clear();
       const double dummy = 12345.67890;
-      double solverEps = 1e-8 ;
+      double solverEps = 1e-2;
       int maxIterations = 1000;
 
       // we want to solve the local problem with the constraint that the weighted Clement interpoltion
