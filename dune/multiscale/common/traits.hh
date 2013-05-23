@@ -21,7 +21,7 @@
 namespace Dune {
 
 template <class T>
-class GridPtr;
+struct GridPtr;
 template <class T, class R>
 class GridFunctionAdapter;
 template <class T>
@@ -41,7 +41,7 @@ namespace Multiscale {
 
 namespace Problem {
 namespace PROBLEM_NAME {
-class ModelProblemData;
+struct ModelProblemData;
 class FirstSource;
 class SecondSource;
 class Diffusion;
