@@ -206,7 +206,7 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i)
 } // getSubGrid
 
 // get number of sub grids
-const int SubGridList::getNumberOfSubGrids() const
+int SubGridList::getNumberOfSubGrids() const
 {
   return specifier_.getNumOfCoarseEntities();
 }

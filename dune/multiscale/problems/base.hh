@@ -183,16 +183,16 @@ public:
 } //namespace Dune {
 
 #define MSCONSTANTFUNCTION(classname, constant) \
-  struct classname \
+  class classname \
     : public Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType > \
-  { classname() \
+  { public: classname() \
       : Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType > \
             (typename Dune::Multiscale::CommonTraits::FunctionSpaceType::RangeType(constant)) {} };
 
 #define MSNULLFUNCTION(classname) \
-  struct classname \
+  class classname \
     : public Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType > \
-  { classname(const double /*d*/, const Dune::Multiscale::CommonTraits::FunctionSpaceType &t, double = 0.0, double = 0.0) \
+  { public: classname(const double /*d*/, const Dune::Multiscale::CommonTraits::FunctionSpaceType &t, double = 0.0, double = 0.0) \
       : Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType >(t) {} \
     classname() \
       : Dune::Stuff::Fem::ConstantFunction< Dune::Multiscale::CommonTraits::FunctionSpaceType >() {} \
