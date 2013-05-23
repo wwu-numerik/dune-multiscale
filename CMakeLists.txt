@@ -1,6 +1,6 @@
 if( NOT CMAKE_BUILD_TYPE )
 	message( STATUS "No build type selected, setting default build type 'Debug'" )
-	set( CMAKE_BUILD_TYPE "RELEASE" CACHE STRING "DEBUG/RELEASE")
+	set( CMAKE_BUILD_TYPE "DEBUG" CACHE STRING "DEBUG/RELEASE")
 endif( NOT CMAKE_BUILD_TYPE )
 
 PROJECT(dune_multiscale)
