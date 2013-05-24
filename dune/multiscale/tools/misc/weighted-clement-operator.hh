@@ -297,7 +297,7 @@ public:                                                           /*@LST0S@*/
     typedef typename EntityType :: Geometry GeometryType;
     typedef typename CoarseEntityType :: Geometry CoarseGeometryType;
 
-    // coefficients in the matrix that describes the weighted Clement interpolation
+    // coefficients in the matrix that describes the weighted Clement interpolation, i.e. coff[c] = (\int_{\Omega} \Phi_j)^{-1}
     std::vector<double> coff( coarse_space_.size(), 0.0 );
 
     CoarseIteratorType coarse_end = coarse_space_.end();

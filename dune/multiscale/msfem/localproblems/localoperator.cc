@@ -411,6 +411,7 @@ void LocalProblemOperator
     if (oversampling_strategy == 3)
      clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
 
+    // if the we use oversampling strategy 2 or 3/Lagrange, we need to sort out some coarse grid nodes:
     std::vector< int > sub_grid_entity_corner_is_relevant;
     if (!clement)
     {
@@ -418,8 +419,8 @@ void LocalProblemOperator
       {
         for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
         {
-     // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
-     // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
+         // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
+         // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
          if ( (coarse_node_vector[coarse_node_local_id] == geometry.corner(c))
          && (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) == sub_grid_entity_corner_is_relevant.end()) )
          { sub_grid_entity_corner_is_relevant.push_back(c);
