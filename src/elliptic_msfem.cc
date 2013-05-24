@@ -134,6 +134,12 @@ int main(int argc, char** argv) {
     return 0;
   } catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;
+  } catch (const std::exception& ex) {
+    std::cerr << "Caught std::exception: " << ex.what() << "\n";
+  } catch (const std::string& ex) {
+    std::cerr << "Caught string-type exception: " << ex << "\n";
+  } catch (...) {
+    std::cerr << "Exception of non-known type thrown!\n";
   }
   return 1;
 } // main
