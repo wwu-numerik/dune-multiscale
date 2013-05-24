@@ -54,6 +54,82 @@ private:
   typedef typename DiscreteFunctionSpace::RangeType         RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
+  static const int dimension = GridPart::GridType::dimension;
+  
+  class OrderedDomainType
+  : public DomainType
+  {
+    public:
+  
+    OrderedDomainType ( DomainType point ) 
+    : DomainType( point )
+    {   
+    }
+
+    const bool operator< ( OrderedDomainType point_2 ) const
+    {
+
+      for (int i = 0; i < dimension; ++i)
+      {
+        if ( (*this)[i] < point_2[i] ) 
+          return true;
+        if ( (*this)[i] > point_2[i] ) 
+          return false;
+      }
+
+      return false;
+    }
+
+    const bool operator<= ( OrderedDomainType point_2 ) const
+    {
+      for (int i = 0; i < dimension; ++i)
+      {
+        if ( (*this)[i] < point_2[i] ) 
+          return true;
+        if ( (*this)[i] > point_2[i] ) 
+          return false;
+      }
+      return true;
+    }
+    
+    const bool operator> ( OrderedDomainType point_2 ) const
+    {
+      for (int i = 0; i < dimension; ++i)
+      {
+        if ( (*this)[i] > point_2[i] ) 
+          return true;
+        if ( (*this)[i] < point_2[i] ) 
+          return false;
+      }
+      return false;
+    }
+    
+    const bool operator>= ( OrderedDomainType point_2 ) const
+    {
+      for (int i = 0; i < dimension; ++i)
+      {
+        if ( (*this)[i] > point_2[i] ) 
+          return true;
+        if ( (*this)[i] < point_2[i] ) 
+          return false;
+      }
+      return true;
+    }
+    
+    const bool operator== ( OrderedDomainType point_2 ) const
+    {
+      for (int i = 0; i < dimension; ++i)
+      {
+        if ( (*this)[i] > point_2[i] ) 
+          return false;
+        if ( (*this)[i] < point_2[i] ) 
+          return false;
+      }
+      return true;
+    }
+
+  };
+  
   // typedef typename HostGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
   // LevelEntityIteratorType;
 
@@ -88,6 +164,13 @@ private:
   typedef AdaptiveDiscreteFunction< SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
 
   typedef typename SubgridDiscreteFunctionSpace::IteratorType SubGridIterator;
+  
+  typedef typename SubGridIterator::Entity SubGridEntity;
+
+  typedef typename SubGridEntity::EntityPointer SubGridEntityPointer;
+  
+  typedef typename SubGridPart::IntersectionIteratorType  SGIntersectionIterator;
+
 
   //!-----------------------------------------------------------------------------------------
 
@@ -116,8 +199,17 @@ private:
   void vtk_output( MsFEMBasisFunctionType& msfem_basis_function_list,
                    std::string basis_name = "msfem_basis_function" ) const;
 
-  void subgrid_to_hostrid_projection( const SubgridDiscreteFunction& sub_func,
-                                      DiscreteFunction& host_func) const;
+   //! for each subgrid, store the vector of basis functions ids that
+   //! correspond to interior coarse grid nodes in the subgrid
+   // information stored in 'std::vector< std::vector< int > >'
+   void assemble_interior_basis_ids( MacroMicroGridSpecifier& specifier,
+                                     MsFEMTraits::SubGridListType& subgrid_list,
+                                     std::map<int,int>& global_id_to_internal_id,
+                                     std::map< OrderedDomainType, int >& coordinates_to_global_coarse_node_id,
+                                     std::vector< std::vector< int > >& ids_basis_function_in_subgrid) const;
+
+   void subgrid_to_hostrid_projection( const SubgridDiscreteFunction& sub_func,
+                                       DiscreteFunction& host_func) const;
 
   //! create standard coarse grid basis functions as discrete functions defined on the fine grid
   // ------------------------------------------------------------------------------------

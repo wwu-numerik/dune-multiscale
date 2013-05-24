@@ -130,6 +130,123 @@ void Elliptic_Rigorous_MsFEM_Solver::vtk_output(
 
 
 
+
+// ------------------------------------------------------------------------------------------------------
+//! for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the subgrid
+// information stored in 'std::vector< std::vector< int > >'
+void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
+     MacroMicroGridSpecifier& specifier,
+     MsFEMTraits::SubGridListType& subgrid_list,
+     std::map<int,int>& global_id_to_internal_id,
+     std::map< OrderedDomainType, int >& coordinates_to_global_coarse_node_id,
+     std::vector< std::vector< int > >& ids_basis_function_in_subgrid) const
+{
+  // First: determine the index set (internal_coarse_nodes numbering) for the coarse nodes in the interior of U(T)
+  // when assembling the local clement operator for a given subgrid U(T), we need to know the standard coarse
+  // basis functions that belong to the interior(!) coarse nodes in U(T). Coarse nodes on the boundary of
+  // are not relevant.
+
+  int number_of_subgrids = subgrid_list.getNumberOfSubGrids();
+  DiscreteFunctionSpace& fine_space = specifier.fineSpace();
+
+  typedef std::vector< DomainType > CoarseNodeVectorType;
+  typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
+  std::vector< std::vector< int > > coarse_node_ids_in_subgrid;
+  std::vector< std::vector< int > > coarse_boundary_node_ids_in_subgrid;
+  std::vector< std::vector< int > > coarse_interior_node_ids_in_subgrid;
+  coarse_node_ids_in_subgrid.resize( number_of_subgrids );
+  coarse_boundary_node_ids_in_subgrid.resize( number_of_subgrids );
+  coarse_interior_node_ids_in_subgrid.resize( number_of_subgrids );
+  
+
+  for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
+  {
+    CoarseNodeVectorType coarse_nodes_in_subgrid = subgrid_list.getCoarseNodeVector( sg_id );
+    for (unsigned int cn = 0; cn < coarse_nodes_in_subgrid.size(); ++cn)
+    {
+
+      int global_coarse_node_id = coordinates_to_global_coarse_node_id[ coarse_nodes_in_subgrid[cn] ];
+      coarse_node_ids_in_subgrid[ sg_id ].push_back( global_coarse_node_id );
+    }
+  }
+
+  for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
+  {
+
+    SubGridType& subGrid = subgrid_list.getSubGrid( sg_id );
+    SubGridPart subGridPart( subGrid );
+    const SubgridDiscreteFunctionSpace subDiscreteFunctionSpace( subGridPart );
+    
+    CoarseNodeVectorType coarse_nodes_in_subgrid = subgrid_list.getCoarseNodeVector( sg_id );
+
+    const SubGridIterator sg_end = subDiscreteFunctionSpace.end();
+    for (SubGridIterator sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
+    {
+
+      const HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >(*sg_it);
+      const HostEntity& host_entity = *host_entity_pointer;
+
+      const auto iend = fine_space.gridPart().iend( host_entity );
+      for (auto iit = fine_space.gridPart().ibegin( host_entity ); iit != iend; ++iit)
+      {
+
+        // if it is not a boundary element of the subgrid: continue;
+        bool is_subgrid_boundary_face = true;
+        if ( iit->neighbor() ) // if there is a neighbor entity
+        {
+          // check if the neighbor entity is in the subgrid
+          const HostEntityPointer neighborHostEntityPointer = iit->outside();
+          const HostEntity& neighborHostEntity = *neighborHostEntityPointer;
+          if ( subGrid.contains< 0 >(neighborHostEntity) )
+            is_subgrid_boundary_face = false;
+        }
+
+        if ( is_subgrid_boundary_face == false )
+          continue;
+
+        for (int c = 0; c < iit->geometry().corners(); ++c)
+        {
+          DomainType fine_corner = iit->geometry().corner(c);
+          for (unsigned int cn = 0; cn < coarse_nodes_in_subgrid.size(); ++cn)
+          {
+            if ( coarse_nodes_in_subgrid[cn] == fine_corner )
+            {
+              OrderedDomainType coarse_node_coordinates = fine_corner;
+              int global_coarse_node_id = coordinates_to_global_coarse_node_id[ coarse_node_coordinates ];
+              if( std::find( coarse_boundary_node_ids_in_subgrid[ sg_id ].begin(),
+                             coarse_boundary_node_ids_in_subgrid[ sg_id ].end(),
+                             global_coarse_node_id ) == coarse_boundary_node_ids_in_subgrid[ sg_id ].end() )
+                 { coarse_boundary_node_ids_in_subgrid[ sg_id ].push_back( global_coarse_node_id ); }
+
+            }
+          }
+        }
+      }
+    }       
+  }
+  
+  for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
+  {
+    for (unsigned int i_all = 0; i_all < coarse_node_ids_in_subgrid[ sg_id ].size(); ++i_all )
+    {
+
+      if( std::find( coarse_boundary_node_ids_in_subgrid[ sg_id ].begin(),
+                     coarse_boundary_node_ids_in_subgrid[ sg_id ].end(),
+                     coarse_node_ids_in_subgrid[ sg_id ][i_all] ) == coarse_boundary_node_ids_in_subgrid[ sg_id ].end() )
+         { coarse_interior_node_ids_in_subgrid[ sg_id ].push_back( coarse_node_ids_in_subgrid[ sg_id ][i_all] ); }
+    }
+  }
+
+  // Finalize: for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the subgrid
+  ids_basis_function_in_subgrid.resize( number_of_subgrids );
+  for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
+    for (unsigned int i = 0; i < coarse_interior_node_ids_in_subgrid[ sg_id ].size(); ++i )
+     ids_basis_function_in_subgrid[ sg_id ].push_back( global_id_to_internal_id[coarse_interior_node_ids_in_subgrid[ sg_id ][i]] );
+    
+}
+// ------------------------------------------------------------------------------------------------------ 
+  
+
 //! create standard coarse grid basis functions as discrete functions defined on the fine grid
 // ------------------------------------------------------------------------------------
 void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGridSpecifier& specifier,
@@ -346,6 +463,59 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
     msfem_basis_function[internal_id]->clear();
   }
 
+
+  // determine (\int_\Omega coarse standard basis function )^{-1}, which will be a weight in the weighted
+  // clement interpolation
+  // ------------------------------------------------------------------------------------------------------
+  // coefficients in the matrix that describes the weighted Clement interpolation,
+  // i.e. coff[c] = (\int_{\Omega} \Phi_j)^{-1}
+  std::vector< double > coff( number_of_internal_coarse_nodes, 0.0 );
+
+  for(CoarsegridIterator it = coarse_space.begin(); it != coarse_space.end(); ++it)
+  {
+
+    HostEntity& entity = *it;
+
+    assert(entity.partitionType() == InteriorEntity);
+
+    std::vector< RangeType > phi( coarse_space.mapper().maxNumDofs() );
+
+    // get base function set
+    const auto &coarse_baseSet = coarse_space.baseFunctionSet( entity );
+    const auto numBaseFunctions = coarse_baseSet.size();
+
+    // create quadrature of appropriate order
+    CoarseQuadrature quadrature( entity, 2 * DiscreteFunctionSpace :: polynomialOrder + 2 );
+
+    // loop over all quadrature points
+    const size_t numQuadraturePoints = quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      const typename CoarseQuadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+
+      const double weight = quadrature.weight(quadraturePoint) * entity.geometry().integrationElement(local_point);
+
+      coarse_baseSet.evaluateAll( quadrature[quadraturePoint], phi );
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+         const int global_dof_number = coarse_space.mapper().mapToGlobal( entity, i );
+         if ( !specifier.is_coarse_boundary_node( global_dof_number ) )
+             coff[ global_id_to_internal_id[ global_dof_number ] ] += weight * phi[i];
+       }
+    }
+  }
+
+  for ( size_t c = 0; c < coff.size(); ++c )
+  {
+    if ( coff[c] != 0.0 )
+        coff[c] = 1.0 / coff[c];
+  }
+  // ------------------------------------------------------------------------------------------------------
+  
+  
+
+
   //! Determine the support of each ms basis function and the intersection domain of two ms basis functions
   // save the corresponding entity seeds in support_of_ms_basis_func_intersection
   // ------------------------------------------------------------------------------------------------------
@@ -358,6 +528,9 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   // we only store the tuples relevant_constellations[i][j] for 'j<=i' the rest is obtained by symmetry
   // the reason for storing only the values for 'j<=i' is that we can use (if given) the symmetry of the diffusion matrix,
   // in the sense that we only compute the entries of the stiffness matrix for 'j<=i' and then symmetrize the matrix
+  
+  // map the coordinates of a coarse node to its global global index
+  std::map< OrderedDomainType, int > coordinates_to_global_coarse_node_id;
   
   support_of_ms_basis_func_intersection.resize( number_of_internal_coarse_nodes );
   for ( int k = 0; k<number_of_internal_coarse_nodes ; ++k )
@@ -387,10 +560,16 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
         for ( ; faceIterator != faceEndIterator; ++faceIterator)
         {
           int global_id_node = coarse_space.mapper().mapToGlobal(*it, *faceIterator );
+
+          // create map entry: ' global coord of node <--> global_id_node '
+          OrderedDomainType coord = (it->geometry()).global(lagrangePointSet.point( *faceIterator ));
+          coordinates_to_global_coarse_node_id[coord] = global_id_node;     
+
           if ( specifier.is_coarse_boundary_node( global_id_node ) )
             continue;
 
           int internal_id_node = global_id_to_internal_id[ global_id_node ];
+          
           subgrid_id_to_ms_basis_func_ids[ subgrid_id ].push_back( internal_id_node );
         }
 
@@ -441,67 +620,8 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
  
   }
   // ------------------------------------------------------------------------------------------------------
-  
 
-  //! Determine the index set (internal_coarse_nodes numbering) for the coarse nodes in the interior of U(T)
-  // when assembling the local clement operator for a given subgrid U(T), we need to know the standard coarse
-  // basis functions that belong to the interior(!) coarse nodes in U(T). Coarse nodes on the boundary of
-  // are not relevant.
-  // ------------------------------------------------------------------------------------------------------
-  
-#if 0
-  int number_of_subgrids = subgrid_list.getNumberOfSubGrids();
-  std::cout << "number_of_subgrids = " << number_of_subgrids << std::endl;
-  std::cout << "specifier.getNumOfCoarseEntities() = " << specifier.getNumOfCoarseEntities() << std::endl;
-  for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
-  {
-    std::cout << "sg_id = " << sg_id << std::endl;
-    SubGridType& subGrid = subgrid_list.getSubGrid( sg_id );
-    SubGridPart subGridPart( subGrid );
-    const SubgridDiscreteFunctionSpace subDiscreteFunctionSpace( subGridPart );
-    
-#if 0
-    
-  const SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
-  for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
-  {
-    const SubgridEntityType& subgrid_entity = *sg_it;
 
-    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
-    const HostEntityType& host_entity = *host_entity_pointer;
-
-    LocalMatrix local_matrix = locprob_system_matrix.localMatrix(subgrid_entity, subgrid_entity);
-
-    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);
-
-    const HostIntersectionIterator iend = hostGridPart.iend(host_entity);
-    for (HostIntersectionIterator iit = hostGridPart.ibegin(host_entity); iit != iend; ++iit)
-    {
-      if ( iit->neighbor() ) // if there is a neighbor entity
-      {
-        // check if the neighbor entity is in the subgrid
-        const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-        const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
-        if ( subGrid.contains< 0 >(neighborHostEntity) )
-        {
-          continue;
-        }
-      }
-
-      const int face = (*iit).indexInInside();
-      const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< 1 >(face);
-      for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
-        local_matrix.unitRow(*fdit);
-    }
-  }
-    
-#endif      
-    
-  }
-
-#endif  
-  // ------------------------------------------------------------------------------------------------------  
-  
   MsFEMBasisFunctionType standard_basis_function;
   for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
    {
@@ -512,7 +632,13 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, msfem_basis_function );
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, standard_basis_function );
 
-//! just for testing - delete it!
+  // for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the subgrid
+  std::vector< std::vector< int > > ids_basis_functions_in_subgrid;
+  assemble_interior_basis_ids( specifier, subgrid_list, global_id_to_internal_id, coordinates_to_global_coarse_node_id,
+                               ids_basis_functions_in_subgrid );
+  
+
+  //! just for testing - delete it!
 #if 0
     DiscreteFunction dull_copy ("Dully", fine_space);
     dull_copy.clear();
@@ -570,7 +696,7 @@ abort();
 #endif
   
   //! assemble all local problems (within constructor!)
-  MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, diffusion_op,
+  MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, ids_basis_functions_in_subgrid, coff, diffusion_op,
                                            standard_basis_function, global_id_to_internal_id );
   loc_prob_solver.assemble_all(/*silence=*/false);
 

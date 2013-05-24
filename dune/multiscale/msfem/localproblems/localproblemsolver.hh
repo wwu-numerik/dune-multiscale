@@ -121,6 +121,8 @@ private:
   const MacroMicroGridSpecifierType& specifier_;
   SubGridList& subgrid_list_;
 
+  std::vector< std::vector< int > >* ids_basis_functions_in_subgrid_;
+  std::vector< double >* inverse_of_L1_norm_coarse_basis_funcs_;
   const CoarseBasisFunctionListType* coarse_basis_;
   const std::map<int,int>* global_id_to_internal_id_;
 
@@ -136,6 +138,8 @@ public:
   MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                           const MacroMicroGridSpecifierType& specifier,
                           SubGridList& subgrid_list,
+                          std::vector< std::vector< int > >& ids_basis_functions_in_subgrid,
+                          std::vector< double >& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
                           const DiffusionOperatorType& diffusion_operator,
                           const CoarseBasisFunctionListType& coarse_basis,
                           const std::map<int,int>& global_id_to_internal_id );
@@ -144,6 +148,13 @@ public:
   void solvelocalproblem(JacobianRangeType& e,
                          SubDiscreteFunctionType& local_problem_solution,
                          const int coarse_index = -1 ) const;
+
+  // solve local problems for Local Orthogonal Decomposition Method (LOD) 
+  void solvelocalproblems_lod(JacobianRangeType& e_0,
+                              JacobianRangeType& e_1,
+                              SubDiscreteFunctionType& local_problem_solution_0,
+                              SubDiscreteFunctionType& local_problem_solution_1,
+                              const int coarse_index /*= -1*/ ) const;
 
   //! create a hostgrid function from a subgridfunction
   void subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func,
