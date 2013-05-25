@@ -28,6 +28,8 @@ class LocalProblemOperator
   typedef MsFEMLocalProblemSolver::SubDiscreteFunctionType SubDiscreteFunctionType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
 
+  enum { faceCodim = 1 };
+
 private:
   typedef SubDiscreteFunctionType DiscreteFunction;
   typedef DiffusionOperatorType   DiffusionModel;
@@ -42,7 +44,7 @@ private:
   typedef typename DiscreteFunctionSpace::RangeType  RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType
     JacobianRangeType;
-
+  
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
@@ -61,6 +63,19 @@ private:
 
   typedef CachingQuadrature< GridPart, 0 > Quadrature;
 
+  typedef typename SubGridList::HostDiscreteFunctionType HostDiscreteFunction;
+  typedef typename HostDiscreteFunction::DiscreteFunctionSpaceType HostDiscreteFunctionSpace;
+  typedef typename HostDiscreteFunctionSpace::GridPartType HostGridPart;
+  typedef typename HostDiscreteFunctionSpace::IteratorType HostIterator;
+  typedef typename HostIterator::Entity                    HostEntity;
+  typedef typename HostEntity::EntityPointer               HostEntityPointer;
+  typedef typename HostDiscreteFunction::LocalFunctionType HostLocalFunction;
+  typedef typename HostEntity::Geometry                    HostGeometry;
+  typedef typename HostGridPart::IntersectionIteratorType  HostIntersectionIterator;
+  typedef typename HostDiscreteFunctionSpace::LagrangePointSetType HostLagrangePointSet;
+  typedef typename HostLagrangePointSet::Codim< faceCodim >::SubEntityIteratorType
+    HostGridFaceDofIteratorType;
+    
 public:
   LocalProblemOperator(const DiscreteFunctionSpace& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
@@ -93,6 +108,15 @@ public:
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
 
+
+//  template< class CoarseBasisFunctionType >
+  void assemble_local_RHS_pre_processing( const HostDiscreteFunction/*CoarseBasisFunctionType*/& coarse_basis_func, double weight,
+                                           DiscreteFunction& local_problem_RHS ) const;
+
+  // given a discrete function (representing a right hands side of a local problem,
+  // defined on a subgrid) set the boundary dofs to zero
+  void set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpace& host_space, DiscreteFunction& rhs) const;
+  
   void printLocalRHS(const DiscreteFunction& rhs) const;
 
   double normRHS(const DiscreteFunction& rhs) const;
