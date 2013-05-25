@@ -309,24 +309,14 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
                        SubDiscreteFunctionType& local_problem_solution_1,
                        const int coarse_index /*= -1*/ ) const {
 
-#if 0
-    typedef SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
-        WeightedClementMatrixObjectTraits;
-
-    typedef WeightedClementOp< SubDiscreteFunctionType, HostDiscreteFunctionType, WeightedClementMatrixObjectTraits, CoarseBasisFunctionListType >
-              WeightedClementOperatorType;
-
-    // saddle point problem solver:
-    typedef UzawaInverseOp< SubDiscreteFunctionType,
-                            HostDiscreteFunctionType,
-                            InverseLocProbFEMMatrix,
-                            WeightedClementOperatorType >
-       InverseUzawaOperatorType;
-
   // set solution equal to zero:
-  local_problem_solution.clear();
+  local_problem_solution_0.clear();
+  local_problem_solution_1.clear();
 
-  const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = local_problem_solution.space();
+  if ( coarse_index < 0 )
+      DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
+
+  const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = local_problem_solution_0.space();
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
@@ -343,48 +333,29 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
   typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
 
-  //! right hand side vector of the algebraic local MsFEM problem
-  SubDiscreteFunctionType local_problem_rhs("rhs of local MsFEM problem", subDiscreteFunctionSpace);
-  local_problem_rhs.clear();
-
   // NOTE:
   // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
   // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
   // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
   // the result.
-
+  
   switch ( specifier_.getOversamplingStrategy() )
   {
-  case 1: break;
-  case 2: break;
-  case 3: break;
-  default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
+    case 3: break;
+    default: DUNE_THROW(Dune::InvalidStateException, "method 'solvelocalproblems_lod' can be only used in combination with the LOD.");
   }
 
-  // assemble the stiffness matrix
-  if ( specifier_.getOversamplingStrategy() == 1 ) {
-    local_problem_op.assemble_matrix(locprob_system_matrix);
-  }
+  bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
 
-  if ( specifier_.getOversamplingStrategy() == 2 ) {
-    if ( coarse_index < 0 )
-      DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-    local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
-  }
+  if ( !clement )
+    DUNE_THROW(Dune::InvalidStateException, "method 'solvelocalproblems_lod' can be only used in combination with the LOD and Clement interpolation.");
 
-  if ( specifier_.getOversamplingStrategy() == 3 ) {
-    if ( coarse_index < 0 )
-      DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-    bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
+  // assemble stiffness matrix
+  local_problem_op.assemble_matrix( locprob_system_matrix );
 
-    if ( clement ) {
-      local_problem_op.assemble_matrix( locprob_system_matrix );
-    } else {
-      local_problem_op.assemble_matrix( locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
-    }
-  }
 
   //! boundary treatment:
+  // ----------------------------------------------------------------------------------------------------
   typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
 
   typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
@@ -424,22 +395,121 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
         local_matrix.unitRow(*fdit);
     }
   }
+  // ----------------------------------------------------------------------------------------------------
 
+  InverseLocProbFEMMatrix locprob_inverse_system_matrix(locprob_system_matrix,
+                                                        1e-8, 1e-8, 20000,
+                                                        DSC_CONFIG_GET("localproblemsolver_verbose", false));
 
-  // assemble right hand side of algebraic local msfem problem
-  if ( specifier_.getOversamplingStrategy() == 1 ) {
-    local_problem_op.assemble_local_RHS(e, local_problem_rhs);
-  } else
-  if ( ( specifier_.getOversamplingStrategy() == 2 ) || ( specifier_.getOversamplingStrategy() == 3 ) ) {
-    if ( coarse_index < 0 )
-      DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-    local_problem_op.assemble_local_RHS(e,
-            subgrid_list_.getCoarseNodeVector( coarse_index ),
-            specifier_.getOversamplingStrategy(),
-            local_problem_rhs );
-  } else
-    DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
-  //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
+  //! Pre-processing step
+  // For each coarse node j in the subgrid (local internal numbering, i.e. 0 <= j < M_subgrid), solve
+  // for b_h_j with S_h b_h_j = C_h^T e_j, where C_h describes the algebraic version of the weighted
+  // Clement interpolation operator
+  // ----------------------------------------------------------------------------------------------------
+  int number_of_interior_coarse_nodes_in_subgrid = (*ids_basis_functions_in_subgrid_)[ coarse_index ].size();
+    
+  SubDiscreteFunctionType** b_h = new SubDiscreteFunctionType* [number_of_interior_coarse_nodes_in_subgrid];
+  SubDiscreteFunctionType** rhs_Chj = new SubDiscreteFunctionType* [number_of_interior_coarse_nodes_in_subgrid];
+  for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
+  {
+      b_h[j] = new SubDiscreteFunctionType("q_h", subDiscreteFunctionSpace);
+      rhs_Chj[j] = new SubDiscreteFunctionType("rhs_Chj_h", subDiscreteFunctionSpace);
+      b_h[j]->clear();
+      rhs_Chj[j]->clear();
+  }
+
+  for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
+  {
+      int interior_basis_func_id = (*ids_basis_functions_in_subgrid_)[coarse_index][j];
+      local_problem_op.assemble_local_RHS_pre_processing( *((*coarse_basis_)[interior_basis_func_id]),
+                                                          (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_basis_func_id], *(rhs_Chj[j]) );
+  }
+
+  // zero boundary condition for 'rhs_Chj[j]':
+  // set Dirichlet Boundary to zero
+  for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
+  {
+    const SubgridEntityType& subgrid_entity = *sg_it;
+
+    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
+    const HostEntityType& host_entity = *host_entity_pointer;
+
+    HostIntersectionIterator iit = hostGridPart.ibegin(host_entity);
+    const HostIntersectionIterator endiit = hostGridPart.iend(host_entity);
+    for ( ; iit != endiit; ++iit)
+    {
+      if ( iit->neighbor() ) // if there is a neighbor entity
+      {
+        // check if the neighbor entity is in the subgrid
+        const HostEntityPointerType neighborHostEntityPointer = iit->outside();
+        const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+
+        if ( subGrid.contains< 0 >(neighborHostEntity) )
+        {
+          continue;
+        }
+      }
+
+      //SubLocalFunctionType rhsLocal = rhs_Chj[j]->localFunction(subgrid_entity);
+      const SGLagrangePointSetType& lagrangePointSet
+          = subDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);
+
+      const int face = (*iit).indexInInside();
+
+      FaceDofIteratorType faceIterator
+          = lagrangePointSet.beginSubEntity< faceCodim >(face);
+      const FaceDofIteratorType faceEndIterator
+          = lagrangePointSet.endSubEntity< faceCodim >(face);
+
+      for ( ; faceIterator != faceEndIterator; ++faceIterator)
+        for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
+          ((rhs_Chj[j])->localFunction(subgrid_entity))[*faceIterator] = 0;
+    }
+  }
+  
+  // solve the pre-processing problems:
+  for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
+     locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
+
+  // ----------------------------------------------------------------------------------------------------
+     
+
+     
+     
+  //! Solve the local problems without constraint
+  // (without condition that the Lagrange interpolation must be zero)
+  // ----------------------------------------------------------------------------------------------------
+
+  // right hand side vectors of the algebraic local MsFEM problem
+  SubDiscreteFunctionType local_problem_rhs_0("rhs of local MsFEM problem", subDiscreteFunctionSpace); // for e_0
+  SubDiscreteFunctionType local_problem_rhs_1("rhs of local MsFEM problem", subDiscreteFunctionSpace); // for e_1
+  
+  local_problem_rhs_0.clear();
+  local_problem_rhs_1.clear();
+
+  // consider to make separate implementation of 'assemble_local_RHS' for the LOD method
+  local_problem_op.assemble_local_RHS( e_0,
+                                       subgrid_list_.getCoarseNodeVector( coarse_index ), /*coarse node vector is a dummy in this case*/
+                                       specifier_.getOversamplingStrategy(), /*always '3' in this case */
+                                       local_problem_rhs_0 );
+  
+  local_problem_op.assemble_local_RHS( e_1,
+                                       subgrid_list_.getCoarseNodeVector( coarse_index ), /*coarse node vector is a dummy in this case*/
+                                       specifier_.getOversamplingStrategy(), /*always three in this case*/
+                                       local_problem_rhs_1 );
+
+  local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , local_problem_rhs_0 );
+  local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , local_problem_rhs_1 );
+  
+  //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs_0 );
+  //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs_1 );
+ 
+  locprob_inverse_system_matrix( local_problem_rhs_0 , local_problem_solution_0 );
+  locprob_inverse_system_matrix( local_problem_rhs_1 , local_problem_solution_1 );
+  
+  // ----------------------------------------------------------------------------------------------------
+#if 0
+
 
   // zero boundary condition for 'cell problems':
   // set Dirichlet Boundary to zero
@@ -495,7 +565,14 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   } else {
 
     InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
+  
+  
+// assemble_local_RHS_pre_processing(
+  // std::vector< std::vector< int > > ids_basis_functions_in_subgrid,
+  // std::vector< double >& inverse_of_L1_norm_coarse_basis_funcs,
+  // CoarseBasisFunctionListType& coarse_basis
     
+  
     bool clement = false;
     if ( specifier_.getOversamplingStrategy() == 3 )
     { clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ); }
@@ -597,6 +674,11 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution );
 #endif
+    for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
+    {  delete b_h[j]; delete rhs_Chj[j]; }
+    delete[] b_h;
+    delete[] rhs_Chj;
+
 } // solvelocalproblem
 
 void MsFEMLocalProblemSolver::subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func,
@@ -714,7 +796,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
     local_problem_solution_1.clear();
 
-    bool clement = false; //( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
+    bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
     if ( (specifier_.getOversamplingStrategy() == 3) && clement ) {
 
       // requires a pre-processing step (that is the same for both directions e_0 and e_1)

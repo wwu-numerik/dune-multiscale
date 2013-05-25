@@ -251,6 +251,64 @@ void LocalProblemOperator::printLocalRHS(const LocalProblemOperator::DiscreteFun
   }
 }  // end method
 
+
+void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpace& host_space,
+                                                           LocalProblemOperator::DiscreteFunction& rhs ) const {
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunctionType;
+
+  const DiscreteFunctionSpaceType& discreteFunctionSpace
+    = rhs.space();
+
+  const GridType& subGrid = discreteFunctionSpace.grid();
+  const HostGridPart& hostGridPart = host_space.gridPart();
+  
+  // set Dirichlet Boundary to zero
+  const Iterator endit = discreteFunctionSpace.end();
+  for (Iterator it = discreteFunctionSpace.begin(); it != endit; ++it)
+  {
+    const Entity& subgrid_entity = *it;
+
+    HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
+    const HostEntity& host_entity = *host_entity_pointer;
+
+    HostIntersectionIterator iit = hostGridPart.ibegin(host_entity);
+    const HostIntersectionIterator endiit = hostGridPart.iend(host_entity);
+    for ( ; iit != endiit; ++iit)
+    {
+      if ( iit->neighbor() ) // if there is a neighbor entity
+      {
+        // check if the neighbor entity is in the subgrid
+        const HostEntityPointer neighborHostEntityPointer = iit->outside();
+        const HostEntity& neighborHostEntity = *neighborHostEntityPointer;
+
+        if ( subGrid.contains< 0 >(neighborHostEntity) )
+        {
+          continue;
+        }
+      }
+
+      const LagrangePointSet& lagrangePointSet
+          = discreteFunctionSpace.lagrangePointSet(subgrid_entity);
+
+      const int face = (*iit).indexInInside();
+
+      FaceDofIterator faceIterator
+          = lagrangePointSet.beginSubEntity< faceCodim >(face);
+      const FaceDofIterator faceEndIterator
+          = lagrangePointSet.endSubEntity< faceCodim >(face);
+
+      for ( ; faceIterator != faceEndIterator; ++faceIterator)
+        (rhs.localFunction( subgrid_entity ))[*faceIterator] = 0;
+    }
+
+  }
+
+}  // end method
+
+
+
 double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
   double norm = 0.0;
 
@@ -480,6 +538,74 @@ void LocalProblemOperator
     }
   }
 } // assemble_local_RHS
+
+
+void LocalProblemOperator
+      ::assemble_local_RHS_pre_processing( const HostDiscreteFunction& coarse_basis_func, double clement_weight,
+                                           DiscreteFunction& local_problem_RHS ) const {
+
+
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
+
+  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
+  typedef typename Iterator::Entity                           Entity;
+  typedef typename Entity::Geometry                           Geometry;
+
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+
+  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
+
+  const GridType& subGrid = discreteFunctionSpace.grid();
+  
+  // set entries to zero:
+  local_problem_RHS.clear();
+
+  // gradient of micro scale base function:
+  std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
+
+  const Iterator end = discreteFunctionSpace.end();
+  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
+  {
+    const Entity& local_grid_entity = *it;
+    const Geometry& geometry = local_grid_entity.geometry();
+    assert(local_grid_entity.partitionType() == InteriorEntity);
+
+    LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
+
+    const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const auto numBaseFunctions = baseSet.size();
+        
+    HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );
+    const HostEntity& host_entity = *host_entity_pointer;
+
+    HostLocalFunction local_coarse_basis_func = coarse_basis_func.localFunction( host_entity );
+
+    const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const size_t numQuadraturePoints = quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+
+      const double weight = clement_weight * quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+
+      std::vector<RangeType> fine_phi_x;
+      baseSet.evaluateAll( quadrature[quadraturePoint], fine_phi_x);
+      
+      RangeType value_coarse_basis_func;
+      local_coarse_basis_func.evaluate( quadrature[quadraturePoint] , value_coarse_basis_func);
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+        elementOfRHS[i] += weight * value_coarse_basis_func * fine_phi_x[i];
+
+    }
+  }
+
+} // assemble_local_RHS_pre_processing
+
+
 
 } //namespace MsFEM {
 } //namespace Multiscale {
