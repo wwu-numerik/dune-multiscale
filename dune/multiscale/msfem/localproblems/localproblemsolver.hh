@@ -11,13 +11,16 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+
+#include <dune/istl/matrix.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -32,6 +35,34 @@ struct LocalProblemDataOutputParameters
 public:
   explicit LocalProblemDataOutputParameters();
 };
+
+
+template< class MatrixImp >
+void print_matrix( MatrixImp& system_matrix )
+{
+ std::cout << "---------------------------" << std::endl;
+ std::cout << "Matrix:" << std::endl << std::endl;
+ for (int row = 0; row != system_matrix.N(); ++row) {
+   for (int col = 0; col != system_matrix.M(); ++col) {
+     std::cout << system_matrix[row][col] << "  ";}
+     std::cout << std::endl;
+ }
+ std::cout << "---------------------------" << std::endl;
+ std::cout << std::endl << std::endl;
+}
+
+template< class VectorImp >
+void print_vector( VectorImp& vector )
+{
+ std::cout << "---------------------------" << std::endl;
+ std::cout << "Vector:" << std::endl << std::endl;
+ for (int col = 0; col != vector.N(); ++col) {
+     std::cout << vector[col] << "  ";
+ }
+ std::cout << std::endl << "---------------------------" << std::endl;
+ std::cout << std::endl << std::endl;
+}
+
 
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
@@ -83,7 +114,8 @@ private:
   typedef typename SubDiscreteFunctionType::LocalFunctionType SubLocalFunctionType;
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SGLagrangePointSetType;
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
-
+  typedef typename SubGridType::Codim< 0 >::Geometry SubGridEntityGeometry;
+  
   enum { faceCodim = 1 };
   typedef typename SubgridLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
     SubgridFaceDofIteratorType;
@@ -105,6 +137,18 @@ private:
     };
   };
 
+  //! --------------------- istl matrix and vector types -------------------------------------
+
+  typedef BlockVector< FieldVector< double, 1> > VectorType;
+  typedef Matrix< FieldMatrix< double,1,1 > > MatrixType;
+  typedef MatrixAdapter< MatrixType, VectorType, VectorType > MatrixOperatorType;
+  //typedef SeqGS< MatrixType, VectorType, VectorType > PreconditionerType;
+  typedef SeqSOR< MatrixType, VectorType, VectorType > PreconditionerType;
+  //typedef BiCGSTABSolver< VectorType > SolverType;
+  typedef InverseOperatorResult InverseOperatorResultType;
+  
+  //! ----------------------------------------------------------------------------------------
+  
 public:
   typedef SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType,
                                    LocProbMatrixTraits > LocProbFEMMatrix;

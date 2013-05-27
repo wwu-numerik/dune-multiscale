@@ -274,7 +274,8 @@ public:                                                           /*@LST0S@*/
   }
 
   /** \brief perform a grid walkthrough and assemble the global matrix */
-
+  // the coarse basis functions that belong to nodes on the boundary of the subgrid are included,
+  // excluded are only basis functions that belong to nodes on the boundary of Omega
   void assemble ()  const
   {
     const DiscreteFunctionSpaceType &space = discreteFunctionSpace();

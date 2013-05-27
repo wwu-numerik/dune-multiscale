@@ -108,10 +108,13 @@ public:
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
 
+  // assemble various right hand sides (for solving the local saddle point problems with lagrange multpliers)
+  void assemble_local_RHS_lg_problems( const HostDiscreteFunction/*CoarseBasisFunctionType*/& coarse_basis_func, double weight,
+                                       DiscreteFunction& local_problem_RHS ) const;
 
-//  template< class CoarseBasisFunctionType >
-  void assemble_local_RHS_pre_processing( const HostDiscreteFunction/*CoarseBasisFunctionType*/& coarse_basis_func, double weight,
-                                           DiscreteFunction& local_problem_RHS ) const;
+  void assemble_local_RHS_lg_problems_all( const std::vector< std::shared_ptr<HostDiscreteFunction > >& coarse_basis_func_list, double weight,
+                                           std::vector< std::shared_ptr< DiscreteFunction > >& local_problem_RHS ) const;
+
 
   // given a discrete function (representing a right hands side of a local problem,
   // defined on a subgrid) set the boundary dofs to zero
