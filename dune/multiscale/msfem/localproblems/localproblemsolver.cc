@@ -309,6 +309,8 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
                        SubDiscreteFunctionType& local_problem_solution_1,
                        const int coarse_index /*= -1*/ ) const {
 
+   //! if we do not sort out the coarse boundaries (on rigorous_msfem_solver.cc, line 175), the results get better
+
   // set solution equal to zero:
   local_problem_solution_0.clear();
   local_problem_solution_1.clear();
@@ -350,9 +352,10 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   if ( !clement )
     DUNE_THROW(Dune::InvalidStateException, "method 'solvelocalproblems_lod' can be only used in combination with the LOD and Clement interpolation.");
 
+Dune::Timer assembleTimer;  
   // assemble stiffness matrix
   local_problem_op.assemble_matrix( locprob_system_matrix );
-
+DSC_LOG_INFO << "Time for assembling the locprob_system_matrix: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();
 
   //! boundary treatment:
   // ----------------------------------------------------------------------------------------------------
@@ -396,8 +399,8 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
     }
   }
   // ----------------------------------------------------------------------------------------------------
-
-  InverseLocProbFEMMatrix locprob_inverse_system_matrix(locprob_system_matrix,
+DSC_LOG_INFO << "Time for first boundary treatment in system matrix: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();
+  const InverseLocProbFEMMatrix locprob_inverse_system_matrix(locprob_system_matrix,
                                                         1e-8, 1e-8, 20000,
                                                         DSC_CONFIG_GET("localproblemsolver_verbose", false));
 
@@ -420,11 +423,15 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
   {
+      // clement_weight_j ( \psi_i, \Psi_j ), where
+      // clement_weight_j = (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_basis_func_id]
+      
+      // get the global id of all interior coarse basis functions (subgrid id, local id) -> (global interior id) 
       int interior_basis_func_id = (*ids_basis_functions_in_subgrid_)[coarse_index][j];
-      local_problem_op.assemble_local_RHS_pre_processing( *((*coarse_basis_)[interior_basis_func_id]),
-                                                          (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_basis_func_id], *(rhs_Chj[j]) );
+      local_problem_op.assemble_local_RHS_lg_problems( *((*coarse_basis_)[interior_basis_func_id]),
+                                                       (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_basis_func_id], *(rhs_Chj[j]) );
   }
-
+DSC_LOG_INFO << "Time for assembling the the right hand sides rhs_Cj: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();
   // zero boundary condition for 'rhs_Chj[j]':
   // set Dirichlet Boundary to zero
   for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
@@ -466,16 +473,13 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
           ((rhs_Chj[j])->localFunction(subgrid_entity))[*faceIterator] = 0;
     }
   }
-  
+DSC_LOG_INFO << "Time for second boundary treatment C_h_j: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();  
   // solve the pre-processing problems:
   for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
-
+DSC_LOG_INFO << "Time for solving all the local problems for b_h_j " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();
   // ----------------------------------------------------------------------------------------------------
-     
 
-     
-     
   //! Solve the local problems without constraint
   // (without condition that the Lagrange interpolation must be zero)
   // ----------------------------------------------------------------------------------------------------
@@ -497,7 +501,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
                                        subgrid_list_.getCoarseNodeVector( coarse_index ), /*coarse node vector is a dummy in this case*/
                                        specifier_.getOversamplingStrategy(), /*always three in this case*/
                                        local_problem_rhs_1 );
-
+DSC_LOG_INFO << "Time for assembling the right hand sides: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , local_problem_rhs_0 );
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , local_problem_rhs_1 );
   
@@ -506,8 +510,211 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
  
   locprob_inverse_system_matrix( local_problem_rhs_0 , local_problem_solution_0 );
   locprob_inverse_system_matrix( local_problem_rhs_1 , local_problem_solution_1 );
-  
+DSC_LOG_INFO << "Time for solving the problems for e_0 and e_1: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();
   // ----------------------------------------------------------------------------------------------------
+  
+  
+  //! Assemble and solve the problem for the lagrange multiplier v_h
+  // (this is a low dimensional problem of size 'number_of_interior_coarse_nodes_in_subgrid')
+  // ----------------------------------------------------------------------------------------------------
+  
+  // (stiffness) matrix for the lagrange multiplier (lm) problem  
+  MatrixType lm_system_matrix( number_of_interior_coarse_nodes_in_subgrid, number_of_interior_coarse_nodes_in_subgrid );
+  for (size_t i = 0; i != lm_system_matrix.N(); ++i) //rows
+    for (size_t j = 0; j != lm_system_matrix.M(); ++j) //colums
+      lm_system_matrix[i][j] = 0.0;
+
+  // matrix with entries M[i][j] = weight_i ( b_h[j], coarse_basis_func[i] )_L2(\Omega)
+  // 'i = row' and 'j = column'
+
+  for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
+  {
+    const SubgridEntityType& subgrid_entity = *sg_it;
+    
+    const SubGridEntityGeometry& sg_geometry = subgrid_entity.geometry();
+    
+    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
+    const HostEntityType& host_entity = *host_entity_pointer;
+
+    typedef CachingQuadrature< SubGridPartType, 0 > SubGridQuadrature;
+    typedef CachingQuadrature< HostGridPartType, 0 > HostGridQuadrature;
+    
+    // exact for polynomials of degree 2:
+    const SubGridQuadrature sg_quadrature( subgrid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
+    const HostGridQuadrature quadrature( host_entity, 2 * hostDiscreteFunctionSpace_.order() + 2);
+
+    const HostGridEntityGeometry& geometry = host_entity.geometry();
+    
+    const size_t numQuadraturePoints = sg_quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      const typename SubGridQuadrature::CoordinateType& local_point = sg_quadrature.point(quadraturePoint);
+
+      const double quad_weight = sg_quadrature.weight(quadraturePoint)
+              * sg_geometry.integrationElement(local_point);
+
+      // global point in the subgrid
+      const DomainType global_point = sg_geometry.global(local_point);
+      
+      // check for subgrid-hostgrid-compatibility
+      assert( global_point == geometry.global( quadrature.point(quadraturePoint) ) );
+
+      std::vector< RangeType > value_b, value_coarse_basis_func, clement_weight;
+      value_b.resize(lm_system_matrix.M());
+      value_coarse_basis_func.resize(lm_system_matrix.N());
+      clement_weight.resize(lm_system_matrix.N());
+      for (size_t j = 0; j != lm_system_matrix.M(); ++j) //rows
+        ((b_h[j])->localFunction(subgrid_entity)).evaluate( sg_quadrature[quadraturePoint] , value_b[j]); 
+      for (size_t i = 0; i != lm_system_matrix.N(); ++i) //rows
+      {
+        ((*coarse_basis_)[(*ids_basis_functions_in_subgrid_)[coarse_index][i]]
+          ->localFunction(host_entity)).evaluate( quadrature[quadraturePoint] , value_coarse_basis_func[i]);
+        clement_weight[i] = (*inverse_of_L1_norm_coarse_basis_funcs_)[(*ids_basis_functions_in_subgrid_)[coarse_index][i]];
+      }
+      
+      for (size_t i = 0; i != lm_system_matrix.N(); ++i) //rows
+        for (size_t j = 0; j != lm_system_matrix.M(); ++j) //colums
+          lm_system_matrix[i][j] += quad_weight * clement_weight[i] * value_b[j] * value_coarse_basis_func[i];
+    }
+  } // lagrange multplier problem system matrix assembled
+DSC_LOG_INFO << "Time for assembling the lm_system_matrix: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();
+  // print_matrix( lm_system_matrix );
+  
+  // right hand side vectors for the lagrange multiplier (lm) problems (for e_0 and e_1)
+  // entries lm_rhs_0[i] = weight_i ( local_problem_solution_0, coarse_basis_func[i] )_L2(\Omega)
+  VectorType lm_rhs_0( number_of_interior_coarse_nodes_in_subgrid );
+  VectorType lm_rhs_1( number_of_interior_coarse_nodes_in_subgrid );
+  for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
+  { lm_rhs_0[i] = 0.0; lm_rhs_1[i] = 0.0; }
+
+  for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
+  {
+    const SubgridEntityType& subgrid_entity = *sg_it;
+    
+    const SubGridEntityGeometry& sg_geometry = subgrid_entity.geometry();
+    
+    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
+    const HostEntityType& host_entity = *host_entity_pointer;
+
+    typedef CachingQuadrature< SubGridPartType, 0 > SubGridQuadrature;
+    typedef CachingQuadrature< HostGridPartType, 0 > HostGridQuadrature;
+    
+    // exact for polynomials of degree 2:
+    const SubGridQuadrature sg_quadrature( subgrid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
+    const HostGridQuadrature quadrature( host_entity, 2 * hostDiscreteFunctionSpace_.order() + 2);
+    
+    RangeType value_local_problem_solution_0, value_local_problem_solution_1, value_coarse_basis_func_i;
+
+    const size_t numQuadraturePoints = sg_quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      const typename SubGridQuadrature::CoordinateType& local_point = sg_quadrature.point(quadraturePoint);
+
+      const double quad_weight = sg_quadrature.weight(quadraturePoint)
+              * sg_geometry.integrationElement(local_point);
+      
+      // check for subgrid-hostgrid-compatibility
+      assert( sg_geometry.global(local_point) == host_entity.geometry().global( quadrature.point(quadraturePoint) ) );
+
+      const SubLocalFunctionType local_sol_0 = local_problem_solution_0.localFunction(subgrid_entity);
+      const SubLocalFunctionType local_sol_1 = local_problem_solution_1.localFunction(subgrid_entity);
+
+      local_sol_0.evaluate( sg_quadrature[quadraturePoint] , value_local_problem_solution_0);
+      local_sol_1.evaluate( sg_quadrature[quadraturePoint] , value_local_problem_solution_1);
+
+      for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
+      {
+
+          int interior_coarse_basis_id_in_subgrid = (*ids_basis_functions_in_subgrid_)[coarse_index][i];
+          HostLocalFunctionType local_coarse_basis_i
+                 = (*coarse_basis_)[interior_coarse_basis_id_in_subgrid]->localFunction(host_entity);
+          local_coarse_basis_i.evaluate( quadrature[quadraturePoint] , value_coarse_basis_func_i);
+
+          double clement_weight = (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_coarse_basis_id_in_subgrid];
+
+          lm_rhs_0[i] += quad_weight * clement_weight * value_local_problem_solution_0 * value_coarse_basis_func_i;
+          lm_rhs_1[i] += quad_weight * clement_weight * value_local_problem_solution_1 * value_coarse_basis_func_i;
+
+      }
+    }
+  } // lagrange multplier problem system matrix assembled
+DSC_LOG_INFO << "Time for assembling the lm_right_hand sides: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();  
+  //print_vector( lm_rhs_0 );
+  //print_vector( lm_rhs_1 );
+  
+  MatrixOperatorType lm_matrix_op_0( lm_system_matrix );
+  MatrixOperatorType lm_matrix_op_1( lm_system_matrix );
+  
+  PreconditionerType lm_preconditioner_0( lm_system_matrix, 100, 0.9 );
+  PreconditionerType lm_preconditioner_1( lm_system_matrix, 100, 0.9 );
+  
+  Dune::InverseOperatorResult result_data_0, result_data_1;
+  VectorType v_h_0( number_of_interior_coarse_nodes_in_subgrid );
+  VectorType v_h_1( number_of_interior_coarse_nodes_in_subgrid );
+  for (size_t col = 0; col != v_h_0.N(); ++col)
+  {  v_h_0[col] = 0.0; v_h_1[col] = 0.0;  }
+  
+  typedef Dune::BiCGSTABSolver< VectorType > SolverType;
+
+  double tol = DSC_CONFIG_GET("rigorous_msfem.local_micro_solver_tolerance", 1e-10 );
+  int num_iterations = DSC_CONFIG_GET("rigorous_msfem.local_micro_solver_iterations", 10000 );
+  
+  SolverType lm_prob_solver_0( lm_matrix_op_0, lm_preconditioner_0, tol, num_iterations, false );
+  SolverType lm_prob_solver_1( lm_matrix_op_1, lm_preconditioner_1, tol, num_iterations, false );
+  
+  lm_prob_solver_0.apply( v_h_0, lm_rhs_0, result_data_0);
+  lm_prob_solver_1.apply( v_h_1, lm_rhs_1, result_data_1);
+DSC_LOG_INFO << "Time for solving the lm problem: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();    
+  // set final_rhs_0 = \sum_j clement_weight_j v_h_0[j] coarse_basis_function[j]
+  HostDiscreteFunctionType final_rhs_0("final rhs 0 local problem", hostDiscreteFunctionSpace_); // for e_0
+  HostDiscreteFunctionType final_rhs_1("final rhs 1 local problem", hostDiscreteFunctionSpace_); // for e_1
+  final_rhs_0.clear();
+  final_rhs_1.clear();
+
+  for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
+  {
+
+     int interior_coarse_basis_id_in_subgrid = (*ids_basis_functions_in_subgrid_)[coarse_index][i];
+
+     HostDiscreteFunctionType aux_func_0("auxilliary func 0", hostDiscreteFunctionSpace_);
+     HostDiscreteFunctionType aux_func_1("auxilliary func 1", hostDiscreteFunctionSpace_);
+     aux_func_0.clear();
+     aux_func_1.clear();
+
+     double coefficient_0 = (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_coarse_basis_id_in_subgrid] * v_h_0[i];
+     double coefficient_1 = (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_coarse_basis_id_in_subgrid] * v_h_1[i];
+     
+     aux_func_0 += (*(*coarse_basis_)[interior_coarse_basis_id_in_subgrid]);
+     aux_func_0 *= coefficient_0;
+     final_rhs_0 += aux_func_0;
+
+     aux_func_1 += (*(*coarse_basis_)[interior_coarse_basis_id_in_subgrid]);
+     aux_func_1 *= coefficient_1;
+     final_rhs_1 += aux_func_1;
+  }
+DSC_LOG_INFO << "Time for computing/assembling v_h : " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();  
+  // right hand side vectors of the algebraic local MsFEM problem
+  SubDiscreteFunctionType final_rhs_vector_0("final rhs of local MsFEM problem", subDiscreteFunctionSpace); // for e_0
+  SubDiscreteFunctionType final_rhs_vector_1("final rhs of local MsFEM problem", subDiscreteFunctionSpace); // for e_1
+  final_rhs_vector_0.clear();
+  final_rhs_vector_1.clear();
+  
+  local_problem_op.assemble_local_RHS_lg_problems( final_rhs_0, 1.0, final_rhs_vector_0 );
+  local_problem_op.assemble_local_RHS_lg_problems( final_rhs_1, 1.0, final_rhs_vector_1 );
+  local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , final_rhs_vector_0 );
+  local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , final_rhs_vector_1 );
+  
+  SubDiscreteFunctionType preliminary_solution_0("preliminary_solution_0", subDiscreteFunctionSpace); // for e_0
+  SubDiscreteFunctionType preliminary_solution_1("preliminary_solution_1", subDiscreteFunctionSpace); // for e_1
+  preliminary_solution_0.clear();
+  preliminary_solution_1.clear();
+
+  locprob_inverse_system_matrix( final_rhs_vector_0 , preliminary_solution_0 );
+  locprob_inverse_system_matrix( final_rhs_vector_1 , preliminary_solution_1 );
+DSC_LOG_INFO << "Time for solving the final problems: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();    
+  local_problem_solution_0 -= preliminary_solution_0;
+  local_problem_solution_1 -= preliminary_solution_1;
+DSC_LOG_INFO << "Time for finanlizing step: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();  
 #if 0
 
 
@@ -567,11 +774,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
     InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
   
   
-// assemble_local_RHS_pre_processing(
-  // std::vector< std::vector< int > > ids_basis_functions_in_subgrid,
-  // std::vector< double >& inverse_of_L1_norm_coarse_basis_funcs,
-  // CoarseBasisFunctionListType& coarse_basis
-    
+
   
     bool clement = false;
     if ( specifier_.getOversamplingStrategy() == 3 )
@@ -678,7 +881,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
     {  delete b_h[j]; delete rhs_Chj[j]; }
     delete[] b_h;
     delete[] rhs_Chj;
-
+DSC_LOG_INFO << "Time to free dynamic arrys: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();  
 } // solvelocalproblem
 
 void MsFEMLocalProblemSolver::subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func,
@@ -796,8 +999,10 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
     local_problem_solution_1.clear();
 
+    Dune::Timer assembleTimer;
+    bool uzawa = DSC_CONFIG_GET( "rigorous_msfem.uzawa_solver", false );
     bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
-    if ( (specifier_.getOversamplingStrategy() == 3) && clement ) {
+    if ( (!uzawa) && (specifier_.getOversamplingStrategy() == 3) && clement ) {
 
       // requires a pre-processing step (that is the same for both directions e_0 and e_1)
       // one method for both solutions to half the computational complexity 
@@ -839,7 +1044,9 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
       DSC_PROFILER.resetTiming("none.local_problem_solution");
     }
-        
+
+    DSC_LOG_INFO << "Total time for solving all local problems for the current subgrid: " << assembleTimer.elapsed() << "s" << std::endl << std::endl;
+//abort();
     dfw.append(local_problem_solution_0);
     dfw.append(local_problem_solution_1);
 

@@ -206,7 +206,8 @@ private:
                                      MsFEMTraits::SubGridListType& subgrid_list,
                                      std::map<int,int>& global_id_to_internal_id,
                                      std::map< OrderedDomainType, int >& coordinates_to_global_coarse_node_id,
-                                     std::vector< std::vector< int > >& ids_basis_function_in_subgrid) const;
+                                     std::vector< std::vector< int > >& ids_basis_function_in_subgrid,
+                                     std::vector< std::vector< int > >& ids_basis_function_in_interior_subgrid) const;
 
    void subgrid_to_hostrid_projection( const SubgridDiscreteFunction& sub_func,
                                        DiscreteFunction& host_func) const;
@@ -232,7 +233,7 @@ private:
                                     const SeedSupportStorage& support_of_ms_basis_func_intersection ) const
   {
     RangeType value = 0.0;
-#if 1
+
     int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
     for (int it_id = 0; it_id < support_of_ms_basis_func_intersection.size(); ++it_id)
     {
@@ -269,71 +270,7 @@ private:
 
       }
     }
-#endif
 
-//! delete this soon -> just keep it for testing for the moment
-#if 0
-#if 0
-    std::vector< int > ids;
-    for (int it_id = 0; it_id < support_of_ms_basis_func_intersection.size(); ++it_id)
-    {
-      typedef typename HostEntity::template Codim< 0 >::EntityPointer
-          HostEntityPointer;
-
-      HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[it_id] );
-      
-      const HostGridLeafIndexSet& coarseGridLeafIndexSet = discreteFunctionSpace_.gridPart().grid().leafIndexSet();
-      int id = coarseGridLeafIndexSet.index( *it );
-      ids.push_back( id );
-
-    }
-#endif  
-
-    int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
-    for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
-    {
-      typedef typename HostEntity::template Codim< 0 >::EntityPointer
-          HostEntityPointer;
-
-#if 0
-      const HostGridLeafIndexSet& coarseGridLeafIndexSet = discreteFunctionSpace_.gridPart().grid().leafIndexSet();
-      int id = coarseGridLeafIndexSet.index( *it );
-#endif
-
-      LocalFunction loc_func_1 = func1.localFunction(*it);
-      LocalFunction loc_func_2 = func2.localFunction(*it);
-
-      const auto& geometry = (*it).geometry();
- 
-      const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
-      const int numQuadraturePoints = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
-      {
-        DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
-
-        //weight
-        double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
-        weight *= quadrature.weight(quadraturePoint);
-
-        // gradients of func1 and func2
-        JacobianRangeType grad_func_1, grad_func_2;
-        loc_func_1.jacobian( quadrature[quadraturePoint], grad_func_1);
-        loc_func_2.jacobian( quadrature[quadraturePoint], grad_func_2);
-
-        // A \nabla func1
-        JacobianRangeType diffusive_flux(0.0);
-        diffusion_op.diffusiveFlux( global_point, grad_func_1, diffusive_flux);
-
-#if 0
-         if( std::find( ids.begin(), ids.end(), id ) != ids.end() ) {
-	   value += weight * ( diffusive_flux[0] * grad_func_2[0] );}
-	   //std::cout << "weight * ( diffusive_flux[0] * grad_func_2[0] ) = " << weight * ( diffusive_flux[0] * grad_func_2[0] ) << std::endl; }
-#endif
-        value += weight * ( diffusive_flux[0] * grad_func_2[0] );
-
-      }
-    }
-#endif
     return value;
   }
 

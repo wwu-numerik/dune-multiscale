@@ -541,7 +541,7 @@ void LocalProblemOperator
 
 
 void LocalProblemOperator
-      ::assemble_local_RHS_pre_processing( const HostDiscreteFunction& coarse_basis_func, double clement_weight,
+      ::assemble_local_RHS_lg_problems( const HostDiscreteFunction& coarse_basis_func, double clement_weight,
                                            DiscreteFunction& local_problem_RHS ) const {
 
 
@@ -605,6 +605,12 @@ void LocalProblemOperator
 
 } // assemble_local_RHS_pre_processing
 
+
+//! NOT yet implemented:
+void LocalProblemOperator
+      ::assemble_local_RHS_lg_problems_all( const std::vector< std::shared_ptr<HostDiscreteFunction > >& coarse_basis_func_list, double clement_weight,
+                                            std::vector< std::shared_ptr< DiscreteFunction > >& local_problem_RHS ) const {
+} // assemble_local_RHS_pre_processing_all
 
 
 } //namespace MsFEM {

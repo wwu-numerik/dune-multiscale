@@ -25,11 +25,11 @@
 #include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+#if 0
 template< class MatrixImp >
 void print_matrix( MatrixImp& system_matrix )
 {
@@ -55,7 +55,7 @@ void print_vector( VectorImp& vector )
  std::cout << std::endl << "---------------------------" << std::endl;
  std::cout << std::endl << std::endl;
 }
-
+#endif
 
 Elliptic_Rigorous_MsFEM_Solver::Elliptic_Rigorous_MsFEM_Solver(const Elliptic_Rigorous_MsFEM_Solver::DiscreteFunctionSpace& discreteFunctionSpace)
 : discreteFunctionSpace_(discreteFunctionSpace)
@@ -139,15 +139,18 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
      MsFEMTraits::SubGridListType& subgrid_list,
      std::map<int,int>& global_id_to_internal_id,
      std::map< OrderedDomainType, int >& coordinates_to_global_coarse_node_id,
-     std::vector< std::vector< int > >& ids_basis_function_in_subgrid) const
+                                     std::vector< std::vector< int > >& ids_basis_function_in_subgrid,
+                                     std::vector< std::vector< int > >& ids_basis_function_in_interior_subgrid ) const
 {
   // First: determine the index set (internal_coarse_nodes numbering) for the coarse nodes in the interior of U(T)
   // when assembling the local clement operator for a given subgrid U(T), we need to know the standard coarse
   // basis functions that belong to the interior(!) coarse nodes in U(T). Coarse nodes on the boundary of
   // are not relevant.
-
+  
   int number_of_subgrids = subgrid_list.getNumberOfSubGrids();
   DiscreteFunctionSpace& fine_space = specifier.fineSpace();
+
+  ids_basis_function_in_subgrid.resize( number_of_subgrids );
 
   typedef std::vector< DomainType > CoarseNodeVectorType;
   typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
@@ -167,6 +170,10 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
 
       int global_coarse_node_id = coordinates_to_global_coarse_node_id[ coarse_nodes_in_subgrid[cn] ];
       coarse_node_ids_in_subgrid[ sg_id ].push_back( global_coarse_node_id );
+      
+      // sort out the boundary nodes on Omega
+      if ( specifier.is_coarse_boundary_node( global_coarse_node_id ) == false ){
+        ids_basis_function_in_subgrid[ sg_id ].push_back( global_id_to_internal_id[global_coarse_node_id] ); }
     }
   }
 
@@ -216,7 +223,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
               if( std::find( coarse_boundary_node_ids_in_subgrid[ sg_id ].begin(),
                              coarse_boundary_node_ids_in_subgrid[ sg_id ].end(),
                              global_coarse_node_id ) == coarse_boundary_node_ids_in_subgrid[ sg_id ].end() )
-                 { coarse_boundary_node_ids_in_subgrid[ sg_id ].push_back( global_coarse_node_id ); }
+                { coarse_boundary_node_ids_in_subgrid[ sg_id ].push_back( global_coarse_node_id ); }
 
             }
           }
@@ -238,10 +245,10 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
   }
 
   // Finalize: for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the subgrid
-  ids_basis_function_in_subgrid.resize( number_of_subgrids );
+  ids_basis_function_in_interior_subgrid.resize( number_of_subgrids );
   for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
     for (unsigned int i = 0; i < coarse_interior_node_ids_in_subgrid[ sg_id ].size(); ++i )
-     ids_basis_function_in_subgrid[ sg_id ].push_back( global_id_to_internal_id[coarse_interior_node_ids_in_subgrid[ sg_id ][i]] );
+     ids_basis_function_in_interior_subgrid[ sg_id ].push_back( global_id_to_internal_id[coarse_interior_node_ids_in_subgrid[ sg_id ][i]] );
     
 }
 // ------------------------------------------------------------------------------------------------------ 
@@ -632,71 +639,15 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, msfem_basis_function );
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, standard_basis_function );
 
-  // for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the subgrid
+  // for each subgrid, store the vector of basis functions ids that correspond to coarse grid nodes in the subgrid WITHOUT boundary nodes of Omega
   std::vector< std::vector< int > > ids_basis_functions_in_subgrid;
+  // for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the subgrid
+  std::vector< std::vector< int > > ids_basis_functions_in_interior_subgrid;
   assemble_interior_basis_ids( specifier, subgrid_list, global_id_to_internal_id, coordinates_to_global_coarse_node_id,
-                               ids_basis_functions_in_subgrid );
-  
-
-  //! just for testing - delete it!
-#if 0
-    DiscreteFunction dull_copy ("Dully", fine_space);
-    dull_copy.clear();
-    
-    std::vector< double > values_dull_copy;
-    values_dull_copy.resize(fine_space.size());
-    
-    for (HostgridIterator it = fine_space.begin(); it != fine_space.end(); ++it)
-    {
-      auto loc_func = dull_copy.localFunction( *it );
-      auto loc_func_2 = standard_basis_function[0]->localFunction( *it );
-
-      const int baseSetSize = loc_func.baseFunctionSet().size();
-       
-      for (int i=0; i<baseSetSize; ++i) {
-       loc_func[i] = loc_func_2[i];
-       const int global_dof_number = fine_space.mapper().mapToGlobal(*it, i );
-       values_dull_copy[ global_dof_number ] = loc_func_2[i];
-      }
-    }
- 
-
-    for (auto it = fine_space.begin(); it != fine_space.end(); ++it)
-    {
-        auto intersection_it = fine_space.gridPart().ibegin(*it);
-        
-        auto loc_func = dull_copy.localFunction( *it );   
-        
-        const auto endiit = fine_space.gridPart().iend(*it);
-        for ( ; intersection_it != endiit; ++intersection_it)
-        {
-
-            const auto& lagrangePointSet
-                    = fine_space.lagrangePointSet(*it);
-
-            const int face = (*intersection_it).indexInInside();
-
-            auto faceIterator
-                    = lagrangePointSet.beginSubEntity< faceCodim >(face);
-            const auto faceEndIterator
-                    = lagrangePointSet.endSubEntity< faceCodim >(face);
-            for ( ; faceIterator != faceEndIterator; ++faceIterator)
-	    {
-	      
-	      if ( values_dull_copy[fine_space.mapper().mapToGlobal(*it, *faceIterator )] != loc_func[ *faceIterator ] )
-	      { std::cout << "Scheisse, Fehler!!!!!" << std::endl; }
-	    }
-
-        }
-
-    }
-std::cout << "Alles klaerchen!!" << std::endl;
-abort();
-       //const int global_dof_number = space.mapper().mapToGlobal(*it, loc_basis_number );
-#endif
+                               ids_basis_functions_in_subgrid, ids_basis_functions_in_interior_subgrid );
   
   //! assemble all local problems (within constructor!)
-  MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, ids_basis_functions_in_subgrid, coff, diffusion_op,
+  MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, /*ids_basis_functions_in_interior_subgrid*/ ids_basis_functions_in_subgrid, coff, diffusion_op,
                                            standard_basis_function, global_id_to_internal_id );
   loc_prob_solver.assemble_all(/*silence=*/false);
 
@@ -782,58 +733,6 @@ abort();
   SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
   solver.apply( solution_vector, rhs, result_data);
 #endif
-
-  
-//! delete this:
-#if 0
-  
-  // just for VTK output for the basis function correctors
-  MsFEMBasisFunctionType corrector_basis_function;
-  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
-   {
-    corrector_basis_function.emplace_back(new DiscreteFunction("Corrector basis function", fine_space));
-    corrector_basis_function[internal_id]->clear();
-   }
-
-  add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, corrector_basis_function );
-#if 1
-  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
-   {
-     
-    std::cout << "support_of_ms_basis_func_intersection size = " << support_of_ms_basis_func_intersection[internal_id][internal_id].size() << std::endl;
-    for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[internal_id][internal_id].size(); ++it_id)
-    {
-//      typedef typename HostEntity::template Codim< 0 >::EntityPointer
-//          HostEntityPointer;
-
-      HostEntityPointer it = fine_space.grid().entityPointer( support_of_ms_basis_func_intersection[internal_id][internal_id][it_id] );
- 
-      LocalFunction loc_func = (*corrector_basis_function[internal_id]).localFunction(*it);
-
-      const LagrangePointSet& lagrangePointSet = fine_space.lagrangePointSet(*it);
-
-      typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
-      HostIntersectionIterator iit = fine_space.gridPart().ibegin(*it);
-      const HostIntersectionIterator endiit = fine_space.gridPart().iend(*it);
-      for ( ; iit != endiit; ++iit) {
-        const int face = iit->indexInInside();
-
-        auto faceIterator
-                = lagrangePointSet.beginSubEntity< faceCodim >(face);
-        const auto faceEndIterator
-                = lagrangePointSet.endSubEntity< faceCodim >(face);
-        for ( ; faceIterator != faceEndIterator; ++faceIterator)
-          loc_func[*faceIterator] = 1.0; }
-    }
-    
-   }
-#endif
-  vtk_output( corrector_basis_function, "corrector_basis_function_cut" );
-  
-  
-#endif
-  
-  
   
   coarse_scale_part.clear();
   for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
