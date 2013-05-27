@@ -66,7 +66,7 @@ public:
    **/
   DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                            const DiffusionModel& diffusion_op,
-                           const Reaction* reaction_coefficient = nullptr)
+                           const std::unique_ptr<const Reaction>& reaction_coefficient = nullptr)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
     , reaction_coefficient_(reaction_coefficient)
@@ -99,7 +99,7 @@ public:
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
-  const std::unique_ptr<const ReactionImp> reaction_coefficient_;
+  const std::unique_ptr<const ReactionImp>& reaction_coefficient_;
 };
 
 } //namespace FEM {
