@@ -128,7 +128,24 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
             specifier_.getOversamplingStrategy(),
             local_problem_rhs );
     break;
-  default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
+  case 3:
+    if ( coarse_index < 0 )
+      DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
+    bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
+
+    if ( clement ) {
+      local_problem_op.assemble_matrix( locprob_system_matrix );
+    } else {
+      local_problem_op.assemble_matrix( locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
+    }
+
+
+    local_problem_op.assemble_local_RHS(e,
+            subgrid_list_.getCoarseNodeVector( coarse_index ),
+            specifier_.getOversamplingStrategy(),
+            local_problem_rhs );
+    break;    
+  default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3.");
   }
 
   //! boundary treatment:
