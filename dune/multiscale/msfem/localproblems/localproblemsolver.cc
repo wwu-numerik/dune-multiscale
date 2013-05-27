@@ -10,6 +10,7 @@
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/common/memory.hh>
 
 #include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
@@ -19,6 +20,9 @@
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
+
+#include <memory>
+#include <vector>
 
 namespace Dune {
 namespace Multiscale {
@@ -408,12 +412,12 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   // ----------------------------------------------------------------------------------------------------
   int number_of_interior_coarse_nodes_in_subgrid = (*ids_basis_functions_in_subgrid_)[ coarse_index ].size();
     
-  SubDiscreteFunctionType** b_h = new SubDiscreteFunctionType* [number_of_interior_coarse_nodes_in_subgrid];
-  SubDiscreteFunctionType** rhs_Chj = new SubDiscreteFunctionType* [number_of_interior_coarse_nodes_in_subgrid];
+  std::vector<std::unique_ptr<SubDiscreteFunctionType>> b_h(number_of_interior_coarse_nodes_in_subgrid);
+  std::vector<std::unique_ptr<SubDiscreteFunctionType>> rhs_Chj(number_of_interior_coarse_nodes_in_subgrid);
   for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
   {
-      b_h[j] = new SubDiscreteFunctionType("q_h", subDiscreteFunctionSpace);
-      rhs_Chj[j] = new SubDiscreteFunctionType("rhs_Chj_h", subDiscreteFunctionSpace);
+      b_h[j] = DSC::make_unique<SubDiscreteFunctionType>("q_h", subDiscreteFunctionSpace);
+      rhs_Chj[j] = DSC::make_unique<SubDiscreteFunctionType>("rhs_Chj_h", subDiscreteFunctionSpace);
       b_h[j]->clear();
       rhs_Chj[j]->clear();
   }
@@ -674,11 +678,6 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution );
 #endif
-    for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
-    {  delete b_h[j]; delete rhs_Chj[j]; }
-    delete[] b_h;
-    delete[] rhs_Chj;
-
 } // solvelocalproblem
 
 void MsFEMLocalProblemSolver::subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func,
