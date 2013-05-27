@@ -93,8 +93,8 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
       typename Entity::EntityPointer macro_entity_pointer(macro_grid_entity);
       cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
 
-      corrector_Phi[i] = PeriodicDiscreteFunctionPointer(new PeriodicDiscreteFunction("Corrector Function of Phi",
-                                                                     periodicDiscreteFunctionSpace_));
+      corrector_Phi[i] = DSC::make_unique<PeriodicDiscreteFunction>("Corrector Function of Phi",
+                                                                    periodicDiscreteFunctionSpace_);
       corrector_Phi[i]->clear();
       discrete_function_reader.read( cell_problem_id[i], *(corrector_Phi[i]) );
     }
