@@ -497,10 +497,11 @@ public:
 
     //! build the left hand side (lhs) of the problem
 
+    const auto mass = DSC::make_unique<const MassWeightType>(lambda);
     // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
     const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace,
                                                          tensor_transformed,
-                                                         new MassWeightType(lambda));
+                                                         mass);
 
     FEMMatrix lhsMatrix("Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace, periodicDiscreteFunctionSpace);
     discrete_cell_elliptic_op.assemble_matrix(lhsMatrix, false /*no boundary treatment*/);
