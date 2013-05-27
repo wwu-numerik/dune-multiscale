@@ -112,8 +112,10 @@ public:
   void assemble_local_RHS_lg_problems( const HostDiscreteFunction/*CoarseBasisFunctionType*/& coarse_basis_func, double weight,
                                        DiscreteFunction& local_problem_RHS ) const;
 
-  void assemble_local_RHS_lg_problems_all( const std::vector< std::shared_ptr<HostDiscreteFunction > >& coarse_basis_func_list, double weight,
-                                           std::vector< std::shared_ptr< DiscreteFunction > >& local_problem_RHS ) const;
+  void assemble_local_RHS_lg_problems_all( const std::vector< std::shared_ptr<HostDiscreteFunction > >& coarse_basis_func_list,
+                                           std::vector< double >& weights,
+                                           std::vector< int >& ids_basis_functions_in_subgrid,
+                                           std::vector< std::unique_ptr< DiscreteFunction > >& local_problem_RHS ) const;
 
 
   // given a discrete function (representing a right hands side of a local problem,
