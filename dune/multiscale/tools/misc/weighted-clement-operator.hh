@@ -54,8 +54,8 @@ struct EntityPointerHash {
 };
 
 template<class DomainSpace, class RangeSpace>
-class ClemementPattern : public DSLC::SparsityPatternDefault {
-  typedef DSLC::SparsityPatternDefault BaseType;
+class ClemementPattern : public DSL::SparsityPatternDefault {
+  typedef DSL::SparsityPatternDefault BaseType;
   typedef typename DomainSpace::EntityType::EntityPointer DomainEntityPointerType;
   typedef typename RangeSpace::EntityType::EntityPointer RangeEntityPointerType;
   typedef std::unordered_set<RangeEntityPointerType,
