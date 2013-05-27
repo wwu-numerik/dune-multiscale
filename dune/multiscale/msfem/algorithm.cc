@@ -419,9 +419,8 @@ bool algorithm(const std::string& macroGridName,
   bool repeat_algorithm = false;
 
   //! create subgrids:
-  const bool silence = false;
   {//this scopes subgridlist
-    MsFEMTraits::SubGridListType subgrid_list(specifier, silence);
+    MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
     Elliptic_MsFEM_Solver msfem_solver(discreteFunctionSpace);
