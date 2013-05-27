@@ -111,33 +111,20 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
 
   switch ( specifier_.getOversamplingStrategy() )
   {
-  case 1: break;
-  case 2: break;
-  case 3: break;
-  default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
-  }
-
-  // assemble the stiffness matrix
-  if ( specifier_.getOversamplingStrategy() == 1 ) {
+  case 1:
     local_problem_op.assemble_matrix(locprob_system_matrix);
-  }
-
-  if ( specifier_.getOversamplingStrategy() == 2 ) {
+    local_problem_op.assemble_local_RHS(e, local_problem_rhs);
+    break;
+  case 2:
     if ( coarse_index < 0 )
       DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
     local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
-  }
-
-  if ( specifier_.getOversamplingStrategy() == 3 ) {
-    if ( coarse_index < 0 )
-      DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-    bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
-
-    if ( clement ) {
-      local_problem_op.assemble_matrix( locprob_system_matrix );
-    } else {
-      local_problem_op.assemble_matrix( locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
-    }
+    local_problem_op.assemble_local_RHS(e,
+            subgrid_list_.getCoarseNodeVector( coarse_index ),
+            specifier_.getOversamplingStrategy(),
+            local_problem_rhs );
+    break;
+  default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
   }
 
   //! boundary treatment:
@@ -182,21 +169,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   }
 
 
-  // assemble right hand side of algebraic local msfem problem
-  if ( specifier_.getOversamplingStrategy() == 1 ) {
-    local_problem_op.assemble_local_RHS(e, local_problem_rhs);
-  } else
-  if ( ( specifier_.getOversamplingStrategy() == 2 ) || ( specifier_.getOversamplingStrategy() == 3 ) ) {
-    if ( coarse_index < 0 )
-      DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-    local_problem_op.assemble_local_RHS(e,
-            subgrid_list_.getCoarseNodeVector( coarse_index ),
-            specifier_.getOversamplingStrategy(),
-            local_problem_rhs );
-  } else
-    DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3!");
-  //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs );
-
   // zero boundary condition for 'cell problems':
   // set Dirichlet Boundary to zero
   for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
@@ -237,66 +209,20 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     }
   }
 
-  const double norm_rhs = local_problem_op.normRHS(local_problem_rhs);
-
   if ( !( local_problem_rhs.dofsValid() ) )
   {
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
   }
 
-  if (norm_rhs < /*1e-06*/ 1e-30)
+  if (local_problem_op.normRHS(local_problem_rhs) < /*1e-06*/ 1e-30)
   {
     local_problem_solution.clear();
     DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
-  } else {
-
+  }
+  else
+  {
     InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
-    
-    bool clement = false;
-    if ( specifier_.getOversamplingStrategy() == 3 )
-    { clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ); }
-
-    if ( clement )
-    {
-
-      //! old implementation LODM with Clement using uzawa solver:
-      // ------------------------------------------------------------
-      HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
-      zero.clear();
-      const double dummy = 12345.67890;
-      double solverEps = 1e-2;
-      int maxIterations = 1000;
-
-      // we want to solve the local problem with the constraint that the weighted Clement interpoltion
-      // of the local problem solution is zero
-
-      // implementation of a weighted Clement interpolation operator for our purpose:
-      WeightedClementOperatorType clement_interpolation_op( subDiscreteFunctionSpace,
-                                                            specifier_.coarseSpace(),
-                                                            subgrid_list_.getCoarseNodeVector( coarse_index ),
-                                                            *coarse_basis_, *global_id_to_internal_id_, specifier_ );
-      //! NOTE TODO: implementation is not yet optimal, because the weighted Clement maps a function
-      //! defined on the local subgrid to a function defined on the whole(!) coarse space.
-      //! It would be better to implement a mapping to a localized coarse space, since
-      //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence).
-
-      //clement_interpolation_op.print();
-
-      HostDiscreteFunctionType lagrange_multiplier("lagrange multiplier", specifier_.coarseSpace() );
-      lagrange_multiplier.clear();
-
-      // create inverse operator
-      // saddle point problem solver with uzawa algorithm:
-      {
-        DSC::Profiler::ScopedTiming st("uzawa");
-        InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
-        uzawa( local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier );
-      }
-      // ------------------------------------------------------------
-    }
-    else {
-      locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
-    }
+    locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
   }
 
   if ( !( local_problem_solution.dofsValid() ) ) {
