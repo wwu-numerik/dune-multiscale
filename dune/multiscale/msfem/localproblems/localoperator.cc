@@ -608,8 +608,76 @@ void LocalProblemOperator
 
 //! NOT yet implemented:
 void LocalProblemOperator
-      ::assemble_local_RHS_lg_problems_all( const std::vector< std::shared_ptr<HostDiscreteFunction > >& coarse_basis_func_list, double clement_weight,
-                                            std::vector< std::shared_ptr< DiscreteFunction > >& local_problem_RHS ) const {
+      ::assemble_local_RHS_lg_problems_all( const std::vector< std::shared_ptr<HostDiscreteFunction > >& coarse_basis_func_list,
+                                            std::vector< double >& clement_weights,
+                                            std::vector< int >& ids_basis_functions_in_subgrid,
+                                            std::vector< std::unique_ptr< DiscreteFunction > >& local_problem_RHS ) const {
+
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
+
+  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
+  typedef typename Iterator::Entity                           Entity;
+  typedef typename Entity::Geometry                           Geometry;
+
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+
+  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS[0]->space();
+
+  const GridType& subGrid = discreteFunctionSpace.grid();
+  
+  for (int j = 0; j < local_problem_RHS.size(); ++j)
+  {
+    // set entries to zero:
+    local_problem_RHS[j]->clear();
+  }
+
+  // gradient of micro scale base function:
+  std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
+
+  const Iterator end = discreteFunctionSpace.end();
+  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
+  {
+    const Entity& local_grid_entity = *it;
+    const Geometry& geometry = local_grid_entity.geometry();
+    assert(local_grid_entity.partitionType() == InteriorEntity);
+    
+    const BaseFunctionSet& baseSet = (local_problem_RHS[0]->localFunction(local_grid_entity)).baseFunctionSet();
+    const auto numBaseFunctions = baseSet.size();
+        
+    HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );
+    const HostEntity& host_entity = *host_entity_pointer;
+
+    const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const size_t numQuadraturePoints = quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+
+      const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+
+      std::vector<RangeType> fine_phi_x;
+      baseSet.evaluateAll( quadrature[quadraturePoint], fine_phi_x);
+      
+      for (int j = 0; j < local_problem_RHS.size(); ++j)
+      {
+         int interior_basis_func_id = ids_basis_functions_in_subgrid[j];
+         HostLocalFunction local_coarse_basis_func = coarse_basis_func_list[interior_basis_func_id]->localFunction( host_entity );
+         LocalFunction elementOfRHS = local_problem_RHS[j]->localFunction( local_grid_entity );
+
+         RangeType value_coarse_basis_func;
+         local_coarse_basis_func.evaluate( quadrature[quadraturePoint] , value_coarse_basis_func);
+
+         for (unsigned int i = 0; i < numBaseFunctions; ++i)
+           elementOfRHS[i] += clement_weights[interior_basis_func_id] * weight * value_coarse_basis_func * fine_phi_x[i];
+
+      }
+    }
+
+  }
+
 } // assemble_local_RHS_pre_processing_all
 
 

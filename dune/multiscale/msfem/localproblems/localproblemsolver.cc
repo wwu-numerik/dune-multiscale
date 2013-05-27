@@ -409,6 +409,12 @@ DSC_LOG_INFO << "Time for first boundary treatment in system matrix: " << assemb
       rhs_Chj[j]->clear();
   }
 
+#if 1
+local_problem_op.assemble_local_RHS_lg_problems_all( (*coarse_basis_), (*inverse_of_L1_norm_coarse_basis_funcs_),
+(*ids_basis_functions_in_subgrid_)[coarse_index], rhs_Chj );
+#endif
+
+#if 0
   for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
   {
       // clement_weight_j ( \psi_i, \Psi_j ), where
@@ -419,6 +425,7 @@ DSC_LOG_INFO << "Time for first boundary treatment in system matrix: " << assemb
       local_problem_op.assemble_local_RHS_lg_problems( *((*coarse_basis_)[interior_basis_func_id]),
                                                        (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_basis_func_id], *(rhs_Chj[j]) );
   }
+#endif
 DSC_LOG_INFO << "Time for assembling the the right hand sides rhs_Cj: " << assembleTimer.elapsed() << "s" << std::endl << std::endl; assembleTimer.reset();
   // zero boundary condition for 'rhs_Chj[j]':
   // set Dirichlet Boundary to zero
