@@ -208,9 +208,8 @@ void algorithm(const std::string& macroGridName,
   specifier.setOversamplingStrategy( 3 ); //! Important!
 
   //! create subgrids:
-  const bool silence = false;
   {//this scopes subgridlist
-    MsFEMTraits::SubGridListType subgrid_list(specifier, silence);
+    MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
     Elliptic_Rigorous_MsFEM_Solver msfem_solver(discreteFunctionSpace);
