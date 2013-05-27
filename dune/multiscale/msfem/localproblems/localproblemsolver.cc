@@ -37,9 +37,13 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpace
                         SubGridList& subgrid_list,
                         const DiffusionOperatorType& diffusion_operator)
   : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
-    , diffusion_(diffusion_operator)
-    , specifier_(specifier)
-    , subgrid_list_(subgrid_list)
+  , diffusion_(diffusion_operator)
+  , specifier_(specifier)
+  , subgrid_list_(subgrid_list)
+  , ids_basis_functions_in_subgrid_(nullptr)
+  , inverse_of_L1_norm_coarse_basis_funcs_(nullptr)
+  , coarse_basis_(nullptr)
+  , global_id_to_internal_id_(nullptr)
 {}
 
 MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
@@ -50,13 +54,13 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpace
                         const CoarseBasisFunctionListType& coarse_basis,
                         const std::map<int,int>& global_id_to_internal_id )
   : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
-    , diffusion_(diffusion_operator)
-    , specifier_(specifier)
-    , subgrid_list_(subgrid_list)
-    , ids_basis_functions_in_subgrid_( &ids_basis_functions_in_subgrid ) // ids of the coarse grid basis functions in the interior of the subgrid
-    , inverse_of_L1_norm_coarse_basis_funcs_( &inverse_of_L1_norm_coarse_basis_funcs )
-    , coarse_basis_( &coarse_basis )
-    , global_id_to_internal_id_( &global_id_to_internal_id )
+  , diffusion_(diffusion_operator)
+  , specifier_(specifier)
+  , subgrid_list_(subgrid_list)
+  , ids_basis_functions_in_subgrid_( &ids_basis_functions_in_subgrid ) // ids of the coarse grid basis functions in the interior of the subgrid
+  , inverse_of_L1_norm_coarse_basis_funcs_( &inverse_of_L1_norm_coarse_basis_funcs )
+  , coarse_basis_( &coarse_basis )
+  , global_id_to_internal_id_( &global_id_to_internal_id )
 {}
 
 
