@@ -606,7 +606,6 @@ void LocalProblemOperator
 } // assemble_local_RHS_pre_processing
 
 
-//! NOT yet implemented:
 void LocalProblemOperator
       ::assemble_local_RHS_lg_problems_all( const std::vector< std::shared_ptr<HostDiscreteFunction > >& coarse_basis_func_list,
                                             std::vector< double >& clement_weights,
