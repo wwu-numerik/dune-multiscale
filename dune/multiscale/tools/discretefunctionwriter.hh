@@ -27,13 +27,14 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/aliases.hh>
+
 #include <boost/filesystem/path.hpp>
 
 /**
  * \brief simple discrete function to disk writer
  * this class isn't type safe in the sense that different appends may append
  * non-convertible discrete function implementations
- * \todo base on discrete's functions write_xdr functionality
  */
 class DiscreteFunctionWriter
 {
@@ -45,48 +46,28 @@ public:
    * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
    */
   DiscreteFunctionWriter(const std::string filename)
-    : filename_(filename)
-    , dir_(DSC_CONFIG_GET("global.datadir", "data"))
-    , file_(Dune::Stuff::Common
-            ::make_ofstream(dir_ / filename_,
-                            std::fstream::trunc | std::fstream::out | std::fstream::binary))
+    : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
+    , size_(0)
   {
-    if(!file_->is_open())
-      DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for writing") % filename_ % dir_ );
+    DSC::testCreateDirectory(dir_.string());
   }
 
   /**
    * \copydoc DiscreteFunctionReader()
    */
   DiscreteFunctionWriter(const boost::filesystem::path& path)
-    : filename_(path.string())
-    , dir_(DSC_CONFIG_GET("global.datadir", "data"))
-    , file_(Dune::Stuff::Common
-            ::make_ofstream(dir_ / filename_,
-                            std::fstream::trunc | std::fstream::out | std::fstream::binary))
+    : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path)
+    , size_(0)
   {
-    if(!file_->is_open())
-      DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for writing") % filename_ % dir_ );
-  }
-
-  ~DiscreteFunctionWriter() {
-    if (file_->is_open())
-      file_->close();
-  }
-
-  bool is_open() const {
-    return file_->is_open();
+    DSC::testCreateDirectory(dir_.string());
   }
 
   template < class DiscreteFunctionTraits >
   void append(const Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
-    assert( file_->is_open() );
-    typedef typename Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >::DomainFieldType
-      Field;
-    for (const Field d : df)
-    {
-      file_->write( reinterpret_cast< const char* >(&d), sizeof(Field) );
-    }
+    const std::string fn = (dir_ / DSC::toString(size_++)).string();
+    DSC::testCreateDirectory(fn);
+    Dune::Fem::BinaryFileOutStream stream(fn);
+    df.write(stream);
   } // append
 
   template < class DiscreteFunctionTraits >
@@ -96,9 +77,8 @@ public:
   } // append
 
 private:
-  const std::string filename_;
   const boost::filesystem::path dir_;
-  std::unique_ptr<boost::filesystem::ofstream> file_;
+  unsigned int size_;
 };
 
 /**
@@ -109,47 +89,17 @@ private:
  */
 class DiscreteFunctionReader
 {
-  void init() {
-    if(file_->is_open())
-    {
-      // get size of file
-      file_->seekg(0, std::fstream::end);
-      size_ = file_->tellg();
-      file_->seekg(0);
-    }
-  }
 
 public:
   DiscreteFunctionReader(const std::string filename)
-    : filename_(filename)
-    , size_(-1)
-    , dir_(DSC_CONFIG_GET("global.datadir", "data"))
-    , file_(Dune::Stuff::Common
-            ::make_ifstream(dir_ / filename_,
-                            std::fstream::in | std::fstream::binary))
-  {
-    init();
-  }
+    : size_(0)
+    , dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
+  {}
 
   DiscreteFunctionReader(const boost::filesystem::path path)
-    : filename_(path.string())
-    , size_(-1)
-    , dir_(DSC_CONFIG_GET("global.datadir", "data"))
-    , file_(Dune::Stuff::Common
-            ::make_ifstream(dir_ / filename_,
-                            std::fstream::in | std::fstream::binary))
-  {
-    init();
-  }
-
-  ~DiscreteFunctionReader() {
-    if ( file_->is_open() )
-      file_->close();
-  }
-
-  bool is_open() const {
-    return file_->is_open();
-  }
+    : size_(0)
+    , dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path)
+  {}
 
   long size() const {
     return size_;
@@ -158,20 +108,9 @@ public:
   template < class DiscreteFunctionTraits >
   void read(const unsigned long index,
             Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
-    if(!is_open())
-      DUNE_THROW(Dune::IOError, boost::format("cannot open file %s in dir %s for reading") % filename_ % dir_ );
-    typedef typename Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >::DomainFieldType
-      Field;
-    const unsigned long bytes = df.size() * sizeof(Field);
-
-    assert( file_->is_open() );
-    assert( size_ >= long( bytes * (index + 1) ) );
-    file_->seekg(bytes * index);
-
-    for (auto& dof : df)
-    {
-      file_->read( reinterpret_cast< char* >( &(dof) ), sizeof(Field) );
-    }
+    const std::string fn = (dir_ / DSC::toString(index)).string();
+    Dune::Fem::BinaryFileInStream stream(fn);
+    df.read(stream);
   } // read
 
   /*template < class DFType >
@@ -183,10 +122,8 @@ public:
      * }*/
 
 private:
-  const std::string filename_;
   long size_;
   const boost::filesystem::path dir_;
-  std::unique_ptr<boost::filesystem::ifstream> file_;
 };
 
 #endif // ifndef DISCRETEFUNCTIONWRITER_HEADERGUARD
