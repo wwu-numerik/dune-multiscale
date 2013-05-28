@@ -787,7 +787,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 //  const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
 //  int slice = coarse_indices.size() / comm.size();
 //  for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
-  for (int gc=0; gc<coarse_indices.size(); ++gc)
+  for (std::size_t gc=0; gc<coarse_indices.size(); ++gc)
   {
     const int coarse_index = coarse_indices[gc];
 
@@ -865,12 +865,15 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     dfw.append(local_problem_solution_0);
     dfw.append(local_problem_solution_1);
 
-    HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
-    subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
-    output_local_solution(coarse_index, 0, host_local_solution);
-      
-    subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
-    output_local_solution(coarse_index, 1, host_local_solution);
+    if (DSC_CONFIG_GET("msfem.localproblem_vtkoutput", false))
+    {
+      HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
+      subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
+      output_local_solution(coarse_index, 0, host_local_solution);
+
+      subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
+      output_local_solution(coarse_index, 1, host_local_solution);
+    }
   } //for
 
   const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all")/1000.f;
