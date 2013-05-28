@@ -11,6 +11,7 @@
 #include "localoperator.hh"
 
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
@@ -90,6 +91,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   // gradient of micro scale base function:
   std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi(
     subDiscreteFunctionSpace_.mapper().maxNumDofs() );
+  typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
 
   const Iterator end = subDiscreteFunctionSpace_.end();
   for (Iterator it = subDiscreteFunctionSpace_.begin(); it != end; ++it)
@@ -98,7 +100,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
     const Geometry& sub_grid_geometry = sub_grid_entity.geometry();
     assert(sub_grid_entity.partitionType() == InteriorEntity);
 
-    auto local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
+    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrix> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -124,7 +126,6 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         // A( x, \nabla \phi(x) )
-        typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
         diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
         for (unsigned int j = 0; j < numBaseFunctions; ++j)
         {
@@ -174,7 +175,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
         }
       }
 
-    auto local_matrix = global_matrix.localMatrix(sub_grid_entity, sub_grid_entity);
+    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrix> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.size();
