@@ -203,15 +203,16 @@ public:
     rhsVector.clear();
 
     const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
+    RangeType f_x;
     for (const auto& coarse_grid_entity : rhsVector.space())
     {
-
       const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
       const GeometryType& coarse_grid_geometry = coarse_grid_entity.geometry();
       auto elementOfRHS = rhsVector.localFunction(coarse_grid_entity);
+      const int numDofs = elementOfRHS.numDofs();
 
-      const BaseFunctionSetType coarse_grid_baseSet = specifier.coarseSpace().baseFunctionSet(coarse_grid_entity);
+      const BaseFunctionSetType& coarse_grid_baseSet = specifier.coarseSpace().baseFunctionSet(coarse_grid_entity);
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       typedef typename SubGridListType::SubGridPartType SubGridPartType;
@@ -219,113 +220,106 @@ public:
       typedef typename SubGridListType::SubGridDiscreteFunction LocalDiscreteFunction;
       typedef CachingQuadrature< SubGridPartType, 0 > LocalGridQuadrature;
 
-      auto& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
-      SubGridPartType subGridPart(sub_grid_U_T);
-      LocalDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
-
-      LocalDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
-      local_problem_solution_e0.clear();
-
-      LocalDiscreteFunction local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
-      local_problem_solution_e1.clear();
-
-      // -- load local solutions --
-      // the file/place, where we saved the solutions of the cell problems
-      const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-                                                  % global_index_entity % MPIManager::rank()).str();
-      // reader for the cell problem data file:
-      DiscreteFunctionReader discrete_function_reader(local_solution_location);
-      discrete_function_reader.read(0, local_problem_solution_e0);
-      discrete_function_reader.read(1, local_problem_solution_e1);
-
       // --------- add standard contribution of right hand side -------------------------
-      const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
-      const int numDofs = elementOfRHS.numDofs();
-      std::vector<RangeType> phi_x_vec(numDofs);
-      RangeType f_x;
-      const int numQuadraturePoints = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
       {
-        const double det
-          = coarse_grid_geometry.integrationElement( quadrature.point(quadraturePoint) );
-        // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-        f.evaluate(coarse_grid_geometry.global( quadrature.point(quadraturePoint) ), f_x);
-        coarse_grid_baseSet.evaluateAll(quadrature[quadraturePoint], phi_x_vec);
-        for (int i = 0; i < numDofs; ++i)
+        const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
+        std::vector<RangeType> phi_x_vec(numDofs);
+        const int numQuadraturePoints = quadrature.nop();
+        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
         {
-          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x_vec[i]);
+          const double det
+            = coarse_grid_geometry.integrationElement( quadrature.point(quadraturePoint) );
+          // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
+          f.evaluate(coarse_grid_geometry.global( quadrature.point(quadraturePoint) ), f_x);
+          coarse_grid_baseSet.evaluateAll(quadrature[quadraturePoint], phi_x_vec);
+          for (int i = 0; i < numDofs; ++i)
+          {
+            elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x_vec[i]);
+          }
         }
       }
       // ----------------------------------------------------------------------------------
 
 
       // --------- add corrector contribution of right hand side --------------------------
-
-      // 1 point quadrature!! We only need the gradient of the base function,
-      // which is constant on the whole entity.
-      const CachingQuadrature< GridPartType, 0 > one_point_quadrature(coarse_grid_entity, 0);
-
-      // the barycenter of the macro_grid_entity
-      const typename CachingQuadrature< GridPartType, 0 >::CoordinateType& local_coarse_point
-           = one_point_quadrature.point(0 /*=quadraturePoint*/);
-
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
-      std::vector<JacobianRangeType> gradient_Phi_vec(numDofs);
-      coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_vec);
-
-      for (int i = 0; i < numDofs; ++i)
       {
-        // iterator for the micro grid ( grid for the reference element T_0 )
-        for (const auto& local_grid_entity : localDiscreteFunctionSpace)
+        // 1 point quadrature!! We only need the gradient of the base function,
+        // which is constant on the whole entity.
+        const CachingQuadrature< GridPartType, 0 > one_point_quadrature(coarse_grid_entity, 0);
+
+        // the barycenter of the macro_grid_entity
+        const typename CachingQuadrature< GridPartType, 0 >::CoordinateType& local_coarse_point
+             = one_point_quadrature.point(0 /*=quadraturePoint*/);
+
+        // transposed of the the inverse jacobian
+        const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
+        std::vector<JacobianRangeType> gradient_Phi_vec(numDofs);
+        coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_vec);
+
+        auto& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
+        SubGridPartType subGridPart(sub_grid_U_T);
+        LocalDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
+
+        LocalDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
+        local_problem_solution_e0.clear();
+
+        LocalDiscreteFunction local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
+        local_problem_solution_e1.clear();
+
+        // -- load local solutions --
+        // the file/place, where we saved the solutions of the cell problems
+        const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
+                                                    % global_index_entity % MPIManager::rank()).str();
+        // reader for the cell problem data file:
+        DiscreteFunctionReader discrete_function_reader(local_solution_location);
+        discrete_function_reader.read(0, local_problem_solution_e0);
+        discrete_function_reader.read(1, local_problem_solution_e1);
+
+        for (int i = 0; i < numDofs; ++i)
         {
-          // check if "local_grid_entity" (which is an entity of U(T)) is in T:
-//          const auto father_of_loc_grid_ent =
-//                  Stuff::Grid::make_father(coarseGridLeafIndexSet,
-//                          localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity),
-//                          specifier.getLevelDifference());
-          const auto& hostCell = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity);
-          const int enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
-          if (enclosingCoarseCellIndex!=global_index_entity)
-//          if (Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
+          // iterator for the micro grid ( grid for the reference element T_0 )
+          for (const auto& local_grid_entity : localDiscreteFunctionSpace)
           {
-            const auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
-                    local_grid_entity);
-            const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
-                    local_grid_entity);
-
-            const auto& local_grid_geometry = local_grid_entity.geometry();
-            assert(local_grid_entity.partitionType() == InteriorEntity);
-
-            // higher order quadrature, since A^{\epsilon} is highly variable
-            LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
-            for (size_t localQuadraturePoint = 0; localQuadraturePoint < local_grid_quadrature.nop(); ++localQuadraturePoint)
+            const auto& hostCell = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity);
+            const int enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
+            if (enclosingCoarseCellIndex!=global_index_entity)
+  //          if (Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
             {
+              const auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
+                      local_grid_entity);
+              const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
+                      local_grid_entity);
+
+              const auto& local_grid_geometry = local_grid_entity.geometry();
+              assert(local_grid_entity.partitionType() == InteriorEntity);
+
+              // higher order quadrature, since A^{\epsilon} is highly variable
+              LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
               RangeType corrector_phi_x;
-
-              // local (barycentric) coordinates (with respect to entity)
-              const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
-                      localQuadraturePoint);
-              const auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
-
-              const double weight_local_quadrature
-                      = local_grid_quadrature.weight(localQuadraturePoint)
-                              * local_grid_geometry.integrationElement(local_subgrid_point);
-
-
-
-              // local corrector for e_0 and e_1
               RangeType loc_sol_e0, loc_sol_e1;
-              localized_local_problem_solution_e0.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e0);
-              localized_local_problem_solution_e1.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e1);
+              for (size_t localQuadraturePoint = 0; localQuadraturePoint < local_grid_quadrature.nop(); ++localQuadraturePoint)
+              {
+                // local (barycentric) coordinates (with respect to entity)
+                const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
+                        localQuadraturePoint);
+                const auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
 
-              corrector_phi_x = 0.0;
-              corrector_phi_x += gradient_Phi_vec[i][0][0] * loc_sol_e0;
-              corrector_phi_x += gradient_Phi_vec[i][0][1] * loc_sol_e1;
+                const double weight_local_quadrature
+                        = local_grid_quadrature.weight(localQuadraturePoint)
+                                * local_grid_geometry.integrationElement(local_subgrid_point);
 
-              f.evaluate(global_point_in_U_T , f_x);
+                // local corrector for e_0 and e_1
+                localized_local_problem_solution_e0.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e0);
+                localized_local_problem_solution_e1.evaluate(local_grid_quadrature[localQuadraturePoint], loc_sol_e1);
 
-              elementOfRHS[i] += weight_local_quadrature * (f_x * corrector_phi_x);
+                corrector_phi_x = 0.0;
+                corrector_phi_x += gradient_Phi_vec[i][0][0] * loc_sol_e0;
+                corrector_phi_x += gradient_Phi_vec[i][0][1] * loc_sol_e1;
+
+                f.evaluate(global_point_in_U_T , f_x);
+
+                elementOfRHS[i] += weight_local_quadrature * (f_x * corrector_phi_x);
+              }
             }
           }
         }
