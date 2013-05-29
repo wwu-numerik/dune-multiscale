@@ -91,9 +91,8 @@ public:
     grad_u[0][0] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
     grad_u[0][1] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
 
-    RangeType u = x[0] * (1.0 - x[0]) * (1.0 - x[1]) * x[1];
-    RangeType d_xx_u = (-2.0) * (1.0 - x[1]) * x[1];
-    RangeType d_yy_u = (-2.0) * (1.0 - x[0]) * x[0];
+    const RangeType d_xx_u = (-2.0) * (1.0 - x[1]) * x[1];
+    const RangeType d_yy_u = (-2.0) * (1.0 - x[0]) * x[0];
 
     y = 0.0;
     y -= grad_a_0_x_0 * grad_u[0][0];
