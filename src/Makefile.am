@@ -27,6 +27,7 @@ libmultiscale_common_la_CPPFLAGS=$(CPPFLAGS)
 ##########  Lib: Problems  #############
 ######################################
 libmultiscale_problems_la_SOURCES=../dune/multiscale/problems/elliptic/eight.cc \
+	../dune/multiscale/problems/elliptic/eleven.cc \
 	../dune/multiscale/problems/elliptic/example.cc \
 	../dune/multiscale/problems/elliptic/five.cc \
 	../dune/multiscale/problems/elliptic/four.cc \
