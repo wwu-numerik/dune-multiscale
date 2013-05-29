@@ -7,6 +7,7 @@
 #include <dune/multiscale/problems/elliptic/selector.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 
 // artificical mass coefficient to guarantee uniqueness and existence of the cell problem solution
 // (should be as small as possible)
@@ -46,7 +47,7 @@ void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
     const Geometry& cell_grid_geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
-    auto local_matrix = global_matrix.localMatrix(cell_grid_entity, cell_grid_entity);
+    DSFe::LocalMatrixProxy<CellProblemSolver::CellFEMMatrix> local_matrix(global_matrix, cell_grid_entity, cell_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -122,7 +123,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(
     const Geometry& cell_grid_geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
-    auto local_matrix = global_matrix.localMatrix(cell_grid_entity, cell_grid_entity);
+    DSFe::LocalMatrixProxy<CellProblemSolver::CellFEMMatrix> local_matrix(global_matrix, cell_grid_entity, cell_grid_entity);
     auto local_fine_function = old_fine_function.localFunction(cell_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();

@@ -353,8 +353,7 @@ public:                                                           /*@LST0S@*/
        {
 
          const auto& coarse_entity = *coarse_entity_ptr;
-//          DSFe::LocalMatrixProxy<LinearOperatorType> localMatrix(linearOperator_, entity, coarse_entity, 1e-12);
-          auto localMatrix = linearOperator_.localMatrix(entity, coarse_entity);
+          DSFe::LocalMatrixProxy<LinearOperatorType> localMatrix(linearOperator_, entity, coarse_entity, 1e-12);
 
           const CoarseGeometryType coarse_geometry = coarse_entity.geometry();
 
@@ -477,6 +476,7 @@ public:                                                           /*@LST0S@*/
       {
         // get local matrix from matrix object
         LocalMatrixType localMatrix = linearOperator_.localMatrix( entity, entity );
+
         const LagrangePointSetType& lagrangePointSet = dfSpace.lagrangePointSet(entity);
 
         const IntersectionIteratorType endiit = gridPart.iend( entity );

@@ -4,6 +4,7 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -60,7 +61,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
     const Geometry& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
-    auto local_matrix = global_matrix.localMatrix(macro_grid_entity, macro_grid_entity);
+    DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
 
     const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBaseFunctionSet();
     const unsigned int numMacroBaseFunctions = macro_grid_baseSet.size();
@@ -229,7 +230,7 @@ void DiscreteEllipticHMMOperator
     const Geometry& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
-    auto local_matrix = global_matrix.localMatrix(macro_grid_entity, macro_grid_entity);
+    DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
     LocalFunction local_old_u_H = old_u_H.localFunction(macro_grid_entity);
 
     const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBaseFunctionSet();
