@@ -31,47 +31,40 @@ FirstSource::FirstSource(){}
 
 // evaluate f, i.e. return y=f(x) for a given x
 // the following method defines 'f':
-void FirstSource::evaluate(const DomainType& x,
+void __attribute__((hot)) FirstSource::evaluate(const DomainType& x,
                      RangeType& y) const {
 
-  double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
-  double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
+  const double eps = constants().epsilon;
+  const double pi_square = pow(M_PI, 2.0);
+  const double x0_eps = (x[0] / eps);
+  const double cos_2_pi_x0_eps = cos( 2.0 * M_PI * x0_eps );
+  const double sin_2_pi_x0_eps = sin( 2.0 * M_PI * x0_eps );
+  const double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos_2_pi_x0_eps ) );
+  const double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos_2_pi_x0_eps ) );
+  const double sin_2_pi_x0 = sin(2.0 * M_PI * x[0]);
+  const double cos_2_pi_x0 = cos(2.0 * M_PI * x[0]);
+  const double sin_2_pi_x1 = sin(2.0 * M_PI * x[1]);
 
-  double d_x0_coefficient_0
-    = pow(2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ), -2.0) * ( 1.0 / (2.0 * M_PI) ) * (1.0 / constants().epsilon) * sin(
-    2.0 * M_PI * (x[0] / constants().epsilon) );
+  const double d_x0_coefficient_0
+    = pow(2.0 + cos_2_pi_x0_eps, -2.0) * ( 1.0 / (2.0 * M_PI) ) * (1.0 / eps) * sin_2_pi_x0_eps;
 
-  JacobianRangeType grad_u;
-  grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
-  grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
+  const RangeType grad_u = (2.0* M_PI* cos_2_pi_x0 * sin_2_pi_x1)
+                           +( (-1.0) * eps * M_PI * ( sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps ) )
+                           +( M_PI * ( cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps ) );
 
-  grad_u[0][0] += (-1.0) * constants().epsilon * M_PI
-                  * ( sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
-  grad_u[0][0] += M_PI * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
 
-  grad_u[0][1] += constants().epsilon * M_PI
-                  * ( cos(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
+  const RangeType d_x0_x0_u =
+                    - (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1)
+                    - (2.0 * pi_square * ( eps + (1.0 / eps) ) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)
+                    - (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
-  RangeType d_x0_x0_u(0.0);
-  d_x0_x0_u -= 4.0 * pow(M_PI, 2.0) * sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
-  d_x0_x0_u -= 2.0
-               * pow(M_PI,
-                     2.0) * ( constants().epsilon + (1.0 / constants().epsilon) ) * cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin(
-    2.0 * M_PI * (x[0] / constants().epsilon) );
-  d_x0_x0_u -= 4.0
-               * pow(M_PI, 2.0) * sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos( 2.0 * M_PI * (x[0] / constants().epsilon) );
+  const RangeType d_x1_x1_u =
+                    - (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1)
+                    - (2.0 * pi_square * eps * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 
-  RangeType d_x1_x1_u(0.0);
-  d_x1_x1_u -= 4.0 * pow(M_PI, 2.0) * sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
-  d_x1_x1_u -= 2.0
-               * pow(M_PI,
-                     2.0) * constants().epsilon
-               * cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) );
-
-  y = 0.0;
-  y -= d_x0_coefficient_0 * grad_u[0][0];
-  y -= coefficient_0 * d_x0_x0_u;
-  y -= coefficient_1 * d_x1_x1_u;
+  y = -(d_x0_coefficient_0 * grad_u)
+      -(coefficient_0 * d_x0_x0_u)
+      -(coefficient_1 * d_x1_x1_u);
 } // evaluate
 
 void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
