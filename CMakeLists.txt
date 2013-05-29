@@ -1,6 +1,6 @@
 if( NOT CMAKE_BUILD_TYPE )
-	message( STATUS "No build type selected, setting default build type 'Debug'" )
-	set( CMAKE_BUILD_TYPE "RELEASE" CACHE STRING "DEBUG/RELEASE")
+	message( STATUS "No build type selected, setting default build type 'RELWITHDEBINFO'" )
+	set( CMAKE_BUILD_TYPE "RELWITHDEBINFO" CACHE STRING "DEBUG/RELEASE")
 endif( NOT CMAKE_BUILD_TYPE )
 
 PROJECT(dune_multiscale)
@@ -41,10 +41,6 @@ ENDMACRO(ADD_CXX_FLAGS)
 SET( BLAS_LIB
 	"blas" CACHE STRING
 	"" )
-
-SET( USE_ISTL
-	0 CACHE STRING
-	"Use fem-wrapped istl matrix" )
 		
 SET( GRIDTYPE
         "SPGRID" CACHE STRING
@@ -199,7 +195,13 @@ set( LODM_SOURCES
         dune/multiscale/msfem/rigorous_msfem_solver.cc
     )
     
-    
+
+If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
+  ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native" 
+  "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize")
+EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
+
+
 ADD_LIBRARY(multiscale_common ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem ${PROBLEM_SOURCES})
 set( COMMON_LIBS multiscale_problem multiscale_common "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
