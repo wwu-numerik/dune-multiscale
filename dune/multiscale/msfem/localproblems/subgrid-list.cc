@@ -30,7 +30,7 @@ bool SubGridList::entityPatchInSubgrid(const HostEntityPointerType& hit,
 
     const int global_index_node = hostGridPart.indexSet().index(*node);
 
-    for (int j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j) {
+    for (std::size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j) {
       if (!(subGrid->contains< 0 >(*entities_sharing_same_node[global_index_node][j]))) {
         patch_in_subgrid = false;
       }
@@ -299,9 +299,6 @@ void SubGridList::identifySubGrids() {
   const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
   const int oversampling_strategy          = specifier_.getOversamplingStrategy();
   DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
-
-  // determine the maximum number of oversampling layers
-  int max_num_layers = specifier_.maxNumberOverlayLayers();
 
   if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
     coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
