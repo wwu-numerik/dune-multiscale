@@ -60,11 +60,11 @@ SET( UGGRID_BASE_PATH
 	"/share/dune/Modules/modules_x86_64/ug" CACHE STRING
 	"UGGRID_BASE_PATH" )
 
-SET(PROBLEM_NAMES "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" INTERNAL )
+SET(PROBLEM_NAMES "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" "Eleven" INTERNAL )
 
 SET( PROBLEM_NAME
 	"Nine" CACHE STRING
-	"MSFEM_PROBLEM NAME" )
+	"One of ${PROBLEM_NAMES}" )
 
 SET_CONFIGHEADER_VARS()
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
@@ -154,6 +154,7 @@ set( COMMON_SOURCES
 set( PROBLEM_SOURCES
 	dune/multiscale/problems/elliptic/eight.cc
 	dune/multiscale/problems/elliptic/example.cc
+	dune/multiscale/problems/elliptic/eleven.cc
 	dune/multiscale/problems/elliptic/five.cc
 	dune/multiscale/problems/elliptic/four.cc
 	dune/multiscale/problems/elliptic/nine.cc
