@@ -1,4 +1,9 @@
 # Initfile
+algorithm.solver.eps: 1e-14
+algorithm.solver.verbose: 0
+algorithm.solver.maxIterations: 10000
+algorithm.solver.preconditioner.dropTol: 1e-4
+algorithm.solver.preconditioner.fillFactor: 20
 
 [problem]
 # problem specifications
@@ -56,6 +61,7 @@ file = ms.log
 # logging directory relative to datadir
 # data will be saved under 'datadir/dir'
 dir = logdata
+subgrid_silent = 1
 
 
 # method specifications for MsFEM and HMM #
@@ -63,13 +69,13 @@ dir = logdata
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 0
+coarse_grid_level = 1
 
 # initial fine grid level 
-fine_grid_level = 1
+fine_grid_level = 4
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 0
+oversampling_layers = 4
 
 # oversampling strategy 1 or 2.
 oversampling_strategy = 1
@@ -94,6 +100,8 @@ error_tolerance = 1e-6
 fem_comparison = 1
 #   (fem resolution = fine_grid_level of MsFEM)
 
+#avail: cg.diagonal direct.superlu 
+localsolver = direct.superlu
 
 [rigorous_msfem]
 
@@ -130,6 +138,8 @@ fem_comparison = 1
 
 #vtk output for MsFEM basis functions
 msfem_basis_vtk_output = 1
+
+localsolver = bicgstab.ilut
 
 [hmm]
 

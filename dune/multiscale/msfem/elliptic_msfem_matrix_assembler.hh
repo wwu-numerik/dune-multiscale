@@ -28,7 +28,7 @@
 #include <dune/multiscale/problems/elliptic/selector.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
-
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -167,7 +167,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
     const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
-    auto local_matrix = global_matrix.localMatrix(coarse_grid_entity, coarse_grid_entity);
+    DSFe::LocalMatrixProxy<SPMatrixObject> local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
 
     const CoarseBaseFunctionSet& coarse_grid_baseSet = local_matrix.domainBaseFunctionSet();
     const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.size();
