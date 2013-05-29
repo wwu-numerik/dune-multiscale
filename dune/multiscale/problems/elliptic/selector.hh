@@ -13,6 +13,7 @@
 
 //for i in $(ls *hh) ; do echo \#include \"${i}\" ; done
 #include "eight.hh"
+#include "eleven.hh"
 #include "example.hh"
 #include "five.hh"
 #include "four.hh"
