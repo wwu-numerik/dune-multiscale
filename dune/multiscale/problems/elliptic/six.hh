@@ -27,8 +27,6 @@ namespace Problem {
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Six {
-// default value for epsilon (if not sprecified in the parameter file)
-CONSTANTSFUNCTION( 0.05 )
 
 // model problem information
 struct ModelProblemData
@@ -88,14 +86,7 @@ public:
   // (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const {
-
-    // coeff.first = 1.01 + cos( 2.0 * M_PI * (x[0] / epsilon) ) + stochastic perturbation
-    // coeff.second = 1.01 + cos( 2.0 * M_PI * (x[0] / epsilon) ) + stochastic perturbation
-    const auto coeff = constants().coefficients(x);
-    flux[0][0] = coeff.first * gradient[0][0];
-    flux[0][1] = coeff.second * gradient[0][1];
-  } // diffusiveFlux
+                     JacobianRangeType& flux) const; // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
   // "nabla w", i.e.
@@ -105,16 +96,7 @@ public:
   void jacobianDiffusiveFlux(const DomainType& x,
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const {
-
-    // coeff.first = 1.01 + cos( 2.0 * M_PI * (x[0] / epsilon) ) + stochastic perturbation
-    // coeff.second = 1.01 + cos( 2.0 * M_PI * (x[0] / epsilon) ) + stochastic perturbation
-    const auto coeff = constants().coefficients(x);
-
-    flux[0][0] = coeff.first * direction_gradient[0][0];
-    flux[0][1] = coeff.second * direction_gradient[0][1];
-
-  } // jacobianDiffusiveFlux
+                             JacobianRangeType& flux) const; // jacobianDiffusiveFlux
 
   template < class... Args >
   void evaluate( Args... ) const
@@ -162,23 +144,17 @@ public:
   ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& /*y*/) const {
-    DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-  }
+  void evaluate(const DomainType& /*x*/,
+                       RangeType& /*y*/) const;
 
-  inline void evaluateJacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const {
-    DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-  }
+  void evaluateJacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*timedummy*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
+                       RangeType& y) const;
 };
 //! ----------------- End Definition of ' u ' ------------------------
 

@@ -25,9 +25,6 @@ namespace Problem {
 
 namespace Five {
 
-// default value for epsilon (if not sprecified in the parameter file)
-CONSTANTSFUNCTION( 0.05 )
-
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
@@ -68,22 +65,12 @@ public:
 
 public:
 
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
+  void evaluate(const DomainType& x,
+                       RangeType& y) const; // evaluate
 
-    // circle of radius 0.2 around the reentrant corner at (0.5,0.5)
-    double distance = sqrt( pow(x[0] - 0.5, 2.0) + pow(x[1] - 0.5, 2.0) );
-
-    if (distance < 0.2)
-    { y = 1.0; } else
-    { y = 0.1; }
-  } // evaluate
-
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*time*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
+                       RangeType& y) const;
 };
 
 //! ----------------- Definition of ' G ' ----------------------------
@@ -113,15 +100,7 @@ public:
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const {
-
-    // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
-    // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
-    const auto coeff = constants().coefficients_variant_A(x);
-
-    flux[0][0] = coeff.first * ( gradient[0][0] + ( (1.0 / 3.0) * pow(gradient[0][0], 3.0) ) );
-    flux[0][1] = coeff.second * ( gradient[0][1] + ( (1.0 / 3.0) * pow(gradient[0][1], 3.0) ) );
-  } // diffusiveFlux
+                     JacobianRangeType& flux) const; // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
   // "nabla w", i.e.
@@ -131,18 +110,7 @@ public:
   void jacobianDiffusiveFlux(const DomainType& x,
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const {
-
-    // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
-    // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
-    const auto coeff = constants().coefficients_variant_A(x);
-
-    flux[0][0] = coeff.first * direction_gradient[0][0]
-                   * ( 1.0 + pow(position_gradient[0][0], 2.0) );
-    flux[0][1] = coeff.second * direction_gradient[0][1]
-                   * ( 1.0 + pow(position_gradient[0][1], 2.0) );
-
-  } // jacobianDiffusiveFlux
+                             JacobianRangeType& flux) const; // jacobianDiffusiveFlux
 
   /** \deprecated throws Dune::NotImplemented exception **/
   template < class... Args >
@@ -191,23 +159,17 @@ public:
   ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& /*y*/) const {
-    DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-  }
+  void evaluate(const DomainType& /*x*/,
+                       RangeType& /*y*/) const;
 
-  inline void evaluateJacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const {
-    DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-  }
+  void evaluateJacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*timedummy*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
+                       RangeType& y) const;
 };
 //! ----------------- End Definition of ' u ' ------------------------
 

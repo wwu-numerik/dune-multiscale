@@ -26,8 +26,7 @@ namespace Problem {
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Nine {
-// default value for epsilon (if not sprecified in the parameter file)
-CONSTANTSFUNCTION( 0.05 )
+
 // model problem information
 struct ModelProblemData
   : public IModelProblemData
