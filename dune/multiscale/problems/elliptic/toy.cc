@@ -47,3 +47,10 @@ void Dune::Multiscale::Problem::Toy::ExactSolution::evaluateJacobian(const Dune:
   grad_u[0][0] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
   grad_u[0][1] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
 }
+
+void Dune::Multiscale::Problem::Toy::Diffusion::diffusiveFlux(const Dune::Multiscale::Problem::Toy::Diffusion::DomainType &x, const Dune::Multiscale::Problem::Toy::Diffusion::JacobianRangeType &gradient, Dune::Multiscale::Problem::Toy::Diffusion::JacobianRangeType &flux) const {
+  double a_0 = 1.0 + pow(x[0], 2.0);
+
+  flux[0][0] = a_0 * gradient[0][0];
+  flux[0][1] = a_0 * gradient[0][1];
+}
