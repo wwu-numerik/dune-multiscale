@@ -31,10 +31,10 @@ namespace Problem {
 // if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
 #define SYMMETRIC_DIFFUSION_MATRIX
 
-// Note that in the following, 'Imp' abbreviates 'Implementation'
+
 namespace Toy {
 
-// model problem information
+//! model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
@@ -107,7 +107,7 @@ public:
   }
 };
 
-//! ----------------- End Definition of ' f ' ------------------------
+
 
 
 //! ----------------- Definition of ' G ' ------------------------
@@ -116,14 +116,14 @@ public:
    * Realization: set G(x) = 0: **/
   MSNULLFUNCTION(SecondSource)
 
-//! ----------------- End Definition of ' G ' ------------------------
+
 
 
 
 //! ----------------- Definition of ' A ' ------------------------
 
-// the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
-// A^{\epsilon} : \Omega × R² -> R²
+//! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
+//! A^{\epsilon} : \Omega × R² -> R²
 class Diffusion
   : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
 {
@@ -150,36 +150,19 @@ public:
   // (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const {
-    double a_0 = 1.0 + pow(x[0], 2.0);
-
-    flux[0][0] = a_0 * gradient[0][0];
-    flux[0][1] = a_0 * gradient[0][1];
-  }
-
-  /** \deprecated throws Dune::NotImplemented exception **/
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
-
-  template < class... Args >
-  void jacobianDiffusiveFlux( Args... ) const {
-    DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
-  }
+                     JacobianRangeType& flux) const;
 };
-//! ----------------- End Definition of ' A ' ------------------------
+
 
 
 //! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm,  0.0)
-//! ----------------- End Definition of ' m ' ------------------------
+
 
 
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
-//! ----------------- End Definition of some dummy -------------------
+
 
 
 //! ----------------- Definition of ' u ' ----------------------------
@@ -199,10 +182,10 @@ public:
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
   typedef DomainFieldType TimeType;
-  // essentially: 'DomainFieldType' is the type of an entry of a domain-element.
-  // But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  // This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
-  // entry of a domain-element.
+
+
+
+
 
 public:
   ExactSolution(){}
@@ -221,7 +204,7 @@ public:
   void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const;
 
 };
-//! ----------------- End Definition of ' u ' ------------------------
+
 
 } //! @} namespace Toy {
 }

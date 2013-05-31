@@ -21,13 +21,13 @@ namespace Problem {
 
 // For details, see 'example.hh'
 
-// Note that in the following, 'Imp' abbreviates 'Implementation'
+
 namespace Eight {
 // description see below
 
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
-// model problem information
+//! model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
@@ -127,12 +127,6 @@ public:
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const; // jacobianDiffusiveFlux
-
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details.");
-  }
 };
 
 //! ----------------- Definition of ' m ' ----------------------------
@@ -157,10 +151,10 @@ public:
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
   typedef DomainFieldType TimeType;
-  // essentially: 'DomainFieldType' is the type of an entry of a domain-element.
-  // But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  // This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
-  // entry of a domain-element.
+
+
+
+
 
 public:
   ExactSolution(){}

@@ -93,7 +93,7 @@ namespace Multiscale {
 namespace Problem {
 namespace Example {
 
-// model problem information
+//! model problem information
 struct ModelProblemData
   : public Dune::Multiscale::Problem::IModelProblemData
 {
@@ -181,7 +181,7 @@ public:
   //! (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& direction,
-                     JacobianRangeType& flux) const; // diffusiveFlux
+                     JacobianRangeType& flux) const;
 
   /**
       the jacobian matrix (JA) of the diffusion operator A with respect to the direction,
@@ -192,13 +192,7 @@ public:
   void jacobianDiffusiveFlux(const DomainType& /*x*/,
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const; // jacobianDiffusiveFlux
-
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
+                             JacobianRangeType& flux) const;
 };
 
 //! ----------------- Definition of ' m ' ----------------------------
@@ -318,12 +312,6 @@ public:
 //      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
 //    }
 //  } // jacobianDiffusiveFlux
-
-//  template < class... Args >
-//  void evaluate( Args... ) const
-//  {
-//    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-//  }
 //};
 
 

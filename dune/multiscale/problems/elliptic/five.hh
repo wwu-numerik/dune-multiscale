@@ -25,7 +25,7 @@ namespace Problem {
 
 namespace Five {
 
-// model problem information
+//! model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
@@ -110,26 +110,17 @@ public:
   void jacobianDiffusiveFlux(const DomainType& x,
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const; // jacobianDiffusiveFlux
-
-  /** \deprecated throws Dune::NotImplemented exception **/
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
+                             JacobianRangeType& flux) const;
 };
-//! ----------------- End Definition of ' A ' ------------------------
-
 
 //! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm,  0.0)
-//! ----------------- End Definition of ' m ' ------------------------
+
 
 
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
-//! ----------------- End Definition of some dummy -------------------
+
 
 
 //! ----------------- Definition of ' u ' ----------------------------
@@ -150,10 +141,10 @@ public:
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
   typedef DomainFieldType TimeType;
-  // essentially: 'DomainFieldType' is the type of an entry of a domain-element.
-  // But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  // This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
-  // entry of a domain-element.
+
+
+
+
 
 public:
   ExactSolution(){}
@@ -171,7 +162,7 @@ public:
                        const TimeType& /*timedummy*/,
                        RangeType& y) const;
 };
-//! ----------------- End Definition of ' u ' ------------------------
+
 
 } //! @} namespace Five {
 }
