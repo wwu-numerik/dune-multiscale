@@ -239,26 +239,22 @@ private:
     }
   }
 
-  void DUNE_DEPRECATED_MSG( "This Dune::LinearLagrangeInterpolation2D is deprecated and should be replaced by Dune::LinearLagrangeFunction2D." )
-    deprecationWarning ( ) {}
-  
 public:
   // Constructor for LinearLagrangeInterpolation2D
-  inline explicit LinearLagrangeInterpolation2D(DomainType a_0,
+  explicit LinearLagrangeInterpolation2D(DomainType a_0,
                                            RangeType p_a_0,
                                            DomainType a_1,
                                            RangeType p_a_1,
                                            DomainType a_2,
                                            RangeType p_a_2)
+    DUNE_DEPRECATED_MSG( "This Dune::LinearLagrangeInterpolation2D is deprecated and should be replaced by Dune::LinearLagrangeFunction2D." )
     : a_0_(a_0)
       , p_a_0_(p_a_0)
       , a_1_(a_1)
       , p_a_1_(p_a_1)
       , a_2_(a_2)
       , p_a_2_(p_a_2)
-  {
-    deprecationWarning();
-  }
+  {}
 
   inline void evaluate(const DomainType& x,
                        RangeType& y) const {
