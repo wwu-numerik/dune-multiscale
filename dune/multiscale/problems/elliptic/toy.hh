@@ -33,8 +33,6 @@ namespace Problem {
 
 // Note that in the following, 'Imp' abbreviates 'Implementation'
 namespace Toy {
-// default value for epsilon (not required for this toy problem)
-CONSTANTSFUNCTION( 1.0 )
 
 // model problem information
 struct ModelProblemData
@@ -78,7 +76,7 @@ public:
 public:
   FirstSource(){}
 
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        RangeType& y) const {
     double a_0_x_0 = 1.0 + pow(x[0], 2.0);
     double a_1_x_1 = 1.0 + pow(x[0], 2.0);
@@ -102,7 +100,7 @@ public:
     y -= a_1_x_1 * d_yy_u;
   } // evaluate
 
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*time*/,
                        RangeType& y) const {
     evaluate(x, y);
@@ -210,24 +208,17 @@ public:
   ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    y = x[0] * (1.0 - x[0]) * (1.0 - x[1]) * x[1];
-  }
+  void evaluate(const DomainType& x,
+                       RangeType& y) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*timedummy*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
+                       RangeType& y) const;
 
-  inline void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const {
-    grad_u[0][0] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
-    grad_u[0][1] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
-  }
+  void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const;
 
 };
 //! ----------------- End Definition of ' u ' ------------------------

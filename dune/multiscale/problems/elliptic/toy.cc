@@ -5,6 +5,9 @@ namespace Multiscale {
 namespace Problem {
 namespace Toy {
 
+// default value for epsilon (not required for this toy problem)
+CONSTANTSFUNCTION( 1.0 )
+
 ModelProblemData::ModelProblemData()
   : IModelProblemData(constants()) {
     if (!constants().get("linear", true))
@@ -31,3 +34,16 @@ bool ModelProblemData::problemAllowsStochastics() const {
 } //namespace Problem
 } //namespace Multiscale {
 } //namespace Dune {
+
+void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType &x, Dune::Multiscale::Problem::Toy::ExactSolution::RangeType &y) const {
+  y = x[0] * (1.0 - x[0]) * (1.0 - x[1]) * x[1];
+}
+
+void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType &x, const Dune::Multiscale::Problem::Toy::ExactSolution::TimeType &, Dune::Multiscale::Problem::Toy::ExactSolution::RangeType &y) const {
+  evaluate(x, y);
+}
+
+void Dune::Multiscale::Problem::Toy::ExactSolution::evaluateJacobian(const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType &x, Dune::Multiscale::Problem::Toy::ExactSolution::JacobianRangeType &grad_u) const {
+  grad_u[0][0] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
+  grad_u[0][1] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
+}
