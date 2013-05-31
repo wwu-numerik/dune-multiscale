@@ -22,6 +22,7 @@
 #include <dune/fem/misc/h1norm.hh>
 
 #include <dune/stuff/common/filesystem.hh>
+#include <dune/stuff/grid/output/entity_visualization.hh>
 //! local (dune-multiscale) includes
 #include <dune/multiscale/problems/elliptic/selector.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
@@ -234,12 +235,14 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
   fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring);
 
-  // ----------------------------------------------------------------------
   // ---------------------- write discrete msfem solution to file ---------
   const std::string location = (boost::format("msfem_solution_discFunc_refLevel_%d_%d")
                                 %  total_refinement_level_ % coarse_grid_level_).str();
   DiscreteFunctionWriter(location).append(msfem_solution);
-  //! --------------------------------------------------------------------
+
+  DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(),
+                                 Dune::MPIManager::helper(),
+                                 outputparam.path());
 }
 
 //! \TODO docme
