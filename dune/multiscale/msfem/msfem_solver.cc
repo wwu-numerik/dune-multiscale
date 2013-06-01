@@ -334,6 +334,8 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
   solution += coarse_scale_part;
   solution += fine_scale_part;
+
+  solution.communicate();
 } // solve_dirichlet_zero
 
 } //namespace MsFEM {
