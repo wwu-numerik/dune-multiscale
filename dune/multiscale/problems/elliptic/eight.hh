@@ -21,15 +21,13 @@ namespace Problem {
 
 // For details, see 'example.hh'
 
-// Note that in the following, 'Imp' abbreviates 'Implementation'
+
 namespace Eight {
 // description see below
 
-// default value for epsilon
-CONSTANTSFUNCTION( 0.001 )
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
-// model problem information
+//! model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
@@ -73,19 +71,12 @@ public:
 public:
   FirstSource(){}
 
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    y = 0.0;
-    y += 2.0 * ( x[0] + x[1] - pow(x[0], 2.0) - pow(x[1], 2.0) );
-    y -= 12.0 * pow( (2.0 * x[0]) - 1.0, 2.0 ) * pow( (x[1] * x[1]) - x[1], 3.0 );
-    y -= 12.0 * pow( (2.0 * x[1]) - 1.0, 2.0 ) * pow( (x[0] * x[0]) - x[0], 3.0 );
-  } // evaluate
+  void evaluate(const DomainType& x,
+                       RangeType& y) const; // evaluate
 
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*time*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
+                       RangeType& y) const;
 };
 
 /** \brief default class for the second source term G.
@@ -115,27 +106,7 @@ public:
 private:
 
   //! to simplify evaluate
-  double additivePart(const DomainType& x, const int i, const int j) const {
-    double y = 0.0;
-
-    y -= (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(2.0 * M_PI * x[j] / constants().epsilon);
-
-    double helper1 = 1.0;
-    helper1 *= ( 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon) );
-
-    double helper2 = 1.0;
-    helper2 *= 3.0;
-    helper2 *= ( (2.0 * x[i] - 1.0) * (x[j] * x[j] - x[j]) )
-               + ( (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(2.0 * M_PI * x[j] / constants().epsilon) );
-    helper2 *= (2.0 * x[i] - 1.0) * (x[j] * x[j] - x[j]) * (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(
-      2.0 * M_PI * x[j] / constants().epsilon);
-    helper2 += pow( (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(2.0 * M_PI * x[j] / constants().epsilon), 3.0 );
-
-    helper1 *= helper2;
-    y -= helper1;
-    y -= sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon) * pow( (2.0 * x[i]) - 1.0, 3.0 ) * pow( (x[j] * x[j]) - x[j], 3.0 );
-    return y;
-  } // additivePart
+  double additivePart(const DomainType& x, const int i, const int j) const; // additivePart
 
   // instantiate all possible cases of the evaluate-method:
 
@@ -145,17 +116,7 @@ public:
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const {
-    double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon);
-
-    flux[0][0] = gradient[0][0] + ( coefficient * pow(gradient[0][0], 3.0) );
-    flux[0][0] -= additivePart(x, 0, 1);
-    flux[0][0] *= (-1.0);
-
-    flux[0][1] = gradient[0][1] + ( coefficient * pow(gradient[0][1], 3.0) );
-    flux[0][1] -= additivePart(x, 1, 0);
-    flux[0][1] *= (-1.0);
-  } // diffusiveFlux
+                     JacobianRangeType& flux) const; // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
   // "nabla w", i.e.
@@ -165,23 +126,7 @@ public:
   void jacobianDiffusiveFlux(const DomainType& x,
                              const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const {
-    double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon);
-
-    flux[0][0] = direction_gradient[0][0]
-                 * ( 1.0 + 3.0 * coefficient * pow(position_gradient[0][0], 2.0) );
-    flux[0][1] = direction_gradient[0][1]
-                 * ( 1.0 + 3.0 * coefficient * pow(position_gradient[0][1], 2.0) );
-
-    flux[0][0] *= (-1.0);
-    flux[0][1] *= (-1.0);
-  } // jacobianDiffusiveFlux
-
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate' method of the Diffusion class! See 'problem_specification.hh' for details.");
-  }
+                             JacobianRangeType& flux) const; // jacobianDiffusiveFlux
 };
 
 //! ----------------- Definition of ' m ' ----------------------------
@@ -206,33 +151,26 @@ public:
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
   typedef DomainFieldType TimeType;
-  // essentially: 'DomainFieldType' is the type of an entry of a domain-element.
-  // But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  // This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
-  // entry of a domain-element.
+
+
+
+
 
 public:
   ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    y = (-1.0) * ( (x[0] * x[0]) - x[0] ) * ( (x[1] * x[1]) - x[1] );
-    y -= constants().epsilon * (x[0] + x[1]) * sin(2.0 * M_PI * x[0] / constants().epsilon) * sin(2.0 * M_PI * x[1] / constants().epsilon);
-  }
+  void evaluate(const DomainType& x,
+                       RangeType& y) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*timedummy*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
+                       RangeType& y) const;
 
-  inline void evaluateJacobian(const DomainType& , typename FunctionSpaceType::JacobianRangeType& ) const {
-    DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
-  }
+  void evaluateJacobian(const DomainType& , typename FunctionSpaceType::JacobianRangeType& ) const;
 };
 
 } //! @} namespace Eight {

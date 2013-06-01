@@ -5,6 +5,9 @@ namespace Multiscale {
 namespace Problem {
 namespace Nine {
 
+// default value for epsilon (if not sprecified in the parameter file)
+CONSTANTSFUNCTION( 0.05 )
+
 ModelProblemData::ModelProblemData()
   : IModelProblemData(constants()) {
     if (!constants().get("linear", true))

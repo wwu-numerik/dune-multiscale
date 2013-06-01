@@ -92,11 +92,8 @@ namespace Dune {
 namespace Multiscale {
 namespace Problem {
 namespace Example {
-// default value for epsilon (=0.05)
-// (in case epsilon is not specified in the paramter file)
-CONSTANTSFUNCTION( 0.05 ) // 0.05 is a dummy! no epsilon in our example
 
-// model problem information
+//! model problem information
 struct ModelProblemData
   : public Dune::Multiscale::Problem::IModelProblemData
 {
@@ -147,13 +144,8 @@ public:
 public:
   //! evaluate f, i.e. return y=f(x) for a given x
   //! the following method defines 'f':
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-
-    // f(x_1,x_2) :=  sin( 2 π x_1 ) · sin( 2 π x_2 )
-    y = sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
-
-  } // end evaluate
+  void evaluate(const DomainType& x,
+                       RangeType& y) const; // end evaluate
 
 };
 
@@ -189,14 +181,7 @@ public:
   //! (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& /*x*/,
                      const JacobianRangeType& direction,
-                     JacobianRangeType& flux) const {
-
-    // coefficient = ( 1 /(8π²) )
-    double coefficient = 1.0 * ( 1.0 / (8.0 * M_PI * M_PI) );
-    //  for 'direction = ∇v(x)', we set 'flux = A(x,∇v(x)) = ( 1 /(8π²) ) ∇v(x)':
-    flux[0][0] = coefficient * direction[0][0];
-    flux[0][1] = coefficient * direction[0][1];
-  } // diffusiveFlux
+                     JacobianRangeType& flux) const;
 
   /**
       the jacobian matrix (JA) of the diffusion operator A with respect to the direction,
@@ -207,22 +192,7 @@ public:
   void jacobianDiffusiveFlux(const DomainType& /*x*/,
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const {
-    // Note: in the linear case, we have
-    //     'JA( x , position_gradient ) = A( x )'
-    // for all directions.
-
-    // coefficient = ( 1 /(8π²) )
-    double coefficient = 1.0 * ( 1.0 / (8.0 * M_PI * M_PI) );
-    flux[0][0] = coefficient * direction_gradient[0][0];
-    flux[0][1] = coefficient * direction_gradient[0][1];
-  } // jacobianDiffusiveFlux
-
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
+                             JacobianRangeType& flux) const;
 };
 
 //! ----------------- Definition of ' m ' ----------------------------
@@ -258,26 +228,20 @@ public:
   ExactSolution(){}
 
   //! evaluate 'u(x)'
-  inline void evaluate(const DomainType& x,
-                       RangeType& y) const {
-    // u( x_1, x_2 ) = sin( 2 π x_1 ) · sin( 2 π x_2 )
-    y = sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
-
-  } // evaluate
+  void evaluate(const DomainType& x,
+                       RangeType& y) const; // evaluate
 
   //! evaluate '∇u(x)'
-  inline void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const {
+  void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const {
     grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
   } // evaluateJacobian
 
   //! in case 'u' has a time-dependency use the following method:
   //! (some classes might require this as a default implementation)
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*timedummy*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
+                       RangeType& y) const;
 
 };
 
@@ -348,12 +312,6 @@ public:
 //      DUNE_THROW(Dune::NotImplemented,"Nonlinear example not yet implemented.");
 //    }
 //  } // jacobianDiffusiveFlux
-
-//  template < class... Args >
-//  void evaluate( Args... ) const
-//  {
-//    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-//  }
 //};
 
 

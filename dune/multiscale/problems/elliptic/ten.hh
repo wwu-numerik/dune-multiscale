@@ -24,11 +24,10 @@ namespace Problem {
 // if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
 #define SYMMETRIC_DIFFUSION_MATRIX
 
-// Note that in the following, 'Imp' abbreviates 'Implementation'
+
 namespace Ten {
-// description see below 0.05
-CONSTANTSFUNCTION( 0.05 )
-// model problem information
+
+//! model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
@@ -51,18 +50,18 @@ struct ModelProblemData
 
 //! ----------------- Definition of ' f ' ------------------------
 MSCONSTANTFUNCTION(FirstSource, 1.0)
-//! ----------------- End Definition of ' f ' ------------------------
+
 
 
 //! ----------------- Definition of ' G ' ------------------------
 MSNULLFUNCTION(SecondSource)
-//! ----------------- End Definition of ' G ' ------------------------
+
 
 
 //! ----------------- Definition of ' A ' ------------------------
 
-// the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
-// A^{\epsilon} : \Omega × R² -> R²
+//! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
+//! A^{\epsilon} : \Omega × R² -> R²
 class Diffusion
   : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
 {
@@ -90,60 +89,7 @@ public:
 
   void diffusiveFlux(const DomainType& x,
                      const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const {
-    double diff_coef = 0.0;
-
-    double coefficient
-      = ( 1.0
-          / (8.0 * M_PI
-             * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
-
-    double constant_val = 0.0005;
-
-    double r1 = 0.425;
-    double r2 = 0.125;
-
-    // check if x part of the ellipse
-    double position = ( pow(x[0] - 0.5, 2.0) / pow(r1, 2.0) ) + ( pow(x[1] - 0.5, 2.0) / pow(r2, 2.0) );
-
-    if (position <= 1.0)
-    {
-      if (position >= 0.9)
-      {
-        diff_coef = ( (10.0 * position) - 9.0 ) * coefficient;
-        diff_coef += ( 1.0 - ( (10.0 * position) - 9.0 ) ) * constant_val;
-      } else {
-        diff_coef = constant_val;
-
-        r1 = 0.35;
-        r2 = 0.022;
-
-        double new_position = ( pow(x[0] - 0.5, 2.0) / pow(r1, 2.0) ) + ( pow(x[1] - 0.5, 2.0) / pow(r2, 2.0) );
-
-        if (new_position <= 1.0)
-          diff_coef *= 100.0;
-
-        r1 = 0.25;
-        r2 = 0.022;
-
-        new_position = ( pow(x[0] - 0.5, 2.0) / pow(r1, 2.0) ) + ( pow(x[1] - 0.56, 2.0) / pow(r2, 2.0) );
-
-        if (new_position <= 1.0)
-          diff_coef *= 100.0;
-
-        new_position = ( pow(x[0] - 0.5, 2.0) / pow(r1, 2.0) ) + ( pow(x[1] - 0.44, 2.0) / pow(r2, 2.0) );
-
-        if (new_position <= 1.0)
-          diff_coef *= 100.0;
-      }
-    } else {
-      diff_coef = coefficient;
-    }
-
-    const double stab = 0.0;
-    flux[0][0] = diff_coef * gradient[0][0] + stab * gradient[0][1];
-    flux[0][1] = diff_coef * gradient[0][1] + stab * gradient[0][0];
-  } // diffusiveFlux
+                     JacobianRangeType& flux) const; // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
   // "nabla w", i.e.
@@ -153,77 +99,19 @@ public:
   void jacobianDiffusiveFlux(const DomainType& x,
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const {
-    double diff_coef = 0.0;
-
-    double coefficient
-      = ( 1.0
-          / (8.0 * M_PI
-             * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) * sin( 2.0 * M_PI * (x[1] / constants().epsilon) ) ) );
-
-    double constant_val = 0.0005;
-
-    double r1 = 0.425;
-    double r2 = 0.125;
-
-    // check if x part of the ellipse
-    double position = ( pow(x[0] - 0.5, 2.0) / pow(r1, 2.0) ) + ( pow(x[1] - 0.5, 2.0) / pow(r2, 2.0) );
-
-    if (position <= 1.0)
-    {
-      if (position >= 0.9)
-      {
-        diff_coef = ( (10.0 * position) - 9.0 ) * coefficient;
-        diff_coef += ( 1.0 - ( (10.0 * position) - 9.0 ) ) * constant_val;
-      } else {
-        diff_coef = constant_val;
-
-        r1 = 0.35;
-        r2 = 0.022;
-
-        double new_position = ( pow(x[0] - 0.5, 2.0) / pow(r1, 2.0) ) + ( pow(x[1] - 0.5, 2.0) / pow(r2, 2.0) );
-
-        if (new_position <= 1.0)
-          diff_coef *= 100.0;
-
-        r1 = 0.25;
-        r2 = 0.022;
-
-        new_position = ( pow(x[0] - 0.5, 2.0) / pow(r1, 2.0) ) + ( pow(x[1] - 0.56, 2.0) / pow(r2, 2.0) );
-
-        if (new_position <= 1.0)
-          diff_coef *= 100.0;
-
-        new_position = ( pow(x[0] - 0.5, 2.0) / pow(r1, 2.0) ) + ( pow(x[1] - 0.44, 2.0) / pow(r2, 2.0) );
-
-        if (new_position <= 1.0)
-          diff_coef *= 100.0;
-      }
-    } else {
-      diff_coef = coefficient;
-    }
-    flux[0][0] = diff_coef * direction_gradient[0][0];
-    flux[0][1] = diff_coef * direction_gradient[0][1];
-  } // jacobianDiffusiveFlux
-
-  /** \deprecated throws Dune::NotImplemented exception **/
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
+                             JacobianRangeType& flux) const;
 };
-//! ----------------- End Definition of ' A ' ------------------------
+
 
 
 //! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm,  0.0)
-//! ----------------- End Definition of ' m ' ------------------------
+
 
 
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
-//! ----------------- End Definition of some dummy -------------------
+
 
 
 //! ----------------- Definition of ' u ' ----------------------------
@@ -244,34 +132,28 @@ public:
   typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
   typedef DomainFieldType TimeType;
-  // essentially: 'DomainFieldType' is the type of an entry of a domain-element.
-  // But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  // This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
-  // entry of a domain-element.
+
+
+
+
 
 public:
   ExactSolution(){}
 
   // in case 'u' has NO time-dependency use the following method:
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& /*y*/) const {
-    DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-  }
+  void evaluate(const DomainType& /*x*/,
+                       RangeType& /*y*/) const;
 
-  inline void evaluateJacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const {
-    DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-  }
+  void evaluateJacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
-  inline void evaluate(const DomainType& x,
+  void evaluate(const DomainType& x,
                        const TimeType& /*timedummy*/,
-                       RangeType& y) const {
-    evaluate(x, y);
-  }
+                       RangeType& y) const;
 };
-//! ----------------- End Definition of ' u ' ------------------------
+
 
 } //namespace Ten {
 }

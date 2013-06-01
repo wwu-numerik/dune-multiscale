@@ -165,6 +165,7 @@ set( PROBLEM_SOURCES
 	dune/multiscale/problems/elliptic/three.cc
 	dune/multiscale/problems/elliptic/toy.cc
 	dune/multiscale/problems/elliptic/two.cc
+	dune/multiscale/problems/base.cc
     )
 set( HMM_SOURCES 
         src/elliptic_hmm.cc 
