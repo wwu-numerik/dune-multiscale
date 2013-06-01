@@ -358,8 +358,7 @@ bool algorithm(const std::string& macroGridName,
   L2Error< CommonTraits::DiscreteFunctionType > l2error;
 
   CommonTraits::GridType& grid = *macro_grid_pointer;
-  grid.loadBalance();
-  gridinfo(grid);
+
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for MsFEM-macro-problem
   CommonTraits::GridPartType gridPart(grid);
@@ -368,9 +367,10 @@ bool algorithm(const std::string& macroGridName,
 
   // coarse grid
   CommonTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
-  macro_grid_pointer_coarse->globalRefine(coarse_grid_level_);
-  CommonTraits::GridPartType gridPart_coarse(*macro_grid_pointer_coarse);
-  CommonTraits::GridType& grid_coarse = gridPart_coarse.grid();
+  CommonTraits::GridType& grid_coarse = *macro_grid_pointer_coarse;
+  grid_coarse.globalRefine(coarse_grid_level_);
+  grid_coarse.loadBalance();
+  CommonTraits::GridPartType gridPart_coarse(grid_coarse);
 
   // strategy for adaptivity:
   if (DSC_CONFIG_GET("adaptive", false) && local_indicators_available_)
