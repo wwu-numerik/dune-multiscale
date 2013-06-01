@@ -290,8 +290,7 @@ public:
               const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
                       local_grid_entity);
 
-              const auto& local_grid_geometry = local_grid_entity.geometry();
-              assert(local_grid_entity.partitionType() == InteriorEntity);
+            const auto& local_grid_geometry = local_grid_entity.geometry();
 
               // higher order quadrature, since A^{\epsilon} is highly variable
               LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
