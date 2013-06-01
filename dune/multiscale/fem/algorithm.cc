@@ -10,6 +10,7 @@
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/tools/misc/h1error.hh>
 #include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/fem/constantdiffusionmatrix.hh>
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
@@ -345,8 +346,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
   typedef Dune::Homogenizer< typename CommonTraits::GridType, typename CommonTraits::DiffusionType > HomogenizerType;
 
   // to create an empty diffusion matrix that can be filled with constant values
-  typedef Problem::ConstantDiffusionMatrix< typename HomogenizerType::HomTensorType >
-     HomDiffusionType;
+  typedef Dune::Multiscale::ConstantDiffusionMatrix<typename HomogenizerType::HomTensorType> HomDiffusionType;
 
   const HomogenizerType disc_homogenizer(unit_cell_location);
   const typename HomogenizerType::HomTensorType A_hom = disc_homogenizer.getHomTensor(diffusion_op);

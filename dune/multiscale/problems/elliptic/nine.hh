@@ -24,11 +24,10 @@ namespace Problem {
 // if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
 #define SYMMETRIC_DIFFUSION_MATRIX
 
-// Note that in the following, 'Imp' abbreviates 'Implementation'
+
 namespace Nine {
-// default value for epsilon (if not sprecified in the parameter file)
-CONSTANTSFUNCTION( 0.05 )
-// model problem information
+
+//! model problem information
 struct ModelProblemData
   : public IModelProblemData
 {
@@ -121,12 +120,6 @@ public:
                              const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const;
-
-  template < class... Args >
-  void evaluate( Args... ) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'");
-  }
 };
 
 //! ----------------- Definition of ' m ' ----------------------------
