@@ -128,9 +128,14 @@ int main(int argc, char** argv) {
     //normal
     // macro problem
 
-    const auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
-    DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
-    DSC_PROFILER.outputTimings("profiler");
+    auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
+    auto max_cpu_time = Dune::MPIManager::comm().max(cpu_time);
+    if (Dune::MPIManager::rank()==0) {
+      DSC_LOG_INFO << "Maximum total runtime of the program over all processes: "
+                   << max_cpu_time
+                   << "ms" << std::endl;
+      DSC_PROFILER.outputTimings("profiler");
+    }
     return 0;
   } catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;
