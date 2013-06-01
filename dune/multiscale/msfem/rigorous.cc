@@ -177,7 +177,7 @@ void algorithm(const std::string& macroGridName,
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const CommonTraits::DiffusionType diffusion_op;
   // define (first) source term:
-  const CommonTraits::FirstSourceType f; // standard source f
+  const CommonTraits::FirstSourceType f( DSC_CONFIG_GET("rigorous_msfem.nonlinearity_scaling", 0.1) ); // standard source f
 
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters

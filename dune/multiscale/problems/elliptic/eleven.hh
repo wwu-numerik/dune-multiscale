@@ -5,9 +5,6 @@
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ELEVEN
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ELEVEN
 
-// for applying the LOD to a nonlinear problem
-#define LOD_NONLINEAR
-
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
@@ -72,13 +69,15 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FirstSource();
+  FirstSource( double scaling_factor = 1.0 ) : scaling_factor_( scaling_factor ) {}
 
   //! evaluate f, i.e. return y=f(x) for a given x
   //! the following method defines 'f':
   void evaluate(const DomainType& x, RangeType& y) const;
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
+  
+  double scaling_factor_;
 };
 
 
@@ -138,7 +137,7 @@ MSCONSTANTFUNCTION(MassTerm,  0.0)
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
 
-#if 0
+
 //! ----------------- Definition of the nonlinear term F -------------
 class Nonlinearity
   : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
@@ -161,7 +160,8 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  Nonlinearity();
+
+  Nonlinearity( double scaling_factor = 1.0 ) : scaling_factor_( scaling_factor ) {}
 
   // dummy
   void evaluate(const DomainType& x, RangeType& y) const;
@@ -181,8 +181,9 @@ public:
   // 'position = u(x)', 'direction_gradient = \grad u(x)'
   void direction_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, JacobianRangeType& y) const;
   
+  double scaling_factor_;
 };
-#endif
+
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
