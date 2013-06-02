@@ -8,6 +8,10 @@
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
 
+#include <dune/fem/misc/l2norm.hh>
+#include <dune/fem/misc/l2error.hh>
+#include <dune/fem/misc/h1norm.hh>
+
 namespace Dune {
 namespace Multiscale {
 
@@ -85,6 +89,7 @@ public:
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   //! homogenous Dirchilet boundary condition!:
   void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
+                            const CommonTraits::LowerOrderTermType& lower_order_term,
                             const CommonTraits::FirstSourceType& f,
                             DiscreteFunction& solution) const;
 };

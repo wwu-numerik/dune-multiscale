@@ -19,18 +19,18 @@ namespace FEM {
 // used mith multiple type combinations, no real possibilty of splitting
 
 //! \TODO docme
-template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
+template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
 class DiscreteEllipticOperator
   : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
                      DiscreteFunctionImp, DiscreteFunctionImp >
     , boost::noncopyable
 {
-  typedef DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp > This;
+  typedef DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp > This;
 
 private:
   typedef DiscreteFunctionImp DiscreteFunction;
   typedef DiffusionImp        DiffusionModel;
-  typedef ReactionImp         Reaction;
+  typedef LowerOrderTermImp   LowerOrderTerm;
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
@@ -62,14 +62,14 @@ private:
 public:
 
   /**
-   * \param reaction_coefficient Operator assumes ownership of it
+   * \param lower_order_term Operator assumes ownership of it
    **/
   DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                            const DiffusionModel& diffusion_op,
-                           const std::unique_ptr<const Reaction>& reaction_coefficient = nullptr)
+                           const std::unique_ptr<const LowerOrderTerm>& lower_order_term = nullptr)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
-    , reaction_coefficient_(reaction_coefficient)
+    , lower_order_term_(lower_order_term)
   {}
 
 private:
@@ -99,7 +99,7 @@ public:
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
-  const std::unique_ptr<const ReactionImp>& reaction_coefficient_;
+  const std::unique_ptr<const LowerOrderTermImp>& lower_order_term_;
 };
 
 } //namespace FEM {

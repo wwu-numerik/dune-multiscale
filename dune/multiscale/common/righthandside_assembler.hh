@@ -333,7 +333,7 @@ public:
    * if there is a first source f and a second source G:
    * discreteFunction is an output parameter (kind of return value)
    **/
-  template< int polOrd, class FirstSourceType, class DiffusionOperatorType >
+  template< int polOrd, class FirstSourceType, class DiffusionOperatorType  >
   static void assemble_for_Newton_method(const FirstSourceType& f,
                                   const DiffusionOperatorType& A,
                                   const DiscreteFunctionType& old_u_H, // old_u_H from the last iteration step
@@ -389,6 +389,76 @@ public:
   }  // end method
 
 
+  /**
+   * The rhs-assemble()-methods for non-linear elliptic problems
+   * if there is a first source f, a second source G and a lower order term F:
+   * discreteFunction is an output parameter (kind of return value)
+   **/
+  template< int polOrd, class FirstSourceType, class DiffusionOperatorType, class LowerOrderTermType >
+  static void assemble_for_Newton_method(const FirstSourceType& f,
+                                  const DiffusionOperatorType& A,
+                                  const LowerOrderTermType& F,
+                                  const DiscreteFunctionType& old_u_H, // old_u_H from the last iteration step
+                                  DiscreteFunctionType& rhsVector) {
+    rhsVector.clear();
+
+    for (const auto& entity : rhsVector.space())
+    {
+      const auto& geometry = entity.geometry();
+      auto elementOfRHS = rhsVector.localFunction(entity);
+      const auto baseSet = rhsVector.space().baseFunctionSet(entity);
+
+      const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
+      const Quadrature quadrature(entity, polOrd);
+
+      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
+      const int numQuadraturePoints = quadrature.nop();
+      // the return values:
+      RangeType f_x;
+      std::vector<RangeType> phi_x(numDofs);
+      // gradient of base function and gradient of old_u_H
+      std::vector<JacobianRangeType> grad_phi_x(numDofs);
+      JacobianRangeType grad_old_u_H;
+      RangeType value_old_u_H;
+      // Let A denote the diffusion operator, then we save
+      // A( \gradient old_u_H )
+      JacobianRangeType diffusive_flux_in_grad_old_u_H;
+      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+      {
+        // local (barycentric) coordinates (with respect to entity)
+        const auto& local_point = quadrature.point(quadraturePoint);
+        const auto global_point = geometry.global(local_point);
+        const double det = geometry.integrationElement(local_point);
+        const auto& inv = geometry.jacobianInverseTransposed(local_point);
+        // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
+        f.evaluate(global_point, f_x);
+        // evaluate the current base function at the current quadrature point and save its value in 'z':
+        baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
+        // evaluate the gradient of the current base function at the current quadrature point and save its value in
+        // 'returnGradient':
+        baseSet.jacobianAll(quadrature[quadraturePoint], inv, grad_phi_x);
+        // get value of old u_H:
+        old_u_H_loc.evaluate(quadrature[quadraturePoint], value_old_u_H);
+        // get gradient of old u_H:
+        old_u_H_loc.jacobian(quadrature[quadraturePoint], grad_old_u_H);
+        // evaluate diffusion operator in x(=global_point) and grad_old_u_H
+        A.diffusiveFlux(global_point, grad_old_u_H, diffusive_flux_in_grad_old_u_H);
+
+        RangeType F_x;
+        F.evaluate( global_point, value_old_u_H, grad_old_u_H, F_x );
+
+        for (int i = 0; i < numDofs; ++i)
+        {
+          elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x[i]);
+          elementOfRHS[i] -= det * quadrature.weight(quadraturePoint)
+                             * (diffusive_flux_in_grad_old_u_H[0] * grad_phi_x[i][0]);
+          elementOfRHS[i] -= det * quadrature.weight(quadraturePoint) * (F_x * phi_x[i]);
+        }
+      }
+    }
+  }  // end method
+  
+  
   //! The rhs-assemble()-methods for non-linear elliptic problems, solved with the heterogenous multiscale method
   // ( requires reconstruction of old_u_H and local fine scale averages )
   template< int polOrd, class FirstSourceType, class DiffusionOperatorType, class PeriodicDiscreteFunctionType,

@@ -680,205 +680,323 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   double tol = DSC_CONFIG_GET("rigorous_msfem.macro_solver_tolerance", 1e-10 );
   int num_iterations = DSC_CONFIG_GET("rigorous_msfem.macro_solver_iterations", 10000 );
 
-//! linear version:
-#if 0
-//#ifndef LODNONLINEAR
-  DSC_LOG_INFO << "Start assembling the stiffness matrix of the global problems.." << std::endl;
-  Dune::Timer assembleTimer;
+  // linear version
+  if ( DSC_CONFIG_GET("problem.linear", true ) )
+  {
+
+     DSC_LOG_INFO << "Start assembling the stiffness matrix of the global problems.." << std::endl;
+     Dune::Timer assembleTimer;
   
-  //! (stiffness) matrix
-  MatrixType system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
+     //! (stiffness) matrix
+     MatrixType system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
 
-  if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-  { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function,
-                     support_of_ms_basis_func_intersection, relevant_constellations, system_matrix); }
-  else
-  { assemble_matrix( diffusion_op, msfem_basis_function, msfem_basis_function,
-                     support_of_ms_basis_func_intersection, relevant_constellations, system_matrix); }
-  // NOTE: in the case that we use the Petrov Galerkin version of the method 'support_of_ms_basis_func_intersection'
-  // is not yet optimally assembled (it is a little larger as required, since we still determine the intersection of two ms basis functions,
-  // whereas the support of the classical basis function is typically smaller). It is correct, but not optimal!
+     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
+     { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function,
+                        support_of_ms_basis_func_intersection, relevant_constellations, system_matrix); }
+     else
+     { assemble_matrix( diffusion_op, msfem_basis_function, msfem_basis_function,
+                        support_of_ms_basis_func_intersection, relevant_constellations, system_matrix); }
+     // NOTE: in the case that we use the Petrov Galerkin version of the method 'support_of_ms_basis_func_intersection'
+     // is not yet optimally assembled (it is a little larger as required, since we still determine the intersection of two ms basis functions,
+     // whereas the support of the classical basis function is typically smaller). It is correct, but not optimal!
   
-  DSC_LOG_INFO << ".. assembling of the stiffness matrix done." << std::endl;
-  DSC_LOG_INFO << "Time to assemble Rigorous MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+     DSC_LOG_INFO << ".. assembling of the stiffness matrix done." << std::endl;
+     DSC_LOG_INFO << "Time to assemble Rigorous MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
-  //print_matrix( system_matrix );
+     //print_matrix( system_matrix );
 
-  //! NOTE TODO: Assembling of right hand side is also quite expensive!
-  VectorType rhs( number_of_internal_coarse_nodes );
-  if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-  { assemble_rhs( f, standard_basis_function, support_of_ms_basis_func_intersection, rhs ); }
-  else
-  { assemble_rhs( f, msfem_basis_function, support_of_ms_basis_func_intersection, rhs ); }
+     //! NOTE TODO: Assembling of right hand side is also quite expensive!
+     VectorType rhs( number_of_internal_coarse_nodes );
+     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
+     { assemble_rhs( f, standard_basis_function, support_of_ms_basis_func_intersection, rhs ); }
+     else
+     { assemble_rhs( f, msfem_basis_function, support_of_ms_basis_func_intersection, rhs ); }
 
-  //print_vector( rhs );
+     //print_vector( rhs );
 
-  MatrixOperatorType matrix_op( system_matrix );
-  PreconditionerType preconditioner( system_matrix, 100, 0.9 );
+     MatrixOperatorType matrix_op( system_matrix );
+     PreconditionerType preconditioner( system_matrix, 100, 0.9 );
 
-  Dune::InverseOperatorResult result_data;
+     Dune::InverseOperatorResult result_data;
 
 #ifdef SYMMETRIC_DIFFUSION_MATRIX
-  if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-  {
-    typedef Dune::BiCGSTABSolver< VectorType > SolverType;
-    SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
-    solver.apply( solution_vector, rhs, result_data);
-  }
-  else
-  {
-    typedef Dune::CGSolver< VectorType > SolverType;
-    SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
-    solver.apply( solution_vector, rhs, result_data);
-  }
+     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
+     {
+       typedef Dune::BiCGSTABSolver< VectorType > SolverType;
+       SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
+       solver.apply( solution_vector, rhs, result_data);
+     }
+     else
+     {
+       typedef Dune::CGSolver< VectorType > SolverType;
+       SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
+       solver.apply( solution_vector, rhs, result_data);
+     }
 #else
-  typedef Dune::BiCGSTABSolver< VectorType > SolverType;
+     typedef Dune::BiCGSTABSolver< VectorType > SolverType;
 
-  SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
-  solver.apply( solution_vector, rhs, result_data);
+     SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
+     solver.apply( solution_vector, rhs, result_data);
 #endif
   
-  coarse_scale_part.clear();
-  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
-   {
-     DiscreteFunction aux("auxilliary function", fine_space);
-     aux.clear();
-     aux += *(standard_basis_function[internal_id]);
-     aux *= solution_vector[internal_id];
-     coarse_scale_part += aux;
-   }
+     coarse_scale_part.clear();
+     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+      {
+        DiscreteFunction aux("auxilliary function", fine_space);
+        aux.clear();
+        aux += *(standard_basis_function[internal_id]);
+        aux *= solution_vector[internal_id];
+        coarse_scale_part += aux;
+      }
 
-  solution.clear();
-  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
-   {
-     DiscreteFunction aux("auxilliary function", fine_space);
-     aux.clear();
-     aux += *(msfem_basis_function[internal_id]);
-     aux *= solution_vector[internal_id];
-     solution += aux;
-   }
+     solution.clear();
+     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+      {
+        DiscreteFunction aux("auxilliary function", fine_space);
+        aux.clear();
+        aux += *(msfem_basis_function[internal_id]);
+        aux *= solution_vector[internal_id];
+        solution += aux;
+      }
 
-  fine_scale_part.assign(solution);
-  fine_scale_part -= coarse_scale_part;
-#endif
-// endif #ifndef LOD_NONLINEAR
-  
-//! nonlinear version:
-// montone nonlinear problem (nonlinearity only in the lower order terms)
-// solve: - div( A \grad u ) + F( x, u , \grad u ) = f
-// implementation not yet efficient, since the re-assemblation of the system matrices is quite expensive
-// (always need to got down to the micro-scale for evaluations)
-// nonlinearity = F
-//! FOR TESTING
-#if 1
-//#ifdef LODNONLINEAR
-  
-  DSC_LOG_INFO  << std::endl << "Starting Newton iterations." << std::endl;
-
-  //Dune::Multiscale::Problem::Eleven::Nonlinearity nonlinear_term;
-  Dune::Multiscale::Problem::Eleven::Nonlinearity nonlinear_term( DSC_CONFIG_GET("rigorous_msfem.nonlinearity_scaling", 0.1) );
-  solution.clear();
-
-  VectorType newton_solution_vector( number_of_internal_coarse_nodes );
-  VectorType newton_step_rhs( number_of_internal_coarse_nodes );
-  for (size_t col = 0; col != newton_solution_vector.N(); ++col)
-  {
-    newton_solution_vector[col] = 0.0;
-    newton_step_rhs[col] = 0.0;
+     fine_scale_part.assign(solution);
+     fine_scale_part -= coarse_scale_part;
   }
-  
-  double previous_newton_error = 10000.0;
-  
-  bool first_cycle = true;
-  
-  int iteration = 0;
-  bool stop_newton_cycle = false;
-  while ( !stop_newton_cycle )
+  else // if nonlinear
   {
+    //! nonlinear version:
+    // montone nonlinear problem (nonlinearity only in the lower order terms)
+    // solve: - div( A \grad u ) + F( x, u , \grad u ) = f
+    // implementation not yet efficient, since the re-assemblation of the system matrices is quite expensive
+    // (always need to got down to the micro-scale for evaluations)
+    // nonlinearity = F
 
-    DSC_LOG_INFO << "Newton iteration " << iteration << std::endl << std::endl;
-    double newton_tolerance = 1e-10;
-    double damping_parameter = 1.0;
+    DSC_LOG_INFO  << std::endl << "Starting Newton iterations." << std::endl;
+
+    //Dune::Multiscale::Problem::Eleven::Nonlinearity nonlinear_term;
+    Dune::Multiscale::Problem::Eleven::LowerOrderTerm nonlinear_term;
+    solution.clear();
+
+    VectorType newton_solution_vector( number_of_internal_coarse_nodes );
+    VectorType newton_step_rhs( number_of_internal_coarse_nodes );
+    for (size_t col = 0; col != newton_solution_vector.N(); ++col)
+    {
+      newton_solution_vector[col] = 0.0;
+      newton_step_rhs[col] = 0.0;
+    }
+  
+    double previous_newton_error = 10000.0;
+  
+    bool first_cycle = true;
+  
+    int iteration = 0;
+    bool stop_newton_cycle = false;
+    while ( !stop_newton_cycle )
+    {
+
+      DSC_LOG_INFO << std::endl << "Newton iteration " << iteration << std::endl;
+      double newton_tolerance = 1e-10;
+      double damping_parameter = 1.0;
     
-    //! Newton (stiffness) matrix
-    MatrixType newton_system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
+      //! Newton (stiffness) matrix
+      MatrixType newton_system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
 
-    for (size_t row = 0; row != newton_system_matrix.N(); ++row)
-      for (size_t col = 0; col != newton_system_matrix.M(); ++col)
-        newton_system_matrix[row][col] = 0.0;
+      for (size_t row = 0; row != newton_system_matrix.N(); ++row)
+        for (size_t col = 0; col != newton_system_matrix.M(); ++col)
+          newton_system_matrix[row][col] = 0.0;
       
 
-    VectorType newton_step_solution_vector( number_of_internal_coarse_nodes );
-    for (size_t col = 0; col != solution_vector.N(); ++col)
-    {
-      newton_step_solution_vector[col] = 0.0;
-    }
-    
-    if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-      { std::cout << "Not implemented" << std::endl; abort(); } 
-     
-   for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
-   {
-      unsigned int row = get<0>(relevant_constellations[t]);
-      unsigned int col = get<1>(relevant_constellations[t]);
-  
-      int switch_row_col = -1;
-      if ( row == col )
-       { switch_row_col = 0; }
-       
-      while ( switch_row_col < 1 )
-      {
+      VectorType newton_step_solution_vector( number_of_internal_coarse_nodes );
+      for (size_t col = 0; col != solution_vector.N(); ++col)
+        newton_step_solution_vector[col] = 0.0;
 
-        int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
-        for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[row][col].size(); ++it_id)
+     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
+        { std::cout << "Not implemented" << std::endl; abort(); } 
+     
+     for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
+     {
+        unsigned int row = get<0>(relevant_constellations[t]);
+        unsigned int col = get<1>(relevant_constellations[t]);
+  
+        int switch_row_col = -1;
+        if ( row == col )
+        { switch_row_col = 0; }
+       
+        while ( switch_row_col < 1 )
         {
 
-          HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[row][col][it_id] );
-
-          LocalFunction loc_func_1 = msfem_basis_function[row]->localFunction(*it);
-          LocalFunction loc_func_2 = msfem_basis_function[col]->localFunction(*it);
-
-          const auto& geometry = (*it).geometry();
- 
-          const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
-          const int numQuadraturePoints = quadrature.nop();
-          for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+          int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
+          for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[row][col].size(); ++it_id)
           {
 
-            DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
+            HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[row][col][it_id] );
 
-            //weight
-            double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
-            weight *= quadrature.weight(quadraturePoint);
+            LocalFunction loc_func_1 = msfem_basis_function[row]->localFunction(*it);
+            LocalFunction loc_func_2 = msfem_basis_function[col]->localFunction(*it);
 
-            // gradients of func1 and func2
-            JacobianRangeType grad_func_1, grad_func_2, grad_previous_solution;
-            loc_func_1.jacobian( quadrature[quadraturePoint], grad_func_1);
-            loc_func_2.jacobian( quadrature[quadraturePoint], grad_func_2);
-
-            RangeType value_func_1, value_func_2, value_previous_solution;
-            loc_func_1.evaluate( quadrature[quadraturePoint], value_func_1);
-            loc_func_2.evaluate( quadrature[quadraturePoint], value_func_2);
-
-            solution.localFunction(*it).jacobian( quadrature[quadraturePoint], grad_previous_solution);
-            solution.localFunction(*it).evaluate( quadrature[quadraturePoint], value_previous_solution);
-	    
-            // A \nabla func1
-            JacobianRangeType diffusive_flux(0.0);
-            diffusion_op.diffusiveFlux( global_point, grad_func_1, diffusive_flux);
+            const auto& geometry = (*it).geometry();
  
-            RangeType value_F_x(0.0), value_derivative_1_F_x(0.0);
-            JacobianRangeType value_derivative_2_F_x(0.0);
-            nonlinear_term.evaluate( global_point, value_previous_solution, grad_previous_solution, value_F_x );
-            nonlinear_term.position_derivative( global_point, value_previous_solution, grad_previous_solution, value_derivative_1_F_x );
-            nonlinear_term.direction_derivative( global_point, value_previous_solution, grad_previous_solution, value_derivative_2_F_x );
-
-            newton_system_matrix[row][col] += weight * ( diffusive_flux[0] * grad_func_2[0] );
-            newton_system_matrix[row][col] += weight * value_derivative_1_F_x * value_func_1 * value_func_2;
-            newton_system_matrix[row][col] += weight * ( value_derivative_2_F_x[0] * grad_func_1[0] ) * value_func_2;
-
-            if ( ( row == col) && ( first_cycle == true ) )
+            const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
+            const int numQuadraturePoints = quadrature.nop();
+            for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
             {
+
+              DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
+
+              //weight
+              double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
+              weight *= quadrature.weight(quadraturePoint);
+
+              // gradients of func1 and func2
+              JacobianRangeType grad_func_1, grad_func_2, grad_previous_solution;
+              loc_func_1.jacobian( quadrature[quadraturePoint], grad_func_1);
+              loc_func_2.jacobian( quadrature[quadraturePoint], grad_func_2);
+
+              RangeType value_func_1, value_func_2, value_previous_solution;
+              loc_func_1.evaluate( quadrature[quadraturePoint], value_func_1);
+              loc_func_2.evaluate( quadrature[quadraturePoint], value_func_2);
+
+              solution.localFunction(*it).jacobian( quadrature[quadraturePoint], grad_previous_solution);
+              solution.localFunction(*it).evaluate( quadrature[quadraturePoint], value_previous_solution);
+	    
+              // A \nabla func1
+              JacobianRangeType diffusive_flux(0.0);
+              diffusion_op.diffusiveFlux( global_point, grad_func_1, diffusive_flux);
+ 
+              RangeType value_F_x(0.0), value_derivative_1_F_x(0.0);
+              JacobianRangeType value_derivative_2_F_x(0.0);
+              nonlinear_term.evaluate( global_point, value_previous_solution, grad_previous_solution, value_F_x );
+              nonlinear_term.position_derivative( global_point, value_previous_solution, grad_previous_solution, value_derivative_1_F_x );
+              nonlinear_term.direction_derivative( global_point, value_previous_solution, grad_previous_solution, value_derivative_2_F_x );
+
+              newton_system_matrix[row][col] += weight * ( diffusive_flux[0] * grad_func_2[0] );
+              newton_system_matrix[row][col] += weight * value_derivative_1_F_x * value_func_1 * value_func_2;
+              newton_system_matrix[row][col] += weight * ( value_derivative_2_F_x[0] * grad_func_1[0] ) * value_func_2;
+
+              if ( ( row == col) && ( first_cycle == true ) )
+              {
+
+                RangeType f_x(0.0);
+                f.evaluate( global_point, f_x);
+
+                JacobianRangeType diffusive_flux_in_grad_previous_solution_direction(0.0);
+                diffusion_op.diffusiveFlux( global_point, grad_previous_solution, diffusive_flux_in_grad_previous_solution_direction);
+
+                newton_step_rhs[col] += weight * ( value_func_1 * f_x );
+                newton_step_rhs[col] -= weight * ( diffusive_flux_in_grad_previous_solution_direction[0] * grad_func_1[0] );
+                newton_step_rhs[col] -= weight * ( value_func_1 * value_F_x );
+              }
+            }
+
+          }
+
+          unsigned int row_copy = row;
+          row = col;
+          col = row_copy;
+          switch_row_col += 1;
+
+        }
+
+     }
+   
+     //print_matrix( newton_system_matrix );
+     //print_vector( newton_step_rhs );
+      
+     VectorType copy_newton_step_rhs( number_of_internal_coarse_nodes );
+     for (size_t col = 0; col != newton_step_rhs.N(); ++col)
+       copy_newton_step_rhs[col] = newton_step_rhs[ col ];
+   
+     MatrixOperatorType newton_matrix_op( newton_system_matrix );
+     PreconditionerType newton_preconditioner( newton_system_matrix, 100, 0.9 );
+     Dune::InverseOperatorResult newton_result_data;
+
+     Dune::BiCGSTABSolver< VectorType > newton_solver( newton_matrix_op, newton_preconditioner, tol, num_iterations, true );
+     newton_solver.apply( newton_step_solution_vector, newton_step_rhs, newton_result_data); //this changes newton_step_rhs!
+     
+     for (size_t col = 0; col != newton_step_rhs.N(); ++col)
+       newton_step_rhs[col] = copy_newton_step_rhs[ col ];
+   
+     //print_vector( newton_step_solution_vector );
+   
+     // assemble copys and check if the error is small and if damping is required
+     double newton_error = 10000.0;
+     if ( first_cycle == true )
+     {
+       newton_error = 0.0;
+       for (size_t col = 0; col != newton_solution_vector.N(); ++col)
+       { newton_error += (copy_newton_step_rhs[col] * copy_newton_step_rhs[col]); }
+       newton_error = sqrt(newton_error);
+       previous_newton_error = newton_error;
+       std::cout << "Newton error = " << newton_error << std ::endl;
+     }
+
+     // while-loop not visited in the first Newton iteration cycle
+     while ( newton_error > previous_newton_error )
+     {
+    
+        DiscreteFunction pre_solution("pre_solution", fine_space);
+        pre_solution.clear();
+      
+        VectorType pre_newton_solution_vector( number_of_internal_coarse_nodes );
+
+        for (size_t col = 0; col != newton_solution_vector.N(); ++col)
+        {
+          pre_newton_solution_vector[col] = newton_solution_vector[col] + (damping_parameter * newton_step_solution_vector[col]);
+          newton_step_rhs[col] = 0.0;
+        }
+
+        for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+        {
+          DiscreteFunction aux("auxilliary function", fine_space);
+          aux.clear();
+          aux += *(msfem_basis_function[internal_id]);
+          aux *= pre_newton_solution_vector[internal_id];
+          pre_solution += aux;
+        }
+      
+        // evaluate G(solution) = newton_step_rhs
+        for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
+        {
+          unsigned int row = get<0>(relevant_constellations[t]);
+          unsigned int col = get<1>(relevant_constellations[t]);
+  
+          if ( row != col )
+          { continue; }
+       
+
+          int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
+          for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[row][row].size(); ++it_id)
+          {
+
+            HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[row][col][it_id] );
+
+            LocalFunction loc_func = msfem_basis_function[row]->localFunction(*it);
+	  
+            const auto& geometry = (*it).geometry();
+ 
+            const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
+            const int numQuadraturePoints = quadrature.nop();
+            for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+            {
+
+              DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
+
+              //weight
+              double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
+              weight *= quadrature.weight(quadraturePoint);
+
+              // gradients of func1 and func2
+              JacobianRangeType grad_func, grad_previous_solution;
+              loc_func.jacobian( quadrature[quadraturePoint], grad_func);
+
+              RangeType value_func, value_previous_solution;
+              loc_func.evaluate( quadrature[quadraturePoint], value_func);
+
+              pre_solution.localFunction(*it).jacobian( quadrature[quadraturePoint], grad_previous_solution);
+              pre_solution.localFunction(*it).evaluate( quadrature[quadraturePoint], value_previous_solution);
+ 
+              RangeType value_F_x(0.0);
+              nonlinear_term.evaluate( global_point, value_previous_solution, grad_previous_solution, value_F_x );
 
               RangeType f_x(0.0);
               f.evaluate( global_point, f_x);
@@ -886,192 +1004,70 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
               JacobianRangeType diffusive_flux_in_grad_previous_solution_direction(0.0);
               diffusion_op.diffusiveFlux( global_point, grad_previous_solution, diffusive_flux_in_grad_previous_solution_direction);
 
-              newton_step_rhs[col] += weight * ( value_func_1 * f_x );
-              newton_step_rhs[col] -= weight * ( diffusive_flux_in_grad_previous_solution_direction[0] * grad_func_1[0] );
-              newton_step_rhs[col] -= weight * ( value_func_1 * value_F_x );
+              newton_step_rhs[col] += weight * ( value_func * f_x );
+              newton_step_rhs[col] -= weight * ( diffusive_flux_in_grad_previous_solution_direction[0] * grad_func[0] );
+              newton_step_rhs[col] -= weight * ( value_func * value_F_x );
+
             }
           }
-
         }
 
-        unsigned int row_copy = row;
-        row = col;
-        col = row_copy;
-        switch_row_col += 1;
+        newton_error = 0.0;
+        for (size_t col = 0; col != newton_solution_vector.N(); ++col)
+        { newton_error += (newton_step_rhs[col] * newton_step_rhs[col]); }
+        newton_error = sqrt(newton_error);
 
-      }
-
-   }
-   
-   //print_matrix( newton_system_matrix );
-   //print_vector( newton_step_rhs );
+        if ( newton_error <= newton_tolerance )
+          stop_newton_cycle = true;
       
-   VectorType copy_newton_step_rhs( number_of_internal_coarse_nodes );
-   for (size_t col = 0; col != newton_step_rhs.N(); ++col)
-     copy_newton_step_rhs[col] = newton_step_rhs[ col ];
-   
-   MatrixOperatorType newton_matrix_op( newton_system_matrix );
-   PreconditionerType newton_preconditioner( newton_system_matrix, 100, 0.9 );
-   Dune::InverseOperatorResult newton_result_data;
+        if ( newton_error <= previous_newton_error )
+        {
+           previous_newton_error = newton_error;
+           std::cout << "Newton error = " << newton_error << std ::endl; }
+        else
+        {
+           damping_parameter = damping_parameter / 2.0;
+           std::cout << "Newton error = " << newton_error << ". Repeat with damping parameter = " << damping_parameter << std ::endl;
+        }
 
-   Dune::BiCGSTABSolver< VectorType > newton_solver( newton_matrix_op, newton_preconditioner, tol, num_iterations, true );
-   newton_solver.apply( newton_step_solution_vector, newton_step_rhs, newton_result_data); //this changes newton_step_rhs!
-     
-   for (size_t col = 0; col != newton_step_rhs.N(); ++col)
-     newton_step_rhs[col] = copy_newton_step_rhs[ col ];
-   
-   //print_vector( newton_step_solution_vector );
-   
-   // assemble copys and check if the error is small and if damping is required
-   double newton_error = 10000.0;
-   if ( first_cycle == true )
-   {
-     newton_error = 0.0;
+     }
+
      for (size_t col = 0; col != newton_solution_vector.N(); ++col)
-     { newton_error += (copy_newton_step_rhs[col] * copy_newton_step_rhs[col]); }
-     newton_error = sqrt(newton_error);
-     previous_newton_error = newton_error;
-     std::cout << "Newton error = " << newton_error << std ::endl;
-   }
-
-   // while-loop not visited in the first Newton iteration cycle
-   while ( newton_error > previous_newton_error )
-   {
-    
-      DiscreteFunction pre_solution("pre_solution", fine_space);
-      pre_solution.clear();
-      
-      VectorType pre_newton_solution_vector( number_of_internal_coarse_nodes );
-
-      for (size_t col = 0; col != newton_solution_vector.N(); ++col)
-      {
-        pre_newton_solution_vector[col] = newton_solution_vector[col] + (damping_parameter * newton_step_solution_vector[col]);
-        newton_step_rhs[col] = 0.0;
-      }
-
-      for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+       newton_solution_vector[col] += (damping_parameter * newton_step_solution_vector[col]);
+   
+     //print_vector( newton_solution_vector );
+   
+     // current solution:
+     solution.clear();
+     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
       {
         DiscreteFunction aux("auxilliary function", fine_space);
         aux.clear();
         aux += *(msfem_basis_function[internal_id]);
-        aux *= pre_newton_solution_vector[internal_id];
-        pre_solution += aux;
+        aux *= newton_solution_vector[internal_id];
+        solution += aux;
       }
-      
-      // evaluate G(solution) = newton_step_rhs
-      for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
-      {
-        unsigned int row = get<0>(relevant_constellations[t]);
-        unsigned int col = get<1>(relevant_constellations[t]);
+   
+     first_cycle = false;
+     iteration += 1;
+
+    } // end while ( stop_newton_cycle == false )
   
-        if ( row != col )
-        { continue; }
-       
+    fine_scale_part.clear();
+    coarse_scale_part.clear();
+    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+     {
+       DiscreteFunction aux("auxilliary function", fine_space);
+       aux.clear();
+       aux += *(standard_basis_function[internal_id]);
+       aux *= newton_solution_vector[internal_id];
+       coarse_scale_part += aux;
+     }
 
-        int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
-        for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[row][row].size(); ++it_id)
-        {
+    fine_scale_part.assign(solution);
+    fine_scale_part -= coarse_scale_part;
 
-          HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[row][col][it_id] );
-
-          LocalFunction loc_func = msfem_basis_function[row]->localFunction(*it);
-	  
-          const auto& geometry = (*it).geometry();
- 
-          const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
-          const int numQuadraturePoints = quadrature.nop();
-          for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
-          {
-
-            DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
-
-            //weight
-            double weight = geometry.integrationElement( quadrature.point(quadraturePoint) );
-            weight *= quadrature.weight(quadraturePoint);
-
-            // gradients of func1 and func2
-            JacobianRangeType grad_func, grad_previous_solution;
-            loc_func.jacobian( quadrature[quadraturePoint], grad_func);
-
-            RangeType value_func, value_previous_solution;
-            loc_func.evaluate( quadrature[quadraturePoint], value_func);
-
-            pre_solution.localFunction(*it).jacobian( quadrature[quadraturePoint], grad_previous_solution);
-            pre_solution.localFunction(*it).evaluate( quadrature[quadraturePoint], value_previous_solution);
- 
-            RangeType value_F_x(0.0);
-            nonlinear_term.evaluate( global_point, value_previous_solution, grad_previous_solution, value_F_x );
-
-            RangeType f_x(0.0);
-            f.evaluate( global_point, f_x);
-
-            JacobianRangeType diffusive_flux_in_grad_previous_solution_direction(0.0);
-            diffusion_op.diffusiveFlux( global_point, grad_previous_solution, diffusive_flux_in_grad_previous_solution_direction);
-
-            newton_step_rhs[col] += weight * ( value_func * f_x );
-            newton_step_rhs[col] -= weight * ( diffusive_flux_in_grad_previous_solution_direction[0] * grad_func[0] );
-            newton_step_rhs[col] -= weight * ( value_func * value_F_x );
-
-          }
-        }
-      }
-
-      newton_error = 0.0;
-      for (size_t col = 0; col != newton_solution_vector.N(); ++col)
-      { newton_error += (newton_step_rhs[col] * newton_step_rhs[col]); }
-      newton_error = sqrt(newton_error);
-
-      if ( newton_error <= newton_tolerance )
-        stop_newton_cycle = true;
-      
-      if ( newton_error <= previous_newton_error )
-      {
-         previous_newton_error = newton_error;
-         std::cout << "Newton error = " << newton_error << std ::endl; }
-      else
-      {
-         damping_parameter = damping_parameter / 2.0;
-         std::cout << "Newton error = " << newton_error << ". Repeat with damping parameter = " << damping_parameter << std ::endl;
-      }
-
-   }
-
-   for (size_t col = 0; col != newton_solution_vector.N(); ++col)
-     newton_solution_vector[col] += (damping_parameter * newton_step_solution_vector[col]);
-   
-   //print_vector( newton_solution_vector );
-   
-   // current solution:
-   solution.clear();
-   for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
-    {
-      DiscreteFunction aux("auxilliary function", fine_space);
-      aux.clear();
-      aux += *(msfem_basis_function[internal_id]);
-      aux *= newton_solution_vector[internal_id];
-      solution += aux;
-    }
-   
-   first_cycle = false;
-   iteration += 1;
-
-  } // end while ( stop_newton_cycle == false )
-  
-  fine_scale_part.clear();
-  coarse_scale_part.clear();
-  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
-   {
-     DiscreteFunction aux("auxilliary function", fine_space);
-     aux.clear();
-     aux += *(standard_basis_function[internal_id]);
-     aux *= newton_solution_vector[internal_id];
-     coarse_scale_part += aux;
-   }
-
-  fine_scale_part.assign(solution);
-  fine_scale_part -= coarse_scale_part;
-#endif
-
+  } // end if nonlinear
   
   
   

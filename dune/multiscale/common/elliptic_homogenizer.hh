@@ -61,17 +61,20 @@ public:
 NULLFUNCTION(ZeroFunction)
 
 //! \TODO docme
-template< class FunctionSpaceImp >
+// (to replace the more general lower order term)
 class MassWeight
-  : public Dune::Stuff::Fem::ConstantFunction< FunctionSpaceImp >
 {
-public:
-  // Constructor
-  inline explicit MassWeight(const typename FunctionSpaceImp::RangeType& lambda)
-    : Dune::Stuff::Fem::ConstantFunction< FunctionSpaceImp >(lambda)
-  {}
+ public:
 
+  MassWeight( double lambda ) : lambda_( lambda ) {}
+  
+  template< class DomainType , class RangeType, class JacobianRangeType >
+  void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, RangeType& y) const
+  { y = lambda_ * position; }
+
+  double lambda_;
 };
+
 
 /** since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} )
  * for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving
@@ -310,7 +313,7 @@ private:
   typedef PeriodicDiscreteFunctionType DummyType;
   // (sometimes PeriodicDiscreteFunctionType is only a dummy)
 
-  typedef MassWeight< FunctionSpaceType > MassWeightType;
+  typedef MassWeight MassWeightType;
 
   typedef ZeroFunction< FunctionSpaceType > ZeroFunctionType;
 
@@ -332,9 +335,6 @@ private:
   typedef typename PeriodicDiscreteFunctionSpaceType::IteratorType IteratorType;
 
   typedef typename GridType::template Codim< 0 >::Entity EntityType;
-
-  typedef typename GridType::template Codim< 0 >::EntityPointer
-  EntityPointerType; //!Brauchen wie das? Loeschen? loeschen?
 
   struct MatrixTraits
   {
@@ -496,7 +496,6 @@ public:
     const ZeroFunctionType zero;
 
     //! build the left hand side (lhs) of the problem
-
     const auto mass = DSC::make_unique<const MassWeightType>(lambda);
     // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
     const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace,

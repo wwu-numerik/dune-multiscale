@@ -84,6 +84,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discre
 void solve(typename CommonTraits::DiscreteFunctionType& solution,
            const typename CommonTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
            const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
+           const typename CommonTraits::LowerOrderTermType& lower_order_term, // lower order term F(x, u(x), grad u(x) )
            const std::string& filename,
            const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler)
 {
@@ -161,10 +162,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
 
       // assemble right hand side
       const typename CommonTraits::DiffusionType diffusion_op;
-      rhsassembler.assemble_for_Newton_method< fem_polorder >(f,
-                                                                       diffusion_op,
-                                                                       solution,
-                                                                       system_rhs);
+      rhsassembler.assemble_for_Newton_method< fem_polorder >(f, diffusion_op, lower_order_term, solution, system_rhs);
 
       const Dune::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);
@@ -265,13 +263,18 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const typename CommonTraits::DiffusionType diffusion_op;
 
+  // lower order term F(x, u(x), grad u(x) )
+  const typename CommonTraits::LowerOrderTermType lower_order_term;
+    
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType > rhsassembler;
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
-  const typename FEMTraits::EllipticOperatorType discrete_elliptic_op(discreteFunctionSpace, diffusion_op);
+  const typename FEMTraits::EllipticOperatorType discrete_elliptic_op(discreteFunctionSpace,
+                                                                      diffusion_op,
+                                                                      DSC::make_unique<const CommonTraits::LowerOrderTermType >( lower_order_term ) );
 
   //! solution vector
   // - By solution, we denote the "discrete solution" determined with FEM in the linear case or FEM-Newton (nonlinear case)
@@ -280,7 +283,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
   typename CommonTraits::DiscreteFunctionType discrete_solution(filename + " FEM(-Newton) Solution", discreteFunctionSpace);
   discrete_solution.clear();
 
-  solve(discrete_solution, discreteFunctionSpace, discrete_elliptic_op, filename, rhsassembler);
+  solve(discrete_solution, discreteFunctionSpace, discrete_elliptic_op, lower_order_term, filename, rhsassembler);
 
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(discrete_solution);
@@ -352,9 +355,9 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
   const typename HomogenizerType::HomTensorType A_hom = disc_homogenizer.getHomTensor(diffusion_op);
   const HomDiffusionType hom_diffusion_op(A_hom);
 
-  //!TODO check: hatte nur 2 tmp parameter, Masse hinzugefUGT
+  //!TODO check: hatte nur 2 tmp parameter, Masse/CommonTraits::LowerOrderTermType hinzugefUGT
   typedef DiscreteEllipticOperator< typename CommonTraits::DiscreteFunctionType,
-                                    HomDiffusionType, typename CommonTraits::MassTermType > HomEllipticOperatorType;
+                                    HomDiffusionType, typename CommonTraits::LowerOrderTermType > HomEllipticOperatorType;
 
   HomEllipticOperatorType hom_discrete_elliptic_op( discreteFunctionSpace, hom_diffusion_op);
 
