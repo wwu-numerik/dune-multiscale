@@ -10,8 +10,8 @@ CONSTANTSFUNCTION( 0.05 )
 
 ModelProblemData::ModelProblemData()
   : IModelProblemData(constants()) {
-    if (!constants().get("linear", true))
-      DUNE_THROW(Dune::InvalidStateException, "problem eleven is entirely linear, but problem.linear was false");
+    if (constants().get("linear", true))
+      DUNE_THROW(Dune::InvalidStateException, "problem eleven is entirely nonlinear, but problem.linear was true");
     if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
        DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
 }
@@ -83,7 +83,8 @@ void FirstSource::evaluate(const DomainType& x,
   RangeType F_value = 0.0;
 
 #if 1
-  double factor = scaling_factor_ * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 2.0 + cos( 2.0 * M_PI * (x[0] / pow(constants().epsilon, 1.5 ) ) ) );
+  double scaling_factor = 0.5;
+  double factor = scaling_factor * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 2.0 + cos( 2.0 * M_PI * (x[0] / pow(constants().epsilon, 1.5 ) ) ) );
 
   double p = u;
   double g_p = 0.0;
@@ -99,7 +100,7 @@ void FirstSource::evaluate(const DomainType& x,
     
   if ( p <= -3.0 )
   {
-    std::cout << "In FirstSource::evaluate: Nonlinearity not defined for p <= -3, but p = " << p << "." << std::endl;
+    std::cout << "In FirstSource::evaluate: LowerOrderTerm not defined for p <= -3, but p = " << p << "." << std::endl;
     abort();
   }
     
@@ -154,17 +155,21 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
 } // jacobianDiffusiveFlux
 
 
+
+
+#if 1
 // dummy
-void Nonlinearity::evaluate(const DomainType& x, RangeType& y) const
+void LowerOrderTerm::evaluate(const DomainType& x, RangeType& y) const
 { DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'"); }
 
 // dummy
-void Nonlinearity::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const
+void LowerOrderTerm::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const
 { DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'"); }
 
 // evaluate y = F(x, u(x), \grad u(x))
 // 'position = u(x)', 'direction_gradient = \grad u(x)'
-void Nonlinearity::evaluate(const DomainType& x,
+//! rename this into 'lower order term' or something similar
+void LowerOrderTerm::evaluate(const DomainType& x,
                             const RangeType& position,
                             const JacobianRangeType& direction_gradient,
                             RangeType& y) const {
@@ -172,7 +177,7 @@ void Nonlinearity::evaluate(const DomainType& x,
    // F(x,p, (z_1,z_2) ) = c g(p) z_2
 #if 1
 
-    double scaling_factor = scaling_factor_;
+    double scaling_factor = 0.5;
     scaling_factor *= ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 2.0 + cos( 2.0 * M_PI * (x[0] / pow(constants().epsilon, 1.5) ) ) );
 
     double p = position;
@@ -189,7 +194,7 @@ void Nonlinearity::evaluate(const DomainType& x,
     
     if ( p <= -3.0 )
     {
-      //!std::cout << "In Nonlinearity::evaluate: Nonlinearity not defined for p <= -3, but p = " << p << "." << std::endl;
+      //!std::cout << "In LowerOrderTerm::evaluate: LowerOrderTerm not defined for p <= -3, but p = " << p << "." << std::endl;
       p = -2.999; //!abort();
     }
 
@@ -215,14 +220,14 @@ void Nonlinearity::evaluate(const DomainType& x,
 
 // evaluate position derivative y = d_1 F (x, u(x), \grad u(x))  (derivative with respect to the second componenent 'u(x)')
 // 'position = u(x)', 'direction_gradient = \grad u(x)'
-void Nonlinearity::position_derivative(const DomainType& x,
+void LowerOrderTerm::position_derivative(const DomainType& x,
                                        const RangeType& position,
                                        const JacobianRangeType& direction_gradient,
                                        RangeType& y) const {
 
    // \partial_p F(x,p, (z_1,z_2) ) = ..
 #if 1
-    double scaling_factor = scaling_factor_;
+    double scaling_factor = 0.5;
     scaling_factor *= ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 2.0 + cos( 2.0 * M_PI * (x[0] / pow(constants().epsilon, 1.5) ) ) );
 
     double p = position;
@@ -238,7 +243,7 @@ void Nonlinearity::position_derivative(const DomainType& x,
 
     if ( p <= -3.0 )
     {
-      //!std::cout << "In Nonlinearity::position_derivative: Nonlinearity not defined for p <= -3, but p = " << p << "." << std::endl;
+      //!std::cout << "In LowerOrderTerm::position_derivative: LowerOrderTerm not defined for p <= -3, but p = " << p << "." << std::endl;
       p = -2.999; //!abort();
     }
  
@@ -264,13 +269,13 @@ void Nonlinearity::position_derivative(const DomainType& x,
 
 // evaluate position derivative y = d_2 F (x, u(x), \grad u(x))  (derivative with respect to the third componenent 'grad u(x)')
 // 'position = u(x)', 'direction_gradient = \grad u(x)'
-void Nonlinearity::direction_derivative(const DomainType& x,
+void LowerOrderTerm::direction_derivative(const DomainType& x,
                                         const RangeType& position,
                                         const JacobianRangeType& direction_gradient,
                                         JacobianRangeType& y) const {
    // \grad_z F(x,p, (z_1,z_2) ) = ...
 #if 1
-    double scaling_factor = scaling_factor_;
+    double scaling_factor = 0.5;
     scaling_factor *= ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 2.0 + cos( 2.0 * M_PI * (x[0] / pow(constants().epsilon, 1.5) ) ) );
 
     double p = position;
@@ -287,7 +292,7 @@ void Nonlinearity::direction_derivative(const DomainType& x,
     
     if ( p <= -3.0 )
     {
-      //!std::cout << "Nonlinearity::direction_derivative: Nonlinearity not defined for p <= -3. But p = " << p << "." << std::endl;
+      //!std::cout << "LowerOrderTerm::direction_derivative: LowerOrderTerm not defined for p <= -3. But p = " << p << "." << std::endl;
       p = -2.999; //!abort();
     }
     
@@ -314,6 +319,8 @@ void Nonlinearity::direction_derivative(const DomainType& x,
 #endif
 
 }  // direction_derivative
+#endif
+
 
 ExactSolution::ExactSolution(){}
 

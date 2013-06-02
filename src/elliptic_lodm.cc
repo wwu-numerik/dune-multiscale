@@ -8,10 +8,6 @@
 #include <dune/multiscale/msfem/rigorous.hh>
 #include <dune/multiscale/problems/elliptic/selector.hh>
 
-// for applying the LOD to a nonlinear problem
-//! (this way of switching between linear and nonlinear problems should be replaced eventually!)
-#define LODNONLINEAR
-    
 int main(int argc, char** argv) {
   try {
     init(argc, argv);
@@ -19,10 +15,6 @@ int main(int argc, char** argv) {
     //!TODO include base in config
     DSC_PROFILER.startTiming("msfem.all");
 
-    #ifdef LODNONLINEAR
-    DSC_LOG_INFO << "WARNING! Preprocessor variable LOD_NONLINEAR defined in line 13 of elliptic_lodm.cc!" << std::endl << std::endl;    
-    #endif
-    
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output

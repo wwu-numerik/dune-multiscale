@@ -37,6 +37,7 @@ typedef Dune::Multiscale::Problem::PROBLEM_NAME::SecondSource SecondSource;
 typedef Dune::Multiscale::Problem::PROBLEM_NAME::ExactSolution ExactSolution;
 typedef Dune::Multiscale::Problem::PROBLEM_NAME::DefaultDummyFunction DefaultDummyFunction;
 typedef Dune::Multiscale::Problem::PROBLEM_NAME::MassTerm MassTerm;
+typedef Dune::Multiscale::Problem::PROBLEM_NAME::LowerOrderTerm LowerOrderTerm;
 typedef Dune::Multiscale::Problem::PROBLEM_NAME::ModelProblemData ModelProblemData;
 
 #define STRIN(x) #x

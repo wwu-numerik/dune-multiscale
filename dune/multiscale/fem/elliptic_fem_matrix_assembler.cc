@@ -12,16 +12,16 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
-void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::operator()(const DiscreteFunction& /*u*/,
+template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::operator()(const DiscreteFunction& /*u*/,
                                                                                             DiscreteFunction& /*w*/)
 const {
   DUNE_THROW(Dune::NotImplemented,"the ()-operator of the DiscreteEllipticOperator class is not yet implemented and still a dummy.");
 } // ()
 
-template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
+template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
 template< class MatrixType >
-void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::assemble_matrix(
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::assemble_matrix(
   MatrixType& global_matrix,
   bool boundary_treatment ) const {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
@@ -68,11 +68,11 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
         {
           local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) );
 
-          if (reaction_coefficient_)
+          if (lower_order_term_)
           {
-            RangeType c;
-            reaction_coefficient_->evaluate(global_point, c);
-            local_matrix.add( j, i, weight * c * (phi[i][0] * phi[j][0]) );
+            RangeType F_i;
+            lower_order_term_->evaluate( global_point, phi[i], gradient_phi[i], F_i );
+            local_matrix.add( j, i, weight * F_i * phi[j][0] );
           }
         }
       }
@@ -107,11 +107,11 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
 } // assemble_matrix
 
 
-template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
+template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
 template< class MatrixType, class HostDiscreteFunctionSpaceType >
 void DiscreteEllipticOperator< DiscreteFunctionImp,
                                DiffusionImp,
-                               ReactionImp >::assemble_matrix
+                               LowerOrderTermImp >::assemble_matrix
   (MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace, bool boundary_treatment ) const {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
@@ -162,11 +162,11 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
         {
           local_matrix.add( j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]) );
 
-          if (reaction_coefficient_)
+          if (lower_order_term_)
           {
-            RangeType c;
-            reaction_coefficient_->evaluate(global_point, c);
-            local_matrix.add( j, i, weight * c * (phi[i][0] * phi[j][0]) );
+            RangeType F_i;
+            lower_order_term_->evaluate( global_point, phi[i], gradient_phi[i], F_i );
+            local_matrix.add( j, i, weight * F_i * phi[j][0] );
           }
         }
       }
@@ -224,9 +224,9 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
 } // assemble_matrix
 
 
-template< class DiscreteFunctionImp, class DiffusionImp, class ReactionImp >
+template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
 template< class MatrixType >
-void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >::assemble_jacobian_matrix(
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::assemble_jacobian_matrix(
   DiscreteFunction& disc_func,
   MatrixType& global_matrix,
   bool boundary_treatment ) const {
@@ -276,6 +276,9 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
+        RangeType value_local_disc_function;
+        local_disc_function.evaluate(quadrature[quadraturePoint], value_local_disc_function);
+
         typename BaseFunctionSet::JacobianRangeType grad_local_disc_function;
         local_disc_function.jacobian(quadrature[quadraturePoint], grad_local_disc_function);
         // here: no multiplication with jacobian inverse transposed required!
@@ -292,11 +295,15 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, ReactionImp >:
         {
           local_matrix.add( j, i, weight * (jac_diffusion_flux[0] * gradient_phi[j][0]) );
 
-          if (reaction_coefficient_)
+          if (lower_order_term_)
           {
-            RangeType c;
-            reaction_coefficient_->evaluate(global_point, c);
-            local_matrix.add( j, i, weight * c * (phi[i][0] * phi[j][0]) );
+            RangeType F_position_derivative;
+            typename LocalFunction::JacobianRangeType F_direction_derivative;
+            //lower_order_term_->evaluate( global_point, phi[i], gradient_phi[i], F_i );
+            lower_order_term_->position_derivative( global_point, value_local_disc_function, grad_local_disc_function, F_position_derivative );
+            lower_order_term_->direction_derivative( global_point, value_local_disc_function, grad_local_disc_function, F_direction_derivative );
+            local_matrix.add( j, i, weight * F_position_derivative * phi[i][0] * phi[j][0] );
+            local_matrix.add( j, i, weight * ( F_direction_derivative[0] * gradient_phi[i][0] ) * phi[j][0] );
           }
         }
       }

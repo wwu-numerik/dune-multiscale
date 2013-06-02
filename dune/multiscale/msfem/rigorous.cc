@@ -174,10 +174,12 @@ void algorithm(const std::string& macroGridName,
 
   //! --------------------------- coefficient functions ------------------------------------
 
-  // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
+  // defines the matrix A^{\epsilon} in our global problem
+  //    - div ( A^{\epsilon}(\nabla u^{\epsilon} ) + F(x,u^{\epsilon},\nabla u^{\epsilon}) = f
   const CommonTraits::DiffusionType diffusion_op;
   // define (first) source term:
-  const CommonTraits::FirstSourceType f( DSC_CONFIG_GET("rigorous_msfem.nonlinearity_scaling", 0.1) ); // standard source f
+  const CommonTraits::FirstSourceType f; // standard source f
+  const CommonTraits::LowerOrderTermType F; // lower term F(x,u^{\epsilon},\nabla u^{\epsilon})
 
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
@@ -230,9 +232,10 @@ void algorithm(const std::string& macroGridName,
 
   if ( DSC_CONFIG_GET("rigorous_msfem.fem_comparison",false) )
   {
+   
     // just for Dirichlet zero-boundary condition
     const Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
-    fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
+    fem_solver.solve_dirichlet_zero(diffusion_op, F, f, fem_solution);
     fem_solution.communicate();
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
@@ -247,6 +250,7 @@ void algorithm(const std::string& macroGridName,
     // write data
     fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );
     // -------------------------------------------------------------
+
   }
 
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;

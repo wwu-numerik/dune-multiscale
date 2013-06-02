@@ -125,6 +125,41 @@ public:
 };
 
 
+// dummmy for a lower order term F( x , u(x) , grad u(x) ) in a PDE like
+// - div ( A grad u ) + F ( x , u(x) , grad u(x) ) = f
+// NOTE: the operator describing the pde must be a monotone operator
+//! ------- Definition of the (possibly nonlinear) lower term F ---------
+class LowerOrderTerm
+//  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
+//                                LowerOrderTerm >
+{
+
+public:
+
+  LowerOrderTerm( /*double scaling_factor = 1.0*/ ){} // : scaling_factor_( scaling_factor ) {}
+
+  template< class DomainType , class RangeType >
+  void evaluate(const DomainType& x, RangeType& y) const
+  {}
+
+  template< class DomainType , class TimeType, class RangeType >
+  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const
+  {}
+  
+  template< class DomainType , class RangeType, class JacobianRangeType >
+  void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, RangeType& y) const
+  {}
+
+  template< class DomainType , class RangeType, class JacobianRangeType >
+  void position_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, RangeType& y) const
+  {}
+
+  template< class DomainType , class RangeType, class JacobianRangeType >
+  void direction_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, JacobianRangeType& y) const
+  {}
+  
+};
+
 
 //! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm,  0.0)

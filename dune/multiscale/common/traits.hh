@@ -45,6 +45,7 @@ struct ModelProblemData;
 class FirstSource;
 class SecondSource;
 class Diffusion;
+class LowerOrderTerm;
 class MassTerm;
 class DefaultDummyFunction;
 class ExactSolution;
@@ -72,6 +73,8 @@ struct CommonTraits {
   typedef Problem::PROBLEM_NAME::SecondSource SecondSourceType;
   // type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
   typedef Problem::PROBLEM_NAME::Diffusion DiffusionType;
+  // type of (possibly non-linear) lower order term F( x, u(x), grad u(x) )
+  typedef Problem::PROBLEM_NAME::LowerOrderTerm LowerOrderTermType;
   // type of mass (or reaction) term (i.e. 'm' or 'c')
   typedef Problem::PROBLEM_NAME::MassTerm MassTermType;
   // default type for any missing coefficient function (e.g. advection,...)

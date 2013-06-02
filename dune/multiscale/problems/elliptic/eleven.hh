@@ -68,15 +68,13 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  FirstSource( double scaling_factor = 1.0 ) : scaling_factor_( scaling_factor ) {}
+  FirstSource( ) {}
 
   //! evaluate f, i.e. return y=f(x) for a given x
   //! the following method defines 'f':
   void evaluate(const DomainType& x, RangeType& y) const;
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
-  
-  double scaling_factor_;
 };
 
 
@@ -131,10 +129,13 @@ MSCONSTANTFUNCTION(MassTerm,  0.0)
 MSNULLFUNCTION(DefaultDummyFunction)
 
 
-//! ----------------- Definition of the nonlinear term F -------------
-class Nonlinearity
+
+// F( x , u(x) , grad u(x) ) 
+// NOTE: the operator describing the pde must be a montone operator
+//! ------- Definition of the (possibly nonlinear) lower term F ---------
+class LowerOrderTerm
   : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
-                                Nonlinearity >
+                                LowerOrderTerm >
 {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -154,7 +155,7 @@ public:
 
 public:
 
-  Nonlinearity( double scaling_factor = 1.0 ) : scaling_factor_( scaling_factor ) {}
+  LowerOrderTerm( /*double scaling_factor = 1.0*/ ){} // : scaling_factor_( scaling_factor ) {}
 
   // dummy
   void evaluate(const DomainType& x, RangeType& y) const;
@@ -174,7 +175,7 @@ public:
   // 'position = u(x)', 'direction_gradient = \grad u(x)'
   void direction_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, JacobianRangeType& y) const;
   
-  double scaling_factor_;
+  //double scaling_factor_;
 };
 
 
