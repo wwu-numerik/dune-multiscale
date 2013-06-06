@@ -455,9 +455,9 @@ bool algorithm(const std::string& macroGridName,
   if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
   {
     // just for Dirichlet zero-boundary condition
-    typedef Dune::Multiscale::Elliptic_FEM_Solver KOP;
-    const KOP fem_solver(discreteFunctionSpace);
-    fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
+    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
+    const CommonTraits::LowerOrderTermType l;
+    fem_solver.solve_dirichlet_zero(diffusion_op, l, f, fem_solution);
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
     //! -------------------------- writing data output FEM Solution ----------

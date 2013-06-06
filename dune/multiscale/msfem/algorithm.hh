@@ -11,7 +11,7 @@
 namespace Dune {
 namespace Multiscale {
 
-class OutputParameters;
+struct OutputParameters;
 
 namespace MsFEM {
 
