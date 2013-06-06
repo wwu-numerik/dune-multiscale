@@ -36,7 +36,7 @@
  * class ExactSolution -> describes u(x)
  * methods:
  *   evaluate  u( x )        --> evaluate
- *   evaluate  ∇u( x )       --> evaluateJacobian
+ *   evaluate  ∇u( x )       --> jacobian
 
 
  * class Diffusion -> describes A(x,·)
@@ -267,10 +267,10 @@ public:
                        RangeType& y) const; // evaluate
 
   //! evaluate '∇u(x)'
-  void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const {
+  void jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
     grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
     grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
-  } // evaluateJacobian
+  } // jacobian
 
   //! in case 'u' has a time-dependency use the following method:
   //! (some classes might require this as a default implementation)

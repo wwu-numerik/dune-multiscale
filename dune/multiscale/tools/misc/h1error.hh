@@ -76,7 +76,7 @@ public:
 
         local_disc_func.jacobian(quadrature[quadraturePoint], gradient_of_disc_function);
 
-        function.evaluateJacobian(geo.global( quadrature.point(quadraturePoint) ), gradient_of_function);
+        function.jacobian(geo.global( quadrature.point(quadraturePoint) ), gradient_of_function);
 
         const double det = quadrature.weight(quadraturePoint)
                            * geo.integrationElement( quadrature.point(quadraturePoint) );

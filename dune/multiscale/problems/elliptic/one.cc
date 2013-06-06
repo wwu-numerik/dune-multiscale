@@ -57,7 +57,7 @@ void Dune::Multiscale::Problem::One::ExactSolution::evaluate(const Dune::Multisc
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void Dune::Multiscale::Problem::One::ExactSolution::evaluateJacobian(const Dune::Multiscale::Problem::One::ExactSolution::DomainType &, Dune::Multiscale::Problem::One::ExactSolution::JacobianRangeType &) const {
+void Dune::Multiscale::Problem::One::ExactSolution::jacobian(const Dune::Multiscale::Problem::One::ExactSolution::DomainType &, Dune::Multiscale::Problem::One::ExactSolution::JacobianRangeType &) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 

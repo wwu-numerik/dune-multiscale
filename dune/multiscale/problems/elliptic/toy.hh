@@ -238,7 +238,7 @@ public:
                        const TimeType& /*timedummy*/,
                        RangeType& y) const;
 
-  void evaluateJacobian(const DomainType& x, JacobianRangeType& grad_u) const;
+  void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
 
 };
 
