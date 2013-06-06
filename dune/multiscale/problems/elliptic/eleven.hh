@@ -205,7 +205,7 @@ public:
   void evaluate(const DomainType& x, RangeType& y) const;
 
   // evaluate 'grad u(x)'
-  void evaluateJacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const;
+  void jacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be

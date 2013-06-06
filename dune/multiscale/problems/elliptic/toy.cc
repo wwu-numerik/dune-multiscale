@@ -43,7 +43,7 @@ void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(const Dune::Multisc
   evaluate(x, y);
 }
 
-void Dune::Multiscale::Problem::Toy::ExactSolution::evaluateJacobian(const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType &x, Dune::Multiscale::Problem::Toy::ExactSolution::JacobianRangeType &grad_u) const {
+void Dune::Multiscale::Problem::Toy::ExactSolution::jacobian(const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType &x, Dune::Multiscale::Problem::Toy::ExactSolution::JacobianRangeType &grad_u) const {
   grad_u[0][0] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
   grad_u[0][1] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
 }

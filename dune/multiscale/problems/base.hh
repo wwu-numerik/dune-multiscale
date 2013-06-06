@@ -44,7 +44,7 @@ namespace Problem {
  * class ExactSolution -> describes u^{\epsilon}
  * methods:
  *   evaluate  u^{\epsilon}( x )        --> evaluate
- *   evaluate  \grad u^{\epsilon}( x )  --> evaluateJacobian
+ *   evaluate  \grad u^{\epsilon}( x )  --> jacobian
 
 
  * class Diffusion -> describes A^{\epsilon}
