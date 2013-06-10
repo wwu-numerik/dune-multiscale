@@ -149,6 +149,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/msfem_grid_specifier.cc
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
+        dune/multiscale/common/error_calc.cc
     )
 
 set( PROBLEM_SOURCES

@@ -20,7 +20,8 @@ libmultiscale_common_la_SOURCES=../dune/multiscale/tools/misc/outputparameter.cc
         ../dune/multiscale/msfem/localproblems/subgrid-list.cc \
         ../dune/multiscale/msfem/msfem_grid_specifier.cc \
         ../dune/multiscale/msfem/localproblems/localoperator.cc \
-        ../dune/multiscale/msfem/localproblems/localproblemsolver.cc
+        ../dune/multiscale/msfem/localproblems/localproblemsolver.cc \
+        ../dune/multiscale/common/error_calc.cc
 libmultiscale_common_la_CPPFLAGS=$(CPPFLAGS)
 
 ######################################

@@ -8,17 +8,16 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/common/elliptic_homogenizer.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/tools/misc/h1error.hh>
 #include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/fem/constantdiffusionmatrix.hh>
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
+
 #include <dune/fem/misc/l2norm.hh>
-#include <dune/fem/misc/l2error.hh>
-#include <dune/fem/misc/h1norm.hh>
 
 #include <string>
 #include <fstream>
@@ -288,29 +287,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(discrete_solution);
 
-  //! ----------------- compute L2- and H1- errors -------------------
-  if (Problem::ModelProblemData::has_exact_solution)
-  {
-
-    DSC_LOG_INFO << std::endl << "The L2 and H1 error:" << std::endl << std::endl;
-    H1Error< typename CommonTraits::DiscreteFunctionType > h1error;
-    L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
-
-    const typename CommonTraits::ExactSolutionType u;
-
-    typedef typename CommonTraits::ExactSolutionType ExactSolution;
-
-    const int order_quadrature_rule = 13;
-
-    typename CommonTraits::RangeType fem_error = l2error.norm< ExactSolution >
-       (u, discrete_solution, order_quadrature_rule /* * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder */ );
-    DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
-
-    typename CommonTraits::RangeType h1_fem_error(0.0);
-    h1_fem_error = h1error.semi_norm < ExactSolution >(u, discrete_solution, order_quadrature_rule);
-    h1_fem_error += fem_error;
-    DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
-  }
+  ErrorCalculator(nullptr, &discrete_solution).print(DSC_LOG_INFO_0);
 }
 
 //! \TODO docme
