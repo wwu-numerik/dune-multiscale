@@ -30,6 +30,8 @@ template <class T>
 class ParallelScalarProduct;
 template <class T, class R>
 class DataOutput;
+template <class T, class R>
+class DataWriter;
 template <bool T>
 class LagrangeMatrixSetup;
 template <class T, class R>
