@@ -73,8 +73,11 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     typedef SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
         WeightedClementMatrixObjectTraits;
 
-    typedef WeightedClementOp< SubDiscreteFunctionType, HostDiscreteFunctionType, WeightedClementMatrixObjectTraits, CoarseBasisFunctionListType >
-              WeightedClementOperatorType;
+    typedef WeightedClementOp< SubDiscreteFunctionType,
+                               HostDiscreteFunctionType,
+                               WeightedClementMatrixObjectTraits,
+                               CoarseBasisFunctionListType >
+            WeightedClementOperatorType;
 
     // saddle point problem solver:
     typedef UzawaInverseOp< SubDiscreteFunctionType,
@@ -113,35 +116,34 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
   // the result.
 
-  switch ( specifier_.getOversamplingStrategy() )
-  {
-  case 1:
-    local_problem_op.assemble_matrix(locprob_system_matrix);
-    local_problem_op.assemble_local_RHS(e, local_problem_rhs);
-    break;
-  case 2:
-    if ( coarse_index < 0 )
+  switch ( specifier_.getOversamplingStrategy() ) {
+    case 1:
+      local_problem_op.assemble_matrix(locprob_system_matrix);
+      local_problem_op.assemble_local_RHS(e, local_problem_rhs);
+      break;
+    case 2:
+      if ( coarse_index < 0 )
       DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-    local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
-    local_problem_op.assemble_local_RHS(e,
-            subgrid_list_.getCoarseNodeVector( coarse_index ),
-            specifier_.getOversamplingStrategy(),
-            local_problem_rhs );
-    break;
-  case 3:
-    if ( coarse_index < 0 )
+      local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
+      local_problem_op.assemble_local_RHS(e,
+              subgrid_list_.getCoarseNodeVector( coarse_index ),
+              specifier_.getOversamplingStrategy(),
+              local_problem_rhs );
+      break;
+    case 3:
+      if ( coarse_index < 0 )
       DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-    if ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ) {
-      local_problem_op.assemble_matrix( locprob_system_matrix );
-    } else {
-      local_problem_op.assemble_matrix( locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
-    }
-    local_problem_op.assemble_local_RHS(e,
-            subgrid_list_.getCoarseNodeVector( coarse_index ),
-            specifier_.getOversamplingStrategy(),
-            local_problem_rhs );
-    break;    
   default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1, 2 or 3.");
+      if ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ) {
+        local_problem_op.assemble_matrix( locprob_system_matrix );
+      } else {
+        local_problem_op.assemble_matrix( locprob_system_matrix, subgrid_list_.getCoarseNodeVector( coarse_index ) );
+      }
+      local_problem_op.assemble_local_RHS(e,
+              subgrid_list_.getCoarseNodeVector( coarse_index ),
+              specifier_.getOversamplingStrategy(),
+              local_problem_rhs );
+      break;
   }
 
   //! boundary treatment:
@@ -241,11 +243,11 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
     
     bool clement = false;
-    if ( specifier_.getOversamplingStrategy() == 3 )
-    { clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" ); }
+    if ( specifier_.getOversamplingStrategy() == 3 ) {
+      clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
+    }
 
-    if ( clement )
-    {
+    if ( clement ) {
       HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
       zero.clear();
       const double dummy = 12345.67890;
