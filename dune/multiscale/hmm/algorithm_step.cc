@@ -346,7 +346,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
   // write the solution after the current HMM Newton step to a file
   // for adaptive computations, the saved solution is not suitable for a later usage
   if (DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", true)) {
-    std::string fname = (boost::format("/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
+    std::string fname = (boost::format("hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
                          % refinement_level_macrogrid_ % hmm_iteration_step).str();
     DiscreteFunctionWriter(fname).append(hmm_solution);
 
@@ -471,7 +471,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
     // for adaptive computations, the saved solution is not suitable for a later usage
     if (!DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("hmm.write_to_file", false)) {
-      DiscreteFunctionWriter((boost::format("/hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
+      DiscreteFunctionWriter((boost::format("hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
                              ).append(hmm_solution);
     }
 

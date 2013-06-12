@@ -59,7 +59,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discrete_solution )
  {
   // write the final (discrete) solution to a file
-  std::string solution_file = (boost::format("/fem_solution_refLevel_%d")
+  std::string solution_file = (boost::format("fem_solution_refLevel_%d")
                                 % DSC_CONFIG_GET("fem.grid_level", 4) ).str();
   DiscreteFunctionWriter(solution_file).append(discrete_solution);
 
@@ -362,7 +362,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
   // ---------------------------------------------------------------------------------
 
   // write the final (discrete) solution to a file
-  std::string solution_file = (boost::format("/homogenized_solution_macro_refLevel_%d")
+  std::string solution_file = (boost::format("homogenized_solution_macro_refLevel_%d")
                                 % DSC_CONFIG_GET("fem.grid_level", 4) ).str();
   DiscreteFunctionWriter(solution_file).append(homogenized_solution);
 

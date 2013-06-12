@@ -740,7 +740,7 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarse_index, cons
   // create and initialize output class
   IOTupleType local_solution_series(&host_local_solution);
 
-  const std::string ls_name_s = (boost::format("/local_problem_solution_e%d_%d") % which % coarse_index).str();
+  const std::string ls_name_s = (boost::format("local_problem_solution_e%d_%d") % which % coarse_index).str();
 
   outputparam.set_prefix(ls_name_s);
   DataOutputType localsol_dataoutput(

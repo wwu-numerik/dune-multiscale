@@ -123,7 +123,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   // create and initialize output class
   OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
 
-  const auto coarse_grid_fname = (boost::format("/coarse_grid_visualization_")).str();
+  const auto coarse_grid_fname = (boost::format("coarse_grid_visualization_")).str();
   outputparam.set_prefix(coarse_grid_fname);
   OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
   // write data
