@@ -101,8 +101,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
   // traverse coarse space
-  for (HostgridIterator coarse_it = coarse_space.begin(); coarse_it != coarse_space.end(); ++coarse_it)
-  {
+  for (HostgridIterator coarse_it = coarse_space.begin(); coarse_it != coarse_space.end(); ++coarse_it) {
     // the coarse entity 'T': *coarse_it
 
     // only required for oversampling strategy 1 and 2, where we need to identify the correction for each
@@ -153,10 +152,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
     // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e0 );
 
     // oversampling strategy 3: just sum up the local correctors:
-    if ( (specifier.getOversamplingStrategy() == 3) )
-     {
+    if ( (specifier.getOversamplingStrategy() == 3) ) {
       subgrid_to_hostrid_projection(local_problem_solution_e0, correction_on_U_T);
-     }
+    }
 
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming projection:
     if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) ) {
@@ -172,8 +170,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
       typedef typename SubgridDiscreteFunction::LocalFunctionType SubgridLocalFunction;
 
       const SubgridIterator sub_endit = localDiscreteFunctionSpace.end();
-      for (SubgridIterator sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it)
-      {
+      for (SubgridIterator sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it) {
         const SubgridEntity& sub_entity = *sub_it;
 
         const HostEntityPointer fine_host_entity_pointer = sub_grid_U_T.getHostEntity< 0 >(*sub_it);
@@ -218,8 +215,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
           host_loc_value[i] = ( sub_loc_value[i] / coarse_entities.size() );
         }
-  }
-     }
+      }
+    }
 
     fine_scale_part += correction_on_U_T;
   }

@@ -860,7 +860,8 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       DSC_PROFILER.resetTiming("none.local_problem_solution");
     }
 
-    DSC_LOG_INFO << "Total time for solving all local problems for the current subgrid: " << assembleTimer.elapsed() << "s" << std::endl << std::endl;
+    DSC_LOG_INFO << "Total time for solving all local problems for the current subgrid: "
+                 << assembleTimer.elapsed() << "s" << std::endl << std::endl;
 
     dfw.append(local_problem_solution_0);
     dfw.append(local_problem_solution_1);

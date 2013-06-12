@@ -204,8 +204,8 @@ public:
 
     const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
     RangeType f_x;
-    for (const auto& coarse_grid_entity : rhsVector.space())
-    {
+    for (const auto& coarse_grid_entity : rhsVector.space()) {
+
       const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
       const GeometryType& coarse_grid_geometry = coarse_grid_entity.geometry();
