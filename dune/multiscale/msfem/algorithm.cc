@@ -191,7 +191,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   const auto& gridPart = msfem_solution.space().gridPart();
   std::string outstring;
   if (DSC_CONFIG_GET("adaptive", false)) {
-    const std::string msfem_fname_s = (boost::format("/msfem_solution_%d_") % loop_number).str();
+    const std::string msfem_fname_s = (boost::format("msfem_solution_%d_") % loop_number).str();
     outputparam.set_prefix(msfem_fname_s);
     outstring = msfem_fname_s;
   } else {
@@ -206,7 +206,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
 
   if (DSC_CONFIG_GET("adaptive", false)) {
-    const std::string coarse_msfem_fname_s = (boost::format("/coarse_part_msfem_solution_%d_") % loop_number).str();
+    const std::string coarse_msfem_fname_s = (boost::format("coarse_part_msfem_solution_%d_") % loop_number).str();
     outputparam.set_prefix(coarse_msfem_fname_s);
     outstring = coarse_msfem_fname_s;
   } else {
@@ -221,7 +221,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
 
   if (DSC_CONFIG_GET("adaptive", false)) {
-    const std::string fine_msfem_fname_s = (boost::format("/fine_part_msfem_solution_%d_") % loop_number).str();
+    const std::string fine_msfem_fname_s = (boost::format("fine_part_msfem_solution_%d_") % loop_number).str();
     outputparam.set_prefix(fine_msfem_fname_s);
     // write data
     outstring = fine_msfem_fname_s;
@@ -277,7 +277,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   // create and initialize output class
   OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
 
-  const auto coarse_grid_fname = (boost::format("/coarse_grid_visualization_%d_") % loop_number).str();
+  const auto coarse_grid_fname = (boost::format("coarse_grid_visualization_%d_") % loop_number).str();
   outputparam.set_prefix(coarse_grid_fname);
   OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
   // write data
