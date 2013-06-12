@@ -84,20 +84,22 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
   // if the oversampling strategy is 1 or 2, we need identify the entities that share a certain node
   // (because a 'conforming projection' operator is required - for stragey 3, we directly get a conforming approximation)
-  if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) )
-   {
-     for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it)
-     {
-       const int number_of_nodes_in_entity = it-> count< 2 >();
-       for (int i = 0; i < number_of_nodes_in_entity; i += 1)
-       {
-         const typename HostEntity::Codim< 2 >::EntityPointer node = it->subEntity< 2 >(i);
-         const int global_index_node = gridPart.indexSet().index(*node);
+  if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) ) {
+    // determine the entities that share a common global node with a given index
+    // we need to iterate over the whole grid, not only from hostSpace_.begin() to
+    // hostSpace_.end() for parallel runs!
+    for (auto& hostEntity : DSC::viewRange(discreteFunctionSpace_.gridPart().grid().leafView())) {
+      int number_of_nodes_in_entity = hostEntity.count< 2 >();
+      for (int i = 0; i < number_of_nodes_in_entity; ++i) {
+        const auto node              = hostEntity.subEntity< 2 >(i);
+        const int             global_index_node = gridPart.indexSet().index(*node);
 
-         entities_sharing_same_node[global_index_node].emplace_back(*it);
-       }
-     }
-   }
+        entities_sharing_same_node[global_index_node].emplace_back(hostEntity);
+      }
+    }
+
+
+  }
 
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
   // traverse coarse space
