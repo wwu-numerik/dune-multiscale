@@ -1,4 +1,4 @@
-GRIDTYPE=ALBERTAGRID
+GRIDTYPE=SPGRID
 GRIDDIM=2
 PROBLEM_NAMES= Toy One Two Three Four Five Six Seven Eight Nine Ten Eleven
 PROBLEM=Nine

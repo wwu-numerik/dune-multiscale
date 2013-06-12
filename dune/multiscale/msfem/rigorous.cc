@@ -58,7 +58,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
   const auto& gridPart = msfem_solution.space().gridPart();
   std::string outstring;
-  outputparam.set_prefix("/msfem_solution");
+  outputparam.set_prefix("msfem_solution");
   outstring = "msfem_solution";
 
   OutputTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
@@ -67,7 +67,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   // create and initialize output class
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
 
-  outputparam.set_prefix("/coarse_part_msfem_solution");
+  outputparam.set_prefix("coarse_part_msfem_solution");
   outstring = "coarse_part_msfem_solution";
 
   OutputTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
@@ -76,7 +76,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   // create and initialize output class
   OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
 
-  outputparam.set_prefix("/fine_part_msfem_solution");
+  outputparam.set_prefix("fine_part_msfem_solution");
   // write data
   outstring = "fine_msfem_solution";
 
@@ -107,7 +107,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     // create and initialize output class
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-    outputparam.set_prefix("/exact_solution");
+    outputparam.set_prefix("exact_solution");
     OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
     // write data
     exactsol_dataoutput.writeData( 1.0 /*dummy*/, "exact-solution" );
@@ -241,7 +241,7 @@ void algorithm(const std::string& macroGridName,
     // ------------- VTK data output for FEM solution --------------
     // create and initialize output class
     OutputTraits::IOTupleType fem_solution_series(&fem_solution);
-    outputparam.set_prefix("/fem_solution");
+    outputparam.set_prefix("fem_solution");
     OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
     // write data
