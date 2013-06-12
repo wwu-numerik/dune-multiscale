@@ -69,7 +69,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discre
 
   // create and initialize output class
   typename OutputTraits::IOTupleType fem_solution_series(&discrete_solution);
-  outputparam.set_prefix((boost::format("/fem_solution")).str());
+  outputparam.set_prefix((boost::format("fem_solution")).str());
   typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
                                                  fem_solution_series, outputparam);
   // write data
@@ -372,7 +372,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
 
   // create and initialize output class
   typename OutputTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);
-  outputparam.set_prefix((boost::format("/homogenized_solution")).str());
+  outputparam.set_prefix((boost::format("homogenized_solution")).str());
   typename OutputTraits::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
                                                     hom_fem_solution_series, outputparam);
   homfemsol_dataoutput.writeData( 1.0 /*dummy*/, "homogenized-solution" );
