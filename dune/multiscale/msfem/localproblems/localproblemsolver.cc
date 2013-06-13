@@ -781,17 +781,20 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
   std::vector<int> coarse_indices;
+  std::vector<int> coarse_ids;
   const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
   const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
   for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
   {
     coarse_indices.push_back(coarseGridLeafIndexSet.index(*coarse_it));
+    coarse_ids.push_back(coarseSpace.gridPart().grid().globalIdSet().id(*coarse_it));
   }
 
 
 //  const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
 //  int slice = coarse_indices.size() / comm.size();
 //  for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
+  std::ofstream file(boost::lexical_cast<std::string>(MPIManager::rank())+"_subgrids.txt");
   for (std::size_t gc=0; gc<coarse_indices.size(); ++gc)
   {
     
@@ -799,9 +802,8 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     
     DSC_LOG_INFO << "-------------------------" << std::endl
                  << "Coarse index " << coarse_index << std::endl;
-
     const std::string locprob_solution_location =
-        (boost::format("local_problems/_localProblemSolutions_%d_%d") % coarse_index % Fem::MPIManager::rank()).str();
+        (boost::format("local_problems/_localProblemSolutions_%d") % coarse_ids[gc]).str();
 
     DiscreteFunctionWriter dfw(locprob_solution_location);
 
@@ -809,7 +811,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
     const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
 
-    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarse_index).str();
+    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarse_ids[gc]).str();
 
     //! only for dimension 2!
     SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
