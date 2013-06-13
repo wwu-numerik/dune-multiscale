@@ -3,6 +3,7 @@
 #include <dune/fem/misc/h1norm.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
+#include <dune/stuff/common/filesystem.hh>
 
 #include <dune/multiscale/problems/elliptic/selector.hh>
 #include <iostream>
@@ -23,6 +24,8 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
     Dune::H1Norm< CommonTraits::GridPartType > h1norm(gridPart);
     Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
 
+    std::map<std::string,double> csv;
+
     //! ----------------- compute L2- and H1- errors -------------------
     if (Problem::ModelProblemData::has_exact_solution)
     {
@@ -39,6 +42,9 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
 
           CommonTraits::RangeType h1_msfem_error = h1norm.distance(u_disc, *msfem_solution_);
           out << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
+
+          csv["msfem_exact_L2"] = msfem_error;
+          csv["msfem_exact_H1"] = h1_msfem_error;
       }
 
       if (fem_solution_)
@@ -48,6 +54,9 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
 
         CommonTraits::RangeType h1_fem_error = h1norm.distance(u_disc, *fem_solution_);
         out << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
+
+        csv["fem_exact_L2"] = fem_error;
+        csv["fem_exact_H1"] = h1_fem_error;
       }
     }
     if ( msfem_solution_ && fem_solution_) {
@@ -57,5 +66,21 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
 
       CommonTraits::RangeType h1_approx_msfem_error = h1norm.distance(*fem_solution_, *msfem_solution_);
       out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
+
+      csv["msfem_fem_L2"] = approx_msfem_error;
+      csv["msfem_fem_H1"] = h1_approx_msfem_error;
     }
+
+    std::unique_ptr<boost::filesystem::ofstream> csvfile(DSC::make_ofstream("errors.csv"));
+    const std::string sep(",");
+    for(const auto& key_val : csv)
+    {
+      *csvfile << key_val.first << sep;
+    }
+    *csvfile << std::endl;
+    for(const auto& key_val : csv)
+    {
+      *csvfile << key_val.second << sep;
+    }
+    *csvfile << std::endl;
 }
