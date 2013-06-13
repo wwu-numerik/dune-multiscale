@@ -228,8 +228,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     }
   }
 
-  if ( !( local_problem_rhs.dofsValid() ) )
-  {
+  if ( !( local_problem_rhs.dofsValid() ) ) {
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
   }
 

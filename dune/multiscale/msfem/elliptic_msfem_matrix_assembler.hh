@@ -211,6 +211,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
       // -------------------------------------------------------------------
       const auto& local_grid_entity = local_grid_it;
       const auto& hostEntity = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity);
+      // ignore overlay elements
       if (global_index_entity==subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
         assert(hostEntity->partitionType() == InteriorEntity);
         // -------------------------------------------------------------------
@@ -297,8 +298,9 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
         if ( intersection.boundary() ) {
           const int face = intersection.indexInInside();
           const CoarseFaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-          for (CoarseFaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+          for (CoarseFaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit) {
             local_matrix.unitRow(*fdit);
+          }
         }
       }
     }

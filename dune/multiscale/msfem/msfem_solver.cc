@@ -188,8 +188,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
           int number_of_nodes_entity = sub_it->count< 2 >();
           for (int i = 0; i < number_of_nodes_entity; ++i)
           {
-            const typename HostEntity::Codim< 2 >::EntityPointer node =
-                    fine_host_entity.subEntity< 2 >(i);
+            const typename HostEntity::Codim< 2 >::EntityPointer node = fine_host_entity.subEntity< 2 >(i);
 
             const int global_index_node = gridPart.indexSet().index(*node);
 
@@ -318,7 +317,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part( specifier, subgrid_list, coarse_msfem_solution, fine_scale_part );
 
-  // Auf Grobskalen MsFEM Anteil noch Feinksalen MsFEM Anteil aufaddieren.
+  // add coarse and fine scale part to solution
   solution += coarse_scale_part;
   solution += fine_scale_part;
 
