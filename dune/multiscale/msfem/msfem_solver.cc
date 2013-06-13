@@ -93,7 +93,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
       int number_of_nodes_in_entity = hostEntity.count< 2 >();
       for (int i = 0; i < number_of_nodes_in_entity; ++i) {
         const auto node              = hostEntity.subEntity< 2 >(i);
-        const int             global_index_node = gridPart.indexSet().index(*node);
+        const int             global_index_node = gridPart.grid().leafIndexSet().index(*node);
 
         entities_sharing_same_node[global_index_node].emplace_back(hostEntity);
       }
@@ -180,14 +180,15 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
           for (int i = 0; i < number_of_nodes_entity; ++i)
           {
             const typename HostEntity::Codim< 2 >::EntityPointer node = fine_host_entity.subEntity< 2 >(i);
-
-            const int global_index_node = gridPart.indexSet().index(*node);
+            const int global_index_node = gridPart.grid().leafIndexSet().index(*node);
 
             // count the number of different coarse-grid-entities that share the above node
             std::unordered_set< int > coarse_entities;
-            for (size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j) {
-              const int innerIndex
-                      = subgrid_list.getEnclosingMacroCellIndex(entities_sharing_same_node[global_index_node][j]);
+            const int numEntitiesSharingNode = entities_sharing_same_node[global_index_node].size();
+            for (size_t j = 0; j < numEntitiesSharingNode; ++j) {
+              // get the id of the macro element enclosing the current element
+              const int innerId
+                      = subgrid_list.getEnclosingMacroCellId(entities_sharing_same_node[global_index_node][j]);
               // the following will only add the entity index if it is not yet present
               coarse_entities.insert(innerIndex);
             }
@@ -197,8 +198,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
         }
       }
     }
-
-    fine_scale_part += correction_on_U_T;
   }
   DSC_LOG_INFO << " done." << std::endl;
 }
@@ -252,6 +251,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
 
   // assemble the MsFEM stiffness matrix
   elliptic_msfem_op.assemble_matrix(msfem_matrix);
+
   DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
   // assemble right hand side
@@ -263,9 +263,9 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
                                                                                                 subgrid_list,
                                                                                                 msfem_rhs);
   }
+  msfem_rhs.communicate();
 
   // oneLinePrint( DSC_LOG_DEBUG, fem_rhs );
-
   //! --- boundary treatment ---
   // set the dirichlet points to zero (in right hand side of the fem problem)
   const HostgridIterator endit = coarse_space.end();
@@ -285,12 +285,12 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
                 = lagrangePointSet.beginSubEntity< faceCodim >(face);
         const auto faceEndIterator
                 = lagrangePointSet.endSubEntity< faceCodim >(face);
-        for ( ; faceIterator != faceEndIterator; ++faceIterator)
+        for ( ; faceIterator != faceEndIterator; ++faceIterator) {
           rhsLocal[*faceIterator] = 0;
+        }
       }
     }
   }
-  msfem_rhs.communicate();
   //! --- end boundary treatment ---
   const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true);
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
@@ -307,12 +307,13 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part( specifier, subgrid_list, coarse_msfem_solution, fine_scale_part );
+  fine_scale_part.communicate();
+
 
   // add coarse and fine scale part to solution
   solution += coarse_scale_part;
   solution += fine_scale_part;
 
-  solution.communicate();
 } // solve_dirichlet_zero
 
 } //namespace MsFEM {
