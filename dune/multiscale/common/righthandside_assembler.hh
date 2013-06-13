@@ -201,11 +201,9 @@ public:
   {
     // set rhsVector to zero:
     rhsVector.clear();
-
     const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
     RangeType f_x;
     for (const auto& coarse_grid_entity : rhsVector.space()) {
-
       const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
       const GeometryType& coarse_grid_geometry = coarse_grid_entity.geometry();
@@ -232,8 +230,7 @@ public:
           // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
           f.evaluate(coarse_grid_geometry.global( quadrature.point(quadraturePoint) ), f_x);
           coarse_grid_baseSet.evaluateAll(quadrature[quadraturePoint], phi_x_vec);
-          for (int i = 0; i < numDofs; ++i)
-          {
+          for (int i = 0; i < numDofs; ++i) {
             elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x_vec[i]);
           }
         }
@@ -290,7 +287,7 @@ public:
               const auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
                       local_grid_entity);
 
-            const auto& local_grid_geometry = local_grid_entity.geometry();
+              const auto& local_grid_geometry = local_grid_entity.geometry();
 
               // higher order quadrature, since A^{\epsilon} is highly variable
               LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
