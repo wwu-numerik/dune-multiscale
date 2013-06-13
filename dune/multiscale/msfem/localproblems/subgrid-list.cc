@@ -140,7 +140,13 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
 
   fine_id_to_subgrid_ids_.resize( hostGridPart_.grid().size(0) );
-  
+
+
+  //! @todo temp!
+  for (const auto& hostEntity : DSC::viewRange(hostGridPart_.grid().leafView())) {
+    getEnclosingMacroCellId(hostEntity);
+  }
+
   // initialize the subgrids (no elements are added)
   identifySubGrids();
   
@@ -274,6 +280,50 @@ int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEnt
   // if we came this far, we did not find an enclosing coarse cell at all, issue a warning
   // and return with error code
 //  DSC_LOG_DEBUG << "Warning: Host grid entity was not in any coarse grid cell!\n";
+  return -1;
+}
+
+
+int SubGridList::getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer) {
+  // first check, whether we looked for this host entity already
+  int hostEntityIndex = hostGridLeafIndexSet_.index(*hostEntityPointer);
+  auto itFound = fineToCoarseMapID_.find(hostEntityIndex);
+  if (itFound!=fineToCoarseMapID_.end()) {
+    // if so, return the index that was found last time
+    return itFound->second;
+  }
+  static auto lastIterator = coarseSpace_.gridPart().grid().leafbegin<0>();
+  const auto  baryCenter = hostEntityPointer->geometry().center();
+  auto macroCellIterator = lastIterator;
+  for (; macroCellIterator != coarseSpace_.gridPart().grid().leafend<0>(); ++macroCellIterator) {
+    const auto& macroGeo   = macroCellIterator->geometry();
+    const auto& refElement = CoarseRefElementType::general(macroGeo.type());
+
+    bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
+    if (hostEnIsInMacroCell) {
+      lastIterator  = macroCellIterator;
+      int macroId = coarseSpace_.gridPart().grid().globalIdSet().id(*macroCellIterator);
+      fineToCoarseMapID_[hostEntityIndex] = macroId;
+      return macroId;
+    }
+  }
+  // if we came this far, we did not find the matching enclosing coarse cell for the given
+  // fine cell in [lastIterator, coarse grid end]. Start search from beginning
+  for (macroCellIterator = coarseSpace_.gridPart().grid().leafbegin<0>(); macroCellIterator != lastIterator; ++macroCellIterator) {
+    const auto& macroGeo   = macroCellIterator->geometry();
+    const auto& refElement = CoarseRefElementType::general(macroGeo.type());
+    bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
+    if (hostEnIsInMacroCell) {
+      lastIterator = macroCellIterator;
+      int macroId = coarseSpace_.gridPart().grid().globalIdSet().id(*macroCellIterator);
+      fineToCoarseMapID_[hostEntityIndex] = macroId;
+      return macroId;
+    }
+  }
+  // if we came this far, we did not find an enclosing coarse cell at all, issue a warning
+  // and return with error code
+//  DSC_LOG_DEBUG << "Warning: Host grid entity was not in any coarse grid cell!\n";
+  assert(false);
   return -1;
 }
 
