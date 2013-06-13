@@ -33,8 +33,9 @@
 #include <dune/common/exceptions.hh> // We use exceptions
 #include <dune/common/unused.hh>
 
-// to display data with ParaView:
-#include <dune/grid/io/file/vtk/vtkwriter.hh>
+#if HAVE_DUNE_SPGRID
+#include <dune/grid/spgrid/capabilities.hh>
+#endif
 
 #include <dune/fem/io/file/dataoutput.hh>
 #include <dune/fem/io/parameter.hh>
