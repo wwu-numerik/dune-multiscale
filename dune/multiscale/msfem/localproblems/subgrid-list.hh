@@ -127,6 +127,8 @@ public:
 */
   int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
 
+  int getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer);
+
 private:
   typedef std::map<int, std::shared_ptr<SubGridType> > SubGridStorageType;
   /**
@@ -158,6 +160,7 @@ private:
   EntityPointerCollectionType entities_sharing_same_node_;
   EnrichmentMatrixType enriched_;
   std::vector<std::map<int, int> > fineToCoarseMap_;
+  std::map<int, int> fineToCoarseMapID_;
   // given the id of a fine grid element, the vector returns the ids of all subgrids that share that element
   std::vector < std::vector< int > > fine_id_to_subgrid_ids_;
 };
