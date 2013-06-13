@@ -17,6 +17,8 @@ int main(int argc, char** argv) {
     DSC_PROFILER.startTiming("msfem.all");
 
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
+
+    // generate directories for data output
     DSC::testCreateDirectory(datadir);
     DSC_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n")
                             % datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
@@ -102,6 +104,23 @@ int main(int argc, char** argv) {
                  << max_cpu_time
                  << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
+
+    // Compute the peak memory consumption of each processes
+    int who = RUSAGE_SELF;
+    struct rusage usage;
+    int ret = getrusage(who, &usage);
+    long peakMemConsumption = usage.ru_maxrss;
+    // compute the maximum and mean peak memory consumption over all processes
+    long maxPeakMemConsumption = Dune::MPIManager::comm().max(peakMemConsumption);
+    long totalPeakMemConsumption = Dune::MPIManager::comm().sum(peakMemConsumption);
+    long meanPeakMemConsumption = totalPeakMemConsumption/Dune::MPIManager::size();
+    // write output on rank zero
+    if (Dune::MPIManager::rank()==0) {
+      std::unique_ptr<boost::filesystem::ofstream>
+              memoryConsFile(DSC::make_ofstream(DSC_CONFIG_GET("global.datadir", "data")+"/memory.csv"));
+      *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n"
+              << maxPeakMemConsumption << "," << meanPeakMemConsumption << std::endl;
+    }
 
     return 0;
   } catch (Dune::Exception& e) {
