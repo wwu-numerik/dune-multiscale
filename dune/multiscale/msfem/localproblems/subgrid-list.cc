@@ -385,23 +385,7 @@ void SubGridList::identifySubGrids() {
         coarse_node_store_[coarse_index].emplace_back(coarse_entity.geometry().corner(c));
     }
   }
-
-  // -----------------------------------------------------------
-  // initialize and fill a vector 'entities_sharing_same_node_' that tells you for
-  // a given node 'i' which fine grid entities intersect with 'i'
-  // -----------------------------------------------------------
-  //! \todo: isn't this exactly the same as in lines 140--149???
-  for (const auto& localEntity : hostSpace_)
-  {
-    const int number_of_nodes_in_entity = localEntity.count< 2 >();
-    for (int i = 0; i < number_of_nodes_in_entity; i += 1) {
-      const HostNodePointer node              = localEntity.subEntity< 2 >(i);
-      const int             global_index_node = hostGridPart.indexSet().index(*node);
-
-      entities_sharing_same_node_[global_index_node].emplace_back(localEntity);
-    }
-  }
-  // -----------------------------------------------------------
+//  // -----------------------------------------------------------
 
   DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
 
