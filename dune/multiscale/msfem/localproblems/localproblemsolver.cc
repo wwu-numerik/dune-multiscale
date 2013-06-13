@@ -726,7 +726,6 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 //  const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
 //  int slice = coarse_indices.size() / comm.size();
 //  for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
-  std::ofstream file(boost::lexical_cast<std::string>(MPIManager::rank())+"_subgrids.txt");
   for (std::size_t gc=0; gc<coarse_indices.size(); ++gc)
   {
     
