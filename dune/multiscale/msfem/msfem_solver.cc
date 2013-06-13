@@ -191,8 +191,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
               // the following will only add the entity index if it is not yet present
               coarse_entities.insert(innerIndex);
             }
+            host_loc_value[i] += ( sub_loc_value[i] / coarse_entities.size() );
 
-            host_loc_value[i] = ( sub_loc_value[i] / coarse_entities.size() );
           }
         }
       }
