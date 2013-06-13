@@ -279,7 +279,7 @@ public:
           {
             const auto& hostCell = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity);
             const int enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
-            if (enclosingCoarseCellIndex!=global_index_entity)
+            if (enclosingCoarseCellIndex==global_index_entity)
   //          if (Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
             {
               const auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
