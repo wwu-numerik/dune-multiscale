@@ -71,7 +71,8 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
       csv["msfem_fem_H1"] = h1_approx_msfem_error;
     }
 
-    std::unique_ptr<boost::filesystem::ofstream> csvfile(DSC::make_ofstream("errors.csv"));
+    std::unique_ptr<boost::filesystem::ofstream>
+            csvfile(DSC::make_ofstream(DSC_CONFIG_GET("global.datadir", "data")+"/errors.csv"));
     const std::string sep(",");
     for(const auto& key_val : csv)
     {
