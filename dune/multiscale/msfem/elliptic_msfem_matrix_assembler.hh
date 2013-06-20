@@ -210,79 +210,70 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
       // check if "local_grid_entity" (which is an entity of U(T)) is in T:
       // -------------------------------------------------------------------
       const auto& local_grid_entity = local_grid_it;
-      auto father_of_loc_grid_ent =
-              Stuff::Grid::make_father(coarseGridLeafIndexSet,
-                      localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity),
-                      specifier_.getLevelDifference());
-      if (!Stuff::Grid::entities_identical(coarse_grid_entity, *father_of_loc_grid_ent))
-      {
-        continue;
-      }
-      // -------------------------------------------------------------------
-      LocalGridLocalFunction localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
-              local_grid_entity);
-      LocalGridLocalFunction localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
-              local_grid_entity);
+      const auto& hostEntity = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity);
+      // ignore overlay elements
+      if (global_index_entity==subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
+        assert(hostEntity->partitionType() == InteriorEntity);
+        // -------------------------------------------------------------------
+        LocalGridLocalFunction localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
+                local_grid_entity);
+        LocalGridLocalFunction localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
+                local_grid_entity);
 
-      for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
-        for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
-          RangeType local_integral = 0.0;
+        for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
+          for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
+            RangeType local_integral = 0.0;
 
-          const LocalGridGeometry& local_grid_geometry = local_grid_entity.geometry();
-          assert(local_grid_entity.partitionType() == InteriorEntity);
-
-          // higher order quadrature, since A^{\epsilon} is highly variable
-          LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
-          const size_t numQuadraturePoints = local_grid_quadrature.nop();
-
-          for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint)
-          {
-            // local (barycentric) coordinates (with respect to entity)
-            const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
-                    localQuadraturePoint);
-
-            DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
-
-            const double weight_local_quadrature
-                    = local_grid_quadrature.weight(localQuadraturePoint) * local_grid_geometry.integrationElement(
-                            local_subgrid_point);
-
-            // grad corrector for e_0 and e_1
-            typename LocalGridBaseFunctionSet::JacobianRangeType grad_loc_sol_e0, grad_loc_sol_e1;
-            localized_local_problem_solution_e0.jacobian(local_grid_quadrature[localQuadraturePoint], grad_loc_sol_e0);
-            localized_local_problem_solution_e1.jacobian(local_grid_quadrature[localQuadraturePoint], grad_loc_sol_e1);
-
-            // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
-            JacobianRangeType direction_of_diffusion(0.0);
-            for (int k = 0; k < dimension; ++k)
-            {
-              direction_of_diffusion[0][k] += gradient_Phi[i][0][0] * grad_loc_sol_e0[0][k];
-              direction_of_diffusion[0][k] += gradient_Phi[i][0][1] * grad_loc_sol_e1[0][k];
-              direction_of_diffusion[0][k] += gradient_Phi[i][0][k];
-            }
-
-            JacobianRangeType diffusive_flux(0.0);
-            diffusion_operator_.diffusiveFlux(global_point_in_U_T, direction_of_diffusion, diffusive_flux);
+            const LocalGridGeometry& local_grid_geometry = local_grid_entity.geometry();
 
 
-            if ( petrovGalerkin_ ) /*if Petrov-Galerkin MsFEM*/ {
-              local_integral += weight_local_quadrature * (diffusive_flux[0] * gradient_Phi[j][0]);
-            } else /* if not Petrov-Galerkin MsFEM:*/ {
-              JacobianRangeType reconstruction_grad_phi_j(0.0);
-              for (int k = 0; k < dimension; ++k)
-              {
-                reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][0] * grad_loc_sol_e0[0][k];
-                reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][1] * grad_loc_sol_e1[0][k];
-                reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][k];
+            // higher order quadrature, since A^{\epsilon} is highly variable
+            LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
+            const size_t numQuadraturePoints = local_grid_quadrature.nop();
+
+            for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
+              // local (barycentric) coordinates (with respect to entity)
+              const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
+                      localQuadraturePoint);
+
+              DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
+              const double weight_local_quadrature
+                      = local_grid_quadrature.weight(localQuadraturePoint) * local_grid_geometry.integrationElement(
+                              local_subgrid_point);
+
+              // grad corrector for e_0 and e_1
+              typename LocalGridBaseFunctionSet::JacobianRangeType grad_loc_sol_e0, grad_loc_sol_e1;
+              localized_local_problem_solution_e0.jacobian(local_grid_quadrature[localQuadraturePoint], grad_loc_sol_e0);
+              localized_local_problem_solution_e1.jacobian(local_grid_quadrature[localQuadraturePoint], grad_loc_sol_e1);
+              // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
+              JacobianRangeType direction_of_diffusion(0.0);
+              for (int k = 0; k < dimension; ++k) {
+                direction_of_diffusion[0][k] += gradient_Phi[i][0][0] * grad_loc_sol_e0[0][k];
+                direction_of_diffusion[0][k] += gradient_Phi[i][0][1] * grad_loc_sol_e1[0][k];
+                direction_of_diffusion[0][k] += gradient_Phi[i][0][k];
               }
 
-              local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstruction_grad_phi_j[0]);
+              JacobianRangeType diffusive_flux(0.0);
+              diffusion_operator_.diffusiveFlux(global_point_in_U_T, direction_of_diffusion, diffusive_flux);
+
+              if ( petrovGalerkin_ ) /*if Petrov-Galerkin MsFEM*/ {
+                local_integral += weight_local_quadrature * (diffusive_flux[0] * gradient_Phi[j][0]);
+              } else /* if not Petrov-Galerkin MsFEM:*/ {
+                JacobianRangeType reconstruction_grad_phi_j(0.0);
+                for (int k = 0; k < dimension; ++k) {
+                  reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][0] * grad_loc_sol_e0[0][k];
+                  reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][1] * grad_loc_sol_e1[0][k];
+                  reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][k];
+                }
+
+                local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstruction_grad_phi_j[0]);
+              }
+
             }
+            // add entries
+            local_matrix.add(j, i, local_integral);
 
           }
-          // add entries
-          local_matrix.add(j, i, local_integral);
-
         }
       }
     }
@@ -294,24 +285,24 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
   for (CoarseIterator it = coarseDiscreteFunctionSpace_.begin(); it != coarseDiscreteFunctionSpace_.end(); ++it)
   {
     const CoarseEntity& entity = *it;
-    if ( !entity.hasBoundaryIntersections() )
-      continue;
+    if ( entity.hasBoundaryIntersections() ) {
 
-    auto local_matrix = global_matrix.localMatrix(entity, entity);
+      auto local_matrix = global_matrix.localMatrix(entity, entity);
 
-    const CoarseLagrangePointSet& lagrangePointSet = coarseDiscreteFunctionSpace_.lagrangePointSet(entity);
+      const CoarseLagrangePointSet& lagrangePointSet = coarseDiscreteFunctionSpace_.lagrangePointSet(entity);
 
-    const CoarseIntersectionIterator iend = coarseGridPart.iend(entity);
-    for (CoarseIntersectionIterator iit = coarseGridPart.ibegin(entity); iit != iend; ++iit)
-    {
-      const CoarseIntersection& intersection = *iit;
-      if ( !intersection.boundary() )
-        continue;
-
-      const int face = intersection.indexInInside();
-      const CoarseFaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-      for (CoarseFaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
-        local_matrix.unitRow(*fdit);
+      const CoarseIntersectionIterator iend = coarseGridPart.iend(entity);
+      for (CoarseIntersectionIterator iit = coarseGridPart.ibegin(entity); iit != iend; ++iit)
+      {
+        const CoarseIntersection& intersection = *iit;
+        if ( intersection.boundary() ) {
+          const int face = intersection.indexInInside();
+          const CoarseFaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
+          for (CoarseFaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit) {
+            local_matrix.unitRow(*fdit);
+          }
+        }
+      }
     }
   }
 } // assemble_matrix

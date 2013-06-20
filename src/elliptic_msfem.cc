@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     // generate directories for data output
     DSC::testCreateDirectory(datadir);
 
-    DSC_LOG_INFO << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n")
+    DSC_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n")
                             % datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
 
     // syntax: info_from_par_file / default  / validation of the value
@@ -52,39 +52,39 @@ int main(int argc, char** argv) {
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
 
-    DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
+    DSC_LOG_INFO_0 << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
               << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
     if (DSC_CONFIG_GET("msfem.uniform", true)) {
       if ( DSC_CONFIG_GET("msfem.petrov_galerkin", true) )
-        DSC_LOG_INFO << "Use MsFEM in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;
+        DSC_LOG_INFO_0 << "Use MsFEM in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;
       else
-        DSC_LOG_INFO << "Use MsFEM in classical (symmetric) formulation with an uniform computation, i.e.:" << std::endl;      
-      DSC_LOG_INFO << "Uniformly refined coarse and fine mesh and" << std::endl;
-      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
-      DSC_LOG_INFO << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-      DSC_LOG_INFO << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-      DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
-      DSC_LOG_INFO << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
+        DSC_LOG_INFO_0 << "Use MsFEM in classical (symmetric) formulation with an uniform computation, i.e.:" << std::endl;
+      DSC_LOG_INFO_0 << "Uniformly refined coarse and fine mesh and" << std::endl;
+      DSC_LOG_INFO_0 << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      DSC_LOG_INFO_0 << "Computations were made for:" << std::endl << std::endl;
+      DSC_LOG_INFO_0 << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO_0 << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO_0 << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
+      DSC_LOG_INFO_0 << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
       if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
-       { DSC_LOG_INFO << std::endl << "Comparison with standard FEM computation on the MsFEM Fine Grid, i.e. on Refinement Level " << total_refinement_level_ << std::endl; }
-      DSC_LOG_INFO << std::endl << std::endl;
+       { DSC_LOG_INFO_0 << std::endl << "Comparison with standard FEM computation on the MsFEM Fine Grid, i.e. on Refinement Level " << total_refinement_level_ << std::endl; }
+      DSC_LOG_INFO_0 << std::endl << std::endl;
     } else {
       if ( DSC_CONFIG_GET("msfem.petrov_galerkin", true) )
-        DSC_LOG_INFO << "Use MsFEM in Petrov-Galerkin formulation with an adaptive computation, i.e.:" << std::endl;
+        DSC_LOG_INFO_0 << "Use MsFEM in Petrov-Galerkin formulation with an adaptive computation, i.e.:" << std::endl;
       else
-        DSC_LOG_INFO << "Use MsFEM in classical (symmetric) formulation with an adaptive computation, i.e.:" << std::endl;  
-      DSC_LOG_INFO << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
-      DSC_LOG_INFO << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
-      DSC_LOG_INFO << "Error tolerance = " << DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) << std::endl << std::endl;
-      DSC_LOG_INFO << "Computations were made for:" << std::endl << std::endl;
-      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-      DSC_LOG_INFO << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-      DSC_LOG_INFO << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
-      DSC_LOG_INFO << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
+        DSC_LOG_INFO_0 << "Use MsFEM in classical (symmetric) formulation with an adaptive computation, i.e.:" << std::endl;
+      DSC_LOG_INFO_0 << "Starting with a uniformly refined coarse and fine mesh and" << std::endl;
+      DSC_LOG_INFO_0 << "the same number of layers for each (oversampled) local grid computation." << std::endl << std::endl;
+      DSC_LOG_INFO_0 << "Error tolerance = " << DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) << std::endl << std::endl;
+      DSC_LOG_INFO_0 << "Computations were made for:" << std::endl << std::endl;
+      DSC_LOG_INFO_0 << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+      DSC_LOG_INFO_0 << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
+      DSC_LOG_INFO_0 << "Oversampling Strategy = " << DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) << std::endl;
+      DSC_LOG_INFO_0 << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
       if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
-      { DSC_LOG_INFO << std::endl << "Comparison with a standard FEM computation on the MsFEM Fine Grid." << std::endl; }
-      DSC_LOG_INFO << std::endl << std::endl;
+      { DSC_LOG_INFO_0 << std::endl << "Comparison with a standard FEM computation on the MsFEM Fine Grid." << std::endl; }
+      DSC_LOG_INFO_0 << std::endl << std::endl;
     }
 
     //! ---------------------- local error indicators --------------------------------
@@ -128,9 +128,13 @@ int main(int argc, char** argv) {
     //normal
     // macro problem
 
-    const auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
-    DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
+    auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
+    auto max_cpu_time = Dune::MPIManager::comm().max(cpu_time);
+    DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: "
+                 << max_cpu_time
+                 << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
+
     return 0;
   } catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;

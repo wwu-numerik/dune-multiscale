@@ -10,6 +10,7 @@
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/ranges.hh>
 
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/tools/subgrid_io.hh>
@@ -285,13 +286,15 @@ void SubGridList::identifySubGrids() {
   // -------- identify the entities that share a certain node -------
 
   // determine the entities that share a common global node with a given index
-  for (const auto& host_entity : hostSpace_) {
-    int number_of_nodes_in_entity = host_entity.count< 2 >();
+  // we need to iterate over the whole grid, not only from hostSpace_.begin() to
+  // hostSpace_.end() for parallel runs!
+  for (auto& hostEntity : DSC::viewRange(hostSpace_.gridPart().grid().leafView())) {
+    int number_of_nodes_in_entity = hostEntity.count< 2 >();
     for (int i = 0; i < number_of_nodes_in_entity; ++i) {
-      const HostNodePointer node              = host_entity.subEntity< 2 >(i);
+      const HostNodePointer node              = hostEntity.subEntity< 2 >(i);
       const int             global_index_node = hostGridPart.indexSet().index(*node);
 
-      entities_sharing_same_node_[global_index_node].emplace_back(host_entity);
+      entities_sharing_same_node_[global_index_node].emplace_back(hostEntity);
     }
   }
 
@@ -356,7 +359,6 @@ void SubGridList::createSubGrids() {
   const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
   
   // loop over all host entities and assign them to a macro cell
-  auto lastIt = coarseSpace_.begin();
   for (const auto& host_entity : hostSpace_) {
     // get the coarse-grid-father of host_entity (which is a maxlevel entity)...
 //    const HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet_,
@@ -368,6 +370,8 @@ void SubGridList::createSubGrids() {
     // if macroCellIndex is smaller than zero, the enclosing coarse cell was
     // not found. This may be the case if the host cell does not belong to the
     // grid part for the current process.
+    if (macroCellIndex<0)
+      DUNE_THROW(InvalidStateException, "macro cell not found!");
     if (macroCellIndex>=0) {
       // add host_entity to the subgrid with the index 'macroCellIndex'
       subGridList_[macroCellIndex]->insertPartial(host_entity);

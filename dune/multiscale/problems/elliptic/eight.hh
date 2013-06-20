@@ -205,7 +205,7 @@ public:
                        const TimeType& /*timedummy*/,
                        RangeType& y) const;
 
-  void evaluateJacobian(const DomainType& , typename FunctionSpaceType::JacobianRangeType& ) const;
+  void jacobian(const DomainType& , typename FunctionSpaceType::JacobianRangeType& ) const;
 };
 
 } //! @} namespace Eight {

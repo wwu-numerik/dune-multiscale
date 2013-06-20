@@ -113,14 +113,6 @@ public:
     df.read(stream);
   } // read
 
-  /*template < class DFType >
-     * void read( std::vector<DFType>& df_vec )
-     * {
-     *  for ( Iter it = df_vec.begin(); it != end; ++it ) {
-     * append( *it );
-     *  }
-     * }*/
-
 private:
   long size_;
   const boost::filesystem::path dir_;

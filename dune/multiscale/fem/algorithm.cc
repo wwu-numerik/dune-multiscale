@@ -8,17 +8,16 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/common/elliptic_homogenizer.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/tools/misc/h1error.hh>
 #include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/fem/constantdiffusionmatrix.hh>
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
+
 #include <dune/fem/misc/l2norm.hh>
-#include <dune/fem/misc/l2error.hh>
-#include <dune/fem/misc/h1norm.hh>
 
 #include <string>
 #include <fstream>
@@ -60,7 +59,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discrete_solution )
  {
   // write the final (discrete) solution to a file
-  std::string solution_file = (boost::format("/fem_solution_refLevel_%d")
+  std::string solution_file = (boost::format("fem_solution_refLevel_%d")
                                 % DSC_CONFIG_GET("fem.grid_level", 4) ).str();
   DiscreteFunctionWriter(solution_file).append(discrete_solution);
 
@@ -70,7 +69,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discre
 
   // create and initialize output class
   typename OutputTraits::IOTupleType fem_solution_series(&discrete_solution);
-  outputparam.set_prefix((boost::format("/fem_solution")).str());
+  outputparam.set_prefix((boost::format("fem_solution")).str());
   typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
                                                  fem_solution_series, outputparam);
   // write data
@@ -288,29 +287,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(discrete_solution);
 
-  //! ----------------- compute L2- and H1- errors -------------------
-  if (Problem::ModelProblemData::has_exact_solution)
-  {
-
-    DSC_LOG_INFO << std::endl << "The L2 and H1 error:" << std::endl << std::endl;
-    H1Error< typename CommonTraits::DiscreteFunctionType > h1error;
-    L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
-
-    const typename CommonTraits::ExactSolutionType u;
-
-    typedef typename CommonTraits::ExactSolutionType ExactSolution;
-
-    const int order_quadrature_rule = 13;
-
-    typename CommonTraits::RangeType fem_error = l2error.norm< ExactSolution >
-       (u, discrete_solution, order_quadrature_rule /* * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder */ );
-    DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl << std::endl;
-
-    typename CommonTraits::RangeType h1_fem_error(0.0);
-    h1_fem_error = h1error.semi_norm < ExactSolution >(u, discrete_solution, order_quadrature_rule);
-    h1_fem_error += fem_error;
-    DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
-  }
+  ErrorCalculator(nullptr, &discrete_solution).print(DSC_LOG_INFO_0);
 }
 
 //! \TODO docme
@@ -385,7 +362,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
   // ---------------------------------------------------------------------------------
 
   // write the final (discrete) solution to a file
-  std::string solution_file = (boost::format("/homogenized_solution_macro_refLevel_%d")
+  std::string solution_file = (boost::format("homogenized_solution_macro_refLevel_%d")
                                 % DSC_CONFIG_GET("fem.grid_level", 4) ).str();
   DiscreteFunctionWriter(solution_file).append(homogenized_solution);
 
@@ -395,7 +372,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
 
   // create and initialize output class
   typename OutputTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);
-  outputparam.set_prefix((boost::format("/homogenized_solution")).str());
+  outputparam.set_prefix((boost::format("homogenized_solution")).str());
   typename OutputTraits::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
                                                     hom_fem_solution_series, outputparam);
   homfemsol_dataoutput.writeData( 1.0 /*dummy*/, "homogenized-solution" );
