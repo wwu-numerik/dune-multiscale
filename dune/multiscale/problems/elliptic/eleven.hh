@@ -31,7 +31,7 @@ namespace Eleven {
 struct ModelProblemData
   : public IModelProblemData
 {
-  static const bool has_exact_solution = true;
+  static const bool has_exact_solution = false;
   ModelProblemData();
 
   //! \copydoc IModelProblemData::getMacroGridFile();
