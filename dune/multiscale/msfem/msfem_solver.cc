@@ -198,7 +198,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
               const int innerIndex
                       = subgrid_list.getEnclosingMacroCellIndex(entities_sharing_same_node[global_index_node][j]);
               // the following will only add the entity index if it is not yet present
-              coarse_entities.emplace(innerIndex);
+              coarse_entities.insert(innerIndex);
             }
 
             host_loc_value[i] = ( sub_loc_value[i] / coarse_entities.size() );
