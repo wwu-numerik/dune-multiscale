@@ -149,6 +149,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/msfem_grid_specifier.cc
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
+        dune/multiscale/common/error_calc.cc
     )
 
 set( PROBLEM_SOURCES
@@ -229,6 +230,6 @@ ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
 
-# HEADERCHECK( ${header} ${dune} )
-# DEPENDENCYCHECK( ${header} ${dune} )
-# ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
+HEADERCHECK( ${header} ${dune} )
+DEPENDENCYCHECK( ${header} ${dune} )
+ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})

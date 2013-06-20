@@ -98,7 +98,6 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   {
     const Entity& sub_grid_entity = *it;
     const Geometry& sub_grid_geometry = sub_grid_entity.geometry();
-    assert(sub_grid_entity.partitionType() == InteriorEntity);
 
     DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrix> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
@@ -385,7 +384,6 @@ void LocalProblemOperator
   {
     const Entity& local_grid_entity = *it;
     const Geometry& geometry = local_grid_entity.geometry();
-    assert(local_grid_entity.partitionType() == InteriorEntity);
 
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 

@@ -13,14 +13,14 @@
  #include <config.h>
 #endif // ifdef HAVE_CMAKE_CONFIG
 
-#include <dune/fem/io/file/dataoutput.hh>
+#include <dune/fem/io/file/datawriter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
 namespace Dune {
 namespace Multiscale {
 //! define output parameters for \ref Dune::DataOutput
 struct OutputParameters
-  : public Dune::DataOutputParameters
+  : public Dune::DataWriterParameters
 {
 public:
   explicit OutputParameters(const std::string _path
@@ -42,6 +42,11 @@ public:
    *  3; // gnuplot
   **/
   int outputformat() const;
+
+  //! return true if all data should be written to a spearate path per rank
+  virtual bool separateRankPath () const;
+
+  virtual std::string macroGridName (const int dim) const;
 
 private:
   //! to avoid confusion path is only changeable in ctor

@@ -10,7 +10,7 @@ namespace Multiscale {
 struct OutputTraits {
 //! --------- typedefs and classes for data output -----------------------------------------
 typedef std::tuple< const CommonTraits::DiscreteFunctionType* >      IOTupleType;
-typedef Dune::DataOutput< CommonTraits::GridType, IOTupleType > DataOutputType;
+typedef Dune::DataWriter< CommonTraits::GridType, IOTupleType > DataOutputType;
 typedef Dune::GridFunctionAdapter< Problem::ExactSolution, CommonTraits::GridPartType > DiscreteExactSolutionType;
 // just for the discretized exact solution (in case it is available)
 typedef std::tuple< const DiscreteExactSolutionType* > ExSolIOTupleType;

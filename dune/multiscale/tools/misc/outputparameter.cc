@@ -8,6 +8,7 @@
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -45,6 +46,15 @@ int OutputParameters::outputformat() const {
   // return 3; // gnuplot
 }
 
+bool OutputParameters::separateRankPath() const {
+  return false;
+}
+
+std::string OutputParameters::macroGridName(const int /*dim*/) const {
+  return Problem::ModelProblemData().getMacroGridFile();
+}
 
 } //namespace Multiscale
 } //namespace Dune
+
+

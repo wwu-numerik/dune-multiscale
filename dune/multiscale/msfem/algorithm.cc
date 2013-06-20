@@ -8,6 +8,8 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
+#include <dune/fem/misc/h1norm.hh>
+#include <dune/fem/misc/l2norm.hh>
 #include <dune/grid/common/gridinfo.hh>
 
 // to display data with ParaView:
@@ -17,9 +19,6 @@
 #include <dune/fem/io/parameter.hh>
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
-#include <dune/fem/misc/l2error.hh>
-#include <dune/fem/misc/l2norm.hh>
-#include <dune/fem/misc/h1norm.hh>
 
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
@@ -29,7 +28,6 @@
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
-#include <dune/multiscale/tools/misc/h1error.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>
@@ -40,6 +38,7 @@
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/common/output_traits.hh>
 
 namespace Dune {
@@ -72,10 +71,10 @@ void adapt(CommonTraits::GridType& grid,
        || (total_fine_grid_jumps_[loop_number - 1] >= average_est_error) )
   {
     total_refinement_level_ += 2;   // 'the fine grid level'
-    DSC_LOG_INFO << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2."
+    DSC_LOG_INFO_0 << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2."
               << std::endl;
-    DSC_LOG_INFO << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
-    DSC_LOG_INFO << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
+    DSC_LOG_INFO_0 << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
+    DSC_LOG_INFO_0 << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
               << " refinement levels finer than the coarse grid." << std::endl;
   }
 
@@ -85,10 +84,10 @@ void adapt(CommonTraits::GridType& grid,
        || (total_conservative_flux_jumps_[loop_number - 1] >= average_est_error) )
   {
     number_of_layers_ += 1;
-    DSC_LOG_INFO
+    DSC_LOG_INFO_0
     << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5."
     << std::endl;
-    DSC_LOG_INFO << "NEW: Number of layers = " << number_of_layers_ << std::endl;
+    DSC_LOG_INFO_0 << "NEW: Number of layers = " << number_of_layers_ << std::endl;
   }
 
   const auto& total_coarse_residual_ = *totals[0];
@@ -96,7 +95,7 @@ void adapt(CommonTraits::GridType& grid,
   if ( (total_coarse_residual_[loop_number - 1] >= average_est_error)
        || (total_coarse_grid_jumps_[loop_number - 1] >= average_est_error) )
   {
-    DSC_LOG_INFO << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment."
+    DSC_LOG_INFO_0 << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment."
               << std::endl;
     coarse_scale_error_dominant = true;   /* mark elementwise for 2 refinments */
   }
@@ -145,7 +144,7 @@ void adapt(CommonTraits::GridType& grid,
 
       if ( l == (loop_number - 1) )
       {
-        DSC_LOG_INFO << number_of_marked_entities << " of " << total_number_of_entities
+        DSC_LOG_INFO_0 << number_of_marked_entities << " of " << total_number_of_entities
                   << " coarse grid entities marked for mesh refinement." << std::endl;
       }
 
@@ -192,11 +191,11 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   const auto& gridPart = msfem_solution.space().gridPart();
   std::string outstring;
   if (DSC_CONFIG_GET("adaptive", false)) {
-    const std::string msfem_fname_s = (boost::format("/msfem_solution_%d_") % loop_number).str();
+    const std::string msfem_fname_s = (boost::format("msfem_solution_%d_") % loop_number).str();
     outputparam.set_prefix(msfem_fname_s);
     outstring = msfem_fname_s;
   } else {
-    outputparam.set_prefix("/msfem_solution");
+    outputparam.set_prefix("msfem_solution");
     outstring = "msfem_solution";
   }
 
@@ -207,11 +206,11 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
 
   if (DSC_CONFIG_GET("adaptive", false)) {
-    const std::string coarse_msfem_fname_s = (boost::format("/coarse_part_msfem_solution_%d_") % loop_number).str();
+    const std::string coarse_msfem_fname_s = (boost::format("coarse_part_msfem_solution_%d_") % loop_number).str();
     outputparam.set_prefix(coarse_msfem_fname_s);
     outstring = coarse_msfem_fname_s;
   } else {
-    outputparam.set_prefix("/coarse_part_msfem_solution");
+    outputparam.set_prefix("coarse_part_msfem_solution");
     outstring = "coarse_part_msfem_solution";
   }
 
@@ -222,12 +221,12 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
 
   if (DSC_CONFIG_GET("adaptive", false)) {
-    const std::string fine_msfem_fname_s = (boost::format("/fine_part_msfem_solution_%d_") % loop_number).str();
+    const std::string fine_msfem_fname_s = (boost::format("fine_part_msfem_solution_%d_") % loop_number).str();
     outputparam.set_prefix(fine_msfem_fname_s);
     // write data
     outstring = fine_msfem_fname_s;
   } else {
-    outputparam.set_prefix("/fine_part_msfem_solution");
+    outputparam.set_prefix("fine_part_msfem_solution");
     // write data
     outstring = "fine_msfem_solution";
   }
@@ -262,7 +261,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     // create and initialize output class
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-    outputparam.set_prefix("/exact_solution");
+    outputparam.set_prefix("exact_solution");
     OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
     // write data
     exactsol_dataoutput.writeData( 1.0 /*dummy*/, "exact-solution" );
@@ -278,7 +277,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   // create and initialize output class
   OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
 
-  const auto coarse_grid_fname = (boost::format("/coarse_grid_visualization_%d_") % loop_number).str();
+  const auto coarse_grid_fname = (boost::format("coarse_grid_visualization_%d_") % loop_number).str();
   outputparam.set_prefix(coarse_grid_fname);
   OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
   // write data
@@ -345,9 +344,9 @@ bool algorithm(const std::string& macroGridName,
   bool local_indicators_available_ = false;
 
   if (DSC_CONFIG_GET("adaptive", false))
-    DSC_LOG_INFO << "------------------ run " << loop_number + 1 << " --------------------" << std::endl << std::endl;
+    DSC_LOG_INFO_0 << "------------------ run " << loop_number + 1 << " --------------------" << std::endl << std::endl;
 
-  DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
+  DSC_LOG_INFO_0 << "loading dgf: " << macroGridName << std::endl;
   // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
   // for the parameters:
   // create a grid pointer for the DGF file belongig to the macro grid:
@@ -358,8 +357,7 @@ bool algorithm(const std::string& macroGridName,
   L2Error< CommonTraits::DiscreteFunctionType > l2error;
 
   CommonTraits::GridType& grid = *macro_grid_pointer;
-  grid.loadBalance();
-  gridinfo(grid);
+
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for MsFEM-macro-problem
   CommonTraits::GridPartType gridPart(grid);
@@ -368,9 +366,10 @@ bool algorithm(const std::string& macroGridName,
 
   // coarse grid
   CommonTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
-  macro_grid_pointer_coarse->globalRefine(coarse_grid_level_);
-  CommonTraits::GridPartType gridPart_coarse(*macro_grid_pointer_coarse);
-  CommonTraits::GridType& grid_coarse = gridPart_coarse.grid();
+  CommonTraits::GridType& grid_coarse = *macro_grid_pointer_coarse;
+  grid_coarse.globalRefine(coarse_grid_level_);
+  grid_coarse.loadBalance();
+  CommonTraits::GridPartType gridPart_coarse(grid_coarse);
 
   // strategy for adaptivity:
   if (DSC_CONFIG_GET("adaptive", false) && local_indicators_available_)
@@ -430,7 +429,7 @@ bool algorithm(const std::string& macroGridName,
     msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
                                       coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
 
-    DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
+    DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
     solution_output(msfem_solution, coarse_part_msfem_solution,
                     fine_part_msfem_solution, outputparam, loop_number,
                     total_refinement_level_, coarse_grid_level_);
@@ -455,17 +454,17 @@ bool algorithm(const std::string& macroGridName,
   if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
   {
     // just for Dirichlet zero-boundary condition
-    typedef Dune::Multiscale::Elliptic_FEM_Solver KOP;
-    const KOP fem_solver(discreteFunctionSpace);
-    fem_solver.solve_dirichlet_zero(diffusion_op, f, fem_solution);
+    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
+    const CommonTraits::LowerOrderTermType l;
+    fem_solver.solve_dirichlet_zero(diffusion_op, l, f, fem_solution);
     //! ----------------------------------------------------------------------
-    DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
+    DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
     //! -------------------------- writing data output FEM Solution ----------
 
     // ------------- VTK data output for FEM solution --------------
     // create and initialize output class
     OutputTraits::IOTupleType fem_solution_series(&fem_solution);
-    outputparam.set_prefix("/fem_solution");
+    outputparam.set_prefix("fem_solution");
     OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
     // write data
@@ -473,54 +472,12 @@ bool algorithm(const std::string& macroGridName,
     // -------------------------------------------------------------
   }
 
-  DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
-  //! ----------------- compute L2- and H1- errors -------------------
-  if (Problem::ModelProblemData::has_exact_solution)
-  {
+  ErrorCalculator(&msfem_solution, &fem_solution).print(DSC_LOG_INFO_0);
 
-    H1Error< CommonTraits::DiscreteFunctionType > h1error;
-
-    const CommonTraits::ExactSolutionType u;
-    int order_quadrature_rule = 13;
-    CommonTraits::RangeType msfem_error = l2error.norm< CommonTraits::ExactSolutionType >(u,
-                                                              msfem_solution,
-                                                              order_quadrature_rule );
-    DSC_LOG_INFO << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
-
-    CommonTraits::RangeType h1_msfem_error(0.0);
-    h1_msfem_error = h1error.semi_norm< CommonTraits::ExactSolutionType >(u, msfem_solution, order_quadrature_rule);
-    h1_msfem_error += msfem_error;
-
-    DSC_LOG_INFO << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
-
-    if ( DSC_CONFIG_GET("msfem.fem_comparison",false) ) {
-      CommonTraits::RangeType fem_error = l2error.norm< CommonTraits::ExactSolutionType >(u,
-                                                            fem_solution,
-                                                            order_quadrature_rule );
-
-      DSC_LOG_INFO << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
-
-      CommonTraits::RangeType h1_fem_error(0.0);
-
-      //! \todo This is actually not the h1 error
-      h1_fem_error = h1error.semi_norm< CommonTraits::ExactSolutionType >(u, fem_solution, order_quadrature_rule);
-      h1_fem_error += fem_error;
-      DSC_LOG_INFO << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
-    }
-  }
-  if ( DSC_CONFIG_GET("msfem.fem_comparison",false) ) {
-    CommonTraits::RangeType approx_msfem_error = l2error.norm2< 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(fem_solution,
-                                                                                                      msfem_solution);
-    DSC_LOG_INFO << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
-    H1Norm< CommonTraits::GridPartType > h1norm(gridPart);
-    CommonTraits::RangeType h1_approx_msfem_error = h1norm.distance(fem_solution, msfem_solution);
-
-    DSC_LOG_INFO << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
-  }
   //! -------------------------------------------------------
   if (DSC_CONFIG_GET("adaptive", false)) {
-    DSC_LOG_INFO << std::endl << std::endl;
-    DSC_LOG_INFO << "---------------------------------------------" << std::endl;
+    DSC_LOG_INFO_0 << std::endl << std::endl;
+    DSC_LOG_INFO_0 << "---------------------------------------------" << std::endl;
   }
   return repeat_algorithm;
 } // function algorithm

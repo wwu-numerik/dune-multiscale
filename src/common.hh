@@ -33,8 +33,9 @@
 #include <dune/common/exceptions.hh> // We use exceptions
 #include <dune/common/unused.hh>
 
-// to display data with ParaView:
-#include <dune/grid/io/file/vtk/vtkwriter.hh>
+#if HAVE_DUNE_SPGRID
+#include <dune/grid/spgrid/capabilities.hh>
+#endif
 
 #include <dune/fem/io/file/dataoutput.hh>
 #include <dune/fem/io/parameter.hh>
@@ -56,10 +57,16 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/aliases.hh>
 
+#include <dune/multiscale/common/traits.hh>
 
 void init(int argc, char** argv) {
   namespace DSC = Dune::Stuff::Common;
   Dune::MPIManager::initialize(argc, argv);
+  if (Dune::MPIManager::size() > 1
+      && !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v))
+  {
+    DUNE_THROW(Dune::InvalidStateException, "mpi enabled + serial grid = bad idea");
+  }
   DSC::Config().readCommandLine(argc, argv);
 
   // LOG_NONE = 1, LOG_ERROR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32

@@ -338,7 +338,7 @@ void ExactSolution::evaluate(const DomainType& x,
   y += 0.5 * constants().epsilon * ( cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
 } // evaluate
 
-void ExactSolution::evaluateJacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const {
+void ExactSolution::jacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const {
   grad_u[0][0] = (20.0) * 2.0 * (1.0 - x[1]) * x[1] * (2.0 * x[0] - 1.0);
   grad_u[0][1] = (20.0) * 2.0 * (1.0 - x[0]) * x[0] * (2.0 * x[1] - 1.0);
 
@@ -348,7 +348,7 @@ void ExactSolution::evaluateJacobian(const DomainType& x, typename FunctionSpace
 
   grad_u[0][1] += constants().epsilon * M_PI
                   * ( cos(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]) * sin( 2.0 * M_PI * (x[0] / constants().epsilon) ) );
-} // evaluateJacobian
+} // jacobian
 
 void ExactSolution::evaluate(const DomainType& x,
                      const TimeType& /*timedummy*/,

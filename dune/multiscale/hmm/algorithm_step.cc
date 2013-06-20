@@ -346,7 +346,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
   // write the solution after the current HMM Newton step to a file
   // for adaptive computations, the saved solution is not suitable for a later usage
   if (DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", true)) {
-    std::string fname = (boost::format("/hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
+    std::string fname = (boost::format("hmm_solution_discFunc_refLevel_%d_NewtonStep_%d")
                          % refinement_level_macrogrid_ % hmm_iteration_step).str();
     DiscreteFunctionWriter(fname).append(hmm_solution);
 
@@ -356,7 +356,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
 
     // create and initialize output class
     typename OutputTraits::IOTupleType hmm_solution_newton_step_series(&hmm_solution);
-    outputparam.set_prefix((boost::format("/hmm_solution_%d_NewtonStep_%d") % loop_cycle % hmm_iteration_step).str());
+    outputparam.set_prefix((boost::format("hmm_solution_%d_NewtonStep_%d") % loop_cycle % hmm_iteration_step).str());
     typename OutputTraits::DataOutputType hmmsol_dataoutput(hmm_solution.space().gridPart().grid(),
                                                    hmm_solution_newton_step_series, outputparam);
     // write data
@@ -401,10 +401,10 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
   // create and initialize output class
   typename OutputTraits::IOTupleType hmm_solution_series(&hmm_solution);
   if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
-    outputparam.set_prefix((boost::format("/hmm_solution_%d") % loop_cycle).str());
+    outputparam.set_prefix((boost::format("hmm_solution_%d") % loop_cycle).str());
   }
   else {
-    outputparam.set_prefix("/hmm_solution");
+    outputparam.set_prefix("hmm_solution");
   }
   typename OutputTraits::DataOutputType hmmsol_dataoutput(gridPart.grid(), hmm_solution_series, outputparam);
 
@@ -419,7 +419,7 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
     typename CommonTraits::ExactSolutionType u;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
     typename OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-    outputparam.set_prefix("/exact_solution");
+    outputparam.set_prefix("exact_solution");
     typename OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
 
     // write data
@@ -471,7 +471,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
     const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
     // for adaptive computations, the saved solution is not suitable for a later usage
     if (!DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("hmm.write_to_file", false)) {
-      DiscreteFunctionWriter((boost::format("/hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
+      DiscreteFunctionWriter((boost::format("hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()
                              ).append(hmm_solution);
     }
 
