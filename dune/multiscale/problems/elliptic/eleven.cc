@@ -36,6 +36,8 @@ bool ModelProblemData::problemAllowsStochastics() const {
 void FirstSource::evaluate(const DomainType& x,
                      RangeType& y) const {
 
+  y = -0.3;
+#if 0
   double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
   double coefficient_1 = ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 + ( 0.5 * cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
 
@@ -82,7 +84,7 @@ void FirstSource::evaluate(const DomainType& x,
   // F(x,u(x), \grad u(x)
   RangeType F_value = 0.0;
 
-#if 1
+#if 0
   double scaling_factor = 0.5;
   double factor = scaling_factor * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 2.0 + cos( 2.0 * M_PI * (x[0] / pow(constants().epsilon, 1.5 ) ) ) );
 
@@ -112,17 +114,18 @@ void FirstSource::evaluate(const DomainType& x,
        { g_p = 0.0; }
   F_value = factor * g_p * grad_u[0][1];
 #endif
-#if 0
-   double scale = 0.1;
+#if 1
+   double scale = ( 2.0 + cos( 2.0 * M_PI * (x[1] / pow(constants().epsilon, 2.0) ) ) );
    if ( u <= (-0.25) )
    { F_value = -1.0; }
    else if ( u >= 0.25 )
-        { F_value = 1.0; }
+        { F_value = scale; }
         else
-	{ F_value = sin( 2.0 * M_PI * u); }
-   F_value *= (3.0 + ( scale * ( cos( grad_u[0][0] ) + cos( grad_u[0][1] ) ) ) );
+	{ F_value = scale * sin( 2.0 * M_PI * u); }
+   //F_value *= (3.0 + ( scale * ( cos( grad_u[0][0] ) + cos( grad_u[0][1] ) ) ) );
 #endif
   y += F_value;
+#endif
 #endif
 } // evaluate
 
@@ -194,8 +197,8 @@ void LowerOrderTerm::evaluate(const DomainType& x,
     
     if ( p <= -3.0 )
     {
-      //!std::cout << "In LowerOrderTerm::evaluate: LowerOrderTerm not defined for p <= -3, but p = " << p << "." << std::endl;
-      p = -2.999; //!abort();
+      //std::cout << "In LowerOrderTerm::evaluate: LowerOrderTerm not defined for p <= -3, but p = " << p << "." << std::endl;
+      p = -2.999;// abort();
     }
 
     if ( p <= -1.25 )
@@ -207,14 +210,14 @@ void LowerOrderTerm::evaluate(const DomainType& x,
     y = scaling_factor * g_p * direction_gradient[0][1];
 #endif
 #if 0
-   double scale = 0.1;
+   double scale = ( 2.0 + cos( 2.0 * M_PI * (x[1] / pow(constants().epsilon, 2.0) ) ) );
    if ( position <= (-0.25) )
    { y = -1.0; }
    else if ( position >= 0.25 )
-        { y = 1.0; }
+        { y = scale; }
         else
-	{ y = sin( 2.0 * M_PI * position); }
-   y *= (3.0 + ( scale * ( cos( direction_gradient[0][0] ) + cos( direction_gradient[0][1] ) ) ) );
+	{ y = scale * sin( 2.0 * M_PI * position); }
+   //y *= (3.0 + ( scale * ( cos( direction_gradient[0][0] ) + cos( direction_gradient[0][1] ) ) ) );
 #endif
 }  // evaluate
 
@@ -243,8 +246,8 @@ void LowerOrderTerm::position_derivative(const DomainType& x,
 
     if ( p <= -3.0 )
     {
-      //!std::cout << "In LowerOrderTerm::position_derivative: LowerOrderTerm not defined for p <= -3, but p = " << p << "." << std::endl;
-      p = -2.999; //!abort();
+      //std::cout << "In LowerOrderTerm::position_derivative: LowerOrderTerm not defined for p <= -3, but p = " << p << "." << std::endl;
+      p = -2.999; //abort();
     }
  
     if ( p <= -1.25 )
@@ -256,14 +259,14 @@ void LowerOrderTerm::position_derivative(const DomainType& x,
     y = scaling_factor * g_p * direction_gradient[0][1];
 #endif
 #if 0
-   double scale = 0.1;
+   double scale = ( 2.0 + cos( 2.0 * M_PI * (x[1] / pow(constants().epsilon, 2.0) ) ) );
    if ( position <= (-0.25) )
    { y = 0.0; }
    else if ( position >= 0.25 )
         { y = 0.0; }
         else
-	{ y = 2.0 * M_PI * cos( 2.0 * M_PI * position); }
-   y *= (3.0 + ( scale * ( cos( direction_gradient[0][0] ) + cos( direction_gradient[0][1] ) ) ) );
+	{ y = scale * 2.0 * M_PI * cos( 2.0 * M_PI * position); }
+   //y *= (3.0 + ( scale * ( cos( direction_gradient[0][0] ) + cos( direction_gradient[0][1] ) ) ) );
 #endif
 }  // position_derivative
 
@@ -292,8 +295,8 @@ void LowerOrderTerm::direction_derivative(const DomainType& x,
     
     if ( p <= -3.0 )
     {
-      //!std::cout << "LowerOrderTerm::direction_derivative: LowerOrderTerm not defined for p <= -3. But p = " << p << "." << std::endl;
-      p = -2.999; //!abort();
+      //std::cout << "LowerOrderTerm::direction_derivative: LowerOrderTerm not defined for p <= -3. But p = " << p << "." << std::endl;
+      p = -2.999; //abort();
     }
     
     if ( p <= -1.25 )
@@ -306,16 +309,16 @@ void LowerOrderTerm::direction_derivative(const DomainType& x,
     y[0][0] = 0.0;
 #endif
 #if 0
-   double scale = 0.1;
-   if ( position <= (-0.25) )
-   { y[0][0] = -1.0; }
-   else if ( position >= 0.25 )
-        { y[0][0] = 1.0; }
-        else
-        { y[0][0] = sin( 2.0 * M_PI * position); }
-   y[0][1] = y[0][0];
-   y[0][0] *= scale * (-1.0) * sin( direction_gradient[0][0] );
-   y[0][1] *= scale * (-1.0) * sin( direction_gradient[0][1] );
+   //double scale = ( 2.0 + cos( 2.0 * M_PI * (x[1] / pow(constants().epsilon, 2.0) ) ) );
+   //if ( position <= (-0.25) )
+   //{ y[0][0] = -1.0; }
+   //else if ( position >= 0.25 )
+   //     { y[0][0] = 1.0; }
+   //     else
+   //     { y[0][0] = sin( 2.0 * M_PI * position); }
+   //y[0][1] = y[0][0];
+   y[0][0] = 0.0;//*= scale * (-1.0) * sin( direction_gradient[0][0] );
+   y[0][1] = 0.0;//*= scale * (-1.0) * sin( direction_gradient[0][1] );
 #endif
 
 }  // direction_derivative
