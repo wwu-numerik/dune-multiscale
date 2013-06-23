@@ -56,7 +56,8 @@ private:
   enum { dimension = GridType::dimension };
   enum { spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder };
 
-  mutable FieldMatrix< RangeType, dimension, dimension > a;
+  typedef FieldMatrix< RangeType, dimension, dimension > TensorMatrixType;
+
 
   // dgf file that describes the perforated domain
   std::string& filename_;
@@ -73,22 +74,16 @@ public:
     << std::endl;
 
     GridPtr< GridType > gridptr(filename_);
-
     gridptr->globalRefine(12);
-
     GridPartType gridPart(*gridptr);
 
     DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
 
     FieldMatrix< RangeType, dimension, dimension > tensorHom(0.0);
 
-    IteratorType endit = discreteFunctionSpace.end();
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+    TensorMatrixType a;
+    for (const EntityType& entity : discreteFunctionSpace)
     {
-      // entity
-      const EntityType& entity = *it;
-
-      // create quadrature for given geometry type
       const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
@@ -111,12 +106,8 @@ public:
 
     tensorHom[0][0] = 1 / tensorHom[0][0];
 
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+    for (const EntityType& entity : discreteFunctionSpace)
     {
-      // entity
-      const EntityType& entity = *it;
-
-      // create quadrature for given geometry type
       const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
@@ -142,15 +133,10 @@ public:
     }
 
     tensorHom[0][1] *= tensorHom[0][0];
-
     tensorHom[1][0] = tensorHom[0][1];
 
-    for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
+    for (const EntityType& entity : discreteFunctionSpace)
     {
-      // entity
-      const EntityType& entity = *it;
-
-      // create quadrature for given geometry type
       const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
