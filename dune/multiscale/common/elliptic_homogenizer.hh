@@ -58,7 +58,7 @@ public:
 };
 
 
-NULLFUNCTION(ZeroFunction)
+NULLFUNCTION(ZeroFunction);
 
 //! \TODO docme
 // (to replace the more general lower order term)
@@ -115,13 +115,8 @@ public:
   void diffusiveFlux(const DomainType& y,
                      const JacobianRangeType& direction,
                      JacobianRangeType& flux) const {
-    const double epsilon = DSC_CONFIG_GET("problem.epsilon", 1.0f);
-
-    DomainType new_y;
-
-    for (int i = 0; i < dimDomain; ++i)
-      new_y[i] = epsilon * y[i];
-
+    DomainType new_y = y;
+    new_y *= DSC_CONFIG_GET("problem.epsilon", 1.0f);
     tensor_.diffusiveFlux(new_y, direction, flux);
   } // diffusiveFlux
 
@@ -186,14 +181,9 @@ public:
     JacobianRangeType direction;
     JacobianRangeType flux;
 
-    for (int i_ = 0; i_ < DomainType::dimension; ++i_)
+    for (int j = 0; j < DomainType::dimension; ++j)
     {
-      if (j_ == i_)
-      {
-        direction[0][i_] = 1.0;
-      } else {
-        direction[0][i_] = 0.0;
-      }
+        direction[0][j] = int(j_ == j);
     }
 
     tensor_.diffusiveFlux(y, direction, flux);
@@ -203,88 +193,9 @@ public:
   } // evaluate
 };
 
-//! \TODO docme
-template< class FunctionSpaceImp >
-class DefaultDummyAdvection
-  : public Fem::Function< FunctionSpaceImp, DefaultDummyAdvection< FunctionSpaceImp > >
-{
-private:
-  typedef FunctionSpaceImp FunctionSpaceType;
 
-  typedef DefaultDummyAdvection< FunctionSpaceType > ThisType;
-  typedef Fem::Function< FunctionSpaceType, ThisType >    BaseType;
+NULLFUNCTION(DefaultDummyAdvection);
 
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-  const FunctionSpaceType* functionSpace_;
-  const double epsilon_;
-
-public:
-  // Constructor for Dummy
-  inline explicit DefaultDummyAdvection(const FunctionSpaceType& functionSpace)
-    : functionSpace_(&functionSpace)
-      , epsilon_(0)
-  {}
-
-  inline explicit DefaultDummyAdvection(const FunctionSpaceType& functionSpace, const double& epsilon)
-    : functionSpace_(&functionSpace)
-      , epsilon_(epsilon)
-  {}
-
-  inline void evaluate(const int /*i*/,
-                       const int /*j*/,
-                       const DomainType& /*x*/,
-                       const DomainType& /*y*/,
-                       RangeType& z) const {
-    z = 0;
-  }
-
-  inline void evaluate(const int /*i*/,
-                       const DomainType& /*x*/,
-                       const DomainType& /*y*/,
-                       RangeType& z) const {
-    z = 0;
-  }
-
-  inline void evaluate(const int /*i*/,
-                       const int /*j*/,
-                       const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  inline void evaluate(const int /*i*/,
-                       const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  inline void evaluate(const int /*i*/,
-                       const DomainType& /*x*/,
-                       const TimeType& /*t*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& /*x*/,
-                       const TimeType /*time*/,
-                       RangeType& y) const {
-    y = 0;
-  }
-};
 
 //! \TODO docme
 template< class GridImp, class TensorImp >
@@ -413,7 +324,7 @@ private:
         localW_j.jacobian(quadrature[localQuadPoint], grad_w_j);
 
         // local (barycentric) coordinates (with respect to cell grid entity)
-        const typename QuadratureType::CoordinateType& local_point = quadrature.point(localQuadPoint);
+        const auto& local_point = quadrature.point(localQuadPoint);
 
         // global point in the unit cell Y
         const DomainType global_point_in_Y = geometry.global(local_point);
