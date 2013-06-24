@@ -5,6 +5,12 @@
 #ifndef Elliptic_RIG_MSEM_Solver_HH
 #define Elliptic_RIG_MSEM_Solver_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 #include <dune/common/fmatrix.hh>
 
 #include <dune/fem/solver/oemsolver/oemsolver.hh>

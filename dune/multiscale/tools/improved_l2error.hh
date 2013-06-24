@@ -5,11 +5,18 @@
 #ifndef DUNE_MULTISCALE_IMPROVED_L2ERROR_HH
 #define DUNE_MULTISCALE_IMPROVED_L2ERROR_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 namespace Dune {
 
