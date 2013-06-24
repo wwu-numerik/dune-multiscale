@@ -5,6 +5,12 @@
 #ifndef DUNE_ANALYTICALHOMOGENIZER_HH
 #define DUNE_ANALYTICALHOMOGENIZER_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
@@ -12,6 +18,7 @@
 #include <dune/fem/space/lagrangespace.hh>
 #include <dune/fem/function/adaptivefunction.hh>
 #include <dune/grid/io/file/dgfparser/gridptr.hh>
+#include <dune/stuff/common/logging.hh>
 
 namespace Dune {
 

@@ -5,6 +5,12 @@
 #ifndef DiscreteEllipticMsFEMConservativeFluxSolver_HH
 #define DiscreteEllipticMsFEMConservativeFluxSolver_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 #include <vector>
 #include <dune/common/fmatrix.hh>
 
@@ -21,6 +27,7 @@
 
 // dune-subgrid include:
 #include <dune/multiscale/tools/subgrid_io.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/subgrid/subgrid.hh>
 
 // dune-fem includes:

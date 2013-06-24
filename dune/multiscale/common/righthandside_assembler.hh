@@ -5,6 +5,12 @@
 #ifndef DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
 #define DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 // - Dune includes
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
@@ -13,6 +19,7 @@
 //#include <dune/multiscale/tools/solver/MsFEM/msfem_localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/stuff/fem/functions/checks.hh>
+#include <dune/stuff/common/logging.hh>
 
 namespace Dune {
 //! Assembler for right rand side
