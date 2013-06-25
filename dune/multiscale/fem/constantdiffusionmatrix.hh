@@ -1,6 +1,9 @@
 #ifndef CONSTANTDIFFUSIONMATRIX_HH
 #define CONSTANTDIFFUSIONMATRIX_HH
 
+#include <dune/fem/function/common/function.hh>
+#include <dune/multiscale/common/traits.hh>
+
 namespace Dune {
 namespace Multiscale {
 

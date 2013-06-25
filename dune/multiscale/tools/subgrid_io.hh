@@ -8,6 +8,12 @@
 /** this file contains specializations of write/read functions targetd for dune-subgrid
  **/
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/utility/grapedataioformattypes.hh>
 #include <dune/grid/yaspgrid.hh>

@@ -5,8 +5,15 @@
 #ifndef DUNE_LINEARLAGRANGEINTERPOLATION_HH
 #define DUNE_LINEARLAGRANGEINTERPOLATION_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 #include <dune/fem/function/common/function.hh>
 #include <dune/stuff/common/logging.hh>
+#include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/memory.hh>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <dune/fem/function/localfunction/temporarylocalfunction.hh>
