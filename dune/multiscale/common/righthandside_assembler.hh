@@ -260,8 +260,7 @@ public:
         std::vector<JacobianRangeType> gradient_Phi_vec(numDofs);
         coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_vec);
 
-        auto& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
-        SubGridPartType subGridPart(sub_grid_U_T);
+        auto subGridPart = subgrid_list.gridPart(global_index_entity);
         LocalDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
 
         LocalDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);

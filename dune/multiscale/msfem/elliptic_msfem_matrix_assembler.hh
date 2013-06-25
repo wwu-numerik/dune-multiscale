@@ -173,8 +173,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.size();
 
     // the sub grid U(T) that belongs to the coarse_grid_entity T
-    auto& sub_grid_U_T = subgrid_list_.getSubGrid(global_index_entity);
-    SubGridPart subGridPart(sub_grid_U_T);
+    auto subGridPart = subgrid_list_.gridPart(global_index_entity);
 
     LocalDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
 
@@ -198,8 +197,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     const CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
 
     // the barycenter of the macro_grid_entity
-    const typename CoarseQuadrature::CoordinateType& local_coarse_point
-            = one_point_quadrature.point(0 /*=quadraturePoint*/);
+    const auto& local_coarse_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
 
     // transposed of the the inverse jacobian
     const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);

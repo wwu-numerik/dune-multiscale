@@ -6,6 +6,7 @@
 #define ESTIMATOR_UTILS_HH
 
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -81,7 +82,7 @@ struct EstimatorUtils {
 
   static std::pair<typename EstimatorType::JumpArray,typename EstimatorType::JumpArray>
   flux_contributions( const typename EstimatorType::SubGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace,
-                      const typename EstimatorType::SubGridType& sub_grid_U_T,
+                      const typename SubGridList::SubGridPartType& sub_gridPart,
                       const typename EstimatorType::LeafIndexSetType& coarseGridLeafIndexSet,
                       const typename EstimatorType::DiscreteFunctionPointerPair& cflux_coarse_ent_host,
                       const typename EstimatorType::DiscreteFunctionType& msfem_coarse_part,
@@ -98,7 +99,8 @@ struct EstimatorUtils {
 
     for (const auto& sub_entity : localDiscreteFunctionSpace)
     {
-      auto host_entity_pointer = sub_grid_U_T.template getHostEntity< 0 >(sub_entity);
+      //! MARK actual subgrid usage
+      auto host_entity_pointer = sub_gridPart.grid().template getHostEntity< 0 >(sub_entity);
       const auto& host_entity = *host_entity_pointer;
 
       auto father_of_sub_grid_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet,

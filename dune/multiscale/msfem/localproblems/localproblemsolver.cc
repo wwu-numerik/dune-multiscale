@@ -800,9 +800,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
     DiscreteFunctionWriter dfw(locprob_solution_location);
 
-    SubGridType& subGrid = subgrid_list_.getSubGrid(coarse_index);
-
-    SubGridPartType subGridPart(subGrid);
+    auto subGridPart = subgrid_list_.gridPart(coarse_index);
 
     const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
 
@@ -831,8 +829,8 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       DSC_LOG_INFO  << std::endl
                     << "Number of the local problem: " << dimension * coarse_index << " (of "
                     << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
-                    << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
-                    << subGrid.size(2) << " nodes." << std::endl;
+                    << "   Subgrid " << coarse_index << " contains " << subGridPart.grid().size(0) << " elements and "
+                    << subGridPart.grid().size(2) << " nodes." << std::endl;
 
       // take time
       DSC_PROFILER.startTiming("none.local_problem_solution");
@@ -846,9 +844,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       DSC_LOG_INFO  << std::endl
                     << "Number of the local problem: "
                     << (dimension * coarse_index) + 1 << " (of "
-                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
-                    << "   Subgrid " << coarse_index << " contains " << subGrid.size(0) << " elements and "
-                    << subGrid.size(2) << " nodes." << std::endl;
+                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
 
       // take time
       DSC_PROFILER.startTiming("none.local_problem_solution");
