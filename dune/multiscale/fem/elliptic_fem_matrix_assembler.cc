@@ -12,17 +12,18 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-template< class T, class R, class S >
-void DiscreteEllipticOperator< T, R, S >::operator()(const DiscreteFunction&, DiscreteFunction& /*w*/) const
-{
+template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::operator()(const DiscreteFunction& /*u*/,
+                                                                                            DiscreteFunction& /*w*/)
+const {
   DUNE_THROW(Dune::NotImplemented,"the ()-operator of the DiscreteEllipticOperator class is not yet implemented and still a dummy.");
-}
+} // ()
 
 template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
 template< class MatrixType >
-void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >
-  ::assemble_matrix(MatrixType& global_matrix, bool boundary_treatment ) const
-{
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::assemble_matrix(
+  MatrixType& global_matrix,
+  bool boundary_treatment ) const {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
   global_matrix.reserve();
@@ -90,14 +91,15 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
       LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
       const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
       const IntersectionIterator iend = gridPart.iend(entity);
-      for (const Intersection& intersection : DSC::intersectionRange(gridPart,entity))
+      for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
       {
+        const Intersection& intersection = *iit;
         if ( !intersection.boundary() )
           continue;
 
         const int face = intersection.indexInInside();
-        const auto fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-        for (auto fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+        const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
+        for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
           local_matrix.unitRow(*fdit);
       }
     }
@@ -121,8 +123,10 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
   // micro scale base function:
   std::vector< RangeType > phi( discreteFunctionSpace_.mapper().maxNumDofs() );
 
-  for (const Entity& entity : discreteFunctionSpace_)
+  const Iterator end = discreteFunctionSpace_.end();
+  for (Iterator it = discreteFunctionSpace_.begin(); it != end; ++it)
   {
+    const Entity& entity = *it;
     const Geometry& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
@@ -138,7 +142,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       // local (barycentric) coordinates (with respect to entity)
-      const auto& local_point = quadrature.point(quadraturePoint);
+      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
       const DomainType global_point = geometry.global(local_point);
 
@@ -176,8 +180,8 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
     const auto& subGrid = discreteFunctionSpace_.grid();
     for (const auto& entity : discreteFunctionSpace_)
     {
-      const HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity< 0 >(entity);
-      const HostEntityType& host_entity = *host_entity_pointer;
+      const auto host_entity_pointer = subGrid.template getHostEntity< 0 >(entity);
+      const auto& host_entity = *host_entity_pointer;
       auto local_matrix = global_matrix.localMatrix(entity, entity);
       const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
       const auto iend = hostGridPart.iend(host_entity);
@@ -186,8 +190,8 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
         if ( iit->neighbor() ) // if there is a neighbor entity
         {
           // check if the neighbor entity is in the subgrid
-          const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-          const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
+          const auto neighborHostEntityPointer = iit->outside();
+          const auto& neighborHostEntity = *neighborHostEntityPointer;
           if ( subGrid.template contains< 0 >(neighborHostEntity) )
           {
             continue;
@@ -206,9 +210,15 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
 
 template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
 template< class MatrixType >
-void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >
-  ::assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix, bool boundary_treatment ) const
-{
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::assemble_jacobian_matrix(
+  DiscreteFunction& disc_func,
+  MatrixType& global_matrix,
+  bool boundary_treatment ) const {
+  typedef typename MatrixType::LocalMatrixType LocalMatrix;
+
+  typedef typename DiscreteFunction::LocalFunctionType
+  LocalFunction;
+
   global_matrix.reserve();
   global_matrix.clear();
 
@@ -216,13 +226,16 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
 
   // micro scale base function:
   std::vector< RangeType > phi( discreteFunctionSpace_.mapper().maxNumDofs() );
-  for (const Entity& entity : discreteFunctionSpace_)
+
+  const Iterator end = discreteFunctionSpace_.end();
+  for (Iterator it = discreteFunctionSpace_.begin(); it != end; ++it)
   {
+    const Entity& entity = *it;
     const Geometry& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
-    auto local_matrix = global_matrix.localMatrix(entity, entity);
-    auto local_disc_function = disc_func.localFunction(entity);
+    LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
+    LocalFunction local_disc_function = disc_func.localFunction(entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -234,8 +247,10 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       // local (barycentric) coordinates (with respect to entity)
-      const auto& local_point = quadrature.point(quadraturePoint);
-      const auto global_point = geometry.global(local_point);
+      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+
+      const DomainType global_point = geometry.global(local_point);
+
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
@@ -283,17 +298,20 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
   if (boundary_treatment)
   {
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-    for (const Entity& entity : discreteFunctionSpace_)
+    for (Iterator it = discreteFunctionSpace_.begin(); it != end; ++it)
     {
+      const Entity& entity = *it;
       if ( !entity.hasBoundaryIntersections() )
         continue;
 
-      auto local_matrix = global_matrix.localMatrix(entity, entity);
-      const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-      const auto iend = gridPart.iend(entity);
-      for (auto iit = gridPart.ibegin(entity); iit != iend; ++iit)
+      LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
+
+      const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+
+      const IntersectionIterator iend = gridPart.iend(entity);
+      for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
       {
-        const auto& intersection = *iit;
+        const Intersection& intersection = *iit;
         if ( !intersection.boundary() )
           continue;
 

@@ -5,6 +5,12 @@
 #ifndef DUNE_DIVERGENCE_HH
 #define DUNE_DIVERGENCE_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 #include <unordered_map>
 #include <unordered_set>
 
@@ -13,6 +19,7 @@
 #include <dune/fem/storage/array.hh>
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/solver/oemsolver.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/la/container/pattern.hh>

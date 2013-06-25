@@ -5,6 +5,12 @@
 #ifndef DiscreteEllipticMsFEMLocalProblem_HH
 #define DiscreteEllipticMsFEMLocalProblem_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 #include <vector>
 
 #include <dune/common/fmatrix.hh>
