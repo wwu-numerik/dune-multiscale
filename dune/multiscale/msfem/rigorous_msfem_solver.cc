@@ -179,9 +179,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
 
   for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
   {
-
-    SubGridType& subGrid = subgrid_list.getSubGrid( sg_id );
-    SubGridPart subGridPart( subGrid );
+    auto subGridPart = subgrid_list.gridPart(sg_id);
     const SubgridDiscreteFunctionSpace subDiscreteFunctionSpace( subGridPart );
     
     CoarseNodeVectorType coarse_nodes_in_subgrid = subgrid_list.getCoarseNodeVector( sg_id );
@@ -189,8 +187,8 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
     const SubGridIterator sg_end = subDiscreteFunctionSpace.end();
     for (SubGridIterator sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
     {
-
-      const HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >(*sg_it);
+      //! MARK actual subgrid usage
+      const HostEntityPointer host_entity_pointer = subGridPart.grid().getHostEntity< 0 >(*sg_it);
       const HostEntity& host_entity = *host_entity_pointer;
 
       const auto iend = fine_space.gridPart().iend( host_entity );
@@ -204,8 +202,8 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
           // check if the neighbor entity is in the subgrid
           const HostEntityPointer neighborHostEntityPointer = iit->outside();
           const HostEntity& neighborHostEntity = *neighborHostEntityPointer;
-          if ( subGrid.contains< 0 >(neighborHostEntity) )
-            is_subgrid_boundary_face = false;
+          //! MARK actual subgrid usage
+          is_subgrid_boundary_face = subGridPart.grid().contains< 0 >(neighborHostEntity);
         }
 
         if ( is_subgrid_boundary_face == false )
@@ -369,8 +367,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
     const auto numBaseFunctions = coarseBaseSet.size();
 
     // the sub grid U(T) that belongs to the coarse_grid_entity T
-    SubGridType& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
-    SubGridPart subGridPart(sub_grid_U_T);
+    auto subGridPart = subgrid_list.gridPart(global_index_entity);
 
     const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
 

@@ -114,8 +114,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
     const int index = coarseGridLeafIndexSet.index(*coarse_it);
 
     // the sub-grid U(T) that belongs to the coarse_grid_entity T
-    SubGridType& sub_grid_U_T = subgrid_list.getSubGrid(index);
-    SubGridPart subGridPart(sub_grid_U_T);
+    auto subGridPart = subgrid_list.gridPart(index);
 
     const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
 
@@ -162,30 +161,21 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming projection:
     if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) ) {
 
-      if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() ) {
-        DSC_LOG_ERROR << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl;
-      }
-
       correction_on_U_T.clear();
 
-      typedef typename SubgridDiscreteFunctionSpace::IteratorType SubgridIterator;
-      typedef typename SubgridIterator::Entity                    SubgridEntity;
-      typedef typename SubgridDiscreteFunction::LocalFunctionType SubgridLocalFunction;
-
-      const SubgridIterator sub_endit = localDiscreteFunctionSpace.end();
-      for (SubgridIterator sub_it = localDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it) {
-        const SubgridEntity& sub_entity = *sub_it;
-
-        const HostEntityPointer fine_host_entity_pointer = sub_grid_U_T.getHostEntity< 0 >(*sub_it);
-        const HostEntity& fine_host_entity = *fine_host_entity_pointer;
+      for (const auto& sub_entity : localDiscreteFunctionSpace)
+      {
+        //! MARK actual subgrid usage
+        const auto fine_host_entity_pointer = subGridPart.grid().getHostEntity< 0 >(sub_entity);
+        const auto& fine_host_entity = *fine_host_entity_pointer;
 
         const int hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(fine_host_entity_pointer);
         if (hostFatherIndex==index) {
 
-          const SubgridLocalFunction sub_loc_value = local_problem_solution_e0.localFunction(sub_entity);
-          LocalFunction host_loc_value = correction_on_U_T.localFunction(fine_host_entity);
+          const auto sub_loc_value = local_problem_solution_e0.localFunction(sub_entity);
+          auto host_loc_value = correction_on_U_T.localFunction(fine_host_entity);
 
-          int number_of_nodes_entity = sub_it->count< 2 >();
+          int number_of_nodes_entity = sub_entity.count< 2 >();
           for (int i = 0; i < number_of_nodes_entity; ++i)
           {
             const typename HostEntity::Codim< 2 >::EntityPointer node = fine_host_entity.subEntity< 2 >(i);

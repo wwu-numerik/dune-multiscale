@@ -99,9 +99,13 @@ public:
 
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true);
   ~SubGridList();
+private:
   SubGridType& getSubGrid(int i);
   const SubGridType& getSubGrid(int i) const;
+public:
   int getNumberOfSubGrids() const;
+
+  SubGridPartType gridPart(int i);
 
   // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
   const std::vector< int >& getSubgridIDs_that_contain_entity (int host_enitity_index) const;

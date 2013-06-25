@@ -754,8 +754,7 @@ public:
       int global_index_entity = coarseGridLeafIndexSet.index(*coarse_grid_it);
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
-      SubGridType& sub_grid_U_T = subgrid_list.getSubGrid(global_index_entity);
-      SubGridPartType subGridPart(sub_grid_U_T);
+      auto subGridPart = subgrid_list.gridPart(global_index_entity);
 
       SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 

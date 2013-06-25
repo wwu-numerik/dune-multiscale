@@ -212,6 +212,11 @@ int SubGridList::getNumberOfSubGrids() const
   return specifier_.getNumOfCoarseEntities();
 }
 
+SubGridList::SubGridPartType SubGridList::gridPart(int i)
+{
+  return SubGridPartType(getSubGrid(i));
+}
+
 /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
 *
 * Given a fine cell, this method computes its barycentre. Using a grid run on the coarse

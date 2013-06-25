@@ -265,8 +265,7 @@ private:
 
     //! ---- get sub grid that for coarse entity
     // the sub grid U(T) that belongs to the coarse_grid_entity T
-    SubGridType& sub_grid_U_T = subgrid_list_.getSubGrid(index_coarse_entity);
-    SubGridPart subGridPart(sub_grid_U_T);
+    auto subGridPart = subgrid_list_.gridPart(index_coarse_entity);
 
     SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
     std::array<SubGridDiscreteFunctionType, 2> conservative_flux_coarse_ent = {{
@@ -311,9 +310,7 @@ private:
         const int index_coarse_neighbor_entity = coarseGridLeafIndexSet.index(*outside_it);
 
         // --- get subgrids and load fluxes ---
-
-        SubGridType& sub_grid_neighbor_U_T = subgrid_list_.getSubGrid(index_coarse_neighbor_entity);
-        SubGridPart subGridPart_neighbor(sub_grid_neighbor_U_T);
+        auto subGridPart_neighbor = subgrid_list_.gridPart(index_coarse_neighbor_entity);
         SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_neighbor(subGridPart_neighbor);
 
         std::array<SubGridDiscreteFunctionType, 2> conservative_flux_coarse_ent_neighbor = {{
@@ -347,7 +344,7 @@ private:
     }
 
     const auto contributions = EstimatorUtilsType::flux_contributions(localDiscreteFunctionSpace,
-                                                  sub_grid_U_T,
+                                                  subGridPart,
                                                   coarseGridLeafIndexSet,
                                                   cflux_coarse_ent_host,
                                                   msfem_coarse_part,
@@ -493,8 +490,7 @@ private:
       // -------------------------- subgrids and local function ----------------------
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
-      SubGridType& sub_grid_U_T = subgrid_list_.getSubGrid(global_index_entity);
-      SubGridPart subGridPart(sub_grid_U_T);
+      auto subGridPart = subgrid_list_.gridPart(global_index_entity);
 
       SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
