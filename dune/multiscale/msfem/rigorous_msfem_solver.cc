@@ -560,7 +560,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
         const int face = (*intersection_it).indexInInside();
 
         std::vector< std::size_t > indices;
-        coarse_space.mapper().mapToGlobal(*it, indices);
+        coarse_space.mapper().map(*it, indices);
 
         auto faceIterator = lagrangePointSet.beginSubEntity< faceCodim >(face);
         const auto faceEndIterator = lagrangePointSet.endSubEntity< faceCodim >(face);
