@@ -88,7 +88,7 @@ void Elliptic_Rigorous_MsFEM_Solver::subgrid_to_hostrid_projection(
       const SubgridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
       LocalFunction host_loc_value = host_func.localFunction(host_entity);
 
-      const auto numBaseFunctions = sub_loc_value.baseFunctionSet().size();
+      const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         host_loc_value[i] = sub_loc_value[i];
@@ -263,7 +263,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
 
   typedef typename HostEntity::Codim< 2 >::EntityPointer HostNodePointer;
   typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
 
   const HostGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
 
@@ -275,7 +275,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
                                                                HostEntityPointer(*it),
                                                                specifier.getLevelDifference());
 
-    const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().baseFunctionSet( *coarse_father );
+    const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().basisFunctionSet( *coarse_father );
     const auto numBaseFunctions = coarseBaseSet.size();
 
     const auto& lagrangepoint_set = specifier.coarseSpace().lagrangePointSet(*coarse_father);
@@ -284,14 +284,17 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
     const auto number_of_points = lagrangepoint_set.nop();
 
     std::vector< RangeType > phi( numBaseFunctions );
-    //! TODO switch loops for more efficiency
-    for(size_t loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number ) {
+    std::vector< std::size_t > indices;
+    specifier.coarseSpace().mapper().map(*coarse_father, indices);
 
-      const int global_dof_number = specifier.coarseSpace().mapper().mapToGlobal(*coarse_father, loc_basis_number );
-      if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
+    //! TODO switch loops for more efficiency
+    for(size_t loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number )
+    {
+      const int global_dof_number = indices[loc_basis_number];
+      if ( specifier.is_coarse_boundary_node( global_dof_number ) )
       { continue; }
 
-      int global_interior_dof_number = global_id_to_internal_id[ global_dof_number ];
+      const int global_interior_dof_number = global_id_to_internal_id[ global_dof_number ];
 
       // only implemented for 3 Lagrange Points, i.e. piecewise linear functions
       assert( number_of_points == 3 );
@@ -313,7 +316,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
       LocalFunction loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
 
       const int number_of_nodes_in_fine_entity = it->count< 2 >();
-      if ( !( number_of_nodes_in_fine_entity == int( loc_coarse_basis_function.baseFunctionSet().size() ) ) )
+      if ( !( number_of_nodes_in_fine_entity == int( loc_coarse_basis_function.basisFunctionSet().size() ) ) )
       { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
 
       for (int i = 0; i < number_of_nodes_in_fine_entity; i += 1)
@@ -350,7 +353,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
   typedef typename CoarseIterator::Entity CoarseEntity;
   typedef typename CoarseEntity::Geometry CoarseGeometry;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType CoarseBaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
 
   std::vector< JacobianRangeType > gradient_Phi(
      specifier.coarseSpace().mapper().maxNumDofs() );
@@ -363,7 +366,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
 
     const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
-    const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().baseFunctionSet( coarse_grid_entity );
+    const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().basisFunctionSet( coarse_grid_entity );
     const auto numBaseFunctions = coarseBaseSet.size();
 
     // the sub grid U(T) that belongs to the coarse_grid_entity T
@@ -380,7 +383,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
     const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-                                                % global_index_entity % MPIManager::rank()).str();
+                                                % global_index_entity % Fem::MPIManager::rank()).str();
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
     // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 0 << std::endl;
@@ -391,19 +394,14 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
     // 1 point quadrature!! We only need the gradient of the base function,
     // which is constant on the whole entity.
     const CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
+    coarseBaseSet.jacobianAll(one_point_quadrature[0], gradient_Phi);
 
-    // the barycenter of the macro_grid_entity
-    const typename CoarseQuadrature::CoordinateType& local_coarse_point
-      = one_point_quadrature.point(0 /*=quadraturePoint*/);
-
-    // transposed of the the inverse jacobian
-    const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
-    coarseBaseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi);
-
+    std::vector< std::size_t > indices;
+    specifier.coarseSpace().mapper().map(coarse_grid_entity , indices);
     for (unsigned int i = 0; i < numBaseFunctions; ++i)
     {
-      int global_dof_number = specifier.coarseSpace().mapper().mapToGlobal( coarse_grid_entity , i );
-      if ( specifier.is_coarse_boundary_node( global_dof_number ) == true )
+      int global_dof_number = indices[i];
+      if ( specifier.is_coarse_boundary_node( global_dof_number ))
       { continue; }
 
       int global_interior_dof_number = global_id_to_internal_id[ global_dof_number ];
@@ -485,7 +483,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
     std::vector< RangeType > phi( coarse_space.mapper().maxNumDofs() );
 
     // get base function set
-    const auto &coarse_baseSet = coarse_space.baseFunctionSet( entity );
+    const auto &coarse_baseSet = coarse_space.basisFunctionSet( entity );
     const auto numBaseFunctions = coarse_baseSet.size();
 
     // create quadrature of appropriate order
@@ -501,9 +499,11 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
 
       coarse_baseSet.evaluateAll( quadrature[quadraturePoint], phi );
 
+      std::vector< std::size_t > indices;
+      coarse_space.mapper().map(entity, indices);
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
-         const int global_dof_number = coarse_space.mapper().mapToGlobal( entity, i );
+        const int global_dof_number = indices[i];
          if ( !specifier.is_coarse_boundary_node( global_dof_number ) )
              coff[ global_id_to_internal_id[ global_dof_number ] ] += weight * phi[i];
        }
@@ -559,11 +559,14 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
 
         const int face = (*intersection_it).indexInInside();
 
+        std::vector< std::size_t > indices;
+        coarse_space.mapper().mapToGlobal(*it, indices);
+
         auto faceIterator = lagrangePointSet.beginSubEntity< faceCodim >(face);
         const auto faceEndIterator = lagrangePointSet.endSubEntity< faceCodim >(face);
         for ( ; faceIterator != faceEndIterator; ++faceIterator)
         {
-          int global_id_node = coarse_space.mapper().mapToGlobal(*it, *faceIterator );
+          const int global_id_node = indices[*faceIterator];
 
           // create map entry: ' global coord of node <--> global_id_node '
           OrderedDomainType coord = (it->geometry()).global(lagrangePointSet.point( *faceIterator ));
@@ -572,8 +575,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
           if ( specifier.is_coarse_boundary_node( global_id_node ) )
             continue;
 
-          int internal_id_node = global_id_to_internal_id[ global_id_node ];
-          
+          const int internal_id_node = global_id_to_internal_id[ global_id_node ];
           subgrid_id_to_ms_basis_func_ids[ subgrid_id ].push_back( internal_id_node );
         }
 
@@ -833,7 +835,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
 
             const auto& geometry = (*it).geometry();
  
-            const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
+            const Fem::CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
             const int numQuadraturePoints = quadrature.nop();
             for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
             {
@@ -971,7 +973,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
 	  
             const auto& geometry = (*it).geometry();
  
-            const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
+            const Fem::CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
             const int numQuadraturePoints = quadrature.nop();
             for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
             {

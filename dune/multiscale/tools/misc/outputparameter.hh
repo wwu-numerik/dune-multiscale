@@ -20,7 +20,7 @@ namespace Dune {
 namespace Multiscale {
 //! define output parameters for \ref Dune::DataOutput
 struct OutputParameters
-  : public Dune::DataWriterParameters
+  : public Dune::Fem::DataWriterParameters
 {
 public:
   explicit OutputParameters(const std::string _path

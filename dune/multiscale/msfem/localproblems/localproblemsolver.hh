@@ -77,14 +77,14 @@ private:
   //! type of grid
   typedef typename SubGridList::SubGridType SubGridType;
   //! type of grid part
-  typedef LeafGridPart< SubGridType > SubGridPartType;
+  typedef Fem::LeafGridPart< SubGridType > SubGridPartType;
   //! type of subgrid discrete function space
-  typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1 >  // 1=POLORDER
+  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1 >  // 1=POLORDER
     SubDiscreteFunctionSpaceType;
 
   //! type of subgrid discrete function
 public:
-  typedef AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
+  typedef Fem::AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
   typedef typename SubgridIteratorType::Entity SubgridEntityType;
@@ -106,7 +106,7 @@ private:
     typedef SubDiscreteFunctionSpaceType                          RowSpaceType;
     typedef SubDiscreteFunctionSpaceType                          ColumnSpaceType;
     typedef LagrangeMatrixSetup< false >                          StencilType;
-    typedef ParallelScalarProduct< SubDiscreteFunctionSpaceType > ParallelScalarProductType;
+    typedef Fem::ParallelScalarProduct< SubDiscreteFunctionSpaceType > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
@@ -128,14 +128,14 @@ private:
   //! ----------------------------------------------------------------------------------------
   
 public:
-  typedef SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType,
+  typedef Fem::SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType,
                                    LocProbMatrixTraits > LocProbFEMMatrix;
 private:
   #ifdef SYMMETRIC_DIFFUSION_MATRIX
   typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrix;
   #else
   // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
-  typedef OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
+  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
   #endif // ifdef SYMMETRIC_DIFFUSION_MATRIX
 
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;

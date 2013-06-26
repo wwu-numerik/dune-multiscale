@@ -27,7 +27,7 @@ struct FEMTraits {
      ****ones. GMRES seems to be more stable, but is extremely slow!
      */
   typedef //Dune::OEMBICGSQOp
-    Dune::OEMBICGSTABOp
+    Dune::Fem::OEMBICGSTABOp
   //  OEMGMRESOp
     < typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix > InverseFEMMatrix;
 

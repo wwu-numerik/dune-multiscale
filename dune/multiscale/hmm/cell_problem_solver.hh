@@ -59,7 +59,7 @@ private:
     typedef PeriodicDiscreteFunctionSpaceType                          RowSpaceType;
     typedef PeriodicDiscreteFunctionSpaceType                          ColumnSpaceType;
     typedef LagrangeMatrixSetup< false >     StencilType;
-    typedef ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
+    typedef Fem::ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
@@ -69,11 +69,11 @@ private:
     };
   };
 public:
-  typedef SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType,
+  typedef Fem::SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType,
                                    CellMatrixTraits > CellFEMMatrix;
 private:
   //! OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
-  typedef OEMBICGSTABOp< PeriodicDiscreteFunctionType, CellFEMMatrix > InverseCellFEMMatrix;
+  typedef Dune::Fem::OEMBICGSTABOp< PeriodicDiscreteFunctionType, CellFEMMatrix > InverseCellFEMMatrix;
 
 private:
   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_; // Referenz &, wenn & verwendet, dann unten:

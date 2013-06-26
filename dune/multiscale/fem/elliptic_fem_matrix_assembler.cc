@@ -40,7 +40,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
 
     LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -54,9 +54,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
       const DomainType global_point = geometry.global(local_point);
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
@@ -237,7 +235,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
     LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
     LocalFunction local_disc_function = disc_func.localFunction(entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -247,15 +245,13 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
     {
       // local (barycentric) coordinates (with respect to entity)
-      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const auto& local_point = quadrature.point(quadraturePoint);
 
       const DomainType global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)

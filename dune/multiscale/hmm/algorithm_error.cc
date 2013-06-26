@@ -63,7 +63,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
                                                           periodicDiscreteFunctionSpace);
       corrector_of_base_func.clear();
       typename CommonTraits::DiscreteFunctionType::LocalFunctionType local_hmm_solution = hmm_solution.localFunction(entity);
-      const typename CommonTraits::BaseFunctionSetType& baseSet = discreteFunctionSpace.baseFunctionSet(entity);
+      const typename CommonTraits::BasisFunctionSetType& baseSet = discreteFunctionSpace.basisFunctionSet(entity);
       const unsigned int numMacroBaseFunctions = baseSet.size();
       std::vector<int> cell_problem_id(numMacroBaseFunctions);
       for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -115,7 +115,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
 
           typename CommonTraits::DiscreteFunctionType::LocalFunctionType local_hmm_solution_neighbor = hmm_solution.localFunction(entity_outside);
 
-          const typename CommonTraits::BaseFunctionSetType& baseSet_neighbor = discreteFunctionSpace.baseFunctionSet(entity_outside);
+          const typename CommonTraits::BasisFunctionSetType& baseSet_neighbor = discreteFunctionSpace.basisFunctionSet(entity_outside);
           const unsigned int numMacroBaseFunctions_neighbor = baseSet_neighbor.size();
           std::vector<int> cell_problem_id_neighbor(numMacroBaseFunctions_neighbor);
           for (unsigned int i = 0; i < numMacroBaseFunctions_neighbor; ++i)

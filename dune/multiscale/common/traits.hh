@@ -14,7 +14,7 @@
 #include <dune/common/tuples.hh>
 #include <dune/fem/space/common/functionspace.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-#include <dune/fem/space/lagrangespace/lagrangespace.hh>
+#include <dune/fem/space/lagrange.hh>
 #include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 
@@ -22,6 +22,10 @@ namespace Dune {
 
 template <class T>
 struct GridPtr;
+template <bool T>
+class LagrangeMatrixSetup;
+
+namespace Fem {
 template <class T, class R>
 class GridFunctionAdapter;
 template <class T>
@@ -32,12 +36,11 @@ template <class T, class R>
 class DataOutput;
 template <class T, class R>
 class DataWriter;
-template <bool T>
-class LagrangeMatrixSetup;
 template <class T, class R>
 class AdaptationManager;
 template <class T, class R, class S>
 class SparseRowMatrixOperator;
+} // namespace Fem
 
 namespace Multiscale {
 
@@ -62,9 +65,9 @@ struct CommonTraits {
   // Dune::InteriorBorder_Partition or Dune::All_Partition >?
   // see:
   // http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
-  typedef Dune::AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
+  typedef Dune::Fem::AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
   typedef Dune::GridPtr< GridType >                                       GridPointerType;
-  typedef Dune::FunctionSpace< double, double, WORLDDIM, 1 >              FunctionSpaceType;
+  typedef Dune::Fem::FunctionSpace< double, double, WORLDDIM, 1 >              FunctionSpaceType;
   //!-----------------------------------------------------------------------------------------
 
   //! --------- typedefs for the coefficient and data functions ------------------------------
@@ -93,7 +96,7 @@ struct CommonTraits {
   typedef FunctionSpaceType::RangeType RangeType;
   //! defines the function space to which the numerical solution belongs to
   //! see dune/fem/lagrangebase.hh
-  typedef Dune::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >  // 1=POLORDER
+  typedef Dune::Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >  // 1=POLORDER
       DiscreteFunctionSpaceType;
   typedef DiscreteFunctionSpaceType::DomainFieldType            TimeType;
   typedef DiscreteFunctionSpaceType::JacobianRangeType          JacobianRangeType;
@@ -101,11 +104,12 @@ struct CommonTraits {
   typedef GridType::Codim< 0 >::EntityPointer                   EntityPointerType;
   typedef GridType::Codim< 0 >::Geometry                        EntityGeometryType;
   typedef GridType::Codim< 1 >::Geometry                        FaceGeometryType;
-  typedef DiscreteFunctionSpaceType::BaseFunctionSetType        BaseFunctionSetType;
-  typedef Dune::CachingQuadrature< GridPartType, 0 >                  EntityQuadratureType;
-  typedef Dune::CachingQuadrature< GridPartType, 1 >                  FaceQuadratureType;
+  //!TODO carry the rename over to the type def'ed name
+  typedef DiscreteFunctionSpaceType::BasisFunctionSetType        BasisFunctionSetType;
+  typedef Dune::Fem::CachingQuadrature< GridPartType, 0 >                  EntityQuadratureType;
+  typedef Dune::Fem::CachingQuadrature< GridPartType, 1 >                  FaceQuadratureType;
   typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
-  typedef Dune::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
+  typedef Dune::Fem::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
   typedef DiscreteFunctionType::LocalFunctionType               LocalFunctionType;
   typedef DiscreteFunctionType::DofIteratorType                 DofIteratorType;
 
@@ -115,12 +119,12 @@ struct CommonTraits {
     typedef DiscreteFunctionSpaceType                          RowSpaceType;
     typedef DiscreteFunctionSpaceType                          ColumnSpaceType;
     typedef Dune::LagrangeMatrixSetup< false >                       StencilType;
-    typedef Dune::ParallelScalarProduct< DiscreteFunctionSpaceType > ParallelScalarProductType;
+    typedef Dune::Fem::ParallelScalarProduct< DiscreteFunctionSpaceType > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
     {
-      typedef Dune::LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
+      typedef Dune::Fem::LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
     };
   };
 
@@ -129,9 +133,9 @@ struct CommonTraits {
 
   //!------------------------- for adaptive grid refinement ---------------------------------
   //! type of restrict-prolong operator
-  typedef Dune::RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOperatorType;
+  typedef Dune::Fem::RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOperatorType;
   //! type of the adaption manager
-  typedef Dune::AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
+  typedef Dune::Fem::AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
   //!---------------------------------------------------------------------------------------
 
   typedef std::vector< RangeType > RangeVector;
@@ -139,7 +143,7 @@ struct CommonTraits {
 
   static const int assembler_order = 2* DiscreteFunctionSpaceType::polynomialOrder + 2;
 
-  typedef Dune::SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, MatrixTraits > FEMMatrix;
+  typedef Dune::Fem::SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, MatrixTraits > FEMMatrix;
 
 };
 

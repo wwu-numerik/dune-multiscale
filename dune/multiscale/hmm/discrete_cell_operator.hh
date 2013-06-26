@@ -56,7 +56,7 @@ class DiscreteCellProblemOperator
 
   typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType                   BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType                   BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::LagrangePointSetType                  LagrangePointSet;
   typedef typename LagrangePointSet::Codim< 1 >::SubEntityIteratorType FaceDofIterator;
 
@@ -67,7 +67,7 @@ class DiscreteCellProblemOperator
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
 
-  typedef CachingQuadrature< GridPart, 0 > Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 > Quadrature;
 
 public:
   DiscreteCellProblemOperator(const DiscreteFunctionSpace& periodicDiscreteFunctionSpace,

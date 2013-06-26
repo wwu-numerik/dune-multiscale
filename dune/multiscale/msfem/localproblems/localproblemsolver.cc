@@ -70,7 +70,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
                        SubDiscreteFunctionType& local_problem_solution,
                        const int coarse_index /*= -1*/ ) const {
 
-    typedef SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
+    typedef Fem::SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
         WeightedClementMatrixObjectTraits;
 
     typedef WeightedClementOp< SubDiscreteFunctionType,
@@ -143,7 +143,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
               specifier_.getOversamplingStrategy(),
               local_problem_rhs );
       break;
-    default: DUNE_THROW(Dune::ParameterInvalid, "Oversampling Strategy must be 1, 2 or 3.");
+    default: DUNE_THROW(Dune::Fem::ParameterInvalid, "Oversampling Strategy must be 1, 2 or 3.");
   }
 
   //! boundary treatment:
@@ -519,8 +519,8 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
     HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
     const HostEntityType& host_entity = *host_entity_pointer;
 
-    typedef CachingQuadrature< SubGridPartType, 0 > SubGridQuadrature;
-    typedef CachingQuadrature< HostGridPartType, 0 > HostGridQuadrature;
+    typedef Fem::CachingQuadrature< SubGridPartType, 0 > SubGridQuadrature;
+    typedef Fem::CachingQuadrature< HostGridPartType, 0 > HostGridQuadrature;
     
     // exact for polynomials of degree 2:
     const SubGridQuadrature sg_quadrature( subgrid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
@@ -579,8 +579,8 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
     HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
     const HostEntityType& host_entity = *host_entity_pointer;
 
-    typedef CachingQuadrature< SubGridPartType, 0 > SubGridQuadrature;
-    typedef CachingQuadrature< HostGridPartType, 0 > HostGridQuadrature;
+    typedef Fem::CachingQuadrature< SubGridPartType, 0 > SubGridQuadrature;
+    typedef Fem::CachingQuadrature< HostGridPartType, 0 > HostGridQuadrature;
     
     // exact for polynomials of degree 2:
     const SubGridQuadrature sg_quadrature( subgrid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
@@ -718,7 +718,7 @@ void MsFEMLocalProblemSolver::subgrid_to_hostrid_function(const SubDiscreteFunct
     SubLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
     HostLocalFunctionType host_loc_value = host_func.localFunction(host_entity);
 
-    const auto numBaseFunctions = sub_loc_value.baseFunctionSet().size();
+    const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
     for (unsigned int i = 0; i < numBaseFunctions; ++i)
     {
       host_loc_value[i] = sub_loc_value[i];
@@ -732,7 +732,7 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarse_index, cons
   if (!DSC_CONFIG_GET("global.local_solution_vtk_output", false))
     return;
   typedef tuple< const HostDiscreteFunctionType* >      IOTupleType;
-  typedef DataOutput< HostGridType, IOTupleType > DataOutputType;
+  typedef Fem::DataOutput< HostGridType, IOTupleType > DataOutputType;
 
   // general output parameters
   LocalProblemDataOutputParameters outputparam;
@@ -796,7 +796,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
                  << "Coarse index " << coarse_index << std::endl;
 
     const std::string locprob_solution_location =
-        (boost::format("local_problems/_localProblemSolutions_%d_%d") % coarse_index % MPIManager::rank()).str();
+        (boost::format("local_problems/_localProblemSolutions_%d_%d") % coarse_index % Fem::MPIManager::rank()).str();
 
     DiscreteFunctionWriter dfw(locprob_solution_location);
 

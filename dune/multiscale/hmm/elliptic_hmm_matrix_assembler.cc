@@ -63,7 +63,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
 
     DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
 
-    const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBaseFunctionSet();
+    const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const unsigned int numMacroBaseFunctions = macro_grid_baseSet.size();
 
     // 1 point quadrature!! That is how we compute and save the cell problems.
@@ -77,15 +77,12 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
     const double macro_entity_volume = one_point_quadrature.weight(0 /*=quadraturePoint*/)
                                        * macro_grid_geometry.integrationElement(local_macro_point);
 
-    // transposed of the the inverse jacobian
-    const auto& inverse_jac = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
-
     std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
 
     typedef std::unique_ptr<PeriodicDiscreteFunction> PeriodicDiscreteFunctionPointer;
     std::vector<PeriodicDiscreteFunctionPointer> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
-    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi);
+    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi);
 
     //!TODO generator functions
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -233,7 +230,7 @@ void DiscreteEllipticHMMOperator
     DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
     LocalFunction local_old_u_H = old_u_H.localFunction(macro_grid_entity);
 
-    const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBaseFunctionSet();
+    const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const unsigned int numMacroBaseFunctions = macro_grid_baseSet.size();
 
     // 1 point quadrature!! That is how we compute and save the cell problems.
@@ -264,8 +261,7 @@ void DiscreteEllipticHMMOperator
     discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
 
     std::vector<std::unique_ptr<PeriodicDiscreteFunction> > corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
-
-    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac,gradient_Phi);
+    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi);
 
     // gradients of macrocopic base functions:
     //TODO generator
@@ -283,7 +279,7 @@ void DiscreteEllipticHMMOperator
       }
     }
     // the multiplication with jacobian inverse is delegated
-    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_new);
+    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi_new);
     assert( gradient_Phi == gradient_Phi_new );
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)

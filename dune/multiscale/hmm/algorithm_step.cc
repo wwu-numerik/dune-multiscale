@@ -364,7 +364,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
   }
 
   // || u^(n+1) - u^(n) ||_L2
-  const Dune::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(hmm_newton_residual.gridPart());
+  const Dune::Fem::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(hmm_newton_residual.gridPart());
   relative_newton_error = l2norm.norm(hmm_newton_residual);
   // || u^(n+1) - u^(n) ||_L2 / || u^(n+1) ||_L2
   relative_newton_error = relative_newton_error / l2norm.norm(hmm_solution);

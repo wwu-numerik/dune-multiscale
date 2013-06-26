@@ -29,17 +29,17 @@ class ErrorEstimator;
 struct HMMTraits {
 
   //! --------- typedefs for the periodic micro grid and the corresponding discrete space ----
-  typedef Dune::PeriodicLeafGridPart< typename CommonTraits::GridType > PeriodicGridPartType;
-  typedef Dune::LagrangeDiscreteFunctionSpace< typename CommonTraits::FunctionSpaceType, PeriodicGridPartType, 1 > // 1 =POLORDER
+  typedef Dune::Fem::PeriodicLeafGridPart< typename CommonTraits::GridType > PeriodicGridPartType;
+  typedef Dune::Fem::LagrangeDiscreteFunctionSpace< typename CommonTraits::FunctionSpaceType, PeriodicGridPartType, 1 > // 1 =POLORDER
     PeriodicDiscreteFunctionSpaceType;
-  typedef Dune::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
+  typedef Dune::Fem::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
 
   /** \brief --------------- solver for the linear system of equations ----------------------------
      * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
      ****ones. GMRES seems to be more stable, but is extremely slow!
      */
   typedef Dune::
-    OEMBICGSQOp
+    Fem::OEMBICGSQOp
   //  OEMBICGSTABOp
   //    OEMGMRESOp
     < typename CommonTraits::DiscreteFunctionType, CommonTraits::FEMMatrix > InverseFEMMatrix;

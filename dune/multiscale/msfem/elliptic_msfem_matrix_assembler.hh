@@ -70,7 +70,7 @@ private:
   static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
 
   typedef typename FineDiscreteFunction::LocalFunctionType FineLocalFunction;
-  typedef typename FineDiscreteFunctionSpace::BaseFunctionSetType                   FineBaseFunctionSet;
+  typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType                   FineBaseFunctionSet;
   typedef typename FineDiscreteFunctionSpace::LagrangePointSetType                  FineLagrangePointSet;
   typedef typename FineLagrangePointSet::Codim< 1 >::SubEntityIteratorType FineFaceDofIterator;
   typedef typename FineGrid::Traits::LeafIndexSet FineGridLeafIndexSet;
@@ -80,13 +80,13 @@ private:
   typedef typename FineEntity::Geometry                    FineGeometry;
   typedef typename FineGridPart::IntersectionIteratorType FineIntersectionIterator;
   typedef typename FineIntersectionIterator::Intersection FineIntersection;
-  typedef CachingQuadrature< FineGridPart, 0 > FineQuadrature;
+  typedef Fem::CachingQuadrature< FineGridPart, 0 > FineQuadrature;
 
   typedef typename CoarseDiscreteFunctionSpace::GridPartType CoarseGridPart;
   typedef typename CoarseDiscreteFunctionSpace::GridType     CoarseGrid;
 
   typedef typename CoarseDiscreteFunction::LocalFunctionType CoarseLocalFunction;
-  typedef typename CoarseDiscreteFunctionSpace::BaseFunctionSetType                   CoarseBaseFunctionSet;
+  typedef typename CoarseDiscreteFunctionSpace::BasisFunctionSetType                   CoarseBaseFunctionSet;
   typedef typename CoarseDiscreteFunctionSpace::LagrangePointSetType                  CoarseLagrangePointSet;
   typedef typename CoarseLagrangePointSet::Codim< 1 >::SubEntityIteratorType CoarseFaceDofIterator;
   typedef typename CoarseDiscreteFunctionSpace::IteratorType CoarseIterator;
@@ -95,28 +95,28 @@ private:
   typedef typename CoarseEntity::Geometry CoarseGeometry;
   typedef typename CoarseGridPart::IntersectionIteratorType CoarseIntersectionIterator;
   typedef typename CoarseIntersectionIterator::Intersection CoarseIntersection;
-  typedef CachingQuadrature< CoarseGridPart, 0 > CoarseQuadrature;
+  typedef Fem::CachingQuadrature< CoarseGridPart, 0 > CoarseQuadrature;
 
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
   //! type of grid part
-  typedef LeafGridPart< MsFEMTraits::SubGridType > SubGridPart;
+  typedef Fem::LeafGridPart< MsFEMTraits::SubGridType > SubGridPart;
 
   //! type of subgrid discrete function space
-  typedef LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
+  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
   LocalDiscreteFunctionSpace;
 
   //! type of subgrid discrete function
-  typedef AdaptiveDiscreteFunction< LocalDiscreteFunctionSpace > LocalDiscreteFunction;
+  typedef Fem::AdaptiveDiscreteFunction< LocalDiscreteFunctionSpace > LocalDiscreteFunction;
   typedef typename LocalDiscreteFunctionSpace::IteratorType LocalGridIterator;
   typedef typename LocalGridIterator::Entity LocalGridEntity;
   typedef typename LocalGridEntity::EntityPointer LocalGridEntityPointer;
   typedef typename LocalDiscreteFunction::LocalFunctionType LocalGridLocalFunction;
   typedef typename LocalDiscreteFunctionSpace::LagrangePointSetType LGLagrangePointSet;
-  typedef typename LocalDiscreteFunctionSpace::BaseFunctionSetType LocalGridBaseFunctionSet;
+  typedef typename LocalDiscreteFunctionSpace::BasisFunctionSetType LocalGridBaseFunctionSet;
   typedef typename LocalGridEntity::Geometry LocalGridGeometry;
-  typedef CachingQuadrature< SubGridPart, 0 > LocalGridQuadrature;
+  typedef Fem::CachingQuadrature< SubGridPart, 0 > LocalGridQuadrature;
 
   //!-----------------------------------------------------------------------------------------
 
@@ -169,7 +169,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
     DSFe::LocalMatrixProxy<SPMatrixObject> local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
 
-    const CoarseBaseFunctionSet& coarse_grid_baseSet = local_matrix.domainBaseFunctionSet();
+    const CoarseBaseFunctionSet& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.size();
 
     // the sub grid U(T) that belongs to the coarse_grid_entity T
@@ -186,7 +186,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
     const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-            % global_index_entity % MPIManager::rank()).str();
+            % global_index_entity % Fem::MPIManager::rank()).str();
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
     discrete_function_reader.read(0, local_problem_solution_e0);
@@ -195,13 +195,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     // 1 point quadrature!! We only need the gradient of the base function,
     // which is constant on the whole entity.
     const CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
-
-    // the barycenter of the macro_grid_entity
-    const auto& local_coarse_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
-
-    // transposed of the the inverse jacobian
-    const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
-    coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi);
+    coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi);
 
     // iterator for the micro grid ( grid for the reference element T_0 )
     for (const auto& local_grid_it : localDiscreteFunctionSpace) {

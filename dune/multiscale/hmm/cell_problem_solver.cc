@@ -136,7 +136,7 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
     PeriodicDiscreteFunctionType cell_problem_residual("Cell Problem Residual", periodicDiscreteFunctionSpace_);
     cell_problem_residual.clear();
 
-    const L2Error< PeriodicDiscreteFunctionType > l2error;
+    const Dune::L2Error< PeriodicDiscreteFunctionType > l2error;
     RangeType relative_newton_error = 10000.0;
 
     int iteration_step = 0;
@@ -207,8 +207,9 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
 
       cell_problem_solution += cell_problem_residual;
 
-      relative_newton_error = l2error.norm2< (2* polynomialOrder) + 2 >(cell_problem_residual, zero_func);
-      const RangeType norm_cell_solution = l2error.norm2< (2* polynomialOrder) + 2 >(cell_problem_solution,
+      constexpr int pol_order = (2* polynomialOrder) + 2;
+      relative_newton_error = l2error.norm2<pol_order>(cell_problem_residual, zero_func);
+      const RangeType norm_cell_solution = l2error.norm2<pol_order>(cell_problem_solution,
                                                                                         zero_func);
       relative_newton_error = relative_newton_error / norm_cell_solution;
       cell_problem_residual.clear();
@@ -250,8 +251,8 @@ void CellProblemSolver::saveTheSolutions_baseSet(
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType
   JacobianRangeType;
 
-  typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType
-  BaseFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
+  BasisFunctionSetType;
 
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
@@ -261,7 +262,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
   typedef typename GridType::Codim< 0 >::Entity EntityType;
   typedef typename EntityType::Geometry                  EntityGeometryType;
 
-  typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
+  typedef Fem::CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
 
   enum { dimension = GridType::dimension };
   enum { maxnumOfBaseFct = 100 };
@@ -284,7 +285,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
     // entity
     const EntityType& entity = *it;
-    const BaseFunctionSetType baseSet = discreteFunctionSpace.baseFunctionSet(entity);
+    const BasisFunctionSetType baseSet = discreteFunctionSpace.basisFunctionSet(entity);
     const EntityGeometryType& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
     const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
@@ -293,8 +294,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     const auto numBaseFunctions = baseSet.size();
 
     // calc Jacobian inverse before volume is evaluated
-    const auto& inv = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
-    baseSet.jacobianAll(quadrature[0], inv, gradientPhi);
+    baseSet.jacobianAll(quadrature[0], gradientPhi);
 
     PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
     for (size_t i = 0; i < numBaseFunctions; ++i)
@@ -349,8 +349,8 @@ void CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFu
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType
   JacobianRangeType;
 
-  typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType
-  BaseFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
+  BasisFunctionSetType;
 
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
@@ -360,7 +360,7 @@ void CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFu
   typedef typename GridType::Codim< 0 >::Entity EntityType;
   typedef typename EntityType::Geometry                  EntityGeometryType;
 
-  typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
+  typedef Fem::CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
 
   enum { dimension = GridType::dimension };
   enum { maxnumOfBaseFct = 100 };
@@ -435,8 +435,8 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType
   JacobianRangeType;
 
-  typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType
-  BaseFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
+  BasisFunctionSetType;
 
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
@@ -448,7 +448,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
   EntityPointerType;
   typedef typename EntityType::Geometry EntityGeometryType;
 
-  typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
+  typedef Fem::CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
 
   enum { dimension = GridType::dimension };
   enum { maxnumOfBaseFct = 100 };
@@ -480,16 +480,13 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
     // entity
     const EntityType& entity = *it;
-    const BaseFunctionSetType baseSet = discreteFunctionSpace.baseFunctionSet(entity);
+    const BasisFunctionSetType baseSet = discreteFunctionSpace.basisFunctionSet(entity);
     const EntityGeometryType& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
     const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
 
     // number of base functions on entity
     const int numBaseFunctions = baseSet.size();
-
-    // calc Jacobian inverse before volume is evaluated
-    const auto& inv = geometry.jacobianInverseTransposed( quadrature.point(0 /*=quadraturePoint*/) );
 
     LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
     JacobianRangeType grad_macro_discrete_function;
@@ -502,7 +499,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     // the solution that we want to save to the data file
     PeriodicDiscreteFunctionType jac_corrector_Phi_i("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
 
-    baseSet.jacobianAll(quadrature[0 /*=quadraturePoint*/], inv, gradientPhi);
+    baseSet.jacobianAll(quadrature[0 /*=quadraturePoint*/], gradientPhi);
 
     for (int i = 0; i < numBaseFunctions; ++i)
     {

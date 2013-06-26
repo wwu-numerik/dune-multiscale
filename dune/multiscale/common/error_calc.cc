@@ -21,7 +21,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
 
     auto gridPart = fem_solution_ ? fem_solution_->gridPart()
                                   : msfem_solution_->gridPart();
-    Dune::H1Norm< CommonTraits::GridPartType > h1norm(gridPart);
+    Dune::Fem::H1Norm< CommonTraits::GridPartType > h1norm(gridPart);
     Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
 
     std::map<std::string,double> csv;
@@ -32,7 +32,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
 
       const CommonTraits::ExactSolutionType u;
       const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;
-      const Dune::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType>
+      const Dune::Fem::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType>
           u_disc("", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
 
       if (msfem_solution_)

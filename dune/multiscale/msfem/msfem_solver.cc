@@ -44,7 +44,7 @@ void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteF
     const SubgridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
     LocalFunction host_loc_value = host_func.localFunction(host_entity);
 
-    const auto numBaseFunctions = sub_loc_value.baseFunctionSet().size();
+    const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
     for (unsigned int i = 0; i < numBaseFunctions; ++i)
     {
       host_loc_value[i] = sub_loc_value[i];
@@ -127,7 +127,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
     const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-                                                % index % MPIManager::rank()).str();
+                                                % index % Fem::MPIManager::rank()).str();
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
     discrete_function_reader.read(0, local_problem_solution_e0);
@@ -136,7 +136,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
     LocalFunction local_coarse_part = coarse_msfem_solution.localFunction(*coarse_it);
 
     // 1 point quadrature!! We only need the gradient of the coarse scale part on the element, which is a constant.
-    const CachingQuadrature< GridPart, 0 > one_point_quadrature(*coarse_it, 0);
+    const Fem::CachingQuadrature< GridPart, 0 > one_point_quadrature(*coarse_it, 0);
 
     JacobianRangeType grad_coarse_msfem_on_entity;
     local_coarse_part.jacobian(one_point_quadrature[0], grad_coarse_msfem_on_entity);

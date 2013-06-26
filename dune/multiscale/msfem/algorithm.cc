@@ -7,7 +7,7 @@
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
-#include <dune/fem/function/adaptivefunction.hh>
+//#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/misc/h1norm.hh>
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/grid/common/gridinfo.hh>
@@ -240,7 +240,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   DiscreteFunctionWriter(location).append(msfem_solution);
 
   DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(),
-                                 Dune::MPIManager::helper(),
+                                 Dune::Fem::MPIManager::helper(),
                                  outputparam.path());
 }
 

@@ -35,8 +35,8 @@ namespace Multiscale {
 namespace MsFEM {
 
 template < class FunctionSpaceTraits >
-std::vector<int> mapEach(const Dune::DiscreteFunctionSpaceInterface<FunctionSpaceTraits>& space,
-                         const typename Dune::DiscreteFunctionSpaceInterface<FunctionSpaceTraits>::EntityType& entity)
+std::vector<int> mapEach(const Dune::Fem::DiscreteFunctionSpaceInterface<FunctionSpaceTraits>& space,
+                         const typename Dune::Fem::DiscreteFunctionSpaceInterface<FunctionSpaceTraits>::EntityType& entity)
 {
   const auto& mapper = space.mapper();
   std::vector<int> ret(mapper.numDofs(entity));
@@ -120,10 +120,7 @@ class WeightedClementOp
                    DiscreteFunction,
                    CoarseDiscreteFunction >,
   public OEMSolver::PreconditionInterface
-{                                                                 /*@LST0E@*/
-  // needs to be friend for conversion check
-  friend class Conversion<ThisType,OEMSolver::PreconditionInterface>;
-
+{
 private:
   //! type of discrete functions
   typedef DiscreteFunction DiscreteFunctionType;
@@ -132,6 +129,9 @@ private:
 
   //! type of this LaplaceFEOp
   typedef WeightedClementOp< DiscreteFunctionType, CoarseDiscreteFunction, MatrixTraits, CoarseBasisFunctionList > WeightedClementOpType;
+
+  //! needs to be friend for conversion check
+  friend class Conversion<WeightedClementOpType,OEMSolver::PreconditionInterface>;
 
   typedef WeightedClementOpType ThisType;
 
@@ -164,11 +164,11 @@ private:
   typedef typename DiscreteFunctionSpaceType :: JacobianRangeType
     JacobianRangeType;
   //! type of the base function set
-  typedef typename DiscreteFunctionSpaceType :: BaseFunctionSetType
-    BaseFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType :: BasisFunctionSetType
+    BasisFunctionSetType;
 
-  typedef typename CoarseDiscreteFunctionSpaceType :: BaseFunctionSetType
-    CoarseBaseFunctionSetType;
+  typedef typename CoarseDiscreteFunctionSpaceType :: BasisFunctionSetType
+    CoarseBasisFunctionSetType;
 
   enum{dimRange = GridType::dimension};
 
@@ -179,8 +179,8 @@ private:
   enum { dimension = GridType :: dimension };
 
   //! type of quadrature to be used
-  typedef CachingQuadrature< GridPartType, 0 > QuadratureType;
-  typedef CachingQuadrature< CoarseGridPartType, 0 > CoarseQuadratureType;
+  typedef Fem::CachingQuadrature< GridPartType, 0 > QuadratureType;
+  typedef Fem::CachingQuadrature< CoarseGridPartType, 0 > CoarseQuadratureType;
 
   typedef typename MatrixTraits
     :: template  MatrixObject< LagrangeMatrixTraits< MatrixTraits > >
@@ -194,7 +194,7 @@ private:
   typedef std::vector<DomainType> CoarseNodeVectorType;
 
   // type of DofManager
-  typedef DofManager< GridType > DofManagerType;
+  typedef Fem::DofManager< GridType > DofManagerType;
 
 
 public:
@@ -311,8 +311,10 @@ public:                                                           /*@LST0S@*/
     CoarseIteratorType coarse_end = coarse_space_.end();
     for(CoarseIteratorType it = coarse_space_.begin(); it != coarse_end; ++it)
     {
-
       CoarseEntityType& entity = *it;
+
+      std::vector< std::size_t > indices;
+      coarse_space_.mapper().map(entity, indices);
 
       // cache geometry of entity
       const CoarseGeometryType coarse_geometry = entity.geometry();
@@ -322,7 +324,7 @@ public:                                                           /*@LST0S@*/
       std::vector< RangeType > phi( coarse_space_.mapper().maxNumDofs() );
 
       // get base function set
-      const CoarseBaseFunctionSetType &coarse_baseSet = coarse_space_.baseFunctionSet( entity );
+      const CoarseBasisFunctionSetType &coarse_baseSet = coarse_space_.basisFunctionSet( entity );
       const auto numBaseFunctions = coarse_baseSet.size();
 
       // create quadrature of appropriate order
@@ -337,11 +339,9 @@ public:                                                           /*@LST0S@*/
         const double weight = quadrature.weight(quadraturePoint) * coarse_geometry.integrationElement(local_point);
 
         coarse_baseSet.evaluateAll( quadrature[quadraturePoint], phi );
-
         for (unsigned int i = 0; i < numBaseFunctions; ++i)
          {
-           const int global_dof_number = coarse_space_.mapper().mapToGlobal( entity, i );
-           coff[ global_dof_number ] += weight * phi[i];
+          coff[ indices[i] ] += weight * phi[i];
          }
       }
     }
@@ -365,7 +365,7 @@ public:                                                           /*@LST0S@*/
           const CoarseGeometryType coarse_geometry = coarse_entity.geometry();
 
           // get base function set
-          const CoarseBaseFunctionSetType &coarse_baseSet = coarse_space_.baseFunctionSet( coarse_entity );
+          const CoarseBasisFunctionSetType &coarse_baseSet = coarse_space_.basisFunctionSet( coarse_entity );
           const auto coarse_numBaseFunctions = coarse_baseSet.size();
 
           const auto& coarse_lagrangepoint_set = specifier_.coarseSpace().lagrangePointSet(coarse_entity);
@@ -378,6 +378,8 @@ public:                                                           /*@LST0S@*/
           std::vector< RangeType > coarse_phi_corner_2( coarse_numBaseFunctions );
 
           std::vector< DomainType > coarse_corners( coarse_numBaseFunctions );
+          std::vector< std::size_t > coarse_global_dof_number;
+          coarse_space_.mapper().map(coarse_entity, coarse_global_dof_number);
 
           // coarse_corner_phi_j[i] = coarse basis function i evaluated in corner j
           coarse_baseSet.evaluateAll( coarse_lagrangepoint_set.point( 0 ) , coarse_phi_corner_0 );
@@ -404,17 +406,17 @@ public:                                                           /*@LST0S@*/
           std::vector< RangeType > fine_phi( space.mapper().maxNumDofs() );
 
           // get base function set
-          const BaseFunctionSetType &baseSet = space.baseFunctionSet( entity );
+          const BasisFunctionSetType &baseSet = space.basisFunctionSet( entity );
           const auto numBaseFunctions = baseSet.size();
 
           // create quadrature of appropriate order
-          QuadratureType quadrature( entity, 2 * polynomialOrder + 2 );
+          const QuadratureType quadrature( entity, 2 * polynomialOrder + 2 );
 
           // loop over all quadrature points
           const size_t numQuadraturePoints = quadrature.nop();
           for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
           {
-             const typename QuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
+             const auto& local_point = quadrature.point(quadraturePoint);
              DomainType global_point = geometry.global( quadrature.point(quadraturePoint) );
 
              const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
@@ -425,8 +427,7 @@ public:                                                           /*@LST0S@*/
              {
                for (unsigned int i = 0; i < coarse_numBaseFunctions; ++i)
                {
-                  int coarse_global_dof_number = coarse_space_.mapper().mapToGlobal( coarse_entity, i );
-                  if ( specifier_.is_coarse_boundary_node( coarse_global_dof_number ) == true )
+                  if ( specifier_.is_coarse_boundary_node( coarse_global_dof_number[i] ) )
                     { continue; }
 
                   RangeType coarse_phi_i( 0.0 );
@@ -438,7 +439,7 @@ public:                                                           /*@LST0S@*/
                   if (i == 2)
                     coarse_basis_interpolation_2.evaluate(global_point, coarse_phi_i);
 
-                  localMatrix.add( i, j, weight * coff[coarse_global_dof_number] * coarse_phi_i * fine_phi[j] );
+                  localMatrix.add( i, j, weight * coff[coarse_global_dof_number[i]] * coarse_phi_i * fine_phi[j] );
                }
              }
           }
@@ -448,7 +449,7 @@ public:                                                           /*@LST0S@*/
     // get elapsed time
     const double assemblyTime = timer.elapsed();
     // in verbose mode print times
-    if ( Parameter :: verbose () )
+    if ( Fem::Parameter :: verbose () )
       std :: cout << "Time to assemble weighted clement operator: " << assemblyTime << "s" << std :: endl;
 
     // get grid sequence number from space (for adaptive runs)    /*@LST0S@*/

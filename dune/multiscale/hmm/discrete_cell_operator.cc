@@ -8,6 +8,7 @@
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
 
 // artificical mass coefficient to guarantee uniqueness and existence of the cell problem solution
 // (should be as small as possible)
@@ -49,7 +50,7 @@ void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
 
     DSFe::LocalMatrixProxy<CellProblemSolver::CellFEMMatrix> local_matrix(global_matrix, cell_grid_entity, cell_grid_entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -74,9 +75,7 @@ void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
       const double weight = quadrature.weight(quadraturePoint)
                             * cell_grid_geometry.integrationElement(local_point);
 
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = cell_grid_geometry.jacobianInverseTransposed(local_point);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
@@ -126,7 +125,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(
     DSFe::LocalMatrixProxy<CellProblemSolver::CellFEMMatrix> local_matrix(global_matrix, cell_grid_entity, cell_grid_entity);
     auto local_fine_function = old_fine_function.localFunction(cell_grid_entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*periodicDiscreteFunctionSpace_.order()" is sufficient, for the general case, it is
@@ -150,11 +149,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(
 
       const double weight = quadrature.weight(quadraturePoint) * cell_grid_geometry.integrationElement(local_point);
 
-      // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = cell_grid_geometry.jacobianInverseTransposed(local_point);
-
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
@@ -238,7 +233,7 @@ double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const
     const EntityType& entity = *it;
 
     // create quadrature for given geometry type
-    const CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
 
     // get geoemetry of entity
     const EnGeometryType& geo = entity.geometry();
@@ -269,13 +264,13 @@ void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T,
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
 
   const DiscreteFunctionSpace& discreteFunctionSpace = cell_problem_RHS.space();
 
@@ -299,7 +294,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T,
 
     LocalFunction elementOfRHS = cell_problem_RHS.localFunction(cell_grid_entity);
 
-    const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
@@ -320,15 +315,12 @@ void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T,
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
-
       // A^{\eps}( x_T + \delta y) \nabla_x PHI_H(x_T)
       // diffusion operator evaluated in (x_T + \delta y) multiplied with \nabla_x PHI_H(x_T)
       JacobianRangeType diffusion_in_gradient_PHI_H;
       diffusion_operator_.diffusiveFlux(x_T_delta_global_point, gradient_PHI_H, diffusion_in_gradient_PHI_H);
 
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
@@ -347,12 +339,12 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
 
   const DiscreteFunctionSpace& discreteFunctionSpace = cell_problem_RHS.space();
 
@@ -373,7 +365,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
     LocalFunction local_old_fine_function = old_fine_function.localFunction(cell_grid_entity);
     LocalFunction elementOfRHS = cell_problem_RHS.localFunction(cell_grid_entity);
 
-    const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
@@ -407,10 +399,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
       diffusion_operator_.diffusiveFlux(x_T_delta_global_point, position_vector, diffusive_flux);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
-
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         elementOfRHS[i] -= weight * (diffusive_flux[0] * gradient_phi[i][0]);
@@ -438,14 +427,14 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
 
   // this is a periodic grid partition:
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
 
   const DiscreteFunctionSpace& discreteFunctionSpace = corrector_of_old_coarse_function.space();
 
@@ -469,7 +458,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS
     const LocalFunction local_Q_old_u_H = corrector_of_old_coarse_function.localFunction(cell_grid_entity);
     LocalFunction elementOfRHS = jac_corrector_cell_problem_RHS.localFunction(cell_grid_entity);
 
-    const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
     const unsigned int numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
@@ -513,10 +502,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS
                                                 jacobian_diffusive_flux);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
-
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {

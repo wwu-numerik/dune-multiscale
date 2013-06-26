@@ -61,8 +61,8 @@
 
 void init(int argc, char** argv) {
   namespace DSC = Dune::Stuff::Common;
-  Dune::MPIManager::initialize(argc, argv);
-  if (Dune::MPIManager::size() > 1
+  Dune::Fem::MPIManager::initialize(argc, argv);
+  if (Dune::Fem::MPIManager::size() > 1
       && !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v))
   {
     DUNE_THROW(Dune::InvalidStateException, "mpi enabled + serial grid = bad idea");

@@ -202,20 +202,13 @@ void MacroMicroGridSpecifier::identify_coarse_boundary_nodes()
         for ( ; intersection_it != endiit; ++intersection_it)
         {
 
-            if ( !(*intersection_it).boundary() )
+            if ( !intersection_it->boundary() )
                 continue;
 
-            const auto& lagrangePointSet
-                    = coarse_scale_space_.lagrangePointSet(*it);
-
-            const int face = (*intersection_it).indexInInside();
-
-            auto faceIterator
-                    = lagrangePointSet.beginSubEntity< faceCodim >(face);
-            const auto faceEndIterator
-                    = lagrangePointSet.endSubEntity< faceCodim >(face);
-            for ( ; faceIterator != faceEndIterator; ++faceIterator)
-                is_boundary_node_[coarse_scale_space_.mapper().mapToGlobal(*it, *faceIterator )] = true;
+            std::vector< std::size_t > indices;
+            coarse_scale_space_.mapper().map(*it, indices);
+            for (auto index : indices)
+                is_boundary_node_[index] = true;
 
         }
 

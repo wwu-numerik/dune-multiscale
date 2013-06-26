@@ -26,7 +26,7 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrangespace.hh>
-#include <dune/fem/function/adaptivefunction.hh>
+//#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
@@ -89,13 +89,13 @@ public:
   typedef SubGridImp SubGridType;
 
   //! type of grid part
-  typedef LeafGridPart< SubGridType > SubGridPartType;
+  typedef Fem::LeafGridPart< SubGridType > SubGridPartType;
   
     //! type of subgrid discrete function space
-  typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1/*=POLORDER*/ > SubGridDiscreteFunctionSpace;
+  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1/*=POLORDER*/ > SubGridDiscreteFunctionSpace;
 
   //! type of subgrid discrete function
-  typedef AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpace > SubGridDiscreteFunction;
+  typedef Fem::AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpace > SubGridDiscreteFunction;
 
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true);
   ~SubGridList();

@@ -93,7 +93,7 @@ public:
                 unsigned int maxIterations )
   : epsilon_( epsilon ),
     maxIterations_( maxIterations ),
-    verbose_( Parameter::getValue< bool >( "fem.solver.verbose", false ) ),
+    verbose_( Fem::Parameter::getValue< bool >( "fem.solver.verbose", false ) ),
     averageCommTime_( 0.0 ),
     realCount_(0)
   {}
