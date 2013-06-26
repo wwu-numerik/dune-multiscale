@@ -11,6 +11,7 @@
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/h1norm.hh>
+#include <dune/fem/solver/cginverseoperator.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -47,7 +48,7 @@ private:
     typedef DiscreteFunctionSpace                          RowSpaceType;
     typedef DiscreteFunctionSpace                          ColumnSpaceType;
     typedef LagrangeMatrixSetup< false >                   StencilType;
-    typedef ParallelScalarProduct< DiscreteFunctionSpace > ParallelScalarProductType;
+    typedef Fem::ParallelScalarProduct< DiscreteFunctionSpace > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
@@ -60,7 +61,7 @@ private:
 
   //! --------------------- type of fem stiffness matrix -----------------------------------
 
-  typedef SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > FEMMatrix;
+  typedef Fem::SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > FEMMatrix;
 
   //! --------------------------------------------------------------------------------------
 
@@ -70,7 +71,7 @@ private:
   // ones.
   // GMRES seems to be more stable, but is extremely slow!
   // typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
-  typedef CGInverseOperator< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
+  typedef Fem::CGInverseOperator< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
 
   //! --------------------------------------------------------------------------------------
 

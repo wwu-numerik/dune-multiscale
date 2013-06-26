@@ -158,15 +158,15 @@ public:
   template< typename DiscreteFunctionType >
   inline void set_corners(const DiscreteFunctionType& disc_func) {
     auto loc_func = disc_func.localFunction( *(*entity_) );
-    const int baseSetSize = localFunc_->baseFunctionSet().size();
-    assert( baseSetSize == loc_func.baseFunctionSet().size());
+    const int baseSetSize = localFunc_->basisFunctionSet().size();
+    assert( baseSetSize == loc_func.basisFunctionSet().size());
     for (int i=0; i<baseSetSize; ++i) {
       (*localFunc_)[i] = loc_func[i];
     }
 
     /*const int number_of_nodes = ( *(*entity_) ).template count< 2 >();
 
-    if ( number_of_nodes != int( loc_func.baseFunctionSet().size() ) ) {
+    if ( number_of_nodes != int( loc_func.basisFunctionSet().size() ) ) {
       DSC_LOG_ERROR << "Error! Inconsistency in 'linear-lagrange-interpolation.hh'." << std::endl;
     }
 

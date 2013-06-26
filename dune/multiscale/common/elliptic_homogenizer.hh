@@ -25,7 +25,7 @@ namespace Dune {
 
 //! define output traits
 struct CellDataOutputParameters
-  : public DataOutputParameters
+  : public Fem::DataOutputParameters
 {
 public:
   std::string my_prefix_;
@@ -207,18 +207,18 @@ private:
 
   typedef TensorImp TensorType;
 
-  typedef PeriodicLeafGridPart< GridType > PeriodicGridPartType;
+  typedef Fem::PeriodicLeafGridPart< GridType > PeriodicGridPartType;
 
-  typedef FunctionSpace< double, double, dimension, 1 > FunctionSpaceType;
+  typedef Fem::FunctionSpace< double, double, dimension, 1 > FunctionSpaceType;
 
-  typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, PeriodicGridPartType, 1 >
-  PeriodicDiscreteFunctionSpaceType;
+  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, PeriodicGridPartType, 1 >
+    PeriodicDiscreteFunctionSpaceType;
 
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionSpaceType DummySpaceType;
   // (sometimes PeriodicDiscreteFunctionSpaceType is only a dummy)
 
-  typedef AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
+  typedef Fem::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
 
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionType DummyType;
@@ -239,7 +239,7 @@ private:
 
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
 
-  typedef CachingQuadrature< PeriodicGridPartType, 0 > QuadratureType;
+  typedef Fem::CachingQuadrature< PeriodicGridPartType, 0 > QuadratureType;
 
   typedef typename GridType::template Codim< 0 >::Geometry GeometryType;
 
@@ -252,7 +252,7 @@ private:
     typedef PeriodicDiscreteFunctionSpaceType                          RowSpaceType;
     typedef PeriodicDiscreteFunctionSpaceType                          ColumnSpaceType;
     typedef LagrangeMatrixSetup< false >                               StencilType;
-    typedef ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
+    typedef Fem::ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
@@ -261,9 +261,9 @@ private:
     };
   };
 
-  typedef SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, MatrixTraits > FEMMatrix;
+  typedef Fem::SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, MatrixTraits > FEMMatrix;
 
-  typedef OEMBICGSTABOp< PeriodicDiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
+  typedef Fem::OEMBICGSTABOp< PeriodicDiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
   // discrete elliptic operator (corresponds with FEM Matrix)
   typedef Multiscale::FEM::DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType,

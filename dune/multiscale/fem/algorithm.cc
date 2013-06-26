@@ -163,7 +163,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
       const typename CommonTraits::DiffusionType diffusion_op;
       rhsassembler.assemble_for_Newton_method< fem_polorder >(f, diffusion_op, lower_order_term, solution, system_rhs);
 
-      const Dune::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
+      const Dune::Fem::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);
       if (rhs_L2_norm < 1e-10)
       {

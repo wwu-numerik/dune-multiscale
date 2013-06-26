@@ -50,8 +50,8 @@ private:
   typedef typename PeriodicGridType::template Codim< 0 >::Geometry      PeriodicEntityGeometryType;
   typedef typename PeriodicGridType::template Codim< 1 >::Geometry      PeriodicFaceGeometryType;
 
-  typedef CachingQuadrature< PeriodicGridPartType, 0 > PeriodicEntityQuadratureType;
-  typedef CachingQuadrature< PeriodicGridPartType, 1 > PeriodicFaceQuadratureType;
+  typedef Fem::CachingQuadrature< PeriodicGridPartType, 0 > PeriodicEntityQuadratureType;
+  typedef Fem::CachingQuadrature< PeriodicGridPartType, 1 > PeriodicFaceQuadratureType;
   //! Necessary typedefs for the DiscreteFunctionImp:
 
   typedef DiscreteFunctionImp DiscreteFunctionType;
@@ -69,10 +69,10 @@ private:
   typedef typename GridType::template Codim< 0 >::EntityPointer   EntityPointerType;
   typedef typename GridType::template Codim< 0 >::Geometry        EntityGeometryType;
   typedef typename GridType::template Codim< 1 >::Geometry        FaceGeometryType;
-  typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
-  typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
-  typedef CachingQuadrature< GridPartType, 1 > FaceQuadratureType;
+  typedef Fem::CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
+  typedef Fem::CachingQuadrature< GridPartType, 1 > FaceQuadratureType;
 
   enum { dimension = PeriodicGridType::dimension };
   enum { spacePolOrd = PeriodicDiscreteFunctionSpaceType::polynomialOrder };
@@ -136,7 +136,7 @@ public:
   template< class SourceType >
   RangeType indicator_f(const SourceType& f, const EntityType& entity) const {
     // create quadrature for given geometry type
-    CachingQuadrature< GridPartType, 0 > entityQuadrature(entity, spacePolOrd);
+    Fem::CachingQuadrature< GridPartType, 0 > entityQuadrature(entity, spacePolOrd);
 
     // get geoemetry of entity
     const EntityGeometryType& geometry = entity.geometry();

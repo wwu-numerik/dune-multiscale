@@ -101,7 +101,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
 
     DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrix> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -117,9 +117,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       const double weight = quadrature.weight(quadraturePoint)
                             * sub_grid_geometry.integrationElement(local_point);
 
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = sub_grid_geometry.jacobianInverseTransposed(local_point);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
@@ -176,7 +174,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
 
     DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrix> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     std::vector<RangeType> value_phi(numBaseFunctions);
@@ -193,9 +191,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       const double weight = quadrature.weight(quadraturePoint)
                             * sub_grid_geometry.integrationElement(local_point);
 
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = sub_grid_geometry.jacobianInverseTransposed(local_point);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
       for ( size_t sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
@@ -331,7 +327,7 @@ double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunctio
     const EntityType& entity = *it;
 
     // create quadrature for given geometry type
-    const CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
 
     // get geoemetry of entity
     const EnGeometryType& geo = entity.geometry();
@@ -363,13 +359,13 @@ void LocalProblemOperator
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
 
   const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
 
@@ -387,7 +383,7 @@ void LocalProblemOperator
 
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
-    const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
@@ -400,19 +396,14 @@ void LocalProblemOperator
 
       // global point in the subgrid
       const DomainType global_point = geometry.global(local_point);
-
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
-
-      // transposed of the the inverse jacobian
-      const FieldMatrix< double, dimension, dimension >& inverse_jac
-        = geometry.jacobianInverseTransposed(local_point);
 
       // A^eps(x) e
       // diffusion operator evaluated in 'x' multiplied with e
       JacobianRangeType diffusion_in_e;
       diffusion_operator_.diffusiveFlux(global_point, e, diffusion_in_e);
 
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         elementOfRHS[i] -= weight * (diffusion_in_e[0] * gradient_phi[i][0]);
@@ -431,13 +422,13 @@ void LocalProblemOperator
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
 
   const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
 
@@ -489,7 +480,7 @@ void LocalProblemOperator
     }
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
-    const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
@@ -512,7 +503,7 @@ void LocalProblemOperator
       // diffusion operator evaluated in 'x' multiplied with e
       JacobianRangeType diffusion_in_e;
       diffusion_operator_.diffusiveFlux(global_point, e, diffusion_in_e);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       std::vector< std::vector<RangeType> > phi_values(sub_grid_entity_corner_is_relevant.size());
       for(auto j : DSC::valueRange(sub_grid_entity_corner_is_relevant.size())) {
         baseSet.evaluateAll(geometry.local(geometry.corner(sub_grid_entity_corner_is_relevant[j])), phi_values[j]);
@@ -547,13 +538,13 @@ void LocalProblemOperator
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
 
   const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
 
@@ -574,7 +565,7 @@ void LocalProblemOperator
 
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
-    const BaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
         
     HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );
@@ -614,13 +605,13 @@ void LocalProblemOperator
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
 
   const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS[0]->space();
 
@@ -642,7 +633,7 @@ void LocalProblemOperator
     const Geometry& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
     
-    const BaseFunctionSet& baseSet = (local_problem_RHS[0]->localFunction(local_grid_entity)).baseFunctionSet();
+    const BaseFunctionSet& baseSet = (local_problem_RHS[0]->localFunction(local_grid_entity)).basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
         
     HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );

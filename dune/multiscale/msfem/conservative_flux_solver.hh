@@ -96,7 +96,7 @@ private:
   typedef typename DiscreteFunction::LocalFunctionType        LocalFunction;
   typedef typename SubGridDiscreteFunction::LocalFunctionType SubGridLocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BaseFunctionSetType                   BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType                   BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::LagrangePointSetType                  LagrangePointSet;
   typedef typename LagrangePointSet::template Codim< 1 >::SubEntityIteratorType FaceDofIterator;
 
@@ -109,7 +109,7 @@ private:
   typedef typename IntersectionIterator::Intersection Intersection;
   typedef typename Intersection::LocalCoordinate      LocalCoordinate;
 
-  typedef typename SubGridDiscreteFunctionSpace::BaseFunctionSetType                   SubGridBaseFunctionSet;
+  typedef typename SubGridDiscreteFunctionSpace::BasisFunctionSetType                   SubGridBaseFunctionSet;
   typedef typename SubGridDiscreteFunctionSpace::LagrangePointSetType                  SubGridLagrangePointSet;
   typedef typename SubGridLagrangePointSet::template Codim< 1 >::SubEntityIteratorType SubGridFaceDofIterator;
 
@@ -120,12 +120,12 @@ private:
   typedef typename SubGridPart::IntersectionIteratorType     SubGridIntersectionIterator;
   typedef typename SubGridIntersectionIterator::Intersection SubGridIntersection;
 
-  typedef CachingQuadrature< GridPart, 0 > Quadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 > Quadrature;
 
   typedef QuadratureRule< double, 1 >      FaceQuadratureRule;
-  typedef CachingQuadrature< GridPart, 1 > FaceQuadrature;
+  typedef Fem::CachingQuadrature< GridPart, 1 > FaceQuadrature;
 
-  typedef CachingQuadrature< SubGridPart, 0 > SubGridQuadrature;
+  typedef Fem::CachingQuadrature< SubGridPart, 0 > SubGridQuadrature;
 
   typedef typename GridType::template Codim< 1 >::Geometry FaceGeometryType;
 
@@ -215,7 +215,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
     DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
-    const SubGridBaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const SubGridBaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const IntersectionIterator iend = discreteFunctionSpace_.gridPart().iend(*host_entity_pointer);
@@ -338,7 +338,7 @@ double ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp
     const EntityType& entity = *it;
 
     // create quadrature for given geometry type
-    CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
 
     // get geoemetry of entity
     const EnGeometryType& geo = entity.geometry();
@@ -412,7 +412,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
     SubGridLocalFunction elementOfRHS = rhs_flux_problem.localFunction(local_grid_entity);
 
-    const SubGridBaseFunctionSet& baseSet = elementOfRHS.baseFunctionSet();
+    const SubGridBaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     SubGridQuadrature quadrature(local_grid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
@@ -428,9 +428,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
-
       // A^eps(x) ( e
       // diffusion operator evaluated in 'x' multiplied with e
       JacobianRangeType diffusion_in_e_i;
@@ -445,7 +442,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
 
       total_diffusive_flux[0] += diffusion_in_e_i[0];
 
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
@@ -545,7 +542,7 @@ private:
     typedef SubGridDiscreteFunctionSpaceType                          RowSpaceType;
     typedef SubGridDiscreteFunctionSpaceType                          ColumnSpaceType;
     typedef LagrangeMatrixSetup< false >                              StencilType;
-    typedef ParallelScalarProduct< SubGridDiscreteFunctionSpaceType > ParallelScalarProductType;
+    typedef Fem::ParallelScalarProduct< SubGridDiscreteFunctionSpaceType > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
@@ -554,11 +551,11 @@ private:
     };
   };
 
-  typedef SparseRowMatrixOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType,
+  typedef Fem::SparseRowMatrixOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType,
                                    FluxProbMatrixTraits > FluxProbFEMMatrix;
 
   // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp /*CGInverseOp*/
-  typedef CGInverseOperator< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
+  typedef Fem::CGInverseOperator< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
 
 private:
   const DiffusionOperatorType& diffusion_;
@@ -679,7 +676,7 @@ public:
       SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
       HostLocalFunctionType host_loc_value = host_func.localFunction(host_entity);
 
-      const auto numBaseFunctions = sub_loc_value.baseFunctionSet().size();
+      const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         host_loc_value[i] = sub_loc_value[i];
@@ -692,8 +689,8 @@ public:
                   const int direction_index) const {
     // --------------- writing data output ---------------------
     // typedefs and initialization
-    typedef Dune::tuple< HostDiscreteFunctionType* >      IOTupleType;
-    typedef DataOutput< HostGridType, IOTupleType > DataOutputType;
+    typedef std::tuple< HostDiscreteFunctionType* >      IOTupleType;
+    typedef Fem::DataOutput< HostGridType, IOTupleType > DataOutputType;
 
     // general output parameters
     ConFluxProblemDataOutputParameters outputparam;
@@ -767,7 +764,7 @@ public:
       // --------- load local solutions -------
       // the file/place, where we saved the solutions of the cell problems
       const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-                                            % global_index_entity % MPIManager::rank()).str();
+                                            % global_index_entity % Fem::MPIManager::rank()).str();
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);

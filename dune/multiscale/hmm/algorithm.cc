@@ -49,7 +49,7 @@ typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctio
   for (const auto& en : discreteFunctionSpace)
   {
     typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-    Dune::CachingQuadrature< GridPartType, 0 > entityQuadrature(en, 0);
+    Dune::Fem::CachingQuadrature< GridPartType, 0 > entityQuadrature(en, 0);
     // get geoemetry of entity
     const auto& geometry = en.geometry();
     const double volumeEntity = entityQuadrature.weight(0)

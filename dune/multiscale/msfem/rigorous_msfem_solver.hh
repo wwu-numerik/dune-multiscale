@@ -48,7 +48,7 @@ private:
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
 
-  typedef CachingQuadrature< GridPart, 0 > CoarseQuadrature;
+  typedef Fem::CachingQuadrature< GridPart, 0 > CoarseQuadrature;
 
   typedef typename DiscreteFunctionSpace::GridType HostGrid;
 
@@ -159,15 +159,15 @@ private:
 
   typedef MsFEMTraits::SubGridType SubGridType;
 
-  typedef LeafGridPart< SubGridType > SubGridPart;
+  typedef Fem::LeafGridPart< SubGridType > SubGridPart;
 
   // typedef typename SubGridType ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
   // SubGridLevelEntityIteratorType;
 
-  typedef LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
+  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
     SubgridDiscreteFunctionSpace;
 
-  typedef AdaptiveDiscreteFunction< SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
+  typedef Fem::AdaptiveDiscreteFunction< SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
 
   typedef typename SubgridDiscreteFunctionSpace::IteratorType SubGridIterator;
   
@@ -253,7 +253,7 @@ private:
 
       const auto& geometry = (*it).geometry();
  
-      const CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
+      const Fem::CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
       const int numQuadraturePoints = quadrature.nop();
       for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
       {
@@ -360,7 +360,7 @@ private:
         const auto& geometry = entity.geometry();
 
         const auto local_func = msfem_basis_function_list[col]->localFunction(entity);
-        const CachingQuadrature< GridPart, 0 > quadrature( entity, polOrder);
+        const Fem::CachingQuadrature< GridPart, 0 > quadrature( entity, polOrder);
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
         {

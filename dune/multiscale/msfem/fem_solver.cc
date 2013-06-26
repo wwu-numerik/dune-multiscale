@@ -198,7 +198,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
       system_rhs.clear();
       rhsassembler.assemble_for_Newton_method< fem_polorder >(f, diffusion_op, lower_order_term, solution, system_rhs);
 
-      const Dune::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
+      const Dune::Fem::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);
       if (rhs_L2_norm < 1e-10)
       {
@@ -236,7 +236,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
       }
       // --- end boundary treatment ---
 
-      const OEMBICGSTABOp< DiscreteFunction, FEMMatrix > fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, true);
+      const Fem::OEMBICGSTABOp< DiscreteFunction, FEMMatrix > fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, true);
       fem_newton_biCGStab(system_rhs, residual);
 
       if ( residual.dofsValid() )

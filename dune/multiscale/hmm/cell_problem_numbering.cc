@@ -12,7 +12,7 @@ CellProblemNumberingManager::CellProblemNumberingManager(const DiscreteFunctionS
   {
     EntityPointerType ep(entity);
     cell_numbering_map_NL_.insert( std::make_pair(ep, number_of_entity) );
-    const int numBaseFunctions = discreteFunctionSpace.baseFunctionSet(entity).size();
+    const int numBaseFunctions = discreteFunctionSpace.basisFunctionSet(entity).size();
     for (int i = 0; i < numBaseFunctions; ++i)
     {
       const std::pair< EntityPointerType, int > idPair(ep, i);

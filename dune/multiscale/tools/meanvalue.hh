@@ -86,7 +86,7 @@ class Meanvalue
     for (const auto& entity : space)
     {
       // create quadrature for given geometry type
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geo = entity.geometry();
@@ -116,7 +116,7 @@ public:
     for (const auto& entity : space)
     {
       // create quadrature for given geometry type
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
       const LocalFunctionType localfunc = discFunc.localFunction(entity);
       const EnGeometryType& geo = entity.geometry();
 

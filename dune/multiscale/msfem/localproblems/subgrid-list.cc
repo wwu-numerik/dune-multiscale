@@ -134,7 +134,7 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
     hostGridPart_(hostSpace_.gridPart()),
     entities_sharing_same_node_(hostGridPart_.grid().size(HostGridPartType::dimension)),
     enriched_(boost::extents[specifier.getNumOfCoarseEntities()][hostGridPart_.grid().size(0)][specifier.maxNumberOverlayLayers() + 1]),
-    fineToCoarseMap_(MPIManager::size())
+    fineToCoarseMap_(Fem::MPIManager::size())
 
 {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
@@ -232,7 +232,7 @@ SubGridList::SubGridPartType SubGridList::gridPart(int i)
 */
 int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer) {
   // first check, whether we looked for this host entity already
-  int myRank = MPIManager::rank();
+  int myRank = Fem::MPIManager::rank();
   int hostEntityIndex = hostGridLeafIndexSet_.index(*hostEntityPointer);
   auto itFound = fineToCoarseMap_[myRank].find(hostEntityIndex);
   if (itFound!=fineToCoarseMap_[myRank].end()) {

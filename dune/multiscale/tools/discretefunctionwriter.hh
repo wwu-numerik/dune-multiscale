@@ -23,7 +23,7 @@
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
-#include <dune/fem/function/adaptivefunction.hh>
+//#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/ranges.hh>
@@ -63,7 +63,7 @@ public:
   }
 
   template < class DiscreteFunctionTraits >
-  void append(const Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
+  void append(const Dune::Fem::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
     const std::string fn = (dir_ / DSC::toString(size_++)).string();
     DSC::testCreateDirectory(fn);
     Dune::Fem::BinaryFileOutStream stream(fn);
@@ -71,7 +71,7 @@ public:
   } // append
 
   template < class DiscreteFunctionTraits >
-  void append(const std::vector<const Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >>& df_vec)  {
+  void append(const std::vector<const Dune::Fem::DiscreteFunctionInterface< DiscreteFunctionTraits >>& df_vec)  {
     for (const auto& df : df_vec)
       append(df);
   } // append
@@ -107,7 +107,7 @@ public:
 
   template < class DiscreteFunctionTraits >
   void read(const unsigned long index,
-            Dune::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
+            Dune::Fem::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
     const std::string fn = (dir_ / DSC::toString(index)).string();
     Dune::Fem::BinaryFileInStream stream(fn);
     df.read(stream);

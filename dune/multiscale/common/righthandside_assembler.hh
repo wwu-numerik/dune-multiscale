@@ -34,8 +34,8 @@ private:
     DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionType::LocalFunctionType
     LocalFunctionType;
-  typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType
-    BaseFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
+    BasisFunctionSetType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
   typedef typename DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
   typedef DomainFieldType TimeType;
@@ -47,7 +47,7 @@ private:
     DomainType;
   typedef typename GridType::template Codim< 0 >::Entity EntityType;
   typedef typename EntityType::Geometry GeometryType;
-  typedef CachingQuadrature< GridPartType, 0 > Quadrature;
+  typedef Fem::CachingQuadrature< GridPartType, 0 > Quadrature;
   enum { dimension = GridType::dimension };
 
 public:
@@ -89,14 +89,14 @@ private:
       // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
       // discreteFunction(aktuelleEntity)
 
-      const BaseFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = rhsVector.space().baseFunctionSet(entity);     // entity Referenz auf eine bestimmtes Element der entity. In der
+      const BasisFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
+        = rhsVector.space().basisFunctionSet(entity);     // entity Referenz auf eine bestimmtes Element der entity. In der
                                                           // ersten Klasse war das Element fest, deshalb konnte man sich
                                                           // dort Pointer sparen. //loeschen: discreteFunctionSpace
                                                           // statt
                                                           // functionSpace
 
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);   // 0 --> codim 0
+      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);   // 0 --> codim 0
       const int numQuadraturePoints = quadrature.nop();
       const int numDofs = elementOfRHS.numDofs();
       for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
@@ -108,10 +108,10 @@ private:
         // to save: A \nabla PHI_H * \nabla phi_h;
         RangeType res = 0;
         const double det = geometry.integrationElement(quadrature.point(quadraturePoint));
-        const auto& inv = geometry.jacobianInverseTransposed(quadrature.point(quadraturePoint));
+
         f.evaluate(geometry.global( quadrature.point(quadraturePoint) ), f_x);
         baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);
-        baseSet.jacobianAll(quadrature[quadraturePoint], inv, gradientPhi);
+        baseSet.jacobianAll(quadrature[quadraturePoint], gradientPhi);
 
         for (int i = 0; i < numDofs; ++i)
         {
@@ -217,17 +217,17 @@ public:
       auto elementOfRHS = rhsVector.localFunction(coarse_grid_entity);
       const int numDofs = elementOfRHS.numDofs();
 
-      const BaseFunctionSetType& coarse_grid_baseSet = specifier.coarseSpace().baseFunctionSet(coarse_grid_entity);
+      const BasisFunctionSetType& coarse_grid_baseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       typedef typename SubGridListType::SubGridPartType SubGridPartType;
       typedef typename SubGridListType::SubGridDiscreteFunctionSpace LocalDiscreteFunctionSpace;
       typedef typename SubGridListType::SubGridDiscreteFunction LocalDiscreteFunction;
-      typedef CachingQuadrature< SubGridPartType, 0 > LocalGridQuadrature;
+      typedef Fem::CachingQuadrature< SubGridPartType, 0 > LocalGridQuadrature;
 
       // --------- add standard contribution of right hand side -------------------------
       {
-        const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
+        const Fem::CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
         std::vector<RangeType> phi_x_vec(numDofs);
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
@@ -249,16 +249,14 @@ public:
       {
         // 1 point quadrature!! We only need the gradient of the base function,
         // which is constant on the whole entity.
-        const CachingQuadrature< GridPartType, 0 > one_point_quadrature(coarse_grid_entity, 0);
+        const Fem::CachingQuadrature< GridPartType, 0 > one_point_quadrature(coarse_grid_entity, 0);
 
         // the barycenter of the macro_grid_entity
-        const typename CachingQuadrature< GridPartType, 0 >::CoordinateType& local_coarse_point
+        const typename Fem::CachingQuadrature< GridPartType, 0 >::CoordinateType& local_coarse_point
              = one_point_quadrature.point(0 /*=quadraturePoint*/);
 
-        // transposed of the the inverse jacobian
-        const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
         std::vector<JacobianRangeType> gradient_Phi_vec(numDofs);
-        coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], inverse_jac, gradient_Phi_vec);
+        coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi_vec);
 
         auto subGridPart = subgrid_list.gridPart(global_index_entity);
         LocalDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
@@ -272,7 +270,7 @@ public:
         // -- load local solutions --
         // the file/place, where we saved the solutions of the cell problems
         const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-                                                    % global_index_entity % MPIManager::rank()).str();
+                                                    % global_index_entity % Fem::MPIManager::rank()).str();
         // reader for the cell problem data file:
         DiscreteFunctionReader discrete_function_reader(local_solution_location);
         discrete_function_reader.read(0, local_problem_solution_e0);
@@ -346,7 +344,7 @@ public:
     {
       const auto& geometry = entity.geometry();
       auto elementOfRHS = rhsVector.localFunction(entity);
-      const auto baseSet = rhsVector.space().baseFunctionSet(entity);
+      const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
@@ -368,14 +366,13 @@ public:
         const auto& local_point = quadrature.point(quadraturePoint);
         const auto global_point = geometry.global(local_point);
         const double det = geometry.integrationElement(local_point);
-        const auto& inv = geometry.jacobianInverseTransposed(local_point);
         // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
         f.evaluate(global_point, f_x);
         // evaluate the current base function at the current quadrature point and save its value in 'z':
         baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
         // evaluate the gradient of the current base function at the current quadrature point and save its value in
         // 'returnGradient':
-        baseSet.jacobianAll(quadrature[quadraturePoint], inv, grad_phi_x);
+        baseSet.jacobianAll(quadrature[quadraturePoint], grad_phi_x);
         // get gradient of old u_H:
         old_u_H_loc.jacobian(quadrature[quadraturePoint], grad_old_u_H);
         // evaluate diffusion operator in x(=global_point) and grad_old_u_H
@@ -408,7 +405,7 @@ public:
     {
       const auto& geometry = entity.geometry();
       auto elementOfRHS = rhsVector.localFunction(entity);
-      const auto baseSet = rhsVector.space().baseFunctionSet(entity);
+      const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
@@ -431,14 +428,13 @@ public:
         const auto& local_point = quadrature.point(quadraturePoint);
         const auto global_point = geometry.global(local_point);
         const double det = geometry.integrationElement(local_point);
-        const auto& inv = geometry.jacobianInverseTransposed(local_point);
         // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
         f.evaluate(global_point, f_x);
         // evaluate the current base function at the current quadrature point and save its value in 'z':
         baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
         // evaluate the gradient of the current base function at the current quadrature point and save its value in
         // 'returnGradient':
-        baseSet.jacobianAll(quadrature[quadraturePoint], inv, grad_phi_x);
+        baseSet.jacobianAll(quadrature[quadraturePoint], grad_phi_x);
         // get value of old u_H:
         old_u_H_loc.evaluate(quadrature[quadraturePoint], value_old_u_H);
         // get gradient of old u_H:
@@ -504,8 +500,8 @@ public:
       const auto& macro_grid_geometry = (*macro_grid_it).geometry(); // Referenz auf Geometrie
       auto elementOfRHS = rhsVector.localFunction(*macro_grid_it);
 
-      const BaseFunctionSetType macro_grid_baseSet
-        = discreteFunctionSpace.baseFunctionSet(*macro_grid_it);
+      const BasisFunctionSetType macro_grid_baseSet
+        = discreteFunctionSpace.basisFunctionSet(*macro_grid_it);
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
       // for \int_{\Omega} f \Phi
       const Quadrature macro_quadrature(*macro_grid_it, polOrd);
@@ -523,9 +519,9 @@ public:
       const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade
       // gradient of base function and gradient of old_u_H
       std::vector<JacobianRangeType> grad_Phi_x_vec(numDofs);
+      std::vector<RangeType> phi_x(numDofs);
       JacobianRangeType grad_old_u_H_x;
 
-      const auto& inv = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
       // get gradient of old u_H:
       old_u_H_loc.jacobian(one_point_macro_quadrature[0], grad_old_u_H_x);
 
@@ -535,8 +531,7 @@ public:
 
       PeriodicDiscreteFunctionType corrector_Phi_i("Corrector of Phi_i", periodicDiscreteFunctionSpace);
       discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
-      macro_grid_baseSet.jacobianAll(one_point_macro_quadrature[0], inv, grad_Phi_x_vec);
-
+      macro_grid_baseSet.jacobianAll(one_point_macro_quadrature[0], grad_Phi_x_vec);
 
       for (int i = 0; i < numDofs; ++i)
       {
@@ -550,20 +545,15 @@ public:
         for (int quadraturePoint = 0; quadraturePoint < numMacroQuadraturePoints; ++quadraturePoint)
         {
           // local (barycentric) coordinates (with respect to entity)
-          const typename Quadrature::CoordinateType& local_point = macro_quadrature.point(quadraturePoint);
-
+          const auto& local_point = macro_quadrature.point(quadraturePoint);
           const auto global_point = macro_grid_geometry.global(local_point);
-
           const double quad_weight
             = macro_grid_geometry.integrationElement(local_point) * macro_quadrature.weight(quadraturePoint);
-
           // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
           f.evaluate(global_point, f_x);
-
-          // evaluate the current base function at the current quadrature point and save its value in 'z':
-          macro_grid_baseSet.evaluate(i, macro_quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
-
-          elementOfRHS[i] += quad_weight * (f_x * phi_x);
+          //!TODO order of loops sucks
+          macro_grid_baseSet.evaluateAll(macro_quadrature[quadraturePoint], phi_x);
+          elementOfRHS[i] += quad_weight * (f_x * phi_x[i]);
         }
 
         // --------------- end of source contribution -----------------------------------------------------

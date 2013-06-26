@@ -112,22 +112,22 @@ private:
   typedef typename GridType::template Codim< 1 >::EntityPointer   FacePointerType;
   typedef typename GridType::template Codim< 0 >::Geometry        EntityGeometryType;
   typedef typename GridType::template Codim< 1 >::Geometry        FaceGeometryType;
-  typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
-  typedef CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
-  typedef CachingQuadrature< GridPartType, 1 > FaceQuadratureType;
+  typedef Fem::CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
+  typedef Fem::CachingQuadrature< GridPartType, 1 > FaceQuadratureType;
 
   // --------------------------- subgrid typedefs ------------------------------------
 
   typedef SubGrid< GridType::dimension, GridType > SubGridType;
-  typedef LeafGridPart< SubGridType >              SubGridPart;
+  typedef Fem::LeafGridPart< SubGridType >              SubGridPart;
 
   typedef typename SubGridType::Traits::LeafIndexSet SubGridLeafIndexSet;
 
-  typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPart,
+  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPart,
                                          1 /*POLORDER*/ > SubGridDiscreteFunctionSpaceType;
 
-  typedef AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpaceType > SubGridDiscreteFunctionType;
+  typedef Fem::AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpaceType > SubGridDiscreteFunctionType;
 
   typedef typename SubGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
 
@@ -151,7 +151,7 @@ private:
 
   typedef typename SubGridType::template Codim< 0 >::Geometry SubGridEntityGeometryType;
 
-  typedef CachingQuadrature< SubGridPart, 0 > LocalGridEntityQuadratureType;
+  typedef Fem::CachingQuadrature< SubGridPart, 0 > LocalGridEntityQuadratureType;
 
   typedef std::array<RangeType, 3> JumpArray;
   typedef std::array<const Intersection*, 3> IntersectionArray;
@@ -226,7 +226,7 @@ private:
   // return:  H_T ||f||_{L^2(T)}
   RangeType indicator_f(const EntityType& entity) const {
     // create quadrature for given geometry type
-    const CachingQuadrature< GridPartType, 0 > entityQuadrature(entity, 2 * spacePolOrd + 2);
+    const Fem::CachingQuadrature< GridPartType, 0 > entityQuadrature(entity, 2 * spacePolOrd + 2);
 
     // get geoemetry of entity
     const EntityGeometryType& geometry = entity.geometry();
@@ -503,7 +503,7 @@ private:
       // --------- load local solutions -------
       // the file/place, where we saved the solutions of the cell problems
       const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-                                % global_index_entity % MPIManager::rank()).str();
+                                % global_index_entity % Fem::MPIManager::rank()).str();
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);

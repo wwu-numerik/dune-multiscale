@@ -16,7 +16,7 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/common/functionspace.hh>
 #include <dune/fem/space/lagrangespace.hh>
-#include <dune/fem/function/adaptivefunction.hh>
+//#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/grid/io/file/dgfparser/gridptr.hh>
 #include <dune/stuff/common/logging.hh>
 
@@ -33,14 +33,14 @@ class AnalyticalHomogenizer
 private:
   typedef GridImp GridType;
 
-  typedef LeafGridPart< GridType > GridPartType;
+  typedef Fem::LeafGridPart< GridType > GridPartType;
 
-  typedef FunctionSpace< double, double, 2, 1 > FunctionSpaceType;
+  typedef Fem::FunctionSpace< double, double, 2, 1 > FunctionSpaceType;
 
-  typedef LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >
+  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >
   DiscreteFunctionSpaceType;
 
-  typedef AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
+  typedef Fem::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
 
   typedef typename FunctionSpaceType::DomainType DomainType;
 
@@ -91,7 +91,7 @@ public:
     TensorMatrixType a;
     for (const EntityType& entity : discreteFunctionSpace)
     {
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
@@ -115,7 +115,7 @@ public:
 
     for (const EntityType& entity : discreteFunctionSpace)
     {
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
@@ -144,7 +144,7 @@ public:
 
     for (const EntityType& entity : discreteFunctionSpace)
     {
-      const CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();

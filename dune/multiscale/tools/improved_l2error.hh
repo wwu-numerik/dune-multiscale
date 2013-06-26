@@ -86,7 +86,7 @@ public:
       const EntityType& en = *it;
       const EntityType& en_2 = *it_2;
 
-      const CachingQuadrature< GridPartType, 0 > quad(en, quadOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > quad(en, quadOrd);
       // get local functions on current element
       const LocalFunctionType lf1 = f1.localFunction(en);
       const LocalFunctionType lf2 = f2.localFunction(en_2);
@@ -147,14 +147,14 @@ public:
       for (int lev = 0; lev < level_difference; ++lev)
         fine_father_entity = fine_father_entity->father();
 
-      const CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
       // get local functions on current element
       const LocalFunctionType local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
       const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*fine_father_entity);
 
       // create at quadrature with 3 quadrature points:
-      const CachingQuadrature< GridPartType, 0 > coarse_quad(*fine_father_entity, 2);       // 3 points for linear pol in 2D
+      const Fem::CachingQuadrature< GridPartType, 0 > coarse_quad(*fine_father_entity, 2);       // 3 points for linear pol in 2D
       // get geoemetry of coarse entity
       const EnGeometryType& coarse_geo = fine_father_entity->geometry();
 
@@ -354,7 +354,7 @@ public:
           relevant_coarse_entity_found = true;
 
           // create at quadrature with 3 quadrature points:
-          CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);        // 3 points for linear pol in 2D
+          Fem::CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);        // 3 points for linear pol in 2D
           for (int qp = 0; qp < 3; ++qp)
           {
             coarse_quad_point[qp] = coarse_geo.global( coarse_quad.point(qp) );
@@ -392,7 +392,7 @@ public:
 
       //! the fine grid quadrature:
 
-      const CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
       // get local functions on current element
       const LocalFunctionType local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
@@ -523,7 +523,7 @@ public:
         // (determined in the previous loop):
 
         // create at quadrature with 3 quadrature points:
-        const CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);       // 3 points for linear pol in 2D
+        const Fem::CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);       // 3 points for linear pol in 2D
         // for the Lagrange Interpolation on the relevant coarse entity:
         DomainType coarse_quad_point[3];
         RangeType local_value_coarse_func[3];
@@ -554,8 +554,8 @@ public:
         DiscreteFunctionType corrector_of_base_func("Corrector of macro base function", local_discreteFunctionSpace);
         corrector_of_base_func.clear();
 
-        typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
-        const BaseFunctionSetType& baseSet = coarse_discreteFunctionSpace.baseFunctionSet(*coarse_it);
+        typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
+        const BasisFunctionSetType& baseSet = coarse_discreteFunctionSpace.basisFunctionSet(*coarse_it);
         const unsigned int numMacroBaseFunctions = baseSet.numBaseFunctions();
 
         int cell_problem_id[numMacroBaseFunctions];
@@ -644,7 +644,7 @@ public:
             LocalFunctionType local_corrector_disc_func = corrector_of_coarse_disc_func.localFunction(*local_grid_it);
 
             // create at quadrature with 3 quadrature points:
-            CachingQuadrature< GridPartType, 0 > local_quad(*local_grid_it, 2);          // 3 points for linear pol in
+            Fem::CachingQuadrature< GridPartType, 0 > local_quad(*local_grid_it, 2);          // 3 points for linear pol in
                                                                                          // 2D
             // for the Lagrange Interpolation on the relevant coarse entity:
             DomainType fine_quad_point[3];
@@ -785,7 +785,7 @@ public:
         // (determined in the previous loop):
 
         // create at quadrature with 3 quadrature points:
-        const CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);       // 3 points for linear pol in 2D
+        const Fem::CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);       // 3 points for linear pol in 2D
         // for the Lagrange Interpolation on the relevant coarse entity:
         DomainType coarse_quad_point[3];
         RangeType local_value_coarse_func[3];
@@ -816,8 +816,8 @@ public:
         DiscreteFunctionType corrector_of_base_func("Corrector of macro base function", local_discreteFunctionSpace);
         corrector_of_base_func.clear();
 
-        typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
-        const BaseFunctionSetType& baseSet = coarse_discreteFunctionSpace.baseFunctionSet(*coarse_it);
+        typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
+        const BasisFunctionSetType& baseSet = coarse_discreteFunctionSpace.basisFunctionSet(*coarse_it);
         const unsigned int numMacroBaseFunctions = baseSet.numBaseFunctions();
 
         int cell_problem_id[numMacroBaseFunctions];
@@ -910,7 +910,7 @@ public:
             LocalFunctionType local_corrector_disc_func = corrector_of_coarse_disc_func.localFunction(*local_grid_it);
 
             // create at quadrature with 3 quadrature points:
-            CachingQuadrature< GridPartType, 0 > local_quad(*local_grid_it, 2);          // 3 points for linear pol in
+            Fem::CachingQuadrature< GridPartType, 0 > local_quad(*local_grid_it, 2);          // 3 points for linear pol in
                                                                                          // 2D
             // for the Lagrange Interpolation on the relevant coarse entity:
             DomainType fine_quad_point[3];
@@ -983,7 +983,7 @@ public:
     {
       const EntityType& fine_en = *fine_it;
 
-      const CachingQuadrature< GridPartType, 0 > quad(fine_en, quadOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > quad(fine_en, quadOrd);
       // get local functions on current element
       const LocalFunctionType local_fine_discrete_function = fine_discrete_function.localFunction(fine_en);
 
@@ -1050,7 +1050,7 @@ public:
 
       // entity
       const EntityType& fine_entity = *fine_it;
-      const CachingQuadrature< GridPartType, 0 > quadrature(fine_entity, polOrd);
+      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(fine_entity, polOrd);
       // integrate
       const int quadratureNop = quadrature.nop();
       for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
@@ -1114,7 +1114,7 @@ public:
       const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
 
       // create at quadrature with 3 quadrature points:
-      const CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);    // 3 points for linear pol in 2D
+      const Fem::CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);    // 3 points for linear pol in 2D
       // get geoemetry of coarse entity
       const EnGeometryType& coarse_geo = coarse_it->geometry();
       DomainType coarse_quad_point[3];
@@ -1154,7 +1154,7 @@ public:
         if (id_fine_father_entity == id_coarse_it)
         {
           has_father = true;
-          const CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
+          const Fem::CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
           // get local functions on current element
           const LocalFunctionType local_fine_disc_func = fine_disc_func.localFunction(*fine_it);

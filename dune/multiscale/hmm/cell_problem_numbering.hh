@@ -27,7 +27,7 @@ private:
   typedef typename GridType::Codim< 0 >::Entity         EntityType;
   typedef typename GridType::Codim< 0 >::EntityPointer EntityPointerType;
 
-  typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
 
   typedef typename DiscreteFunctionSpaceType::DomainType DomainType;

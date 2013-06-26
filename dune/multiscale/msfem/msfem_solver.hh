@@ -72,15 +72,15 @@ private:
 
   typedef SubGrid< HostGrid::dimension, HostGrid > SubGridType;
 
-  typedef LeafGridPart< SubGridType > SubGridPart;
+  typedef Fem::LeafGridPart< SubGridType > SubGridPart;
 
   // typedef typename SubGridType ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
   // SubGridLevelEntityIteratorType;
 
-  typedef LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
-  SubgridDiscreteFunctionSpace;
+  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
+    SubgridDiscreteFunctionSpace;
 
-  typedef AdaptiveDiscreteFunction< SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
+  typedef Fem::AdaptiveDiscreteFunction< SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
 
   typedef typename SubgridDiscreteFunctionSpace::IteratorType CoarseGridIterator;
 
@@ -103,7 +103,7 @@ private:
     typedef SubgridDiscreteFunctionSpace                          RowSpaceType;
     typedef SubgridDiscreteFunctionSpace                          ColumnSpaceType;
     typedef LagrangeMatrixSetup< false >                          StencilType;
-    typedef ParallelScalarProduct< SubgridDiscreteFunctionSpace > ParallelScalarProductType;
+    typedef Fem::ParallelScalarProduct< SubgridDiscreteFunctionSpace > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
@@ -116,7 +116,7 @@ private:
 
   //! --------------------- type of fem stiffness matrix -----------------------------------
 
-  typedef SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > MsFEMMatrix;
+  typedef Fem::SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > MsFEMMatrix;
 
   //! --------------------------------------------------------------------------------------
 
@@ -124,7 +124,7 @@ private:
 
   // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
   // ones. GMRES seems to be more stable, but is extremely slow!
-  typedef /*OEMBICGSQOp*//*CGInverseOp*/ OEMBICGSTABOp< DiscreteFunction, MsFEMMatrix > InverseMsFEMMatrix;
+  typedef /*OEMBICGSQOp*//*CGInverseOp*/ Fem::OEMBICGSTABOp< DiscreteFunction, MsFEMMatrix > InverseMsFEMMatrix;
 
   //! --------------------------------------------------------------------------------------
 
