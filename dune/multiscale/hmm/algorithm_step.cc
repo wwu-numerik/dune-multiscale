@@ -317,7 +317,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
   {
     hmm_newton_residual.clear();
     const typename HMMTraits::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix,
-                                           1e-8, hmm_biCG_tolerance, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+                                           1e-8, hmm_biCG_tolerance, 20000);
 
     hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
 

@@ -6,7 +6,7 @@
 
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-#include <dune/fem/space/lagrangespace.hh>
+#include <dune/fem/space/lagrange.hh>
 //#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/misc/h1norm.hh>
 #include <dune/fem/misc/l2norm.hh>
