@@ -7,6 +7,7 @@
 
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 
 namespace Dune {
 namespace Multiscale {

@@ -98,7 +98,7 @@ public:
         range_set.insert(RangeEntityPointerType(range_entity));
         for (const auto i : globalI_vec) {
           const auto globalJ_vec = mapEach(rangeSpace,range_entity);
-          auto& columns = BaseType::set(i);
+          auto& columns = BaseType::inner(i);
           for (const auto j : globalJ_vec) {
             columns.insert(j);
           }
