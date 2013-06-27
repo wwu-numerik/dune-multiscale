@@ -240,13 +240,10 @@ private:
   {
     RangeType value = 0.0;
 
-    int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
-    for (int it_id = 0; it_id < support_of_ms_basis_func_intersection.size(); ++it_id)
+    const int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
+    for (const auto& support : support_of_ms_basis_func_intersection)
     {
-      typedef typename HostEntity::template Codim< 0 >::EntityPointer
-          HostEntityPointer;
-
-      HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[it_id] );
+      const auto it = discreteFunctionSpace_.grid().entityPointer(support);
  
       LocalFunction loc_func_1 = func1.localFunction(*it);
       LocalFunction loc_func_2 = func2.localFunction(*it);
@@ -273,10 +270,8 @@ private:
         diffusion_op.diffusiveFlux( global_point, grad_func_1, diffusive_flux);
 
         value += weight * ( diffusive_flux[0] * grad_func_2[0] );
-
       }
     }
-
     return value;
   }
 

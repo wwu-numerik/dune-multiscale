@@ -540,7 +540,6 @@ public:
 
         // the return values:
         RangeType f_x;
-        std::vector<RangeType> phi_x(numDofs);
 
         const int numMacroQuadraturePoints = macro_quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numMacroQuadraturePoints; ++quadraturePoint)

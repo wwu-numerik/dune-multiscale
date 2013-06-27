@@ -117,6 +117,7 @@ private:
 
   //! --------------------- istl matrix and vector types -------------------------------------
 
+  //! \TODO diese definitionen machen keinen sinn
   typedef BlockVector< FieldVector< double, 1> > VectorType;
   typedef Matrix< FieldMatrix< double,1,1 > > MatrixType;
   typedef MatrixAdapter< MatrixType, VectorType, VectorType > MatrixOperatorType;

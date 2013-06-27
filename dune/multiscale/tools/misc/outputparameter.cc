@@ -15,9 +15,9 @@ namespace Multiscale {
 
 //OutputParameters::OutputParameters(const std::string path
 //                                  = DSC_CONFIG_GET("global.datadir", "data")
-OutputParameters::OutputParameters(const std::string path)
+OutputParameters::OutputParameters(const std::string path_in)
 : my_prefix_("solutions")
-, my_path_(path)
+, my_path_(path_in)
 {
   Dune::Stuff::Common::testCreateDirectory(my_path_);
 }

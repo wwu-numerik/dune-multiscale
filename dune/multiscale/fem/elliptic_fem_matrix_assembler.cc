@@ -1,5 +1,4 @@
 #include <dune/fem/solver/oemsolver/oemsolver.hh>
-#include <dune/fem/solver/inverseoperators.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/discreteoperatorimp.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
