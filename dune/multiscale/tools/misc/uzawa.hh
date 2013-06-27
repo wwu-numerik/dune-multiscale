@@ -15,7 +15,6 @@
 
 #include <dune/fem/function/common/discretefunction.hh>
 #include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/solver/inverseoperators.hh>
 
 namespace Dune
 {

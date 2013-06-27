@@ -58,7 +58,7 @@ public:
 };
 
 
-NULLFUNCTION(ZeroFunction);
+NULLFUNCTION(ZeroFunction)
 
 //! \TODO docme
 // (to replace the more general lower order term)
@@ -69,7 +69,7 @@ class MassWeight
   MassWeight( double lambda ) : lambda_( lambda ) {}
   
   template< class DomainType , class RangeType, class JacobianRangeType >
-  void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, RangeType& y) const
+  void evaluate(const DomainType& /*x*/, const RangeType& position, const JacobianRangeType& /*direction_gradient*/, RangeType& y) const
   { y = lambda_ * position; }
 
   double lambda_;
@@ -194,7 +194,7 @@ public:
 };
 
 
-NULLFUNCTION(DefaultDummyAdvection);
+NULLFUNCTION(DefaultDummyAdvection)
 
 
 //! \TODO docme

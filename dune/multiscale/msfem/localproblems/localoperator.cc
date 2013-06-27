@@ -490,14 +490,9 @@ void LocalProblemOperator
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
       // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
-
       // global point in the subgrid
       const DomainType global_point = geometry.global(local_point);
-
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
-
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
 
       // A^eps(x) e
       // diffusion operator evaluated in 'x' multiplied with e
@@ -617,19 +612,13 @@ void LocalProblemOperator
 
   const GridType& subGrid = discreteFunctionSpace.grid();
   
-  for (int j = 0; j < local_problem_RHS.size(); ++j)
+  for (auto& rhs : local_problem_RHS)
   {
-    // set entries to zero:
-    local_problem_RHS[j]->clear();
+    rhs->clear();
   }
 
-  // gradient of micro scale base function:
-  std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
-
-  const Iterator end = discreteFunctionSpace.end();
-  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
+  for (const Entity& local_grid_entity : discreteFunctionSpace)
   {
-    const Entity& local_grid_entity = *it;
     const Geometry& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
     
@@ -650,7 +639,7 @@ void LocalProblemOperator
       std::vector<RangeType> fine_phi_x;
       baseSet.evaluateAll( quadrature[quadraturePoint], fine_phi_x);
       
-      for (int j = 0; j < local_problem_RHS.size(); ++j)
+      for (std::size_t j = 0; j < local_problem_RHS.size(); ++j)
       {
          int interior_basis_func_id = ids_basis_functions_in_subgrid[j];
          HostLocalFunction local_coarse_basis_func = coarse_basis_func_list[interior_basis_func_id]->localFunction( host_entity );
@@ -661,12 +650,9 @@ void LocalProblemOperator
 
          for (unsigned int i = 0; i < numBaseFunctions; ++i)
            elementOfRHS[i] += clement_weights[interior_basis_func_id] * weight * value_coarse_basis_func * fine_phi_x[i];
-
       }
     }
-
   }
-
 } // assemble_local_RHS_pre_processing_all
 
 

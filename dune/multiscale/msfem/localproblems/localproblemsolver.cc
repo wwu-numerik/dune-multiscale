@@ -565,19 +565,15 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   
   // right hand side vectors for the lagrange multiplier (lm) problems (for e_0 and e_1)
   // entries lm_rhs_0[i] = weight_i ( local_problem_solution_0, coarse_basis_func[i] )_L2(\Omega)
-  VectorType lm_rhs_0( number_of_interior_coarse_nodes_in_subgrid );
-  VectorType lm_rhs_1( number_of_interior_coarse_nodes_in_subgrid );
-  for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
-  { lm_rhs_0[i] = 0.0; lm_rhs_1[i] = 0.0; }
+  VectorType lm_rhs_0( number_of_interior_coarse_nodes_in_subgrid, 0.0 );
+  VectorType lm_rhs_1( number_of_interior_coarse_nodes_in_subgrid, 0.0 );
 
-  for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
+  for (const auto& subgrid_entity : subDiscreteFunctionSpace)
   {
-    const SubgridEntityType& subgrid_entity = *sg_it;
+    const auto& sg_geometry = subgrid_entity.geometry();
     
-    const SubGridEntityGeometry& sg_geometry = subgrid_entity.geometry();
-    
-    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
-    const HostEntityType& host_entity = *host_entity_pointer;
+    auto host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
+    const auto& host_entity = *host_entity_pointer;
 
     typedef Fem::CachingQuadrature< SubGridPartType, 0 > SubGridQuadrature;
     typedef Fem::CachingQuadrature< HostGridPartType, 0 > HostGridQuadrature;

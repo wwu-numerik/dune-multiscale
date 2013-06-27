@@ -329,7 +329,7 @@ void SubGridList::identifySubGrids() {
     subGridList_[coarse_index]->createBegin();
 
     if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
-      assert(coarse_index >= 0 && coarse_index < coarse_node_store_.size()
+      assert(coarse_index >= 0 && coarse_index < int(coarse_node_store_.size())
               && "Index set is not suitable for the current implementation!");
       for (int c = 0; c < coarse_entity.geometry().corners(); ++c)
         coarse_node_store_[coarse_index].emplace_back(coarse_entity.geometry().corner(c));
@@ -341,9 +341,9 @@ void SubGridList::identifySubGrids() {
   // a given node 'i' which fine grid entities intersect with 'i'
   // -----------------------------------------------------------
   //! \todo: isn't this exactly the same as in lines 140--149???
-  for (HostGridEntityIteratorType it = hostSpace_.begin(); it != hostSpace_.end(); ++it) {
-    const auto& localEntity               = *it;
-    const int   number_of_nodes_in_entity = localEntity.count< 2 >();
+  for (const auto& localEntity : hostSpace_)
+  {
+    const int number_of_nodes_in_entity = localEntity.count< 2 >();
     for (int i = 0; i < number_of_nodes_in_entity; i += 1) {
       const HostNodePointer node              = localEntity.subEntity< 2 >(i);
       const int             global_index_node = hostGridPart.indexSet().index(*node);

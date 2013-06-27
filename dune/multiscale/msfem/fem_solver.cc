@@ -3,7 +3,6 @@
 #include <dune/common/fmatrix.hh>
 
 #include <dune/fem/solver/oemsolver/oemsolver.hh>
-#include <dune/fem/solver/inverseoperators.hh>
 #include <dune/fem/operator/discreteoperatorimp.hh>
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
