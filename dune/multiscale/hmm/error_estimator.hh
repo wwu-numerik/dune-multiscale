@@ -5,6 +5,12 @@
 #ifndef DUNE_ERRORESTIMATER_HH
 #define DUNE_ERRORESTIMATER_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 // where the quadratures are defined
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>

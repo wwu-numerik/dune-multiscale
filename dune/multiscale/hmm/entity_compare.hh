@@ -1,6 +1,12 @@
 #ifndef DUNEMS_ENTITY_COMPARE_HH
 #define DUNEMS_ENTITY_COMPARE_HH
 
+#ifdef HAVE_CMAKE_CONFIG
+  #include "cmake_config.h"
+#else
+  #include "config.h"
+#endif // ifdef HAVE_CMAKE_CONFIG
+
 #include <utility>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 

@@ -15,6 +15,7 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/common/functionspace.hh>
+#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/space/lagrange.hh>
 //#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/grid/io/file/dgfparser/gridptr.hh>
