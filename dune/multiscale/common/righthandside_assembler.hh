@@ -103,8 +103,8 @@ private:
       {
         // the return values:
         RangeType f_x;
-        std::vector<RangeType>phi_x;
-        std::vector<JacobianRangeType> gradientPhi;
+        std::vector<RangeType> phi_x(numDofs);
+        std::vector<JacobianRangeType> gradientPhi(numDofs);
         // to save: A \nabla PHI_H * \nabla phi_h;
         RangeType res = 0;
         const double det = geometry.integrationElement(quadrature.point(quadraturePoint));
