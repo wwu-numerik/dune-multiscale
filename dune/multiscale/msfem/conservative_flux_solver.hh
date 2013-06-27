@@ -33,7 +33,7 @@
 // dune-fem includes:
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/fem/solver/inverseoperators.hh>
+#include <dune/fem/solver/cginverseoperator.hh>
 #include <dune/stuff/common/math.hh>
 
 #include <dune/multiscale/tools/misc.hh>

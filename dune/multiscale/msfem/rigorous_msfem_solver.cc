@@ -6,12 +6,6 @@
 
 #include "rigorous_msfem_solver.hh"
 
-#include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
-#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
-#include <dune/multiscale/common/output_traits.hh>
 
 #include <dune/common/fmatrix.hh>
 
@@ -21,6 +15,15 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
+#include <dune/fem/function/adaptivefunction.hh>
+#include <dune/fem/function/common/function.hh>
+
+#include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
+#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/common/output_traits.hh>
 
 #include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
