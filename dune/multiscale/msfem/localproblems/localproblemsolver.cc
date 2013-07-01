@@ -340,7 +340,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   if ( !clement )
     DUNE_THROW(Dune::InvalidStateException, "method 'solvelocalproblems_lod' can be only used in combination with the LOD and Clement interpolation.");
-
+ 
   // assemble stiffness matrix
   local_problem_op.assemble_matrix( locprob_system_matrix );
 
@@ -397,7 +397,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   // Clement interpolation operator
   // ----------------------------------------------------------------------------------------------------
   int number_of_interior_coarse_nodes_in_subgrid = (*ids_basis_functions_in_subgrid_)[ coarse_index ].size();
-
+    
   std::vector<std::unique_ptr<SubDiscreteFunctionType>> b_h(number_of_interior_coarse_nodes_in_subgrid);
   std::vector<std::unique_ptr<SubDiscreteFunctionType>> rhs_Chj(number_of_interior_coarse_nodes_in_subgrid);
   for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
@@ -414,7 +414,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
                                                        (*inverse_of_L1_norm_coarse_basis_funcs_),
                                                        (*ids_basis_functions_in_subgrid_)[coarse_index], rhs_Chj );
   // get the global id of all interior coarse basis functions (subgrid id, local id) -> (global interior id) 
-
+  
   // zero boundary condition for 'rhs_Chj[j]':
   // set Dirichlet Boundary to zero
   for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
@@ -470,7 +470,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   // right hand side vectors of the algebraic local MsFEM problem
   SubDiscreteFunctionType local_problem_rhs_0("rhs of local MsFEM problem", subDiscreteFunctionSpace); // for e_0
   SubDiscreteFunctionType local_problem_rhs_1("rhs of local MsFEM problem", subDiscreteFunctionSpace); // for e_1
-
+  
   local_problem_rhs_0.clear();
   local_problem_rhs_1.clear();
 
@@ -479,7 +479,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
                                        subgrid_list_.getCoarseNodeVector( coarse_index ), /*coarse node vector is a dummy in this case*/
                                        specifier_.getOversamplingStrategy(), /*always '3' in this case */
                                        local_problem_rhs_0 );
-
+  
   local_problem_op.assemble_local_RHS( e_1,
                                        subgrid_list_.getCoarseNodeVector( coarse_index ), /*coarse node vector is a dummy in this case*/
                                        specifier_.getOversamplingStrategy(), /*always three in this case*/
@@ -487,7 +487,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , local_problem_rhs_0 );
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , local_problem_rhs_1 );
-
+  
   //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs_0 );
   //oneLinePrint( DSC_LOG_DEBUG, local_problem_rhs_1 );
  
@@ -509,6 +509,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   // matrix with entries M[i][j] = weight_i ( b_h[j], coarse_basis_func[i] )_L2(\Omega)
   // 'i = row' and 'j = column'
+
   for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
   {
     const SubgridEntityType& subgrid_entity = *sg_it;
@@ -561,7 +562,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   } // lagrange multplier problem system matrix assembled
 
   // print_matrix( lm_system_matrix );
-
+  
   // right hand side vectors for the lagrange multiplier (lm) problems (for e_0 and e_1)
   // entries lm_rhs_0[i] = weight_i ( local_problem_solution_0, coarse_basis_func[i] )_L2(\Omega)
   VectorType lm_rhs_0( number_of_interior_coarse_nodes_in_subgrid, 0.0 );
@@ -619,13 +620,13 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   //print_vector( lm_rhs_0 );
   //print_vector( lm_rhs_1 );
-
+  
   MatrixOperatorType lm_matrix_op_0( lm_system_matrix );
   MatrixOperatorType lm_matrix_op_1( lm_system_matrix );
   
   PreconditionerType lm_preconditioner_0( lm_system_matrix, 100, 0.9 );
   PreconditionerType lm_preconditioner_1( lm_system_matrix, 100, 0.9 );
-
+  
   Dune::InverseOperatorResult result_data_0, result_data_1;
   VectorType v_h_0( number_of_interior_coarse_nodes_in_subgrid );
   VectorType v_h_1( number_of_interior_coarse_nodes_in_subgrid );
@@ -676,9 +677,8 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   SubDiscreteFunctionType final_rhs_vector_1("final rhs of local MsFEM problem", subDiscreteFunctionSpace); // for e_1
   final_rhs_vector_0.clear();
   final_rhs_vector_1.clear();
-
+  
   local_problem_op.assemble_local_RHS_lg_problems( final_rhs_0, 1.0, final_rhs_vector_0 );
-
   local_problem_op.assemble_local_RHS_lg_problems( final_rhs_1, 1.0, final_rhs_vector_1 );
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , final_rhs_vector_0 );
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , final_rhs_vector_1 );

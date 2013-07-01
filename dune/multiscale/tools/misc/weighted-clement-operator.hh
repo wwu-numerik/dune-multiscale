@@ -38,7 +38,7 @@ template < class FunctionSpaceTraits >
 std::vector<int> mapEach(const Dune::Fem::DiscreteFunctionSpaceInterface<FunctionSpaceTraits>& space,
                          const typename Dune::Fem::DiscreteFunctionSpaceInterface<FunctionSpaceTraits>::EntityType& entity)
 {
-  const auto& mapper = space.mapper();
+  const auto& mapper = space.blockMapper();
   std::vector<int> ret(mapper.numDofs(entity));
   auto add = [&](int localDof, int globalDof){ ret[localDof] = globalDof; };
   mapper.mapEach(entity, add);
