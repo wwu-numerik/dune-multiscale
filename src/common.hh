@@ -47,7 +47,6 @@
 #include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
-#include <dune/fem/solver/inverseoperators.hh>
 #include <dune/fem/misc/mpimanager.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>

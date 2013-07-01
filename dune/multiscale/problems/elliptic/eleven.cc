@@ -34,8 +34,9 @@ bool ModelProblemData::problemAllowsStochastics() const {
 // evaluate f, i.e. return y=f(x) for a given x
 // the following method defines 'f':
 void FirstSource::evaluate(const DomainType& x,
-                     RangeType& y) const {
-
+                     RangeType& y) const
+{
+  //! TODO Patrick: imp. wie in nine.cc
   y = -0.3;
 #if 0
   double coefficient_0 = 2.0 * ( 1.0 / (8.0 * M_PI * M_PI) ) * ( 1.0 / ( 2.0 + cos( 2.0 * M_PI * (x[0] / constants().epsilon) ) ) );
@@ -162,11 +163,11 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
 
 #if 1
 // dummy
-void LowerOrderTerm::evaluate(const DomainType& x, RangeType& y) const
+void LowerOrderTerm::evaluate(const DomainType& /*x*/, RangeType& /*y*/) const
 { DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'"); }
 
 // dummy
-void LowerOrderTerm::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const
+void LowerOrderTerm::evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& /*y*/) const
 { DUNE_THROW(Dune::NotImplemented, "Inadmissible call for 'evaluate'"); }
 
 // evaluate y = F(x, u(x), \grad u(x))
