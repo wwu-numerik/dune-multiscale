@@ -68,22 +68,13 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpace
 
 void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
                        SubDiscreteFunctionType& local_problem_solution,
-                       const int coarse_index /*= -1*/ ) const {
-
-    typedef Fem::SparseRowMatrixTraits < SubDiscreteFunctionSpaceType, HostDiscreteFunctionSpaceType >
-        WeightedClementMatrixObjectTraits;
-
-    typedef WeightedClementOp< SubDiscreteFunctionType,
-                               HostDiscreteFunctionType,
-                               WeightedClementMatrixObjectTraits,
-                               CoarseBasisFunctionListType >
-            WeightedClementOperatorType;
-
+                       const int coarse_index /*= -1*/ ) const
+{
     // saddle point problem solver:
     typedef UzawaInverseOp< SubDiscreteFunctionType,
                             HostDiscreteFunctionType,
                             InverseLocProbFEMMatrix,
-                            WeightedClementOperatorType >
+                            WeightedClementOperator >
        InverseUzawaOperatorType;
 
   // set solution equal to zero:
@@ -257,7 +248,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
       // of the local problem solution is zero
 
       // implementation of a weighted Clement interpolation operator for our purpose:
-      WeightedClementOperatorType clement_interpolation_op( subDiscreteFunctionSpace,
+      WeightedClementOperator clement_interpolation_op( subDiscreteFunctionSpace,
                                                             specifier_.coarseSpace(),
                                                             subgrid_list_.getCoarseNodeVector( coarse_index ),
                                                             *coarse_basis_, *global_id_to_internal_id_, specifier_ );
@@ -398,6 +389,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   // ----------------------------------------------------------------------------------------------------
   int number_of_interior_coarse_nodes_in_subgrid = (*ids_basis_functions_in_subgrid_)[ coarse_index ].size();
     
+  assert(number_of_interior_coarse_nodes_in_subgrid);
   std::vector<std::unique_ptr<SubDiscreteFunctionType>> b_h(number_of_interior_coarse_nodes_in_subgrid);
   std::vector<std::unique_ptr<SubDiscreteFunctionType>> rhs_Chj(number_of_interior_coarse_nodes_in_subgrid);
   for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
