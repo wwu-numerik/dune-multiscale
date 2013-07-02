@@ -576,7 +576,7 @@ void LocalProblemOperator
 
       const double weight = clement_weight * quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
-      std::vector<RangeType> fine_phi_x;
+      std::vector<RangeType> fine_phi_x( discreteFunctionSpace.mapper().maxNumDofs() );
       baseSet.evaluateAll( quadrature[quadraturePoint], fine_phi_x);
       
       RangeType value_coarse_basis_func;
@@ -595,7 +595,7 @@ void LocalProblemOperator
       ::assemble_local_RHS_lg_problems_all( const std::vector< std::shared_ptr<HostDiscreteFunction > >& coarse_basis_func_list,
                                             std::vector< double >& clement_weights,
                                             std::vector< int >& ids_basis_functions_in_subgrid,
-                                            std::vector< std::unique_ptr< DiscreteFunction > >& local_problem_RHS ) const {
+                                            std::vector< std::unique_ptr< LocalProblemOperator::DiscreteFunction > >& local_problem_RHS ) const {
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
@@ -607,11 +607,11 @@ void LocalProblemOperator
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
   typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
-
-  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS[0]->space();
-
-  const GridType& subGrid = discreteFunctionSpace.grid();
   
+  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS[0]->space();
+  
+  const GridType& subGrid = discreteFunctionSpace.grid();
+
   for (auto& rhs : local_problem_RHS)
   {
     rhs->clear();
@@ -624,7 +624,7 @@ void LocalProblemOperator
     
     const BaseFunctionSet& baseSet = (local_problem_RHS[0]->localFunction(local_grid_entity)).basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
-        
+
     HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );
     const HostEntity& host_entity = *host_entity_pointer;
 
@@ -636,9 +636,9 @@ void LocalProblemOperator
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
-      std::vector<RangeType> fine_phi_x;
+      std::vector<RangeType> fine_phi_x( discreteFunctionSpace.mapper().maxNumDofs() );
       baseSet.evaluateAll( quadrature[quadraturePoint], fine_phi_x);
-      
+
       for (std::size_t j = 0; j < local_problem_RHS.size(); ++j)
       {
          int interior_basis_func_id = ids_basis_functions_in_subgrid[j];
@@ -653,6 +653,7 @@ void LocalProblemOperator
       }
     }
   }
+
 } // assemble_local_RHS_pre_processing_all
 
 
