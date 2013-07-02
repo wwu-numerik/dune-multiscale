@@ -77,14 +77,11 @@ private:
   //! type of grid
   typedef typename SubGridList::SubGridType SubGridType;
   //! type of grid part
-  typedef Fem::LeafGridPart< SubGridType > SubGridPartType;
+  typedef typename SubGridList::SubGridPartType SubGridPartType;
   //! type of subgrid discrete function space
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1 >  // 1=POLORDER
-    SubDiscreteFunctionSpaceType;
+  typedef typename SubGridList::SubGridDiscreteFunctionSpace SubDiscreteFunctionSpaceType;
+  typedef typename SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
 
-  //! type of subgrid discrete function
-public:
-  typedef Fem::AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
   typedef typename SubgridIteratorType::Entity SubgridEntityType;

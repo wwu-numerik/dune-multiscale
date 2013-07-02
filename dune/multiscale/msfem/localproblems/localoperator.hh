@@ -31,7 +31,7 @@ namespace MsFEM {
 
 class LocalProblemOperator
 {
-  typedef MsFEMLocalProblemSolver::SubDiscreteFunctionType SubDiscreteFunctionType;
+  typedef SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
 
   enum { faceCodim = 1 };

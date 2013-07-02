@@ -14,7 +14,6 @@
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
 #include <dune/multiscale/problems/elliptic/selector.hh>
 
 namespace Dune {

@@ -19,6 +19,7 @@
 #include <dune/fem/storage/array.hh>
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/solver/oemsolver.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
@@ -27,8 +28,10 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
+
 
 namespace Dune {
 namespace Multiscale {
@@ -113,22 +116,24 @@ public:
   }
 };
 
-template< class DiscreteFunction, class CoarseDiscreteFunction, class MatrixTraits, class CoarseBasisFunctionList >
-class WeightedClementOp
-: public Operator< typename DiscreteFunction :: RangeFieldType,
-                   typename CoarseDiscreteFunction :: RangeFieldType,
-                   DiscreteFunction,
-                   CoarseDiscreteFunction >,
+class WeightedClementOperator
+: public Operator< typename SubGridList::SubGridDiscreteFunction::RangeFieldType,
+                   typename CommonTraits::DiscreteFunctionType::RangeFieldType,
+                   typename SubGridList::SubGridDiscreteFunction,
+                   typename CommonTraits::DiscreteFunctionType>,
   public OEMSolver::PreconditionInterface
 {
 private:
+  typedef std::vector<std::shared_ptr<CommonTraits::DiscreteFunctionType>> CoarseBasisFunctionList;
+  typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
+
   //! type of discrete functions
-  typedef DiscreteFunction DiscreteFunctionType;
+  typedef SubGridList::SubGridDiscreteFunction DiscreteFunctionType;
 
   typedef CoarseDiscreteFunction CoarseDiscreteFunctionType;
 
   //! type of this LaplaceFEOp
-  typedef WeightedClementOp< DiscreteFunctionType, CoarseDiscreteFunction, MatrixTraits, CoarseBasisFunctionList > WeightedClementOpType;
+  typedef WeightedClementOperator WeightedClementOpType;
 
   //! needs to be friend for conversion check
   friend class Conversion<WeightedClementOpType,OEMSolver::PreconditionInterface>;
@@ -182,8 +187,11 @@ private:
   typedef Fem::CachingQuadrature< GridPartType, 0 > QuadratureType;
   typedef Fem::CachingQuadrature< CoarseGridPartType, 0 > CoarseQuadratureType;
 
-  typedef typename MatrixTraits
-    :: template  MatrixObject< LagrangeMatrixTraits< MatrixTraits > >
+  typedef Dune::Fem::SparseRowMatrixTraits < typename SubGridList::SubGridDiscreteFunctionSpace,
+                                       typename SubGridList::HostDiscreteFunctionSpaceType > WeightedClementMatrixObjectTraits;
+
+  typedef typename WeightedClementMatrixObjectTraits
+    :: MatrixObject< Dune::LagrangeMatrixTraits< WeightedClementMatrixObjectTraits > >
     :: MatrixObjectType LinearOperatorType;
 
   //! get important types from the MatrixObject
@@ -199,7 +207,7 @@ private:
 
 public:
   //! constructor
-  explicit WeightedClementOp( const DiscreteFunctionSpaceType& space,
+  explicit WeightedClementOperator( const DiscreteFunctionSpaceType& space,
                               const CoarseDiscreteFunctionSpaceType& coarse_space,
                               const CoarseNodeVectorType& coarse_nodes,
                               const CoarseBasisFunctionList& coarse_basis,
@@ -222,7 +230,7 @@ public:
 
 private:
   // prohibit copying
-  WeightedClementOp ( const ThisType & ) = delete;
+  WeightedClementOperator ( const ThisType & ) = delete;
 
 public:                                                           /*@LST0S@*/
   //! apply the operator
@@ -457,48 +465,40 @@ public:                                                           /*@LST0S@*/
 
   }
 
-  // make boundry treament
+  /** \attention This imp. differs from the one before the refactor in that it iterates over both domain and range entities
+   *   in order to determine which local matrices to touch. I have no idea why this compiled before, since
+   *   type(domain_entity) != type(range_entity) and therefore calling "localMatrix(entity, entity)"
+   *   should never have been possible.
+   **/
   void boundaryTreatment () const
   {
-    typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
-    typedef typename IteratorType :: Entity EntityType;
-
-    const DiscreteFunctionSpaceType &dfSpace = discreteFunctionSpace();
-    typedef typename DiscreteFunctionSpaceType::LagrangePointSetType LagrangePointSetType;
-
-    const GridPartType &gridPart = dfSpace.gridPart();
-
-    const int faceCodim = 1;
-    typedef typename GridPartType :: IntersectionIteratorType
-      IntersectionIteratorType;
-    typedef typename LagrangePointSetType
-      :: template Codim< faceCodim > :: SubEntityIteratorType
-      FaceDofIteratorType;
-
-    const IteratorType end = dfSpace.end();
-    for( IteratorType it = dfSpace.begin(); it != end; ++it )
+    for(const auto& entity : discreteFunctionSpace_)
     {
-      const EntityType &entity = *it;
-      // if entity has boundary intersections
-      if( entity.hasBoundaryIntersections() )
+      for(const auto& coarse_entity : coarse_space_)
       {
-        // get local matrix from matrix object
-        LocalMatrixType localMatrix = linearOperator_.localMatrix( entity, entity );
+        if (!Stuff::Grid::entities_identical(entity, coarse_entity))
+          continue;
 
-        const LagrangePointSetType& lagrangePointSet = dfSpace.lagrangePointSet(entity);
-
-        const IntersectionIteratorType endiit = gridPart.iend( entity );
-        for( IntersectionIteratorType iit = gridPart.ibegin( entity );
-             iit != endiit ; ++iit )
+        // if entity has boundary intersections
+        if( entity.hasBoundaryIntersections() )
         {
+          // get local matrix from matrix object
+          LocalMatrixType localMatrix = linearOperator_.localMatrix(entity, coarse_entity);
 
-          if ( iit->neighbor() ) // if there is a neighbor entity
-           continue;
+          const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 
-          const int face = (*iit).indexInInside();
-          const FaceDofIteratorType fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-          for (FaceDofIteratorType fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
-            localMatrix.unitRow(*fdit);
+          const auto endiit = discreteFunctionSpace_.gridPart().iend( entity );
+          for( auto iit = discreteFunctionSpace_.gridPart().ibegin( entity );
+               iit != endiit ; ++iit )
+          {
+            if ( iit->neighbor() ) // if there is a neighbor entity
+              continue;
+
+            const int face = (*iit).indexInInside();
+            const auto fdend = lagrangePointSet.endSubEntity< 1 >(face);
+            for (auto fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+              localMatrix.unitRow(*fdit);
+          }
         }
       }
     }
