@@ -196,6 +196,9 @@ void MacroMicroGridSpecifier::identify_coarse_boundary_nodes()
     const auto endit = coarse_scale_space_.end();
     for (auto it = coarse_scale_space_.begin(); it != endit; ++it)
     {
+      
+        std::vector< std::size_t > indices;
+        coarse_scale_space_.mapper().map(*it, indices);
 
         auto intersection_it = coarse_scale_space_.gridPart().ibegin(*it);
         const auto endiit = coarse_scale_space_.gridPart().iend(*it);
@@ -205,10 +208,17 @@ void MacroMicroGridSpecifier::identify_coarse_boundary_nodes()
             if ( !intersection_it->boundary() )
                 continue;
 
-            std::vector< std::size_t > indices;
-            coarse_scale_space_.mapper().map(*it, indices);
-            for (auto index : indices)
-                is_boundary_node_[index] = true;
+            const auto& lagrangePointSet
+               = coarse_scale_space_.lagrangePointSet(*it);
+
+            const int face = (*intersection_it).indexInInside();
+            auto faceIterator
+                = lagrangePointSet.beginSubEntity< faceCodim >(face);
+            const auto faceEndIterator
+                = lagrangePointSet.endSubEntity< faceCodim >(face);
+
+            for ( ; faceIterator != faceEndIterator; ++faceIterator)
+              is_boundary_node_[ indices[ *faceIterator ] ] = true;
 
         }
 
