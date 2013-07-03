@@ -225,6 +225,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   }
 } // assemble_matrix
 
+
 void LocalProblemOperator::printLocalRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;

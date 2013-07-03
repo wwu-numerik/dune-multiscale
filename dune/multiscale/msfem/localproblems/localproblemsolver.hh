@@ -42,6 +42,31 @@ public:
   explicit LocalProblemDataOutputParameters();
 };
 
+template< class MatrixImp >
+void print_matrix( MatrixImp& system_matrix )
+{
+ std::cout << "---------------------------" << std::endl;
+ std::cout << "Matrix:" << std::endl << std::endl;
+ for (int row = 0; row != system_matrix.N(); ++row) {
+   for (int col = 0; col != system_matrix.M(); ++col) {
+     std::cout << system_matrix[row][col] << "  ";}
+     std::cout << std::endl;
+ }
+ std::cout << "---------------------------" << std::endl;
+ std::cout << std::endl << std::endl;
+}
+
+template< class VectorImp >
+void print_vector( VectorImp& vector )
+{
+ std::cout << "---------------------------" << std::endl;
+ std::cout << "Vector:" << std::endl << std::endl;
+ for (int col = 0; col != vector.N(); ++col) {
+     std::cout << vector[col] << "  ";
+ }
+ std::cout << std::endl << "---------------------------" << std::endl;
+ std::cout << std::endl << std::endl;
+}
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
 class MsFEMLocalProblemSolver
