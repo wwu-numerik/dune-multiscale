@@ -21,7 +21,8 @@ libmultiscale_common_la_SOURCES=../dune/multiscale/tools/misc/outputparameter.cc
         ../dune/multiscale/msfem/msfem_grid_specifier.cc \
         ../dune/multiscale/msfem/localproblems/localoperator.cc \
         ../dune/multiscale/msfem/localproblems/localproblemsolver.cc \
-        ../dune/multiscale/common/error_calc.cc
+        ../dune/multiscale/common/error_calc.cc \
+        ../dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
 libmultiscale_common_la_CPPFLAGS=$(CPPFLAGS)
 
 ######################################
@@ -92,7 +93,7 @@ elliptic_msfem_LDADD=-lmultiscale_msfem -lmultiscale_problems -lmultiscale_commo
 ######################################
 ###########  LOD Method  #############
 ######################################
-elliptic_lodm_SOURCES = elliptic_lodm.cc ../dune/multiscale/msfem/rigorous.cc ../dune/multiscale/msfem/rigorous_msfem_solver.cc
+elliptic_lodm_SOURCES = elliptic_lodm.cc ../dune/multiscale/msfem/rigorous.cc ../dune/multiscale/msfem/rigorous_msfem_solver.cc 
 elliptic_lodm_DEPENDENCIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_fem.la
 elliptic_lodm_CPPFLAGS = $(CPPFLAGS)
 elliptic_lodm_LDPFLAGS = $(LDPFLAGS)

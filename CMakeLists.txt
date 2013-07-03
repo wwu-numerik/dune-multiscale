@@ -138,6 +138,7 @@ ADD_DEFINITIONS( ${MY_CXX_FLAGS} -DPROBLEM_NAME=${PROBLEM_NAME} )
 add_subdirectory(doc)
 add_subdirectory(dune)
 
+#these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/hmm/cell_problem_numbering.cc
@@ -150,6 +151,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc
+        dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
     )
 
 set( PROBLEM_SOURCES
@@ -168,6 +170,7 @@ set( PROBLEM_SOURCES
 	dune/multiscale/problems/elliptic/two.cc
 	dune/multiscale/problems/base.cc
     )
+    
 set( HMM_SOURCES 
         src/elliptic_hmm.cc 
         dune/multiscale/hmm/algorithm.cc

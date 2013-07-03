@@ -18,7 +18,7 @@
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/tools/misc/weighted-clement-operator.hh>
+#include <dune/multiscale/msfem/localproblems/weighted-clement-operator.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 #include <memory>
