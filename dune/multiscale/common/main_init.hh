@@ -58,6 +58,9 @@
 
 #include <dune/multiscale/common/traits.hh>
 
+namespace Dune {
+namespace Multiscale {
+
 void init(int argc, char** argv) {
   namespace DSC = Dune::Stuff::Common;
   Dune::Fem::MPIManager::initialize(argc, argv);
@@ -79,5 +82,8 @@ void init(int argc, char** argv) {
   DSC_CONFIG.setRecordDefaults(true);
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
 } // init
+
+} // namespace Dune {
+} // namespace Multiscale {
 
 #endif // DUNE_MULTISCALE_SRC_COMMON_HH

@@ -3,15 +3,17 @@
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
 // Implementation of the Local Orthogonal Decomposition Method (LODM)
-#include "common.hh"
 
+#include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/msfem/rigorous.hh>
 #include <dune/multiscale/problems/elliptic/selector.hh>
 
 int main(int argc, char** argv) {
   try {
-    init(argc, argv);
+    using namespace Dune::Multiscale;
     using namespace Dune::Multiscale::MsFEM;
+    init(argc, argv);
+
     //!TODO include base in config
     DSC_PROFILER.startTiming("msfem.all");
 

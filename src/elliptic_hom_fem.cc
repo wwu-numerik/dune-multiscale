@@ -2,37 +2,20 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#include "common.hh"
-
-// The following FEM code requires an access to the 'ModelProblemData' class,
-// which provides us with information about f, A, \Omega, etc.
-
-
-#ifdef HAVE_CMAKE_CONFIG
- #include "cmake_config.h"
-#elif defined (HAVE_CONFIG_H)
- #include <config.h>
-#endif // ifdef HAVE_CMAKE_CONFIG
-
-
-//! local (dune-multiscale) includes
+#include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/multiscale/fem/algorithm.hh>
-
-//! (very restrictive) homogenizer
-#include <dune/multiscale/common/elliptic_analytical_homogenizer.hh>
-#include <dune/multiscale/common/elliptic_homogenizer.hh>
 
 
 int main(int argc, char** argv) {
   try {
+    using namespace Dune::Multiscale;
+    using namespace Dune::Multiscale::FEM;
     init(argc, argv);
 
     if ( !DSC_CONFIG_GET("problem.linear", 1 ) )
      DUNE_THROW(Dune::InvalidStateException, "Problem is declared to be nonlinear. Homogenizers are only available for linear homogenization problems.");
 
-    using namespace Dune::Multiscale;
-    using namespace Dune::Multiscale::FEM;
 
     DSC_PROFILER.startTiming("total_cpu");
 

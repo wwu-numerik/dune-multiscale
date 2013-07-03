@@ -2,36 +2,20 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#include "common.hh"
-
+#include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/hmm/algorithm.hh>
-
-// the solutions of the cell problems are always determined in a pre-process
-
-#include <dune/multiscale/hmm/error_estimator.hh>
-
-//! (very restrictive) homogenizer
-#include <dune/multiscale/common/elliptic_analytical_homogenizer.hh>
-#include <dune/multiscale/common/elliptic_homogenizer.hh>
-
-// all the multiscale code requires an access to the 'ModelProblemData' class
-// (typically defined in the specification file for the model problem)
-
-//! local (dune-multiscale) includes
-#include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/tools/meanvalue.hh>
+#include <dune/multiscale/problems/elliptic/selector.hh>
 
 void check_config();
 
 int main(int argc, char** argv) {
   try {
-    init(argc, argv);
-    check_config();
-
     using namespace Dune::Multiscale;
     using namespace Dune::Multiscale::HMM;
+
+    init(argc, argv);
+    check_config();
 
     DSC_PROFILER.startTiming("total_cpu");
 
