@@ -16,10 +16,7 @@ int main(int argc, char** argv) {
     DSC_PROFILER.startTiming("msfem.all");
 
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
-
-    // generate directories for data output
     DSC::testCreateDirectory(datadir);
-
     DSC_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n")
                             % datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
 
@@ -36,9 +33,7 @@ int main(int argc, char** argv) {
       case 1: break;
       case 2: break;
       default: DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
-    }
-      //if (!( (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 1) || (DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) == 2) ))
-     
+    } 
     
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)

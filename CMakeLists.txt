@@ -135,9 +135,6 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
 ADD_DEFINITIONS( ${MY_CXX_FLAGS} -DPROBLEM_NAME=${PROBLEM_NAME} )
 
-add_subdirectory(doc)
-add_subdirectory(dune)
-
 #these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
@@ -171,8 +168,7 @@ set( PROBLEM_SOURCES
 	dune/multiscale/problems/base.cc
     )
     
-set( HMM_SOURCES 
-        src/elliptic_hmm.cc 
+set( HMM_SOURCES  
         dune/multiscale/hmm/algorithm.cc
         dune/multiscale/hmm/algorithm_error.cc
         dune/multiscale/hmm/algorithm_step.cc
@@ -180,7 +176,6 @@ set( HMM_SOURCES
     )
 
 set( MSFEM_SOURCES
-        src/elliptic_msfem.cc
         dune/multiscale/msfem/algorithm.cc
         dune/multiscale/msfem/msfem_solver.cc
     )
@@ -195,13 +190,11 @@ set( FEM_SOURCES
         dune/multiscale/fem/algorithm.cc
     )
     
-set( LODM_SOURCES
-        src/elliptic_lodm.cc
+set( LODM_SOURCES 
         dune/multiscale/msfem/rigorous.cc
         dune/multiscale/msfem/rigorous_msfem_solver.cc
     )
     
-
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native" 
   "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias")
@@ -210,15 +203,21 @@ EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 ADD_LIBRARY(multiscale_common ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem ${PROBLEM_SOURCES})
+ADD_LIBRARY(multiscale_lodm ${LODM_SOURCES})
+ADD_LIBRARY(multiscale_msfem ${MSFEM_SOURCES})
+ADD_LIBRARY(multiscale_hmm ${HMM_SOURCES})
+
 set( COMMON_LIBS multiscale_problem multiscale_common "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
     ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
     ${BOOST_LIBS})
-    
-ADD_EXECUTABLE(elliptic_hmm ${HMM_SOURCES} ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_hmm ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_msfem ${MSFEM_SOURCES} ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_msfem ${COMMON_LIBS} )
+set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
+
+ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(elliptic_hmm multiscale_hmm ${COMMON_LIBS} )
+
+ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${MSFEM_SOURCES} ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
@@ -226,8 +225,8 @@ TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
 ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_lodm ${LODM_SOURCES} ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_lodm ${COMMON_LIBS} )
+ADD_EXECUTABLE(elliptic_lodm src/elliptic_lodm.cc  ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(elliptic_lodm multiscale_lodm ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
@@ -235,4 +234,8 @@ TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
 HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
+
+add_subdirectory(doc)
+add_subdirectory(dune)
+
 ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
