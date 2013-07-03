@@ -452,7 +452,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   // solve the pre-processing problems:
   for (int j = 0; j < number_of_interior_coarse_nodes_in_subgrid ; ++j)
      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
-
+  
   // ----------------------------------------------------------------------------------------------------
 
   //! Solve the local problems without constraint
@@ -485,6 +485,19 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
  
   locprob_inverse_system_matrix( local_problem_rhs_0 , local_problem_solution_0 );
   locprob_inverse_system_matrix( local_problem_rhs_1 , local_problem_solution_1 );
+
+//! delete
+#if 0
+std::cout<< "local_problem_rhs_0" << std::endl;
+local_problem_op.printLocalRHS( local_problem_rhs_0 );
+std::cout<< "local_problem_solution_0" << std::endl;
+local_problem_op.printLocalRHS( local_problem_solution_0 );
+std::cout<< "local_problem_rhs_1" << std::endl;
+local_problem_op.printLocalRHS( local_problem_rhs_1 );
+std::cout<< "local_problem_solution_1" << std::endl;
+local_problem_op.printLocalRHS( local_problem_solution_1 );
+abort();
+#endif
 
   // ----------------------------------------------------------------------------------------------------
   
@@ -553,12 +566,14 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
     }
   } // lagrange multplier problem system matrix assembled
 
-  // print_matrix( lm_system_matrix );
-  
+  //print_matrix( lm_system_matrix );
+
   // right hand side vectors for the lagrange multiplier (lm) problems (for e_0 and e_1)
   // entries lm_rhs_0[i] = weight_i ( local_problem_solution_0, coarse_basis_func[i] )_L2(\Omega)
   VectorType lm_rhs_0( number_of_interior_coarse_nodes_in_subgrid, 0.0 );
   VectorType lm_rhs_1( number_of_interior_coarse_nodes_in_subgrid, 0.0 );
+  for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
+  { lm_rhs_0[i] = 0.0; lm_rhs_1[i] = 0.0; }
 
   for (const auto& subgrid_entity : subDiscreteFunctionSpace)
   {
@@ -592,11 +607,12 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
       local_sol_0.evaluate( sg_quadrature[quadraturePoint] , value_local_problem_solution_0);
       local_sol_1.evaluate( sg_quadrature[quadraturePoint] , value_local_problem_solution_1);
-
+    
       for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
       {
 
           int interior_coarse_basis_id_in_subgrid = (*ids_basis_functions_in_subgrid_)[coarse_index][i];
+
           HostLocalFunctionType local_coarse_basis_i
                  = (*coarse_basis_)[interior_coarse_basis_id_in_subgrid]->localFunction(host_entity);
           local_coarse_basis_i.evaluate( quadrature[quadraturePoint] , value_coarse_basis_func_i);
@@ -611,7 +627,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   } // lagrange multplier problem system matrix assembled
 
   //print_vector( lm_rhs_0 );
-  //print_vector( lm_rhs_1 );
+  //print_vector( lm_rhs_1 ); //abort();
   
   MatrixOperatorType lm_matrix_op_0( lm_system_matrix );
   MatrixOperatorType lm_matrix_op_1( lm_system_matrix );
@@ -778,8 +794,9 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 //  for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
   for (std::size_t gc=0; gc<coarse_indices.size(); ++gc)
   {
+    
     const int coarse_index = coarse_indices[gc];
-
+    
     DSC_LOG_INFO << "-------------------------" << std::endl
                  << "Coarse index " << coarse_index << std::endl;
 
