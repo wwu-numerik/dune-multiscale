@@ -189,6 +189,26 @@ const SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex) con
 } // getSubGrid
 
 
+/** Get the subgrid belonging to a given coarse cell.
+*
+* @param[in] coarseCell The coarse cell.
+* @return Returns the subgrid belonging to the given coarse cell.
+*/
+const SubGridList::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& entity) const {
+  const int index = coarseGridLeafIndexSet_.index(entity);
+  return getSubGrid(index);
+} // getSubGrid
+
+/** Get the subgrid belonging to a given coarse cell.
+*
+* @param[in] coarseCell The coarse cell.
+* @return Returns the subgrid belonging to the given coarse cell.
+*/
+SubGridList::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& entity) {
+  const int index = coarseGridLeafIndexSet_.index(entity);
+  return getSubGrid(index);
+} // getSubGrid
+
 const SubGridList::EntityPointerCollectionType& SubGridList::getNodeEntityMap() {
   return entities_sharing_same_node_;
 }
