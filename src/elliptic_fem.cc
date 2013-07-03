@@ -2,21 +2,18 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#include "common.hh"
-
 // The following FEM code requires an access to the 'ModelProblemData' class,
 // which provides us with information about f, A, \Omega, etc.
 
-//! local (dune-multiscale) includes
+#include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/fem/algorithm.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 
 int main(int argc, char** argv) {
   try {
-    init(argc, argv);
-
     using namespace Dune::Multiscale;
     using namespace Dune::Multiscale::FEM;
+    init(argc, argv);
 
     DSC_PROFILER.startTiming("total_cpu");
 
