@@ -129,6 +129,11 @@ public:
 
   int getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer);
 
+  /** Get the mapping from node number to codim 0 host entity.
+  * @return Returns the map.
+  * */
+  const EntityPointerCollectionType& getNodeEntityMap();
+
 private:
   typedef std::map<int, std::shared_ptr<SubGridType> > SubGridStorageType;
   /**
