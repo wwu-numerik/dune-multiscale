@@ -63,6 +63,8 @@ private:
   typedef typename HostEntityType::Codim< 2 >::EntityPointer HostNodePointer;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
+  typedef typename CommonTraits::CoarseEntityType CoarseEntityType;
+
   //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
 
@@ -102,7 +104,9 @@ public:
 private:
   SubGridType& getSubGrid(int i);
   const SubGridType& getSubGrid(int i) const;
-public:
+  const SubGridType& getSubGrid(const CoarseEntityType& entity) const;
+  SubGridType& getSubGrid(const CoarseEntityType& entity);
+
   int getNumberOfSubGrids() const;
 
   SubGridPartType gridPart(int i);
