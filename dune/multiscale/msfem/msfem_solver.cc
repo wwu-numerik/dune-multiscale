@@ -123,17 +123,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
     JacobianRangeType grad_coarse_msfem_on_entity;
     local_coarse_part.jacobian(one_point_quadrature[0], grad_coarse_msfem_on_entity);
 
-    //!
-    // std :: cout << "grad_coarse_msfem_on_entity[ 0 ][ 1 ] = " << grad_coarse_msfem_on_entity[ 0 ][ 1 ] << std ::
-    // endl;
-    // std :: cout << "grad_coarse_msfem_on_entity[ 0 ][ 0 ] = " << grad_coarse_msfem_on_entity[ 0 ][ 0 ] << std ::
-    // endl;
     // get the coarse gradient on T, multiply it with the local correctors and sum it up.
     local_problem_solution_e0 *= grad_coarse_msfem_on_entity[0][0];
     local_problem_solution_e1 *= grad_coarse_msfem_on_entity[0][1];
     local_problem_solution_e0 += local_problem_solution_e1;
-
-    // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution_e0 );
 
     // oversampling strategy 3: just sum up the local correctors:
     if ( (specifier.getOversamplingStrategy() == 3) ) {
@@ -214,6 +207,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   //! define the discrete (elliptic) operator that describes our problem
   // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
   // ( effect of the discretized differential operator on a certain discrete function )
+  // This will assemble and solve the local problems
   const DiscreteEllipticMsFEMOperator elliptic_msfem_op(specifier,
                                               coarse_space,
                                               subgrid_list,
@@ -228,10 +222,10 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   DiscreteFunction msfem_rhs("MsFEM right hand side", coarse_space);
   msfem_rhs.clear();
 
-  DSC_LOG_INFO  << std::endl << "Solving MsFEM problem." << std::endl;
-  DSC_LOG_INFO << "Solving linear problem with MsFEM and maximum coarse grid level "
-              << coarse_space.gridPart().grid().maxLevel() << "." << std::endl;
-  DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
+  DSC_LOG_INFO << std::endl << "Solving MsFEM problem." << std::endl
+          << "Solving linear problem with MsFEM and maximum coarse grid level "
+          << coarse_space.gridPart().grid().maxLevel() << "." << std::endl
+          << "------------------------------------------------------------------------------" << std::endl;
 
   // to assemble the computational time
   Dune::Timer assembleTimer;
