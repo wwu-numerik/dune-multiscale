@@ -83,25 +83,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
   const int number_of_nodes = grid.size(2 /*codim*/);
   std::vector< std::vector< HostEntityPointer > > entities_sharing_same_node(number_of_nodes);
 
-  // if the oversampling strategy is 1 or 2, we need identify the entities that share a certain node
-  // (because a 'conforming projection' operator is required - for stragey 3, we directly get a conforming approximation)
-  if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) ) {
-    // determine the entities that share a common global node with a given index
-    // we need to iterate over the whole grid, not only from hostSpace_.begin() to
-    // hostSpace_.end() for parallel runs!
-    for (auto& hostEntity : DSC::viewRange(discreteFunctionSpace_.gridPart().grid().leafView())) {
-      int number_of_nodes_in_entity = hostEntity.count< 2 >();
-      for (int i = 0; i < number_of_nodes_in_entity; ++i) {
-        const auto node              = hostEntity.subEntity< 2 >(i);
-        const int             global_index_node = gridPart.grid().leafIndexSet().index(*node);
-
-        entities_sharing_same_node[global_index_node].emplace_back(hostEntity);
-      }
-    }
-
-
-  }
-
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
   // traverse coarse space
   for (HostgridIterator coarse_it = coarse_space.begin(); coarse_it != coarse_space.end(); ++coarse_it) {
@@ -161,6 +142,12 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming projection:
     if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) ) {
+
+      if ( sub_grid_U_T.maxLevel() != discreteFunctionSpace_.gridPart().grid().maxLevel() ) {
+        DSC_LOG_ERROR << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl;
+      }
+
+      const auto& entities_sharing_same_node = subgrid_list.getNodeEntityMap();
 
       correction_on_U_T.clear();
 

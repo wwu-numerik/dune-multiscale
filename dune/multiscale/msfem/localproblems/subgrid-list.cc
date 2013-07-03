@@ -189,6 +189,11 @@ const SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex) con
 } // getSubGrid
 
 
+const SubGridList::EntityPointerCollectionType& SubGridList::getNodeEntityMap() {
+  return entities_sharing_same_node_;
+}
+
+
 // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
 const std::vector< int >& SubGridList::getSubgridIDs_that_contain_entity (int host_enitity_index) const
 {
