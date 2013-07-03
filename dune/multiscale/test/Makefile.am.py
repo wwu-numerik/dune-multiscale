@@ -3,8 +3,8 @@
 import jinja2
 import sys
 
-problems = ['Easy', 'Toy', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten' ]
-algos = ['hmm', 'msfem']
+problems = ['Easy', 'Toy', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven' ]
+algos = ['hmm', 'msfem', 'lodm']
 
 tpl = jinja2.Template(u'''
 GRIDTYPE=ALUGRID_SIMPLEX
