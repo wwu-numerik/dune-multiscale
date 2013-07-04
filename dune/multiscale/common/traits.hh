@@ -17,6 +17,8 @@
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/stuff/function/interface.hh>
+#include <dune/stuff/function/constant.hh>
 
 namespace Dune {
 
@@ -43,17 +45,16 @@ class SparseRowMatrixOperator;
 } // namespace Fem
 
 namespace Multiscale {
-
 namespace Problem {
+
 namespace PROBLEM_NAME {
 struct ModelProblemData;
-class FirstSource;
-class SecondSource;
+
 class Diffusion;
 class LowerOrderTerm;
 class MassTerm;
 class DefaultDummyFunction;
-class ExactSolution;
+
 } //namespace PROBLEM_NAME
 } //namespace Problem
 
@@ -70,12 +71,24 @@ struct CommonTraits {
   typedef Dune::Fem::FunctionSpace< double, double, WORLDDIM, 1 >              FunctionSpaceType;
   //!-----------------------------------------------------------------------------------------
 
+  typedef Dune::Stuff::FunctionInterface<
+                              FunctionSpaceType::DomainFieldType,
+                              FunctionSpaceType::dimDomain,
+                              FunctionSpaceType::RangeFieldType,
+                              FunctionSpaceType::dimRange>
+    FunctionBaseType;
+  typedef Dune::Stuff::FunctionConstant<
+                              FunctionSpaceType::DomainFieldType,
+                              FunctionSpaceType::dimDomain,
+                              FunctionSpaceType::RangeFieldType,
+                              FunctionSpaceType::dimRange>
+    ConstantFunctionBaseType;
   //! --------- typedefs for the coefficient and data functions ------------------------------
   typedef Problem::PROBLEM_NAME::ModelProblemData ModelProblemDataType;
   // type of first source term (right hand side of differential equation or type of 'f')
-  typedef Problem::PROBLEM_NAME::FirstSource FirstSourceType;
+  typedef FunctionBaseType FirstSourceType;
   // type of second source term 'G' (second right hand side of differential equation 'div G')
-  typedef Problem::PROBLEM_NAME::SecondSource SecondSourceType;
+  typedef FunctionBaseType SecondSourceType;
   // type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
   typedef Problem::PROBLEM_NAME::Diffusion DiffusionType;
   // type of (possibly non-linear) lower order term F( x, u(x), grad u(x) )
@@ -89,7 +102,7 @@ struct CommonTraits {
   //! ---------  typedefs for the standard discrete function space (macroscopic) -------------
 
   // type of exact solution (in general unknown)
-  typedef Problem::PROBLEM_NAME::ExactSolution ExactSolutionType;
+  typedef FunctionBaseType ExactSolutionType;
 
   typedef FunctionSpaceType::DomainType DomainType;
   //! define the type of elements of the codomain v(\Omega) (typically a subset of \R)

@@ -100,7 +100,8 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
   typename CommonTraits::DiscreteFunctionType system_rhs("fem newton rhs", finerDiscreteFunctionSpace);
   system_rhs.clear();
 
-  const typename CommonTraits::FirstSourceType f;   // standard source f
+  auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
+  const auto& f = *f_ptr;
 
   if (DSC_CONFIG_GET("problem.linear", true))
   {

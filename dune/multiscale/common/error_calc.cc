@@ -8,6 +8,39 @@
 #include <dune/multiscale/problems/elliptic/selector.hh>
 #include <iostream>
 
+template< class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDimRows, int rangeDimCols >
+struct TimeFunctionAdapter : public Dune::Stuff::FunctionInterface< DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols >
+{
+  typedef Dune::Stuff::FunctionInterface<DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols>
+    WrappedType;
+
+  TimeFunctionAdapter(const WrappedType& wr)
+    : wrapped_(wr)
+  {}
+
+  virtual void evaluate(const typename WrappedType::DomainType& x,
+                        typename WrappedType::RangeType& ret) const
+  {
+    wrapped_(x, ret);
+  }
+
+  virtual void evaluate(const typename WrappedType::DomainType& x,
+                        const double& /*t*/,
+                        typename WrappedType::RangeType& ret) const
+  {
+    wrapped_(x, ret);
+  }
+
+  const WrappedType& wrapped_;
+};
+
+template< class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDimRows, int rangeDimCols >
+TimeFunctionAdapter<DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols>
+timefunctionAdapted(const Dune::Stuff::FunctionInterface< DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols >& wrapped)
+{
+  return TimeFunctionAdapter<DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols>(wrapped);
+}
+
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType *msfem_solution,
                                                    const CommonTraits::DiscreteFunctionType *fem_solution)
     : msfem_solution_(msfem_solution)
@@ -30,14 +63,15 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
     if (Problem::ModelProblemData::has_exact_solution)
     {
 
-      const CommonTraits::ExactSolutionType u;
+      auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
+      const auto& u = *u_ptr;
       const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;
       const Dune::Fem::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType>
           u_disc("", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
 
       if (msfem_solution_)
       {
-          CommonTraits::RangeType msfem_error = l2error.norm(u, *msfem_solution_ );
+          CommonTraits::RangeType msfem_error = l2error.norm(timefunctionAdapted(u), *msfem_solution_ );
           out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
 
           CommonTraits::RangeType h1_msfem_error = h1norm.distance(u_disc, *msfem_solution_);
@@ -49,7 +83,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
 
       if (fem_solution_)
       {
-        CommonTraits::RangeType fem_error = l2error.norm(u, *fem_solution_);
+        CommonTraits::RangeType fem_error = l2error.norm(timefunctionAdapted(u), *fem_solution_);
         out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
 
         CommonTraits::RangeType h1_fem_error = h1norm.distance(u_disc, *fem_solution_);

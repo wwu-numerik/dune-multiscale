@@ -257,7 +257,8 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   //! -------------------------- writing data output Exact Solution ------------------------
   if (Problem::ModelProblemData::has_exact_solution)
   {
-    const CommonTraits::ExactSolutionType u;
+    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
+    const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     // create and initialize output class
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
@@ -388,7 +389,8 @@ bool algorithm(const std::string& macroGridName,
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const CommonTraits::DiffusionType diffusion_op;
   // define (first) source term:
-  const CommonTraits::FirstSourceType f; // standard source f
+  auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
+  const auto& f = *f_ptr;
 
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters

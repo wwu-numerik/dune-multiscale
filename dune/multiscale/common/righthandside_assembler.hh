@@ -24,6 +24,7 @@
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
 #include <dune/stuff/common/logging.hh>
+#include <dune/stuff/function/interface.hh>
 
 namespace Dune {
 

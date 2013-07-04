@@ -122,7 +122,7 @@ struct ModelProblemData
  is part from. (f \in FunctionSpace)
 */
 class FirstSource
-  : public FunctionBaseType
+  : public Dune::Multiscale::CommonTraits::FunctionBaseType
 
 {
 private:
@@ -199,7 +199,7 @@ public:
 // NOTE: the operator describing the pde must be a monotone operator
 //! ------- Definition of the (possibly nonlinear) lower term F ---------
 class LowerOrderTerm
-//  : public FunctionBaseType
+//  : public Dune::Multiscale::CommonTraits::FunctionBaseType
 //
 {
 
@@ -238,7 +238,7 @@ MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
 class ExactSolution
-  : public FunctionBaseType
+  : public Dune::Multiscale::CommonTraits::FunctionBaseType
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -283,7 +283,7 @@ public:
 ////! ------ Definition of an empty homogenized diffusion matrix -------
 //template< class Dune::Multiscale::CommonTraits::FunctionSpaceType, class FieldMatrixImp >
 //class HomDiffusion
-//  : public FunctionBaseType HomDiffusion< Dune::Multiscale::CommonTraits::FunctionSpaceType, FieldMatrixImp > >
+//  : public Dune::Multiscale::CommonTraits::FunctionBaseType HomDiffusion< Dune::Multiscale::CommonTraits::FunctionSpaceType, FieldMatrixImp > >
 //{
 //public:
 //  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;

@@ -121,7 +121,7 @@ MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution is unknown for this model problem
 class ExactSolution
-  : public FunctionBaseType
+  : public Dune::Multiscale::CommonTraits::FunctionBaseType
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;

@@ -48,7 +48,7 @@ struct ModelProblemData
 //! ----------------- Definition of ' f ' ------------------------
 
 class FirstSource
-  : public FunctionBaseType
+  : public Dune::Multiscale::CommonTraits::FunctionBaseType
 
 {
 private:
@@ -136,7 +136,7 @@ MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
 class ExactSolution
-  : public FunctionBaseType
+  : public Dune::Multiscale::CommonTraits::FunctionBaseType
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
