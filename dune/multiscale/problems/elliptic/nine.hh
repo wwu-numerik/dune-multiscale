@@ -48,8 +48,8 @@ struct ModelProblemData
 //! ----------------- Definition of ' f ' ------------------------
 
 class FirstSource
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
-                                FirstSource >
+  : public FunctionBaseType
+
 {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -86,8 +86,7 @@ MSNULLFUNCTION(SecondSource)
 
 //! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 //! A^{\epsilon} : \Omega × R² -> R²
-class Diffusion
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
+class Diffusion : public DiffusionBase
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -126,7 +125,7 @@ public:
 // - div ( A grad u ) + F ( x , u(x) , grad u(x) ) = f
 // NOTE: the operator describing the pde must be a monotone operator
 //! ------- Definition of the (possibly nonlinear) lower term F ---------
-MSCONSTANTFUNCTION(LowerOrderTerm,  0.0)
+class LowerOrderTerm : public ZeroLowerOrder {};
 
 //! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm,  0.0)
@@ -137,7 +136,7 @@ MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
 class ExactSolution
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
+  : public FunctionBaseType
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;

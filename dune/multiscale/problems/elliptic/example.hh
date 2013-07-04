@@ -122,8 +122,8 @@ struct ModelProblemData
  is part from. (f \in FunctionSpace)
 */
 class FirstSource
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
-                                FirstSource >
+  : public FunctionBaseType
+
 {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -155,8 +155,7 @@ MSNULLFUNCTION(SecondSource)
 
 //! the (non-linear) diffusion operator A(x,\xi)
 //! A : \Omega × R² -> R²
-class Diffusion
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
+class Diffusion: public DiffusionBase
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -200,8 +199,8 @@ public:
 // NOTE: the operator describing the pde must be a monotone operator
 //! ------- Definition of the (possibly nonlinear) lower term F ---------
 class LowerOrderTerm
-//  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
-//                                LowerOrderTerm >
+//  : public FunctionBaseType
+//
 {
 
 public:
@@ -239,7 +238,7 @@ MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
 class ExactSolution
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
+  : public FunctionBaseType
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -284,7 +283,7 @@ public:
 ////! ------ Definition of an empty homogenized diffusion matrix -------
 //template< class Dune::Multiscale::CommonTraits::FunctionSpaceType, class FieldMatrixImp >
 //class HomDiffusion
-//  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, HomDiffusion< Dune::Multiscale::CommonTraits::FunctionSpaceType, FieldMatrixImp > >
+//  : public FunctionBaseType HomDiffusion< Dune::Multiscale::CommonTraits::FunctionSpaceType, FieldMatrixImp > >
 //{
 //public:
 //  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
