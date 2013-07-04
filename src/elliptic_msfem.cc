@@ -3,6 +3,7 @@
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
 #include <dune/multiscale/common/main_init.hh>
+#include <dune/multiscale/common/error_container.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/multiscale/problems/elliptic/selector.hh>
 
@@ -84,38 +85,11 @@ int main(int argc, char** argv) {
     //! ---------------------- local error indicators --------------------------------
     // ----- local error indicators (for each coarse grid element T) -------------
     const int max_loop_number = 10;
-    // local coarse residual, i.e. H ||f||_{L^2(T)}
-    CommonTraits::RangeVectorVector loc_coarse_residual_(max_loop_number);
-    // local coarse grid jumps (contribute to the total coarse residual)
-    CommonTraits::RangeVectorVector loc_coarse_grid_jumps_(max_loop_number);
-    // local projection error (we project to get a globaly continous approximation)
-    CommonTraits::RangeVectorVector loc_projection_error_(max_loop_number);
-    // local jump in the conservative flux
-    CommonTraits::RangeVectorVector loc_conservative_flux_jumps_(max_loop_number);
-    // local approximation error
-    CommonTraits::RangeVectorVector loc_approximation_error_(max_loop_number);
-    // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
-    CommonTraits::RangeVectorVector loc_fine_grid_jumps_(max_loop_number);
-
-    CommonTraits::RangeVector total_coarse_residual_(max_loop_number);
-    CommonTraits::RangeVector total_projection_error_(max_loop_number);
-    CommonTraits::RangeVector total_coarse_grid_jumps_(max_loop_number);
-    CommonTraits::RangeVector total_conservative_flux_jumps_(max_loop_number);
-    CommonTraits::RangeVector total_approximation_error_(max_loop_number);
-    CommonTraits::RangeVector total_fine_grid_jumps_(max_loop_number);
-    CommonTraits::RangeVector total_estimated_H1_error_(max_loop_number);
-
-    //! TODO put these into something like a named tuple/class
-    std::vector<CommonTraits::RangeVectorVector*> locals = {{ &loc_coarse_residual_, &loc_coarse_grid_jumps_,
-                                                             &loc_projection_error_, &loc_conservative_flux_jumps_,
-                                                             &loc_approximation_error_, &loc_fine_grid_jumps_}};
-    std::vector<CommonTraits::RangeVector*> totals = {{&total_coarse_residual_, &total_projection_error_,
-                                                      &total_coarse_grid_jumps_, &total_conservative_flux_jumps_,
-                                                      &total_approximation_error_, &total_fine_grid_jumps_ }};
+    ErrorContainer errors(max_loop_number);
 
     unsigned int loop_number = 0;
     while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_,
-                     number_of_layers_, locals, totals, total_estimated_H1_error_))
+                     number_of_layers_, errors.locals, errors.totals, errors.total_estimated_H1_error_))
     {}
 
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
