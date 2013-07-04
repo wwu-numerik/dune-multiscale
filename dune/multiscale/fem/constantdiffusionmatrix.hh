@@ -11,7 +11,7 @@ namespace Multiscale {
 // (e.g. with the pre-computed values of a homogenzid matrix)
 template< class FieldMatrixImp >
 class ConstantDiffusionMatrix
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
+  : public FunctionBaseType
                                 ConstantDiffusionMatrix< FieldMatrixImp > >
 {
 public:

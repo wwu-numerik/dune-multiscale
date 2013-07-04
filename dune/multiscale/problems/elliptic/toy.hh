@@ -55,8 +55,8 @@ struct ModelProblemData
 
 //! ----------------- Definition of ' f ' ------------------------
 class FirstSource
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
-                                FirstSource >
+  : public FunctionBaseType
+
 {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -124,8 +124,7 @@ public:
 
 //! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 //! A^{\epsilon} : \Omega × R² -> R²
-class Diffusion
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, Diffusion >
+class Diffusion: public DiffusionBase
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -159,38 +158,7 @@ public:
 // - div ( A grad u ) + F ( x , u(x) , grad u(x) ) = f
 // NOTE: the operator describing the pde must be a monotone operator
 //! ------- Definition of the (possibly nonlinear) lower term F ---------
-class LowerOrderTerm
-//  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType,
-//                                LowerOrderTerm >
-{
-
-public:
-
-  LowerOrderTerm( /*double scaling_factor = 1.0*/ ){} // : scaling_factor_( scaling_factor ) {}
-
-  template< class DomainType , class RangeType >
-  void evaluate(const DomainType& x, RangeType& y) const
-  {}
-
-  template< class DomainType , class TimeType, class RangeType >
-  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const
-  {}
-  
-  template< class DomainType , class RangeType, class JacobianRangeType >
-  void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, RangeType& y) const
-  {}
-
-  template< class DomainType , class RangeType, class JacobianRangeType >
-  void position_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, RangeType& y) const
-  {}
-
-  template< class DomainType , class RangeType, class JacobianRangeType >
-  void direction_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, JacobianRangeType& y) const
-  {}
-  
-};
-
-
+class LowerOrderTerm : public ZeroLowerOrder {};
 
 //! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm,  0.0)
@@ -205,7 +173,7 @@ MSNULLFUNCTION(DefaultDummyFunction)
 //! ----------------- Definition of ' u ' ----------------------------
 // Exact solution (typically it is unknown)
 class ExactSolution
-  : public Dune::Fem::Function< Dune::Multiscale::CommonTraits::FunctionSpaceType, ExactSolution >
+  : public FunctionBaseType
 {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
