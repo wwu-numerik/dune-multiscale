@@ -23,6 +23,8 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
+#include <dune/stuff/common/logging.hh>
+
 namespace Dune {
 
 
@@ -231,11 +233,11 @@ public:
       typedef typename SubGridListType::SubGridDiscreteFunctionSpace LocalDiscreteFunctionSpaceType;
       typedef typename SubGridListType::SubGridDiscreteFunction LocalDiscreteFunction;
       typedef typename LocalDiscreteFunction::LocalFunctionType LocalFunctionType;
-      typedef CachingQuadrature< SubGridPartType, 0 > LocalGridQuadrature;
+      typedef Fem::CachingQuadrature< SubGridPartType, 0 > LocalGridQuadrature;
 
       // --------- add standard contribution of right hand side -------------------------
       {
-        const CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
+        const Fem::CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
         std::vector<RangeType> phi_x_vec(numLocalBaseFunctions);
         const int numQuadraturePoints = quadrature.nop();
         for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
