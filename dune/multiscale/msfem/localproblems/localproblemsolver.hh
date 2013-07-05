@@ -111,7 +111,7 @@ private:
 
   //! type of subgrid discrete function
 public:
-  typedef AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
+  typedef Fem::AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
   typedef std::vector<std::unique_ptr<SubDiscreteFunctionType> > SubDiscreteFunctionVectorType;
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
