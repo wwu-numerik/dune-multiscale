@@ -77,6 +77,8 @@ public:
   int get_number_of_coarse_boundary_nodes() const;
   bool is_coarse_boundary_node( int global_index ) const;
 
+  bool simplexCoarseGrid() const;
+
 private:
   DiscreteFunctionSpaceType& coarse_scale_space_;
   DiscreteFunctionSpaceType& fine_scale_space_;
@@ -123,6 +125,7 @@ private:
   // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
   RangeTypeVector loc_fine_grid_jumps_;
 
+  const bool coarseGridIsSimplex_;
 };
 
 } //namespace MsFEM {
