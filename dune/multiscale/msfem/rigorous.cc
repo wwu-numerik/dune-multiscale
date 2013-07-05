@@ -101,9 +101,10 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   //! --------------------------------------------------------------------------------------
 
   //! -------------------------- writing data output Exact Solution ------------------------
-  if (Problem::ModelProblemData::has_exact_solution)
-  {
-    const CommonTraits::ExactSolutionType u;
+  if (Problem::getModelData()->has_exact_solution)
+  { 
+    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
+    const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     // create and initialize output class
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
@@ -173,10 +174,14 @@ void algorithm(const std::string& macroGridName,
 
   // defines the matrix A^{\epsilon} in our global problem
   //    - div ( A^{\epsilon}(\nabla u^{\epsilon} ) + F(x,u^{\epsilon},\nabla u^{\epsilon}) = f
-  const CommonTraits::DiffusionType diffusion_op;
+  auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
+  const auto& diffusion_op = *diffusion_op_ptr;
   // define (first) source term:
-  const CommonTraits::FirstSourceType f; // standard source f
-  const CommonTraits::LowerOrderTermType F; // lower term F(x,u^{\epsilon},\nabla u^{\epsilon})
+  auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
+  const auto& f = *f_ptr;
+  const auto F_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
+  const auto& F = *F_ptr; // lower term F(x,u^{\epsilon},\nabla u^{\epsilon})
+
 
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
@@ -232,7 +237,7 @@ void algorithm(const std::string& macroGridName,
    
     // just for Dirichlet zero-boundary condition
     const Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
-    fem_solver.solve_dirichlet_zero(diffusion_op, F, f, fem_solution);
+    fem_solver.solve_dirichlet_zero(diffusion_op, F_ptr, f, fem_solution);
     fem_solution.communicate();
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;

@@ -35,7 +35,7 @@ class DiscreteCellProblemOperator
     , boost::noncopyable
 {
   typedef typename HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionImp;
-  typedef typename Problem::Diffusion DiffusionImp;
+  typedef typename CommonTraits::DiffusionType DiffusionImp;
 
   typedef PeriodicDiscreteFunctionImp DiscreteFunction;
   typedef DiffusionImp                DiffusionModel;

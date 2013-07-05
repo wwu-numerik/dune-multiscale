@@ -20,7 +20,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
-
+#include <dune/stuff/function/interface.hh>
 
 #include "algorithm_error.hh"
 
@@ -161,9 +161,9 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
       typename CommonTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
       hmm_newton_rhs.clear();
 
-      const typename CommonTraits::FirstSourceType f;   // standard source f
+      const auto f = Problem::getFirstSource();
       rhsassembler.assemble_for_HMM_Newton_method< CommonTraits::assembler_order >(
-        f,
+        *f,
         diffusion_op,
         hmm_solution,
         cp_num_manager,
@@ -282,11 +282,11 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
 
   // assemble right hand side
   //! right hand side vector
-  const typename CommonTraits::FirstSourceType f;   // standard source f
+  const auto f = Problem::getFirstSource();   // standard source f
   // right hand side for the hm finite element method with Newton solver:
   typename CommonTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
   hmm_newton_rhs.clear();
-  rhsassembler.assemble< 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(f, hmm_newton_rhs);
+  rhsassembler.assemble< 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(*f, hmm_newton_rhs);
 
   // set Dirichlet Boundary to zero
   BoundaryTreatment::apply(hmm_newton_rhs);
@@ -416,8 +416,8 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
     // --------- data output discrete exact solution --------------
 
     // create and initialize output class
-    typename CommonTraits::ExactSolutionType u;
-    const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPartFine);
+    auto u = Problem::getExactSolution();
+    const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", *u, gridPartFine);
     typename OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("exact_solution");
     typename OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series, outputparam);
@@ -449,7 +449,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
               << std::endl << std::endl;
 
     // if we have some additional source term (-div G), define:
-    const typename CommonTraits::SecondSourceType G;
+    const auto G = Problem::getSecondSource();
     // - div ( A^{\epsilon} \nabla u^{\epsilon} ) = f - div G
 
     const Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
@@ -516,18 +516,15 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
     if (CommonTraits::ModelProblemDataType::has_exact_solution)
     {
       int order_quadrature_rule = 13;
-
-      const typename CommonTraits::ExactSolutionType u;
-      const typename CommonTraits::RangeType exact_hmm_error = l2error.norm< typename CommonTraits::ExactSolutionType >(u,
-                                                                    hmm_solution,
-                                                                    order_quadrature_rule );
+      const auto u = Problem::getExactSolution();
+      const auto exact_hmm_error
+          = l2error.norm(Dune::Stuff::timefunctionAdapted(*u), hmm_solution, order_quadrature_rule );
 
       DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
       if (DSC_CONFIG_GET("problem.reference_solution", false))
       {
-        typename CommonTraits::RangeType reference_sol_error = l2error.norm< typename CommonTraits::ExactSolutionType >(u,
-                                                                        reference_solution,
-                                                                        order_quadrature_rule );
+        const auto reference_sol_error
+            = l2error.norm(Dune::Stuff::timefunctionAdapted(*u), reference_solution, order_quadrature_rule );
 
         DSC_LOG_INFO << "|| u_reference - u_exact ||_L2 =  " << reference_sol_error << std::endl << std::endl;
       }

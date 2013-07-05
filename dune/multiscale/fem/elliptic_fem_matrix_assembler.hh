@@ -25,18 +25,16 @@ namespace FEM {
 // used mith multiple type combinations, no real possibilty of splitting
 
 //! \TODO docme
-template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
+template<class DiscreteFunctionImp, class DiffusionImp>
 class DiscreteEllipticOperator
-  : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
+    : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
                      DiscreteFunctionImp, DiscreteFunctionImp >
     , boost::noncopyable
 {
-  typedef DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp > This;
+  typedef DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp> This;
 
 private:
   typedef DiscreteFunctionImp DiscreteFunction;
-  typedef DiffusionImp        DiffusionModel;
-  typedef LowerOrderTermImp   LowerOrderTerm;
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
@@ -71,8 +69,8 @@ public:
    * \param lower_order_term Operator assumes ownership of it
    **/
   DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
-                           const DiffusionModel& diffusion_op,
-                           const std::unique_ptr<const LowerOrderTerm>& lower_order_term = nullptr)
+                           const DiffusionImp& diffusion_op,
+                           const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term = nullptr)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
     , lower_order_term_(lower_order_term)
@@ -104,8 +102,8 @@ public:
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
-  const DiffusionModel& diffusion_operator_;
-  const std::unique_ptr<const LowerOrderTermImp>& lower_order_term_;
+  const DiffusionImp& diffusion_operator_;
+  const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term_;
 };
 
 } //namespace FEM {

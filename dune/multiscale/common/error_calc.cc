@@ -8,39 +8,6 @@
 #include <dune/multiscale/problems/elliptic/selector.hh>
 #include <iostream>
 
-template< class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDimRows, int rangeDimCols >
-struct TimeFunctionAdapter : public Dune::Stuff::FunctionInterface< DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols >
-{
-  typedef Dune::Stuff::FunctionInterface<DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols>
-    WrappedType;
-
-  TimeFunctionAdapter(const WrappedType& wr)
-    : wrapped_(wr)
-  {}
-
-  virtual void evaluate(const typename WrappedType::DomainType& x,
-                        typename WrappedType::RangeType& ret) const
-  {
-    wrapped_(x, ret);
-  }
-
-  virtual void evaluate(const typename WrappedType::DomainType& x,
-                        const double& /*t*/,
-                        typename WrappedType::RangeType& ret) const
-  {
-    wrapped_(x, ret);
-  }
-
-  const WrappedType& wrapped_;
-};
-
-template< class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDimRows, int rangeDimCols >
-TimeFunctionAdapter<DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols>
-timefunctionAdapted(const Dune::Stuff::FunctionInterface< DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols >& wrapped)
-{
-  return TimeFunctionAdapter<DomainFieldImp, domainDim, RangeFieldImp, rangeDimRows, rangeDimCols>(wrapped);
-}
-
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType *msfem_solution,
                                                    const CommonTraits::DiscreteFunctionType *fem_solution)
     : msfem_solution_(msfem_solution)
@@ -60,9 +27,8 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
     std::map<std::string,double> csv;
 
     //! ----------------- compute L2- and H1- errors -------------------
-    if (Problem::ModelProblemData::has_exact_solution)
+    if (Problem::getModelData()->has_exact_solution)
     {
-
       auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
       const auto& u = *u_ptr;
       const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;

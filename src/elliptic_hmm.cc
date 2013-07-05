@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 
     // name of the error file in which the data will be saved
     std::string filename_;
-    const Problem::ModelProblemData info;
+    const auto info = Problem::getModelData() ;
 
     // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
     // (vorlauefig sollte diese Variante aber reichen)
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     // (typically this is a very high level so that we get a very fine grid)
 
     // name of the grid file that describes the macro-grid:
-    const std::string macroGridName = info.getMacroGridFile();
+    const std::string macroGridName = info->getMacroGridFile();
     DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
 
     // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
