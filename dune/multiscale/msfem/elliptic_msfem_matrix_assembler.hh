@@ -20,6 +20,7 @@
 
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
+#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/tools/misc.hh>
@@ -153,9 +154,6 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
   global_matrix.reserve();
   global_matrix.clear();
 
-  std::vector< typename CoarseBaseFunctionSet::JacobianRangeType > gradient_Phi(
-          coarseDiscreteFunctionSpace_.mapper().maxNumDofs() );
-
   const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
 
   for (const CoarseEntity& coarse_grid_entity : coarseDiscreteFunctionSpace_) {
@@ -170,102 +168,89 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     const CoarseBaseFunctionSet& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const unsigned int numMacroBaseFunctions = coarse_grid_baseSet.size();
 
-    // the sub grid U(T) that belongs to the coarse_grid_entity T
-    auto subGridPart = subgrid_list_.gridPart(global_index_entity);
+    // Load local solutions
+    Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list_, specifier_);
+    localSolutionManager.loadLocalSolutions();
+    Multiscale::MsFEM::LocalSolutionManager::LocalSolutionVectorType& localSolutions
+            = localSolutionManager.getLocalSolutions();
+    assert(localSolutions.size()>0);
+    std::vector< typename CoarseBaseFunctionSet::JacobianRangeType > gradientPhi(numMacroBaseFunctions);
 
-    LocalDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
+    const int localQuadratureOrder = 2 * localSolutionManager.getLocalDiscreteFunctionSpace().order() + 2;
+    for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
+      for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
+                  // iterator for the micro grid ( grid for the reference element T_0 )
+          for (const auto& localGridEntity : localSolutionManager.getLocalDiscreteFunctionSpace()) {
+            // check if "localGridEntity" (which is an entity of U(T)) is in T:
+            // -------------------------------------------------------------------
+            const auto& hostEntity = localSolutionManager.getSubGridPart().grid().template getHostEntity< 0 >(localGridEntity);
+            // ignore overlay elements
+            if (global_index_entity==subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
+              assert(hostEntity->partitionType() == InteriorEntity);
 
-    LocalDiscreteFunction local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
-    local_problem_solution_e0.clear();
+              RangeType local_integral(0.0);
 
-    LocalDiscreteFunction local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
-    local_problem_solution_e1.clear();
+              const LocalGridGeometry& local_grid_geometry = localGridEntity.geometry();
 
-    // --------- load local solutions -------
-    // the file/place, where we saved the solutions of the cell problems
-    const int coarseId = coarseDiscreteFunctionSpace_.gridPart().grid().globalIdSet().id(coarse_grid_entity);
-    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
-            % coarseId).str();
-    // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader(local_solution_location);
-    discrete_function_reader.read(0, local_problem_solution_e0);
-    discrete_function_reader.read(1, local_problem_solution_e1);
+              // higher order quadrature, since A^{\epsilon} is highly variable
+              LocalGridQuadrature localQuadrature(localGridEntity, localQuadratureOrder);
+              const size_t numQuadraturePoints = localQuadrature.nop();
 
-    // 1 point quadrature!! We only need the gradient of the base function,
-    // which is constant on the whole entity.
-    const CoarseQuadrature one_point_quadrature(coarse_grid_entity, 0);
-    coarse_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi);
-
-    // iterator for the micro grid ( grid for the reference element T_0 )
-    for (const auto& local_grid_it : localDiscreteFunctionSpace) {
-      // check if "local_grid_entity" (which is an entity of U(T)) is in T:
-      // -------------------------------------------------------------------
-      const auto& local_grid_entity = local_grid_it;
-      const auto& hostEntity = localDiscreteFunctionSpace.grid().template getHostEntity< 0 >(local_grid_entity);
-      // ignore overlay elements
-      if (global_index_entity==subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
-        assert(hostEntity->partitionType() == InteriorEntity);
-        // -------------------------------------------------------------------
-        LocalGridLocalFunction localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(
-                local_grid_entity);
-        LocalGridLocalFunction localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(
-                local_grid_entity);
-
-        for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
-          for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
-            RangeType local_integral = 0.0;
-
-            const LocalGridGeometry& local_grid_geometry = local_grid_entity.geometry();
-
-
-            // higher order quadrature, since A^{\epsilon} is highly variable
-            LocalGridQuadrature local_grid_quadrature(local_grid_entity, 2 * localDiscreteFunctionSpace.order() + 2);
-            const size_t numQuadraturePoints = local_grid_quadrature.nop();
-
-            for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
-              // local (barycentric) coordinates (with respect to entity)
-              const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = local_grid_quadrature.point(
-                      localQuadraturePoint);
-
-              DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
-              const double weight_local_quadrature
-                      = local_grid_quadrature.weight(localQuadraturePoint) * local_grid_geometry.integrationElement(
-                              local_subgrid_point);
-
-              // grad corrector for e_0 and e_1
-              typename LocalGridBaseFunctionSet::JacobianRangeType grad_loc_sol_e0, grad_loc_sol_e1;
-              localized_local_problem_solution_e0.jacobian(local_grid_quadrature[localQuadraturePoint], grad_loc_sol_e0);
-              localized_local_problem_solution_e1.jacobian(local_grid_quadrature[localQuadraturePoint], grad_loc_sol_e1);
-              // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
-              JacobianRangeType direction_of_diffusion(0.0);
-              for (int k = 0; k < dimension; ++k) {
-                direction_of_diffusion[0][k] += gradient_Phi[i][0][0] * grad_loc_sol_e0[0][k];
-                direction_of_diffusion[0][k] += gradient_Phi[i][0][1] * grad_loc_sol_e1[0][k];
-                direction_of_diffusion[0][k] += gradient_Phi[i][0][k];
+              // evaluate the jacobians of all local solutions in all quadrature points
+              std::vector<std::vector<JacobianRangeType> >
+                      allLocalSolutionEvaluations(localSolutions.size(),
+                      std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
+              for (int lsNum=0; lsNum < localSolutions.size(); ++lsNum) {
+                LocalGridLocalFunction localFunction = localSolutions[lsNum]->localFunction(localGridEntity);
+                localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
               }
 
-              JacobianRangeType diffusive_flux(0.0);
-              diffusion_operator_.diffusiveFlux(global_point_in_U_T, direction_of_diffusion, diffusive_flux);
+              for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
+                // local (barycentric) coordinates (with respect to entity)
+                const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = localQuadrature.point(
+                        localQuadraturePoint);
 
-              if ( petrovGalerkin_ ) /*if Petrov-Galerkin MsFEM*/ {
-                local_integral += weight_local_quadrature * (diffusive_flux[0] * gradient_Phi[j][0]);
-              } else /* if not Petrov-Galerkin MsFEM:*/ {
-                JacobianRangeType reconstruction_grad_phi_j(0.0);
-                for (int k = 0; k < dimension; ++k) {
-                  reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][0] * grad_loc_sol_e0[0][k];
-                  reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][1] * grad_loc_sol_e1[0][k];
-                  reconstruction_grad_phi_j[0][k] += gradient_Phi[j][0][k];
+                DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
+                const double weight_local_quadrature
+                        = localQuadrature.weight(localQuadraturePoint) * local_grid_geometry.integrationElement(
+                                local_subgrid_point);
+
+                // evaluate the jacobian of the coarse grid base set
+                const DomainType& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
+                const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
+                coarse_grid_baseSet.jacobianAll(local_coarse_point, inverse_jac, gradientPhi);
+
+
+                // Compute the gradients of the i'th and j'th local problem solutions
+                JacobianRangeType gradLocProbSoli(0.0),gradLocProbSolj(0.0);
+                if (specifier_.simplexCoarseGrid()) {
+                  assert(localSolutions.size()==dimension);
+                  // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
+                  for (int k = 0; k < dimension; ++k) {
+                    gradLocProbSoli.axpy(gradientPhi[i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
+                    gradLocProbSolj.axpy(gradientPhi[j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
+                  }
+                } else {
+                  gradLocProbSoli = allLocalSolutionEvaluations[i][localQuadraturePoint];
+                  gradLocProbSolj = allLocalSolutionEvaluations[j][localQuadraturePoint];
                 }
 
-                local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstruction_grad_phi_j[0]);
+                JacobianRangeType reconstructionGradPhii(gradientPhi[i]);
+                reconstructionGradPhii += gradLocProbSoli;
+                JacobianRangeType reconstructionGradPhij(gradientPhi[j]);
+                reconstructionGradPhij += gradLocProbSolj;
+                JacobianRangeType diffusive_flux(0.0);
+                diffusion_operator_.diffusiveFlux(global_point_in_U_T, reconstructionGradPhii, diffusive_flux);
+                if (petrovGalerkin_)
+                  local_integral += weight_local_quadrature * (diffusive_flux[0] * gradientPhi[j][0]);
+                else
+                  local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstructionGradPhij[0]);
               }
-
+              // add entries
+              local_matrix.add(j, i, local_integral);
             }
-            // add entries
-            local_matrix.add(j, i, local_integral);
-
           }
-        }
+
       }
     }
   }
