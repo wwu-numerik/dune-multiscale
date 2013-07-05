@@ -7,11 +7,6 @@
 
 // - Dune includes
 #include <dune/multiscale/common/traits.hh>
-// #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-// #include <dune/stuff/fem/functions/checks.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
-
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/stuff/common/memory.hh>
@@ -29,8 +24,8 @@ LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity,
     localDiscreteFunctionSpace_(subGridPart_),
     coarseId_(gridSpecifier_.coarseSpace().gridPart().grid().globalIdSet().id(coarseEntity)),
     loaded_(false),
-    numLocalProblems_((DSC_CONFIG_GET("msfem.oldLocalProblemSolve", false)) ?
-                      GridSelector::dimgrid : localDiscreteFunctionSpace_.mapper().maxNumDofs()),
+    numLocalProblems_((gridSpecifier_.simplexCoarseGrid()) ?
+                      GridSelector::dimgrid : gridSpecifier_.coarseSpace().mapper().maxNumDofs()),
     localSolutions_(numLocalProblems_),
     localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d")
                             % coarseId_).str())
