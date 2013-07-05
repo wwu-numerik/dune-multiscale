@@ -686,11 +686,7 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarse_index, cons
 }
 
 void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
-  std::string local_path = DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/";
-  Dune::Stuff::Common::testCreateDirectory(local_path);
-
   enum { dimension = CommonTraits::GridType::dimension };
-  enum { maxnumOfBaseFct = 100 };
 
   JacobianRangeType e[dimension];
   for (int i = 0; i < dimension; ++i)
@@ -703,40 +699,24 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     }
 
   // number of coarse grid entities (of codim 0).
-  int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+  int coarseGridSize = specifier_.getNumOfCoarseEntities();
 
-  DSC_LOG_INFO << "in method 'assemble_all': number_of_coarse_grid_entities = " << number_of_coarse_grid_entities
+  DSC_LOG_INFO << "in method 'assemble_all': coarseGridSize = " << coarseGridSize
             << std::endl;
   DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
-  std::vector<int> coarse_indices;
-  std::vector<int> coarse_ids;
   const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
   const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-  for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
-  {
-    coarse_indices.push_back(coarseGridLeafIndexSet.index(*coarse_it));
-    coarse_ids.push_back(coarseSpace.gridPart().grid().globalIdSet().id(*coarse_it));
-  }
+  for (const auto& coarseEntity : coarseSpace) {
+    const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
+    const int coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
 
-
-//  const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
-//  int slice = coarse_indices.size() / comm.size();
-//  for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
-  for (std::size_t gc=0; gc<coarse_indices.size(); ++gc)
-  {
-    
-    const int coarse_index = coarse_indices[gc];
-    
     DSC_LOG_INFO << "-------------------------" << std::endl
-                 << "Coarse index " << coarse_index << std::endl;
-    const std::string locprob_solution_location =
-        (boost::format("local_problems/_localProblemSolutions_%d") % coarse_ids[gc]).str();
+            << "Coarse index " << coarse_index << std::endl;
 
-    DiscreteFunctionWriter dfw(locprob_solution_location);
 
     auto subGridPart = subgrid_list_.gridPart(coarse_index);
 
@@ -812,12 +792,13 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     }
   } //for
 
+  //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all")/1000.f;
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
-  DSC_LOG_INFO << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."
+  DSC_LOG_INFO << "MsFEM problems solved for " << coarseGridSize << " coarse grid entities."
                 << std::endl;
-  DSC_LOG_INFO << dimension * number_of_coarse_grid_entities << " local MsFEM problems solved in total."
+  DSC_LOG_INFO << dimension * coarseGridSize << " local MsFEM problems solved in total."
                 << std::endl;
   DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s." << std::endl;
   DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s." << std::endl;
