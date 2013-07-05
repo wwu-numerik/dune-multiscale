@@ -75,6 +75,7 @@ private:
   typedef CommonTraits::DiscreteFunctionType HostDiscreteFunctionType;
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
+  //! @todo HostDiscreteFunctionType should be replaced by some kind of coarse function type
   typedef std::vector< std::shared_ptr<HostDiscreteFunctionType> > CoarseBasisFunctionListType;
 
   //! type of discrete function space
@@ -96,6 +97,7 @@ private:
   typedef typename HostDiscreteFunctionType::LocalFunctionType HostLocalFunctionType;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
+  typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
@@ -107,6 +109,10 @@ private:
   typedef typename SubGridList::SubGridDiscreteFunctionSpace SubDiscreteFunctionSpaceType;
   typedef typename SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
 
+  //! type of subgrid discrete function
+public:
+  typedef AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
+  typedef std::vector<std::unique_ptr<SubDiscreteFunctionType> > SubDiscreteFunctionVectorType;
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
   typedef typename SubgridIteratorType::Entity SubgridEntityType;
@@ -188,6 +194,8 @@ public:
                           const DiffusionOperatorType& diffusion_operator,
                           const CoarseBasisFunctionListType& coarse_basis,
                           const std::map<int,int>& global_id_to_internal_id );
+
+  void solveAllLocalProblems(const CoarseEntityType& coarseCell, SubDiscreteFunctionVectorType& allLocalSolutions) const;
 
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
   void solvelocalproblem(JacobianRangeType& e,

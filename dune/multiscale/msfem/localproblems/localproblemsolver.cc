@@ -16,6 +16,7 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
+#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/msfem/localproblems/weighted-clement-operator.hh>
@@ -62,6 +63,106 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpace
   , coarse_basis_( &coarse_basis )
   , global_id_to_internal_id_( &global_id_to_internal_id )
 {}
+
+//! ----------- method: solve the local MsFEM problem ------------------------------------------
+/** Solve all local MsFEM problems for one coarse entity at once.
+*
+*
+*/
+void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCell,
+        SubDiscreteFunctionVectorType& allLocalSolutions) const {
+  assert(allLocalSolutions.size()>0);
+
+  const int coarseCellIndex = specifier_.coarseSpace().gridPart().grid().leafIndexSet().index(coarseCell);
+
+  // clear return argument
+  for (auto& localSol : allLocalSolutions) localSol->clear();
+
+  const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = allLocalSolutions[0]->space();
+
+  //! the matrix in our linear system of equations
+  // in the non-linear case, it is the matrix for each iteration step
+  LocProbFEMMatrix locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace);
+
+  //! define the discrete (elliptic) local MsFEM problem operator
+  // ( effect of the discretized differential operator on a certain discrete function )
+  LocalProblemOperator localProblemOperator(subDiscreteFunctionSpace, diffusion_);
+
+  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
+
+  typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
+  typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
+
+  // right hand side vector of the algebraic local MsFEM problem
+  SubDiscreteFunctionVectorType allLocalRHS(allLocalSolutions.size());
+  for (auto& it : allLocalRHS)
+          it = DSC::make_unique<SubDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
+
+  switch ( specifier_.getOversamplingStrategy() ) {
+    case 1:
+      localProblemOperator.assemble_matrix(locProbSysMatrix);
+      localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
+      break;
+    default: DUNE_THROW(Dune::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
+  }
+
+  //! boundary treatment:
+  typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
+
+  typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
+          FaceDofIteratorType;
+
+  const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
+
+  for (const auto& subgridEntity : subDiscreteFunctionSpace) {
+    LocalMatrix localMatrix = locProbSysMatrix.localMatrix(subgridEntity, subgridEntity);
+
+    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
+    for (auto& rhsIt : allLocalRHS) {
+
+      SubLocalFunctionType rhsLocal = rhsIt->localFunction(subgridEntity);
+
+      for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), subgridEntity)) {
+        // if there is a neighbor entity
+        if ( subgridIntersection.boundary() ) {
+          const int face = subgridIntersection.indexInInside();
+          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< 1 >(face);
+          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit) {
+            // zero boundary condition for 'cell problems':
+            // set unit row in matrix for any boundary dof ...
+            localMatrix.unitRow(*fdit);
+            // ... and set respective rhs dof to zero
+            rhsLocal[*fdit] = 0;
+          }
+        }
+      }
+    }
+  }
+
+  for (int i=0; i!=allLocalSolutions.size(); ++i) {
+    if (!allLocalRHS[i]->dofsValid())
+      DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
+
+    // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
+    // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
+    // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
+    // the result.
+    if (localProblemOperator.normRHS(*allLocalRHS[i]) < 1e-30) {
+      allLocalRHS[i]->clear();
+      DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
+      continue;
+    }
+
+    InverseLocProbFEMMatrix localProblemSolver(locProbSysMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
+    localProblemSolver(*allLocalRHS[i], *allLocalSolutions[i]);
+
+    if ( !(allLocalSolutions[i]->dofsValid()) )
+      DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
+  }
+
+  return;
+}
+
 
 
 //! ----------- method: solve the local MsFEM problem ------------------------------------------
