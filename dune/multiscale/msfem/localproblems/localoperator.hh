@@ -31,7 +31,8 @@ namespace MsFEM {
 
 class LocalProblemOperator
 {
-  typedef SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
+  typedef MsFEMLocalProblemSolver::SubDiscreteFunctionType SubDiscreteFunctionType;
+  typedef MsFEMLocalProblemSolver::SubDiscreteFunctionVectorType SubDiscreteFunctionVectorType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
 
   enum { faceCodim = 1 };
@@ -81,8 +82,12 @@ private:
   typedef typename HostDiscreteFunctionSpace::LagrangePointSetType HostLagrangePointSet;
   typedef typename HostLagrangePointSet::Codim< faceCodim >::SubEntityIteratorType
     HostGridFaceDofIteratorType;
-    
+  typedef CommonTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
+  typedef CommonTraits::CoarseEntityType CoarseEntityType;
+  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
+
 public:
+
   LocalProblemOperator(const DiscreteFunctionSpace& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)
@@ -113,6 +118,9 @@ public:
     const int& oversampling_strategy,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
+
+  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
+                  SubDiscreteFunctionVectorType& allLocalRHS) const;
 
   // assemble various right hand sides (for solving the local saddle point problems with lagrange multpliers)
   void assemble_local_RHS_lg_problems( const HostDiscreteFunction/*CoarseBasisFunctionType*/& coarse_basis_func, double weight,
