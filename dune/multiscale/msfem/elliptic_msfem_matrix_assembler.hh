@@ -61,8 +61,7 @@ private:
   typedef typename FineDiscreteFunctionSpace::RangeFieldType RangeFieldType;
   typedef typename FineDiscreteFunctionSpace::DomainType     DomainType;
   typedef typename FineDiscreteFunctionSpace::RangeType      RangeType;
-  typedef typename FineDiscreteFunctionSpace::JacobianRangeType
-    JacobianRangeType;
+  typedef typename FineDiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
   typedef MsFEMLocalProblemSolver MsFEMLocalProblemSolverType;
 
@@ -147,9 +146,9 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
   // if Petrov-Galerkin-MsFEM
   if ( petrovGalerkin_ )
-  DSC_LOG_INFO << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
+    DSC_LOG_INFO << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
   else  // if classical (symmetric) MsFEM
-          DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
+    DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
 
   global_matrix.reserve();
   global_matrix.clear();
@@ -159,8 +158,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
   const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
 
-  for (const CoarseEntity& coarse_grid_entity : coarseDiscreteFunctionSpace_)
-  {
+  for (const CoarseEntity& coarse_grid_entity : coarseDiscreteFunctionSpace_) {
 
     const CoarseGeometry& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
