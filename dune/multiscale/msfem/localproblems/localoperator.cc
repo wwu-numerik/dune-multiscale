@@ -412,6 +412,101 @@ void LocalProblemOperator
   }
 } // assemble_local_RHS
 
+/** Assemble right hand side vectors for all local problems on one coarse cell.
+*
+* @param[in] coarseEntity The coarse cell.
+* @param[in] specifier A MacroMicroGridSpecifier (needed for access to the coarse base function set).
+* @param[out] allLocalRHS A vector with pointers to the discrete functions for the right hand sides.
+*
+* @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
+* functions. The discrete functions in allLocalRHS will be cleared in this function.
+*/
+void LocalProblemOperator
+::assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
+                SubDiscreteFunctionVectorType& allLocalRHS) const {
+  assert(allLocalRHS.size()>0 && "You need to preallocate the necessary space outside this function!");
+
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
+
+  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
+  typedef typename Iterator::Entity                           Entity;
+  typedef typename Entity::Geometry                           Geometry;
+
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef CachingQuadrature< GridPart, 0 >             Quadrature;
+
+  // build unit vectors (needed for cases where rhs is assembled for unit vectors instead of coarse
+  // base functions)
+  JacobianRangeType unitVectors[dimension];
+  for (int i = 0; i < dimension; ++i)
+    for (int j = 0; j < dimension; ++j) {
+      if (i == j) {
+        unitVectors[i][0][j] = 1.0;
+      } else {
+        unitVectors[i][0][j] = 0.0;
+      }
+    }
+
+  const DiscreteFunctionSpace& discreteFunctionSpace = allLocalRHS[0]->space();
+
+  // set entries to zero:
+  for (auto& rhs : allLocalRHS) rhs->clear();
+
+  // get the base function set of the coarse space for the given coarse entity
+  auto& coarseBaseSet = specifier.coarseSpace().baseFunctionSet(coarseEntity);
+  std::vector< CoarseBaseFunctionSetType::JacobianRangeType > coarseBaseFuncJacs(coarseBaseSet.size());
+
+  // gradient of micro scale base function:
+  std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
+
+  for (auto& localGridCell : discreteFunctionSpace) {
+    const Geometry& geometry = localGridCell.geometry();
+
+    for (int coarseBaseFunc=0; coarseBaseFunc<allLocalRHS.size(); ++coarseBaseFunc) {
+      LocalFunction rhsLocalFunction = allLocalRHS[coarseBaseFunc]->localFunction(localGridCell);
+
+      const BaseFunctionSet& baseSet = rhsLocalFunction.baseFunctionSet();
+      const auto numBaseFunctions = baseSet.size();
+
+      const Quadrature quadrature(localGridCell, 2 * discreteFunctionSpace.order() + 2);
+      const size_t numQuadraturePoints = quadrature.nop();
+      for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
+        const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+
+        // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
+
+        // global point in the subgrid
+        const DomainType global_point = geometry.global(local_point);
+
+        const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+
+        // transposed of the the inverse jacobian
+        const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
+        // A^eps(x) e
+        // diffusion operator evaluated in 'x' multiplied with e
+        JacobianRangeType diffusion;
+        if (specifier.simplexCoarseGrid())
+          diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
+        else {
+          const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
+          const auto& coarseInverseJac = coarseEntity.geometry().jacobianInverseTransposed(quadInCoarseLocal);
+          coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseInverseJac, coarseBaseFuncJacs);
+          diffusion_operator_.diffusiveFlux(global_point, coarseBaseFuncJacs[coarseBaseFunc], diffusion);
+        }
+        baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
+        for (unsigned int i = 0; i < numBaseFunctions; ++i)
+        {
+          rhsLocalFunction[i] -= weight * (diffusion[0] * gradient_phi[i][0]);
+        }
+      }
+    }
+  }
+
+  return;
+}
+
 
 void LocalProblemOperator
       ::assemble_local_RHS(const JacobianRangeType &e, // direction 'e'
