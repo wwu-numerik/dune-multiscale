@@ -47,7 +47,8 @@ libmultiscale_problems_la_CPPFLAGS=$(CPPFLAGS)
 ##########  Lib: MsFEM  ##############
 ######################################
 libmultiscale_msfem_la_SOURCES=../dune/multiscale/msfem/algorithm.cc \
-        ../dune/multiscale/msfem/msfem_solver.cc
+        ../dune/multiscale/msfem/msfem_solver.cc \
+        ../dune/multiscale/msfem/localproblems/localsolutionmanager.cc 
 libmultiscale_msfem_la_CPPFLAGS=$(CPPFLAGS)
 
 ######################################

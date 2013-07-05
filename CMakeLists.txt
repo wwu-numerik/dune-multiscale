@@ -178,6 +178,7 @@ set( HMM_SOURCES
 set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
         dune/multiscale/msfem/msfem_solver.cc
+        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
 
 set( HOM_FEM_SOURCES
