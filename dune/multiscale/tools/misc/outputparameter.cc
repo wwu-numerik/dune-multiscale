@@ -51,7 +51,7 @@ bool OutputParameters::separateRankPath() const {
 }
 
 std::string OutputParameters::macroGridName(const int /*dim*/) const {
-  return Problem::ModelProblemData().getMacroGridFile();
+  return Problem::getModelData()->getMacroGridFile();
 }
 
 } //namespace Multiscale

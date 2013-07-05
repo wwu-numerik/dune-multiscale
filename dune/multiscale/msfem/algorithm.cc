@@ -255,7 +255,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   //! --------------------------------------------------------------------------------------
 
   //! -------------------------- writing data output Exact Solution ------------------------
-  if (Problem::ModelProblemData::has_exact_solution)
+  if (Problem::getModelData()->has_exact_solution)
   {
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
@@ -387,7 +387,8 @@ bool algorithm(const std::string& macroGridName,
   //! --------------------------- coefficient functions ------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const CommonTraits::DiffusionType diffusion_op;
+  auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
+  const auto& diffusion_op = *diffusion_op_ptr;
   // define (first) source term:
   auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
   const auto& f = *f_ptr;
@@ -457,8 +458,8 @@ bool algorithm(const std::string& macroGridName,
   {
     // just for Dirichlet zero-boundary condition
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
-    const CommonTraits::LowerOrderTermType l;
-    fem_solver.solve_dirichlet_zero(diffusion_op, l, f, fem_solution);
+    const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
+    fem_solver.solve_dirichlet_zero(diffusion_op, l_ptr, f, fem_solution);
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
     //! -------------------------- writing data output FEM Solution ----------

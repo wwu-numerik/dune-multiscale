@@ -42,7 +42,8 @@ int main(int argc, char** argv) {
     
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
-    const Problem::ModelProblemData info;
+    auto info_ptr = Problem::getModelData();
+    const auto& info = *info_ptr;
 
     // total_refinement_level denotes the (starting) grid refinement level for the global fine scale problem, i.e. it describes 'h'
     int total_refinement_level_

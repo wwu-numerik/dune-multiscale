@@ -33,7 +33,7 @@ struct FEMTraits {
 
   //! --------------- the discrete operators (standard FEM) ----------------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)
-  typedef DiscreteEllipticOperator< typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType, typename CommonTraits::LowerOrderTermType >
+  typedef DiscreteEllipticOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType>
        EllipticOperatorType;
   //! ----------------------------------------------------------------------------------------
 

@@ -775,7 +775,8 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
     DSC_LOG_INFO  << std::endl << "Starting Newton iterations." << std::endl;
 
     //Dune::Multiscale::Problem::Eleven::Nonlinearity nonlinear_term;
-    Dune::Multiscale::Problem::Eleven::LowerOrderTerm nonlinear_term;
+    auto nonlinear_term_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
+    const auto& nonlinear_term = *nonlinear_term_ptr;
     solution.clear();
 
     VectorType newton_solution_vector( number_of_internal_coarse_nodes );

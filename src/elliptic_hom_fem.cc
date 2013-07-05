@@ -26,9 +26,9 @@ int main(int argc, char** argv) {
 
     // name of the error file in which the data will be saved
     std::string filename_;
-    const Problem::ModelProblemData info;
+    const auto info = Dune::Multiscale::Problem::getModelData();
 
-    if ( !info.problemIsPeriodic() )
+    if ( !info->problemIsPeriodic() )
      DUNE_THROW(Dune::InvalidStateException, "Problem is declared to be non-periodic. Homogenizers are only available for periodic homogenization problems.");
 
     if ( DSC_CONFIG_GET("problem.stochastic_pertubation", false) )
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     const int refinement_level = DSC_CONFIG_GET("fem.grid_level", 4);
 
     // name of the grid file that describes the macro-grid:
-    const std::string gridName = info.getMacroGridFile();
+    const std::string gridName = info->getMacroGridFile();
     DSC_LOG_INFO << "loading dgf: " << gridName << std::endl;
 
     // create a grid pointer for the DGF file belongig to the macro grid:

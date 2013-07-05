@@ -60,8 +60,7 @@ typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctio
 } // get_size_of_domain
 
 //! outputs Problem info to output stream
-template <class ProblemDataType>
-void print_info(ProblemDataType info, std::ostream& out)
+void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out)
 {
   // epsilon is specified in the parameter file
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
@@ -247,8 +246,8 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // 
                const std::string filename) {
   using namespace Dune;
 
-  const typename CommonTraits::ModelProblemDataType problem_data;
-  print_info(problem_data, DSC_LOG_INFO);
+  auto problem_data = Problem::getModelData();
+  print_info(*problem_data, DSC_LOG_INFO);
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
   typename CommonTraits::GridPartType gridPart(*macro_grid_pointer);
@@ -270,16 +269,16 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // 
   //! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const typename CommonTraits::DiffusionType diffusion_op;
+  const auto diffusion_op = Problem::getDiffusion();
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType > rhsassembler;
-  const typename CommonTraits::FirstSourceType f;   // standard source f
+  const auto f = Problem::getFirstSource(); // standard source f
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
-  const typename HMMTraits::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
+  const typename HMMTraits::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, *diffusion_op);
 
   //! solution vector
   // - By reference_solution, we denote an (possibly accurate) approximation of the exact solution (used for comparison)
@@ -313,7 +312,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // 
     typename CommonTraits::RestrictProlongOperatorType rp(hmm_solution);
     typename CommonTraits::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                diffusion_op, rhsassembler, hmm_solution, reference_solution, loop_cycle);
+                *diffusion_op, rhsassembler, hmm_solution, reference_solution, loop_cycle);
     // call of 'single_step': 'reference_solution' only required for error computation
 
     if ( !DSC_CONFIG_GET("hmm.adaptivity", false) )

@@ -90,7 +90,7 @@ public:
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   //! homogenous Dirchilet boundary condition!:
   void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
-                            const CommonTraits::LowerOrderTermType& lower_order_term,
+                            const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
                             const CommonTraits::FirstSourceType& f,
                             DiscreteFunction& solution) const;
 };
