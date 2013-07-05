@@ -789,13 +789,13 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarse_index, cons
 void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   enum { dimension = CommonTraits::GridType::dimension };
 
-  JacobianRangeType e[dimension];
+  JacobianRangeType unitVectors[dimension];
   for (int i = 0; i < dimension; ++i)
     for (int j = 0; j < dimension; ++j) {
       if (i == j) {
-        e[i][0][j] = 1.0;
+        unitVectors[i][0][j] = 1.0;
       } else {
-        e[i][0][j] = 0.0;
+        unitVectors[i][0][j] = 0.0;
       }
     }
 
@@ -822,75 +822,56 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     auto subGridPart = subgrid_list_.gridPart(coarse_index);
 
     const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
-
-    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarse_ids[gc]).str();
-
-    //! only for dimension 2!
-    SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
-    local_problem_solution_0.clear();
-
-    SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
-    local_problem_solution_1.clear();
-
     Dune::Timer assembleTimer;
+    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarseId).str();
+
     bool uzawa = DSC_CONFIG_GET( "rigorous_msfem.uzawa_solver", false );
     bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
     if ( (!uzawa) && (specifier_.getOversamplingStrategy() == 3) && clement ) {
+      //! only for dimension 2!
+      SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
+      local_problem_solution_0.clear();
 
+      SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
+      local_problem_solution_1.clear();
       // requires a pre-processing step (that is the same for both directions e_0 and e_1)
-      // one method for both solutions to half the computational complexity 
-      solvelocalproblems_lod( e[0], e[1], local_problem_solution_0,
-                              local_problem_solution_1, coarse_index ); 
+      // one method for both solutions to half the computational complexity
+      solvelocalproblems_lod( unitVectors[0], unitVectors[1], local_problem_solution_0,
+              local_problem_solution_1, coarse_index );
+      const std::string locprob_solution_location =
+              (boost::format("local_problems/_localProblemSolutions_%d") % coarseId).str();
+      DiscreteFunctionWriter dfw(locprob_solution_location);
+      dfw.append(local_problem_solution_0);
+      dfw.append(local_problem_solution_1);
 
-    }
-    else {
+      if (DSC_CONFIG_GET("msfem.localproblem_vtkoutput", false))
+      {
+        HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
+        subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
+        output_local_solution(coarse_index, 0, host_local_solution);
 
-      DSC_LOG_INFO  << std::endl
-                    << "Number of the local problem: " << dimension * coarse_index << " (of "
-                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
-                    << "   Subgrid " << coarse_index << " contains " << subGridPart.grid().size(0) << " elements and "
-                    << subGridPart.grid().size(2) << " nodes." << std::endl;
-
+        subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
+        output_local_solution(coarse_index, 1, host_local_solution);
+      }
+    } else if (uzawa && !(specifier_.simplexCoarseGrid())) {
+        DUNE_THROW(NotImplemented, "Uzawa-solver and non-simplex grid have not been tested together, yet!");
+    } else {
       // take time
       DSC_PROFILER.startTiming("none.local_problem_solution");
+      LocalSolutionManager localSolutionManager(coarseEntity, subgrid_list_, specifier_);
 
       // solve the problems
-      solvelocalproblem(e[0], local_problem_solution_0, coarse_index);
-
-      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
-      DSC_PROFILER.resetTiming("none.local_problem_solution");
-
-      DSC_LOG_INFO  << std::endl
-                    << "Number of the local problem: "
-                    << (dimension * coarse_index) + 1 << " (of "
-                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
-
-      // take time
-      DSC_PROFILER.startTiming("none.local_problem_solution");
-
-      // solve the problems
-      solvelocalproblem(e[1], local_problem_solution_1, coarse_index);
-
+      solveAllLocalProblems(coarseEntity, localSolutionManager.getLocalSolutions());
       // min/max time
       cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
       DSC_PROFILER.resetTiming("none.local_problem_solution");
+
+      // save the local solutions to disk
+      localSolutionManager.saveLocalSolutions();
     }
 
-    DSC_LOG_INFO << "Total time for solving all local problems for the current subgrid: "
-                 << assembleTimer.elapsed() << "s" << std::endl << std::endl;
-
-    dfw.append(local_problem_solution_0);
-    dfw.append(local_problem_solution_1);
-
-    if (DSC_CONFIG_GET("msfem.localproblem_vtkoutput", false))
-    {
-      HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
-      subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
-      output_local_solution(coarse_index, 0, host_local_solution);
-
-      subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
-      output_local_solution(coarse_index, 1, host_local_solution);
-    }
+      DSC_LOG_INFO << "Total time for solving and saving all local problems for the current subgrid: "
+              << assembleTimer.elapsed() << "s" << std::endl << std::endl;
   } //for
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
