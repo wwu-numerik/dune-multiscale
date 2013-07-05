@@ -104,6 +104,7 @@ public:
 private:
   SubGridType& getSubGrid(int i);
   const SubGridType& getSubGrid(int i) const;
+public:
   const SubGridType& getSubGrid(const CoarseEntityType& entity) const;
   SubGridType& getSubGrid(const CoarseEntityType& entity);
 

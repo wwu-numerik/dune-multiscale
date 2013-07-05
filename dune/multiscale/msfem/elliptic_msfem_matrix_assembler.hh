@@ -217,8 +217,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
                 // evaluate the jacobian of the coarse grid base set
                 const DomainType& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
-                const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(local_coarse_point);
-                coarse_grid_baseSet.jacobianAll(local_coarse_point, inverse_jac, gradientPhi);
+                coarse_grid_baseSet.jacobianAll(local_coarse_point, gradientPhi);
 
 
                 // Compute the gradients of the i'th and j'th local problem solutions
