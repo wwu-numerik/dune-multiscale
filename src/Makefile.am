@@ -6,7 +6,7 @@ include $(top_srcdir)/common.mk
 ##########################            Libs       ##############################
 ###############################################################################
 
-lib_LTLIBRARIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_msfem.la libmultiscale_hmm.la libmultiscale_fem.la
+lib_LTLIBRARIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_msfem.la libmultiscale_hmm.la libmultiscale_fem.la libmultiscale_lodm.la
 
 ######################################
 ##########  Lib: Common  #############
@@ -40,7 +40,9 @@ libmultiscale_problems_la_SOURCES=../dune/multiscale/problems/elliptic/eight.cc 
 	../dune/multiscale/problems/elliptic/ten.cc \
 	../dune/multiscale/problems/elliptic/three.cc \
 	../dune/multiscale/problems/elliptic/toy.cc \
-	../dune/multiscale/problems/elliptic/two.cc
+	../dune/multiscale/problems/elliptic/two.cc \
+	../dune/multiscale/problems/elliptic/selector.cc \
+	../dune/multiscale/problems/base.cc
 libmultiscale_problems_la_CPPFLAGS=$(CPPFLAGS)
 
 ######################################
@@ -65,6 +67,15 @@ libmultiscale_hmm_la_CPPFLAGS=$(CPPFLAGS)
 ######################################
 libmultiscale_fem_la_SOURCES=../dune/multiscale/fem/algorithm.cc
 libmultiscale_fem_la_CPPFLAGS=$(CPPFLAGS)
+
+######################################
+###########  Lib: LODM  ###############
+######################################
+libmultiscale_lodm_la_SOURCES= ../dune/multiscale/msfem/rigorous.cc \
+	../dune/multiscale/msfem/rigorous_msfem_solver.cc \
+        ../dune/multiscale/msfem/localproblems/localsolutionmanager.cc 
+libmultiscale_lodm_la_CPPFLAGS=$(CPPFLAGS)
+
 
 ###############################################################################
 ##########################        Executables    ##############################
@@ -94,11 +105,11 @@ elliptic_msfem_LDADD=-lmultiscale_msfem -lmultiscale_problems -lmultiscale_commo
 ######################################
 ###########  LOD Method  #############
 ######################################
-elliptic_lodm_SOURCES = elliptic_lodm.cc ../dune/multiscale/msfem/rigorous.cc ../dune/multiscale/msfem/rigorous_msfem_solver.cc 
-elliptic_lodm_DEPENDENCIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_fem.la
+elliptic_lodm_SOURCES = elliptic_lodm.cc 
+elliptic_lodm_DEPENDENCIES = libmultiscale_problems.la libmultiscale_common.la libmultiscale_lodm.la
 elliptic_lodm_CPPFLAGS = $(CPPFLAGS)
 elliptic_lodm_LDPFLAGS = $(LDPFLAGS)
-elliptic_lodm_LDADD=-lmultiscale_fem -lmultiscale_problems -lmultiscale_common $(LDADD)
+elliptic_lodm_LDADD=-lmultiscale_lodm -lmultiscale_problems -lmultiscale_common $(LDADD)
 
 ######################################
 ##############  FEM  #################
