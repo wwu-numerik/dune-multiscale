@@ -1,4 +1,4 @@
-#ifdef HAVE_CMAKE_CONFIG#ifdef HAVE_CMAKE_CONFIG
+#ifdef HAVE_CMAKE_CONFIG
   #include "cmake_config.h"
 #elif defined (HAVE_CONFIG_H)
   #include <config.h>
