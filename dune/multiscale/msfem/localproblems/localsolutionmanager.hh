@@ -20,7 +20,7 @@ private:
   typedef MsFEMTraits::SubGridListType                      SubGridListType;
   typedef typename SubGridListType::SubGridPartType         SubGridPartType;
   typedef typename SubGridListType::SubGridDiscreteFunction DiscreteFunctionType;
-  typedef CommonTraits::CoarseEntityType                    CoarseEntityType;
+  typedef MsFEMTraits::CoarseEntityType                    CoarseEntityType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType          MacroMicroGridSpecifierType;
 
 public:

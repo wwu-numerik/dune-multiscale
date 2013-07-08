@@ -165,7 +165,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
               // get the id of the macro element enclosing the current element
               const int innerId = subgrid_list.getEnclosingMacroCellId(nodeToEntityMap[global_index_node][j]);
               // the following will only add the entity index if it is not yet present
-              coarse_entities.insert(innerIndex);
+              coarse_entities.insert(innerId);
             }
             host_loc_value[i] += ( sub_loc_value[i] / coarse_entities.size() );
 

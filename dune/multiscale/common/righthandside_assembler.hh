@@ -305,9 +305,8 @@ public:
 
                   // transposed of the the inverse jacobian
                   const auto quadPointLocalInCoarse = coarse_grid_geometry.local(global_point_in_U_T);
-                  const auto& inverse_jac = coarse_grid_geometry.jacobianInverseTransposed(quadPointLocalInCoarse);
                   std::vector<JacobianRangeType> gradient_Phi_vec(numLocalBaseFunctions);
-                  coarse_grid_baseSet.jacobianAll(quadPointLocalInCoarse, inverse_jac, gradient_Phi_vec);
+                  coarse_grid_baseSet.jacobianAll(quadPointLocalInCoarse, gradient_Phi_vec);
 
                   //assert(localSolutionValues.size()==2);
                   corrector_phi_x += gradient_Phi_vec[coarseBF][0][0] * allLocalSolutionEvaluations[0][localQuadraturePoint];

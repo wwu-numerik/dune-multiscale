@@ -25,6 +25,8 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/localproblems/weighted-clement-operator.hh>
+
 
 #include <dune/istl/matrix.hh>
 
@@ -107,11 +109,11 @@ private:
   typedef typename SubGridList::SubGridPartType SubGridPartType;
   //! type of subgrid discrete function space
   typedef typename SubGridList::SubGridDiscreteFunctionSpace SubDiscreteFunctionSpaceType;
-  typedef typename SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
+  
 
-  //! type of subgrid discrete function
 public:
-  typedef AdaptiveDiscreteFunction< SubDiscreteFunctionSpaceType > SubDiscreteFunctionType;
+  //! type of subgrid discrete function
+  typedef typename SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
   typedef std::vector<std::unique_ptr<SubDiscreteFunctionType> > SubDiscreteFunctionVectorType;
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
@@ -158,15 +160,16 @@ private:
   
 public:
   typedef Fem::SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType,
-                                   LocProbMatrixTraits > LocProbFEMMatrix;
+                                   LocProbMatrixTraits > LocProbFEMMatrixType;
 private:
   #ifdef SYMMETRIC_DIFFUSION_MATRIX
-  typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrix;
+  typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrixType;
   #else
   // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
-  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
+  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrixType > InverseLocProbFEMMatrixType;
   #endif // ifdef SYMMETRIC_DIFFUSION_MATRIX
 
+  typedef WeightedClementOperator WeightedClementOperatorType;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
   const MacroMicroGridSpecifierType& specifier_;
