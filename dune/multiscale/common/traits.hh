@@ -109,7 +109,6 @@ struct CommonTraits {
   typedef DiscreteFunctionSpaceType::DomainFieldType            TimeType;
   typedef DiscreteFunctionSpaceType::JacobianRangeType          JacobianRangeType;
   typedef GridType::Codim< 0 >::Entity                          EntityType;
-  typedef EntityType                                            CoarseEntityType;
   typedef GridType::Codim< 0 >::EntityPointer                   EntityPointerType;
   typedef GridType::Codim< 0 >::Geometry                        EntityGeometryType;
   typedef GridType::Codim< 1 >::Geometry                        FaceGeometryType;
