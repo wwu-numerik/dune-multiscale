@@ -37,7 +37,7 @@ struct MsFEMTraits
 
   // the following two may change if we intend to use different meshes on coarse and fine level
   typedef typename CommonTraits::GridType::Codim< 0 >::Entity                   CoarseEntityType;
-  typedef typename CommonTraits::DiscreteFunctionSpaceType::BasisFunctionSetType CoarseBaseFunctionSetType;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;
 };
 } // namespace MsFEM {
 } // namespace Multiscale {
