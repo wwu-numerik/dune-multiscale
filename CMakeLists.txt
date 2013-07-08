@@ -195,6 +195,7 @@ set( FEM_SOURCES
 set( LODM_SOURCES 
         dune/multiscale/msfem/rigorous.cc
         dune/multiscale/msfem/rigorous_msfem_solver.cc
+        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
     
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
