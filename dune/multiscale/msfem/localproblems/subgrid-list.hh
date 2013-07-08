@@ -63,7 +63,7 @@ private:
   typedef typename HostEntityType::Codim< 2 >::EntityPointer HostNodePointer;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
-  typedef typename CommonTraits::CoarseEntityType CoarseEntityType;
+  typedef typename MsFEMTraits::CoarseEntityType CoarseEntityType;
 
   //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;

@@ -114,11 +114,11 @@ int main(int argc, char** argv) {
     int ret = getrusage(who, &usage);
     long peakMemConsumption = usage.ru_maxrss;
     // compute the maximum and mean peak memory consumption over all processes
-    long maxPeakMemConsumption = Dune::MPIManager::comm().max(peakMemConsumption);
-    long totalPeakMemConsumption = Dune::MPIManager::comm().sum(peakMemConsumption);
-    long meanPeakMemConsumption = totalPeakMemConsumption/Dune::MPIManager::size();
+    long maxPeakMemConsumption = Dune::Fem::MPIManager::comm().max(peakMemConsumption);
+    long totalPeakMemConsumption = Dune::Fem::MPIManager::comm().sum(peakMemConsumption);
+    long meanPeakMemConsumption = totalPeakMemConsumption/Dune::Fem::MPIManager::size();
     // write output on rank zero
-    if (Dune::MPIManager::rank()==0) {
+    if (Dune::Fem::MPIManager::rank()==0) {
       std::unique_ptr<boost::filesystem::ofstream>
               memoryConsFile(DSC::make_ofstream(DSC_CONFIG_GET("global.datadir", "data")+"/memory.csv"));
       *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n"

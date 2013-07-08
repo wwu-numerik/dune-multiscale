@@ -19,7 +19,6 @@
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/msfem/localproblems/weighted-clement-operator.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 #include <memory>
@@ -84,7 +83,7 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LocProbFEMMatrix locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace);
+  LocProbFEMMatrixType locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace);
 
   //! define the discrete (elliptic) local MsFEM problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -105,11 +104,11 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
       localProblemOperator.assemble_matrix(locProbSysMatrix);
       localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
       break;
-    default: DUNE_THROW(Dune::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
+    default: DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
   }
 
   //! boundary treatment:
-  typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
+  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
 
   typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
           FaceDofIteratorType;
@@ -155,7 +154,7 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
       continue;
     }
 
-    InverseLocProbFEMMatrix localProblemSolver(locProbSysMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
+    InverseLocProbFEMMatrixType localProblemSolver(locProbSysMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
     localProblemSolver(*allLocalRHS[i], *allLocalSolutions[i]);
 
     if ( !(allLocalSolutions[i]->dofsValid()) )
@@ -173,13 +172,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
                        SubDiscreteFunctionType& local_problem_solution,
                        const int coarse_index /*= -1*/ ) const
 {
-    // saddle point problem solver:
-    typedef UzawaInverseOp< SubDiscreteFunctionType,
-                            HostDiscreteFunctionType,
-                            InverseLocProbFEMMatrix,
-                            WeightedClementOperator >
-       InverseUzawaOperatorType;
-
   // set solution equal to zero:
   local_problem_solution.clear();
 
@@ -187,7 +179,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LocProbFEMMatrix locprob_system_matrix("Local Problem System Matrix",
+  LocProbFEMMatrixType locprob_system_matrix("Local Problem System Matrix",
                                          subDiscreteFunctionSpace,
                                          subDiscreteFunctionSpace);
 
@@ -234,7 +226,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   }
 
   //! boundary treatment:
-  typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
+  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
 
   typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
       FaceDofIteratorType;
@@ -278,7 +270,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     return;
   }
 
-  InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
+  InverseLocProbFEMMatrixType locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
 
   bool clement = false;
   if ( specifier_.getOversamplingStrategy() == 3 ) {
@@ -306,6 +298,13 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence).
 
     //clement_interpolation_op.print();
+
+    // saddle point problem solver:
+    typedef UzawaInverseOp< SubDiscreteFunctionType,
+    HostDiscreteFunctionType,
+    InverseLocProbFEMMatrixType,
+    WeightedClementOperatorType >
+            InverseUzawaOperatorType;
 
     HostDiscreteFunctionType lagrange_multiplier("lagrange multiplier", specifier_.coarseSpace() );
     lagrange_multiplier.clear();
@@ -350,7 +349,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LocProbFEMMatrix locprob_system_matrix("Local Problem System Matrix",
+  LocProbFEMMatrixType locprob_system_matrix("Local Problem System Matrix",
                                          subDiscreteFunctionSpace,
                                          subDiscreteFunctionSpace);
 
@@ -385,7 +384,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   //! boundary treatment:
   // ----------------------------------------------------------------------------------------------------
-  typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
+  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
 
   typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
       FaceDofIteratorType;
@@ -426,7 +425,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   }
   // ----------------------------------------------------------------------------------------------------
 
-  const InverseLocProbFEMMatrix locprob_inverse_system_matrix(locprob_system_matrix,
+  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
                                                         1e-8, 1e-8, 20000,
                                                         DSC_CONFIG_GET("localproblemsolver_verbose", false));
 
