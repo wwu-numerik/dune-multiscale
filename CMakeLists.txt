@@ -149,6 +149,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc
         dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
+        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
 
 set( PROBLEM_SOURCES
@@ -179,7 +180,6 @@ set( HMM_SOURCES
 set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
         dune/multiscale/msfem/msfem_solver.cc
-        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
 
 set( HOM_FEM_SOURCES
@@ -195,7 +195,6 @@ set( FEM_SOURCES
 set( LODM_SOURCES 
         dune/multiscale/msfem/rigorous.cc
         dune/multiscale/msfem/rigorous_msfem_solver.cc
-        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
     
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
