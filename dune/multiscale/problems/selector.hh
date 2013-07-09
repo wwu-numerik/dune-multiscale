@@ -18,14 +18,14 @@ namespace Dune {
 namespace Multiscale {
 namespace Problem {
 
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> getFirstSource();
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> getExactSolution();
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> getSecondSource();
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> getMassTerm();
-std::unique_ptr<Dune::Multiscale::CommonTraits::DiffusionType> getDiffusion();
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> getFirstSource();
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> getExactSolution();
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> getSecondSource();
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> getMassTerm();
+std::unique_ptr<const Dune::Multiscale::CommonTraits::DiffusionType> getDiffusion();
 std::unique_ptr<const Dune::Multiscale::CommonTraits::LowerOrderTermType> getLowerOrderTerm();
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> getDefaultDummyFunction();
-std::unique_ptr<Dune::Multiscale::CommonTraits::ModelProblemDataType> getModelData();
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> getDefaultDummyFunction();
+std::unique_ptr<const Dune::Multiscale::CommonTraits::ModelProblemDataType> getModelData();
 
 std::string name();
 
