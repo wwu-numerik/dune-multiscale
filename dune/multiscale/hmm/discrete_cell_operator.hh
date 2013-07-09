@@ -21,7 +21,6 @@
 
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
 #include <dune/multiscale/hmm/hmm_traits.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
 
 namespace Dune {
 namespace Multiscale {

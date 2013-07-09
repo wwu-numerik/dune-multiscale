@@ -23,6 +23,8 @@
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 #include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>

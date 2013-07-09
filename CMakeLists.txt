@@ -166,7 +166,7 @@ set( PROBLEM_SOURCES
 	dune/multiscale/problems/elliptic/three.cc
 	dune/multiscale/problems/elliptic/toy.cc
 	dune/multiscale/problems/elliptic/two.cc
-	dune/multiscale/problems/elliptic/selector.cc
+	dune/multiscale/problems/selector.cc
 	dune/multiscale/problems/base.cc
     )
     

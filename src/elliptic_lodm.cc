@@ -6,7 +6,7 @@
 
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/msfem/rigorous.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 int main(int argc, char** argv) {
   try {

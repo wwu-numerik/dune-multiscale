@@ -11,7 +11,7 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/hmm/elliptic_hmm_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/common/output_traits.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>

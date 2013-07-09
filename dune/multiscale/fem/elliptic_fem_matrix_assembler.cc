@@ -6,6 +6,7 @@
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {

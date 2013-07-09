@@ -14,7 +14,7 @@
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {
