@@ -15,54 +15,105 @@
 #include "elliptic/toy.hh"
 #include "elliptic/two.hh"
 
-std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getFirstSource() {
-    return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::FirstSource>();
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <unordered_map>
+#include <functional>
+
+#define PROBLEM_NAME Nine
+
+using namespace Dune::Multiscale;
+
+#define MAP_ITEM(ProblemName, ReturnType, FunctionName) \
+  {#ProblemName, [](){return static_cast<ReturnType>(DSC::make_unique<Problem::ProblemName::FunctionName>());}}
+
+#define FUNCTION_MAP(ReturnType, FunctionName) \
+  std::map< std::string, std::function<ReturnType()>>({ \
+    MAP_ITEM(One, ReturnType, FunctionName), \
+    MAP_ITEM(Two, ReturnType, FunctionName), \
+    MAP_ITEM(Three, ReturnType, FunctionName), \
+    MAP_ITEM(Four, ReturnType, FunctionName), \
+    MAP_ITEM(Five, ReturnType, FunctionName), \
+    MAP_ITEM(Six, ReturnType, FunctionName), \
+    MAP_ITEM(Seven, ReturnType, FunctionName), \
+    MAP_ITEM(Eight, ReturnType, FunctionName), \
+    MAP_ITEM(Nine, ReturnType, FunctionName), \
+    MAP_ITEM(Ten, ReturnType, FunctionName), \
+    MAP_ITEM(Eleven, ReturnType, FunctionName), \
+  })
+
+/* to add a new problem a line like this above
+ * MAP_ITEM(NewProblemName, ReturnType, FunctionName), \
+*/
+
+// Toy doesn't comply with interface
+// MAP_ITEM(Toy, ReturnType, FunctionName) \
+
+template<class FunctionType>
+typename FunctionType::result_type find_and_call_item(const std::map<std::string, FunctionType>& rets)
+{
+  auto it = rets.find(Dune::Multiscale::Problem::name());
+  if(it==rets.end())
+    DUNE_THROW(Dune::InvalidStateException, "no data for Problem");
+  return it->second.operator()();
+}
+
+Problem::BasePtr Dune::Multiscale::Problem::getFirstSource()
+{
+  static auto funcs = FUNCTION_MAP(BasePtr, FirstSource);
+  return find_and_call_item(funcs);
 }
 
 
-std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getSecondSource()
+Problem::BasePtr Dune::Multiscale::Problem::getSecondSource()
 {
-    return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::SecondSource>();
+  static auto funcs = FUNCTION_MAP(BasePtr, SecondSource);
+  return find_and_call_item(funcs);
 }
 
 
-std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getExactSolution()
+Problem::BasePtr Dune::Multiscale::Problem::getExactSolution()
 {
-    return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::ExactSolution>();
+  static auto funcs = FUNCTION_MAP(BasePtr, ExactSolution);
+  return find_and_call_item(funcs);
 }
 
 
-std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getMassTerm()
+Problem::BasePtr Dune::Multiscale::Problem::getMassTerm()
 {
-    return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::MassTerm>();
+  static auto funcs = FUNCTION_MAP(BasePtr, MassTerm);
+  return find_and_call_item(funcs);
 }
 
 
-std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getDefaultDummyFunction()
+Problem::BasePtr Dune::Multiscale::Problem::getDefaultDummyFunction()
 {
-    return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::DefaultDummyFunction>();
+  static auto funcs = FUNCTION_MAP(BasePtr, DefaultDummyFunction);
+  return find_and_call_item(funcs);
 }
 
 
-std::unique_ptr<const Dune::Multiscale::CommonTraits::ModelProblemDataType> Dune::Multiscale::Problem::getModelData()
+std::unique_ptr<const CommonTraits::ModelProblemDataType> Dune::Multiscale::Problem::getModelData()
 {
-    return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::ModelProblemData>();
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::ModelProblemDataType>, ModelProblemData);
+  return find_and_call_item(funcs);
 }
 
 
-std::unique_ptr<const Dune::Multiscale::CommonTraits::LowerOrderTermType> Dune::Multiscale::Problem::getLowerOrderTerm()
+std::unique_ptr<const CommonTraits::LowerOrderTermType> Dune::Multiscale::Problem::getLowerOrderTerm()
 {
-    return DSC::make_unique<const Dune::Multiscale::Problem::PROBLEM_NAME::LowerOrderTerm>();
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::LowerOrderTermType>, LowerOrderTerm);
+  return find_and_call_item(funcs);
 }
 
 
-std::unique_ptr<const Dune::Multiscale::CommonTraits::DiffusionType> Dune::Multiscale::Problem::getDiffusion()
+std::unique_ptr<const CommonTraits::DiffusionType> Dune::Multiscale::Problem::getDiffusion()
 {
-    return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::Diffusion>();
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::DiffusionType>, Diffusion);
+  return find_and_call_item(funcs);
 }
 
 
 std::string Dune::Multiscale::Problem::name()
 {
-  return "Dummy Dune::Multiscale::Problem::name()";
+  return DSC_CONFIG_GET("problem.name", "Nine");
 }
