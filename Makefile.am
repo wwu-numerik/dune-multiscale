@@ -3,7 +3,7 @@ include $(top_srcdir)/common.mk
 # we need the module file to be able to build via dunecontrol
 EXTRA_DIST=dune.module
 
-SUBDIRS = . src m4 doc
+SUBDIRS = . src m4 doc dune
 
 if BUILD_DOCS
 # TODO: set up documentation tree automatically
