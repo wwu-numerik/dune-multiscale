@@ -15,36 +15,36 @@
 #include "elliptic/toy.hh"
 #include "elliptic/two.hh"
 
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getFirstSource() {
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getFirstSource() {
     return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::FirstSource>();
 }
 
 
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getSecondSource()
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getSecondSource()
 {
     return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::SecondSource>();
 }
 
 
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getExactSolution()
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getExactSolution()
 {
     return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::ExactSolution>();
 }
 
 
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getMassTerm()
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getMassTerm()
 {
     return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::MassTerm>();
 }
 
 
-std::unique_ptr<Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getDefaultDummyFunction()
+std::unique_ptr<const Dune::Multiscale::CommonTraits::FunctionBaseType> Dune::Multiscale::Problem::getDefaultDummyFunction()
 {
     return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::DefaultDummyFunction>();
 }
 
 
-std::unique_ptr<Dune::Multiscale::CommonTraits::ModelProblemDataType> Dune::Multiscale::Problem::getModelData()
+std::unique_ptr<const Dune::Multiscale::CommonTraits::ModelProblemDataType> Dune::Multiscale::Problem::getModelData()
 {
     return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::ModelProblemData>();
 }
@@ -56,7 +56,7 @@ std::unique_ptr<const Dune::Multiscale::CommonTraits::LowerOrderTermType> Dune::
 }
 
 
-std::unique_ptr<Dune::Multiscale::CommonTraits::DiffusionType> Dune::Multiscale::Problem::getDiffusion()
+std::unique_ptr<const Dune::Multiscale::CommonTraits::DiffusionType> Dune::Multiscale::Problem::getDiffusion()
 {
     return DSC::make_unique<Dune::Multiscale::Problem::PROBLEM_NAME::Diffusion>();
 }
