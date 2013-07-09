@@ -58,7 +58,7 @@ template < int cd, int dim,
 bool entities_identical(const Entity< cd, dim, GridImp, EntityImp >& entity,
                         const Entity< cd, dim, GridImpOther, EntityImpOther >& other)
 {
-    const int number_of_nodes = entity.template count< 2 >();
+    const int number_of_nodes = entity.template count< GridImp::dimension >();
     for (int k = 0; k < number_of_nodes; ++k )
     {
       if ( !( entity.geometry().corner(k) == other.geometry().corner(k) ) )

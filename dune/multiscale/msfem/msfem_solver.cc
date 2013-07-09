@@ -151,11 +151,11 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
           const SubgridLocalFunction sub_loc_value = localSolutions[0]->localFunction(subgridEntity);
           LocalFunction host_loc_value = fine_scale_part.localFunction(fine_host_entity);
 
-          int number_of_nodes_entity = subgridEntity.count<2>();
+          int number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();
 
           for (int i = 0; i < number_of_nodes_entity; ++i)
           {
-            const typename HostEntity::Codim< 2 >::EntityPointer node = fine_host_entity.subEntity< 2 >(i);
+            const typename HostEntity::Codim< HostGrid::dimension >::EntityPointer node = fine_host_entity.subEntity< HostGrid::dimension >(i);
             const int global_index_node = gridPart.grid().leafIndexSet().index(*node);
 
             // count the number of different coarse-grid-entities that share the above node
