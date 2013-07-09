@@ -26,16 +26,14 @@
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/multiscale/common/error_calc.hh>
 
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/rigorous_msfem_solver.hh>
-
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/common/output_traits.hh>
 

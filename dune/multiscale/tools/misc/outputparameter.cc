@@ -8,7 +8,7 @@
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 namespace Dune {
 namespace Multiscale {

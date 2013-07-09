@@ -4,8 +4,8 @@
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/stuff/common/filesystem.hh>
+#include <dune/multiscale/problems/selector.hh>
 
-#include <dune/multiscale/problems/elliptic/selector.hh>
 #include <iostream>
 
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType *msfem_solution,

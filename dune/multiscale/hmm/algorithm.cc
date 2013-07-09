@@ -6,6 +6,7 @@
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -73,7 +74,7 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
   // edge length of the cells in the cell proplems,
   const double delta_ = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 0);
-  out << "Error File for Elliptic Model Problem " << Problem::name << "." << std::endl
+  out << "Error File for Elliptic Model Problem " << Problem::name() << "." << std::endl
             << std::endl;
   if (DSC_CONFIG_GET("problem.linear", true))
     out << "Problem is declared as being LINEAR." << std::endl;

@@ -16,7 +16,6 @@
 #include <dune/fem/operator/common/operator.hh>
 
 #include <boost/noncopyable.hpp>
-#include <dune/multiscale/problems/elliptic/selector.hh>
 
 namespace Dune {
 namespace Multiscale {

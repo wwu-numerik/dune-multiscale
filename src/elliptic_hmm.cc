@@ -5,7 +5,7 @@
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/hmm/algorithm.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 void check_config();
 
