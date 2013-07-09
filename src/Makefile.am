@@ -22,7 +22,8 @@ libmultiscale_common_la_SOURCES=../dune/multiscale/tools/misc/outputparameter.cc
         ../dune/multiscale/msfem/localproblems/localoperator.cc \
         ../dune/multiscale/msfem/localproblems/localproblemsolver.cc \
         ../dune/multiscale/common/error_calc.cc \
-        ../dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
+        ../dune/multiscale/msfem/localproblems/weighted-clement-operator.cc \
+        ../dune/multiscale/msfem/localproblems/localsolutionmanager.cc 
 libmultiscale_common_la_CPPFLAGS=$(CPPFLAGS)
 
 ######################################
@@ -41,7 +42,7 @@ libmultiscale_problems_la_SOURCES=../dune/multiscale/problems/elliptic/eight.cc 
 	../dune/multiscale/problems/elliptic/three.cc \
 	../dune/multiscale/problems/elliptic/toy.cc \
 	../dune/multiscale/problems/elliptic/two.cc \
-	../dune/multiscale/problems/elliptic/selector.cc \
+	../dune/multiscale/problems/selector.cc \
 	../dune/multiscale/problems/base.cc
 libmultiscale_problems_la_CPPFLAGS=$(CPPFLAGS)
 
@@ -49,8 +50,7 @@ libmultiscale_problems_la_CPPFLAGS=$(CPPFLAGS)
 ##########  Lib: MsFEM  ##############
 ######################################
 libmultiscale_msfem_la_SOURCES=../dune/multiscale/msfem/algorithm.cc \
-        ../dune/multiscale/msfem/msfem_solver.cc \
-        ../dune/multiscale/msfem/localproblems/localsolutionmanager.cc 
+        ../dune/multiscale/msfem/msfem_solver.cc
 libmultiscale_msfem_la_CPPFLAGS=$(CPPFLAGS)
 
 ######################################
@@ -72,8 +72,7 @@ libmultiscale_fem_la_CPPFLAGS=$(CPPFLAGS)
 ###########  Lib: LODM  ###############
 ######################################
 libmultiscale_lodm_la_SOURCES= ../dune/multiscale/msfem/rigorous.cc \
-	../dune/multiscale/msfem/rigorous_msfem_solver.cc \
-        ../dune/multiscale/msfem/localproblems/localsolutionmanager.cc 
+	../dune/multiscale/msfem/rigorous_msfem_solver.cc
 libmultiscale_lodm_la_CPPFLAGS=$(CPPFLAGS)
 
 
