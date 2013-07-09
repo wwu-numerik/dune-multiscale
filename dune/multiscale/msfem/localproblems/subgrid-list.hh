@@ -79,7 +79,7 @@ private:
   typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
   //! @todo this should eventually be changed to the type of the coarse space
   typedef typename HostGridPartType::Codim<0>::EntityType::Geometry::LocalCoordinate LocalCoordinateType;
-  typedef GenericReferenceElements< typename  LocalCoordinateType::value_type,  LocalCoordinateType::dimension >
+  typedef ReferenceElements< typename  LocalCoordinateType::value_type,  LocalCoordinateType::dimension >
           CoarseRefElementType;
   typedef std::vector<std::vector<HostEntityPointerType>> EntityPointerCollectionType;
 
