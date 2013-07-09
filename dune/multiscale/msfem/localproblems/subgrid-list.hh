@@ -60,7 +60,7 @@ private:
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
-  typedef typename HostEntityType::Codim< 2 >::EntityPointer HostNodePointer;
+  typedef typename HostEntityType::Codim< HostGridType::dimension >::EntityPointer HostNodePointer;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   typedef typename MsFEMTraits::CoarseEntityType CoarseEntityType;

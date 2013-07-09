@@ -26,8 +26,8 @@ bool SubGridList::entityPatchInSubgrid(const HostEntityPointerType& hit,
   bool patch_in_subgrid = true;
 
   // loop over the nodes of the enity
-  for (int i = 0; i < (*hit).count< 2 >(); ++i) {
-    const HostNodePointer node = (*hit).subEntity< 2 >(i);
+  for (int i = 0; i < (*hit).count< HostGridType::dimension >(); ++i) {
+    const HostNodePointer node = (*hit).subEntity< HostGridType::dimension >(i);
 
     const int global_index_node = hostGridPart.indexSet().index(*node);
 
@@ -62,8 +62,8 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
   --layer;
 
   // loop over the nodes of the fine grid entity
-  for (int i = 0; i < (*hit).count< 2 >(); ++i) {
-    const HostNodePointer node              = (*hit).subEntity< 2 >(i);
+  for (int i = 0; i < (*hit).count< HostGridType::dimension >(); ++i) {
+    const HostNodePointer node              = (*hit).subEntity< HostGridType::dimension >(i);
     int                   global_index_node = hostGridPart_.indexSet().index(*node);
 
     // loop over the the fine grid entities that share the node
@@ -369,9 +369,10 @@ void SubGridList::identifySubGrids() {
   // we need to iterate over the whole grid, not only from hostSpace_.begin() to
   // hostSpace_.end() for parallel runs!
   for (auto& hostEntity : DSC::viewRange(hostSpace_.gridPart().grid().leafView())) {
-    int number_of_nodes_in_entity = hostEntity.count< 2 >();
+    int number_of_nodes_in_entity = hostEntity.count< HostGridType::dimension >();
     for (int i = 0; i < number_of_nodes_in_entity; ++i) {
-      const HostNodePointer node              = hostEntity.subEntity< 2 >(i);
+      int vecSize = entities_sharing_same_node_.size();
+      const HostNodePointer node              = hostEntity.subEntity< HostGridType::dimension >(i);
       const int             global_index_node = hostGridPart.indexSet().index(*node);
 
       entities_sharing_same_node_[global_index_node].emplace_back(hostEntity);
