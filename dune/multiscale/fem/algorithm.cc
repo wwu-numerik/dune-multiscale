@@ -230,7 +230,7 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
   else
     out << "Problem is declared as being NONLINEAR." << std::endl;
 
-  if (info.has_exact_solution) {
+  if (info.hasExactSolution()) {
     out << "Exact solution is available." << std::endl << std::endl;
   } else {
     out << "Exact solution is not available." << std::endl << std::endl;
