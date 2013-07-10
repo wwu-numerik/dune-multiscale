@@ -31,7 +31,10 @@ namespace Nine {
 struct ModelProblemData
   : public IModelProblemData
 {
-  static const bool has_exact_solution = true;
+  virtual bool hasExactSolution() const {
+    return true;
+  }
+
   ModelProblemData();
 
   //! \copydoc IModelProblemData::getMacroGridFile();
