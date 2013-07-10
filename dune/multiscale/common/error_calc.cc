@@ -27,7 +27,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
     std::map<std::string,double> csv;
 
     //! ----------------- compute L2- and H1- errors -------------------
-    if (Problem::getModelData()->has_exact_solution)
+    if (Problem::getModelData()->hasExactSolution())
     {
       auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
       const auto& u = *u_ptr;

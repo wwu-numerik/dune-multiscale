@@ -156,7 +156,6 @@ protected:
 
 public:
 
-  static const bool has_exact_solution = false;
   //! Constructor for ModelProblemData
   inline IModelProblemData(const Constants constants)
     : constants_(constants)
@@ -177,6 +176,9 @@ public:
 
   // does the problem allow a stochastic perturbation of the coefficients?
   virtual bool problemAllowsStochastics() const = 0;
+
+  // does the problem implement an exact solution?
+  virtual bool hasExactSolution() const { return false; }
 
 };
 
