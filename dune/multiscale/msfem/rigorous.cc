@@ -99,7 +99,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   //! --------------------------------------------------------------------------------------
 
   //! -------------------------- writing data output Exact Solution ------------------------
-  if (Problem::getModelData()->has_exact_solution)
+  if (Problem::getModelData()->hasExactSolution())
   { 
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;

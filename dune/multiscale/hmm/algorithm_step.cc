@@ -412,7 +412,7 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
   hmmsol_dataoutput.writeData( 1.0 /*dummy*/, "hmm-solution" );
   // -------------------------------------------------------
 
-  if (CommonTraits::ModelProblemDataType::has_exact_solution) {
+  if (Problem::getModelData()->hasExactSolution()) {
     // --------- data output discrete exact solution --------------
 
     // create and initialize output class
@@ -513,7 +513,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
     }
 
     // L2 errors with exact solution
-    if (CommonTraits::ModelProblemDataType::has_exact_solution)
+    if (Problem::getModelData()->hasExactSolution())
     {
       int order_quadrature_rule = 13;
       const auto u = Problem::getExactSolution();
