@@ -371,10 +371,11 @@ void SubGridList::identifySubGrids() {
   for (auto& hostEntity : DSC::viewRange(hostSpace_.gridPart().grid().leafView())) {
     int number_of_nodes_in_entity = hostEntity.count< HostGridType::dimension >();
     for (int i = 0; i < number_of_nodes_in_entity; ++i) {
-      int vecSize = entities_sharing_same_node_.size();
       const HostNodePointer node              = hostEntity.subEntity< HostGridType::dimension >(i);
       const int             global_index_node = hostGridPart.indexSet().index(*node);
 
+      // make sure we don't access non-existing elements
+      assert(entities_sharing_same_node_.size()>global_index_node);
       entities_sharing_same_node_[global_index_node].emplace_back(hostEntity);
     }
   }
