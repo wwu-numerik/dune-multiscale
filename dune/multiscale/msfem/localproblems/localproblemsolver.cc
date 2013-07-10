@@ -127,8 +127,8 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
         // if there is a neighbor entity
         if ( subgridIntersection.boundary() ) {
           const int face = subgridIntersection.indexInInside();
-          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< 1 >(face);
-          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit) {
+          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< faceCodim >(face);
+          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< faceCodim >(face); fdit != fdend; ++fdit) {
             // zero boundary condition for 'cell problems':
             // set unit row in matrix for any boundary dof ...
             localMatrix.unitRow(*fdit);
