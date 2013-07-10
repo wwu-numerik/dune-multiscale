@@ -287,7 +287,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part( specifier, subgrid_list, coarse_msfem_solution, fine_scale_part );
   {
-    DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero.comm_fine_scale_part");
+    DSC::Profiler::ScopedTiming commFSTimer("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero.comm_fine_scale_part");
     fine_scale_part.communicate();
   }
 
