@@ -177,8 +177,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     std::vector< typename CoarseBaseFunctionSet::JacobianRangeType > gradientPhi(numMacroBaseFunctions);
 
     const int localQuadratureOrder = 2 * localSolutionManager.getLocalDiscreteFunctionSpace().order() + 2;
-    for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
-      for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
+
                   // iterator for the micro grid ( grid for the reference element T_0 )
           for (const auto& localGridEntity : localSolutionManager.getLocalDiscreteFunctionSpace()) {
             // check if "localGridEntity" (which is an entity of U(T)) is in T:
@@ -188,7 +187,6 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
             if (global_index_entity==subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
               assert(hostEntity->partitionType() == InteriorEntity);
 
-              RangeType local_integral(0.0);
 
               const LocalGridGeometry& local_grid_geometry = localGridEntity.geometry();
 
@@ -220,6 +218,10 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
                 coarse_grid_baseSet.jacobianAll(local_coarse_point, gradientPhi);
 
 
+                for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
+                  for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
+                    RangeType local_integral(0.0);
+
                 // Compute the gradients of the i'th and j'th local problem solutions
                 JacobianRangeType gradLocProbSoli(0.0),gradLocProbSolj(0.0);
                 if (specifier_.simplexCoarseGrid()) {
@@ -244,11 +246,12 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
                   local_integral += weight_local_quadrature * (diffusive_flux[0] * gradientPhi[j][0]);
                 else
                   local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstructionGradPhij[0]);
+
+                    // add entries
+                    local_matrix.add(j, i, local_integral);
+                  }
+                }
               }
-              // add entries
-              local_matrix.add(j, i, local_integral);
-            }
-          }
 
       }
     }
