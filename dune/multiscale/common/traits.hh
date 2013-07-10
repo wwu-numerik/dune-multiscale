@@ -47,8 +47,8 @@ class SparseRowMatrixOperator;
 namespace Multiscale {
 namespace Problem {
 
-class DiffusionBase;
-class LowerOrderBase;
+struct DiffusionBase;
+struct LowerOrderBase;
 class IModelProblemData;
 
 } //namespace Problem
