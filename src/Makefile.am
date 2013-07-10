@@ -42,6 +42,7 @@ libmultiscale_problems_la_SOURCES=../dune/multiscale/problems/elliptic/eight.cc 
 	../dune/multiscale/problems/elliptic/three.cc \
 	../dune/multiscale/problems/elliptic/toy.cc \
 	../dune/multiscale/problems/elliptic/two.cc \
+	../dune/multiscale/problems/elliptic/spe10.cc \
 	../dune/multiscale/problems/selector.cc \
 	../dune/multiscale/problems/base.cc
 libmultiscale_problems_la_CPPFLAGS=$(CPPFLAGS)
