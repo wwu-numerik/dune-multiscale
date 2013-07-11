@@ -19,9 +19,11 @@
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
+#include <dune/stuff/common/memory.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 
 namespace Dune {
+namespace Multiscale {
 
 //! define output traits
 struct CellDataOutputParameters
@@ -62,15 +64,19 @@ NULLFUNCTION(ZeroFunction)
 
 //! \TODO docme
 // (to replace the more general lower order term)
-class MassWeight
+class MassWeight : public Problem::ZeroLowerOrder
 {
  public:
 
   MassWeight( double lambda ) : lambda_( lambda ) {}
   
-  template< class DomainType , class RangeType, class JacobianRangeType >
   void evaluate(const DomainType& /*x*/, const RangeType& position, const JacobianRangeType& /*direction_gradient*/, RangeType& y) const
   { y = lambda_ * position; }
+
+  virtual void evaluate(const DomainType& /*x*/, RangeType& /*ret*/) const
+  {
+    DUNE_THROW(Dune::NotImplemented, "");
+  }
 
   double lambda_;
 };
@@ -81,17 +87,12 @@ class MassWeight
  * cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon}
  * instead of A(x,\cdot) )
  **/
-template< class FunctionSpaceImp, class TensorImp >
-class TransformTensor
-  : public Fem::Function< FunctionSpaceImp, TransformTensor< FunctionSpaceImp, TensorImp > >
+template< class TensorImp >
+class TransformTensor : public Problem::DiffusionBase
 {
 private:
-  typedef FunctionSpaceImp FunctionSpaceType;
+  typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
   typedef TensorImp        TensorType;
-
-
-  typedef TransformTensor< FunctionSpaceType, TensorImp > ThisType;
-  typedef Fem::Function< FunctionSpaceType, ThisType >         BaseType;
 
   typedef typename FunctionSpaceType::DomainType        DomainType;
   typedef typename FunctionSpaceType::RangeType         RangeType;
@@ -124,33 +125,36 @@ public:
                        const DomainType& /*x*/,
                        const TimeType& /*time*/,
                        RangeType& /*y*/) const {
-    DUNE_THROW(Dune::InvalidStateException,"Do not use this evaluate()-method !!");
+    DUNE_THROW(Dune::NotImplemented, "");
   }
 
   inline void evaluate(const DomainType& /*x*/,
                        RangeType& /*y*/) const {
-    DUNE_THROW(Dune::InvalidStateException,"Do not use this evaluate()-method !!");
+    DUNE_THROW(Dune::NotImplemented, "");
   }
 
   inline void evaluate(const DomainType& /*x*/,
                        const TimeType& /*time*/,
                        RangeType& /*y*/) const {
-    DUNE_THROW(Dune::InvalidStateException,"Do not use this evaluate()-method !!");
+    DUNE_THROW(Dune::NotImplemented, "");
+  }
+
+  virtual void jacobianDiffusiveFlux(const DomainType& /*x*/,
+                             const JacobianRangeType& /*position_gradient*/,
+                             const JacobianRangeType& /*direction_gradient*/,
+                            JacobianRangeType& /*flux*/) const {
+    DUNE_THROW(Dune::NotImplemented, "");
   }
 };
 
 //! the following class is comparable to a SecondSource-Class (some kind of -div G )
-template< class FunctionSpaceImp, class TensorImp >
-class CellSource
-  : public Fem::Function< FunctionSpaceImp, CellSource< FunctionSpaceImp, TensorImp > >
+template< class TensorImp >
+class CellSource : CommonTraits::FunctionBaseType
 {
 private:
   typedef TensorImp TensorType;
 
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-  typedef CellSource< FunctionSpaceType, TensorImp > ThisType;
-  typedef Fem::Function< FunctionSpaceType, ThisType >    BaseType;
+  typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
 
   typedef typename FunctionSpaceType::DomainType        DomainType;
   typedef typename FunctionSpaceType::RangeType         RangeType;
@@ -198,18 +202,15 @@ NULLFUNCTION(DefaultDummyAdvection)
 
 
 //! \TODO docme
-template< class GridImp, class TensorImp >
+template< class TensorImp >
 class Homogenizer
 {
 private:
-  typedef GridImp GridType;
+  typedef CommonTraits::GridType  GridType;
   enum { dimension = GridType::dimension };
-
   typedef TensorImp TensorType;
-
   typedef Fem::PeriodicLeafGridPart< GridType > PeriodicGridPartType;
-
-  typedef Fem::FunctionSpace< double, double, dimension, 1 > FunctionSpaceType;
+  typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
 
   typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, PeriodicGridPartType, 1 >
     PeriodicDiscreteFunctionSpaceType;
@@ -230,9 +231,9 @@ private:
 
   typedef DefaultDummyAdvection< FunctionSpaceType > DefaultDummyAdvectionType;
 
-  typedef TransformTensor< FunctionSpaceType, TensorType > TransformTensorType;
+  typedef TransformTensor< TensorType > TransformTensorType;
 
-  typedef CellSource< FunctionSpaceType, TransformTensorType > CellSourceType;
+  typedef CellSource< TransformTensorType > CellSourceType;
 
   typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType
   PeriodicJacobianRangeType;
@@ -266,8 +267,7 @@ private:
   typedef Fem::OEMBICGSTABOp< PeriodicDiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
 
   // discrete elliptic operator (corresponds with FEM Matrix)
-  typedef Multiscale::FEM::DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType,
-                                    MassWeightType > EllipticOperatorType;
+  typedef Multiscale::FEM::DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType> EllipticOperatorType;
 
   typedef typename FunctionSpaceType::DomainType DomainType;
 
@@ -407,7 +407,7 @@ public:
     const ZeroFunctionType zero;
 
     //! build the left hand side (lhs) of the problem
-    const auto mass = DSC::make_unique<const MassWeightType>(lambda);
+    const std::unique_ptr<const Problem::LowerOrderBase> mass(new MassWeightType(lambda));
     // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
     const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace,
                                                          tensor_transformed,
@@ -445,5 +445,7 @@ public:
     return a_hom;
   } // getHomTensor
 }; // end of class
+
+} // namespace Multiscale {
 } // end namespace
 #endif // ifndef DUNE_HOMOGENIZER_HH

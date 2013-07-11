@@ -6,29 +6,29 @@
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
-void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::operator()(const DiscreteFunction& /*u*/,
-                                                                                            DiscreteFunction& /*w*/)
-const {
+template< class DiscreteFunctionImp, class DiffusionImp>
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::operator()(const DiscreteFunctionImp& /*u*/,
+                                                                 DiscreteFunctionImp& /*w*/) const
+{
   DUNE_THROW(Dune::NotImplemented,"the ()-operator of the DiscreteEllipticOperator class is not yet implemented and still a dummy.");
 } // ()
 
-template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
+template< class DiscreteFunctionImp, class DiffusionImp>
 template< class MatrixType >
-void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::assemble_matrix(
-  MatrixType& global_matrix,
-  bool boundary_treatment ) const {
-  typedef typename MatrixType::LocalMatrixType LocalMatrix;
-
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matrix( MatrixType& global_matrix,
+                                                                      bool boundary_treatment ) const
+{
   global_matrix.reserve();
   global_matrix.clear();
 
-  std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi( discreteFunctionSpace_.mapper().maxNumDofs() );
+  std::vector< typename BaseFunctionSet::JacobianRangeType >
+          gradient_phi( discreteFunctionSpace_.mapper().maxNumDofs() );
 
   // micro scale base function:
   std::vector< RangeType > phi( discreteFunctionSpace_.mapper().maxNumDofs() );
@@ -37,9 +37,9 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
     const Geometry& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
-    LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
+    auto local_matrix = global_matrix.localMatrix(entity, entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
+    const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -50,7 +50,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
     {
       // local (barycentric) coordinates (with respect to entity)
       const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
-      const DomainType global_point = geometry.global(local_point);
+      const auto global_point = geometry.global(local_point);
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
@@ -85,7 +85,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
       if ( !entity.hasBoundaryIntersections() )
         continue;
 
-      LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
+      auto local_matrix = global_matrix.localMatrix(entity, entity);
       const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
       const IntersectionIterator iend = gridPart.iend(entity);
       for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
@@ -104,32 +104,29 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
 } // assemble_matrix
 
 
-template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
+template< class DiscreteFunctionImp, class DiffusionImp>
 template< class MatrixType, class HostDiscreteFunctionSpaceType >
-void DiscreteEllipticOperator< DiscreteFunctionImp,
-                               DiffusionImp,
-                               LowerOrderTermImp >::assemble_matrix
-  (MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace, bool boundary_treatment ) const {
-  typedef typename MatrixType::LocalMatrixType LocalMatrix;
-
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matrix(MatrixType& global_matrix,
+                                                                      HostDiscreteFunctionSpaceType& hostSpace,
+                                                                      bool boundary_treatment ) const
+{
   global_matrix.reserve();
   global_matrix.clear();
 
-  std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi( discreteFunctionSpace_.mapper().maxNumDofs() );
+  std::vector< typename BaseFunctionSet::JacobianRangeType >
+          gradient_phi( discreteFunctionSpace_.mapper().maxNumDofs() );
 
   // micro scale base function:
   std::vector< RangeType > phi( discreteFunctionSpace_.mapper().maxNumDofs() );
 
-  const Iterator end = discreteFunctionSpace_.end();
-  for (Iterator it = discreteFunctionSpace_.begin(); it != end; ++it)
+  for (const Entity& entity : discreteFunctionSpace_)
   {
-    const Entity& entity = *it;
     const Geometry& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
-    LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
+    auto local_matrix = global_matrix.localMatrix(entity, entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBaseFunctionSet();
+    const auto& baseSet = local_matrix.domainBaseFunctionSet();
     const auto numBaseFunctions = baseSet.numBaseFunctions();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -205,34 +202,29 @@ void DiscreteEllipticOperator< DiscreteFunctionImp,
 } // assemble_matrix
 
 
-template< class DiscreteFunctionImp, class DiffusionImp, class LowerOrderTermImp >
+template< class DiscreteFunctionImp, class DiffusionImp>
 template< class MatrixType >
-void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTermImp >::assemble_jacobian_matrix(
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_jacobian_matrix(
   DiscreteFunction& disc_func,
   MatrixType& global_matrix,
-  bool boundary_treatment ) const {
-  typedef typename MatrixType::LocalMatrixType LocalMatrix;
-
-  typedef typename DiscreteFunction::LocalFunctionType
-  LocalFunction;
-
+  bool boundary_treatment ) const
+{
   global_matrix.reserve();
   global_matrix.clear();
 
-  std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi( discreteFunctionSpace_.mapper().maxNumDofs() );
+  std::vector< typename BaseFunctionSet::JacobianRangeType >
+          gradient_phi( discreteFunctionSpace_.mapper().maxNumDofs() );
 
   // micro scale base function:
   std::vector< RangeType > phi( discreteFunctionSpace_.mapper().maxNumDofs() );
 
-  const Iterator end = discreteFunctionSpace_.end();
-  for (Iterator it = discreteFunctionSpace_.begin(); it != end; ++it)
+  for (const Entity& entity : discreteFunctionSpace_)
   {
-    const Entity& entity = *it;
     const Geometry& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
-    LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
-    LocalFunction local_disc_function = disc_func.localFunction(entity);
+    auto local_matrix = global_matrix.localMatrix(entity, entity);
+    auto local_disc_function = disc_func.localFunction(entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -279,8 +271,10 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
             RangeType F_position_derivative;
             typename LocalFunction::JacobianRangeType F_direction_derivative;
             //lower_order_term_->evaluate( global_point, phi[i], gradient_phi[i], F_i );
-            lower_order_term_->position_derivative( global_point, value_local_disc_function, grad_local_disc_function, F_position_derivative );
-            lower_order_term_->direction_derivative( global_point, value_local_disc_function, grad_local_disc_function, F_direction_derivative );
+            lower_order_term_->position_derivative( global_point, value_local_disc_function,
+                                                    grad_local_disc_function, F_position_derivative );
+            lower_order_term_->direction_derivative( global_point, value_local_disc_function,
+                                                     grad_local_disc_function, F_direction_derivative );
             local_matrix.add( j, i, weight * F_position_derivative * phi[i][0] * phi[j][0] );
             local_matrix.add( j, i, weight * ( F_direction_derivative[0] * gradient_phi[i][0] ) * phi[j][0] );
           }
@@ -293,13 +287,12 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp, LowerOrderTerm
   if (boundary_treatment)
   {
     const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-    for (Iterator it = discreteFunctionSpace_.begin(); it != end; ++it)
+    for (const Entity& entity : discreteFunctionSpace_)
     {
-      const Entity& entity = *it;
       if ( !entity.hasBoundaryIntersections() )
         continue;
 
-      LocalMatrix local_matrix = global_matrix.localMatrix(entity, entity);
+      auto local_matrix = global_matrix.localMatrix(entity, entity);
 
       const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 

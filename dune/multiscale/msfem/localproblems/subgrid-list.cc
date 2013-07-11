@@ -26,8 +26,8 @@ bool SubGridList::entityPatchInSubgrid(const HostEntityPointerType& hit,
   bool patch_in_subgrid = true;
 
   // loop over the nodes of the enity
-  for (int i = 0; i < (*hit).count< 2 >(); ++i) {
-    const HostNodePointer node = (*hit).subEntity< 2 >(i);
+  for (int i = 0; i < (*hit).count< HostGridType::dimension >(); ++i) {
+    const HostNodePointer node = (*hit).subEntity< HostGridType::dimension >(i);
 
     const int global_index_node = hostGridPart.indexSet().index(*node);
 
@@ -62,8 +62,8 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
   --layer;
 
   // loop over the nodes of the fine grid entity
-  for (int i = 0; i < (*hit).count< 2 >(); ++i) {
-    const HostNodePointer node              = (*hit).subEntity< 2 >(i);
+  for (int i = 0; i < (*hit).count< HostGridType::dimension >(); ++i) {
+    const HostNodePointer node              = (*hit).subEntity< HostGridType::dimension >(i);
     int                   global_index_node = hostGridPart_.indexSet().index(*node);
 
     // loop over the the fine grid entities that share the node
@@ -176,7 +176,13 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
 
   fine_id_to_subgrid_ids_.resize( hostGridPart_.grid().size(0) );
-  
+
+
+  //! @todo temp!
+  for (const auto& hostEntity : DSC::viewRange(hostGridPart_.grid().leafView())) {
+    getEnclosingMacroCellId(hostEntity);
+  }
+
   // initialize the subgrids (no elements are added)
   identifySubGrids();
   
@@ -217,6 +223,31 @@ const SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex) con
 
   return *(found->second);
 } // getSubGrid
+
+
+/** Get the subgrid belonging to a given coarse cell.
+*
+* @param[in] coarseCell The coarse cell.
+* @return Returns the subgrid belonging to the given coarse cell.
+*/
+const SubGridList::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& entity) const {
+  const int index = coarseGridLeafIndexSet_.index(entity);
+  return getSubGrid(index);
+} // getSubGrid
+
+/** Get the subgrid belonging to a given coarse cell.
+*
+* @param[in] coarseCell The coarse cell.
+* @return Returns the subgrid belonging to the given coarse cell.
+*/
+SubGridList::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& entity) {
+  const int index = coarseGridLeafIndexSet_.index(entity);
+  return getSubGrid(index);
+} // getSubGrid
+
+const SubGridList::EntityPointerCollectionType& SubGridList::getNodeEntityMap() {
+  return entities_sharing_same_node_;
+}
 
 
 // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
@@ -333,6 +364,50 @@ int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEnt
   return -1;
 }
 
+
+int SubGridList::getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer) {
+  // first check, whether we looked for this host entity already
+  int hostEntityIndex = hostGridLeafIndexSet_.index(*hostEntityPointer);
+  auto itFound = fineToCoarseMapID_.find(hostEntityIndex);
+  if (itFound!=fineToCoarseMapID_.end()) {
+    // if so, return the index that was found last time
+    return itFound->second;
+  }
+  static auto lastIterator = coarseSpace_.gridPart().grid().leafbegin<0>();
+  const auto  baryCenter = hostEntityPointer->geometry().center();
+  auto macroCellIterator = lastIterator;
+  for (; macroCellIterator != coarseSpace_.gridPart().grid().leafend<0>(); ++macroCellIterator) {
+    const auto& macroGeo   = macroCellIterator->geometry();
+    const auto& refElement = CoarseRefElementType::general(macroGeo.type());
+
+    bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
+    if (hostEnIsInMacroCell) {
+      lastIterator  = macroCellIterator;
+      int macroId = coarseSpace_.gridPart().grid().globalIdSet().id(*macroCellIterator);
+      fineToCoarseMapID_[hostEntityIndex] = macroId;
+      return macroId;
+    }
+  }
+  // if we came this far, we did not find the matching enclosing coarse cell for the given
+  // fine cell in [lastIterator, coarse grid end]. Start search from beginning
+  for (macroCellIterator = coarseSpace_.gridPart().grid().leafbegin<0>(); macroCellIterator != lastIterator; ++macroCellIterator) {
+    const auto& macroGeo   = macroCellIterator->geometry();
+    const auto& refElement = CoarseRefElementType::general(macroGeo.type());
+    bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
+    if (hostEnIsInMacroCell) {
+      lastIterator = macroCellIterator;
+      int macroId = coarseSpace_.gridPart().grid().globalIdSet().id(*macroCellIterator);
+      fineToCoarseMapID_[hostEntityIndex] = macroId;
+      return macroId;
+    }
+  }
+  // if we came this far, we did not find an enclosing coarse cell at all, issue a warning
+  // and return with error code
+//  DSC_LOG_DEBUG << "Warning: Host grid entity was not in any coarse grid cell!\n";
+  assert(false);
+  return -1;
+}
+
 void SubGridList::identifySubGrids() {
   DSC_PROFILER.startTiming("msfem.subgrid_list.identify");
   DSC_LOG_INFO << "Starting creation of subgrids." << std::endl << std::endl;
@@ -350,11 +425,13 @@ void SubGridList::identifySubGrids() {
   // we need to iterate over the whole grid, not only from hostSpace_.begin() to
   // hostSpace_.end() for parallel runs!
   for (auto& hostEntity : DSC::viewRange(hostSpace_.gridPart().grid().leafView())) {
-    int number_of_nodes_in_entity = hostEntity.count< 2 >();
+    int number_of_nodes_in_entity = hostEntity.count< HostGridType::dimension >();
     for (int i = 0; i < number_of_nodes_in_entity; ++i) {
-      const HostNodePointer node              = hostEntity.subEntity< 2 >(i);
+      const HostNodePointer node              = hostEntity.subEntity< HostGridType::dimension >(i);
       const int             global_index_node = hostGridPart.indexSet().index(*node);
 
+      // make sure we don't access non-existing elements
+      assert(entities_sharing_same_node_.size()>global_index_node);
       entities_sharing_same_node_[global_index_node].emplace_back(hostEntity);
     }
   }
@@ -395,23 +472,7 @@ void SubGridList::identifySubGrids() {
       }
     }
   }
-
-  // -----------------------------------------------------------
-  // initialize and fill a vector 'entities_sharing_same_node_' that tells you for
-  // a given node 'i' which fine grid entities intersect with 'i'
-  // -----------------------------------------------------------
-  //! \todo: isn't this exactly the same as in lines 140--149???
-  for (const auto& localEntity : hostSpace_)
-  {
-    const int number_of_nodes_in_entity = localEntity.count< 2 >();
-    for (int i = 0; i < number_of_nodes_in_entity; i += 1) {
-      const HostNodePointer node              = localEntity.subEntity< 2 >(i);
-      const int             global_index_node = hostGridPart.indexSet().index(*node);
-
-      entities_sharing_same_node_[global_index_node].emplace_back(localEntity);
-    }
-  }
-  // -----------------------------------------------------------
+//  // -----------------------------------------------------------
 
   DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
 

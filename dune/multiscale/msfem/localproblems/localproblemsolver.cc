@@ -16,9 +16,9 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
+#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/msfem/localproblems/weighted-clement-operator.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 #include <memory>
@@ -33,35 +33,137 @@ LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
 {}
 
 MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
-                        const MacroMicroGridSpecifierType& specifier,
-                        SubGridList& subgrid_list,
-                        const DiffusionOperatorType& diffusion_operator)
-  : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
-  , diffusion_(diffusion_operator)
-  , specifier_(specifier)
-  , subgrid_list_(subgrid_list)
-  , ids_basis_functions_in_subgrid_(nullptr)
-  , inverse_of_L1_norm_coarse_basis_funcs_(nullptr)
-  , coarse_basis_(nullptr)
-  , global_id_to_internal_id_(nullptr)
+                                                 const MacroMicroGridSpecifierType& specifier,
+                                                 SubGridList& subgrid_list,
+                                                 const DiffusionOperatorType& diffusion_operator)
+  : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace),
+    diffusion_(diffusion_operator),
+    specifier_(specifier),
+    subgrid_list_(subgrid_list),
+    ids_basis_functions_in_subgrid_(nullptr),
+    inverse_of_L1_norm_coarse_basis_funcs_(nullptr),
+    coarse_basis_(nullptr),
+    global_id_to_internal_id_(nullptr)
 {}
 
 MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
-                        const MacroMicroGridSpecifierType& specifier,
-                        SubGridList& subgrid_list, std::vector< std::vector< int > >& ids_basis_functions_in_subgrid,
-                        std::vector< double >& inverse_of_L1_norm_coarse_basis_funcs,
-                        const DiffusionOperatorType& diffusion_operator,
-                        const CoarseBasisFunctionListType& coarse_basis,
-                        const std::map<int,int>& global_id_to_internal_id )
-  : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
-  , diffusion_(diffusion_operator)
-  , specifier_(specifier)
-  , subgrid_list_(subgrid_list)
-  , ids_basis_functions_in_subgrid_( &ids_basis_functions_in_subgrid ) // ids of the coarse grid basis functions in the interior of the subgrid
-  , inverse_of_L1_norm_coarse_basis_funcs_( &inverse_of_L1_norm_coarse_basis_funcs )
-  , coarse_basis_( &coarse_basis )
-  , global_id_to_internal_id_( &global_id_to_internal_id )
+                                                 const MacroMicroGridSpecifierType& specifier,
+                                                 SubGridList& subgrid_list,
+                                                 std::vector< std::vector< int > >& ids_basis_functions_in_subgrid,
+                                                 std::vector< double >& inverse_of_L1_norm_coarse_basis_funcs,
+                                                 const DiffusionOperatorType& diffusion_operator,
+                                                 const CoarseBasisFunctionListType& coarse_basis,
+                                                 const std::map< int, int >& global_id_to_internal_id)
+  : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace),
+    diffusion_(diffusion_operator),
+    specifier_(specifier),
+    subgrid_list_(subgrid_list),
+    ids_basis_functions_in_subgrid_(&ids_basis_functions_in_subgrid),
+    // ids of the coarse grid basis functions in the interior of the subgrid
+    inverse_of_L1_norm_coarse_basis_funcs_(&inverse_of_L1_norm_coarse_basis_funcs),
+    coarse_basis_(&coarse_basis),
+    global_id_to_internal_id_(&global_id_to_internal_id)
 {}
+
+//! ----------- method: solve the local MsFEM problem ------------------------------------------
+/** Solve all local MsFEM problems for one coarse entity at once.
+*
+*
+*/
+void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCell,
+        SubDiscreteFunctionVectorType& allLocalSolutions) const {
+  assert(allLocalSolutions.size()>0);
+
+  const int coarseCellIndex = specifier_.coarseSpace().gridPart().grid().leafIndexSet().index(coarseCell);
+
+  // clear return argument
+  for (auto& localSol : allLocalSolutions) localSol->clear();
+
+  const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = allLocalSolutions[0]->space();
+
+  //! the matrix in our linear system of equations
+  // in the non-linear case, it is the matrix for each iteration step
+  LocProbFEMMatrixType locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace);
+
+  //! define the discrete (elliptic) local MsFEM problem operator
+  // ( effect of the discretized differential operator on a certain discrete function )
+  LocalProblemOperator localProblemOperator(subDiscreteFunctionSpace, diffusion_);
+
+  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
+
+  typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
+  typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
+
+  // right hand side vector of the algebraic local MsFEM problem
+  SubDiscreteFunctionVectorType allLocalRHS(allLocalSolutions.size());
+  for (auto& it : allLocalRHS)
+          it = DSC::make_unique<SubDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
+
+  switch ( specifier_.getOversamplingStrategy() ) {
+    case 1:
+      localProblemOperator.assemble_matrix(locProbSysMatrix);
+      localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
+      break;
+    default: DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
+  }
+
+  //! boundary treatment:
+  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
+
+  typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
+          FaceDofIteratorType;
+
+  const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
+
+  for (const auto& subgridEntity : subDiscreteFunctionSpace) {
+    LocalMatrix localMatrix = locProbSysMatrix.localMatrix(subgridEntity, subgridEntity);
+
+    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
+    for (auto& rhsIt : allLocalRHS) {
+
+      SubLocalFunctionType rhsLocal = rhsIt->localFunction(subgridEntity);
+
+      for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), subgridEntity)) {
+        // if there is a neighbor entity
+        if ( subgridIntersection.boundary() ) {
+          const int face = subgridIntersection.indexInInside();
+          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< faceCodim >(face);
+          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< faceCodim >(face); fdit != fdend; ++fdit) {
+            // zero boundary condition for 'cell problems':
+            // set unit row in matrix for any boundary dof ...
+            localMatrix.unitRow(*fdit);
+            // ... and set respective rhs dof to zero
+            rhsLocal[*fdit] = 0;
+          }
+        }
+      }
+    }
+  }
+
+  for (int i=0; i!=allLocalSolutions.size(); ++i) {
+    if (!allLocalRHS[i]->dofsValid())
+      DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
+
+    // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
+    // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
+    // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
+    // the result.
+    if (localProblemOperator.normRHS(*allLocalRHS[i]) < 1e-30) {
+      allLocalRHS[i]->clear();
+      DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
+      continue;
+    }
+
+    InverseLocProbFEMMatrixType localProblemSolver(locProbSysMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
+    localProblemSolver(*allLocalRHS[i], *allLocalSolutions[i]);
+
+    if ( !(allLocalSolutions[i]->dofsValid()) )
+      DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
+  }
+
+  return;
+}
+
 
 
 //! ----------- method: solve the local MsFEM problem ------------------------------------------
@@ -70,13 +172,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
                        SubDiscreteFunctionType& local_problem_solution,
                        const int coarse_index /*= -1*/ ) const
 {
-    // saddle point problem solver:
-    typedef UzawaInverseOp< SubDiscreteFunctionType,
-                            HostDiscreteFunctionType,
-                            InverseLocProbFEMMatrix,
-                            WeightedClementOperator >
-       InverseUzawaOperatorType;
-
   // set solution equal to zero:
   local_problem_solution.clear();
 
@@ -84,7 +179,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LocProbFEMMatrix locprob_system_matrix("Local Problem System Matrix",
+  LocProbFEMMatrixType locprob_system_matrix("Local Problem System Matrix",
                                          subDiscreteFunctionSpace,
                                          subDiscreteFunctionSpace);
 
@@ -100,13 +195,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   //! right hand side vector of the algebraic local MsFEM problem
   SubDiscreteFunctionType local_problem_rhs("rhs of local MsFEM problem", subDiscreteFunctionSpace);
   local_problem_rhs.clear();
-
-  // NOTE:
-  // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
-  // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
-  // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
-  // the result.
-
   switch ( specifier_.getOversamplingStrategy() ) {
     case 1:
       local_problem_op.assemble_matrix(locprob_system_matrix);
@@ -138,84 +226,32 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   }
 
   //! boundary treatment:
-  typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
+  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
 
   typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
       FaceDofIteratorType;
 
   const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
 
-  const SubgridIteratorType sg_end = subDiscreteFunctionSpace.end();
-  for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
-  {
-    const SubgridEntityType& subgrid_entity = *sg_it;
+  for (const auto& subgridEntity : subDiscreteFunctionSpace) {
+    LocalMatrix localMatrix = locprob_system_matrix.localMatrix(subgridEntity, subgridEntity);
 
-    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
-    const HostEntityType& host_entity = *host_entity_pointer;
+    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
+    SubLocalFunctionType rhsLocal = local_problem_rhs.localFunction(subgridEntity);
 
-    LocalMatrix local_matrix = locprob_system_matrix.localMatrix(subgrid_entity, subgrid_entity);
-
-    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);
-
-    const HostIntersectionIterator iend = hostGridPart.iend(host_entity);
-    for (HostIntersectionIterator iit = hostGridPart.ibegin(host_entity); iit != iend; ++iit)
-    {
-      if ( iit->neighbor() ) // if there is a neighbor entity
-      {
-        // check if the neighbor entity is in the subgrid
-        const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-        const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
-        if ( subGrid.contains< 0 >(neighborHostEntity) )
-        {
-          continue;
+    for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), subgridEntity)) {
+      // if there is a neighbor entity
+      if ( subgridIntersection.boundary() ) {
+        const int face = subgridIntersection.indexInInside();
+        const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< 1 >(face);
+        for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit) {
+          // zero boundary condition for 'cell problems':
+          // set unit row in matrix for any boundary dof ...
+          localMatrix.unitRow(*fdit);
+          // ... and set respective rhs dof to zero
+          rhsLocal[*fdit] = 0;
         }
       }
-
-      const int face = (*iit).indexInInside();
-      const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< 1 >(face);
-      for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
-        local_matrix.unitRow(*fdit);
-    }
-  }
-
-
-  // zero boundary condition for 'cell problems':
-  // set Dirichlet Boundary to zero
-  for (SubgridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it)
-  {
-    const SubgridEntityType& subgrid_entity = *sg_it;
-
-    HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
-    const HostEntityType& host_entity = *host_entity_pointer;
-
-    HostIntersectionIterator iit = hostGridPart.ibegin(host_entity);
-    const HostIntersectionIterator endiit = hostGridPart.iend(host_entity);
-    for ( ; iit != endiit; ++iit)
-    {
-      if ( iit->neighbor() ) // if there is a neighbor entity
-      {
-        // check if the neighbor entity is in the subgrid
-        const HostEntityPointerType neighborHostEntityPointer = iit->outside();
-        const HostEntityType& neighborHostEntity = *neighborHostEntityPointer;
-
-        if ( subGrid.contains< 0 >(neighborHostEntity) )
-        {
-          continue;
-        }
-      }
-
-      SubLocalFunctionType rhsLocal = local_problem_rhs.localFunction(subgrid_entity);
-      const SGLagrangePointSetType& lagrangePointSet
-          = subDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);
-
-      const int face = (*iit).indexInInside();
-
-      FaceDofIteratorType faceIterator
-          = lagrangePointSet.beginSubEntity< faceCodim >(face);
-      const FaceDofIteratorType faceEndIterator
-          = lagrangePointSet.endSubEntity< faceCodim >(face);
-      for ( ; faceIterator != faceEndIterator; ++faceIterator)
-        rhsLocal[*faceIterator] = 0;
     }
   }
 
@@ -223,57 +259,68 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
   }
 
-  if (local_problem_op.normRHS(local_problem_rhs) < /*1e-06*/ 1e-30)
-  {
+  // NOTE:
+  // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
+  // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
+  // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
+  // the result.
+  if (local_problem_op.normRHS(local_problem_rhs) < /*1e-06*/ 1e-30) {
     local_problem_solution.clear();
     DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
+    return;
   }
-  else
-  {
-    InverseLocProbFEMMatrix locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
-    
-    bool clement = false;
-    if ( specifier_.getOversamplingStrategy() == 3 ) {
-      clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
-    }
 
-    if ( clement ) {
-      HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
-      zero.clear();
-      const double dummy = 12345.67890;
-      double solverEps = 1e-2;
-      int maxIterations = 1000;
+  InverseLocProbFEMMatrixType locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
 
-      // we want to solve the local problem with the constraint that the weighted Clement interpoltion
-      // of the local problem solution is zero
+  bool clement = false;
+  if ( specifier_.getOversamplingStrategy() == 3 ) {
+    clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
+  }
 
-      // implementation of a weighted Clement interpolation operator for our purpose:
-      WeightedClementOperator clement_interpolation_op( subDiscreteFunctionSpace,
-                                                            specifier_.coarseSpace(),
-                                                            subgrid_list_.getCoarseNodeVector( coarse_index ),
-                                                            *coarse_basis_, *global_id_to_internal_id_, specifier_ );
-      //! NOTE TODO: implementation is not yet optimal, because the weighted Clement maps a function
-      //! defined on the local subgrid to a function defined on the whole(!) coarse space.
-      //! It would be better to implement a mapping to a localized coarse space, since
-      //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence).
+  if ( clement ) {
+    HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
+    zero.clear();
+    const double dummy = 12345.67890;
+    double solverEps = 1e-2;
+    int maxIterations = 1000;
 
-      //clement_interpolation_op.print();
+    // we want to solve the local problem with the constraint that the weighted Clement interpoltion
+    // of the local problem solution is zero
 
-      HostDiscreteFunctionType lagrange_multiplier("lagrange multiplier", specifier_.coarseSpace() );
-      lagrange_multiplier.clear();
+    // implementation of a weighted Clement interpolation operator for our purpose:
+    WeightedClementOperatorType clement_interpolation_op( subDiscreteFunctionSpace,
+            specifier_.coarseSpace(),
+            subgrid_list_.getCoarseNodeVector( coarse_index ),
+            *coarse_basis_, *global_id_to_internal_id_, specifier_ );
+    //! NOTE TODO: implementation is not yet optimal, because the weighted Clement maps a function
+    //! defined on the local subgrid to a function defined on the whole(!) coarse space.
+    //! It would be better to implement a mapping to a localized coarse space, since
+    //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence).
 
-      // create inverse operator
-      // saddle point problem solver with uzawa algorithm:
-      {
-        DSC::Profiler::ScopedTiming st("uzawa");
-        InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
-        uzawa( local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier );
-      }
-    }
-    else {
-      locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
+    //clement_interpolation_op.print();
+
+    // saddle point problem solver:
+    typedef UzawaInverseOp< SubDiscreteFunctionType,
+    HostDiscreteFunctionType,
+    InverseLocProbFEMMatrixType,
+    WeightedClementOperatorType >
+            InverseUzawaOperatorType;
+
+    HostDiscreteFunctionType lagrange_multiplier("lagrange multiplier", specifier_.coarseSpace() );
+    lagrange_multiplier.clear();
+
+    // create inverse operator
+    // saddle point problem solver with uzawa algorithm:
+    {
+      DSC::Profiler::ScopedTiming st("uzawa");
+      InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
+      uzawa( local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier );
     }
   }
+  else {
+    locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
+  }
+
 
   if ( !( local_problem_solution.dofsValid() ) ) {
     DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
@@ -302,7 +349,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LocProbFEMMatrix locprob_system_matrix("Local Problem System Matrix",
+  LocProbFEMMatrixType locprob_system_matrix("Local Problem System Matrix",
                                          subDiscreteFunctionSpace,
                                          subDiscreteFunctionSpace);
 
@@ -337,7 +384,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
 
   //! boundary treatment:
   // ----------------------------------------------------------------------------------------------------
-  typedef typename LocProbFEMMatrix::LocalMatrixType LocalMatrix;
+  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
 
   typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
       FaceDofIteratorType;
@@ -378,7 +425,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   }
   // ----------------------------------------------------------------------------------------------------
 
-  const InverseLocProbFEMMatrix locprob_inverse_system_matrix(locprob_system_matrix,
+  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
                                                         1e-8, 1e-8, 20000,
                                                         DSC_CONFIG_GET("localproblemsolver_verbose", false));
 
@@ -486,19 +533,6 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   locprob_inverse_system_matrix( local_problem_rhs_0 , local_problem_solution_0 );
   locprob_inverse_system_matrix( local_problem_rhs_1 , local_problem_solution_1 );
 
-//! delete
-#if 0
-std::cout<< "local_problem_rhs_0" << std::endl;
-local_problem_op.printLocalRHS( local_problem_rhs_0 );
-std::cout<< "local_problem_solution_0" << std::endl;
-local_problem_op.printLocalRHS( local_problem_solution_0 );
-std::cout<< "local_problem_rhs_1" << std::endl;
-local_problem_op.printLocalRHS( local_problem_rhs_1 );
-std::cout<< "local_problem_solution_1" << std::endl;
-local_problem_op.printLocalRHS( local_problem_solution_1 );
-abort();
-#endif
-
   // ----------------------------------------------------------------------------------------------------
   
   
@@ -570,8 +604,8 @@ abort();
 
   // right hand side vectors for the lagrange multiplier (lm) problems (for e_0 and e_1)
   // entries lm_rhs_0[i] = weight_i ( local_problem_solution_0, coarse_basis_func[i] )_L2(\Omega)
-  VectorType lm_rhs_0( number_of_interior_coarse_nodes_in_subgrid, 0.0 );
-  VectorType lm_rhs_1( number_of_interior_coarse_nodes_in_subgrid, 0.0 );
+  VectorType lm_rhs_0( number_of_interior_coarse_nodes_in_subgrid );
+  VectorType lm_rhs_1( number_of_interior_coarse_nodes_in_subgrid );
   for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
   { lm_rhs_0[i] = 0.0; lm_rhs_1[i] = 0.0; }
 
@@ -754,137 +788,100 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarse_index, cons
 }
 
 void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
-  std::string local_path = DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/";
-  Dune::Stuff::Common::testCreateDirectory(local_path);
-
   enum { dimension = CommonTraits::GridType::dimension };
-  enum { maxnumOfBaseFct = 100 };
 
-  JacobianRangeType e[dimension];
+  JacobianRangeType unitVectors[dimension];
   for (int i = 0; i < dimension; ++i)
     for (int j = 0; j < dimension; ++j) {
       if (i == j) {
-        e[i][0][j] = 1.0;
+        unitVectors[i][0][j] = 1.0;
       } else {
-        e[i][0][j] = 0.0;
+        unitVectors[i][0][j] = 0.0;
       }
     }
 
   // number of coarse grid entities (of codim 0).
-  int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+  int coarseGridSize = specifier_.getNumOfCoarseEntities();
 
-  DSC_LOG_INFO << "in method 'assemble_all': number_of_coarse_grid_entities = " << number_of_coarse_grid_entities
+  DSC_LOG_INFO << "in method 'assemble_all': coarseGridSize = " << coarseGridSize
             << std::endl;
   DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
-  std::vector<int> coarse_indices;
   const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
   const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-  for (HostGridEntityIteratorType coarse_it = coarseSpace.begin(); coarse_it != coarseSpace.end(); ++coarse_it)
-  {
-    coarse_indices.push_back(coarseGridLeafIndexSet.index(*coarse_it));
-  }
+  for (const auto& coarseEntity : coarseSpace) {
+    const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
+    const int coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
 
-
-//  const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
-//  int slice = coarse_indices.size() / comm.size();
-//  for(int gc = comm.rank() * slice; gc < std::min(long(comm.rank() +1)* slice, long(coarse_indices.size())); ++gc)
-  for (std::size_t gc=0; gc<coarse_indices.size(); ++gc)
-  {
-    
-    const int coarse_index = coarse_indices[gc];
-    
     DSC_LOG_INFO << "-------------------------" << std::endl
-                 << "Coarse index " << coarse_index << std::endl;
+            << "Coarse index " << coarse_index << std::endl;
 
-    const std::string locprob_solution_location =
-        (boost::format("local_problems/_localProblemSolutions_%d_%d") % coarse_index % Fem::MPIManager::rank()).str();
-
-    DiscreteFunctionWriter dfw(locprob_solution_location);
 
     auto subGridPart = subgrid_list_.gridPart(coarse_index);
 
     const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
-
-    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarse_index).str();
-
-    //! only for dimension 2!
-    SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
-    local_problem_solution_0.clear();
-
-    SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
-    local_problem_solution_1.clear();
-
     Dune::Timer assembleTimer;
+    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarseId).str();
+
     bool uzawa = DSC_CONFIG_GET( "rigorous_msfem.uzawa_solver", false );
     bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
     if ( (!uzawa) && (specifier_.getOversamplingStrategy() == 3) && clement ) {
+      //! only for dimension 2!
+      SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
+      local_problem_solution_0.clear();
 
+      SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
+      local_problem_solution_1.clear();
       // requires a pre-processing step (that is the same for both directions e_0 and e_1)
-      // one method for both solutions to half the computational complexity 
-      solvelocalproblems_lod( e[0], e[1], local_problem_solution_0,
-                              local_problem_solution_1, coarse_index ); 
+      // one method for both solutions to half the computational complexity
+      solvelocalproblems_lod( unitVectors[0], unitVectors[1], local_problem_solution_0,
+              local_problem_solution_1, coarse_index );
+      const std::string locprob_solution_location =
+              (boost::format("local_problems/_localProblemSolutions_%d") % coarseId).str();
+      DiscreteFunctionWriter dfw(locprob_solution_location);
+      dfw.append(local_problem_solution_0);
+      dfw.append(local_problem_solution_1);
 
-    }
-    else {
+      if (DSC_CONFIG_GET("msfem.localproblem_vtkoutput", false))
+      {
+        HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
+        subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
+        output_local_solution(coarse_index, 0, host_local_solution);
 
-      DSC_LOG_INFO  << std::endl
-                    << "Number of the local problem: " << dimension * coarse_index << " (of "
-                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl
-                    << "   Subgrid " << coarse_index << " contains " << subGridPart.grid().size(0) << " elements and "
-                    << subGridPart.grid().size(2) << " nodes." << std::endl;
-
+        subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
+        output_local_solution(coarse_index, 1, host_local_solution);
+      }
+    } else if (uzawa && !(specifier_.simplexCoarseGrid())) {
+        DUNE_THROW(NotImplemented, "Uzawa-solver and non-simplex grid have not been tested together, yet!");
+    } else {
       // take time
       DSC_PROFILER.startTiming("none.local_problem_solution");
+      LocalSolutionManager localSolutionManager(coarseEntity, subgrid_list_, specifier_);
 
       // solve the problems
-      solvelocalproblem(e[0], local_problem_solution_0, coarse_index);
-
-      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
-      DSC_PROFILER.resetTiming("none.local_problem_solution");
-
-      DSC_LOG_INFO  << std::endl
-                    << "Number of the local problem: "
-                    << (dimension * coarse_index) + 1 << " (of "
-                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
-
-      // take time
-      DSC_PROFILER.startTiming("none.local_problem_solution");
-
-      // solve the problems
-      solvelocalproblem(e[1], local_problem_solution_1, coarse_index);
-
+      solveAllLocalProblems(coarseEntity, localSolutionManager.getLocalSolutions());
       // min/max time
       cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
       DSC_PROFILER.resetTiming("none.local_problem_solution");
+
+      // save the local solutions to disk
+      localSolutionManager.saveLocalSolutions();
     }
 
-    DSC_LOG_INFO << "Total time for solving all local problems for the current subgrid: "
-                 << assembleTimer.elapsed() << "s" << std::endl << std::endl;
-
-    dfw.append(local_problem_solution_0);
-    dfw.append(local_problem_solution_1);
-
-    if (DSC_CONFIG_GET("msfem.localproblem_vtkoutput", false))
-    {
-      HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
-      subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
-      output_local_solution(coarse_index, 0, host_local_solution);
-
-      subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
-      output_local_solution(coarse_index, 1, host_local_solution);
-    }
+      DSC_LOG_INFO << "Total time for solving and saving all local problems for the current subgrid: "
+              << assembleTimer.elapsed() << "s" << std::endl << std::endl;
   } //for
 
+  //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all")/1000.f;
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
-  DSC_LOG_INFO << "MsFEM problems solved for " << number_of_coarse_grid_entities << " coarse grid entities."
+  DSC_LOG_INFO << "MsFEM problems solved for " << coarseGridSize << " coarse grid entities."
                 << std::endl;
-  DSC_LOG_INFO << dimension * number_of_coarse_grid_entities << " local MsFEM problems solved in total."
+  DSC_LOG_INFO << dimension * coarseGridSize << " local MsFEM problems solved in total."
                 << std::endl;
   DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s." << std::endl;
   DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s." << std::endl;

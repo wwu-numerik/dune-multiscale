@@ -17,7 +17,7 @@ namespace Dune {
 namespace Multiscale {
 
 namespace FEM{
-template <class R, class T, class S>
+template <class R, class S>
 class DiscreteEllipticOperator;
 }
 namespace HMM {
@@ -46,9 +46,7 @@ struct HMMTraits {
 
   //! --------------- the discrete operators (standard FEM and HMM) ------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)
-  typedef Dune::Multiscale::FEM::DiscreteEllipticOperator< typename CommonTraits::DiscreteFunctionType,
-                                                           typename CommonTraits::DiffusionType,
-                                                           typename CommonTraits::MassTermType >
+  typedef Dune::Multiscale::FEM::DiscreteEllipticOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType>
     EllipticOperatorType;
 
   //! --------------------------------------------------------------------------------------

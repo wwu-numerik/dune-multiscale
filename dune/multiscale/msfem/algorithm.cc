@@ -23,7 +23,7 @@
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
 //! local (dune-multiscale) includes
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
@@ -34,7 +34,7 @@
 #include <dune/multiscale/msfem/msfem_elliptic_error_estimator.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
@@ -255,9 +255,10 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   //! --------------------------------------------------------------------------------------
 
   //! -------------------------- writing data output Exact Solution ------------------------
-  if (Problem::ModelProblemData::has_exact_solution)
+  if (Problem::getModelData()->hasExactSolution())
   {
-    const CommonTraits::ExactSolutionType u;
+    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
+    const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     // create and initialize output class
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
@@ -386,9 +387,11 @@ bool algorithm(const std::string& macroGridName,
   //! --------------------------- coefficient functions ------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const CommonTraits::DiffusionType diffusion_op;
+  auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
+  const auto& diffusion_op = *diffusion_op_ptr;
   // define (first) source term:
-  const CommonTraits::FirstSourceType f; // standard source f
+  auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
+  const auto& f = *f_ptr;
 
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
@@ -455,8 +458,8 @@ bool algorithm(const std::string& macroGridName,
   {
     // just for Dirichlet zero-boundary condition
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
-    const CommonTraits::LowerOrderTermType l;
-    fem_solver.solve_dirichlet_zero(diffusion_op, l, f, fem_solution);
+    const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
+    fem_solver.solve_dirichlet_zero(diffusion_op, l_ptr, f, fem_solution);
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
     //! -------------------------- writing data output FEM Solution ----------

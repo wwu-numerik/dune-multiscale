@@ -6,6 +6,7 @@
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -60,8 +61,7 @@ typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctio
 } // get_size_of_domain
 
 //! outputs Problem info to output stream
-template <class ProblemDataType>
-void print_info(ProblemDataType info, std::ostream& out)
+void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out)
 {
   // epsilon is specified in the parameter file
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
@@ -74,14 +74,14 @@ void print_info(ProblemDataType info, std::ostream& out)
   // edge length of the cells in the cell proplems,
   const double delta_ = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 0);
-  out << "Error File for Elliptic Model Problem " << Problem::name << "." << std::endl
+  out << "Error File for Elliptic Model Problem " << Problem::name() << "." << std::endl
             << std::endl;
   if (DSC_CONFIG_GET("problem.linear", true))
     out << "Problem is declared as being LINEAR." << std::endl;
   else
     out << "Problem is declared as being NONLINEAR." << std::endl;
 
-  if (info.has_exact_solution) {
+  if (info.hasExactSolution()) {
     out << "Exact solution is available." << std::endl << std::endl;
   } else {
     out << "Exact solution is not available." << std::endl << std::endl;
@@ -247,8 +247,8 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // 
                const std::string filename) {
   using namespace Dune;
 
-  const typename CommonTraits::ModelProblemDataType problem_data;
-  print_info(problem_data, DSC_LOG_INFO);
+  auto problem_data = Problem::getModelData();
+  print_info(*problem_data, DSC_LOG_INFO);
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
   typename CommonTraits::GridPartType gridPart(*macro_grid_pointer);
@@ -270,16 +270,16 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // 
   //! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const typename CommonTraits::DiffusionType diffusion_op;
+  const auto diffusion_op = Problem::getDiffusion();
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType > rhsassembler;
-  const typename CommonTraits::FirstSourceType f;   // standard source f
+  const auto f = Problem::getFirstSource(); // standard source f
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
-  const typename HMMTraits::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, diffusion_op);
+  const typename HMMTraits::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, *diffusion_op);
 
   //! solution vector
   // - By reference_solution, we denote an (possibly accurate) approximation of the exact solution (used for comparison)
@@ -313,7 +313,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // 
     typename CommonTraits::RestrictProlongOperatorType rp(hmm_solution);
     typename CommonTraits::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                diffusion_op, rhsassembler, hmm_solution, reference_solution, loop_cycle);
+                *diffusion_op, rhsassembler, hmm_solution, reference_solution, loop_cycle);
     // call of 'single_step': 'reference_solution' only required for error computation
 
     if ( !DSC_CONFIG_GET("hmm.adaptivity", false) )

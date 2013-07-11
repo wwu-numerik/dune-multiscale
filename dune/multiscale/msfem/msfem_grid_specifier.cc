@@ -4,17 +4,19 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-
 MacroMicroGridSpecifier::MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space,
-                                                         DiscreteFunctionSpaceType& fine_scale_space)
-    : coarse_scale_space_(coarse_scale_space)
-    , fine_scale_space_(fine_scale_space)
-    , coarse_level_fine_level_difference_( fine_scale_space.gridPart().grid().maxLevel()
-                                           - coarse_scale_space.gridPart().grid().maxLevel() )
-    , number_of_level_host_entities_( coarse_scale_space.gridPart().grid().size(0 /*codim*/) )
-    , number_of_layers(number_of_level_host_entities_, 0)
-{ boundary_nodes_identified_ = false; }
-
+                                                 DiscreteFunctionSpaceType& fine_scale_space)
+  : coarse_scale_space_(coarse_scale_space),
+    fine_scale_space_(fine_scale_space),
+    coarse_level_fine_level_difference_(fine_scale_space.gridPart().grid().maxLevel()
+                                        - coarse_scale_space.gridPart().grid().maxLevel()),
+    number_of_level_host_entities_(coarse_scale_space.gridPart().grid().size(0 /*codim*/)),
+    number_of_layers(number_of_level_host_entities_, 0),
+    coarseGridIsSimplex_(coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
+                         coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0)[0].isSimplex())
+{
+  boundary_nodes_identified_ = false;
+}
 // get number of coarse grid entities
 int MacroMicroGridSpecifier::getNumOfCoarseEntities() const {
     return number_of_level_host_entities_;
@@ -244,6 +246,10 @@ bool MacroMicroGridSpecifier::is_coarse_boundary_node( int global_index ) const
 {
     assert( boundary_nodes_identified_ );
     return is_boundary_node_[global_index];
+}
+
+bool MacroMicroGridSpecifier::simplexCoarseGrid() const {
+  return coarseGridIsSimplex_;
 }
 
 } //namespace MsFEM {

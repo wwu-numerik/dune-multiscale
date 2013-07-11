@@ -23,6 +23,8 @@
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 #include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
@@ -263,7 +265,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
 
   DSC_LOG_INFO << "Create standard coarse grid basis functions as discrete functions on the fine grid... ";
 
-  typedef typename HostEntity::Codim< 2 >::EntityPointer HostNodePointer;
+  typedef typename HostEntity::Codim< HostGrid::dimension >::EntityPointer HostNodePointer;
   typedef typename GridPart::IntersectionIteratorType HostIntersectionIterator;
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
 
@@ -317,13 +319,13 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
 
       LocalFunction loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
 
-      const int number_of_nodes_in_fine_entity = it->count< 2 >();
+      const int number_of_nodes_in_fine_entity = it->count< HostGrid::dimension >();
       if ( !( number_of_nodes_in_fine_entity == int( loc_coarse_basis_function.basisFunctionSet().size() ) ) )
       { DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl; }
 
       for (int i = 0; i < number_of_nodes_in_fine_entity; i += 1)
       {
-        const HostNodePointer node = it->subEntity< 2 >(i);
+        const HostNodePointer node = it->subEntity< HostGrid::dimension >(i);
 
         const DomainType coordinates_of_node = node->geometry().corner(0);
         if ( !( coordinates_of_node == it->geometry().corner(i) ) )
@@ -384,8 +386,8 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
 
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
-    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d_%d")
-                                                % global_index_entity % Fem::MPIManager::rank()).str();
+    const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d")
+                                                % specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
     // reader for the cell problem data file:
     DiscreteFunctionReader discrete_function_reader(local_solution_location);
     // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 0 << std::endl;
@@ -775,7 +777,8 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
     DSC_LOG_INFO  << std::endl << "Starting Newton iterations." << std::endl;
 
     //Dune::Multiscale::Problem::Eleven::Nonlinearity nonlinear_term;
-    Dune::Multiscale::Problem::Eleven::LowerOrderTerm nonlinear_term;
+    auto nonlinear_term_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
+    const auto& nonlinear_term = *nonlinear_term_ptr;
     solution.clear();
 
     VectorType newton_solution_vector( number_of_internal_coarse_nodes );

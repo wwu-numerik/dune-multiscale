@@ -5,7 +5,10 @@
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/common/error_container.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
+
+// for rusage
+#include <sys/resource.h>
 
 int main(int argc, char** argv) {
   try {
@@ -17,6 +20,8 @@ int main(int argc, char** argv) {
     DSC_PROFILER.startTiming("msfem.all");
 
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
+
+    // generate directories for data output
     DSC::testCreateDirectory(datadir);
     DSC_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n")
                             % datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
@@ -38,7 +43,8 @@ int main(int argc, char** argv) {
     
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
-    const Problem::ModelProblemData info;
+    auto info_ptr = Problem::getModelData();
+    const auto& info = *info_ptr;
 
     // total_refinement_level denotes the (starting) grid refinement level for the global fine scale problem, i.e. it describes 'h'
     int total_refinement_level_
@@ -102,6 +108,23 @@ int main(int argc, char** argv) {
                  << max_cpu_time
                  << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
+
+    // Compute the peak memory consumption of each processes
+    int who = RUSAGE_SELF;
+    struct rusage usage;
+    int ret = getrusage(who, &usage);
+    long peakMemConsumption = usage.ru_maxrss;
+    // compute the maximum and mean peak memory consumption over all processes
+    long maxPeakMemConsumption = Dune::Fem::MPIManager::comm().max(peakMemConsumption);
+    long totalPeakMemConsumption = Dune::Fem::MPIManager::comm().sum(peakMemConsumption);
+    long meanPeakMemConsumption = totalPeakMemConsumption/Dune::Fem::MPIManager::size();
+    // write output on rank zero
+    if (Dune::Fem::MPIManager::rank()==0) {
+      std::unique_ptr<boost::filesystem::ofstream>
+              memoryConsFile(DSC::make_ofstream(DSC_CONFIG_GET("global.datadir", "data")+"/memory.csv"));
+      *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n"
+              << maxPeakMemConsumption << "," << meanPeakMemConsumption << std::endl;
+    }
 
     return 0;
   } catch (Dune::Exception& e) {

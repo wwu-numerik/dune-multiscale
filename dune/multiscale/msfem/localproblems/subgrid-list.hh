@@ -60,8 +60,10 @@ private:
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
-  typedef typename HostEntityType::Codim< 2 >::EntityPointer HostNodePointer;
+  typedef typename HostEntityType::Codim< HostGridType::dimension >::EntityPointer HostNodePointer;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
+
+  typedef typename MsFEMTraits::CoarseEntityType CoarseEntityType;
 
   //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
@@ -77,7 +79,7 @@ private:
   typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
   //! @todo this should eventually be changed to the type of the coarse space
   typedef typename HostGridPartType::Codim<0>::EntityType::Geometry::LocalCoordinate LocalCoordinateType;
-  typedef GenericReferenceElements< typename  LocalCoordinateType::value_type,  LocalCoordinateType::dimension >
+  typedef ReferenceElements< typename  LocalCoordinateType::value_type,  LocalCoordinateType::dimension >
           CoarseRefElementType;
   typedef std::vector<std::vector<HostEntityPointerType>> EntityPointerCollectionType;
 
@@ -103,6 +105,9 @@ private:
   SubGridType& getSubGrid(int i);
   const SubGridType& getSubGrid(int i) const;
 public:
+  const SubGridType& getSubGrid(const CoarseEntityType& entity) const;
+  SubGridType& getSubGrid(const CoarseEntityType& entity);
+
   int getNumberOfSubGrids() const;
 
   SubGridPartType gridPart(int i);
@@ -134,6 +139,13 @@ public:
 *
 */
   int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
+
+  int getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer);
+
+  /** Get the mapping from node number to codim 0 host entity.
+  * @return Returns the map.
+  * */
+  const EntityPointerCollectionType& getNodeEntityMap();
 
 private:
   typedef std::map<int, std::shared_ptr<SubGridType> > SubGridStorageType;
@@ -167,6 +179,7 @@ private:
   EntityPointerCollectionType entities_sharing_same_node_;
   EnrichmentMatrixType enriched_;
   std::vector<std::map<int, int> > fineToCoarseMap_;
+  std::map<int, int> fineToCoarseMapID_;
   // given the id of a fine grid element, the vector returns the ids of all subgrids that share that element
   std::vector < std::vector< int > > fine_id_to_subgrid_ids_;
 };

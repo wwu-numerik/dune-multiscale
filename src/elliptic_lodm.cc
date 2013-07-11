@@ -6,7 +6,7 @@
 
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/msfem/rigorous.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 int main(int argc, char** argv) {
   try {
@@ -37,21 +37,16 @@ int main(int argc, char** argv) {
       || ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Lagrange" ) ))
     { DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 'Lagrange' or 'Clement'."); }
 
-
-    // data for the model problem; the information manager
-    // (see 'problem_specification.hh' for details)
-    const Dune::Multiscale::Problem::ModelProblemData info;
-
-
     // total_refinement_level denotes the (starting) grid refinement level for the global fine scale problem, i.e. it describes 'h'
     int total_refinement_level_
       = DSC_CONFIG_GETV( "rigorous_msfem.fine_grid_level", 4, DSC::ValidateLess< int >(coarse_grid_level_-1) );
 
     // name of the grid file that describes the macro-grid:
-    const std::string macroGridName = info.getMacroGridFile();
+    auto info = Problem::getModelData();
+    const std::string macroGridName = info->getMacroGridFile();
 
 
-    DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
+    DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(*info)
               << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
         DSC_LOG_INFO << "Use Local Orthogonal Decomposition (LOD) Method in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;

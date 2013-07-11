@@ -12,7 +12,7 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/hmm/error_estimator.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -49,7 +49,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
                                      diffusion_op);
 
   HMMResult result(discreteFunctionSpace.grid().size(0));
-  const typename CommonTraits::FirstSourceType f;   // standard source f
+  auto f = Problem::getFirstSource();
   int element_number = 0;
   for (const auto& entity : discreteFunctionSpace)
   {
@@ -81,7 +81,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
     }
 
     // contribution of the local source error
-    typename CommonTraits::RangeType local_source_indicator = error_estimator.indicator_f(f, entity);
+    typename CommonTraits::RangeType local_source_indicator = error_estimator.indicator_f(*f, entity);
     result.estimated_source_error += local_source_indicator;
 
     // contribution of the local approximation error

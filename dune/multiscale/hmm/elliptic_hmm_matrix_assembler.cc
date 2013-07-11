@@ -3,8 +3,9 @@
 
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/stuff/common/memory.hh>
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {
