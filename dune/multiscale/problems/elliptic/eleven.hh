@@ -31,7 +31,7 @@ namespace Eleven {
 struct ModelProblemData
   : public IModelProblemData
 {
-  static const bool has_exact_solution = false;
+  static const bool has_exact_solution = true;
   ModelProblemData();
 
   //! \copydoc IModelProblemData::getMacroGridFile();
@@ -76,6 +76,7 @@ public:
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
+
 
 
 /** \brief default class for the second source term G.
@@ -152,7 +153,7 @@ public:
 
 public:
 
-  LowerOrderTerm( /*double scaling_factor = 1.0*/ ){} // : scaling_factor_( scaling_factor ) {}
+  LowerOrderTerm(){}
 
   // dummy
   void evaluate(const DomainType& x, RangeType& y) const;
@@ -173,6 +174,68 @@ public:
   void direction_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, JacobianRangeType& y) const;
   
   //double scaling_factor_;
+};
+
+
+//! ----------------- Definition of Dirichlet Boundary Condition ------------------------
+
+class DirichletBoundaryCondition
+  : public Dune::Multiscale::CommonTraits::FunctionBaseType
+
+{
+private:
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+
+public:
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+
+  static const int dimDomain = DomainType::dimension;
+
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+
+  typedef DomainFieldType TimeType;
+
+public:
+  DirichletBoundaryCondition( ) {}
+
+  void evaluate(const DomainType& x, RangeType& y) const;
+
+  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
+};
+
+
+//! ----------------- Definition of Neumann Boundary Condition ------------------------
+
+class NeumannBoundaryCondition
+  : public Dune::Multiscale::CommonTraits::FunctionBaseType
+
+{
+private:
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+
+public:
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+
+  static const int dimDomain = DomainType::dimension;
+
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+
+  typedef DomainFieldType TimeType;
+
+public:
+  NeumannBoundaryCondition( ) {}
+
+  void evaluate(const DomainType& x, RangeType& y) const;
+
+  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
 
