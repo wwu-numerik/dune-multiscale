@@ -113,6 +113,14 @@ public:
   // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
   const CoarseNodeVectorType& getCoarseNodeVector(int i) const;
 
+  // only required for oversampling strategy 3:
+  // this method only differs from the method 'getCoarseNodeVector' if the oversampling patch
+  // cannot be excluively described by a union of coarse grid elements.
+  // According to the definition of the LOD 'not full coarse layers' require that the averaging
+  // property of the weighted Clement operator is also applied to those coarse nodes, where
+  // the corresponding basis function has a nonempty intersection with the patch
+  const CoarseNodeVectorType& getExtendendCoarseNodeVector(int i) const;
+  
   /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
 *
 * Given a fine cell, this method computes its barycentre. Using a grid run on the coarse
@@ -152,6 +160,7 @@ private:
   bool silent_;
   SubGridStorageType subGridList_;
   CoarseGridNodeStorageType coarse_node_store_;
+  CoarseGridNodeStorageType extended_coarse_node_store_;
   const HostGridLeafIndexSet& coarseGridLeafIndexSet_;
   const HostGridLeafIndexSet& hostGridLeafIndexSet_;
   const HostGridPartType& hostGridPart_;

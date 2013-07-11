@@ -84,21 +84,57 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
                                                                          current_fine_entity,
                                                                          level_difference);
           for (int c = 0; c < coarse_father->geometry().corners(); ++c) {
+
+            // add the corners of the coarse_father to the 'extended_coarse_node_store_' if they are not yet contained
+            bool coarse_node_contained = false;
+            // check if node is already contained in the vector 'extended_coarse_node_store_[subgrid_index]'
+            for (size_t cn = 0; cn < extended_coarse_node_store_[subgrid_index].size(); ++cn) {
+            // ! not an effective search algorithm (should be improved eventually):
+               for (unsigned int d = 0; d < DomainType::dimension; ++d) {
+                 if ( !(extended_coarse_node_store_[subgrid_index][cn][d] == coarse_father->geometry().corner(c)[d]) )
+                  {
+                     break;
+                  }
+                 else if ( d == (DomainType::dimension-1) )
+                  {
+                     coarse_node_contained = true; 
+                  }
+               }
+            }
+            if (!coarse_node_contained) { 
+               extended_coarse_node_store_[subgrid_index].emplace_back(coarse_father->geometry().corner(c)); }    
+
             for (int c_fine = 0; c_fine < current_fine_entity->geometry().corners(); ++c_fine) {
-              // ! not an effective search algorithm (should be improved eventually):
-              
+   
               // hard coding - 2d case:
               // check if one of the corners of the fine entity is identical to one of the corners of the coarse father
               // if we find such a corner, (and if it is not already contained) it must be added to the coarse_node_store_
-              if ( (current_fine_entity->geometry().corner(c_fine)[0] == coarse_father->geometry().corner(c)[0])
-                     && (current_fine_entity->geometry().corner(c_fine)[1] == coarse_father->geometry().corner(c)[1]) ) {
+              bool fine_corner_is_coarse_corner = false;
+              for (unsigned int d = 0; d < DomainType::dimension; ++d) {
+                 if ( !(current_fine_entity->geometry().corner(c_fine)[d] == coarse_father->geometry().corner(c)[d]) )
+                  {
+                     break;
+                  }
+                 else if ( d == (DomainType::dimension-1) )
+                  {
+                     fine_corner_is_coarse_corner = true; 
+                  }
+               }
+               
+              if ( fine_corner_is_coarse_corner ) {
 
                  bool node_contained = false; // check if node is already contained in the vector 'coarse_node_store_[subgrid_index]'
                  for (size_t cn = 0; cn < coarse_node_store_[subgrid_index].size(); ++cn) {
-                    // hard coding - 2d case:
-                    if ((coarse_node_store_[subgrid_index][cn][0] == coarse_father->geometry().corner(c)[0])
-                        && (coarse_node_store_[subgrid_index][cn][1] == coarse_father->geometry().corner(c)[1])) { 
-                      node_contained = true; 
+
+                     for (unsigned int d = 0; d < DomainType::dimension; ++d) {
+                     if ( !(coarse_node_store_[subgrid_index][cn][d] == coarse_father->geometry().corner(c)[d]) )
+                      {
+                         break;
+                      }
+                     else if ( d == (DomainType::dimension-1) )
+                      {
+                         node_contained = true;
+                      }
                     }
                  }
                  if (!node_contained) { 
@@ -206,6 +242,26 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i)
   return coarse_node_store_[i];
 } // getSubGrid
 
+
+// only required for oversampling strategy 3:
+// this method only differs from the method 'getCoarseNodeVector' if the oversampling patch
+// cannot be excluively described by a union of coarse grid elements.
+// According to the definition of the LOD 'not full coarse layers' require that the averaging
+// property of the weighted Clement operator is also applied to those coarse nodes, where
+// the corresponding basis function has a nonempty intersection with the patch
+const SubGridList::CoarseNodeVectorType& SubGridList::getExtendendCoarseNodeVector(int i) const
+{
+  if ( (specifier_.getOversamplingStrategy() == 1) || (specifier_.getOversamplingStrategy() == 2) )
+    DUNE_THROW(Dune::InvalidStateException,
+               "Method 'getExtendendCoarseNodeVector' of class 'SubGridList' should not be used in\
+                combination with oversampling strategy 1 or 2. Check your implementation!");
+
+  if (i >= specifier_.getNumOfCoarseEntities()) {
+    DUNE_THROW(Dune::RangeError, "Error. Subgrid-Index too large.");
+  }
+  return extended_coarse_node_store_[i];
+} // getSubGrid
+
 // get number of sub grids
 int SubGridList::getNumberOfSubGrids() const
 {
@@ -310,6 +366,7 @@ void SubGridList::identifySubGrids() {
 
   if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
     coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
+    extended_coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
   }
 
 
@@ -332,7 +389,10 @@ void SubGridList::identifySubGrids() {
       assert(coarse_index >= 0 && coarse_index < int(coarse_node_store_.size())
               && "Index set is not suitable for the current implementation!");
       for (int c = 0; c < coarse_entity.geometry().corners(); ++c)
+      {
         coarse_node_store_[coarse_index].emplace_back(coarse_entity.geometry().corner(c));
+        extended_coarse_node_store_[coarse_index].emplace_back(coarse_entity.geometry().corner(c));
+      }
     }
   }
 

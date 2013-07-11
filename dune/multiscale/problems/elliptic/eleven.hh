@@ -16,7 +16,7 @@ namespace Problem {
  * @{ **/
 //! ------------ Elliptic Problem 11 -------------------
 
-// linear elliptic model problem - periodic setting
+// nonlinear elliptic model problem - periodic setting
 
 //! For more further details about the implementation see '../base.hh'
 //! For details on the classes, see 'example.hh'
