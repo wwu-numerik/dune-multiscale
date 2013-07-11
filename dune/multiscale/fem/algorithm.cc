@@ -46,6 +46,9 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
     {
       if ( !intersection.boundary() )
         continue;
+      if ( intersection.boundary() && (intersection.boundaryId() != 1) )
+        continue;
+
       auto rhsLocal = rhs.localFunction(entity);
       const auto face = intersection.indexInInside();
       for(auto point

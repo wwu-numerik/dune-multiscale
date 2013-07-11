@@ -1,15 +1,27 @@
 # Initfile
+algorithm.solver.eps: 1e-14
+algorithm.solver.verbose: 0
+algorithm.solver.maxIterations: 10000
+algorithm.solver.preconditioner.dropTol: 1e-4
+algorithm.solver.preconditioner.fillFactor: 20
 
 [problem]
 # problem specifications
 # note that the grid is specified in '../multiscale/problems/elliptic_problems/XX.hh'
+name = Eleven
 
 # characteristic size of the micro structure
 epsilon = 0.05
 
 # linear or nonlinear problem?
 linear = 1
-# NOTE: nonlinear problems ONLY for HMM and standard FEM!
+# NOTE:
+# - classical MsFEM only available for linear problems
+# - LOD only available for linear problems and nonlinear problems 
+#   with a nonlinearity in the lower order term
+# - HMM only available for linear problems and nonlinear problems 
+#   with a nonlinearity in the leading order term
+# - FEM available for all linear and nonlinear problems 
 
 # do you want a stochastic perturbation of the diffusion operator?
 stochastic_pertubation = 0
@@ -35,10 +47,11 @@ rs_grid_level = 16
 [global]
 
 # directory to save the data output
-#datadir = data/MsFEM/Model_Problem_9/Coarse_8_Fine_16_Layers_10
-datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_6_Fine_12_Layers_16
-
-
+datadir = data/new_tests
+#datadir = data/MsFEM/Model_Problem_9/Strategy_1/Coarse_4_Fine_12_Layers_16
+#datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_4_Fine_12_Layers_16
+#datadir = data/Rigorous_MsFEM_Clement/Model_Problem_Daniel/Coarse_8_Fine_10_Layers_2
+#datadir = data/Rigorous_MsFEM_Clement/Model_Problem_Daniel_class_MsFEM/Coarse_4_Fine_10_Layers_0
 
 # VTK output for the solutions of the local problems
 local_solution_vtk_output = 1
@@ -58,18 +71,18 @@ file = ms.log
 dir = logdata
 
 
-# method specifications for MsFEM and HMM #
+# method specifications for MsFEM, LOD and HMM #
 
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 4
+coarse_grid_level = 2
 
 # initial fine grid level 
-fine_grid_level = 6
+fine_grid_level = 4
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 0
+oversampling_layers = 16
 
 # oversampling strategy 1 or 2.
 oversampling_strategy = 1
@@ -79,7 +92,7 @@ oversampling_strategy = 1
 # See 'rigorous MsFEM for oversampling strategy 3 (a + b).
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
-petrov_galerkin = 0
+petrov_galerkin = 1
 
 # compute the estimated error?
 error_estimation = 0
@@ -94,6 +107,8 @@ error_tolerance = 1e-6
 fem_comparison = 1
 #   (fem resolution = fine_grid_level of MsFEM)
 
+#avail: cg.diagonal direct.superlu 
+localsolver = direct.superlu
 
 [rigorous_msfem]
 
@@ -106,7 +121,7 @@ coarse_grid_level = 6
 fine_grid_level = 12
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 16
+oversampling_layers = 4
 
 # oversampling strategy 3 'Lagrange' or 'Clement'.
 oversampling_strategy = Clement
@@ -117,6 +132,9 @@ oversampling_strategy = Clement
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
 petrov_galerkin = 0
+
+# use UZAWA solver for the local saddle point problems (not suggested!)
+uzawa_solver = 0
 
 # error tolerance for the iterative solver for the final macro problem 
 macro_solver_tolerance = 1e-10
@@ -131,6 +149,8 @@ fem_comparison = 1
 #vtk output for MsFEM basis functions
 msfem_basis_vtk_output = 1
 
+localsolver = bicgstab.ilut
+
 [hmm]
 
 # guess for epsilon (indicator for size of small scale)
@@ -141,10 +161,10 @@ delta = 0.1
 #     NOTE that (delta/epsilon_guess) needs to be a positive integer!
 
 # initial coarse level
-coarse_grid_level = 4
+coarse_grid_level = 2
 
 # resolution level for the grid for the unit cube Y
-cell_grid_level = 6
+cell_grid_level = 4
 # 'effective fine grid level' = 'delta' * 'cell grid size'
 
 # use the MsFEM in Petrov-Galerkin (unsymmetric) formulation
