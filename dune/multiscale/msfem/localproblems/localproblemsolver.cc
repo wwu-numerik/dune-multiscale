@@ -40,7 +40,7 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpace
     diffusion_(diffusion_operator),
     specifier_(specifier),
     subgrid_list_(subgrid_list),
-    ids_basis_functions_in_subgrid_(nullptr),
+    ids_relevant_basis_functions_for_subgrid_(nullptr),
     inverse_of_L1_norm_coarse_basis_funcs_(nullptr),
     coarse_basis_(nullptr),
     global_id_to_internal_id_(nullptr)
@@ -58,7 +58,7 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpace
     diffusion_(diffusion_operator),
     specifier_(specifier),
     subgrid_list_(subgrid_list),
-    ids_basis_functions_in_subgrid_(&ids_basis_functions_in_subgrid),
+    ids_relevant_basis_functions_for_subgrid_(&ids_basis_functions_in_subgrid),
     // ids of the coarse grid basis functions in the interior of the subgrid
     inverse_of_L1_norm_coarse_basis_funcs_(&inverse_of_L1_norm_coarse_basis_funcs),
     coarse_basis_(&coarse_basis),
@@ -434,7 +434,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   // for b_h_j with S_h b_h_j = C_h^T e_j, where C_h describes the algebraic version of the weighted
   // Clement interpolation operator
   // ----------------------------------------------------------------------------------------------------
-  int number_of_interior_coarse_nodes_in_subgrid = (*ids_basis_functions_in_subgrid_)[ coarse_index ].size();
+  int number_of_interior_coarse_nodes_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
     
   assert(number_of_interior_coarse_nodes_in_subgrid);
   std::vector<std::unique_ptr<SubDiscreteFunctionType>> b_h(number_of_interior_coarse_nodes_in_subgrid);
@@ -451,7 +451,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   // clement_weight_j = (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_basis_func_id]
   local_problem_op.assemble_local_RHS_lg_problems_all( (*coarse_basis_),
                                                        (*inverse_of_L1_norm_coarse_basis_funcs_),
-                                                       (*ids_basis_functions_in_subgrid_)[coarse_index], rhs_Chj );
+                                                       (*ids_relevant_basis_functions_for_subgrid_)[coarse_index], rhs_Chj );
   // get the global id of all interior coarse basis functions (subgrid id, local id) -> (global interior id) 
   
   // zero boundary condition for 'rhs_Chj[j]':
@@ -589,9 +589,9 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
         ((b_h[j])->localFunction(subgrid_entity)).evaluate( sg_quadrature[quadraturePoint] , value_b[j]); 
       for (size_t i = 0; i != lm_system_matrix.N(); ++i) //rows
       {
-        ((*coarse_basis_)[(*ids_basis_functions_in_subgrid_)[coarse_index][i]]
+        ((*coarse_basis_)[(*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i]]
           ->localFunction(host_entity)).evaluate( quadrature[quadraturePoint] , value_coarse_basis_func[i]);
-        clement_weight[i] = (*inverse_of_L1_norm_coarse_basis_funcs_)[(*ids_basis_functions_in_subgrid_)[coarse_index][i]];
+        clement_weight[i] = (*inverse_of_L1_norm_coarse_basis_funcs_)[(*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i]];
       }
       
       for (size_t i = 0; i != lm_system_matrix.N(); ++i) //rows
@@ -645,7 +645,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
       for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
       {
 
-          int interior_coarse_basis_id_in_subgrid = (*ids_basis_functions_in_subgrid_)[coarse_index][i];
+          int interior_coarse_basis_id_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i];
 
           HostLocalFunctionType local_coarse_basis_i
                  = (*coarse_basis_)[interior_coarse_basis_id_in_subgrid]->localFunction(host_entity);
@@ -695,7 +695,7 @@ void MsFEMLocalProblemSolver::solvelocalproblems_lod(JacobianRangeType& e_0,
   for (size_t i = 0; i != number_of_interior_coarse_nodes_in_subgrid; ++i) //columns
   {
 
-     int interior_coarse_basis_id_in_subgrid = (*ids_basis_functions_in_subgrid_)[coarse_index][i];
+     int interior_coarse_basis_id_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i];
 
      HostDiscreteFunctionType aux_func_0("auxilliary func 0", hostDiscreteFunctionSpace_);
      HostDiscreteFunctionType aux_func_1("auxilliary func 1", hostDiscreteFunctionSpace_);

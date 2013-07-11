@@ -280,7 +280,7 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i)
 // According to the definition of the LOD 'not full coarse layers' require that the averaging
 // property of the weighted Clement operator is also applied to those coarse nodes, where
 // the corresponding basis function has a nonempty intersection with the patch
-const SubGridList::CoarseNodeVectorType& SubGridList::getExtendendCoarseNodeVector(int i) const
+const SubGridList::CoarseNodeVectorType& SubGridList::getExtendedCoarseNodeVector(int i) const
 {
   if ( (specifier_.getOversamplingStrategy() == 1) || (specifier_.getOversamplingStrategy() == 2) )
     DUNE_THROW(Dune::InvalidStateException,

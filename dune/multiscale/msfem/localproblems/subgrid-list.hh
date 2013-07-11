@@ -124,7 +124,7 @@ public:
   // According to the definition of the LOD 'not full coarse layers' require that the averaging
   // property of the weighted Clement operator is also applied to those coarse nodes, where
   // the corresponding basis function has a nonempty intersection with the patch
-  const CoarseNodeVectorType& getExtendendCoarseNodeVector(int i) const;
+  const CoarseNodeVectorType& getExtendedCoarseNodeVector(int i) const;
   
   /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
 *

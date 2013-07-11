@@ -211,6 +211,7 @@ private:
                                      MsFEMTraits::SubGridListType& subgrid_list,
                                      std::map<int,int>& global_id_to_internal_id,
                                      std::map< OrderedDomainType, int >& coordinates_to_global_coarse_node_id,
+                                     std::vector< std::vector< int > >& ids_basis_function_in_extended_subgrid,
                                      std::vector< std::vector< int > >& ids_basis_function_in_subgrid,
                                      std::vector< std::vector< int > >& ids_basis_function_in_interior_subgrid) const;
 
