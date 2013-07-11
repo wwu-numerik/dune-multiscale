@@ -39,24 +39,28 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
       {
           CommonTraits::RangeType msfem_error = l2error.norm(timefunctionAdapted(u), *msfem_solution_ );
           out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
+          csv["msfem_exact_L2"] = msfem_error;
 
+/*! -- Fix me ---
           CommonTraits::RangeType h1_msfem_error = h1norm.distance(u_disc, *msfem_solution_);
           out << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
 
-          csv["msfem_exact_L2"] = msfem_error;
           csv["msfem_exact_H1"] = h1_msfem_error;
+*/
       }
 
       if (fem_solution_)
       {
         CommonTraits::RangeType fem_error = l2error.norm(timefunctionAdapted(u), *fem_solution_);
         out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
+        csv["fem_exact_L2"] = fem_error;
 
+/*! -- Fix me ---
         CommonTraits::RangeType h1_fem_error = h1norm.distance(u_disc, *fem_solution_);
         out << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
 
-        csv["fem_exact_L2"] = fem_error;
         csv["fem_exact_H1"] = h1_fem_error;
+*/
       }
     }
     if ( msfem_solution_ && fem_solution_) {

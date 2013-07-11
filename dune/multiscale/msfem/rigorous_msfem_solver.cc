@@ -143,8 +143,12 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
      MsFEMTraits::SubGridListType& subgrid_list,
      std::map<int,int>& global_id_to_internal_id,
      std::map< OrderedDomainType, int >& coordinates_to_global_coarse_node_id,
-                                     std::vector< std::vector< int > >& ids_basis_function_in_subgrid,
-                                     std::vector< std::vector< int > >& ids_basis_function_in_interior_subgrid ) const
+     // all coarse nodes, where the corresponding coarse (nodal) basis function has a support that intersects with the subgrid 
+     std::vector< std::vector< int > >& ids_basis_function_in_extended_subgrid,
+     // all coarse nodes that are in the subgrid including its boundary but excluding the boundary of Omega
+     std::vector< std::vector< int > >& ids_basis_function_in_subgrid,
+     // all coarse nodes that are in the _interior_ of the subgrid 
+     std::vector< std::vector< int > >& ids_basis_function_in_interior_subgrid ) const
 {
   // First: determine the index set (internal_coarse_nodes numbering) for the coarse nodes in the interior of U(T)
   // when assembling the local clement operator for a given subgrid U(T), we need to know the standard coarse
@@ -155,20 +159,22 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
   DiscreteFunctionSpace& fine_space = specifier.fineSpace();
 
   ids_basis_function_in_subgrid.resize( number_of_subgrids );
-
+  ids_basis_function_in_extended_subgrid.resize( number_of_subgrids );
+  
   typedef std::vector< DomainType > CoarseNodeVectorType;
   typedef std::vector< CoarseNodeVectorType > CoarseGridNodeStorageType;
   std::vector< std::vector< int > > coarse_node_ids_in_subgrid;
-  std::vector< std::vector< int > > coarse_boundary_node_ids_in_subgrid;
+  std::vector< std::vector< int > > coarse_boundary_node_ids_in_subgrid; //including the boundary
   std::vector< std::vector< int > > coarse_interior_node_ids_in_subgrid;
   coarse_node_ids_in_subgrid.resize( number_of_subgrids );
   coarse_boundary_node_ids_in_subgrid.resize( number_of_subgrids );
   coarse_interior_node_ids_in_subgrid.resize( number_of_subgrids );
-  
 
   for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1 )
   {
     CoarseNodeVectorType coarse_nodes_in_subgrid = subgrid_list.getCoarseNodeVector( sg_id );
+    CoarseNodeVectorType coarse_nodes_in_extended_subgrid = subgrid_list.getExtendedCoarseNodeVector( sg_id );
+
     for (unsigned int cn = 0; cn < coarse_nodes_in_subgrid.size(); ++cn)
     {
 
@@ -178,6 +184,15 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
       // sort out the boundary nodes on Omega
       if ( specifier.is_coarse_boundary_node( global_coarse_node_id ) == false ){
         ids_basis_function_in_subgrid[ sg_id ].push_back( global_id_to_internal_id[global_coarse_node_id] ); }
+    }
+    
+    for (unsigned int cn = 0; cn < coarse_nodes_in_extended_subgrid.size(); ++cn)
+    {
+
+      int global_coarse_node_id = coordinates_to_global_coarse_node_id[ coarse_nodes_in_extended_subgrid[cn] ];
+      // sort out the boundary nodes on Omega
+      if ( specifier.is_coarse_boundary_node( global_coarse_node_id ) == false ){
+        ids_basis_function_in_extended_subgrid[ sg_id ].push_back( global_id_to_internal_id[global_coarse_node_id] ); }
     }
   }
 
@@ -207,7 +222,8 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
           const HostEntityPointer neighborHostEntityPointer = iit->outside();
           const HostEntity& neighborHostEntity = *neighborHostEntityPointer;
           //! MARK actual subgrid usage
-          is_subgrid_boundary_face = subGridPart.grid().contains< 0 >(neighborHostEntity);
+          if ( subGridPart.grid().contains< 0 >(neighborHostEntity) )
+            is_subgrid_boundary_face = false;
         }
 
         if ( is_subgrid_boundary_face == false )
@@ -225,7 +241,9 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
               if( std::find( coarse_boundary_node_ids_in_subgrid[ sg_id ].begin(),
                              coarse_boundary_node_ids_in_subgrid[ sg_id ].end(),
                              global_coarse_node_id ) == coarse_boundary_node_ids_in_subgrid[ sg_id ].end() )
-                { coarse_boundary_node_ids_in_subgrid[ sg_id ].push_back( global_coarse_node_id ); }
+                { coarse_boundary_node_ids_in_subgrid[ sg_id ].push_back( global_coarse_node_id );
+
+                }
 
             }
           }
@@ -646,11 +664,17 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   std::vector< std::vector< int > > ids_basis_functions_in_subgrid;
   // for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the subgrid
   std::vector< std::vector< int > > ids_basis_functions_in_interior_subgrid;
+  // for each subgrid, store the vector of basis functions ids where the support of the bassis function intersects with the subgrid
+  std::vector< std::vector< int > > ids_basis_functions_in_extended_subgrid;
   assemble_interior_basis_ids( specifier, subgrid_list, global_id_to_internal_id, coordinates_to_global_coarse_node_id,
-                               ids_basis_functions_in_subgrid, ids_basis_functions_in_interior_subgrid );
+                               ids_basis_functions_in_extended_subgrid, ids_basis_functions_in_subgrid, ids_basis_functions_in_interior_subgrid );
   
   //! assemble all local problems (within constructor!)
-  MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list, /*ids_basis_functions_in_interior_subgrid*/ ids_basis_functions_in_subgrid, coff, diffusion_op,
+  MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list,
+                                           ids_basis_functions_in_interior_subgrid,
+                                           //ids_basis_functions_in_subgrid,
+                                           //!ids_basis_functions_in_extended_subgrid,
+                                           coff, diffusion_op,
                                            standard_basis_function, global_id_to_internal_id );
   loc_prob_solver.assemble_all(/*silence=*/false);
 

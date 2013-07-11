@@ -175,7 +175,7 @@ private:
   const MacroMicroGridSpecifierType& specifier_;
   SubGridList& subgrid_list_;
 
-  std::vector< std::vector< int > >* ids_basis_functions_in_subgrid_;
+  std::vector< std::vector< int > >* ids_relevant_basis_functions_for_subgrid_;
   std::vector< double >* inverse_of_L1_norm_coarse_basis_funcs_;
   const CoarseBasisFunctionListType* coarse_basis_;
   const std::map<int,int>* global_id_to_internal_id_;
