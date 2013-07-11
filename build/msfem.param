@@ -14,7 +14,13 @@ epsilon = 0.05
 
 # linear or nonlinear problem?
 linear = 1
-# NOTE: nonlinear problems ONLY for HMM and standard FEM!
+# NOTE:
+# - classical MsFEM only available for linear problems
+# - LOD only available for linear problems and nonlinear problems 
+#   with a nonlinearity in the lower order term
+# - HMM only available for linear problems and nonlinear problems 
+#   with a nonlinearity in the leading order term
+# - FEM available for all linear and nonlinear problems 
 
 # do you want a stochastic perturbation of the diffusion operator?
 stochastic_pertubation = 0
@@ -40,9 +46,7 @@ rs_grid_level = 16
 [global]
 
 # directory to save the data output
-#datadir = data/MsFEM/Model_Problem_9/Coarse_8_Fine_16_Layers_10
-datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_6_Fine_16_Layers_30
-
+datadir = data/MsFEM/Model_Problem_9/Coarse_4_Fine_10_Layers_10
 
 
 # VTK output for the solutions of the local problems
@@ -69,13 +73,13 @@ subgrid_silent = 1
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 1
+coarse_grid_level = 4
 
 # initial fine grid level 
-fine_grid_level = 4
+fine_grid_level = 10
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 4
+oversampling_layers = 10
 
 # oversampling strategy 1 or 2.
 oversampling_strategy = 1
@@ -85,7 +89,7 @@ oversampling_strategy = 1
 # See 'rigorous MsFEM for oversampling strategy 3 (a + b).
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
-petrov_galerkin = 0
+petrov_galerkin = 1
 
 # compute the estimated error?
 error_estimation = 0
@@ -125,6 +129,9 @@ oversampling_strategy = Clement
 
 # use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
 petrov_galerkin = 0
+
+# use UZAWA solver for the local saddle point problems (not suggested!)
+uzawa_solver = 0
 
 # error tolerance for the iterative solver for the final macro problem 
 macro_solver_tolerance = 1e-10
