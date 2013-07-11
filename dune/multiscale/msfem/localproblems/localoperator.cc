@@ -14,7 +14,7 @@
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -78,7 +78,7 @@ bool LocalProblemOperator::point_is_in_element( const DomainType& corner_0,
 
 //! stiffness matrix for a linear elliptic diffusion operator
 // for oversampling strategy 1 (no constraints)
-void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrix& global_matrix) const
+void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix) const
 // x_T is the barycenter of the macro grid element T
 {
   global_matrix.reserve();
@@ -88,7 +88,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   std::vector< RangeType > phi( subDiscreteFunctionSpace_.mapper().maxNumDofs() );
 
   // gradient of micro scale base function:
-  std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi(
+  std::vector< typename BasisFunctionSetType::JacobianRangeType > gradient_phi(
     subDiscreteFunctionSpace_.mapper().maxNumDofs() );
   typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
 
@@ -98,9 +98,9 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
     const Entity& sub_grid_entity = *it;
     const Geometry& sub_grid_geometry = sub_grid_entity.geometry();
 
-    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrix> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
+    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrixType> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
+    const BasisFunctionSetType& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
@@ -137,7 +137,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
 
 
 //! stiffness matrix for a linear elliptic diffusion operator
-void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrix& global_matrix,
+void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix,
                                            const SubGridList::CoarseNodeVectorType& coarse_node_vector ) const
 // x_T is the barycenter of the macro grid element T
 {
@@ -148,7 +148,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   std::vector< RangeType > phi( subDiscreteFunctionSpace_.mapper().maxNumDofs() );
 
   // gradient of micro scale base function:
-  std::vector< typename BaseFunctionSet::JacobianRangeType > gradient_phi(
+  std::vector< typename BasisFunctionSetType::JacobianRangeType > gradient_phi(
     subDiscreteFunctionSpace_.mapper().maxNumDofs() );
 
   const Iterator end = subDiscreteFunctionSpace_.end();
@@ -171,9 +171,9 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
         }
       }
 
-    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrix> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
+    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrixType> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
-    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
+    const BasisFunctionSetType& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     std::vector<RangeType> value_phi(numBaseFunctions);
@@ -412,6 +412,97 @@ void LocalProblemOperator
   }
 } // assemble_local_RHS
 
+/** Assemble right hand side vectors for all local problems on one coarse cell.
+*
+* @param[in] coarseEntity The coarse cell.
+* @param[in] specifier A MacroMicroGridSpecifier (needed for access to the coarse base function set).
+* @param[out] allLocalRHS A vector with pointers to the discrete functions for the right hand sides.
+*
+* @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
+* functions. The discrete functions in allLocalRHS will be cleared in this function.
+*/
+void LocalProblemOperator
+::assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
+                SubDiscreteFunctionVectorType& allLocalRHS) const {
+  assert(allLocalRHS.size()>0 && "You need to preallocate the necessary space outside this function!");
+
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
+
+  typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
+  typedef typename Iterator::Entity                           Entity;
+  typedef typename Entity::Geometry                           Geometry;
+
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
+
+  // build unit vectors (needed for cases where rhs is assembled for unit vectors instead of coarse
+  // base functions)
+  JacobianRangeType unitVectors[dimension];
+  for (int i = 0; i < dimension; ++i)
+    for (int j = 0; j < dimension; ++j) {
+      if (i == j) {
+        unitVectors[i][0][j] = 1.0;
+      } else {
+        unitVectors[i][0][j] = 0.0;
+      }
+    }
+
+  const DiscreteFunctionSpace& discreteFunctionSpace = allLocalRHS[0]->space();
+
+  // set entries to zero:
+  for (auto& rhs : allLocalRHS) rhs->clear();
+
+  // get the base function set of the coarse space for the given coarse entity
+  auto& coarseBaseSet = specifier.coarseSpace().basisFunctionSet(coarseEntity);
+  std::vector< CoarseBaseFunctionSetType::JacobianRangeType > coarseBaseFuncJacs(coarseBaseSet.size());
+
+  // gradient of micro scale base function:
+  std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
+
+  for (auto& localGridCell : discreteFunctionSpace) {
+    const Geometry& geometry = localGridCell.geometry();
+
+    for (int coarseBaseFunc=0; coarseBaseFunc<allLocalRHS.size(); ++coarseBaseFunc) {
+      LocalFunction rhsLocalFunction = allLocalRHS[coarseBaseFunc]->localFunction(localGridCell);
+
+      const BasisFunctionSetType& baseSet = rhsLocalFunction.basisFunctionSet();
+      const auto numBaseFunctions = baseSet.size();
+
+      const Quadrature quadrature(localGridCell, 2 * discreteFunctionSpace.order() + 2);
+      const size_t numQuadraturePoints = quadrature.nop();
+      for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
+        const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+
+        // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
+
+        // global point in the subgrid
+        const DomainType global_point = geometry.global(local_point);
+
+        const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+
+        // A^eps(x) e
+        // diffusion operator evaluated in 'x' multiplied with e
+        JacobianRangeType diffusion;
+        if (specifier.simplexCoarseGrid())
+          diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
+        else {
+          const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
+          coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
+          diffusion_operator_.diffusiveFlux(global_point, coarseBaseFuncJacs[coarseBaseFunc], diffusion);
+        }
+        baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
+        for (unsigned int i = 0; i < numBaseFunctions; ++i)
+        {
+          rhsLocalFunction[i] -= weight * (diffusion[0] * gradient_phi[i][0]);
+        }
+      }
+    }
+  }
+
+  return;
+}
+
 
 void LocalProblemOperator
       ::assemble_local_RHS(const JacobianRangeType &e, // direction 'e'
@@ -422,7 +513,6 @@ void LocalProblemOperator
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
@@ -480,7 +570,7 @@ void LocalProblemOperator
     }
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
-    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
+    const BasisFunctionSetType& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
@@ -533,7 +623,6 @@ void LocalProblemOperator
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
@@ -560,7 +649,7 @@ void LocalProblemOperator
 
     LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
-    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
+    const BasisFunctionSetType& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
         
     HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );
@@ -600,7 +689,6 @@ void LocalProblemOperator
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
   typedef typename Iterator::Entity                           Entity;
   typedef typename Entity::Geometry                           Geometry;
@@ -622,7 +710,7 @@ void LocalProblemOperator
     const Geometry& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
     
-    const BaseFunctionSet& baseSet = (local_problem_RHS[0]->localFunction(local_grid_entity)).basisFunctionSet();
+    const BasisFunctionSetType& baseSet = (local_problem_RHS[0]->localFunction(local_grid_entity)).basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );

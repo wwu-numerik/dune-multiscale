@@ -24,7 +24,7 @@
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/problems/elliptic/selector.hh>
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -318,7 +318,7 @@ private:
       system_matrix[row][col]
         = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
 
-      if ( row != cole )
+      if ( row != col )
       { system_matrix[col][row]
         = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[col]), *(msfem_basis_function_list_2[row]), support_of_ms_basis_func_intersection[col][row] ); }
    }

@@ -1,0 +1,16 @@
+DGF
+INTERVAL
+0               0               0           % first corner
+365.76          670.56          51.816      % second corner
+3               11              2      % number of cells in each direction
+# end INTERVAL
+
+GRIDPARAMETER
+overlap 0
+# end GRIDPARAMETER
+
+BOUNDARYDOMAIN
+% 1 = dirichlet, 2=neumann!
+1 0 670.56 0        365.76 670.56 51.816
+default 2
+# end BOUNDARYDOMAIN

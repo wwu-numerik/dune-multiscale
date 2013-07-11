@@ -4,8 +4,8 @@
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/stuff/common/filesystem.hh>
+#include <dune/multiscale/problems/selector.hh>
 
-#include <dune/multiscale/problems/elliptic/selector.hh>
 #include <iostream>
 
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType *msfem_solution,
@@ -27,17 +27,17 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
     std::map<std::string,double> csv;
 
     //! ----------------- compute L2- and H1- errors -------------------
-    if (Problem::ModelProblemData::has_exact_solution)
+    if (Problem::getModelData()->hasExactSolution())
     {
-
-      const CommonTraits::ExactSolutionType u;
+      auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
+      const auto& u = *u_ptr;
       const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;
       const Dune::Fem::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType>
           u_disc("", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
 
       if (msfem_solution_)
       {
-          CommonTraits::RangeType msfem_error = l2error.norm(u, *msfem_solution_ );
+          CommonTraits::RangeType msfem_error = l2error.norm(timefunctionAdapted(u), *msfem_solution_ );
           out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
 
           CommonTraits::RangeType h1_msfem_error = h1norm.distance(u_disc, *msfem_solution_);
@@ -49,7 +49,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
 
       if (fem_solution_)
       {
-        CommonTraits::RangeType fem_error = l2error.norm(u, *fem_solution_);
+        CommonTraits::RangeType fem_error = l2error.norm(timefunctionAdapted(u), *fem_solution_);
         out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
 
         CommonTraits::RangeType h1_fem_error = h1norm.distance(u_disc, *fem_solution_);

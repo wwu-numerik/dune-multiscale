@@ -69,7 +69,7 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const Elliptic_FEM_Solver::DiscreteFunc
 //! G --> 'second' source term, vector valued ('SecondSourceTermType')
 //! homogenous Dirchilet boundary condition!:
 void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
-                                               const CommonTraits::LowerOrderTermType& lower_order_term,// lower order term F(x, u(x), grad u(x) )
+                                               const std::unique_ptr<const CommonTraits::LowerOrderTermType> &lower_order_term, // lower order term F(x, u(x), grad u(x) )
                                                const CommonTraits::FirstSourceType& f,
                                                Elliptic_FEM_Solver::DiscreteFunction& solution) const
 {
@@ -81,9 +81,9 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
 
     //! define the discrete (elliptic) operator that describes our problem
     // ( effect of the discretized differential operator on a certain discrete function )
-    Multiscale::FEM::DiscreteEllipticOperator< DiscreteFunction, CommonTraits::DiffusionType, CommonTraits::LowerOrderTermType > discrete_elliptic_op(
+    Multiscale::FEM::DiscreteEllipticOperator< DiscreteFunction, CommonTraits::DiffusionType> discrete_elliptic_op(
                 discreteFunctionSpace_,
-                diffusion_op, DSC::make_unique<const CommonTraits::LowerOrderTermType >( lower_order_term ) );
+                diffusion_op, lower_order_term );
     // discrete elliptic operator (corresponds with FEM Matrix)
 
 
@@ -195,7 +195,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
 
       // assemble right hand side
       system_rhs.clear();
-      rhsassembler.assemble_for_Newton_method< fem_polorder >(f, diffusion_op, lower_order_term, solution, system_rhs);
+      rhsassembler.assemble_for_Newton_method< fem_polorder >(f, diffusion_op, *lower_order_term, solution, system_rhs);
 
       const Dune::Fem::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);

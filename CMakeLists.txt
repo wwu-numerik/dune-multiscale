@@ -60,12 +60,6 @@ SET( UGGRID_BASE_PATH
 	"/share/dune/Modules/modules_x86_64/ug" CACHE STRING
 	"UGGRID_BASE_PATH" )
 
-SET(PROBLEM_NAMES "Toy" "One" "Two" "Three" "Four" "Five" "Six" "Seven" "Eight" "Nine" "Ten" "Eleven" INTERNAL )
-
-SET( PROBLEM_NAME
-	"Nine" CACHE STRING
-	"One of ${PROBLEM_NAMES}" )
-
 SET_CONFIGHEADER_VARS()
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
 
@@ -128,12 +122,10 @@ FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 
 SET(BOOST_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_CHRONO_LIBRARY})
 
-
-
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
-ADD_DEFINITIONS( ${MY_CXX_FLAGS} -DPROBLEM_NAME=${PROBLEM_NAME} )
+ADD_DEFINITIONS( ${MY_CXX_FLAGS} )
 
 #these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
@@ -149,6 +141,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc
         dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
+        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
 
 set( PROBLEM_SOURCES
@@ -165,6 +158,8 @@ set( PROBLEM_SOURCES
 	dune/multiscale/problems/elliptic/three.cc
 	dune/multiscale/problems/elliptic/toy.cc
 	dune/multiscale/problems/elliptic/two.cc
+	dune/multiscale/problems/elliptic/spe10.cc
+	dune/multiscale/problems/selector.cc
 	dune/multiscale/problems/base.cc
     )
     

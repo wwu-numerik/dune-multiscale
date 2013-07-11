@@ -4,11 +4,10 @@
 
 #include "discrete_cell_operator.hh"
 
-#include <dune/multiscale/problems/elliptic/selector.hh>
-
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/multiscale/problems/base.hh>
 
 // artificical mass coefficient to guarantee uniqueness and existence of the cell problem solution
 // (should be as small as possible)

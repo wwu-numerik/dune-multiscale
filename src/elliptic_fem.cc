@@ -8,6 +8,7 @@
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/fem/algorithm.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 int main(int argc, char** argv) {
   try {
@@ -24,7 +25,7 @@ int main(int argc, char** argv) {
 
     // name of the error file in which the data will be saved
     std::string filename_;
-    const Problem::ModelProblemData info;
+    const auto info = Problem::getModelData();
 
     const std::string save_filename = std::string(path + "/logdata/ms.log.log");
     DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
@@ -34,7 +35,7 @@ int main(int argc, char** argv) {
     const int refinement_level = DSC_CONFIG_GET("fem.grid_level", 4);
 
     // name of the grid file that describes the macro-grid:
-    const std::string gridName = info.getMacroGridFile();
+    const std::string gridName = info->getMacroGridFile();
     DSC_LOG_INFO << "loading dgf: " << gridName << std::endl;
 
     // create a grid pointer for the DGF file belongig to the macro grid:

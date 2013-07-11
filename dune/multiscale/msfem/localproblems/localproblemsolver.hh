@@ -25,6 +25,8 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/localproblems/weighted-clement-operator.hh>
+
 
 #include <dune/istl/matrix.hh>
 
@@ -75,6 +77,7 @@ private:
   typedef CommonTraits::DiscreteFunctionType HostDiscreteFunctionType;
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
+  //! @todo HostDiscreteFunctionType should be replaced by some kind of coarse function type
   typedef std::vector< std::shared_ptr<HostDiscreteFunctionType> > CoarseBasisFunctionListType;
 
   //! type of discrete function space
@@ -96,6 +99,7 @@ private:
   typedef typename HostDiscreteFunctionType::LocalFunctionType HostLocalFunctionType;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
+  typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
@@ -105,8 +109,12 @@ private:
   typedef typename SubGridList::SubGridPartType SubGridPartType;
   //! type of subgrid discrete function space
   typedef typename SubGridList::SubGridDiscreteFunctionSpace SubDiscreteFunctionSpaceType;
-  typedef typename SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
+  
 
+public:
+  //! type of subgrid discrete function
+  typedef typename SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
+  typedef std::vector<std::unique_ptr<SubDiscreteFunctionType> > SubDiscreteFunctionVectorType;
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
   typedef typename SubgridIteratorType::Entity SubgridEntityType;
@@ -152,15 +160,16 @@ private:
   
 public:
   typedef Fem::SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType,
-                                   LocProbMatrixTraits > LocProbFEMMatrix;
+                                   LocProbMatrixTraits > LocProbFEMMatrixType;
 private:
   #ifdef SYMMETRIC_DIFFUSION_MATRIX
-  typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrix;
+  typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrixType;
   #else
   // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
-  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrix > InverseLocProbFEMMatrix;
+  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrixType > InverseLocProbFEMMatrixType;
   #endif // ifdef SYMMETRIC_DIFFUSION_MATRIX
 
+  typedef WeightedClementOperator WeightedClementOperatorType;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
   const MacroMicroGridSpecifierType& specifier_;
@@ -188,6 +197,8 @@ public:
                           const DiffusionOperatorType& diffusion_operator,
                           const CoarseBasisFunctionListType& coarse_basis,
                           const std::map<int,int>& global_id_to_internal_id );
+
+  void solveAllLocalProblems(const CoarseEntityType& coarseCell, SubDiscreteFunctionVectorType& allLocalSolutions) const;
 
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
   void solvelocalproblem(JacobianRangeType& e,

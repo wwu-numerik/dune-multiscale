@@ -31,7 +31,8 @@ namespace MsFEM {
 
 class LocalProblemOperator
 {
-  typedef SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
+  typedef MsFEMLocalProblemSolver::SubDiscreteFunctionType SubDiscreteFunctionType;
+  typedef MsFEMLocalProblemSolver::SubDiscreteFunctionVectorType SubDiscreteFunctionVectorType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
 
   enum { faceCodim = 1 };
@@ -56,7 +57,7 @@ private:
 
   typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType                   BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType                   BasisFunctionSetType;
   typedef typename DiscreteFunctionSpace::LagrangePointSetType                  LagrangePointSet;
   typedef typename LagrangePointSet::Codim< 1 >::SubEntityIteratorType FaceDofIterator;
 
@@ -81,15 +82,19 @@ private:
   typedef typename HostDiscreteFunctionSpace::LagrangePointSetType HostLagrangePointSet;
   typedef typename HostLagrangePointSet::Codim< faceCodim >::SubEntityIteratorType
     HostGridFaceDofIteratorType;
-    
+  typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
+  typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
+  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
+
 public:
+
   LocalProblemOperator(const DiscreteFunctionSpace& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)
-  void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrix& global_matrix) const;
+  void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix) const;
 
   //! assemble stiffness matrix for local problems (oversampling strategy 2 and 3)
-  void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrix& global_matrix,
+  void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix,
                        const SubGridList::CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
 
   //! assemble the right hand side of a local problem (reconstruction problem on entity)
@@ -113,6 +118,9 @@ public:
     const int& oversampling_strategy,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
+
+  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
+                  SubDiscreteFunctionVectorType& allLocalRHS) const;
 
   // assemble various right hand sides (for solving the local saddle point problems with lagrange multpliers)
   void assemble_local_RHS_lg_problems( const HostDiscreteFunction/*CoarseBasisFunctionType*/& coarse_basis_func, double weight,

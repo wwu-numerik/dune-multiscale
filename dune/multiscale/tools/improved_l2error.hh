@@ -22,6 +22,7 @@ namespace Dune {
 
 //! KLASSE IST NUR FUER DEN 2D FALL UND DIE VERWENDUNG VON EINER SIMPLIZIALEN TRIANGULIERUNG, SONST FUNKTIONIERT DAS
 // ALLES NICHT!!!!!
+#if 0
 template< class DiscreteFunctionType, int n = 0 >
 class ImprovedL2Error
 {
@@ -1200,7 +1201,7 @@ public:
     return sqrt(l2Norm);
   } // end method
 }; // end of class L2Error
-
+#endif
 } // end namespace DUNE
 
 #endif // DUNE_MULTISCALE_IMPROVED_L2ERROR_HH
