@@ -88,8 +88,15 @@ void Diffusion::readPermeability()   {
   std::string   filename = "../dune/multiscale/problems/elliptic/spe10_permeability.dat";
   std::ifstream file(filename.c_str());
   double        val;
-  if (!file) // file couldn't be opened
+  if (!file) { // file couldn't be opened
+    DSC_LOG_ERROR << "The SPE10-permeability data file could not be opened. This file does\n"
+            << "not come with the dune-multiscale repository due to file size. To download it\n"
+            << "execute\n"
+            << "wget http://www.spe.org/web/csp/datasets/por_perm_case2a.zip\n"
+            << "unzip the file and move the file 'spe_perm.dat' to\n"
+            << "dune-multiscale/dune/multiscale/problems/elliptic/spe10_permeability.dat!\n";
     DUNE_THROW(IOError, "Data file for Groundwaterflow permeability could not be opened!");
+  }
   file >> val;
   int counter = 0;
   while (!file.eof()) {
