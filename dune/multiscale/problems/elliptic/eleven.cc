@@ -36,7 +36,7 @@ bool ModelProblemData::problemAllowsStochastics() const {
 void FirstSource::evaluate(const DomainType& x,
                      RangeType& y) const
 {
-  y = -6.0 * exp( x[0] + x[1] );
+  y = -6.0 * exp( x[0] +  x[1] );
 
 } // evaluate
 
@@ -123,7 +123,7 @@ void LowerOrderTerm::direction_derivative(const DomainType& x,
 void DirichletBoundaryCondition::evaluate(const DomainType& x,
                                           RangeType& y) const
 {
-  y = exp( x[0] + x[1] );
+  y = exp( x[0] +  x[1] );
 
 } // evaluate
 
@@ -136,7 +136,7 @@ void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /
 void NeumannBoundaryCondition::evaluate(const DomainType& x,
                                         RangeType& y) const
 {
-  y = (- 3.0) * exp( x[0] + x[1] );
+  y = (- 3.0 ) * exp( x[0] +  x[1] );
 
 } // evaluate
 
@@ -150,14 +150,14 @@ ExactSolution::ExactSolution(){}
 void ExactSolution::evaluate(const DomainType& x,
                      RangeType& y) const {
 
-  y = exp( x[0] + x[1] );
+  y = exp( x[0] +  x[1] );
 
 } // evaluate
 
 void ExactSolution::jacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const {
 
-  grad_u[0][0] = exp( x[0] + x[1] );
-  grad_u[0][1] = exp( x[0] + x[1] );
+  grad_u[0][0] = exp( x[0] +  x[1] );
+  grad_u[0][1] = exp( x[0] +  x[1] );
 
 } // jacobian
 

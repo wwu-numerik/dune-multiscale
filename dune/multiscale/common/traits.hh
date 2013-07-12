@@ -88,6 +88,10 @@ struct CommonTraits {
   typedef Problem::DiffusionBase DiffusionType;
   // type of (possibly non-linear) lower order term F( x, u(x), grad u(x) )
   typedef Problem::LowerOrderBase LowerOrderTermType;
+  // type of inhomogeneous Dirichlet boundary condition
+  typedef FunctionBaseType DirichletBCType;
+  // type of inhomogeneous Neumann boundary condition
+  typedef FunctionBaseType NeumannBCType;
   // type of mass (or reaction) term (i.e. 'm' or 'c')
   typedef FunctionBaseType MassTermType;
   // default type for any missing coefficient function (e.g. advection,...)

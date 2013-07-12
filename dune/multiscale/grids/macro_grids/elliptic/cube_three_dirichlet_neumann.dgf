@@ -12,7 +12,7 @@ SIMPLEX       % a simplex grid
 BOUNDARYSEGMENTS
 1   0 1       % between vertex 0,1 use id 1 (= Dirichlet BC)
 1   1 2       % between vertex 1,2 use id 1 (= Dirichlet BC)
-1   2 3       % use id 2 (= Neumann BC)
+1   2 3       % use id 1 (= Dirichlet BC)
 2   3 0       % use id 2 (= Neumann BC)
 #
 BoundaryDomain

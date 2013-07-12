@@ -140,6 +140,10 @@ MSCONSTANTFUNCTION(MassTerm,  0.0)
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
 
+//! ------------ Definition of homogeneous boundary conditions ----------
+MSNULLFUNCTION(DirichletBoundaryCondition)
+MSNULLFUNCTION(NeumannBoundaryCondition)
+
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
 class ExactSolution

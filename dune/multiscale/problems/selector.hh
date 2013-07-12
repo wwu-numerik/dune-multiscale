@@ -25,6 +25,8 @@ BasePtr getSecondSource();
 BasePtr getMassTerm();
 std::unique_ptr<const CommonTraits::DiffusionType> getDiffusion();
 std::unique_ptr<const CommonTraits::LowerOrderTermType> getLowerOrderTerm();
+std::unique_ptr<const CommonTraits::DirichletBCType> getDirichletBC();
+std::unique_ptr<const CommonTraits::NeumannBCType> getNeumannBC();
 BasePtr getDefaultDummyFunction();
 std::unique_ptr<const CommonTraits::ModelProblemDataType> getModelData();
 
