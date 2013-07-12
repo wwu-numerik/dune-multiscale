@@ -94,6 +94,10 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
         if ( !intersection.boundary() )
           continue;
 
+        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+        if ( intersection.boundary() && (intersection.boundaryId() == 2) )
+          continue;
+      
         const int face = intersection.indexInInside();
         const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
         for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)

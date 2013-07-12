@@ -141,6 +141,10 @@ class LowerOrderTerm : public ZeroLowerOrder {};
 //! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm,  0.0)
 
+//! ------------ Definition of homogeneous boundary conditions ----------
+MSNULLFUNCTION(DirichletBoundaryCondition)
+MSNULLFUNCTION(NeumannBoundaryCondition)
+
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
 

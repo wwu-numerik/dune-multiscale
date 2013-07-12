@@ -113,6 +113,20 @@ std::unique_ptr<const CommonTraits::DiffusionType> Dune::Multiscale::Problem::ge
 }
 
 
+std::unique_ptr<const CommonTraits::DirichletBCType> Dune::Multiscale::Problem::getDirichletBC()
+{
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::DirichletBCType>, DirichletBoundaryCondition);
+  return find_and_call_item(funcs);
+}
+
+
+std::unique_ptr<const CommonTraits::NeumannBCType> Dune::Multiscale::Problem::getNeumannBC()
+{
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::NeumannBCType>, NeumannBoundaryCondition);
+  return find_and_call_item(funcs);
+}
+
+
 std::string Dune::Multiscale::Problem::name()
 {
   return DSC_CONFIG_GET("problem.name", "Nine");

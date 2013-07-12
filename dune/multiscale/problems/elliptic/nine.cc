@@ -17,7 +17,7 @@ ModelProblemData::ModelProblemData()
 }
 
 std::string ModelProblemData::getMacroGridFile() const {
-  return("../dune/multiscale/grids/macro_grids/elliptic/msfem_cube_three.dgf");
+  return("../dune/multiscale/grids/macro_grids/elliptic/cube_three.dgf");
 }
 
 bool ModelProblemData::problemIsPeriodic() const {

@@ -85,8 +85,6 @@ public:
  * Realization: set G(x) = 0: **/
 MSNULLFUNCTION(SecondSource)
 
-
-
 //! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 //! A^{\epsilon} : \Omega × R² -> R²
 class Diffusion : public DiffusionBase
@@ -129,6 +127,10 @@ public:
 // NOTE: the operator describing the pde must be a monotone operator
 //! ------- Definition of the (possibly nonlinear) lower term F ---------
 class LowerOrderTerm : public ZeroLowerOrder {};
+
+//! ------------ Definition of homogeneous boundary conditions ----------
+MSNULLFUNCTION(DirichletBoundaryCondition)
+MSNULLFUNCTION(NeumannBoundaryCondition)
 
 //! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm,  0.0)

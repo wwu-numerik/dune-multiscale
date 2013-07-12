@@ -51,12 +51,43 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 
       auto rhsLocal = rhs.localFunction(entity);
       const auto face = intersection.indexInInside();
-      for(auto point
+      for(auto loc_point
           : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
-        rhsLocal[point] = 0;
+        rhsLocal[loc_point] = 0;
     }
   }
 } // boundaryTreatment
+
+
+//! set the dirichlet points to the Dirichlet BC
+template< class DirichletBC, class DiscreteFunctionType >
+void setDirichletValues(DirichletBC &dirichlet_func, DiscreteFunctionType& func) {
+  using namespace Dune::Stuff;
+  const auto& discreteFunctionSpace = func.space();
+  static const unsigned int faceCodim = 1;
+  for (const auto& entity : discreteFunctionSpace)
+  {
+    for (const auto& intersection
+         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
+    {
+      if ( !intersection.boundary() )
+        continue;
+      if ( intersection.boundary() && (intersection.boundaryId() != 1) )
+        continue;
+
+      auto funcLocal = func.localFunction(entity);
+      const auto face = intersection.indexInInside();
+      for(auto loc_point
+          : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face))
+      {
+        const auto& global_point = entity.geometry().global( discreteFunctionSpace.lagrangePointSet(entity).point( loc_point ) );
+        CommonTraits::RangeType dirichlet_value(0.0);
+        dirichlet_func.evaluate( global_point, dirichlet_value);
+        funcLocal[loc_point] = dirichlet_value;
+      }
+    }
+  }
+} // setDirichletValues
 
 
 //! write discrete function to a file + VTK Output
@@ -85,6 +116,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discre
 
 //! \TODO docme
 void solve(typename CommonTraits::DiscreteFunctionType& solution,
+           const typename CommonTraits::DiscreteFunctionType& dirichlet_extension,
            const typename CommonTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
            const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
            const typename CommonTraits::LowerOrderTermType& lower_order_term, // lower order term F(x, u(x), grad u(x) )
@@ -105,7 +137,12 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
   system_rhs.clear();
 
   const auto f = Dune::Multiscale::Problem::getFirstSource();
+  // assemble right hand side
+  const auto diffusion_op = Problem::getDiffusion();
+  // Neumann boundary condition
+  const auto neumann_bc = Problem::getNeumannBC();
 
+  
   if (DSC_CONFIG_GET("problem.linear", true))
   {
     DSC_LOG_INFO << "Solving linear problem." << std::endl;
@@ -122,7 +159,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.assemble< fem_polorder >(*f, system_rhs);
+    rhsassembler.assemble< fem_polorder >(*f, *diffusion_op, dirichlet_extension, *neumann_bc, system_rhs);
 
     // set Dirichlet Boundary to zero
     boundaryTreatment(system_rhs);
@@ -163,8 +200,6 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
       DSC_LOG_INFO << "Time to assemble FEM Newton stiffness matrix for current iteration: "
                    << stepAssembleTimer.elapsed() << "s" << std::endl;
 
-      // assemble right hand side
-      const auto diffusion_op = Problem::getDiffusion();
       rhsassembler.assemble_for_Newton_method< fem_polorder >(*f, *diffusion_op, lower_order_term, solution, system_rhs);
 
       const Dune::Fem::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
@@ -267,7 +302,15 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
   const auto diffusion_op = Problem::getDiffusion();
   // lower order term F(x, u(x), grad u(x) )
   const auto lower_order_term = Problem::getLowerOrderTerm();
-    
+  // Dirichlet boundary condition
+  const auto dirichlet_bc = Problem::getDirichletBC();
+
+  // discrete function that takes the values of the Dirichlet BC on the Dirichlet Boundary nodes
+  // and that is zero elsewhere
+  typename CommonTraits::DiscreteFunctionType dirichlet_extension("Dirichlet extension", discreteFunctionSpace);
+  dirichlet_extension.clear();
+  setDirichletValues( *dirichlet_bc, dirichlet_extension );
+  
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType > rhsassembler;
@@ -285,8 +328,9 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
   typename CommonTraits::DiscreteFunctionType discrete_solution(filename + " FEM(-Newton) Solution", discreteFunctionSpace);
   discrete_solution.clear();
 
-  solve(discrete_solution, discreteFunctionSpace, discrete_elliptic_op, *lower_order_term, filename, rhsassembler);
-
+  solve(discrete_solution, dirichlet_extension, discreteFunctionSpace, discrete_elliptic_op, *lower_order_term, filename, rhsassembler);
+  discrete_solution += dirichlet_extension;
+  
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(discrete_solution);
 
