@@ -307,6 +307,10 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_jaco
         if ( !intersection.boundary() )
           continue;
 
+        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+        if ( intersection.boundary() && (intersection.boundaryId() == 2) )
+          continue;
+
         const int face = intersection.indexInInside();
         const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
         for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
@@ -315,6 +319,134 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_jaco
     }
   }
 } // assemble_jacobian_matrix
+
+
+template< class DiscreteFunctionImp, class DiffusionImp>
+template< class MatrixType >
+void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_jacobian_matrix(
+      DiscreteFunction& disc_func,
+const DiscreteFunction& dirichlet_extension,
+      MatrixType& global_matrix,
+      bool boundary_treatment ) const
+{
+  global_matrix.reserve();
+  global_matrix.clear();
+
+  std::vector< typename BaseFunctionSet::JacobianRangeType >
+          gradient_phi( discreteFunctionSpace_.mapper().maxNumDofs() );
+
+  // micro scale base function:
+  std::vector< RangeType > phi( discreteFunctionSpace_.mapper().maxNumDofs() );
+
+  for (const Entity& entity : discreteFunctionSpace_)
+  {
+    const Geometry& geometry = entity.geometry();
+    assert(entity.partitionType() == InteriorEntity);
+
+    auto local_matrix = global_matrix.localMatrix(entity, entity);
+    auto local_disc_function = disc_func.localFunction(entity);
+    auto local_dirichlet_extension = dirichlet_extension.localFunction(entity);
+    
+    const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
+    const auto numBaseFunctions = baseSet.size();
+
+    // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
+    // use a higher order quadrature:
+    const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
+    const size_t numQuadraturePoints = quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      // local (barycentric) coordinates (with respect to entity)
+      const auto& local_point = quadrature.point(quadraturePoint);
+
+      const DomainType global_point = geometry.global(local_point);
+
+      const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
+      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+        RangeType value_local_disc_function;
+        local_disc_function.evaluate(quadrature[quadraturePoint], value_local_disc_function);
+
+        RangeType value_local_dirichlet_extension;
+        local_dirichlet_extension.evaluate(quadrature[quadraturePoint], value_local_dirichlet_extension);
+
+        typename BaseFunctionSet::JacobianRangeType grad_local_disc_function;
+        local_disc_function.jacobian(quadrature[quadraturePoint], grad_local_disc_function);
+
+        typename BaseFunctionSet::JacobianRangeType grad_local_dirichlet_extension;
+        local_dirichlet_extension.jacobian(quadrature[quadraturePoint], grad_local_dirichlet_extension);
+
+        RangeType total_value = value_local_dirichlet_extension + value_local_disc_function;
+        typename BaseFunctionSet::JacobianRangeType total_direction;
+        total_direction[0] = grad_local_dirichlet_extension[0] + grad_local_disc_function[0];
+
+        // JA( \nabla u_H ) \nabla phi_i // jacobian of diffusion operator evaluated in (x,grad_local_disc_function) in
+        // direction of the gradient of the current base function
+        typename LocalFunction::JacobianRangeType jac_diffusion_flux;
+        diffusion_operator_.jacobianDiffusiveFlux(global_point,
+                                                  total_direction,
+                                                  gradient_phi[i],
+                                                  jac_diffusion_flux);
+
+        for (unsigned int j = 0; j < numBaseFunctions; ++j)
+        {
+          local_matrix.add( j, i, weight * (jac_diffusion_flux[0] * gradient_phi[j][0]) );
+
+          if (lower_order_term_)
+          {
+            RangeType F_position_derivative;
+            typename LocalFunction::JacobianRangeType F_direction_derivative;
+            //lower_order_term_->evaluate( global_point, phi[i], gradient_phi[i], F_i );
+            lower_order_term_->position_derivative( global_point, total_value,
+                                                    total_direction, F_position_derivative );
+            lower_order_term_->direction_derivative( global_point, total_value,
+                                                     total_direction, F_direction_derivative );
+            local_matrix.add( j, i, weight * F_position_derivative * phi[i][0] * phi[j][0] );
+            local_matrix.add( j, i, weight * ( F_direction_derivative[0] * gradient_phi[i][0] ) * phi[j][0] );
+          }
+        }
+      }
+    }
+  }
+
+  // boundary treatment
+  if (boundary_treatment)
+  {
+    const GridPart& gridPart = discreteFunctionSpace_.gridPart();
+    for (const Entity& entity : discreteFunctionSpace_)
+    {
+      if ( !entity.hasBoundaryIntersections() )
+        continue;
+
+      auto local_matrix = global_matrix.localMatrix(entity, entity);
+
+      const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+
+      const IntersectionIterator iend = gridPart.iend(entity);
+      for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
+      {
+        const Intersection& intersection = *iit;
+        if ( !intersection.boundary() )
+          continue;
+
+        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+        if ( intersection.boundary() && (intersection.boundaryId() == 2) )
+          continue;
+
+        const int face = intersection.indexInInside();
+        const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
+        for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
+          local_matrix.unitRow(*fdit);
+      }
+    }
+  }
+} // assemble_jacobian_matrix
+
+
 
 } //namespace FEM {
 } //namespace Multiscale {

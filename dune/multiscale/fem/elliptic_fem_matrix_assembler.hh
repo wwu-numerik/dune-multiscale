@@ -99,6 +99,10 @@ public:
   template< class MatrixType >
   void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix, bool boundary_treatment = true) const;
 
+  // for inhomogeneous boundary condition
+  template< class MatrixType >
+  void assemble_jacobian_matrix(DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension, MatrixType& global_matrix, bool boundary_treatment = true) const;
+
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionImp& diffusion_operator_;
