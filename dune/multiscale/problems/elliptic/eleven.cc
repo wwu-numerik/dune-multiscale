@@ -132,7 +132,9 @@ void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /
 }
 
 
-// evaluate Neumann Boundary Function
+// evaluate Neumann Boundary Function 'q'
+// q = A( \nabla u ) \cdot n    (on the Neumann boundary)
+// ( A denotes the above diffusion operator and can be nonlinear )
 void NeumannBoundaryCondition::evaluate(const DomainType& x,
                                         RangeType& y) const
 {

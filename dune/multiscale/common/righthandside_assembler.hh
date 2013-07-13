@@ -237,9 +237,6 @@ public:
       
       const LocalFunctionType loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
-
-      std::vector< std::size_t > indices;
-      rhsVector.space().mapper().map( entity, indices);
       
       const auto& lagrangePointSet = rhsVector.space().lagrangePointSet( entity );
 
@@ -445,8 +442,7 @@ public:
 
 
   /**
-   * The rhs-assemble()-methods for non-linear elliptic problems
-   * if there is a first source f and a second source G:
+   * The rhs-assemble()-methods for non-linear elliptic problems:
    * discreteFunction is an output parameter (kind of return value)
    **/
   template< int polOrd, class FirstSourceType, class DiffusionOperatorType  >
@@ -506,7 +502,7 @@ public:
 
   /**
    * The rhs-assemble()-methods for non-linear elliptic problems
-   * if there is a first source f, a second source G and a lower order term F:
+   * if there is a first source f and a lower order term F:
    * discreteFunction is an output parameter (kind of return value)
    **/
   template< int polOrd, class FirstSourceType, class DiffusionOperatorType, class LowerOrderTermType >
@@ -572,6 +568,137 @@ public:
     }
   }  // end method
   
+  
+  /**
+   * The rhs-assemble()-methods for non-linear elliptic problems
+   * if there is a first source f, a lower order term F
+   * and Dirichlet and Neumann boundary conditions
+   * discreteFunction is an output parameter (kind of return value)
+   **/
+  template< int polOrd, class FirstSourceType, class DiffusionOperatorType, class LowerOrderTermType, class NeumannBCType >
+  static void assemble_for_Newton_method(const FirstSourceType& f,
+                                  const DiffusionOperatorType& A,
+                                  const LowerOrderTermType& F,
+                                  const DiscreteFunctionType& old_u_H, // old_u_H from the last iteration step
+                                  const DiscreteFunctionType& dirichlet_extension, //discrete function describing dirichlet extension 
+                                  const NeumannBCType& neumann_bc,
+                                  DiscreteFunctionType& rhsVector) {
+    rhsVector.clear();
+
+    for (const auto& entity : rhsVector.space())
+    {
+      const auto& geometry = entity.geometry();
+      auto elementOfRHS = rhsVector.localFunction(entity);
+      const auto baseSet = rhsVector.space().basisFunctionSet(entity);
+
+      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
+
+      std::vector<RangeType> phi_x(numDofs);
+      // gradient of base function and gradient of old_u_H
+      std::vector<JacobianRangeType> grad_phi_x(numDofs);
+      
+      const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
+      const LocalFunctionType loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
+      const Quadrature quadrature(entity, polOrd);
+
+      const auto& lagrangePointSet = rhsVector.space().lagrangePointSet( entity );
+
+      for (const auto& intersection
+         : Dune::Stuff::Common::intersectionRange(rhsVector.space().gridPart(), entity))
+      {
+        if ( !intersection.boundary() )
+          continue;
+        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+        if ( intersection.boundary() && (intersection.boundaryId() != 2) )
+          continue;
+
+        const auto face = intersection.indexInInside();
+      
+        const FaceQuadrature faceQuadrature( rhsVector.space().gridPart(),
+                                             intersection, polOrd, FaceQuadrature::INSIDE );
+        const int numFaceQuadraturePoints = faceQuadrature.nop();
+
+        enum { faceCodim = 1 };
+        for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
+        {
+          baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi_x );
+          baseSet.jacobianAll( faceQuadrature[faceQuadraturePoint], grad_phi_x );
+
+          const auto local_point_entity = faceQuadrature.point( faceQuadraturePoint ); 
+          const auto global_point = geometry.global( local_point_entity ); 
+          const auto local_point_face = intersection.geometry().local( global_point );
+
+          RangeType neumann_value( 0.0 );
+          neumann_bc.evaluate( global_point, neumann_value );
+
+          const double face_weight = intersection.geometry().integrationElement( local_point_face )
+                          * faceQuadrature.weight( faceQuadraturePoint );
+
+          auto faceIterator = lagrangePointSet.template beginSubEntity< faceCodim >( face );
+          const auto faceEndIterator = lagrangePointSet.template endSubEntity< faceCodim >( face );
+
+          for ( ; faceIterator != faceEndIterator; ++faceIterator)
+          {
+             elementOfRHS[ *faceIterator ] += neumann_value * face_weight * phi_x[ *faceIterator ];
+          }
+
+        }
+
+      }
+
+      const int numQuadraturePoints = quadrature.nop();
+      // the return values:
+      RangeType f_x;
+
+      JacobianRangeType gradient_dirichlet_extension;
+      RangeType value_dirichlet_extension;
+      JacobianRangeType grad_old_u_H;
+      RangeType value_old_u_H;
+      // Let A denote the diffusion operator, then we save
+      // A( \gradient old_u_H )
+      JacobianRangeType diffusive_flux;
+      
+      JacobianRangeType direction;
+
+      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+      {
+        // local (barycentric) coordinates (with respect to entity)
+        const auto& local_point = quadrature.point(quadraturePoint);
+        const auto global_point = geometry.global(local_point);
+        const double weight = geometry.integrationElement(local_point) * quadrature.weight(quadraturePoint);
+        // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
+        f.evaluate(global_point, f_x);
+        // evaluate the current base function at the current quadrature point and save its value in 'z':
+        baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);   // i = i'te Basisfunktion;
+        // evaluate the gradient of the current base function at the current quadrature point and save its value in
+        // 'returnGradient':
+        baseSet.jacobianAll(quadrature[quadraturePoint], grad_phi_x);
+        // get value of old u_H:
+        old_u_H_loc.evaluate(quadrature[quadraturePoint], value_old_u_H);
+        // get gradient of old u_H:
+        old_u_H_loc.jacobian(quadrature[quadraturePoint], grad_old_u_H);
+        // get value of dirichlet extension:
+        loc_dirichlet_extension.evaluate(quadrature[quadraturePoint], value_dirichlet_extension );
+        // get gradient of dirichlet extension:
+        loc_dirichlet_extension.jacobian(quadrature[quadraturePoint], gradient_dirichlet_extension );
+        direction[0] = grad_old_u_H[0] + gradient_dirichlet_extension[0];
+        // evaluate diffusion operator in x(=global_point) and grad_old_u_H
+        A.diffusiveFlux(global_point, direction, diffusive_flux );
+
+        RangeType F_x;
+        F.evaluate( global_point, value_old_u_H + value_dirichlet_extension, direction, F_x );
+
+        for (int i = 0; i < numDofs; ++i)
+        {
+          elementOfRHS[i] += weight * (f_x * phi_x[i]);
+          elementOfRHS[i] -= weight
+                             * (diffusive_flux[0] * grad_phi_x[i][0]);
+          elementOfRHS[i] -= weight * (F_x * phi_x[i]);
+        }
+      }
+    }
+  }  // end method
+
   
   //! The rhs-assemble()-methods for non-linear elliptic problems, solved with the heterogenous multiscale method
   // ( requires reconstruction of old_u_H and local fine scale averages )

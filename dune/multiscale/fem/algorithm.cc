@@ -195,12 +195,14 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
       DSC_LOG_INFO << "Newton iteration " << iteration_step << ":" << std::endl;
       Dune::Timer stepAssembleTimer;
       // assemble the stiffness matrix
-      discrete_elliptic_op.assemble_jacobian_matrix(solution, system_matrix);
+      discrete_elliptic_op.assemble_jacobian_matrix(solution, dirichlet_extension, system_matrix);
 
       DSC_LOG_INFO << "Time to assemble FEM Newton stiffness matrix for current iteration: "
                    << stepAssembleTimer.elapsed() << "s" << std::endl;
 
-      rhsassembler.assemble_for_Newton_method< fem_polorder >(*f, *diffusion_op, lower_order_term, solution, system_rhs);
+      rhsassembler.assemble_for_Newton_method< fem_polorder >(*f, *diffusion_op,
+                                                              lower_order_term, solution,
+                                                              dirichlet_extension, *neumann_bc, system_rhs);
 
       const Dune::Fem::L2Norm< typename CommonTraits::DiscreteFunctionType::GridPartType > l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);
