@@ -29,6 +29,10 @@ void DiscreteEllipticHMMOperator::boundary_treatment(CommonTraits::FEMMatrix& gl
       if ( !intersection.boundary() )
         continue;
 
+      // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+      if ( intersection.boundary() && (intersection.boundaryId() == 2) )
+        continue;
+
       const int face = intersection.indexInInside();
       const auto fdend = lagrangePointSet.endSubEntity< 1 >(face);
       for (auto fdit = lagrangePointSet.beginSubEntity< 1 >(face); fdit != fdend; ++fdit)

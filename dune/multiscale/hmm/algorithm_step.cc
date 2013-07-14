@@ -48,6 +48,9 @@ struct BoundaryTreatment {
       {
         if ( !intersection.boundary() )
           continue;
+        if ( intersection.boundary() && (intersection.boundaryId() != 1) )
+          continue;
+
         auto rhsLocal = rhs.localFunction(entity);
         const auto face = intersection.indexInInside();
         for(auto point
@@ -57,6 +60,38 @@ struct BoundaryTreatment {
     }
   }
 }; // boundaryTreatment
+
+
+//! set the dirichlet points to the Dirichlet BC
+template< class DirichletBC, class DiscreteFunctionType >
+void setDirichletValues(DirichletBC &dirichlet_func, DiscreteFunctionType& func) {
+  using namespace Dune::Stuff;
+  const auto& discreteFunctionSpace = func.space();
+  static const unsigned int faceCodim = 1;
+  for (const auto& entity : discreteFunctionSpace)
+  {
+    for (const auto& intersection
+         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
+    {
+      if ( !intersection.boundary() )
+        continue;
+      if ( intersection.boundary() && (intersection.boundaryId() != 1) )
+        continue;
+
+      auto funcLocal = func.localFunction(entity);
+      const auto face = intersection.indexInInside();
+      for(auto loc_point
+          : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face))
+      {
+        const auto& global_point = entity.geometry().global( discreteFunctionSpace.lagrangePointSet(entity).point( loc_point ) );
+        CommonTraits::RangeType dirichlet_value(0.0);
+        dirichlet_func.evaluate( global_point, dirichlet_value);
+        funcLocal[loc_point] = dirichlet_value;
+      }
+    }
+  }
+} // setDirichletValues
+
 
 
 //! \TODO docme
@@ -269,31 +304,50 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
   Dune::Timer hmmAssembleTimer;
 
   //! matrix
-  typename CommonTraits::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
+  typename CommonTraits::FEMMatrix hmm_matrix("HMM Newton stiffness matrix", discreteFunctionSpace, discreteFunctionSpace);
   const DiscreteEllipticHMMOperator discrete_elliptic_hmm_op(discreteFunctionSpace,
-                                                   periodicDiscreteFunctionSpace,
-                                                   diffusion_op,
-                                                   cp_num_manager);
+                                                             periodicDiscreteFunctionSpace,
+                                                             diffusion_op,
+                                                             cp_num_manager);
   // assemble the hmm stiffness matrix
-  discrete_elliptic_hmm_op.assemble_matrix(hmm_newton_matrix);
-  // to print the matrix, use:   hmm_newton_matrix.print();
+  discrete_elliptic_hmm_op.assemble_matrix(hmm_matrix);
+  // to print the matrix, use:   hmm_matrix.print();
 
   DSC_LOG_INFO << "Time to assemble HMM macro stiffness matrix: " << hmmAssembleTimer.elapsed() << "s" << std::endl;
 
   // assemble right hand side
   //! right hand side vector
-  const auto f = Problem::getFirstSource();   // standard source f
+  // if we have some additional source term (-div G), define:
+  const auto G = Problem::getSecondSource();
+  const auto f = Problem::getFirstSource(); // standard source f
+  // lower order term F(x, u(x), grad u(x) ):
+
+  // Dirichlet boundary condition
+  const auto dirichlet_bc = Problem::getDirichletBC();
+  // Neumann boundary condition
+  const auto neumann_bc = Problem::getNeumannBC();
+
+  // - div ( A^{\epsilon} \nabla u^{\epsilon} ) + F(x, u^{\epsilon}, \nabla u^{\epsilon}) = f - div G
+
+  // discrete function that takes the values of the Dirichlet BC on the Dirichlet Boundary nodes
+  // and that is zero elsewhere
+  typename CommonTraits::DiscreteFunctionType dirichlet_extension("Dirichlet extension", discreteFunctionSpace);
+  dirichlet_extension.clear();
+  setDirichletValues( *dirichlet_bc, dirichlet_extension );
+  
   // right hand side for the hm finite element method with Newton solver:
-  typename CommonTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
-  hmm_newton_rhs.clear();
-  rhsassembler.assemble< 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(*f, hmm_newton_rhs);
+  typename CommonTraits::DiscreteFunctionType hmm_rhs("hmm rhs", discreteFunctionSpace);
+  hmm_rhs.clear();
+  rhsassembler.assemble< 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2 >(*f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
 
   // set Dirichlet Boundary to zero
-  BoundaryTreatment::apply(hmm_newton_rhs);
+  BoundaryTreatment::apply(hmm_rhs);
 
-  typename HMMTraits::InverseFEMMatrix hmm_biCGStab(hmm_newton_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-  hmm_biCGStab(hmm_newton_rhs, hmm_solution);
+  typename HMMTraits::InverseFEMMatrix hmm_biCGStab(hmm_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+  hmm_biCGStab(hmm_rhs, hmm_solution);
   DSC_LOG_INFO << seperator_line << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl << std::endl;
+  
+  hmm_solution += dirichlet_extension;
 }
 
 
@@ -447,10 +501,6 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
               << " unkowns and polynomial order "
               << CommonTraits::DiscreteFunctionSpaceType::polynomialOrder << "."
               << std::endl << std::endl;
-
-    // if we have some additional source term (-div G), define:
-    const auto G = Problem::getSecondSource();
-    // - div ( A^{\epsilon} \nabla u^{\epsilon} ) = f - div G
 
     const Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
 
