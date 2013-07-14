@@ -41,51 +41,81 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+//! set the dirichlet points to the Dirichlet BC
+template< class DirichletBC, class DiscreteFunctionType >
+void setDirichletValues(DirichletBC &dirichlet_func, DiscreteFunctionType& func) {
+  using namespace Dune::Stuff;
+  const auto& discreteFunctionSpace = func.space();
+  static const unsigned int faceCodim = 1;
+  for (const auto& entity : discreteFunctionSpace)
+  {
+    for (const auto& intersection
+         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
+    {
+      if ( !intersection.boundary() )
+        continue;
+      if ( intersection.boundary() && (intersection.boundaryId() != 1) )
+        continue;
+
+      auto funcLocal = func.localFunction(entity);
+      const auto face = intersection.indexInInside();
+      for(auto loc_point
+          : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face))
+      {
+        const auto& global_point = entity.geometry().global( discreteFunctionSpace.lagrangePointSet(entity).point( loc_point ) );
+        CommonTraits::RangeType dirichlet_value(0.0);
+        dirichlet_func.evaluate( global_point, dirichlet_value);
+        funcLocal[loc_point] = dirichlet_value;
+      }
+    }
+  }
+} // setDirichletValues
+  
 //! \TODO docme
-void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
-                     const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
-                     const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
+void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
+                     const CommonTraits::DiscreteFunctionType& coarse_part_lod_solution,
+                     const CommonTraits::DiscreteFunctionType& fine_part_lod_solution,
                      Dune::Multiscale::OutputParameters& outputparam,
                      int& total_refinement_level_,
                      int& coarse_grid_level_)
 {
   using namespace Dune;
-  //! ----------------- writing data output MsFEM Solution -----------------
-  // --------- VTK data output for MsFEM solution --------------------------
+  //! ----------------- writing data output LOD Solution -----------------
+  // --------- VTK data output for LOD solution --------------------------
   // create and initialize output class
-  OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
-  const auto& gridPart = msfem_solution.space().gridPart();
+  OutputTraits::IOTupleType lod_solution_series(&lod_solution);
+  const auto& gridPart = lod_solution.space().gridPart();
   std::string outstring;
-  outputparam.set_prefix("msfem_solution");
-  outstring = "msfem_solution";
+  outputparam.set_prefix("lod_solution");
+  outstring = "lod_solution";
 
-  OutputTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
-  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring );
-
-  // create and initialize output class
-  OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
-
-  outputparam.set_prefix("coarse_part_msfem_solution");
-  outstring = "coarse_part_msfem_solution";
-
-  OutputTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
-  coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring );
+  OutputTraits::DataOutputType lod_dataoutput(gridPart.grid(), lod_solution_series, outputparam);
+  lod_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
   // create and initialize output class
-  OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
+  OutputTraits::IOTupleType coarse_lod_solution_series(&coarse_part_lod_solution);
 
-  outputparam.set_prefix("fine_part_msfem_solution");
+  outputparam.set_prefix("coarse_part_lod_solution");
+  outstring = "coarse_part_lod_solution";
+
+  OutputTraits::DataOutputType coarse_lod_dataoutput(gridPart.grid(), coarse_lod_solution_series, outputparam);
+  coarse_lod_dataoutput.writeData( 1.0 /*dummy*/, outstring );
+
+  // create and initialize output class
+  OutputTraits::IOTupleType fine_lod_solution_series(&fine_part_lod_solution);
+
+  outputparam.set_prefix("fine_part_lod_solution");
   // write data
-  outstring = "fine_msfem_solution";
+  outstring = "fine_lod_solution";
 
-  OutputTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
-  fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring);
+  OutputTraits::DataOutputType fine_lod_dataoutput(gridPart.grid(), fine_lod_solution_series, outputparam);
+  fine_lod_dataoutput.writeData( 1.0 /*dummy*/, outstring);
 
   // ----------------------------------------------------------------------
-  // ---------------------- write discrete msfem solution to file ---------
+  // ---------------------- write discrete lod solution to file ---------
   const std::string location = (boost::format("msfem_solution_discFunc_refLevel_%d_%d")
                                 %  total_refinement_level_ % coarse_grid_level_).str();
-  DiscreteFunctionWriter(location).append(msfem_solution);
+  DiscreteFunctionWriter(location).append(lod_solution);
   //! --------------------------------------------------------------------
 }
 
@@ -150,7 +180,7 @@ void algorithm(const std::string& macroGridName,
   L2Error< CommonTraits::DiscreteFunctionType > l2error;
 
   //! ---------------------------- grid parts ----------------------------------------------
-  // grid part for the global function space, required for MsFEM-macro-problem
+  // grid part for the global function space, required for LOD-macro-problem
   CommonTraits::GridPartType gridPart(*macro_grid_pointer);
   CommonTraits::GridType& grid = gridPart.grid();
   //! --------------------------------------------------------------------------------------
@@ -178,24 +208,35 @@ void algorithm(const std::string& macroGridName,
   auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
   const auto& f = *f_ptr;
   const auto F_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-  const auto& F = *F_ptr; // lower term F(x,u^{\epsilon},\nabla u^{\epsilon})
-
+  const auto& F = *F_ptr; // lower term F(x,u ,\nabla u )
+  // Dirichlet boundary condition
+  const auto dirichlet_bc_ptr = Problem::getDirichletBC();
+  const auto& dirichlet_bc = *dirichlet_bc_ptr; 
+  // Neumann boundary condition
+  const auto neumann_bc_ptr = Problem::getNeumannBC();
+  const auto& neumann_bc = *neumann_bc_ptr;
+   
+  // discrete function that takes the values of the Dirichlet BC on the Dirichlet Boundary nodes
+  // and that is zero elsewhere
+  CommonTraits::DiscreteFunctionType dirichlet_extension("Dirichlet extension", discreteFunctionSpace);
+  dirichlet_extension.clear();
+  setDirichletValues( dirichlet_bc, dirichlet_extension );
 
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
   data_output(gridPart, discreteFunctionSpace_coarse, outputparam );
 
-  //! ---------------------- solve MsFEM problem ---------------------------
+  //! ---------------------- solve LOD problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType msfem_solution("LOD Solution", discreteFunctionSpace);
   msfem_solution.clear();
 
-  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution", discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part LOD Solution", discreteFunctionSpace);
   coarse_part_msfem_solution.clear();
 
-  CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part LOD Solution", discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
   const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
@@ -214,9 +255,13 @@ void algorithm(const std::string& macroGridName,
     MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
-    Elliptic_Rigorous_MsFEM_Solver msfem_solver(discreteFunctionSpace);
-    msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
-                                      coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
+    Elliptic_Rigorous_MsFEM_Solver lod_solver(discreteFunctionSpace);
+    lod_solver.solve(diffusion_op, f, dirichlet_extension, neumann_bc,
+                     specifier, subgrid_list,
+                     coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
+
+    coarse_part_msfem_solution += dirichlet_extension;
+    msfem_solution += dirichlet_extension;
 
     DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
     solution_output(msfem_solution, coarse_part_msfem_solution,
@@ -235,7 +280,8 @@ void algorithm(const std::string& macroGridName,
    
     // just for Dirichlet zero-boundary condition
     const Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
-    fem_solver.solve_dirichlet_zero(diffusion_op, F_ptr, f, fem_solution);
+    fem_solver.solve(diffusion_op, F_ptr, f, dirichlet_extension, neumann_bc, fem_solution);
+    fem_solution += dirichlet_extension;
     fem_solution.communicate();
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
