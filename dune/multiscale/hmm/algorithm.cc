@@ -275,7 +275,6 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType > rhsassembler;
-  const auto f = Problem::getFirstSource(); // standard source f
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
