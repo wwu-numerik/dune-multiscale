@@ -88,11 +88,17 @@ public:
   //! c --> reaction part ('ReactionTermType')
   //! f --> 'first' source term, scalar ('SourceTermType')
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
-  //! homogenous Dirchilet boundary condition!:
+  void solve(const CommonTraits::DiffusionType& diffusion_op,
+             const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+             const CommonTraits::FirstSourceType& f,
+             const CommonTraits::DiscreteFunctionType& dirichlet_extension,
+             const CommonTraits::NeumannBCType& neumann_bc,
+                   DiscreteFunction& solution) const;
+		   
   void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
                             const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
                             const CommonTraits::FirstSourceType& f,
-                            DiscreteFunction& solution) const;
+                                  DiscreteFunction& solution) const;
 };
 
 } // namespace Multiscale

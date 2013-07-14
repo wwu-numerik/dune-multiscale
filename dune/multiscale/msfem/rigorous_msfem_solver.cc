@@ -145,7 +145,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
      std::map< OrderedDomainType, int >& coordinates_to_global_coarse_node_id,
      // all coarse nodes, where the corresponding coarse (nodal) basis function has a support that intersects with the subgrid 
      std::vector< std::vector< int > >& ids_basis_function_in_extended_subgrid,
-     // all coarse nodes that are in the subgrid including its boundary but excluding the boundary of Omega
+     // all coarse nodes that are in the subgrid including its boundary but excluding the Dirichlet boundary of Omega
      std::vector< std::vector< int > >& ids_basis_function_in_subgrid,
      // all coarse nodes that are in the _interior_ of the subgrid 
      std::vector< std::vector< int > >& ids_basis_function_in_interior_subgrid ) const
@@ -181,8 +181,8 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
       int global_coarse_node_id = coordinates_to_global_coarse_node_id[ coarse_nodes_in_subgrid[cn] ];
       coarse_node_ids_in_subgrid[ sg_id ].push_back( global_coarse_node_id );
       
-      // sort out the boundary nodes on Omega
-      if ( specifier.is_coarse_boundary_node( global_coarse_node_id ) == false ){
+      // sort out the Dirichlet boundary nodes on Omega
+      if ( specifier.is_coarse_dirichlet_node( global_coarse_node_id ) == false ){
         ids_basis_function_in_subgrid[ sg_id ].push_back( global_id_to_internal_id[global_coarse_node_id] ); }
     }
     
@@ -190,8 +190,8 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
     {
 
       int global_coarse_node_id = coordinates_to_global_coarse_node_id[ coarse_nodes_in_extended_subgrid[cn] ];
-      // sort out the boundary nodes on Omega
-      if ( specifier.is_coarse_boundary_node( global_coarse_node_id ) == false ){
+      // sort out the Dirichlet boundary nodes on Omega
+      if ( specifier.is_coarse_dirichlet_node( global_coarse_node_id ) == false ){
         ids_basis_function_in_extended_subgrid[ sg_id ].push_back( global_id_to_internal_id[global_coarse_node_id] ); }
     }
   }
@@ -447,8 +447,10 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
   DSC_LOG_INFO << " done." << std::endl;
 }
 
-void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
+void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
                           const CommonTraits::FirstSourceType& f,
+                          const CommonTraits::DiscreteFunctionType& dirichlet_extension,
+                          const CommonTraits::NeumannBCType& neumann_bc,
                           // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                           // n(T)-layers.
                           MacroMicroGridSpecifier& specifier,
@@ -464,24 +466,26 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
   DiscreteFunctionSpace& fine_space = specifier.fineSpace();
 
-  specifier.identify_coarse_boundary_nodes();
+  specifier.identify_coarse_dirichlet_nodes();
+  specifier.identify_coarse_boundary_nodes();//!DELETE ME SOON!!!!!!!!!!!!
 
-  const int number_of_internal_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_boundary_nodes();
+  const int number_of_relevant_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_dirichlet_nodes();
 
   // mapper: global_id_of_node -> new_id_of_node
-  // ('new' means that we only count the internal nodes, boundary nodes do not receive an id)
+  // ('new' means that we only count the internal nodes and the non-Dirichlet boundary nodes, 
+  //  Dirichlet boundary nodes do not receive an id)
   std::map<int,int> global_id_to_internal_id;
   for (int internal_id = 0, global_id = 0; global_id < coarse_space.size(); ++global_id)
   {
-    if ( !specifier.is_coarse_boundary_node(global_id) )
+    if ( !specifier.is_coarse_dirichlet_node(global_id) )
     {
       global_id_to_internal_id[ global_id ] = internal_id;
       ++internal_id;
     }
   }
-  
+
   MsFEMBasisFunctionType msfem_basis_function;
-  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; ++internal_id)
+  for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; ++internal_id)
   {
     msfem_basis_function.emplace_back(new DiscreteFunction("MsFEM basis function", fine_space));
     msfem_basis_function[internal_id]->clear();
@@ -493,7 +497,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   // ------------------------------------------------------------------------------------------------------
   // coefficients in the matrix that describes the weighted Clement interpolation,
   // i.e. coff[c] = (\int_{\Omega} \Phi_j)^{-1}
-  std::vector< double > coff( number_of_internal_coarse_nodes, 0.0 );
+  std::vector< double > coff( number_of_relevant_coarse_nodes, 0.0 );
 
   for(CoarsegridIterator it = coarse_space.begin(); it != coarse_space.end(); ++it)
   {
@@ -526,7 +530,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
       for (unsigned int i = 0; i < numBaseFunctions; ++i)
       {
         const int global_dof_number = indices[i];
-         if ( !specifier.is_coarse_boundary_node( global_dof_number ) )
+         if ( !specifier.is_coarse_dirichlet_node( global_dof_number ) )
              coff[ global_id_to_internal_id[ global_dof_number ] ] += weight * phi[i];
        }
     }
@@ -538,8 +542,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
         coff[c] = 1.0 / coff[c];
   }
   // ------------------------------------------------------------------------------------------------------
-  
-  
 
 
   //! Determine the support of each ms basis function and the intersection domain of two ms basis functions
@@ -554,14 +556,14 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   // we only store the tuples relevant_constellations[i][j] for 'j<=i' the rest is obtained by symmetry
   // the reason for storing only the values for 'j<=i' is that we can use (if given) the symmetry of the diffusion matrix,
   // in the sense that we only compute the entries of the stiffness matrix for 'j<=i' and then symmetrize the matrix
-  
-  // map the coordinates of a coarse node to its global global index
+
+  // map the coordinates of a coarse node to its global (coarse node) index
   std::map< OrderedDomainType, int > coordinates_to_global_coarse_node_id;
   
-  support_of_ms_basis_func_intersection.resize( number_of_internal_coarse_nodes );
-  for ( int k = 0; k<number_of_internal_coarse_nodes ; ++k )
-    support_of_ms_basis_func_intersection[k].resize( number_of_internal_coarse_nodes );
-  
+  support_of_ms_basis_func_intersection.resize( number_of_relevant_coarse_nodes );
+  for ( int k = 0; k<number_of_relevant_coarse_nodes ; ++k )
+    support_of_ms_basis_func_intersection[k].resize( number_of_relevant_coarse_nodes );
+    
   // for each subgrid, determine all ms basis functions that were constructed using the corresponding subgrid corrector 
   // for each subgrid id, we save the vector of the (internal) id's of the corresponding ms basis functions 
   std::vector< std::vector< int > > subgrid_id_to_ms_basis_func_ids;
@@ -570,7 +572,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   {
     const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
     int subgrid_id = coarseGridLeafIndexSet.index( *it );
-    
+
     auto intersection_it = coarse_space.gridPart().ibegin( *it );
     const auto endiit = coarse_space.gridPart().iend(*it);
     for ( ; intersection_it != endiit; ++intersection_it)
@@ -594,7 +596,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
           OrderedDomainType coord = (it->geometry()).global(lagrangePointSet.point( *faceIterator ));
           coordinates_to_global_coarse_node_id[coord] = global_id_node;     
 
-          if ( specifier.is_coarse_boundary_node( global_id_node ) )
+          if ( specifier.is_coarse_dirichlet_node( global_id_node ) )
             continue;
 
           const int internal_id_node = global_id_to_internal_id[ global_id_node ];
@@ -604,6 +606,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
       }
       
   }
+  
   const HostGridLeafIndexSet& hostGridLeafIndexSet = fine_space.gridPart().grid().leafIndexSet();
   for (HostgridIterator it = fine_space.begin(); it != fine_space.end(); ++it)
   {
@@ -618,7 +621,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
     {
       int subgrid_id = subgrid_list.getSubgridIDs_that_contain_entity( fine_entity_id )[m];
       
-      // now iterate over the ms basis functions that were assemble using a corrector that belongs to the current subgrid
+      // now iterate over the ms basis functions that were assembled using a corrector that belongs to the current subgrid
       for (unsigned int l = 0; l < subgrid_id_to_ms_basis_func_ids[ subgrid_id ].size(); ++l)
       {
          int ms_basis_func_id = subgrid_id_to_ms_basis_func_ids[ subgrid_id ][ l ];
@@ -651,7 +654,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
 
 
   MsFEMBasisFunctionType standard_basis_function;
-  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+  for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
    {
     standard_basis_function.emplace_back(new DiscreteFunction("Standard basis function", fine_space));
     standard_basis_function[internal_id]->clear();
@@ -660,7 +663,8 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, msfem_basis_function );
   add_coarse_basis_contribution( specifier, global_id_to_internal_id, standard_basis_function );
 
-  // for each subgrid, store the vector of basis functions ids that correspond to coarse grid nodes in the subgrid WITHOUT boundary nodes of Omega
+  // for each subgrid, store the vector of basis functions ids that correspond to coarse grid nodes 
+  // in the subgrid WITHOUT Dirichlet boundary nodes of Omega
   std::vector< std::vector< int > > ids_basis_functions_in_subgrid;
   // for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the subgrid
   std::vector< std::vector< int > > ids_basis_functions_in_interior_subgrid;
@@ -668,7 +672,9 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   std::vector< std::vector< int > > ids_basis_functions_in_extended_subgrid;
   assemble_interior_basis_ids( specifier, subgrid_list, global_id_to_internal_id, coordinates_to_global_coarse_node_id,
                                ids_basis_functions_in_extended_subgrid, ids_basis_functions_in_subgrid, ids_basis_functions_in_interior_subgrid );
-  
+
+//! --- > Bis hierhin überarbeitet
+
   //! assemble all local problems (within constructor!)
   MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list,
                                            ids_basis_functions_in_interior_subgrid,
@@ -684,7 +690,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   // just for VTK output for the basis function correctors
   /*
   MsFEMBasisFunctionType corrector_basis_function;
-  for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+  for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
    {
     corrector_basis_function.emplace_back(new DiscreteFunction("Corrector basis function", fine_space));
     corrector_basis_function[internal_id]->clear();
@@ -700,7 +706,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
      vtk_output( standard_basis_function, "standard_basis_function" );
   }
   
-  VectorType solution_vector( number_of_internal_coarse_nodes );
+  VectorType solution_vector( number_of_relevant_coarse_nodes );
   for (size_t col = 0; col != solution_vector.N(); ++col)
     solution_vector[col] = 0.0;
   
@@ -715,7 +721,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
      Dune::Timer assembleTimer;
   
      //! (stiffness) matrix
-     MatrixType system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
+     MatrixType system_matrix( number_of_relevant_coarse_nodes, number_of_relevant_coarse_nodes );
 
      if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
      { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function,
@@ -733,7 +739,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
      //print_matrix( system_matrix );
 
      //! NOTE TODO: Assembling of right hand side is also quite expensive!
-     VectorType rhs( number_of_internal_coarse_nodes );
+     VectorType rhs( number_of_relevant_coarse_nodes );
      if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
      { assemble_rhs( f, standard_basis_function, support_of_ms_basis_func_intersection, rhs ); }
      else
@@ -767,7 +773,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
 #endif
   
      coarse_scale_part.clear();
-     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+     for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
       {
         DiscreteFunction aux("auxilliary function", fine_space);
         aux.clear();
@@ -775,9 +781,10 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
         aux *= solution_vector[internal_id];
         coarse_scale_part += aux;
       }
+     coarse_scale_part += dirichlet_extension;
 
      solution.clear();
-     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+     for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
       {
         DiscreteFunction aux("auxilliary function", fine_space);
         aux.clear();
@@ -785,6 +792,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
         aux *= solution_vector[internal_id];
         solution += aux;
       }
+     solution += dirichlet_extension;
 
      fine_scale_part.assign(solution);
      fine_scale_part -= coarse_scale_part;
@@ -805,8 +813,8 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
     const auto& nonlinear_term = *nonlinear_term_ptr;
     solution.clear();
 
-    VectorType newton_solution_vector( number_of_internal_coarse_nodes );
-    VectorType newton_step_rhs( number_of_internal_coarse_nodes );
+    VectorType newton_solution_vector( number_of_relevant_coarse_nodes );
+    VectorType newton_step_rhs( number_of_relevant_coarse_nodes );
     for (size_t col = 0; col != newton_solution_vector.N(); ++col)
     {
       newton_solution_vector[col] = 0.0;
@@ -827,14 +835,14 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
       double damping_parameter = 1.0;
     
       //! Newton (stiffness) matrix
-      MatrixType newton_system_matrix( number_of_internal_coarse_nodes, number_of_internal_coarse_nodes );
+      MatrixType newton_system_matrix( number_of_relevant_coarse_nodes, number_of_relevant_coarse_nodes );
 
       for (size_t row = 0; row != newton_system_matrix.N(); ++row)
         for (size_t col = 0; col != newton_system_matrix.M(); ++col)
           newton_system_matrix[row][col] = 0.0;
       
 
-      VectorType newton_step_solution_vector( number_of_internal_coarse_nodes );
+      VectorType newton_step_solution_vector( number_of_relevant_coarse_nodes );
       for (size_t col = 0; col != solution_vector.N(); ++col)
         newton_step_solution_vector[col] = 0.0;
 
@@ -930,7 +938,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
      //print_matrix( newton_system_matrix );
      //print_vector( newton_step_rhs );
       
-     VectorType copy_newton_step_rhs( number_of_internal_coarse_nodes );
+     VectorType copy_newton_step_rhs( number_of_relevant_coarse_nodes );
      for (size_t col = 0; col != newton_step_rhs.N(); ++col)
        copy_newton_step_rhs[col] = newton_step_rhs[ col ];
    
@@ -965,7 +973,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
         DiscreteFunction pre_solution("pre_solution", fine_space);
         pre_solution.clear();
       
-        VectorType pre_newton_solution_vector( number_of_internal_coarse_nodes );
+        VectorType pre_newton_solution_vector( number_of_relevant_coarse_nodes );
 
         for (size_t col = 0; col != newton_solution_vector.N(); ++col)
         {
@@ -973,7 +981,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
           newton_step_rhs[col] = 0.0;
         }
 
-        for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+        for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
         {
           DiscreteFunction aux("auxilliary function", fine_space);
           aux.clear();
@@ -1067,7 +1075,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
    
      // current solution:
      solution.clear();
-     for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+     for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
       {
         DiscreteFunction aux("auxilliary function", fine_space);
         aux.clear();
@@ -1083,7 +1091,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::D
   
     fine_scale_part.clear();
     coarse_scale_part.clear();
-    for (int internal_id = 0; internal_id < number_of_internal_coarse_nodes; internal_id += 1 )
+    for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
      {
        DiscreteFunction aux("auxilliary function", fine_space);
        aux.clear();

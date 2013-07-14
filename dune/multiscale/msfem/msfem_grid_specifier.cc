@@ -236,6 +236,56 @@ void MacroMicroGridSpecifier::identify_coarse_boundary_nodes()
 
 }
 
+void MacroMicroGridSpecifier::identify_coarse_dirichlet_nodes()
+{
+    is_dirichlet_node_.resize( coarse_scale_space_.size() );
+
+    number_of_coarse_dirichlet_nodes_ = 0;
+
+    const auto endit = coarse_scale_space_.end();
+    for (auto it = coarse_scale_space_.begin(); it != endit; ++it)
+    {
+      
+        std::vector< std::size_t > indices;
+        coarse_scale_space_.mapper().map(*it, indices);
+
+        auto intersection_it = coarse_scale_space_.gridPart().ibegin(*it);
+        const auto endiit = coarse_scale_space_.gridPart().iend(*it);
+        for ( ; intersection_it != endiit; ++intersection_it)
+        {
+
+            if ( !intersection_it->boundary() )
+                continue;
+
+            if ( intersection_it->boundary() && (intersection_it->boundaryId() != 1) )
+                continue;
+
+            const auto& lagrangePointSet
+               = coarse_scale_space_.lagrangePointSet(*it);
+
+            const int face = (*intersection_it).indexInInside();
+            auto faceIterator
+                = lagrangePointSet.beginSubEntity< faceCodim >(face);
+            const auto faceEndIterator
+                = lagrangePointSet.endSubEntity< faceCodim >(face);
+
+            for ( ; faceIterator != faceEndIterator; ++faceIterator)
+              is_dirichlet_node_[ indices[ *faceIterator ] ] = true;
+
+        }
+
+    }
+
+    for ( size_t i = 0; i < is_dirichlet_node_.size(); ++i )
+    {
+        if ( is_dirichlet_node_[i] )
+            number_of_coarse_dirichlet_nodes_ += 1;
+    }
+
+    dirichlet_nodes_identified_ = true;
+
+}
+
 int MacroMicroGridSpecifier::get_number_of_coarse_boundary_nodes() const
 {
     assert( boundary_nodes_identified_ );
@@ -246,6 +296,18 @@ bool MacroMicroGridSpecifier::is_coarse_boundary_node( int global_index ) const
 {
     assert( boundary_nodes_identified_ );
     return is_boundary_node_[global_index];
+}
+
+int MacroMicroGridSpecifier::get_number_of_coarse_dirichlet_nodes() const
+{
+    assert( dirichlet_nodes_identified_ );
+    return number_of_coarse_dirichlet_nodes_;
+}
+
+bool MacroMicroGridSpecifier::is_coarse_dirichlet_node( int global_index ) const
+{
+    assert( dirichlet_nodes_identified_ );
+    return is_dirichlet_node_[global_index];
 }
 
 bool MacroMicroGridSpecifier::simplexCoarseGrid() const {

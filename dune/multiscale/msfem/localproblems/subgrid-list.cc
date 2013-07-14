@@ -106,7 +106,6 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
 
             for (int c_fine = 0; c_fine < current_fine_entity->geometry().corners(); ++c_fine) {
    
-              // hard coding - 2d case:
               // check if one of the corners of the fine entity is identical to one of the corners of the coarse father
               // if we find such a corner, (and if it is not already contained) it must be added to the coarse_node_store_
               bool fine_corner_is_coarse_corner = false;
@@ -258,8 +257,8 @@ const std::vector< int >& SubGridList::getSubgridIDs_that_contain_entity (int ho
 
 
 // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
-// for each given subgrid index return the vecor of coarse nodes (global coordinates) that are in the subgrid,
-// this also includes the coarse nodes on the boundary of U(T)
+// for each given subgrid index return the vecor of ALL coarse nodes (global coordinates) that are in the subgrid,
+// this also includes the coarse nodes on the boundary of U(T), even if this is a global Dirichlet node!
 const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i) const
 {
   if (specifier_.getOversamplingStrategy() == 1)

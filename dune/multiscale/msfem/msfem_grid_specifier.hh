@@ -74,8 +74,13 @@ public:
   RangeType get_loc_fine_grid_jumps(int index) const;
 
   void identify_coarse_boundary_nodes();
+  void identify_coarse_dirichlet_nodes();
+
   int get_number_of_coarse_boundary_nodes() const;
+  int get_number_of_coarse_dirichlet_nodes() const;
+
   bool is_coarse_boundary_node( int global_index ) const;
+  bool is_coarse_dirichlet_node( int global_index ) const;
 
   bool simplexCoarseGrid() const;
 
@@ -98,12 +103,21 @@ private:
   // have the boundary nodes been identified?
   bool boundary_nodes_identified_;
 
+  // have the Dirichlet boundary nodes been identified?
+  bool dirichlet_nodes_identified_;
+
   // is a given coarse node a boundary node of the coarse grid? true/false
   std::vector< bool > is_boundary_node_;
+
+  // is a given coarse node a Dirichlet boundary node of the coarse grid? true/false
+  std::vector< bool > is_dirichlet_node_;
 
   // number of coarse grid boundary nodes
   int number_of_coarse_boundary_nodes_;
 
+  // number of coarse grid boundary nodes
+  int number_of_coarse_dirichlet_nodes_;
+  
   // ----- local error indicators (for each coarse grid element T) -------------
 
   // local coarse residual, i.e. H ||f||_{L^2(T)}

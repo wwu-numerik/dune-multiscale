@@ -2,8 +2,8 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef Elliptic_RIG_MSEM_Solver_HH
-#define Elliptic_RIG_MSEM_Solver_HH
+#ifndef Elliptic_LOD_Solver_HH
+#define Elliptic_LOD_Solver_HH
 
 #ifdef HAVE_CMAKE_CONFIG
   #include "cmake_config.h"
@@ -386,19 +386,21 @@ public:
   //! f --> 'first' source term, scalar ('SourceTermType')
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   //! homogenous Dirchilet boundary condition!:
-  void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
-                            const CommonTraits::FirstSourceType& f,
-                            // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
-                            // n(T)-layers.
-                            MacroMicroGridSpecifier &specifier,
-                            MsFEMTraits::SubGridListType& subgrid_list,
-                            DiscreteFunction& coarse_scale_part,
-                            DiscreteFunction& fine_scale_part,
-                            DiscreteFunction& solution) const;
+  void solve(const CommonTraits::DiffusionType& diffusion_op,
+             const CommonTraits::FirstSourceType& f,
+             const CommonTraits::DiscreteFunctionType& dirichlet_extension,
+             const CommonTraits::NeumannBCType& neumann_bc,
+                   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
+                   // n(T)-layers.
+                   MacroMicroGridSpecifier &specifier,
+                   MsFEMTraits::SubGridListType& subgrid_list,
+                   DiscreteFunction& coarse_scale_part,
+                   DiscreteFunction& fine_scale_part,
+                   DiscreteFunction& solution) const;
 };
 
 } //namespace MsFEM {
 } //namespace Multiscale {
 } //namespace Dune {
 
-#endif // #ifndef Elliptic_RIG_MSEM_Solver_HH
+#endif // #ifndef Elliptic_LOD_Solver_HH
