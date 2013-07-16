@@ -447,6 +447,156 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
   DSC_LOG_INFO << " done." << std::endl;
 }
 
+
+
+//! assemble global dirichlet corrector
+void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
+                                 MacroMicroGridSpecifier& specifier,
+                                 MsFEMTraits::SubGridListType& subgrid_list,
+                                 Elliptic_Rigorous_MsFEM_Solver::DiscreteFunction& global_dirichlet_corrector ) const
+{
+
+  DSC_LOG_INFO << "Sum up local Dirichlet boundary correctors to create the global Dirichlet Corrector... ";
+
+  global_dirichlet_corrector.clear();
+  const HostGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
+
+  typedef typename DiscreteFunctionSpace::IteratorType CoarseIterator;
+  typedef typename CoarseIterator::Entity CoarseEntity;
+  typedef typename CoarseEntity::Geometry CoarseGeometry;
+
+  for (const CoarseEntity& coarse_grid_entity : specifier.coarseSpace())
+  {
+
+    assert(coarse_grid_entity.partitionType() == InteriorEntity);
+
+    const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
+
+    std::vector< std::size_t > indices;
+    specifier.coarseSpace().mapper().map( coarse_grid_entity, indices );
+
+    // is a Dirichlet boundary corrector available for this coarse entity (i.e. for the corresponding subgrid)
+    bool boundary_corrector_available = false;
+    for (const auto& intersection : Dune::Stuff::Common::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity))
+    {
+
+          // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+          if ( intersection.boundary() && (intersection.boundaryId() == 1) )
+          { boundary_corrector_available = true; }
+          else
+          {
+            const auto& lagrangePointSet
+               = specifier.coarseSpace().lagrangePointSet( coarse_grid_entity );
+
+            const int face = intersection.indexInInside();
+            auto faceIterator
+                = lagrangePointSet.beginSubEntity< faceCodim >(face);
+            const auto faceEndIterator
+                = lagrangePointSet.endSubEntity< faceCodim >(face);
+
+            for ( ; faceIterator != faceEndIterator; ++faceIterator)
+            {
+              if ( specifier.is_coarse_dirichlet_node( indices[ *faceIterator ] ) )
+              { boundary_corrector_available = true; continue; }
+            }
+            continue;
+          }
+
+    }
+
+    if ( boundary_corrector_available )
+    {
+       // the sub grid U(T) that belongs to the coarse_grid_entity T
+       auto subGridPart = subgrid_list.gridPart(global_index_entity);
+       const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
+    
+       SubgridDiscreteFunction local_dirichlet_corrector("Local Dirichlet corrector", localDiscreteFunctionSpace);
+       local_dirichlet_corrector.clear();
+    
+       // --------- load local Dirichlet corrector -------
+       // the file/place, where we saved the corrector
+       const std::string local_solution_location = (boost::format("local_problems/_dirichletBoundaryCorrector_%d")
+                                                    % specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
+
+       // reader for the cell problem data file:
+       DiscreteFunctionReader discrete_function_reader( local_solution_location );
+       discrete_function_reader.read(0, local_dirichlet_corrector);
+       
+       DiscreteFunction local_dirichlet_corrector_aux("local_dirichlet_corrector_aux", discreteFunctionSpace_);
+       local_dirichlet_corrector_aux.clear();
+       subgrid_to_hostrid_projection( local_dirichlet_corrector , local_dirichlet_corrector_aux );      
+       global_dirichlet_corrector += local_dirichlet_corrector_aux;
+    }
+
+  }
+
+  DSC_LOG_INFO << " done." << std::endl;
+}
+
+
+//! assemble global neumann corrector
+void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
+                                 MacroMicroGridSpecifier& specifier,
+                                 MsFEMTraits::SubGridListType& subgrid_list,
+                                 Elliptic_Rigorous_MsFEM_Solver::DiscreteFunction& global_neumann_corrector ) const
+{
+
+  DSC_LOG_INFO << "Sum up local Neumann boundary correctors to create the global Neumann Corrector... ";
+
+  global_neumann_corrector.clear();
+  const HostGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
+
+  typedef typename DiscreteFunctionSpace::IteratorType CoarseIterator;
+  typedef typename CoarseIterator::Entity CoarseEntity;
+  typedef typename CoarseEntity::Geometry CoarseGeometry;
+
+  for (const CoarseEntity& coarse_grid_entity : specifier.coarseSpace())
+  {
+
+    assert(coarse_grid_entity.partitionType() == InteriorEntity);
+
+    const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
+
+    // is a neumann boundary corrector available for this coarse entity (i.e. for the corresponding subgrid)
+    bool boundary_corrector_available = false;
+    for (const auto& intersection : Dune::Stuff::Common::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity))
+      {
+
+        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+        if ( intersection.boundary() && (intersection.boundaryId() == 2) )
+          boundary_corrector_available = true;
+       }
+
+    if ( boundary_corrector_available )
+    {
+       // the sub grid U(T) that belongs to the coarse_grid_entity T
+       auto subGridPart = subgrid_list.gridPart(global_index_entity);
+       const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
+    
+       SubgridDiscreteFunction local_neumann_corrector("Local Neumann corrector", localDiscreteFunctionSpace);
+       local_neumann_corrector.clear();
+    
+       // --------- load local neumann corrector -------
+       // the file/place, where we saved the corrector
+       const std::string local_solution_location = (boost::format("local_problems/_neumannBoundaryCorrector_%d")
+                                                    % specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
+
+       // reader for the cell problem data file:
+       DiscreteFunctionReader discrete_function_reader( local_solution_location );
+       discrete_function_reader.read(0, local_neumann_corrector);
+       
+       DiscreteFunction local_neumann_corrector_aux("local_neumann_corrector_aux", discreteFunctionSpace_);
+       local_neumann_corrector_aux.clear();
+       subgrid_to_hostrid_projection( local_neumann_corrector , local_neumann_corrector_aux );      
+       global_neumann_corrector += local_neumann_corrector_aux;
+    }
+
+  }
+
+  DSC_LOG_INFO << " done." << std::endl;
+}
+
+
 void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
                           const CommonTraits::FirstSourceType& f,
                           const CommonTraits::DiscreteFunctionType& dirichlet_extension,
@@ -465,9 +615,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
   DiscreteFunctionSpace& fine_space = specifier.fineSpace();
-
-  specifier.identify_coarse_dirichlet_nodes();
-  specifier.identify_coarse_boundary_nodes();//!DELETE ME SOON!!!!!!!!!!!!
 
   const int number_of_relevant_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_dirichlet_nodes();
 
@@ -550,7 +697,11 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
   // the support of the interaction of two ms basis functions
   std::vector< std::vector< std::vector< FineGridEntitySeed > > > support_of_ms_basis_func_intersection;
-  
+
+  // support of the global Dirichlet and the global Neumann boundary corrector
+  std::vector< FineGridEntitySeed > support_global_dirichlet_corrector;
+  std::vector< FineGridEntitySeed > support_global_neumann_corrector;
+
   // relevant constellations of two ms basis functions (i.e. when they have a non-empty intersection of their supports) 
   std::vector < std::tuple< unsigned int, unsigned int > > relevant_constellations;
   // we only store the tuples relevant_constellations[i][j] for 'j<=i' the rest is obtained by symmetry
@@ -613,6 +764,9 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
       
     int fine_entity_id = hostGridLeafIndexSet.index( *it );
 
+    bool add_to_support_dirichlet_corrector = false;
+    bool add_to_support_neumann_corrector = false;
+      
     // IDs of the ms basis functions that containt the fine grid entity 'it'
     std::vector< int > ms_basis_funcs_that_contain_entity;
     
@@ -620,6 +774,19 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
     for (unsigned int m = 0; m < subgrid_list.getSubgridIDs_that_contain_entity( fine_entity_id ).size(); ++m)
     {
       int subgrid_id = subgrid_list.getSubgridIDs_that_contain_entity( fine_entity_id )[m];
+      
+      HostEntityPointer coarse_it = coarse_space.grid().entityPointer( subgrid_list.get_coarse_entity_seed( subgrid_id ) );
+      HostEntity& coarse_entity = *coarse_it;
+      for (const auto& coarse_intersection
+         : Dune::Stuff::Common::intersectionRange(coarse_space.gridPart(), coarse_entity))
+      {
+
+        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+        if ( coarse_intersection.boundary() && (coarse_intersection.boundaryId() == 1) )
+          add_to_support_dirichlet_corrector = true;
+        if ( coarse_intersection.boundary() && (coarse_intersection.boundaryId() == 2) )
+          add_to_support_neumann_corrector = true;
+      }
       
       // now iterate over the ms basis functions that were assembled using a corrector that belongs to the current subgrid
       for (unsigned int l = 0; l < subgrid_id_to_ms_basis_func_ids[ subgrid_id ].size(); ++l)
@@ -640,15 +807,21 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
         int ms_basis_id_2 = ms_basis_funcs_that_contain_entity[ mid2 ];
         // check if the tuple was already added to the relevant_constellations-vector
         if ( (support_of_ms_basis_func_intersection[ ms_basis_id_1 ][ ms_basis_id_2 ].size() == 0) && (ms_basis_id_2<=ms_basis_id_1) )
-	{
+        {
           std::tuple< unsigned int, unsigned int > tup = make_tuple( ms_basis_id_1, ms_basis_id_2 );
           relevant_constellations.push_back( tup );
-	}
+        }
         // add the seed to the support of the insection between ms basis ms_basis_id_1 and ms_basis_id_2
-	support_of_ms_basis_func_intersection[ ms_basis_id_1 ][ ms_basis_id_2 ].push_back( (*it).seed() );
+        support_of_ms_basis_func_intersection[ ms_basis_id_1 ][ ms_basis_id_2 ].push_back( (*it).seed() );
       }
     }
- 
+
+    if ( add_to_support_dirichlet_corrector == true )
+       support_global_dirichlet_corrector.push_back( (*it).seed() );
+
+    if ( add_to_support_neumann_corrector == true )
+       support_global_neumann_corrector.push_back( (*it).seed() );
+
   }
   // ------------------------------------------------------------------------------------------------------
 
@@ -673,19 +846,24 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
   assemble_interior_basis_ids( specifier, subgrid_list, global_id_to_internal_id, coordinates_to_global_coarse_node_id,
                                ids_basis_functions_in_extended_subgrid, ids_basis_functions_in_subgrid, ids_basis_functions_in_interior_subgrid );
 
-//! --- > Bis hierhin überarbeitet
-
   //! assemble all local problems (within constructor!)
   MsFEMLocalProblemSolver loc_prob_solver( specifier.fineSpace(), specifier, subgrid_list,
-                                           ids_basis_functions_in_interior_subgrid,
+                                           //ids_basis_functions_in_interior_subgrid,
                                            //ids_basis_functions_in_subgrid,
-                                           //!ids_basis_functions_in_extended_subgrid,
+                                           ids_basis_functions_in_extended_subgrid,
                                            coff, diffusion_op,
-                                           standard_basis_function, global_id_to_internal_id );
+                                           standard_basis_function, global_id_to_internal_id,
+                                           neumann_bc, dirichlet_extension );
   loc_prob_solver.assemble_all(/*silence=*/false);
-
+  
   // define the discrete (elliptic) operator that describes our problem
   add_corrector_contribution( specifier, global_id_to_internal_id, subgrid_list, msfem_basis_function );
+
+  DiscreteFunction global_dirichlet_corrector("Global Dirichlet Corrector", fine_space);
+  DiscreteFunction global_neumann_corrector("Global Neumann Corrector", fine_space);
+  // assemble the global boundary correctors
+  assemble_global_dirichlet_corrector( specifier, subgrid_list, global_dirichlet_corrector );
+  assemble_global_neumann_corrector( specifier, subgrid_list, global_neumann_corrector );
 
   // just for VTK output for the basis function correctors
   /*
@@ -738,12 +916,19 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
      //print_matrix( system_matrix );
 
-     //! NOTE TODO: Assembling of right hand side is also quite expensive!
      VectorType rhs( number_of_relevant_coarse_nodes );
      if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-     { assemble_rhs( f, standard_basis_function, support_of_ms_basis_func_intersection, rhs ); }
+     { assemble_rhs( f, diffusion_op,
+                     dirichlet_extension, neumann_bc,
+                     global_dirichlet_corrector, global_neumann_corrector,
+//                     support_global_dirichlet_corrector, support_global_neumann_corrector,
+                     standard_basis_function, support_of_ms_basis_func_intersection, rhs ); }
      else
-     { assemble_rhs( f, msfem_basis_function, support_of_ms_basis_func_intersection, rhs ); }
+     { assemble_rhs( f, diffusion_op,
+                     dirichlet_extension, neumann_bc,
+                     global_dirichlet_corrector, global_neumann_corrector,
+//                     support_global_dirichlet_corrector, support_global_neumann_corrector,
+                     msfem_basis_function, support_of_ms_basis_func_intersection, rhs ); }
 
      //print_vector( rhs );
 
@@ -781,7 +966,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
         aux *= solution_vector[internal_id];
         coarse_scale_part += aux;
       }
-     coarse_scale_part += dirichlet_extension;
 
      solution.clear();
      for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
@@ -792,13 +976,16 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
         aux *= solution_vector[internal_id];
         solution += aux;
       }
-     solution += dirichlet_extension;
+     solution += global_dirichlet_corrector;
+     solution -= global_neumann_corrector;
 
      fine_scale_part.assign(solution);
      fine_scale_part -= coarse_scale_part;
   }
   else // if nonlinear
   {
+//! --- > Bis hierhin überarbeitet
+
     //! nonlinear version:
     // montone nonlinear problem (nonlinearity only in the lower order terms)
     // solve: - div( A \grad u ) + F( x, u , \grad u ) = f
@@ -1107,7 +1294,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
   
   
   
-} // solve_dirichlet_zero
+} // solve
 
 } //namespace MsFEM {
 } //namespace Multiscale {

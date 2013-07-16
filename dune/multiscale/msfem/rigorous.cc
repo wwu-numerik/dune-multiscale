@@ -43,12 +43,86 @@ namespace MsFEM {
 
 //! set the dirichlet points to the Dirichlet BC
 template< class DirichletBC, class DiscreteFunctionType >
-void setDirichletValues(DirichletBC &dirichlet_func, DiscreteFunctionType& func) {
+void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, DirichletBC &dirichlet_func, DiscreteFunctionType& func) {
   using namespace Dune::Stuff;
   const auto& discreteFunctionSpace = func.space();
   static const unsigned int faceCodim = 1;
   for (const auto& entity : discreteFunctionSpace)
   {
+    
+#if 0
+     const int level_difference = specifier.getLevelDifference();
+     CommonTraits::DiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
+
+     typedef typename CommonTraits::GridType::Traits::LeafIndexSet HostGridLeafIndexSet;
+     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+
+     CommonTraits::EntityPointerType& coarse_father = Stuff::Grid::make_father( coarseGridLeafIndexSet,
+                                                                                entity,
+                                                                                level_difference );
+     CommonTraits::EntityType& coarse_grid_entity = *coarse_father;
+
+     const auto& lagrangePointSet = specifier.coarseSpace().lagrangePointSet( coarse_grid_entity );
+     const auto number_of_points = lagrangePointSet.nop();
+   
+     assert( number_of_points == 3 );
+     std::vector< RangeType > dirichlet_values_coarse_corners( number_of_points );
+     std::vector< DomainType > corners( number_of_points );
+
+     for(size_t loc_point = 0; loc_point < number_of_points ; ++loc_point ) {
+        corners[ loc_point ] = coarse_geometry.global(lagrangepoint_set.point( loc_point ) );
+        dirichlet_func.evaluate( corners[ loc_point ], dirichlet_values_coarse_corners[ loc_point ] );
+      }
+    
+     // LinearLagrangeInterpolation2D should be eventually replaced by
+     // LinearLagrangeFunction2D< DiscreteFunctionSpace > dirichlet_interpolation
+     LinearLagrangeInterpolation2D< DiscreteFunctionSpace > dirichlet_interpolation
+          ( corners[0], dirichlet_values_coarse_corners[0],
+            corners[1], dirichlet_values_coarse_corners[1],
+            corners[2], dirichlet_values_coarse_corners[2] );
+
+
+#if 0
+     const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
+
+     std::vector< std::size_t > indices;
+     specifier.coarseSpace().mapper().map( coarse_grid_entity, indices );
+
+     bool intersects_dirichlet_boundary = false;
+     for (const auto& coarse_intersection : Dune::Stuff::Common::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity ))
+     {
+
+          // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+          if ( coarse_intersection.boundary() && (coarse_intersection.boundaryId() == 1) )
+          { intersects_dirichlet_boundary = true; }
+          else
+          {
+
+
+            const int face = coarse_intersection.indexInInside();
+            auto faceIterator
+                = lagrangePointSet.beginSubEntity< faceCodim >(face);
+            const auto faceEndIterator
+                = lagrangePointSet.endSubEntity< faceCodim >(face);
+
+            for ( ; faceIterator != faceEndIterator; ++faceIterator)
+            {
+              if ( specifier.is_coarse_dirichlet_node( indices[ *faceIterator ] ) )
+              { intersects_dirichlet_boundary = true; continue; }
+            }
+            continue;
+          }
+
+     }
+     
+     
+     if ( intersects_dirichlet_boundary == true ) 
+     {
+       
+     }     
+#endif
+#endif
+
     for (const auto& intersection
          : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
     {
@@ -215,12 +289,6 @@ void algorithm(const std::string& macroGridName,
   // Neumann boundary condition
   const auto neumann_bc_ptr = Problem::getNeumannBC();
   const auto& neumann_bc = *neumann_bc_ptr;
-   
-  // discrete function that takes the values of the Dirichlet BC on the Dirichlet Boundary nodes
-  // and that is zero elsewhere
-  CommonTraits::DiscreteFunctionType dirichlet_extension("Dirichlet extension", discreteFunctionSpace);
-  dirichlet_extension.clear();
-  setDirichletValues( dirichlet_bc, dirichlet_extension );
 
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
@@ -249,6 +317,14 @@ void algorithm(const std::string& macroGridName,
   }
   //! \todo Important why? (Sven)
   specifier.setOversamplingStrategy( 3 ); //! Important!
+  specifier.identify_coarse_dirichlet_nodes();
+  specifier.identify_coarse_boundary_nodes();//!DELETE ME SOON!!!!!!!!!!!!
+
+  // discrete function that takes the values of the Dirichlet BC on the Dirichlet Boundary nodes
+  // and that is zero elsewhere
+  CommonTraits::DiscreteFunctionType dirichlet_extension("Dirichlet extension", discreteFunctionSpace);
+  dirichlet_extension.clear();
+  setDirichletValues( specifier, dirichlet_bc, dirichlet_extension );
 
   //! create subgrids:
   {//this scopes subgridlist

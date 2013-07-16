@@ -10,7 +10,7 @@ CONSTANTSFUNCTION( 0.05 )
 
 ModelProblemData::ModelProblemData()
   : IModelProblemData(constants()) {
-    if (constants().get("linear", true))
+    if (!constants().get("linear", true))
       DUNE_THROW(Dune::InvalidStateException, "problem eleven is entirely nonlinear, but problem.linear was true");
     if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()) )
        DUNE_THROW(Dune::InvalidStateException, "The problem does not allow stochastic perturbations. Please, switch the key off.");
@@ -37,14 +37,15 @@ void FirstSource::evaluate(const DomainType& x,
                      RangeType& y) const
 {
   y = -6.0 * exp( x[0] +  x[1] );
-  
+
+#if 0
   if ( exp( x[0] +  x[1] ) <= (-1.0) )
    { y += (-1.0) * (1.0 + pow( x[0] +  x[1] , 2.0 ) ); }
   else if ( exp( x[0] +  x[1] ) >= 1 )
         { y += (1.0 + pow( x[0] +  x[1] , 2.0 ) ); }
         else
         { y += (1.0 + pow( x[0] +  x[1] , 2.0 ) ) * sin( 0.5 * M_PI * exp( x[0] +  x[1] ) ); }
-
+#endif
 } // evaluate
 
 void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
@@ -56,8 +57,8 @@ Diffusion::Diffusion(){}
 void Diffusion::diffusiveFlux(const DomainType& x,
                    const JacobianRangeType& direction,
                    JacobianRangeType& flux) const {
-  double a_0_0 = 2.0;
-  double a_0_1 = 1.0;
+  double a_0_0 = 3.0;
+  double a_0_1 = 0.0;
   double a_1_0 = 0.0;
   double a_1_1 = 3.0;
   
@@ -69,8 +70,8 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
                            const JacobianRangeType& /*position_gradient*/,
                            const JacobianRangeType& direction_gradient,
                            JacobianRangeType& flux) const {
-  double a_0_0 = 2.0;
-  double a_0_1 = 1.0;
+  double a_0_0 = 3.0;
+  double a_0_1 = 0.0;
   double a_1_0 = 0.0;
   double a_1_1 = 3.0;
  
@@ -97,13 +98,15 @@ void LowerOrderTerm::evaluate(const DomainType& x,
                             RangeType& y) const {
 
    // F(x,p, (z_1,z_2) ) = c g(p) z_2
+   y = 0.0;
+#if 0
    if ( position <= (-1.0) )
    { y = (-1.0) * (1.0 + pow( x[0] +  x[1] , 2.0 ) ); }
    else if ( position >= 1 )
         { y = (1.0 + pow( x[0] +  x[1] , 2.0 ) ); }
         else
         { y = (1.0 + pow( x[0] +  x[1] , 2.0 ) ) * sin( 0.5 * M_PI * position); }
-    
+#endif
 }  // evaluate
 
 // evaluate position derivative y = d_1 F (x, u(x), \grad u(x))  (derivative with respect to the second componenent 'u(x)')
@@ -114,12 +117,15 @@ void LowerOrderTerm::position_derivative(const DomainType& x,
                                        RangeType& y) const {
 
    // \partial_p F(x,p, (z_1,z_2) ) = ..
+   y = 0.0;
+#if 0
    if ( position <= (-1.0) )
    { y = 0.0; }
    else if ( position >= 1 )
         { y = 0.0; }
         else
         { y = 0.5 * M_PI * (1.0 + pow( x[0] +  x[1] , 2.0 ) ) * cos( 0.5 * M_PI * position); }
+#endif
 }  // position_derivative
 
 // evaluate position derivative y = d_2 F (x, u(x), \grad u(x))  (derivative with respect to the third componenent 'grad u(x)')
