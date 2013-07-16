@@ -60,6 +60,7 @@ private:
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
+  typedef typename HostEntityType::EntitySeed CoarseGridEntitySeed;
   typedef typename HostEntityType::Codim< HostGridType::dimension >::EntityPointer HostNodePointer;
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
@@ -146,6 +147,10 @@ public:
   * @return Returns the map.
   * */
   const EntityPointerCollectionType& getNodeEntityMap();
+  
+  // given the id of a subgrid, return the entity seed for the 'base coarse entity'
+  // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
+  const CoarseGridEntitySeed get_coarse_entity_seed( int i ) const;
 
 private:
   typedef std::map<int, std::shared_ptr<SubGridType> > SubGridStorageType;
@@ -182,6 +187,10 @@ private:
   std::map<int, int> fineToCoarseMapID_;
   // given the id of a fine grid element, the vector returns the ids of all subgrids that share that element
   std::vector < std::vector< int > > fine_id_to_subgrid_ids_;
+  
+  // given the id of a subgrid, return the entity seed for the 'base coarse entity'
+  // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
+  std::vector < CoarseGridEntitySeed > subgrid_id_to_base_coarse_entity_;
 };
 
 } //namespace MsFEM {

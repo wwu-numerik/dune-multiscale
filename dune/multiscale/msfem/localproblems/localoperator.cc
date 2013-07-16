@@ -284,6 +284,8 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
           continue;
         }
       }
+      else if ( iit->boundaryId() != 1 )
+      { continue; }
 
       const LagrangePointSet& lagrangePointSet
           = discreteFunctionSpace.lagrangePointSet(subgrid_entity);
@@ -613,6 +615,268 @@ void LocalProblemOperator
     }
   }
 } // assemble_local_RHS
+
+
+void LocalProblemOperator
+      ::assemble_local_RHS_Dirichlet_corrector(
+             const HostDiscreteFunction& dirichlet_extension,
+             const SubGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+             const int& oversampling_strategy,
+             // rhs local msfem problem:
+             DiscreteFunction& local_problem_RHS) const {
+
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
+
+  typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
+  typedef typename Iterator::Entity                           Entity;
+  typedef typename Entity::Geometry                           Geometry;
+
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
+
+  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
+  const GridType& subGrid = discreteFunctionSpace.grid();
+
+  // set entries to zero:
+  local_problem_RHS.clear();
+
+  // gradient of micro scale base function:
+  std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
+
+  const Iterator end = discreteFunctionSpace.end();
+  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
+  {
+    const Entity& local_grid_entity = *it;
+    const Geometry& geometry = local_grid_entity.geometry();
+    assert(local_grid_entity.partitionType() == InteriorEntity);
+
+    HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );
+    const HostEntity& host_entity = *host_entity_pointer;
+
+    // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
+    if ( oversampling_strategy == 3 )
+      {
+        // the first three elements of the 'coarse_node_vector' are the corners of the relevant coarse grid entity
+        // (the coarse grid entity that was the starting entity to create the current subgrid that was constructed by enrichment)
+        if ( !(point_is_in_element( coarse_node_vector[0], coarse_node_vector[1], coarse_node_vector[2], geometry.center() )) )
+       continue;
+      }
+
+    // 'oversampling_strategy == 3' means that we use the rigorous MsFEM
+    bool clement = false;
+    if (oversampling_strategy == 3)
+     clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
+
+    // if the we use oversampling strategy 2 or 3/Lagrange, we need to sort out some coarse grid nodes:
+    std::vector< int > sub_grid_entity_corner_is_relevant;
+    if (!clement)
+    {
+      for ( int c = 0; c < geometry.corners(); ++c )
+      {
+        for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+        {
+         // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
+         // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
+         if ( (coarse_node_vector[coarse_node_local_id] == geometry.corner(c))
+         && (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) == sub_grid_entity_corner_is_relevant.end()) )
+         { sub_grid_entity_corner_is_relevant.push_back(c);
+         //std :: cout << std ::endl << "geometry.corner(" << c << ") = " << geometry.corner(c) << " is relevant." << std ::endl;
+
+        }
+        }
+      }
+    }
+    LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
+    const HostLocalFunction loc_dirichlet_extension = dirichlet_extension.localFunction( host_entity );
+
+    const BasisFunctionSetType& baseSet = elementOfRHS.basisFunctionSet();
+    const auto numBaseFunctions = baseSet.size();
+
+    const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const size_t numQuadraturePoints = quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+    {
+      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+
+      // remember, we are concerned with: - \int_T A( \nabla dirichlet_extension ) · ∇ \phi(x)
+      // global point in the subgrid
+      const DomainType global_point = geometry.global(local_point);
+      const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+
+      JacobianRangeType gradient_dirichlet_extension;
+      loc_dirichlet_extension.jacobian( quadrature[quadraturePoint] , gradient_dirichlet_extension);
+
+      // A( \nabla dirichlet_extension )
+      // diffusion operator evaluated in 'x' multiplied with gradient_dirichlet_extension
+      JacobianRangeType diffusive_flux;
+
+      diffusion_operator_.diffusiveFlux(global_point, gradient_dirichlet_extension , diffusive_flux );
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
+      std::vector< std::vector<RangeType> > phi_values(sub_grid_entity_corner_is_relevant.size());
+      for(auto j : DSC::valueRange(sub_grid_entity_corner_is_relevant.size())) {
+        baseSet.evaluateAll(geometry.local(geometry.corner(sub_grid_entity_corner_is_relevant[j])), phi_values[j]);
+      }
+
+      for (unsigned int i = 0; i < numBaseFunctions; ++i)
+      {
+        bool zero_entry = false;
+        for ( size_t sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+        {
+          const auto& value_phi_i = phi_values[sgec][i];
+          if ( value_phi_i == 1.0 )
+          {
+            zero_entry = true;
+          }
+        }
+        if (!zero_entry)
+          elementOfRHS[i] -= weight * (diffusive_flux[0] * gradient_phi[i][0]);
+        else
+          elementOfRHS[i] = 0.0;
+      }
+
+    }
+  }
+
+} // assemble_local_RHS_Dirichlet_corrector
+
+
+void LocalProblemOperator
+      ::assemble_local_RHS_Neumann_corrector(
+             const NeumannBoundaryType& neumann_bc,
+             const HostDiscreteFunctionSpace& host_space,
+             const SubGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+             const int& oversampling_strategy,
+             // rhs local msfem problem:
+             DiscreteFunction& local_problem_RHS) const {
+
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::LocalFunctionType         LocalFunction;
+
+  typedef typename DiscreteFunctionSpace::IteratorType        Iterator;
+  typedef typename Iterator::Entity                           Entity;
+  typedef typename Entity::Geometry                           Geometry;
+
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef Fem::CachingQuadrature< GridPart, 0 >             Quadrature;
+
+  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
+  const GridType& subGrid = discreteFunctionSpace.grid();
+
+  // set entries to zero:
+  local_problem_RHS.clear();
+
+  // gradient of micro scale base function:
+  std::vector<RangeType> phi( discreteFunctionSpace.mapper().maxNumDofs() );
+
+  const Iterator end = discreteFunctionSpace.end();
+  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it)
+  {
+    const Entity& local_grid_entity = *it;
+    const Geometry& geometry = local_grid_entity.geometry();
+    assert(local_grid_entity.partitionType() == InteriorEntity);
+
+    HostEntityPointer host_entity_pointer = subGrid.getHostEntity< 0 >( local_grid_entity );
+    const HostEntity& host_entity = *host_entity_pointer;
+
+    // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
+    if ( oversampling_strategy == 3 )
+      {
+        // the first three elements of the 'coarse_node_vector' are the corners of the relevant coarse grid entity
+        // (the coarse grid entity that was the starting entity to create the current subgrid that was constructed by enrichment)
+        if ( !(point_is_in_element( coarse_node_vector[0], coarse_node_vector[1], coarse_node_vector[2], geometry.center() )) )
+       continue;
+      }
+
+    // 'oversampling_strategy == 3' means that we use the rigorous MsFEM
+    bool clement = false;
+    if (oversampling_strategy == 3)
+     clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
+
+    // if the we use oversampling strategy 2 or 3/Lagrange, we need to sort out some coarse grid nodes:
+    std::vector< int > sub_grid_entity_corner_is_relevant;
+    if (!clement)
+    {
+      for ( int c = 0; c < geometry.corners(); ++c )
+      {
+        for ( size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size(); ++coarse_node_local_id )
+        {
+         // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
+         // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
+         if ( (coarse_node_vector[coarse_node_local_id] == geometry.corner(c))
+         && (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) == sub_grid_entity_corner_is_relevant.end()) )
+         { sub_grid_entity_corner_is_relevant.push_back(c); }
+        }
+      }
+    }
+
+    LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
+    const BasisFunctionSetType& baseSet = elementOfRHS.basisFunctionSet();
+
+    const auto& lagrangePointSet = host_space.lagrangePointSet( host_entity );
+
+    std::vector< std::vector<RangeType> > phi_values(sub_grid_entity_corner_is_relevant.size());
+    for(auto j : DSC::valueRange(sub_grid_entity_corner_is_relevant.size())) {
+        baseSet.evaluateAll(geometry.local(geometry.corner(sub_grid_entity_corner_is_relevant[j])), phi_values[j]);
+    }
+
+    for (const auto& intersection
+         : Dune::Stuff::Common::intersectionRange(host_space.gridPart(), host_entity ))
+      {
+        if ( !intersection.boundary() )
+          continue;
+        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+        if ( intersection.boundary() && (intersection.boundaryId() != 2) )
+          continue;
+
+        const auto face = intersection.indexInInside();
+
+        const HostFaceQuadrature faceQuadrature( host_space.gridPart(),
+                                                 intersection, 2 * host_space.order() + 2, HostFaceQuadrature::INSIDE );
+        const int numFaceQuadraturePoints = faceQuadrature.nop();
+
+        enum { faceCodim = 1 };
+        for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
+        {
+          baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi );
+
+          const auto local_point_entity = faceQuadrature.point( faceQuadraturePoint ); 
+          const auto global_point = host_entity.geometry().global( local_point_entity ); 
+          const auto local_point_face = intersection.geometry().local( global_point );
+
+          RangeType neumann_value( 0.0 );
+          neumann_bc.evaluate( global_point, neumann_value );
+
+          const double face_weight = intersection.geometry().integrationElement( local_point_face )
+                          * faceQuadrature.weight( faceQuadraturePoint );
+
+          auto faceIterator = lagrangePointSet.beginSubEntity< faceCodim >( face );
+          const auto faceEndIterator = lagrangePointSet.endSubEntity< faceCodim >( face );
+
+          for ( ; faceIterator != faceEndIterator; ++faceIterator)
+          {
+             bool zero_entry = false;
+             for ( size_t sgec = 0; sgec < sub_grid_entity_corner_is_relevant.size(); ++sgec )
+             {
+               const auto& value_phi_i = phi_values[sgec][*faceIterator];
+               if ( value_phi_i == 1.0 )
+               {
+                 zero_entry = true;
+               }
+             }
+             
+             if (!zero_entry)
+                elementOfRHS[ *faceIterator ] -= neumann_value * face_weight * phi[ *faceIterator ];
+             else
+                elementOfRHS[ *faceIterator ] = 0.0;
+          }
+
+        }
+
+      }
+  }
+} // assemble_local_RHS_Neumann_corrector
+
 
 
 void LocalProblemOperator

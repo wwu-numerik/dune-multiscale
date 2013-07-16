@@ -176,6 +176,7 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
 
   fine_id_to_subgrid_ids_.resize( hostGridPart_.grid().size(0) );
 
+  subgrid_id_to_base_coarse_entity_.resize( specifier_.getNumOfCoarseEntities() );
 
   //! @todo temp!
   for (const auto& hostEntity : DSC::viewRange(hostGridPart_.grid().leafView())) {
@@ -248,10 +249,14 @@ const SubGridList::EntityPointerCollectionType& SubGridList::getNodeEntityMap() 
   return entities_sharing_same_node_;
 }
 
+// given the id of a subgrid, return the entity seed for the 'base coarse entity'
+// (i.e. the coarse entity that the subgrid was constructed from by enrichment )
+const SubGridList::CoarseGridEntitySeed SubGridList::get_coarse_entity_seed( int i ) const {
+  return subgrid_id_to_base_coarse_entity_[ i ];
+}
 
 // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
-const std::vector< int >& SubGridList::getSubgridIDs_that_contain_entity (int host_enitity_index) const
-{
+const std::vector< int >& SubGridList::getSubgridIDs_that_contain_entity (int host_enitity_index) const {
   return fine_id_to_subgrid_ids_[ host_enitity_index ];
 }
 
@@ -458,6 +463,7 @@ void SubGridList::identifySubGrids() {
     const int coarse_index = coarseGridLeafIndexSet_.index(coarse_entity);
     // make sure we did not create a subgrid for the current coarse entity so far
     assert(subGridList_.find(coarse_index)==subGridList_.end());
+    subgrid_id_to_base_coarse_entity_[coarse_index] = coarse_entity.seed();
     subGridList_[coarse_index] = make_shared<SubGridType>(hostGrid);
     subGridList_[coarse_index]->createBegin();
 

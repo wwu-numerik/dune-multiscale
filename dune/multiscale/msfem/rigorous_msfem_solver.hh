@@ -22,9 +22,13 @@
 
 #include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/function/interface.hh>
+
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -48,6 +52,7 @@ private:
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
 
   typedef Fem::CachingQuadrature< GridPart, 0 > CoarseQuadrature;
+  typedef Fem::CachingQuadrature< GridPart, 1 > HostFaceQuadrature;
 
   typedef typename DiscreteFunctionSpace::GridType HostGrid;
 
@@ -232,6 +237,15 @@ private:
                                    MsFEMBasisFunctionType& msfem_basis_function_list ) const;
 
 
+  //! assemble global dirichlet corrector
+  void assemble_global_dirichlet_corrector(MacroMicroGridSpecifier &specifier,
+                                           MsFEMTraits::SubGridListType& subgrid_list,
+                                           DiscreteFunction& global_dirichlet_corrector ) const;
+
+  //! assemble global neumann corrector
+  void assemble_global_neumann_corrector(MacroMicroGridSpecifier &specifier,
+                                         MsFEMTraits::SubGridListType& subgrid_list,
+                                         DiscreteFunction& global_neumann_corrector ) const;
 
   template< class DiffusionOperator, class SeedSupportStorage >
   RangeType evaluate_bilinear_form( const DiffusionOperator& diffusion_op,
@@ -328,9 +342,17 @@ private:
   }
 
 
+
   // ------------------------------------------------------------------------------------
-  template< class SourceTerm, class SeedSupportStorageList, class VectorImp >
-  void assemble_rhs( const SourceTerm& f,
+  template< class SeedSupportStorageList, class VectorImp >
+  void assemble_rhs( const CommonTraits::FirstSourceType& f,
+                     const CommonTraits::DiffusionType& diffusion_op,
+                     const CommonTraits::DiscreteFunctionType& dirichlet_extension,
+                     const CommonTraits::NeumannBCType& neumann_bc,
+                     const DiscreteFunction& global_dirichlet_corrector,
+                     const DiscreteFunction& global_neumann_corrector,
+//                     const std::vector< FineGridEntitySeed >& support_global_dirichlet_corrector,
+//                     const std::vector< FineGridEntitySeed >& support_global_neumann_corrector,
                      MsFEMBasisFunctionType& msfem_basis_function_list,
                      SeedSupportStorageList& support_of_ms_basis_func_intersection,
                      VectorImp& rhs ) const
@@ -344,7 +366,7 @@ private:
       
       typedef typename HostEntity::template Codim< 0 >::EntityPointer
           HostEntityPointer;
-	  
+
       const int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
       for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[col][col].size(); ++it_id)
 //      for (const auto& entity : discreteFunctionSpace_)
@@ -355,6 +377,45 @@ private:
         const auto& geometry = entity.geometry();
 
         const auto local_func = msfem_basis_function_list[col]->localFunction(entity);
+
+        for (const auto& intersection
+         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace_.gridPart(), entity ))
+        {
+           if ( !intersection.boundary() )
+             continue;
+           // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+           if ( intersection.boundary() && (intersection.boundaryId() != 2) )
+             continue;
+
+           const auto face = intersection.indexInInside();
+           const HostFaceQuadrature faceQuadrature( discreteFunctionSpace_.gridPart(),
+                                                    intersection, polOrder, HostFaceQuadrature::INSIDE );
+           const int numFaceQuadraturePoints = faceQuadrature.nop();
+
+           enum { faceCodim = 1 };
+           for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
+           {
+             RangeType func_in_x;
+             local_func.evaluate( faceQuadrature[faceQuadraturePoint], func_in_x );
+
+             const auto local_point_entity = faceQuadrature.point( faceQuadraturePoint ); 
+             const auto global_point = geometry.global( local_point_entity ); 
+             const auto local_point_face = intersection.geometry().local( global_point );
+
+             RangeType neumann_value( 0.0 );
+             neumann_bc.evaluate( global_point, neumann_value );
+
+             const double face_weight = intersection.geometry().integrationElement( local_point_face )
+                          * faceQuadrature.weight( faceQuadraturePoint );
+
+             rhs[col] += face_weight * ( func_in_x * neumann_value );
+           }
+        }
+
+        const auto glob_dirichlet_corrector_localized = global_dirichlet_corrector.localFunction(entity);
+        const auto glob_neumann_corrector_localized = global_neumann_corrector.localFunction(entity);
+        const auto dirichlet_extension_localized = dirichlet_extension.localFunction(entity);
+
         const Fem::CachingQuadrature< GridPart, 0 > quadrature( entity, polOrder);
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
@@ -368,10 +429,29 @@ private:
           RangeType func_in_x;
           local_func.evaluate( quadrature[quadraturePoint], func_in_x );
 
+          JacobianRangeType grad_func_in_x;
+          local_func.jacobian( quadrature[quadraturePoint], grad_func_in_x );
+
+          JacobianRangeType grad_global_dirichlet_corrector;
+          glob_dirichlet_corrector_localized.jacobian( quadrature[quadraturePoint], grad_global_dirichlet_corrector );
+
+          JacobianRangeType grad_global_neumann_corrector;
+          glob_neumann_corrector_localized.jacobian( quadrature[quadraturePoint], grad_global_neumann_corrector );
+
+          JacobianRangeType grad_dirichlet_extension;
+          dirichlet_extension_localized.jacobian( quadrature[quadraturePoint], grad_dirichlet_extension );
+
+          JacobianRangeType flux_direction;
+          flux_direction[0] = grad_dirichlet_extension[0] + grad_global_dirichlet_corrector[0] - grad_global_neumann_corrector[0];
+
+          JacobianRangeType diffusive_flux;
+          diffusion_op.diffusiveFlux(global_point, flux_direction, diffusive_flux );
+
           RangeType f_x(0.0);
           f.evaluate( global_point, f_x);
 
           rhs[col] += weight * ( func_in_x * f_x );
+          rhs[col] -= weight * ( grad_func_in_x[0] * diffusive_flux[0] );
         }
       }
     }

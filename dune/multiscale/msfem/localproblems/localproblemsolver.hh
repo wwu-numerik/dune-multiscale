@@ -77,6 +77,8 @@ private:
   typedef CommonTraits::DiscreteFunctionType HostDiscreteFunctionType;
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
+  typedef CommonTraits::NeumannBCType NeumannBoundaryType;
+
   //! @todo HostDiscreteFunctionType should be replaced by some kind of coarse function type
   typedef std::vector< std::shared_ptr<HostDiscreteFunctionType> > CoarseBasisFunctionListType;
 
@@ -179,6 +181,9 @@ private:
   std::vector< double >* inverse_of_L1_norm_coarse_basis_funcs_;
   const CoarseBasisFunctionListType* coarse_basis_;
   const std::map<int,int>* global_id_to_internal_id_;
+  
+  const NeumannBoundaryType* neumann_bc_;
+  const HostDiscreteFunctionType* dirichlet_extension_;
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
@@ -196,7 +201,9 @@ public:
                           std::vector< double >& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
                           const DiffusionOperatorType& diffusion_operator,
                           const CoarseBasisFunctionListType& coarse_basis,
-                          const std::map<int,int>& global_id_to_internal_id );
+                          const std::map<int,int>& global_id_to_internal_id,
+                          const NeumannBoundaryType& neumann_bc,
+                          const HostDiscreteFunctionType& dirichlet_extension );
 
   void solveAllLocalProblems(const CoarseEntityType& coarseCell, SubDiscreteFunctionVectorType& allLocalSolutions) const;
 
@@ -205,12 +212,31 @@ public:
                          SubDiscreteFunctionType& local_problem_solution,
                          const int coarse_index = -1 ) const;
 
-  // solve local problems for Local Orthogonal Decomposition Method (LOD) 
-  void solvelocalproblems_lod(JacobianRangeType& e_0,
-                              JacobianRangeType& e_1,
-                              SubDiscreteFunctionType& local_problem_solution_0,
-                              SubDiscreteFunctionType& local_problem_solution_1,
-                              const int coarse_index /*= -1*/ ) const;
+  // Preprocessing step for the LOD:
+  // assemble the two relevant system matrices: one for the corrector problem without contraints
+  // and the second of the low dimensional lagrange multiplier (describing the inverse of the schur complement)
+  void preprocess_corrector_problems( const int coarse_index,
+                                            LocProbFEMMatrixType& locprob_system_matrix,
+                                            MatrixType &lm_system_matrix ) const;
+
+  // solve local problem for Local Orthogonal Decomposition Method (LOD) 
+  void solve_corrector_problem_lod(JacobianRangeType& e,
+                                   LocProbFEMMatrixType& locprob_system_matrix,
+                                   MatrixType &lm_system_matrix,
+                                   SubDiscreteFunctionType& local_corrector,
+                                   const int coarse_index /*= -1*/ ) const;    
+
+  // solve Dirichlet boundary corrector problem for Local Orthogonal Decomposition Method (LOD) 
+  void solve_dirichlet_corrector_problem_lod( LocProbFEMMatrixType& locprob_system_matrix,
+                                              MatrixType &lm_system_matrix,
+                                              SubDiscreteFunctionType& local_corrector,
+                                              const int coarse_index /*= -1*/ ) const; 
+
+  // solve Neumann boundary corrector problem for Local Orthogonal Decomposition Method (LOD) 
+  void solve_neumann_corrector_problem_lod( LocProbFEMMatrixType& locprob_system_matrix,
+                                            MatrixType &lm_system_matrix,
+                                            SubDiscreteFunctionType& local_corrector,
+                                            const int coarse_index /*= -1*/ ) const; 
 
   //! create a hostgrid function from a subgridfunction
   void subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func,

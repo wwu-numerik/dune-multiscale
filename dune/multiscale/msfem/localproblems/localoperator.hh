@@ -34,6 +34,7 @@ class LocalProblemOperator
   typedef MsFEMLocalProblemSolver::SubDiscreteFunctionType SubDiscreteFunctionType;
   typedef MsFEMLocalProblemSolver::SubDiscreteFunctionVectorType SubDiscreteFunctionVectorType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
+  typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
   enum { faceCodim = 1 };
 
@@ -85,6 +86,8 @@ private:
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
+  
+  typedef Fem::CachingQuadrature< HostGridPart, 1 > HostFaceQuadrature;
 
 public:
 
@@ -119,6 +122,21 @@ public:
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const;
 
+  void assemble_local_RHS_Dirichlet_corrector(
+    const HostDiscreteFunction& dirichlet_extension,
+    const SubGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
+    const int& oversampling_strategy,
+    // rhs local msfem problem:
+    DiscreteFunction& local_problem_RHS) const;
+
+  void assemble_local_RHS_Neumann_corrector(
+    const NeumannBoundaryType& neumann_bc,
+    const HostDiscreteFunctionSpace& host_space,
+    const SubGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
+    const int& oversampling_strategy,
+    // rhs local msfem problem:
+    DiscreteFunction& local_problem_RHS) const;
+    
   void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
                   SubDiscreteFunctionVectorType& allLocalRHS) const;
 
