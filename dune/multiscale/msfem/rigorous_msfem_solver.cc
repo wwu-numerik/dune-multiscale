@@ -984,7 +984,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
   }
   else // if nonlinear
   {
-//! --- > Bis hierhin überarbeitet
 
     //! nonlinear version:
     // montone nonlinear problem (nonlinearity only in the lower order terms)
@@ -1056,9 +1055,49 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
             LocalFunction loc_func_1 = msfem_basis_function[row]->localFunction(*it);
             LocalFunction loc_func_2 = msfem_basis_function[col]->localFunction(*it);
+            LocalFunction local_dirichlet_extension = dirichlet_extension.localFunction(*it);
+            LocalFunction glob_dirichlet_corrector_localized = global_dirichlet_corrector.localFunction(*it);
+            LocalFunction glob_neumann_corrector_localized = global_neumann_corrector.localFunction(*it);
 
             const auto& geometry = (*it).geometry();
- 
+
+            if ( ( row == col) && ( first_cycle == true ) )
+            {
+               for (const auto& intersection
+                : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace_.gridPart(), (*it) ))
+               {
+                 if ( !intersection.boundary() )
+                   continue;
+                 // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+                 if ( intersection.boundary() && (intersection.boundaryId() != 2) )
+                   continue;
+
+                 const auto face = intersection.indexInInside();
+                 const HostFaceQuadrature faceQuadrature( discreteFunctionSpace_.gridPart(),
+                                                          intersection, polOrder, HostFaceQuadrature::INSIDE );
+                 const int numFaceQuadraturePoints = faceQuadrature.nop();
+
+                 enum { faceCodim = 1 };
+                 for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
+                 {
+                    RangeType func_in_x;
+                    loc_func_1.evaluate( faceQuadrature[faceQuadraturePoint], func_in_x );
+
+                    const auto local_point_entity = faceQuadrature.point( faceQuadraturePoint ); 
+                    const auto global_point = geometry.global( local_point_entity ); 
+                    const auto local_point_face = intersection.geometry().local( global_point );
+
+                    RangeType neumann_value( 0.0 );
+                    neumann_bc.evaluate( global_point, neumann_value );
+
+                    const double face_weight = intersection.geometry().integrationElement( local_point_face )
+                           * faceQuadrature.weight( faceQuadraturePoint );
+
+                    newton_step_rhs[col] += face_weight * ( func_in_x * neumann_value );
+                 }
+               }
+            }
+
             const Fem::CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
             const int numQuadraturePoints = quadrature.nop();
             for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
@@ -1086,11 +1125,35 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
               JacobianRangeType diffusive_flux(0.0);
               diffusion_op.diffusiveFlux( global_point, grad_func_1, diffusive_flux);
  
+              RangeType value_local_dirichlet_extension;
+              local_dirichlet_extension.evaluate(quadrature[quadraturePoint], value_local_dirichlet_extension);
+
+              JacobianRangeType grad_local_dirichlet_extension;
+              local_dirichlet_extension.jacobian(quadrature[quadraturePoint], grad_local_dirichlet_extension);
+
+              JacobianRangeType grad_global_dirichlet_corrector;
+              glob_dirichlet_corrector_localized.jacobian( quadrature[quadraturePoint], grad_global_dirichlet_corrector );
+
+              RangeType value_global_dirichlet_corrector;
+              glob_dirichlet_corrector_localized.evaluate( quadrature[quadraturePoint], value_global_dirichlet_corrector );
+
+              JacobianRangeType grad_global_neumann_corrector;
+              glob_neumann_corrector_localized.jacobian( quadrature[quadraturePoint], grad_global_neumann_corrector );
+
+              RangeType value_global_neumann_corrector;
+              glob_neumann_corrector_localized.evaluate( quadrature[quadraturePoint], value_global_neumann_corrector );
+	      
+              RangeType position = value_previous_solution + value_local_dirichlet_extension
+                                    + value_global_dirichlet_corrector - value_global_neumann_corrector;
+              JacobianRangeType direction(0.0);
+              direction[0] = grad_previous_solution[0] + grad_local_dirichlet_extension[0]
+                              + grad_global_dirichlet_corrector[0] - grad_global_neumann_corrector[0];
+
               RangeType value_F_x(0.0), value_derivative_1_F_x(0.0);
               JacobianRangeType value_derivative_2_F_x(0.0);
-              nonlinear_term.evaluate( global_point, value_previous_solution, grad_previous_solution, value_F_x );
-              nonlinear_term.position_derivative( global_point, value_previous_solution, grad_previous_solution, value_derivative_1_F_x );
-              nonlinear_term.direction_derivative( global_point, value_previous_solution, grad_previous_solution, value_derivative_2_F_x );
+              nonlinear_term.evaluate( global_point, position, direction, value_F_x );
+              nonlinear_term.position_derivative( global_point, position, direction, value_derivative_1_F_x );
+              nonlinear_term.direction_derivative( global_point, position, direction, value_derivative_2_F_x );
 
               newton_system_matrix[row][col] += weight * ( diffusive_flux[0] * grad_func_2[0] );
               newton_system_matrix[row][col] += weight * value_derivative_1_F_x * value_func_1 * value_func_2;
@@ -1103,7 +1166,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
                 f.evaluate( global_point, f_x);
 
                 JacobianRangeType diffusive_flux_in_grad_previous_solution_direction(0.0);
-                diffusion_op.diffusiveFlux( global_point, grad_previous_solution, diffusive_flux_in_grad_previous_solution_direction);
+                diffusion_op.diffusiveFlux( global_point, direction, diffusive_flux_in_grad_previous_solution_direction);
 
                 newton_step_rhs[col] += weight * ( value_func_1 * f_x );
                 newton_step_rhs[col] -= weight * ( diffusive_flux_in_grad_previous_solution_direction[0] * grad_func_1[0] );
@@ -1186,7 +1249,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
           if ( row != col )
           { continue; }
        
-
           int polOrder = 2* DiscreteFunctionSpace::polynomialOrder + 2;
           for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[row][row].size(); ++it_id)
           {
@@ -1194,9 +1256,46 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
             HostEntityPointer it = discreteFunctionSpace_.grid().entityPointer( support_of_ms_basis_func_intersection[row][col][it_id] );
 
             LocalFunction loc_func = msfem_basis_function[row]->localFunction(*it);
-	  
+            LocalFunction local_dirichlet_extension = dirichlet_extension.localFunction(*it);
+            LocalFunction glob_dirichlet_corrector_localized = global_dirichlet_corrector.localFunction(*it);
+            LocalFunction glob_neumann_corrector_localized = global_neumann_corrector.localFunction(*it);
+
             const auto& geometry = (*it).geometry();
  
+            for (const auto& intersection
+                : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace_.gridPart(), (*it) ))
+            {
+                 if ( !intersection.boundary() )
+                   continue;
+                 // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+                 if ( intersection.boundary() && (intersection.boundaryId() != 2) )
+                   continue;
+
+                 const auto face = intersection.indexInInside();
+                 const HostFaceQuadrature faceQuadrature( discreteFunctionSpace_.gridPart(),
+                                                          intersection, polOrder, HostFaceQuadrature::INSIDE );
+                 const int numFaceQuadraturePoints = faceQuadrature.nop();
+
+                 enum { faceCodim = 1 };
+                 for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
+                 {
+                    RangeType func_in_x;
+                    loc_func.evaluate( faceQuadrature[faceQuadraturePoint], func_in_x );
+
+                    const auto local_point_entity = faceQuadrature.point( faceQuadraturePoint ); 
+                    const auto global_point = geometry.global( local_point_entity ); 
+                    const auto local_point_face = intersection.geometry().local( global_point );
+
+                    RangeType neumann_value( 0.0 );
+                    neumann_bc.evaluate( global_point, neumann_value );
+
+                    const double face_weight = intersection.geometry().integrationElement( local_point_face )
+                           * faceQuadrature.weight( faceQuadraturePoint );
+
+                    newton_step_rhs[col] += face_weight * ( func_in_x * neumann_value );
+                 }
+            }
+
             const Fem::CachingQuadrature< GridPart, 0 > quadrature( *it , polOrder);
             const int numQuadraturePoints = quadrature.nop();
             for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
@@ -1217,15 +1316,39 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
               pre_solution.localFunction(*it).jacobian( quadrature[quadraturePoint], grad_previous_solution);
               pre_solution.localFunction(*it).evaluate( quadrature[quadraturePoint], value_previous_solution);
- 
+
+              RangeType value_local_dirichlet_extension;
+              local_dirichlet_extension.evaluate(quadrature[quadraturePoint], value_local_dirichlet_extension);
+
+              JacobianRangeType grad_local_dirichlet_extension;
+              local_dirichlet_extension.jacobian(quadrature[quadraturePoint], grad_local_dirichlet_extension);
+
+              JacobianRangeType grad_global_dirichlet_corrector;
+              glob_dirichlet_corrector_localized.jacobian( quadrature[quadraturePoint], grad_global_dirichlet_corrector );
+
+              RangeType value_global_dirichlet_corrector;
+              glob_dirichlet_corrector_localized.evaluate( quadrature[quadraturePoint], value_global_dirichlet_corrector );
+
+              JacobianRangeType grad_global_neumann_corrector;
+              glob_neumann_corrector_localized.jacobian( quadrature[quadraturePoint], grad_global_neumann_corrector );
+
+              RangeType value_global_neumann_corrector;
+              glob_neumann_corrector_localized.evaluate( quadrature[quadraturePoint], value_global_neumann_corrector );
+	      
+              RangeType position = value_previous_solution + value_local_dirichlet_extension
+                                    + value_global_dirichlet_corrector - value_global_neumann_corrector;
+              JacobianRangeType direction(0.0);
+              direction[0] = grad_previous_solution[0] + grad_local_dirichlet_extension[0]
+                              + grad_global_dirichlet_corrector[0] - grad_global_neumann_corrector[0];
+
               RangeType value_F_x(0.0);
-              nonlinear_term.evaluate( global_point, value_previous_solution, grad_previous_solution, value_F_x );
+              nonlinear_term.evaluate( global_point, position, direction, value_F_x );
 
               RangeType f_x(0.0);
               f.evaluate( global_point, f_x);
 
               JacobianRangeType diffusive_flux_in_grad_previous_solution_direction(0.0);
-              diffusion_op.diffusiveFlux( global_point, grad_previous_solution, diffusive_flux_in_grad_previous_solution_direction);
+              diffusion_op.diffusiveFlux( global_point, direction, diffusive_flux_in_grad_previous_solution_direction);
 
               newton_step_rhs[col] += weight * ( value_func * f_x );
               newton_step_rhs[col] -= weight * ( diffusive_flux_in_grad_previous_solution_direction[0] * grad_func[0] );
@@ -1276,6 +1399,9 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
     } // end while ( stop_newton_cycle == false )
   
+    solution += global_dirichlet_corrector;
+    solution -= global_neumann_corrector;
+
     fine_scale_part.clear();
     coarse_scale_part.clear();
     for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
