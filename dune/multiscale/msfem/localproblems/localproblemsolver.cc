@@ -494,7 +494,9 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
 
   // solve the pre-processing problems:
   for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+  {
      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
+  }
   
   // ----------------------------------------------------------------------------------------------------
 
@@ -1178,7 +1180,10 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       int number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size(); 
       MatrixType lagrange_multiplier_system_matrix( number_of_relevant_coarse_nodes_for_subgrid, number_of_relevant_coarse_nodes_for_subgrid );
 
+      std::cout << "Start preprocessing for subgrid " << coarse_index << "." << std::endl;
+      std::cout << "There are " << number_of_relevant_coarse_nodes_for_subgrid << " preprocessing problems to solve." << std::endl;
       preprocess_corrector_problems( coarse_index, locprob_system_matrix, lagrange_multiplier_system_matrix );
+      std::cout << "Preprocessing done." << std::endl;
       // -----------------------------------------------------------------------------------------------------
       
       SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);

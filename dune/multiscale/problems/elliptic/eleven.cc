@@ -36,7 +36,7 @@ bool ModelProblemData::problemAllowsStochastics() const {
 void FirstSource::evaluate(const DomainType& x,
                      RangeType& y) const
 {
-  y = -6.0 * exp( x[0] +  x[1] );
+  y = -6.0 * exp( x[0] + x[1] );
 
 #if 0
   if ( exp( x[0] +  x[1] ) <= (-1.0) )
@@ -146,7 +146,7 @@ void LowerOrderTerm::direction_derivative(const DomainType& x,
 void DirichletBoundaryCondition::evaluate(const DomainType& x,
                                           RangeType& y) const
 {
-  y = exp( x[0] +  x[1] );
+  y = exp( x[0] + x[1] );
 
 } // evaluate
 
@@ -175,7 +175,7 @@ ExactSolution::ExactSolution(){}
 void ExactSolution::evaluate(const DomainType& x,
                      RangeType& y) const {
 
-  y = exp( x[0] +  x[1] );
+  y = exp( x[0] + x[1] );
 
 } // evaluate
 
