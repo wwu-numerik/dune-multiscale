@@ -313,7 +313,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGri
     for(size_t loc_basis_number = 0; loc_basis_number < numBaseFunctions ; ++loc_basis_number )
     {
       const int global_dof_number = indices[loc_basis_number];
-      if ( specifier.is_coarse_boundary_node( global_dof_number ) )
+      if ( specifier.is_coarse_dirichlet_node( global_dof_number ) )
       { continue; }
 
       const int global_interior_dof_number = global_id_to_internal_id[ global_dof_number ];
@@ -423,7 +423,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
     for (unsigned int i = 0; i < numBaseFunctions; ++i)
     {
       int global_dof_number = indices[i];
-      if ( specifier.is_coarse_boundary_node( global_dof_number ))
+      if ( specifier.is_coarse_dirichlet_node( global_dof_number ))
       { continue; }
 
       int global_interior_dof_number = global_id_to_internal_id[ global_dof_number ];

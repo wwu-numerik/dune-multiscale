@@ -994,6 +994,7 @@ void LocalProblemOperator
       for (std::size_t j = 0; j < local_problem_RHS.size(); ++j)
       {
          int interior_basis_func_id = ids_basis_functions_in_subgrid[j];
+
          HostLocalFunction local_coarse_basis_func = coarse_basis_func_list[interior_basis_func_id]->localFunction( host_entity );
          LocalFunction elementOfRHS = local_problem_RHS[j]->localFunction( local_grid_entity );
 
@@ -1001,7 +1002,7 @@ void LocalProblemOperator
          local_coarse_basis_func.evaluate( quadrature[quadraturePoint] , value_coarse_basis_func);
 
          for (unsigned int i = 0; i < numBaseFunctions; ++i)
-           elementOfRHS[i] += clement_weights[interior_basis_func_id] * weight * value_coarse_basis_func * fine_phi_x[i];
+            elementOfRHS[i] += clement_weights[interior_basis_func_id] * weight * value_coarse_basis_func * fine_phi_x[i];
       }
     }
   }

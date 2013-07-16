@@ -26,6 +26,7 @@
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/multiscale/common/error_calc.hh>
 
+#include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
@@ -49,80 +50,128 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
   static const unsigned int faceCodim = 1;
   for (const auto& entity : discreteFunctionSpace)
   {
-    
-#if 0
+
+     // we might look for a better Dirichlet Extension in the case of a Neumann boundary part ..
+
+#if 1
+     auto funcLocal = func.localFunction(entity);
+
+     // ------------- first, use a coarse grid interpolation ----------------
+     bool intersects_dirichlet_boundary = false;
+
      const int level_difference = specifier.getLevelDifference();
      CommonTraits::DiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
 
      typedef typename CommonTraits::GridType::Traits::LeafIndexSet HostGridLeafIndexSet;
      const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
-     CommonTraits::EntityPointerType& coarse_father = Stuff::Grid::make_father( coarseGridLeafIndexSet,
-                                                                                entity,
-                                                                                level_difference );
+     const auto& entity_ptr = coarseSpace.grid().entityPointer( entity.seed() );
+     const CommonTraits::EntityPointerType& coarse_father = Stuff::Grid::make_father( coarseGridLeafIndexSet,
+                                                                                      entity_ptr,
+                                                                                      level_difference );
      CommonTraits::EntityType& coarse_grid_entity = *coarse_father;
 
      const auto& lagrangePointSet = specifier.coarseSpace().lagrangePointSet( coarse_grid_entity );
      const auto number_of_points = lagrangePointSet.nop();
-   
-     assert( number_of_points == 3 );
-     std::vector< RangeType > dirichlet_values_coarse_corners( number_of_points );
-     std::vector< DomainType > corners( number_of_points );
+     
+     std::vector< std::size_t > indices;
+     specifier.coarseSpace().mapper().map( coarse_grid_entity, indices );
 
+#if 0
+     int neumann_element = 0;
+     int num_boundary_nodes = 0;
      for(size_t loc_point = 0; loc_point < number_of_points ; ++loc_point ) {
-        corners[ loc_point ] = coarse_geometry.global(lagrangepoint_set.point( loc_point ) );
-        dirichlet_func.evaluate( corners[ loc_point ], dirichlet_values_coarse_corners[ loc_point ] );
+       
+        if ( specifier.is_coarse_boundary_node( indices[ loc_point ] ) )
+        {
+          num_boundary_nodes += 1;
+          if ( !specifier.is_coarse_dirichlet_node( indices[ loc_point ] ) )
+           neumann_element += 1;
+        }
+      }
+#if 0
+     for (const auto& coarse_intersection
+         : Dune::Stuff::Common::intersectionRange(coarseSpace.gridPart(), coarse_grid_entity ))
+     {
+        std::cout << "coarse_intersection.boundary() = " << coarse_intersection.boundary() << std::endl;
+        std::cout << "coarse_intersection.boundaryId() = " << coarse_intersection.boundaryId() << std::endl;
+        if ( coarse_intersection.boundary() && (coarse_intersection.boundaryId() == 2) )
+        { neumann_element = true; }
+     }
+#endif
+     if ( (neumann_element >= 1) && (num_boundary_nodes >= 2) )
+     { continue; }
+#endif
+
+     assert( number_of_points == 3 );
+     std::vector< CommonTraits::RangeType > dirichlet_values_coarse_corners( number_of_points );
+     std::vector< CommonTraits::DomainType > corners( number_of_points );
+     std::vector< CommonTraits::DomainType > dirichlet_corners;
+     
+     for(size_t loc_point = 0; loc_point < number_of_points ; ++loc_point ) {
+        corners[ loc_point ] = coarse_grid_entity.geometry().global(lagrangePointSet.point( loc_point ) );
+        
+        if ( specifier.is_coarse_dirichlet_node( indices[ loc_point ] ) )
+        {  dirichlet_func.evaluate( corners[ loc_point ], dirichlet_values_coarse_corners[ loc_point ] ); 
+           intersects_dirichlet_boundary = true;
+           dirichlet_corners.push_back( corners[ loc_point ] );
+        }
+        else
+        { dirichlet_values_coarse_corners[ loc_point ] = 0.0; }
       }
     
      // LinearLagrangeInterpolation2D should be eventually replaced by
      // LinearLagrangeFunction2D< DiscreteFunctionSpace > dirichlet_interpolation
-     LinearLagrangeInterpolation2D< DiscreteFunctionSpace > dirichlet_interpolation
+     LinearLagrangeInterpolation2D< CommonTraits::DiscreteFunctionSpaceType > dirichlet_interpolation
           ( corners[0], dirichlet_values_coarse_corners[0],
             corners[1], dirichlet_values_coarse_corners[1],
             corners[2], dirichlet_values_coarse_corners[2] );
-
-
-#if 0
-     const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
-
-     std::vector< std::size_t > indices;
-     specifier.coarseSpace().mapper().map( coarse_grid_entity, indices );
-
-     bool intersects_dirichlet_boundary = false;
-     for (const auto& coarse_intersection : Dune::Stuff::Common::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity ))
-     {
-
-          // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
-          if ( coarse_intersection.boundary() && (coarse_intersection.boundaryId() == 1) )
-          { intersects_dirichlet_boundary = true; }
-          else
-          {
-
-
-            const int face = coarse_intersection.indexInInside();
-            auto faceIterator
-                = lagrangePointSet.beginSubEntity< faceCodim >(face);
-            const auto faceEndIterator
-                = lagrangePointSet.endSubEntity< faceCodim >(face);
-
-            for ( ; faceIterator != faceEndIterator; ++faceIterator)
-            {
-              if ( specifier.is_coarse_dirichlet_node( indices[ *faceIterator ] ) )
-              { intersects_dirichlet_boundary = true; continue; }
-            }
-            continue;
-          }
-
-     }
-     
-     
+     // --------------------------------------------------------------------------------
+  
      if ( intersects_dirichlet_boundary == true ) 
      {
-       
-     }     
-#endif
-#endif
+       for (const auto& intersection
+         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
+       {
 
+         const auto face = intersection.indexInInside();
+
+         for(auto loc_point
+           : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face))
+         {
+           const auto& global_point = entity.geometry().global( discreteFunctionSpace.lagrangePointSet(entity).point( loc_point ) );
+           CommonTraits::RangeType dirichlet_value(0.0);
+           
+           if ( intersection.boundary() && (intersection.boundaryId() == 2) )
+           {
+             bool point_is_dirichlet_point_on_neumann_boundary_piece = false;
+             for ( int c = 0; c < dirichlet_corners.size(); c++ )
+             {
+                if ( global_point == dirichlet_corners[c] )
+                { point_is_dirichlet_point_on_neumann_boundary_piece = true; }
+             }
+             if ( point_is_dirichlet_point_on_neumann_boundary_piece )
+             { dirichlet_func.evaluate( global_point, dirichlet_value); }
+             else
+             { dirichlet_value = 0.0; }
+             funcLocal[loc_point] = dirichlet_value;
+           }
+           else
+           {
+             // use the coarse grid interpolation, but on the Dirichlet boundary, use a fine grid interpolation
+             if ( !intersection.boundary() )
+             { 
+               dirichlet_interpolation.evaluate( global_point, dirichlet_value);
+             }
+             else
+             { dirichlet_func.evaluate( global_point, dirichlet_value); }
+             funcLocal[loc_point] = dirichlet_value;
+           }
+         }
+       }
+     }
+#endif
+#if 0
     for (const auto& intersection
          : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
     {
@@ -142,6 +191,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
         funcLocal[loc_point] = dirichlet_value;
       }
     }
+#endif
   }
 } // setDirichletValues
   
@@ -149,6 +199,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
 void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_lod_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_lod_solution,
+                     const CommonTraits::DiscreteFunctionType& dirichlet_extension,
                      Dune::Multiscale::OutputParameters& outputparam,
                      int& total_refinement_level_,
                      int& coarse_grid_level_)
@@ -166,6 +217,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
   OutputTraits::DataOutputType lod_dataoutput(gridPart.grid(), lod_solution_series, outputparam);
   lod_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
+  // ---------------------------------------------------------------------------
   // create and initialize output class
   OutputTraits::IOTupleType coarse_lod_solution_series(&coarse_part_lod_solution);
 
@@ -175,6 +227,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
   OutputTraits::DataOutputType coarse_lod_dataoutput(gridPart.grid(), coarse_lod_solution_series, outputparam);
   coarse_lod_dataoutput.writeData( 1.0 /*dummy*/, outstring );
 
+  // ---------------------------------------------------------------------------
   // create and initialize output class
   OutputTraits::IOTupleType fine_lod_solution_series(&fine_part_lod_solution);
 
@@ -184,6 +237,17 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
 
   OutputTraits::DataOutputType fine_lod_dataoutput(gridPart.grid(), fine_lod_solution_series, outputparam);
   fine_lod_dataoutput.writeData( 1.0 /*dummy*/, outstring);
+  
+  // ---------------------------------------------------------------------------
+  // create and initialize output class
+  OutputTraits::IOTupleType dirichlet_extension_series(&dirichlet_extension);
+
+  outputparam.set_prefix("dirichlet_extension");
+  // write data
+  outstring = "dirichlet_extension";
+
+  OutputTraits::DataOutputType dirichlet_extension_dataoutput(gridPart.grid(), dirichlet_extension_series, outputparam);
+  dirichlet_extension_dataoutput.writeData( 1.0 /*dummy*/, outstring);
 
   // ----------------------------------------------------------------------
   // ---------------------- write discrete lod solution to file ---------
@@ -318,7 +382,7 @@ void algorithm(const std::string& macroGridName,
   //! \todo Important why? (Sven)
   specifier.setOversamplingStrategy( 3 ); //! Important!
   specifier.identify_coarse_dirichlet_nodes();
-  specifier.identify_coarse_boundary_nodes();//!DELETE ME SOON!!!!!!!!!!!!
+  //!specifier.identify_coarse_boundary_nodes();//!DELETE ME SOON!!!!!!!!!!!!
 
   // discrete function that takes the values of the Dirichlet BC on the Dirichlet Boundary nodes
   // and that is zero elsewhere
@@ -341,7 +405,7 @@ void algorithm(const std::string& macroGridName,
 
     DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
     solution_output(msfem_solution, coarse_part_msfem_solution,
-                    fine_part_msfem_solution, outputparam,
+                    fine_part_msfem_solution, dirichlet_extension, outputparam,
                     total_refinement_level_, coarse_grid_level_);
   }
 
