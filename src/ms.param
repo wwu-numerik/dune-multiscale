@@ -8,7 +8,7 @@ algorithm.solver.preconditioner.fillFactor: 20
 [problem]
 # problem specifications
 # note that the grid is specified in '../multiscale/problems/elliptic_problems/XX.hh'
-name = Eleven
+name = Twelve
 
 # characteristic size of the micro structure
 epsilon = 0.05
@@ -21,6 +21,7 @@ linear = 1
 #   with a nonlinearity in the lower order term
 # - HMM only available for linear problems and nonlinear problems 
 #   with a nonlinearity in the leading order term
+#   Nonlinear-HMM only works with a homogenous Dirichlet boundary condition!
 # - FEM available for all linear and nonlinear problems 
 
 # do you want a stochastic perturbation of the diffusion operator?
@@ -47,7 +48,8 @@ rs_grid_level = 16
 [global]
 
 # directory to save the data output
-datadir = data/new_tests
+#datadir = data/lod_tests
+datadir = data/LOD/Model_Problem_12/Coarse_8_Fine_16_Layers_32
 #datadir = data/MsFEM/Model_Problem_9/Strategy_1/Coarse_4_Fine_12_Layers_16
 #datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_4_Fine_12_Layers_16
 #datadir = data/Rigorous_MsFEM_Clement/Model_Problem_Daniel/Coarse_8_Fine_10_Layers_2
@@ -56,6 +58,8 @@ datadir = data/new_tests
 # VTK output for the solutions of the local problems
 local_solution_vtk_output = 1
 # (key currently only active for MsFEM!)
+
+cgsolver_verbose = 1
 
 [logging]
 # logging specifications
@@ -82,7 +86,7 @@ coarse_grid_level = 2
 fine_grid_level = 4
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 16
+oversampling_layers = 32
 
 # oversampling strategy 1 or 2.
 oversampling_strategy = 1
@@ -118,10 +122,10 @@ localsolver = direct.superlu
 coarse_grid_level = 6
 
 # initial fine grid level 
-fine_grid_level = 12
+fine_grid_level = 16
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 4
+oversampling_layers = 32
 
 # oversampling strategy 3 'Lagrange' or 'Clement'.
 oversampling_strategy = Clement
