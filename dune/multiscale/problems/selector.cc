@@ -11,8 +11,10 @@
 #include "elliptic/seven.hh"
 #include "elliptic/six.hh"
 #include "elliptic/ten.hh"
+#include "elliptic/thirteen.hh"
 #include "elliptic/three.hh"
 #include "elliptic/toy.hh"
+#include "elliptic/twelve.hh"
 #include "elliptic/two.hh"
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
@@ -39,6 +41,8 @@ using namespace Dune::Multiscale;
     MAP_ITEM(Nine, ReturnType, FunctionName), \
     MAP_ITEM(Ten, ReturnType, FunctionName), \
     MAP_ITEM(Eleven, ReturnType, FunctionName), \
+    MAP_ITEM(Twelve, ReturnType, FunctionName), \
+    MAP_ITEM(Thirteen, ReturnType, FunctionName), \
   })
 
 /* to add a new problem a line like this above

@@ -39,8 +39,10 @@ libmultiscale_problems_la_SOURCES=../dune/multiscale/problems/elliptic/eight.cc 
 	../dune/multiscale/problems/elliptic/seven.cc \
 	../dune/multiscale/problems/elliptic/six.cc \
 	../dune/multiscale/problems/elliptic/ten.cc \
+	../dune/multiscale/problems/elliptic/thirteen.cc \
 	../dune/multiscale/problems/elliptic/three.cc \
 	../dune/multiscale/problems/elliptic/toy.cc \
+	../dune/multiscale/problems/elliptic/twelve.cc \
 	../dune/multiscale/problems/elliptic/two.cc \
 	../dune/multiscale/problems/elliptic/spe10.cc \
 	../dune/multiscale/problems/selector.cc \

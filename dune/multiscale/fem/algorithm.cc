@@ -112,6 +112,25 @@ void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discre
     femsol_dataoutput.writeData( 1.0 /*dummy*/, "fem-solution" );
   else
     femsol_dataoutput.writeData( 1.0 /*dummy*/, "fem-newton-solution" );
+  
+  //! -------------------------- writing data output Exact Solution ------------------------
+  if (Problem::getModelData()->hasExactSolution())
+  { 
+    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
+    const auto& u = *u_ptr;
+    const OutputTraits::DiscreteExactSolutionType
+         discrete_exact_solution("discrete exact solution ", u, discrete_solution.space().gridPart());
+    // create and initialize output class
+    OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+    outputparam.set_prefix("exact_solution");
+    OutputTraits::ExSolDataOutputType exactsol_dataoutput(discrete_solution.space().gridPart().grid(),
+                 exact_solution_series, outputparam);
+    // write data
+    exactsol_dataoutput.writeData( 1.0 /*dummy*/, "exact-solution" );
+    // -------------------------------------------------------
+  }
+  //! --------------------------------------------------------------------------------------
+
  }
 
 //! \TODO docme
