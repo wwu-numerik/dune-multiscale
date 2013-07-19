@@ -21,7 +21,7 @@ std::string ModelProblemData::getMacroGridFile() const {
 }
 
 bool ModelProblemData::problemIsPeriodic() const {
-  return true; // = problem is periodic
+  return false; // = problem is periodic
 }
 
 bool ModelProblemData::problemAllowsStochastics() const {
