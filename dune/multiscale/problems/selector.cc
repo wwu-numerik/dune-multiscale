@@ -133,12 +133,32 @@ std::unique_ptr<const CommonTraits::NeumannDataType> Dune::Multiscale::Problem::
 }
 
 template< class GridImp, class IntersectionImp >
-bool isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+bool Dune::Multiscale::Problem::isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
   return (face.boundary() && face.boundaryId()==2);
 }
 
 template< class GridImp, class IntersectionImp >
-bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+bool Dune::Multiscale::Problem::isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+  return (face.boundary() && face.boundaryId()==1);
+}
+
+template<>
+bool Dune::Multiscale::Problem::isNeumannBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==2);
+}
+
+template<>
+bool Dune::Multiscale::Problem::isDirichletBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==1);
+}
+
+template<>
+bool Dune::Multiscale::Problem::isNeumannBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==2);
+}
+
+template<>
+bool Dune::Multiscale::Problem::isDirichletBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
   return (face.boundary() && face.boundaryId()==1);
 }
 

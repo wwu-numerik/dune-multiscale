@@ -24,8 +24,9 @@ LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity,
     localDiscreteFunctionSpace_(subGridPart_),
     coarseId_(gridSpecifier_.coarseSpace().gridPart().grid().globalIdSet().id(coarseEntity)),
     loaded_(false),
+    numBoundaryCorrectors_((gridSpecifier_.simplexCoarseGrid()) ? 1 : 2),
     numLocalProblems_((gridSpecifier_.simplexCoarseGrid()) ?
-                      GridSelector::dimgrid : gridSpecifier_.coarseSpace().mapper().maxNumDofs()),
+                      GridSelector::dimgrid + 1 : gridSpecifier_.coarseSpace().mapper().maxNumDofs() + 2),
     localSolutions_(numLocalProblems_),
     localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d")
                             % coarseId_).str())
@@ -75,6 +76,10 @@ void LocalSolutionManager::saveLocalSolutions() const
 bool LocalSolutionManager::solutionsWereLoaded() const
 {
   return loaded_;
+}
+
+int LocalSolutionManager::numBoundaryCorrectors() const {
+  return numBoundaryCorrectors_;
 }
 }
 }

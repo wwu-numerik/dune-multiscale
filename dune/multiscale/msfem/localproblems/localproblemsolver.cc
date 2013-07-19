@@ -95,10 +95,10 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   // ( effect of the discretized differential operator on a certain discrete function )
   LocalProblemOperator localProblemOperator(subDiscreteFunctionSpace, diffusion_);
 
-  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
-
-  typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
-  typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
+//  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
+//
+//  typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
+//  typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
 
   // right hand side vector of the algebraic local MsFEM problem
   SubDiscreteFunctionVectorType allLocalRHS(allLocalSolutions.size());
@@ -113,38 +113,38 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
     default: DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
   }
 
-  //! boundary treatment:
-  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
-
-  typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
-          FaceDofIteratorType;
-
-  const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
-
-  for (const auto& subgridEntity : subDiscreteFunctionSpace) {
-    LocalMatrix localMatrix = locProbSysMatrix.localMatrix(subgridEntity, subgridEntity);
-
-    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
-    for (auto& rhsIt : allLocalRHS) {
-
-      SubLocalFunctionType rhsLocal = rhsIt->localFunction(subgridEntity);
-
-      for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), subgridEntity)) {
-        // if there is a neighbor entity
-        if ( subgridIntersection.boundary() ) {
-          const int face = subgridIntersection.indexInInside();
-          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< faceCodim >(face);
-          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< faceCodim >(face); fdit != fdend; ++fdit) {
-            // zero boundary condition for 'cell problems':
-            // set unit row in matrix for any boundary dof ...
-            localMatrix.unitRow(*fdit);
-            // ... and set respective rhs dof to zero
-            rhsLocal[*fdit] = 0;
-          }
-        }
-      }
-    }
-  }
+//  //! boundary treatment:
+//  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
+//
+//  typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
+//          FaceDofIteratorType;
+//
+//  const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
+//
+//  for (const auto& subgridEntity : subDiscreteFunctionSpace) {
+//    LocalMatrix localMatrix = locProbSysMatrix.localMatrix(subgridEntity, subgridEntity);
+//
+//    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
+//    for (auto& rhsIt : allLocalRHS) {
+//
+//      SubLocalFunctionType rhsLocal = rhsIt->localFunction(subgridEntity);
+//
+//      for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), subgridEntity)) {
+//        // if there is a neighbor entity
+//        if ( subgridIntersection.boundary() ) {
+//          const int face = subgridIntersection.indexInInside();
+//          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< faceCodim >(face);
+//          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< faceCodim >(face); fdit != fdend; ++fdit) {
+//            // zero boundary condition for 'cell problems':
+//            // set unit row in matrix for any boundary dof ...
+//            localMatrix.unitRow(*fdit);
+//            // ... and set respective rhs dof to zero
+//            rhsLocal[*fdit] = 0;
+//          }
+//        }
+//      }
+//    }
+//  }
 
   for (int i=0; i!=allLocalSolutions.size(); ++i) {
     if (!allLocalRHS[i]->dofsValid())

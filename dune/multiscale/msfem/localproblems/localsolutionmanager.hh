@@ -43,6 +43,8 @@ public:
 
   bool solutionsWereLoaded() const;
 
+  int numBoundaryCorrectors() const;
+
 private:
   SubGridListType&                   subgridList_;
   const MacroMicroGridSpecifierType& gridSpecifier_;
@@ -50,6 +52,7 @@ private:
   DiscreteFunctionSpaceType          localDiscreteFunctionSpace_;
   const int                          coarseId_;
   bool                               loaded_;
+  const int                          numBoundaryCorrectors_;
   const int                          numLocalProblems_;
   LocalSolutionVectorType            localSolutions_;
   const std::string                  localSolutionLocation_;

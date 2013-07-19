@@ -171,18 +171,20 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
         SubGridQuadratureType localQuadrature(localGridEntity, localQuadratureOrder);
         const size_t       numQuadraturePoints = localQuadrature.nop();
 
+        // number of local solutions without the boundary correctors. Those are only needed for the right hand side
+        const int numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
         // evaluate the jacobians of all local solutions in all quadrature points
         std::vector< std::vector< JacobianRangeType > >
-        allLocalSolutionEvaluations(localSolutions.size(),
+        allLocalSolutionEvaluations(numLocalSolutions,
                                     std::vector< JacobianRangeType >(localQuadrature.nop(), JacobianRangeType(0.0)));
-        for (int lsNum = 0; lsNum < localSolutions.size(); ++lsNum) {
-          LocalGridLocalFunction localFunction = localSolutions[lsNum]->localFunction(localGridEntity);
+        for (int lsNum = 0; lsNum < numLocalSolutions; ++lsNum) {
+          auto localFunction = localSolutions[lsNum]->localFunction(localGridEntity);
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
         }
 
         for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
           // local (barycentric) coordinates (with respect to entity)
-          const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = localQuadrature.point(
+          const typename FineQuadratureType::CoordinateType& local_subgrid_point = localQuadrature.point(
             localQuadraturePoint);
 
           DomainType   global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
@@ -202,13 +204,14 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
               // Compute the gradients of the i'th and j'th local problem solutions
               JacobianRangeType gradLocProbSoli(0.0), gradLocProbSolj(0.0);
               if (specifier_.simplexCoarseGrid()) {
-                assert(localSolutions.size() == dimension);
+                assert(allLocalSolutionEvaluations.size()==dimension);
                 // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
                 for (int k = 0; k < dimension; ++k) {
                   gradLocProbSoli.axpy(gradientPhi[i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                   gradLocProbSolj.axpy(gradientPhi[j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                 }
               } else {
+                assert(allLocalSolutionEvaluations.size()==numMacroBaseFunctions);
                 gradLocProbSoli = allLocalSolutionEvaluations[i][localQuadraturePoint];
                 gradLocProbSolj = allLocalSolutionEvaluations[j][localQuadraturePoint];
               }
