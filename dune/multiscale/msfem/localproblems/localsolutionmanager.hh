@@ -19,13 +19,13 @@ class LocalSolutionManager
 private:
   typedef MsFEMTraits::SubGridListType                      SubGridListType;
   typedef typename SubGridListType::SubGridPartType         SubGridPartType;
-  typedef typename SubGridListType::SubGridDiscreteFunction DiscreteFunctionType;
-  typedef MsFEMTraits::CoarseEntityType                    CoarseEntityType;
+  typedef typename SubGridListType::SubGridDiscreteFunctionType DiscreteFunctionType;
+  typedef MsFEMTraits::CoarseEntityType                     CoarseEntityType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType          MacroMicroGridSpecifierType;
 
 public:
   typedef std::vector< std::unique_ptr< DiscreteFunctionType > > LocalSolutionVectorType;
-  typedef typename SubGridListType::SubGridDiscreteFunctionSpace DiscreteFunctionSpaceType;
+  typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   LocalSolutionManager(const CoarseEntityType& coarseEntity, SubGridListType& subgridList,
                        const MacroMicroGridSpecifierType& gridSpecifier);

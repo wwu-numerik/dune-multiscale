@@ -119,13 +119,12 @@ struct CommonTraits {
   typedef DiscreteFunctionSpaceType::DomainFieldType            TimeType;
   typedef DiscreteFunctionSpaceType::JacobianRangeType          JacobianRangeType;
   typedef GridType::Codim< 0 >::Entity                          EntityType;
+  typedef GridPartType::IntersectionType                        FaceType;
   typedef GridType::Codim< 0 >::EntityPointer                   EntityPointerType;
   typedef GridType::Codim< 0 >::Geometry                        EntityGeometryType;
   typedef GridType::Codim< 1 >::Geometry                        FaceGeometryType;
   //!TODO carry the rename over to the type def'ed name
   typedef DiscreteFunctionSpaceType::BasisFunctionSetType        BasisFunctionSetType;
-  typedef Dune::Fem::CachingQuadrature< GridPartType, 0 >                  EntityQuadratureType;
-  typedef Dune::Fem::CachingQuadrature< GridPartType, 1 >                  FaceQuadratureType;
   typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
   typedef Dune::Fem::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
   typedef DiscreteFunctionType::LocalFunctionType               LocalFunctionType;

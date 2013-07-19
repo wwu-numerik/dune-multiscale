@@ -29,9 +29,9 @@ namespace MsFEM {
 
 
 class WeightedClementOperator
-: public Operator< typename SubGridList::SubGridDiscreteFunction::RangeFieldType,
+: public Operator< typename SubGridList::SubGridDiscreteFunctionType::RangeFieldType,
                    typename CommonTraits::DiscreteFunctionType::RangeFieldType,
-                   typename SubGridList::SubGridDiscreteFunction,
+                   typename SubGridList::SubGridDiscreteFunctionType,
                    typename CommonTraits::DiscreteFunctionType>,
   public OEMSolver::PreconditionInterface
 {
@@ -40,7 +40,7 @@ private:
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
 
   //! type of discrete functions
-  typedef SubGridList::SubGridDiscreteFunction DiscreteFunctionType;
+  typedef SubGridList::SubGridDiscreteFunctionType DiscreteFunctionType;
 
   typedef CoarseDiscreteFunction CoarseDiscreteFunctionType;
 
@@ -99,7 +99,7 @@ private:
   typedef Fem::CachingQuadrature< GridPartType, 0 > QuadratureType;
   typedef Fem::CachingQuadrature< CoarseGridPartType, 0 > CoarseQuadratureType;
 
-  typedef Dune::Fem::SparseRowMatrixTraits < typename SubGridList::SubGridDiscreteFunctionSpace,
+  typedef Dune::Fem::SparseRowMatrixTraits < typename SubGridList::SubGridDiscreteFunctionSpaceType,
                                        typename SubGridList::HostDiscreteFunctionSpaceType > WeightedClementMatrixObjectTraits;
 
   typedef typename WeightedClementMatrixObjectTraits

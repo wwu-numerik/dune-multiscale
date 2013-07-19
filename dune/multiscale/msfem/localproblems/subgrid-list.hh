@@ -40,13 +40,11 @@ namespace MsFEM {
 class SubGridList : public boost::noncopyable
 {
   typedef typename CommonTraits::DiscreteFunctionType HostDiscreteFunctionImp;
-  typedef MsFEMTraits::SubGridType SubGridImp;
-  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierImp;
 
 public:
   //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
-  typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
+  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
   typedef HostDiscreteFunctionImp HostDiscreteFunctionType;
   //! type of discrete function space
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
@@ -87,18 +85,16 @@ private:
 public:
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
-
   //! type of grid
-  typedef SubGridImp SubGridType;
-
+  typedef MsFEMTraits::SubGridType SubGridType;
   //! type of grid part
-  typedef Fem::LeafGridPart< SubGridType > SubGridPartType;
-  
+  typedef MsFEMTraits::SubGridPartType SubGridPartType;
     //! type of subgrid discrete function space
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1/*=POLORDER*/ > SubGridDiscreteFunctionSpace;
-
+  typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
   //! type of subgrid discrete function
-  typedef Fem::AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpace > SubGridDiscreteFunction;
+  typedef MsFEMTraits::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
+  typedef MsFEMTraits::SubGridQuadratureType SubGridQuadratureType;
+  typedef MsFEMTraits::SubFaceQuadratureType SubFaceQuadratureType;
 
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true);
   ~SubGridList();
