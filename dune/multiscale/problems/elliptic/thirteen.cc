@@ -139,11 +139,12 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
                            const JacobianRangeType& /*position_gradient*/,
                            const JacobianRangeType& direction_gradient,
                            JacobianRangeType& flux) const {
+
   double conductor_thickness = 0.05;
-  double conductivity = 1e2;
+  double conductivity = 100.0;
   
   double isolator_thickness = 0.05;
-  double isolator_conductivity = 1e-1;
+  double isolator_conductivity = 1e-2;
   
   double coefficient = 0.0;
   
@@ -152,27 +153,48 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
 
   bool x_0_qualifies = false;
   bool x_1_qualifies = false;
-
-  if ( (x[0] >= 0.2) && (x[0] <= 0.8 ) )
-    x_0_qualifies = true;
-
-  if ( (x[1] >= 0.25) && (x[1] <= (0.25+conductor_thickness) ) )
-    x_1_qualifies = true;
-
-  if ( (x[1] >= 0.75) && (x[1] <= (0.75+conductor_thickness) ) )
-    x_1_qualifies = true;
   
-  if ( x_0_qualifies && x_1_qualifies )
+  // two stribes of high conductivity
+  double position_x_a = 0.0;
+  double position_x_b = 0.8;
+
+  double position_y_a = 0.2;
+  double position_y_b = 0.8-conductor_thickness;
+
+  if ( (x[0] >= position_x_a ) && (x[0] <= position_x_b ) )
+    x_0_qualifies = true;
+  
+  if ( x_0_qualifies )
   {
-    coefficient = conductivity;
-    in_conductor = true;
+    if ( (x[1] >= position_y_a) && (x[1] <= (position_y_a+conductor_thickness) ) )
+    {
+//      coefficient = conductivity*(x[0]-position_x_a)*(position_x_b-x[0]);
+//      coefficient *= (x[1]-position_y_a)*((position_y_a+conductor_thickness)-x[1]);
+//      coefficient /= conductor_thickness;
+//      coefficient /= conductor_thickness;
+//      coefficient += 1.0;
+      coefficient = conductivity;
+      in_conductor = true;
+    }
+
+    if ( (x[1] >= position_y_b) && (x[1] <= (position_y_b+conductor_thickness) ) )
+    {
+//      coefficient = conductivity*(x[0]-position_x_a)*(position_x_b-x[0]);
+//      coefficient *= (x[1]-position_y_b)*((position_y_b+conductor_thickness)-x[1]);
+//      coefficient /= conductor_thickness;
+//      coefficient /= conductor_thickness;
+//      coefficient += 1.0;
+      coefficient = conductivity;
+      in_conductor = true;
+    }
+
   }
 
 
   x_0_qualifies = false;
   x_1_qualifies = false;
 
-  if ( (x[0] >= 0.5) && (x[0] <= (0.5+isolator_thickness) ) )
+  if ( (x[0] >= (0.5-0.5*isolator_thickness)) && (x[0] <= (0.5+0.5*isolator_thickness) ) )
     x_0_qualifies = true;
 
   if ( (x[1] >= 0.35) && (x[1] <= 0.65 ) )
@@ -191,6 +213,7 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
     double floor_x_1 = std::floor( x[1] - x[0] );
     coefficient = 1.2 + (0.5 * sin( floor_x_0 + std::floor( x[0] / eps) + std::floor(x[1] / eps)) );
     coefficient += (0.5 * cos( floor_x_1 + std::floor( x[0] / eps) + std::floor(x[1] / eps) ) );
+    //coefficient = 1.0;
   }
 
   double a_0_0 = coefficient;
