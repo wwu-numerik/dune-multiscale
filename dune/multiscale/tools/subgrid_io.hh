@@ -17,10 +17,10 @@
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/utility/grapedataioformattypes.hh>
 #include <dune/grid/yaspgrid.hh>
-//#ifdef HAVE_ALUGRID
+#ifdef HAVE_ALUGRID
   #include <dune/grid/alugrid.hh>
-//  #include <dune/grid/spgrid.hh>
-//#endif
+#endif
+#include <dune/grid/spgrid.hh>
 #include <dune/grid/sgrid.hh>
 #include <dune/subgrid/subgrid.hh>
 #include <boost/filesystem/fstream.hpp>
@@ -81,7 +81,7 @@ namespace Dune {
         \
         template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
         { return readHostgridCommon(hostgrid, filename); }
-    #else
+    #elif defined(HAVE_ALUGRID)
         HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,2)
         HOSTGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
         HOSTGRID_IO_FUNCTION_PAIR(ALUCubeGrid,2)

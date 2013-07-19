@@ -63,14 +63,14 @@ struct CommonTraits {
   // http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
   typedef Dune::Fem::AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
   typedef Dune::GridPtr< GridType >                                       GridPointerType;
-  typedef Dune::Fem::FunctionSpace< double, double, WORLDDIM, 1 >              FunctionSpaceType;
+  typedef Dune::Fem::FunctionSpace< double, double, GridType::dimension, 1 >              FunctionSpaceType;
   //!-----------------------------------------------------------------------------------------
 
   typedef Dune::Stuff::FunctionInterface<
                               FunctionSpaceType::DomainFieldType,
                               FunctionSpaceType::dimDomain,
                               FunctionSpaceType::RangeFieldType,
-                              FunctionSpaceType::dimRange>
+                              FunctionSpaceType::dimRange, 1>
     FunctionBaseType;
   typedef Dune::Stuff::FunctionConstant<
                               FunctionSpaceType::DomainFieldType,

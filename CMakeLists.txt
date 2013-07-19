@@ -3,69 +3,25 @@ if( NOT CMAKE_BUILD_TYPE )
 	set( CMAKE_BUILD_TYPE "RELWITHDEBINFO" CACHE STRING "DEBUG/RELEASE")
 endif( NOT CMAKE_BUILD_TYPE )
 
-PROJECT(dune_multiscale)
+PROJECT(dune-multiscale CXX)
 
 #set minimum cmake version
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.6)
 
-set(ENABLE_MPI "0" CACHE STRING "set to 1 to enable mpi")
-	
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../dune-stuff/cmake )
+#find dune-common and set the module path
+find_package(dune-common)
+list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
+     "${CMAKE_SOURCE_DIR}/cmake/modules" ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../dune-stuff/cmake )
+     # make sure our own modules are found
+
+#include the dune macros
+include(DuneMacros)
+
+# start a dune project with information from dune.module
+dune_project()
 include(DuneUtils)
 
-#----------------------------------------------------------------------------------------------------
-# General Settings
-#----------------------------------------------------------------------------------------------------
-SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true )
-SET( CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".lib" ".la" ".a")
-SET( CMAKE_COLOR_MAKEFILE ON)
-
-EXECUTE_PROCESS(
-	COMMAND ${CMAKE_SOURCE_DIR}/cmake/getRevision.sh
-	OUTPUT_VARIABLE COMMIT
-	ERROR_VARIABLE shell_error
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-MACRO(ADD_CXX_FLAGS)
-    string(REPLACE " " ";" FLAGS ${ARGN})
- FOREACH( ARG ${FLAGS} )
-   ADD_DEFINITIONS(${ARG})
-   LIST(APPEND MY_CXX_FLAGS ${ARG} )
- ENDFOREACH( ARG )
-ENDMACRO(ADD_CXX_FLAGS)
-
-#----------------------------------------------------------------------------------------------------
-# Options, that can be changed be the User in order to customise dune_multiscale
-#----------------------------------------------------------------------------------------------------
-SET( BLAS_LIB
-	"blas" CACHE STRING
-	"" )
-		
-SET( GRIDTYPE
-        "SPGRID" CACHE STRING
-	"GRIDTYPE" )
-
-SET( GRIDDIM
-	"2" CACHE STRING
-	"GRIDDIM" )
-
-SET( ALUGRID_BASE_PATH
-	"/Users/svenkaulmann/dune_modules/ALUGrid-1.52_clang" CACHE STRING
-	"ALUGRID_BASE_PATH" )
-SET( ALBERTA_GRID_BASE_PATH
-	"/opt/dune/modules/alberta/alberta-3.0" CACHE STRING
-	"ALUGRID_BASE_PATH" )
-SET( UGGRID_BASE_PATH
-	"/share/dune/Modules/modules_x86_64/ug" CACHE STRING
-	"UGGRID_BASE_PATH" )
-
-SET_CONFIGHEADER_VARS()
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
-
-INCLUDE_DIR( ${dune_multiscale_BINARY_DIR} )
-INCLUDE_DIR( ${dune_multiscale_SOURCE_DIR} )
-INCLUDE_DIR( ${dune_multiscale_SOURCE_DIR}/.. )
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 #	INCLUDE_SYS_DIR( opt/local/include )
@@ -73,59 +29,11 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   LINK_DIRECTORIES( /opt/local/lib/ )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
-IF( ${GRIDTYPE} STREQUAL "UGGRID" )
-	ADD_CXX_FLAGS( -DENABLE_UG )
-	INCLUDE_SYS_DIR( ${UGGRID_BASE_PATH}/include )
-	LINK_DIRECTORIES( ${UGGRID_BASE_PATH}/lib/ )
-	SET( GRIDLIBS "ugS3" "ugS2" "devS")
-ENDIF( ${GRIDTYPE} STREQUAL "UGGRID" )
-
-
-SET( ENABLE_ALUGRID OFF )
-IF( ${GRIDTYPE} MATCHES "ALUGRID" )
-#	IF( ${ALUGRID_FOUND} )
-#		MESSAGE( FATAL ) 
-#	ENDIF( ${ALUGRID_FOUND} )	
-	INCLUDE_SYS_DIR( 	${GRAPE_PATH} 
-						${ALUGRID_BASE_PATH}/include 
-						${ALUGRID_BASE_PATH}/include/serial
-						${ALUGRID_BASE_PATH}/include/duneinterface )
-	LINK_DIRECTORIES( "${ALUGRID_BASE_PATH}/lib"  )
-	SET( GRIDLIBS "alugrid" )
-	SET( ENABLE_ALUGRID ON )
-	IF ( ENABLE_MPI )
-		INCLUDE_SYS_DIR( ${ALUGRID_BASE_PATH}/include/parallel )
-	ENDIF (ENABLE_MPI )
-	ADD_CXX_FLAGS( "-DENABLE_ALUGRID" )
-ENDIF( ${GRIDTYPE} MATCHES "ALUGRID" )
-
-SET( ENABLE_ALBERTA OFF )
-IF( ${GRIDTYPE} MATCHES "ALBERTAGRID" )
-	INCLUDE_SYS_DIR( 	${ALBERTA_GRID_BASE_PATH}/include 
-						${ALBERTA_GRID_BASE_PATH}/include/alberta)
-	LINK_DIRECTORIES( "${ALBERTA_GRID_BASE_PATH}/lib"  )
-# 	SET( GRIDLIBS alberta_utilities_debug alberta_2d_debug dunealbertagrid_2d dunegrid)
-	SET( GRIDLIBS alberta_utilities alberta_2d dunealbertagrid_2d dunegrid)
-	SET( ENABLE_ALBERTA ON )
-	ADD_CXX_FLAGS( -DENABLE_ALBERTA=1 -DDEBUG )
-ENDIF( ${GRIDTYPE} MATCHES "ALBERTAGRID" )
-
-CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
-
-ADD_DUNE_MODULES( common istl grid fem geometry localfunctions subgrid stuff spgrid)
-ADD_CXX_FLAGS( "${CUSTOM_FLAGS} -DGRIDTYPE=${GRIDTYPE} -DHAVE_CMAKE_CONFIG -DHAVE_CONFIG_H" )
-
-LINK_DIRECTORIES( "/usr/lib" "${ALUGRID_BASE_PATH}/lib" )
-
 FILE( GLOB_RECURSE header "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh" )
 FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 
-SET(BOOST_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_CHRONO_LIBRARY})
-
 set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
-
-ADD_DEFINITIONS( ${MY_CXX_FLAGS} )
 
 #these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
@@ -197,7 +105,7 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias")
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
-
+add_definitions("-DSPGRID" "-DGRIDDIM=2")
 ADD_LIBRARY(multiscale_common ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_lodm ${LODM_SOURCES})
@@ -206,7 +114,7 @@ ADD_LIBRARY(multiscale_hmm ${HMM_SOURCES})
 
 set( COMMON_LIBS multiscale_problem multiscale_common "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
     ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
-    ${BOOST_LIBS})
+    ${BOOST_LIBS} ${DUNE_LIBS})
 
 set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
@@ -236,3 +144,4 @@ add_subdirectory(doc)
 add_subdirectory(dune)
 
 ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
+finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
