@@ -183,7 +183,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
     // set Dirichlet Boundary to zero
     boundaryTreatment(system_rhs);
 
-    if (DSC_CONFIG_GET("fem.algebraic_solver", "cg" ) == "cg" )
+    if (DSC_CONFIG_GET("fem.algebraic_solver", "bi_cg_stab" ) == "cg" )
     {
       const typename FEMTraits::InverseFEMMatrix_CG fem_cg(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
       fem_cg(system_rhs, solution);

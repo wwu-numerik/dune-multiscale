@@ -8,7 +8,7 @@ algorithm.solver.preconditioner.fillFactor: 20
 [problem]
 # problem specifications
 # note that the grid is specified in '../multiscale/problems/elliptic_problems/XX.hh'
-name = Thirteen
+name = Twelve
 
 # characteristic size of the micro structure
 epsilon = 0.05
@@ -120,13 +120,13 @@ localsolver = direct.superlu
 # no error estimation implemented
 
 # initial coarse grid level
-coarse_grid_level = 2
+coarse_grid_level = 4
 
 # initial fine grid level 
-fine_grid_level = 12
+fine_grid_level = 16
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 8
+oversampling_layers = 16
 
 # oversampling strategy 3 'Lagrange' or 'Clement'.
 oversampling_strategy = Clement
@@ -134,9 +134,6 @@ oversampling_strategy = Clement
 #                        without the coarse grid nodes, i.e. coarse Lagrange interpolation is zero)
 # strategy 3b / Clement : local problems are solved in the full fine space but weighted Clement 
 #                        interpolation I_H : V_h -> V_H must be zero)
-
-# use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
-petrov_galerkin = 0
 
 # use UZAWA solver for the local saddle point problems (not suggested!)
 uzawa_solver = 0
@@ -155,6 +152,21 @@ fem_comparison = 1
 msfem_basis_vtk_output = 1
 
 localsolver = bicgstab.ilut
+
+[lod]
+
+# use the MsFEM in Petrov-Galerkin formulation (unsymmetric)
+petrov_galerkin = 0
+
+# algebraic solver ('cg' or 'bi_cg_stab')
+algebraic_solver = cg
+
+# algebraic solver for the local problems ('cg' or 'bi_cg_stab')
+local_solver = cg
+
+# show iterations of the local problem solver?
+local_problem_solver_verbose = 0
+
 
 [hmm]
 
@@ -190,8 +202,8 @@ write_to_file = 1
 [fem]
 
 # grid refinement level
-grid_level = 16
+grid_level = 18
 
-# algebraic solver
+# algebraic solver ('cg' or 'bi_cg_stab')
 algebraic_solver = cg
 

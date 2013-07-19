@@ -419,10 +419,6 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
   }
   // ----------------------------------------------------------------------------------------------------
 
-  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                  1e-8, 1e-8, 20000,
-                                                                  DSC_CONFIG_GET("localproblemsolver_verbose", false));
-
   //! Essential pre-processing step
   // For each coarse node j in the subgrid (local internal numbering, i.e. 0 <= j < M_subgrid), solve
   // for b_h_j with S_h b_h_j = C_h^T e_j, where C_h describes the algebraic version of the weighted
@@ -492,10 +488,23 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
     }
   }
 
-  // solve the pre-processing problems:
-  for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+  if (DSC_CONFIG_GET("lod.local_solver", "bi_cg_stab" ) == "cg" )
   {
-     locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
+    const InverseLocProbFEMMatrixType_CG locprob_inverse_system_matrix(locprob_system_matrix,
+                                                                       1e-8, 1e-8, 20000,
+                                                                       DSC_CONFIG_GET("lod.local_problem_solver_verbose", false));
+    // solve the pre-processing problems:
+    for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
+  }
+  else
+  {
+    const InverseLocProbFEMMatrixType_BiCGStab locprob_inverse_system_matrix(locprob_system_matrix,
+                                                                              1e-8, 1e-8, 20000,
+                                                                              DSC_CONFIG_GET("lod.local_problem_solver_verbose", false));
+    // solve the pre-processing problems:
+    for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
   }
   
   // ----------------------------------------------------------------------------------------------------

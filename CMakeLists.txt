@@ -188,8 +188,8 @@ set( FEM_SOURCES
     )
     
 set( LODM_SOURCES 
-        dune/multiscale/msfem/rigorous.cc
-        dune/multiscale/msfem/rigorous_msfem_solver.cc
+        dune/multiscale/lod/algorithm.cc
+        dune/multiscale/lod/lod_solver.cc
     )
     
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")

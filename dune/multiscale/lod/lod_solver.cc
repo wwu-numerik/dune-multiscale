@@ -4,7 +4,7 @@
  #include <config.h>
 #endif // ifdef HAVE_CMAKE_CONFIG
 
-#include "rigorous_msfem_solver.hh"
+#include "lod_solver.hh"
 
 
 #include <dune/common/fmatrix.hh>
@@ -901,7 +901,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
      //! (stiffness) matrix
      MatrixType system_matrix( number_of_relevant_coarse_nodes, number_of_relevant_coarse_nodes );
 
-     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
+     if ( DSC_CONFIG_GET("lod.petrov_galerkin", true) )
      { assemble_matrix( diffusion_op, msfem_basis_function, standard_basis_function,
                         support_of_ms_basis_func_intersection, relevant_constellations, system_matrix); }
      else
@@ -917,7 +917,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
      //print_matrix( system_matrix );
 
      VectorType rhs( number_of_relevant_coarse_nodes );
-     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
+     if ( DSC_CONFIG_GET("lod.petrov_galerkin", true) )
      { assemble_rhs( f, diffusion_op,
                      dirichlet_extension, neumann_bc,
                      global_dirichlet_corrector, global_neumann_corrector,
@@ -937,25 +937,38 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
      Dune::InverseOperatorResult result_data;
 
-#ifdef SYMMETRIC_DIFFUSION_MATRIX
-     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
+     if ( DSC_CONFIG_GET("lod.algebraic_solver", "bi_cg_stab") == "bi_cg_stab" )
      {
        typedef Dune::BiCGSTABSolver< VectorType > SolverType;
+
        SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
        solver.apply( solution_vector, rhs, result_data);
+     }
+     else if ( DSC_CONFIG_GET("lod.algebraic_solver", "bi_cg_stab") == "cg" )
+     {
+       if ( DSC_CONFIG_GET("lod.petrov_galerkin", true) )
+       {
+         std::cout << "Warning! Key 'lod.petrov_galerkin' is set true (leading to an unsymetric system matrix)."
+         << "This is incompatible with the key "
+         << "'lod.algebraic_solver' which is set to 'cg' (only for symetric systems). "
+	 << "Automatically switched the key to 'bi_cg_stab'." << std::endl;
+         typedef Dune::BiCGSTABSolver< VectorType > SolverType;
+         SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
+         solver.apply( solution_vector, rhs, result_data);
+       }
+       else
+       {
+         typedef Dune::CGSolver< VectorType > SolverType;
+         SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
+         solver.apply( solution_vector, rhs, result_data);
+       }
      }
      else
      {
-       typedef Dune::CGSolver< VectorType > SolverType;
-       SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
-       solver.apply( solution_vector, rhs, result_data);
+       std::cout << "Unknown key for 'lod.algebraic_solver'." << std::endl;
+       abort();
      }
-#else
-     typedef Dune::BiCGSTABSolver< VectorType > SolverType;
 
-     SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
-     solver.apply( solution_vector, rhs, result_data);
-#endif
   
      coarse_scale_part.clear();
      for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
@@ -1032,8 +1045,8 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
       for (size_t col = 0; col != solution_vector.N(); ++col)
         newton_step_solution_vector[col] = 0.0;
 
-     if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
-        { std::cout << "Not implemented" << std::endl; abort(); } 
+     if ( DSC_CONFIG_GET("lod.petrov_galerkin", true) )
+        { std::cout << "rigorous_msfem.petrov_galerkin not implemented for nonlinear problems!" << std::endl; abort(); } 
      
      for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
      {
