@@ -426,6 +426,13 @@ void LocalProblemOperator
         unitVectors[i][0][j] = 0.0;
       }
     }
+  }
+
+  // get dirichlet and neumann data
+  auto dirichletDataPtr = Dune::Multiscale::Problem::getDirichletData();
+  const auto& dirichletData = *dirichletDataPtr;
+  auto neumannDataPtr = Dune::Multiscale::Problem::getNeumannData();
+  const auto& neumannData = *neumannDataPtr;
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace = allLocalRHS[0]->space();
 
@@ -438,9 +445,14 @@ void LocalProblemOperator
 
   // gradient of micro scale base function:
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
+  std::vector< RangeType > phi( discreteFunctionSpace.mapper().maxNumDofs() );
+
+  const int numBoundaryCorrectors = specifier.simplexCoarseGrid() ? 1 : 2;
+  const int numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
   for (auto& localGridCell : discreteFunctionSpace) {
     const GeometryType& geometry = localGridCell.geometry();
+    const bool hasBoundaryIntersection = localGridCell.hasBoundaryIntersections();
 
     for (int coarseBaseFunc=0; coarseBaseFunc<allLocalRHS.size(); ++coarseBaseFunc) {
       LocalFunctionType rhsLocalFunction = allLocalRHS[coarseBaseFunc]->localFunction(localGridCell);
@@ -450,30 +462,80 @@ void LocalProblemOperator
 
       const QuadratureType quadrature(localGridCell, 2 * discreteFunctionSpace.order() + 2);
       const size_t numQuadraturePoints = quadrature.nop();
-      for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-        const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      if (coarseBaseFunc<numInnerCorrectors) {
+        for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
+          const auto& local_point = quadrature.point(quadraturePoint);
 
-        // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
+          // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
 
-        // global point in the subgrid
-        const DomainType global_point = geometry.global(local_point);
+          // global point in the subgrid
+          const DomainType global_point = geometry.global(local_point);
 
-        const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+          const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
-        // A^eps(x) e
-        // diffusion operator evaluated in 'x' multiplied with e
-        JacobianRangeType diffusion;
-        if (specifier.simplexCoarseGrid())
-          diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
-        else {
-          const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
-          coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
-          diffusion_operator_.diffusiveFlux(global_point, coarseBaseFuncJacs[coarseBaseFunc], diffusion);
+          // A^eps(x) e
+          // diffusion operator evaluated in 'x' multiplied with e
+          JacobianRangeType diffusion(0.0);
+          if (specifier.simplexCoarseGrid())
+            diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
+          else {
+            const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
+            coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
+            diffusion_operator_.diffusiveFlux(global_point, coarseBaseFuncJacs[coarseBaseFunc], diffusion);
+          }
+          baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
+          for (unsigned int i = 0; i < numBaseFunctions; ++i) {
+            rhsLocalFunction[i] -= weight * (diffusion[0] * gradient_phi[i][0]);
+          }
         }
-        baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
-        for (unsigned int i = 0; i < numBaseFunctions; ++i)
-        {
-          rhsLocalFunction[i] -= weight * (diffusion[0] * gradient_phi[i][0]);
+      }
+
+      // neumann boundary integrals
+      if (coarseBaseFunc>=numInnerCorrectors && hasBoundaryIntersection) {
+        const auto intEnd = discreteFunctionSpace.gridPart().iend(localGridCell);
+        for (auto iIt = discreteFunctionSpace.gridPart().ibegin(localGridCell); iIt!=intEnd; ++iIt) {
+          const auto& intersection = *iIt;
+          if (intersection.boundary()) {
+            const int          orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
+            const int          quadOrder        = std::ceil((orderOfIntegrand + 1) / 2);
+            FaceQuadratureType faceQuad(discreteFunctionSpace.gridPart(), intersection, quadOrder, FaceQuadratureType::INSIDE);
+            RangeType neumannValue(0.0);
+            const size_t numQuadPoints = faceQuad.nop();
+            // loop over all quadrature points
+            for (unsigned int iqP = 0; iqP < numQuadPoints; ++iqP) {
+              // get local coordinate of quadrature point
+              const auto& xLocal = faceQuad.localPoint(iqP);
+              const auto& faceGeometry  = intersection.geometry();
+
+              // the following does not work because subgrid does not implement geometryInInside()
+              // const auto& insideGeometry    = intersection.geometryInInside();
+              // const typename FaceQuadratureType::CoordinateType& xInInside = insideGeometry.global(xLocal);
+              // therefore, we have to do stupid thins:
+              const typename FaceQuadratureType::CoordinateType& xGlobal   = faceGeometry.global(xLocal);
+              auto insidePtr = intersection.inside();
+              const auto& insideEntity = *insidePtr;
+              const auto& xInInside = insideEntity.geometry().local(xGlobal);
+
+              const double factor = faceGeometry.integrationElement(xLocal) * faceQuad.weight(iqP);
+              if (Dune::Multiscale::Problem::isNeumannBoundary(intersection)) { // assemble neumann data
+                neumannData.evaluate(xGlobal, neumannValue);
+                baseSet.evaluateAll(xInInside, phi);
+                for (unsigned int i = 0; i < numBaseFunctions; ++i)
+                  rhsLocalFunction[i] -= factor * (neumannValue * phi[i]);
+              } else { // if boundary is true and neumann false we have to be at a dirichlet boundary
+                assert(Dune::Multiscale::Problem::isDirichletBoundary(intersection)
+                        && "Boundary id should indicate either neumann or dirichlet!");
+                JacobianRangeType dirichletValue(0.0);
+                dirichletData.jacobian(xGlobal, dirichletValue);
+                JacobianRangeType diffusion(0.0);
+                diffusion_operator_.diffusiveFlux(xGlobal, dirichletValue, diffusion);
+                baseSet.jacobianAll(xInInside, gradient_phi);
+                for (unsigned int i = 0; i < numBaseFunctions; ++i) {
+                  rhsLocalFunction[i] -= factor * (diffusion[0] * gradient_phi[i][0]);
+                }
+              }
+            }
+          }
         }
       }
     }
