@@ -5,7 +5,6 @@
 #endif // ifdef HAVE_CMAKE_CONFIG
 
 #include <unordered_set>
-#include "msfem_solver.hh"
 
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
@@ -16,6 +15,9 @@
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
+#include "msfem_solver.hh"
+
+
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
@@ -24,15 +26,15 @@ Elliptic_MsFEM_Solver::Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discre
   : discreteFunctionSpace_(discreteFunctionSpace)
 {}
 
-void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteFunction& sub_func, DiscreteFunction& host_func) const {
+void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func, DiscreteFunction& host_func) const {
   host_func.clear();
 
-  const SubgridDiscreteFunctionSpace& subDiscreteFunctionSpace = sub_func.space();
+  const SubgridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
   const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
 
-  typedef typename SubgridDiscreteFunctionSpace::IteratorType SubgridIterator;
+  typedef typename SubgridDiscreteFunctionSpaceType::IteratorType SubgridIterator;
   typedef typename SubgridIterator::Entity                    SubgridEntity;
-  typedef typename SubgridDiscreteFunction::LocalFunctionType SubgridLocalFunction;
+  typedef typename SubgridDiscreteFunctionType::LocalFunctionType SubgridLocalFunction;
 
   const SubgridIterator sub_endit = subDiscreteFunctionSpace.end();
   for (SubgridIterator sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it)
@@ -136,9 +138,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
       const auto& nodeToEntityMap = subgrid_list.getNodeEntityMap();
 
-      typedef typename SubgridDiscreteFunctionSpace::IteratorType SubgridIterator;
+      typedef typename SubgridDiscreteFunctionSpaceType::IteratorType SubgridIterator;
       typedef typename SubgridIterator::Entity                    SubgridEntity;
-      typedef typename SubgridDiscreteFunction::LocalFunctionType SubgridLocalFunction;
+      typedef typename SubgridDiscreteFunctionType::LocalFunctionType SubgridLocalFunction;
 
       for (auto& subgridEntity : localSolManager.getLocalDiscreteFunctionSpace()) {
         //! MARK actual subgrid usage

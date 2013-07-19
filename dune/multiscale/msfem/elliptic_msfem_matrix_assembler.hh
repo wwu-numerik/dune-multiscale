@@ -43,11 +43,9 @@ class DiscreteEllipticMsFEMOperator
 private:
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
   typedef CommonTraits::DiscreteFunctionType FineDiscreteFunction;
-  typedef MacroMicroGridSpecifier
-    MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
 
   typedef CommonTraits::DiffusionType                                DiffusionModel;
-  typedef CommonTraits::DiffusionType                                Dummy;
 
   typedef typename CoarseDiscreteFunction::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
   typedef typename FineDiscreteFunction::DiscreteFunctionSpaceType   FineDiscreteFunctionSpace;
@@ -78,7 +76,7 @@ private:
   typedef typename FineEntity::Geometry                                      FineGeometry;
   typedef typename FineGridPart::IntersectionIteratorType                    FineIntersectionIterator;
   typedef typename FineIntersectionIterator::Intersection                    FineIntersection;
-  typedef Fem::CachingQuadrature< FineGridPart, 0 >                          FineQuadrature;
+  typedef Fem::CachingQuadrature< FineGridPart, 0 >                          FineQuadratureType;
 
   typedef typename CoarseDiscreteFunctionSpace::GridPartType                 CoarseGridPart;
   typedef typename CoarseDiscreteFunctionSpace::GridType                     CoarseGrid;
@@ -95,28 +93,8 @@ private:
   typedef typename CoarseIntersectionIterator::Intersection                  CoarseIntersection;
   typedef Fem::CachingQuadrature< CoarseGridPart, 0 >                        CoarseQuadrature;
 
-  // ! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
-  // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
-
-  // ! type of grid part
-  typedef Fem::LeafGridPart< MsFEMTraits::SubGridType > SubGridPart;
-
-  // ! type of subgrid discrete function space
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
-    LocalDiscreteFunctionSpace;
-
-  // ! type of subgrid discrete function
-  typedef Fem::AdaptiveDiscreteFunction< LocalDiscreteFunctionSpace > LocalDiscreteFunction;
-  typedef typename LocalDiscreteFunctionSpace::IteratorType           LocalGridIterator;
-  typedef typename LocalGridIterator::Entity                          LocalGridEntity;
-  typedef typename LocalGridEntity::EntityPointer                     LocalGridEntityPointer;
-  typedef typename LocalDiscreteFunction::LocalFunctionType           LocalGridLocalFunction;
-  typedef typename LocalDiscreteFunctionSpace::LagrangePointSetType   LGLagrangePointSet;
-  typedef typename LocalDiscreteFunctionSpace::BasisFunctionSetType   LocalGridBaseFunctionSet;
-  typedef typename LocalGridEntity::Geometry                          LocalGridGeometry;
-  typedef Fem::CachingQuadrature< SubGridPart, 0 >                    LocalGridQuadrature;
-
-  // !-----------------------------------------------------------------------------------------
+  typedef MsFEMTraits::SubGridListType SubGridListType;
+  typedef typename SubGridListType::SubGridQuadratureType SubGridQuadratureType;
 
 public:
   DiscreteEllipticMsFEMOperator(MacroMicroGridSpecifierType& specifier,
@@ -187,11 +165,11 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
         assert(hostEntity->partitionType() == InteriorEntity);
 
 
-        const LocalGridGeometry& local_grid_geometry = localGridEntity.geometry();
+        const auto& local_grid_geometry = localGridEntity.geometry();
 
         // higher order quadrature, since A^{\epsilon} is highly variable
-        LocalGridQuadrature localQuadrature(localGridEntity, localQuadratureOrder);
-        const size_t        numQuadraturePoints = localQuadrature.nop();
+        SubGridQuadratureType localQuadrature(localGridEntity, localQuadratureOrder);
+        const size_t       numQuadraturePoints = localQuadrature.nop();
 
         // evaluate the jacobians of all local solutions in all quadrature points
         std::vector< std::vector< JacobianRangeType > >
