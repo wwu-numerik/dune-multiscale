@@ -6,6 +6,7 @@
 #include "elliptic/example.hh"
 #include "elliptic/five.hh"
 #include "elliptic/four.hh"
+#include "elliptic/fourteen.hh"
 #include "elliptic/nine.hh"
 #include "elliptic/one.hh"
 #include "elliptic/seven.hh"
@@ -35,6 +36,7 @@ using namespace Dune::Multiscale;
     MAP_ITEM(Two, ReturnType, FunctionName), \
     MAP_ITEM(Three, ReturnType, FunctionName), \
     MAP_ITEM(Four, ReturnType, FunctionName), \
+    MAP_ITEM(Fourteen, ReturnType, FunctionName), \
     MAP_ITEM(Five, ReturnType, FunctionName), \
     MAP_ITEM(Six, ReturnType, FunctionName), \
     MAP_ITEM(Seven, ReturnType, FunctionName), \
