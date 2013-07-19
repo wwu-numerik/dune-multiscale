@@ -8,7 +8,7 @@ algorithm.solver.preconditioner.fillFactor: 20
 [problem]
 # problem specifications
 # note that the grid is specified in '../multiscale/problems/elliptic_problems/XX.hh'
-name = Twelve
+name = Thirteen
 
 # characteristic size of the micro structure
 epsilon = 0.05
@@ -49,7 +49,8 @@ rs_grid_level = 16
 
 # directory to save the data output
 #datadir = data/lod_tests
-datadir = data/LOD/Model_Problem_12/Coarse_8_Fine_16_Layers_32
+datadir = data/fem
+#datadir = data/LOD/Model_Problem_12/Coarse_8_Fine_16_Layers_32
 #datadir = data/MsFEM/Model_Problem_9/Strategy_1/Coarse_4_Fine_12_Layers_16
 #datadir = data/Rigorous_MsFEM_Clement/Model_Problem_9/Coarse_4_Fine_12_Layers_16
 #datadir = data/Rigorous_MsFEM_Clement/Model_Problem_Daniel/Coarse_8_Fine_10_Layers_2
@@ -119,13 +120,13 @@ localsolver = direct.superlu
 # no error estimation implemented
 
 # initial coarse grid level
-coarse_grid_level = 6
+coarse_grid_level = 2
 
 # initial fine grid level 
-fine_grid_level = 16
+fine_grid_level = 12
 
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 32
+oversampling_layers = 8
 
 # oversampling strategy 3 'Lagrange' or 'Clement'.
 oversampling_strategy = Clement
@@ -190,4 +191,7 @@ write_to_file = 1
 
 # grid refinement level
 grid_level = 16
+
+# algebraic solver
+algebraic_solver = cg
 

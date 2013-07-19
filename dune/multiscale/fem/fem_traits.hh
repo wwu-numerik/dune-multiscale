@@ -26,11 +26,22 @@ struct FEMTraits {
      * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
      ****ones. GMRES seems to be more stable, but is extremely slow!
      */
-  typedef //Dune::OEMBICGSQOp
-    Dune::Fem::OEMBICGSTABOp
-  //  OEMGMRESOp
+#ifdef SYMMETRIC_DIFFUSION_MATRIX
+  typedef Dune::Fem::OEMCGOp
     < typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix > InverseFEMMatrix;
+#else
+   // typedef Dune::Fem::OEMBICGSQOp
+    typedef Dune::Fem::OEMBICGSTABOp
+   // typedef Dune::Fem::OEMCGOp
+   // typedef Dune::Fem::OEMGMRESOp
+    < typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix > InverseFEMMatrix;
+#endif
+  typedef Dune::Fem::OEMCGOp
+    < typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix > InverseFEMMatrix_CG;
 
+  typedef Dune::Fem::OEMBICGSTABOp
+    < typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix > InverseFEMMatrix_BiCG_Stab;
+    
   //! --------------- the discrete operators (standard FEM) ----------------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)
   typedef DiscreteEllipticOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType>

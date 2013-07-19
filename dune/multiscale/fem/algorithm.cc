@@ -183,8 +183,16 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
     // set Dirichlet Boundary to zero
     boundaryTreatment(system_rhs);
 
-    const typename FEMTraits::InverseFEMMatrix fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-    fem_biCGStab(system_rhs, solution);
+    if (DSC_CONFIG_GET("fem.algebraic_solver", "cg" ) == "cg" )
+    {
+      const typename FEMTraits::InverseFEMMatrix_CG fem_cg(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+      fem_cg(system_rhs, solution);
+    }
+    else
+    {
+      const typename FEMTraits::InverseFEMMatrix fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+      fem_biCGStab(system_rhs, solution);
+    }
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
     DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
