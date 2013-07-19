@@ -73,6 +73,12 @@ private:
   // typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
   typedef Fem::CGInverseOperator< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
 
+  typedef Fem::OEMCGOp
+    < DiscreteFunction, FEMMatrix > InverseFEMMatrix_CG;
+
+  typedef Fem::OEMBICGSTABOp
+    < DiscreteFunction, FEMMatrix > InverseFEMMatrix_BiCG_Stab;
+ 
   //! --------------------------------------------------------------------------------------
 
 private:

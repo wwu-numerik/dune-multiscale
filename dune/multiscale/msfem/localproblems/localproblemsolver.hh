@@ -170,6 +170,9 @@ private:
   // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
   typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrixType > InverseLocProbFEMMatrixType;
   #endif // ifdef SYMMETRIC_DIFFUSION_MATRIX
+  
+  typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrixType_CG;
+  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrixType > InverseLocProbFEMMatrixType_BiCGStab;
 
   typedef WeightedClementOperator WeightedClementOperatorType;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;

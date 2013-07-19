@@ -5,7 +5,7 @@
 // Implementation of the Local Orthogonal Decomposition Method (LODM)
 
 #include <dune/multiscale/common/main_init.hh>
-#include <dune/multiscale/msfem/rigorous.hh>
+#include <dune/multiscale/lod/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
 
 int main(int argc, char** argv) {

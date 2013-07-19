@@ -26,7 +26,7 @@
 #include <dune/stuff/function/interface.hh>
 
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/lod/lod_traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 

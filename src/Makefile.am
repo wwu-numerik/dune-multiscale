@@ -74,8 +74,8 @@ libmultiscale_fem_la_CPPFLAGS=$(CPPFLAGS)
 ######################################
 ###########  Lib: LODM  ###############
 ######################################
-libmultiscale_lodm_la_SOURCES= ../dune/multiscale/msfem/rigorous.cc \
-	../dune/multiscale/msfem/rigorous_msfem_solver.cc
+libmultiscale_lodm_la_SOURCES= ../dune/multiscale/lod/lod_solver.cc \
+        ../dune/multiscale/lod/algorithm.cc
 libmultiscale_lodm_la_CPPFLAGS=$(CPPFLAGS)
 
 
