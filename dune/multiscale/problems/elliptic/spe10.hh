@@ -151,6 +151,10 @@ MSNULLFUNCTION(DefaultDummyFunction)
 // we have no exact solution
 MSNULLFUNCTION(ExactSolution)
 
+// set zero dirichlet and neumann-values by default
+class DirichletData : public ZeroDirichletData {};
+class NeumannData : public ZeroNeumannData {};
+
 } //! @} namespace SPE10 {
 }
 } //namespace Multiscale {
