@@ -55,6 +55,7 @@ public:
 private:
   typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
+  typedef typename HostGridLeafIndexSet::IndexType EntityIndexType;
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
@@ -148,7 +149,7 @@ public:
   
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-  const CoarseGridEntitySeed get_coarse_entity_seed( int i ) const;
+  const CoarseGridEntitySeed& get_coarse_entity_seed( int i ) const;
 
 private:
   typedef std::map<int, std::shared_ptr<SubGridType> > SubGridStorageType;
@@ -188,7 +189,7 @@ private:
   
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-  std::vector < CoarseGridEntitySeed > subgrid_id_to_base_coarse_entity_;
+  std::map< EntityIndexType, CoarseGridEntitySeed > subgrid_id_to_base_coarse_entity_;
 };
 
 } //namespace MsFEM {
