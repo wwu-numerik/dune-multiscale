@@ -369,10 +369,10 @@ int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEnt
 }
 
 
-int SubGridList::getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer) {
+SubGridList::IdType SubGridList::getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer) {
   // first check, whether we looked for this host entity already
-  int hostEntityIndex = hostGridLeafIndexSet_.index(*hostEntityPointer);
-  auto itFound = fineToCoarseMapID_.find(hostEntityIndex);
+  IdType hostEntityId = coarseSpace_.gridPart().grid().globalIdSet().id(*hostEntityPointer);
+  auto itFound = fineToCoarseMapID_.find(hostEntityId);
   if (itFound!=fineToCoarseMapID_.end()) {
     // if so, return the index that was found last time
     return itFound->second;
@@ -387,8 +387,8 @@ int SubGridList::getEnclosingMacroCellId(const HostEntityPointerType& hostEntity
     bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
     if (hostEnIsInMacroCell) {
       lastIterator  = macroCellIterator;
-      int macroId = coarseSpace_.gridPart().grid().globalIdSet().id(*macroCellIterator);
-      fineToCoarseMapID_[hostEntityIndex] = macroId;
+      IdType macroId = coarseSpace_.gridPart().grid().globalIdSet().id(*macroCellIterator);
+      fineToCoarseMapID_[hostEntityId] = macroId;
       return macroId;
     }
   }
@@ -400,8 +400,8 @@ int SubGridList::getEnclosingMacroCellId(const HostEntityPointerType& hostEntity
     bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
     if (hostEnIsInMacroCell) {
       lastIterator = macroCellIterator;
-      int macroId = coarseSpace_.gridPart().grid().globalIdSet().id(*macroCellIterator);
-      fineToCoarseMapID_[hostEntityIndex] = macroId;
+      IdType macroId = coarseSpace_.gridPart().grid().globalIdSet().id(*macroCellIterator);
+      fineToCoarseMapID_[hostEntityId] = macroId;
       return macroId;
     }
   }
