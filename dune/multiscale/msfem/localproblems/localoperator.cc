@@ -774,7 +774,7 @@ void LocalProblemOperator
 void LocalProblemOperator
       ::assemble_local_RHS_Neumann_corrector(
              const NeumannBoundaryType& neumann_bc,
-             const HostDiscreteFunctionSpace& host_space,
+             const HostDiscreteFunctionSpaceType& host_space,
              const SubGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
              const int& oversampling_strategy,
              // rhs local msfem problem:

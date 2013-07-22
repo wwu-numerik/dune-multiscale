@@ -504,9 +504,9 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
     {
        // the sub grid U(T) that belongs to the coarse_grid_entity T
        auto subGridPart = subgrid_list.gridPart(global_index_entity);
-       const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
+       const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
     
-       SubgridDiscreteFunction local_dirichlet_corrector("Local Dirichlet corrector", localDiscreteFunctionSpace);
+       SubGridDiscreteFunctionType local_dirichlet_corrector("Local Dirichlet corrector", localDiscreteFunctionSpace);
        local_dirichlet_corrector.clear();
     
        // --------- load local Dirichlet corrector -------
@@ -567,9 +567,9 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
     {
        // the sub grid U(T) that belongs to the coarse_grid_entity T
        auto subGridPart = subgrid_list.gridPart(global_index_entity);
-       const SubgridDiscreteFunctionSpace localDiscreteFunctionSpace(subGridPart);
+       const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
     
-       SubgridDiscreteFunction local_neumann_corrector("Local Neumann corrector", localDiscreteFunctionSpace);
+       SubGridDiscreteFunctionType local_neumann_corrector("Local Neumann corrector", localDiscreteFunctionSpace);
        local_neumann_corrector.clear();
     
        // --------- load local neumann corrector -------
