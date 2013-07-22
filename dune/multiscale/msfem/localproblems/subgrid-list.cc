@@ -176,8 +176,6 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
 
   fine_id_to_subgrid_ids_.resize( hostGridPart_.grid().size(0) );
 
-  subgrid_id_to_base_coarse_entity_.resize( specifier_.getNumOfCoarseEntities() );
-
   //! @todo temp!
   for (const auto& hostEntity : DSC::viewRange(hostGridPart_.grid().leafView())) {
     getEnclosingMacroCellId(hostEntity);
@@ -251,8 +249,10 @@ const SubGridList::EntityPointerCollectionType& SubGridList::getNodeEntityMap() 
 
 // given the id of a subgrid, return the entity seed for the 'base coarse entity'
 // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-const SubGridList::CoarseGridEntitySeed SubGridList::get_coarse_entity_seed( int i ) const {
-  return subgrid_id_to_base_coarse_entity_[ i ];
+const SubGridList::CoarseGridEntitySeed& SubGridList::get_coarse_entity_seed( int i ) const {
+  // the following returns the mapped element for index i if present,
+  // if not, an out-of-range exception is thrown
+  return subgrid_id_to_base_coarse_entity_.at(i);
 }
 
 // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
@@ -460,10 +460,10 @@ void SubGridList::identifySubGrids() {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
     assert(coarse_entity.partitionType()==Dune::InteriorEntity);
-    const int coarse_index = coarseGridLeafIndexSet_.index(coarse_entity);
+    const auto coarse_index = coarseGridLeafIndexSet_.index(coarse_entity);
     // make sure we did not create a subgrid for the current coarse entity so far
     assert(subGridList_.find(coarse_index)==subGridList_.end());
-    subgrid_id_to_base_coarse_entity_[coarse_index] = coarse_entity.seed();
+    subgrid_id_to_base_coarse_entity_.emplace(coarse_index, coarse_entity.seed());
     subGridList_[coarse_index] = make_shared<SubGridType>(hostGrid);
     subGridList_[coarse_index]->createBegin();
 
