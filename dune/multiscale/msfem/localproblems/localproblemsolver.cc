@@ -1156,7 +1156,6 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
   for (const auto& coarseEntity : coarseSpace) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
-    const int coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
 
     DSC_LOG_INFO << "-------------------------" << std::endl
             << "Coarse index " << coarse_index << std::endl;
@@ -1166,7 +1165,6 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
     const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
     Dune::Timer assembleTimer;
-    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarseId).str();
 
     bool uzawa = DSC_CONFIG_GET( "rigorous_msfem.uzawa_solver", false );
     bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );

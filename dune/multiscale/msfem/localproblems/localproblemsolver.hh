@@ -94,6 +94,7 @@ private:
   typedef typename HostDiscreteFunctionSpaceType::DomainType DomainType;
 
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
+  typedef typename HostGridType::Traits::GlobalIdSet::IdType IdType;
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;

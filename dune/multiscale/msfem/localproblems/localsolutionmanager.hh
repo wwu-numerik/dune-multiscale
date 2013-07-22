@@ -22,6 +22,7 @@ private:
   typedef typename SubGridListType::SubGridDiscreteFunctionType DiscreteFunctionType;
   typedef MsFEMTraits::CoarseEntityType                     CoarseEntityType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType          MacroMicroGridSpecifierType;
+  typedef typename CommonTraits::GridType::Traits::GlobalIdSet::IdType IdType;
 
 public:
   typedef std::vector< std::unique_ptr< DiscreteFunctionType > > LocalSolutionVectorType;
@@ -50,7 +51,7 @@ private:
   const MacroMicroGridSpecifierType& gridSpecifier_;
   SubGridPartType                    subGridPart_;
   DiscreteFunctionSpaceType          localDiscreteFunctionSpace_;
-  const int                          coarseId_;
+  const IdType                          coarseId_;
   bool                               loaded_;
   const int                          numBoundaryCorrectors_;
   const int                          numLocalProblems_;

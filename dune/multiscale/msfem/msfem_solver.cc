@@ -161,11 +161,11 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
             const int global_index_node = gridPart.grid().leafIndexSet().index(*node);
 
             // count the number of different coarse-grid-entities that share the above node
-            std::unordered_set< int > coarse_entities;
+            std::unordered_set< SubGridListType::IdType > coarse_entities;
             const int numEntitiesSharingNode = nodeToEntityMap[global_index_node].size();
             for (size_t j = 0; j < numEntitiesSharingNode; ++j) {
               // get the id of the macro element enclosing the current element
-              const int innerId = subgrid_list.getEnclosingMacroCellId(nodeToEntityMap[global_index_node][j]);
+              const auto innerId = subgrid_list.getEnclosingMacroCellId(nodeToEntityMap[global_index_node][j]);
               // the following will only add the entity index if it is not yet present
               coarse_entities.insert(innerId);
             }
