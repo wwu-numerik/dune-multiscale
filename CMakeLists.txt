@@ -106,15 +106,13 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 add_definitions("-DSPGRID" "-DGRIDDIM=2")
-ADD_LIBRARY(multiscale_common ${COMMON_SOURCES})
-ADD_LIBRARY(multiscale_problem ${PROBLEM_SOURCES})
-ADD_LIBRARY(multiscale_lodm ${LODM_SOURCES})
-ADD_LIBRARY(multiscale_msfem ${MSFEM_SOURCES})
-ADD_LIBRARY(multiscale_hmm ${HMM_SOURCES})
+ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
+ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
+ADD_LIBRARY(multiscale_lodm STATIC ${LODM_SOURCES})
+ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
+ADD_LIBRARY(multiscale_hmm STATIC ${HMM_SOURCES})
 
-set( COMMON_LIBS multiscale_problem multiscale_common "dunestuff" "dunefem" "dunegrid" "dunecommon" "dunegeometry" 
-    ${BLAS_LIB} ${GRIDLIBS} ${ParaLIBS} ${CCGNU_LIBRARIES} ${PARALIBS}
-    ${BOOST_LIBS} ${DUNE_LIBS})
+set( COMMON_LIBS multiscale_problem multiscale_common "dunestuff" "dunefem" ${DUNE_DEFAULT_LIBS} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
@@ -145,3 +143,4 @@ add_subdirectory(dune)
 
 ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
+
