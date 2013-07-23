@@ -112,7 +112,7 @@ ADD_LIBRARY(multiscale_lodm STATIC ${LODM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
 ADD_LIBRARY(multiscale_hmm STATIC ${HMM_SOURCES})
 
-set( COMMON_LIBS multiscale_problem multiscale_common "dunestuff" "dunefem" ${DUNE_DEFAULT_LIBS} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+set( COMMON_LIBS multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS})
 
 set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
@@ -134,7 +134,6 @@ TARGET_LINK_LIBRARIES(elliptic_lodm multiscale_lodm ${COMMON_LIBS} )
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 
-
 HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
 
@@ -143,4 +142,3 @@ add_subdirectory(dune)
 
 ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
-
