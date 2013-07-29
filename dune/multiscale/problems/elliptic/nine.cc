@@ -128,6 +128,45 @@ void ExactSolution::evaluate(const DomainType& x,
                      RangeType& y) const {
   evaluate(x, y);
 }
+
+// evaluate Dirichlet Boundary Function
+void DirichletData::evaluate(const DomainType& x,
+        RangeType& y) const
+{
+  y = 0.0;
+
+} // evaluate
+
+void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
+  evaluate(x, y);
+}
+
+// evaluate jacobian of dirichlet boundary function
+void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y) const
+{
+  y[0] = 0.0;
+} // jacobian
+
+// evaluate jacobian of dirichlet boundary function
+void DirichletData::jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const
+{
+  jacobian(x,y);
+} // jacobian
+
+// evaluate Neumann Boundary Function
+void NeumannData::evaluate(const DomainType& x,
+        RangeType& y) const
+{
+  y = 1.0;
+
+} // evaluate
+
+void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
+  evaluate(x, y);
+}
+
+
+
 } //namespace Nine
 } //namespace Problem
 } //namespace Multiscale {

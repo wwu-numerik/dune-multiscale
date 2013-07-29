@@ -94,6 +94,7 @@ private:
   typedef typename HostDiscreteFunctionSpaceType::DomainType DomainType;
 
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
+  typedef typename HostGridType::Traits::GlobalIdSet::IdType IdType;
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
@@ -110,12 +111,12 @@ private:
   //! type of grid part
   typedef typename SubGridList::SubGridPartType SubGridPartType;
   //! type of subgrid discrete function space
-  typedef typename SubGridList::SubGridDiscreteFunctionSpace SubDiscreteFunctionSpaceType;
+  typedef typename SubGridList::SubGridDiscreteFunctionSpaceType SubDiscreteFunctionSpaceType;
   
 
 public:
   //! type of subgrid discrete function
-  typedef typename SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
+  typedef typename SubGridList::SubGridDiscreteFunctionType SubDiscreteFunctionType;
   typedef std::vector<std::unique_ptr<SubDiscreteFunctionType> > SubDiscreteFunctionVectorType;
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;

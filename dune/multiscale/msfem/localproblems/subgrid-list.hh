@@ -40,13 +40,11 @@ namespace MsFEM {
 class SubGridList : public boost::noncopyable
 {
   typedef typename CommonTraits::DiscreteFunctionType HostDiscreteFunctionImp;
-  typedef MsFEMTraits::SubGridType SubGridImp;
-  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierImp;
 
 public:
   //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
 
-  typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
+  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
   typedef HostDiscreteFunctionImp HostDiscreteFunctionType;
   //! type of discrete function space
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
@@ -57,6 +55,7 @@ public:
 private:
   typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
+  typedef typename HostGridLeafIndexSet::IndexType EntityIndexType;
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
@@ -73,6 +72,7 @@ private:
   typedef typename FunctionSpaceType::DomainType DomainType;
 
 public:
+  typedef typename HostGridType::Traits::GlobalIdSet::IdType IdType;
   typedef std::vector< DomainType > CoarseNodeVectorType;
 
 private:
@@ -87,18 +87,17 @@ private:
 public:
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
-
   //! type of grid
-  typedef SubGridImp SubGridType;
-
+  typedef MsFEMTraits::SubGridType SubGridType;
   //! type of grid part
-  typedef Fem::LeafGridPart< SubGridType > SubGridPartType;
-  
+  typedef MsFEMTraits::SubGridPartType SubGridPartType;
     //! type of subgrid discrete function space
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1/*=POLORDER*/ > SubGridDiscreteFunctionSpace;
-
+  typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
   //! type of subgrid discrete function
-  typedef Fem::AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpace > SubGridDiscreteFunction;
+  typedef MsFEMTraits::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
+  typedef MsFEMTraits::SubGridQuadratureType SubGridQuadratureType;
+  typedef MsFEMTraits::SubFaceQuadratureType SubFaceQuadratureType;
+
 
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true);
   ~SubGridList();
@@ -141,7 +140,7 @@ public:
 */
   int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
 
-  int getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer);
+  IdType getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer);
 
   /** Get the mapping from node number to codim 0 host entity.
   * @return Returns the map.
@@ -150,7 +149,7 @@ public:
   
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-  const CoarseGridEntitySeed get_coarse_entity_seed( int i ) const;
+  const CoarseGridEntitySeed& get_coarse_entity_seed( int i ) const;
 
 private:
   typedef std::map<int, std::shared_ptr<SubGridType> > SubGridStorageType;
@@ -184,13 +183,13 @@ private:
   EntityPointerCollectionType entities_sharing_same_node_;
   EnrichmentMatrixType enriched_;
   std::vector<std::map<int, int> > fineToCoarseMap_;
-  std::map<int, int> fineToCoarseMapID_;
+  std::map<IdType, IdType> fineToCoarseMapID_;
   // given the id of a fine grid element, the vector returns the ids of all subgrids that share that element
   std::vector < std::vector< int > > fine_id_to_subgrid_ids_;
   
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-  std::vector < CoarseGridEntitySeed > subgrid_id_to_base_coarse_entity_;
+  std::map< EntityIndexType, CoarseGridEntitySeed > subgrid_id_to_base_coarse_entity_;
 };
 
 } //namespace MsFEM {
