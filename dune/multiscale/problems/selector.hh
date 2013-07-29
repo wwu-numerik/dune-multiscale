@@ -13,6 +13,7 @@
 
 
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -29,6 +30,13 @@ std::unique_ptr<const CommonTraits::DirichletBCType> getDirichletBC();
 std::unique_ptr<const CommonTraits::NeumannBCType> getNeumannBC();
 BasePtr getDefaultDummyFunction();
 std::unique_ptr<const CommonTraits::ModelProblemDataType> getModelData();
+std::unique_ptr<const CommonTraits::DirichletDataType> getDirichletData();
+std::unique_ptr<const CommonTraits::NeumannDataType> getNeumannData();
+
+template< class GridImp, class IntersectionImp >
+bool isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face);
+template< class GridImp, class IntersectionImp >
+bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face);
 
 std::string name();
 

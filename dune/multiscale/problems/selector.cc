@@ -120,6 +120,47 @@ std::unique_ptr<const CommonTraits::DiffusionType> Dune::Multiscale::Problem::ge
   return find_and_call_item(funcs);
 }
 
+std::unique_ptr<const CommonTraits::DirichletDataType> Dune::Multiscale::Problem::getDirichletData()
+{
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::DirichletDataType>, DirichletData);
+  return find_and_call_item(funcs);
+}
+
+std::unique_ptr<const CommonTraits::NeumannDataType> Dune::Multiscale::Problem::getNeumannData()
+{
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::NeumannDataType>, NeumannData);
+  return find_and_call_item(funcs);
+}
+
+template< class GridImp, class IntersectionImp >
+bool Dune::Multiscale::Problem::isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+  return (face.boundary() && face.boundaryId()==2);
+}
+
+template< class GridImp, class IntersectionImp >
+bool Dune::Multiscale::Problem::isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+  return (face.boundary() && face.boundaryId()==1);
+}
+
+template<>
+bool Dune::Multiscale::Problem::isNeumannBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==2);
+}
+
+template<>
+bool Dune::Multiscale::Problem::isDirichletBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==1);
+}
+
+template<>
+bool Dune::Multiscale::Problem::isNeumannBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==2);
+}
+
+template<>
+bool Dune::Multiscale::Problem::isDirichletBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==1);
+}
 
 std::unique_ptr<const CommonTraits::DirichletBCType> Dune::Multiscale::Problem::getDirichletBC()
 {
@@ -139,3 +180,4 @@ std::string Dune::Multiscale::Problem::name()
 {
   return DSC_CONFIG_GET("problem.name", "Nine");
 }
+

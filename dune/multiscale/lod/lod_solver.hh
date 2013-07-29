@@ -160,28 +160,14 @@ private:
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   // --------------------------- subgrid typedefs ------------------------------------
-
-  typedef MsFEMTraits::SubGridType SubGridType;
-
-  typedef Fem::LeafGridPart< SubGridType > SubGridPart;
-
-  // typedef typename SubGridType ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
-  // SubGridLevelEntityIteratorType;
-
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
-    SubgridDiscreteFunctionSpace;
-
-  typedef Fem::AdaptiveDiscreteFunction< SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
-
-  typedef typename SubgridDiscreteFunctionSpace::IteratorType SubGridIterator;
-  
-  typedef typename SubGridIterator::Entity SubGridEntity;
-
-  typedef typename SubGridEntity::EntityPointer SubGridEntityPointer;
-  
-  typedef typename SubGridPart::IntersectionIteratorType  SGIntersectionIterator;
-
-
+  typedef MsFEMTraits::SubGridListType SubGridListType;
+  typedef MsFEMTraits::SubGridType  SubGridType;
+  typedef MsFEMTraits::SubGridPartType SubGridPartType;
+  typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
+  typedef MsFEMTraits::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
+  typedef typename SubGridDiscreteFunctionType::LocalFunctionType SubGridLocalFunctionType;
+  typedef typename SubGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
+  typedef typename SubGridIteratorType::Entity SubGridEntityType;
   //!-----------------------------------------------------------------------------------------
 
   //! --------------------- istl matrix and vector types -------------------------------------
@@ -213,14 +199,14 @@ private:
    //! correspond to interior coarse grid nodes in the subgrid
    // information stored in 'std::vector< std::vector< int > >'
    void assemble_interior_basis_ids( MacroMicroGridSpecifier& specifier,
-                                     MsFEMTraits::SubGridListType& subgrid_list,
+                                     SubGridListType& subgrid_list,
                                      std::map<int,int>& global_id_to_internal_id,
                                      std::map< OrderedDomainType, int >& coordinates_to_global_coarse_node_id,
                                      std::vector< std::vector< int > >& ids_basis_function_in_extended_subgrid,
                                      std::vector< std::vector< int > >& ids_basis_function_in_subgrid,
                                      std::vector< std::vector< int > >& ids_basis_function_in_interior_subgrid) const;
 
-   void subgrid_to_hostrid_projection( const SubgridDiscreteFunction& sub_func,
+   void subgrid_to_hostrid_projection( const SubGridDiscreteFunctionType& sub_func,
                                        DiscreteFunction& host_func) const;
 
   //! create standard coarse grid basis functions as discrete functions defined on the fine grid
@@ -233,7 +219,7 @@ private:
   //! add corrector part to MsFEM basis functions
   void add_corrector_contribution(MacroMicroGridSpecifier &specifier,
                                    std::map<int,int>& global_id_to_internal_id,
-                                   MsFEMTraits::SubGridListType& subgrid_list,
+                                   SubGridListType& subgrid_list,
                                    MsFEMBasisFunctionType& msfem_basis_function_list ) const;
 
 

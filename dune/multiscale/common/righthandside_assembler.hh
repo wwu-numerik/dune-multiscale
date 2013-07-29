@@ -344,8 +344,8 @@ public:
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       typedef typename SubGridListType::SubGridPartType SubGridPartType;
-      typedef typename SubGridListType::SubGridDiscreteFunctionSpace LocalDiscreteFunctionSpaceType;
-      typedef typename SubGridListType::SubGridDiscreteFunction LocalDiscreteFunction;
+      typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType LocalDiscreteFunctionSpaceType;
+      typedef typename SubGridListType::SubGridDiscreteFunctionType LocalDiscreteFunction;
       typedef typename LocalDiscreteFunction::LocalFunctionType LocalFunctionType;
       typedef Fem::CachingQuadrature< SubGridPartType, 0 > LocalGridQuadrature;
 

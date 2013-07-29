@@ -119,26 +119,16 @@ private:
 
   // --------------------------- subgrid typedefs ------------------------------------
 
-  typedef SubGrid< GridType::dimension, GridType > SubGridType;
-  typedef Fem::LeafGridPart< SubGridType >              SubGridPart;
-
-  typedef typename SubGridType::Traits::LeafIndexSet SubGridLeafIndexSet;
-
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPart,
-                                         1 /*POLORDER*/ > SubGridDiscreteFunctionSpaceType;
-
-  typedef Fem::AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpaceType > SubGridDiscreteFunctionType;
+  typedef typename SubGridListType::SubGridType  SubGridType;
+  typedef typename SubGridListType::SubGridPartType SubGridPartType;
+  typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
+  typedef typename SubGridListType::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
 
   typedef typename SubGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
-
   typedef typename SubGridIteratorType::Entity SubGridEntityType;
-
-  typedef typename SubGridEntityType::EntityPointer SubGridEntityPointerType;
-
   typedef typename SubGridDiscreteFunctionType::LocalFunctionType SubGridLocalFunctionType;
 
-  typedef typename SubGridDiscreteFunctionSpaceType::LagrangePointSetType
-  SubGridLagrangePointSetType;
+  typedef typename SubGridDiscreteFunctionSpaceType::LagrangePointSetType SubGridLagrangePointSetType;
 
   enum { faceCodim = 1 };
   typedef typename SubGridLagrangePointSetType::template Codim< faceCodim >
@@ -151,7 +141,7 @@ private:
 
   typedef typename SubGridType::template Codim< 0 >::Geometry SubGridEntityGeometryType;
 
-  typedef Fem::CachingQuadrature< SubGridPart, 0 > LocalGridEntityQuadratureType;
+  typedef Fem::CachingQuadrature< SubGridPartType, 0 > LocalGridEntityQuadratureType;
 
   typedef std::array<RangeType, 3> JumpArray;
   typedef std::array<const Intersection*, 3> IntersectionArray;
