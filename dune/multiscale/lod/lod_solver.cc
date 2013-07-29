@@ -1046,7 +1046,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
         newton_step_solution_vector[col] = 0.0;
 
      if ( DSC_CONFIG_GET("lod.petrov_galerkin", true) )
-        { std::cout << "rigorous_msfem.petrov_galerkin not implemented for nonlinear problems!" << std::endl; abort(); } 
+        { std::cout << "lod.petrov_galerkin not implemented for nonlinear problems!" << std::endl; abort(); } 
      
      for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
      {
