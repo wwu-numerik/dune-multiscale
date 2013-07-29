@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 
     DSC_LOG_INFO << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(*info)
               << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
-    if ( DSC_CONFIG_GET("rigorous_msfem.petrov_galerkin", true) )
+    if ( DSC_CONFIG_GET("lod.petrov_galerkin", false) )
         DSC_LOG_INFO << "Use Local Orthogonal Decomposition (LOD) Method in Petrov-Galerkin formulation with an uniform computation, i.e.:" << std::endl;
     else
         DSC_LOG_INFO << "Use Local Orthogonal Decomposition (LOD) Method in classical (symmetric) formulation with an uniform computation, i.e.:" << std::endl;      

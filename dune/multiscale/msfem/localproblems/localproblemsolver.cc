@@ -1207,6 +1207,10 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
                                    local_problem_solution_0, coarse_index );
       solve_corrector_problem_lod( unitVectors[1], locprob_system_matrix, lagrange_multiplier_system_matrix,
                                    local_problem_solution_1, coarse_index );
+      
+      assert( local_problem_solution_0.dofsValid() );
+      assert( local_problem_solution_1.dofsValid() );
+      
       const std::string locprob_solution_location =
               (boost::format("local_problems/_localProblemSolutions_%d") % coarseId).str();
       DiscreteFunctionWriter dfw(locprob_solution_location);
@@ -1266,6 +1270,8 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
            solve_dirichlet_corrector_problem_lod( locprob_system_matrix, lagrange_multiplier_system_matrix,
                                                   dirichlet_boundary_corrector, coarse_index );
 
+           assert( dirichlet_boundary_corrector.dofsValid() );
+
            const std::string dirichlet_corrector_location = (boost::format("local_problems/_dirichletBoundaryCorrector_%d") % coarseId).str();
            DiscreteFunctionWriter dfw_dirichlet( dirichlet_corrector_location );
            dfw_dirichlet.append( dirichlet_boundary_corrector );
@@ -1289,7 +1295,9 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
            // also requires the pre-processing step:
            solve_neumann_corrector_problem_lod( locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                                  neumann_boundary_corrector, coarse_index );
+                                                 neumann_boundary_corrector, coarse_index );
+
+           assert( neumann_boundary_corrector.dofsValid() );
 
            const std::string neumann_corrector_location = (boost::format("local_problems/_neumannBoundaryCorrector_%d") % coarseId).str();
            DiscreteFunctionWriter dfw_neumann( neumann_corrector_location );

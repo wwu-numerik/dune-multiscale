@@ -51,7 +51,7 @@ void Diffusion::diffusiveFlux(const DomainType& x,
                    JacobianRangeType& flux) const {
 
   double conductor_thickness = 0.05;
-  double conductivity = 100.0;
+  double conductivity = 20.0;
   
   double isolator_thickness = 0.05;
   double isolator_conductivity = 1e-2;
