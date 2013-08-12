@@ -15,7 +15,7 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
-#include <dune/stuff/function/interface.hh>
+#include <dune/stuff/functions/interfaces.hh>
 
 namespace Dune {
 namespace Multiscale {

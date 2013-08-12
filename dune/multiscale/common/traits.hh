@@ -17,7 +17,7 @@
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/stuff/function/interface.hh>
+#include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/function/constant.hh>
 
 namespace Dune {

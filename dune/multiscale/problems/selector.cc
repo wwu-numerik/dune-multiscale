@@ -132,35 +132,43 @@ std::unique_ptr<const CommonTraits::NeumannDataType> Dune::Multiscale::Problem::
   return find_and_call_item(funcs);
 }
 
+namespace Dune {
+namespace Multiscale {
+namespace Problem {
+//for some reason gcc 4.7 does not like the specializations if they're not in an explicit ns scope
 template< class GridImp, class IntersectionImp >
-bool Dune::Multiscale::Problem::isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+bool isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
   return (face.boundary() && face.boundaryId()==2);
 }
 
 template< class GridImp, class IntersectionImp >
-bool Dune::Multiscale::Problem::isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
   return (face.boundary() && face.boundaryId()==1);
 }
 
 template<>
-bool Dune::Multiscale::Problem::isNeumannBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
+bool isNeumannBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
   return (face.boundary() && face.boundaryId()==2);
 }
 
 template<>
-bool Dune::Multiscale::Problem::isDirichletBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
+bool isDirichletBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
   return (face.boundary() && face.boundaryId()==1);
 }
 
 template<>
-bool Dune::Multiscale::Problem::isNeumannBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+bool isNeumannBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
   return (face.boundary() && face.boundaryId()==2);
 }
 
 template<>
-bool Dune::Multiscale::Problem::isDirichletBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+bool isDirichletBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
   return (face.boundary() && face.boundaryId()==1);
 }
+
+} // namespace Problem
+} // namespace Multiscale
+} // namespace Dune
 
 std::unique_ptr<const CommonTraits::DirichletBCType> Dune::Multiscale::Problem::getDirichletBC()
 {
