@@ -463,7 +463,7 @@ void SubGridList::identifySubGrids() {
     const auto coarse_index = coarseGridLeafIndexSet_.index(coarse_entity);
     // make sure we did not create a subgrid for the current coarse entity so far
     assert(subGridList_.find(coarse_index)==subGridList_.end());
-    subgrid_id_to_base_coarse_entity_.emplace(coarse_index, coarse_entity.seed());
+    subgrid_id_to_base_coarse_entity_.insert(std::make_pair(coarse_index, std::move(coarse_entity.seed())));
     subGridList_[coarse_index] = make_shared<SubGridType>(hostGrid);
     subGridList_[coarse_index]->createBegin();
 
