@@ -172,6 +172,72 @@ public:
   void evaluate(const DomainType& x, const TimeType&, RangeType& y) const;
 };
 
+//! ----------------- Definition of Dirichlet Boundary Condition ------------------------
+
+class DirichletData
+        : public DirichletDataBase
+{
+private:
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+
+public:
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+
+  static const int dimDomain = DomainType::dimension;
+
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+
+  typedef DomainFieldType TimeType;
+
+public:
+  DirichletData( ) {}
+
+  void evaluate(const DomainType& x, RangeType& y) const;
+
+  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
+
+  void jacobian(const DomainType& x, JacobianRangeType& y) const;
+
+  void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const;
+
+};
+
+
+//! ----------------- Definition of Neumann Boundary Condition ------------------------
+
+class NeumannData
+        : public NeumannDataBase
+{
+private:
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+
+public:
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+
+  static const int dimDomain = DomainType::dimension;
+
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+
+  typedef DomainFieldType TimeType;
+
+public:
+  NeumannData( ) {}
+
+  void evaluate(const DomainType& x, RangeType& y) const;
+
+  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
+};
+
+
+
 } //! @} namespace Nine {
 }
 } //namespace Multiscale {

@@ -160,6 +160,9 @@ public:
                        RangeType& y) const;
 };
 
+// set zero dirichlet and neumann-values by default
+class DirichletData : public ZeroDirichletData {};
+class NeumannData : public ZeroNeumannData {};
 
 } //namespace One {
 }

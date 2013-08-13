@@ -15,7 +15,7 @@
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
-#include <dune/stuff/function/interface.hh>
+#include <dune/stuff/functions/interfaces.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -76,6 +76,65 @@ struct ZeroLowerOrder : public LowerOrderBase
   virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const { y = RangeType(0); }
   virtual void direction_derivative(const DomainType&, const RangeType&, const JacobianRangeType&, JacobianRangeType& y) const { y = JacobianRangeType(0); }
 };
+
+class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
+public:
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef DomainFieldType TimeType;
+
+  virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
+  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
+
+  virtual void jacobian(const DomainType& x, JacobianRangeType& y) const = 0;
+  virtual void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const = 0;
+};
+
+class ZeroDirichletData : public DirichletDataBase
+{
+public:
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef DomainFieldType TimeType;
+
+  virtual void evaluate(const DomainType& x, RangeType& y) const { y = RangeType(0.0); };
+  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); };
+
+  virtual void jacobian(const DomainType& x, JacobianRangeType& y) const { y = JacobianRangeType(0.0); };
+  virtual void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const { y = JacobianRangeType(0.0); };
+};
+
+class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
+public:
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef DomainFieldType TimeType;
+
+  virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
+  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
+};
+
+class ZeroNeumannData: public NeumannDataBase
+{
+public:
+  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef DomainFieldType TimeType;
+
+  virtual void evaluate(const DomainType& x, RangeType& y) const { y = RangeType(0.0); };
+  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); };
+};
+
 
 /**
  * \addtogroup Problem

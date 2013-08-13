@@ -16,10 +16,13 @@ namespace Problem {
  * @{ **/
 //! ------------ Elliptic Problem 13 -------------------
 
-// nonlinear elliptic model problem - periodic setting
+// linear elliptic model problem
 
 //! For more further details about the implementation see '../base.hh'
 //! For details on the classes, see 'example.hh'
+
+// if the diffusion matrix is symmetric, we can use a CG solver, if not, default to BiCGStab.
+#define SYMMETRIC_DIFFUSION_MATRIX
 
 namespace Thirteen {
 
@@ -193,8 +196,9 @@ public:
 };
 
 
+// Exact solution is unknown:
 //! ----------------- Definition of ' u ' ----------------------------
-//! Exact solution (typically it is unknown)
+//! Exact solution is unknown for this model problem
 class ExactSolution
   : public Dune::Multiscale::CommonTraits::FunctionBaseType
 {
@@ -213,19 +217,25 @@ public:
   typedef DomainFieldType TimeType;
 
 public:
-  ExactSolution();
+  ExactSolution(){}
 
-  // evaluate 'u(x)'
-  void evaluate(const DomainType& x, RangeType& y) const;
+  // in case 'u' has NO time-dependency use the following method:
+  void evaluate(const DomainType& /*x*/,
+                       RangeType& /*y*/) const;
 
-  // evaluate 'grad u(x)'
-  void jacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const;
+  void jacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
-  void evaluate(const DomainType& x, const TimeType&, RangeType& y) const;
+  void evaluate(const DomainType& x,
+                       const TimeType& /*timedummy*/,
+                       RangeType& y) const;
 };
+
+// set zero dirichlet and neumann-values by default
+class DirichletData : public ZeroDirichletData {};
+class NeumannData : public ZeroNeumannData {};
 
 } //! @} namespace Thirteen {
 }

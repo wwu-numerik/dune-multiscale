@@ -62,16 +62,31 @@ void Diffusion::diffusiveFlux(const DomainType& x,
   assert(x.size()<=3 && "SPE 10 model is only defined for up to three dimensions!");
   Dune::FieldMatrix< double, DomainType::dimension, DomainType::dimension> permeability(0.0);
 
+  //TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
+  
   // 3 is the maximum space dimension
   std::vector<double> intervalls(3, 0.0);
   for (int dim=0; dim<DomainType::dimension; ++dim)
     intervalls[dim] = std::floor(x[dim] / deltas_[dim]);
 
-  int offset = intervalls[0] + intervalls[1] * 60 + intervalls[2] * 220 * 60;
-
-    permeability[0][0] = permeability_[offset];
-    permeability[1][1] = permeability_[offset + 1122000];
-    permeability[2][2] = permeability_[offset + 2244000];
+  int offset = 0;
+  switch ( DomainType::dimension ) {
+    case 1:
+      offset = intervalls[0];
+      permeability[0][0] = permeability_[offset];
+      break;
+    case 2:
+      offset = intervalls[0] + intervalls[1] * 60;
+      permeability[0][0] = permeability_[offset];
+      permeability[1][1] = permeability_[offset + 1122000];
+      break;
+    case 3:
+      offset = intervalls[0] + intervalls[1] * 60 + intervalls[2] * 220 * 60;
+      permeability[0][0] = permeability_[offset];
+      permeability[1][1] = permeability_[offset + 1122000];
+      permeability[2][2] = permeability_[offset + 2244000];
+      break;
+  }
 
   permeability.mv(direction[0], flux[0]);
 } // diffusiveFlux

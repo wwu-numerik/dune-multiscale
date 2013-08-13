@@ -42,45 +42,45 @@ private:
   typedef SubDiscreteFunctionType DiscreteFunction;
   typedef DiffusionOperatorType   DiffusionModel;
 
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
-  typedef typename DiscreteFunctionSpace::GridPartType   GridPart;
-  typedef typename DiscreteFunctionSpace::GridType       GridType;
-  typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
+  typedef typename DiscreteFunctionSpaceType::GridPartType   GridPartType;
+  typedef typename DiscreteFunctionSpaceType::GridType       GridType;
+  typedef typename DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef typename DiscreteFunctionSpace::DomainType DomainType;
-  typedef typename DiscreteFunctionSpace::RangeType  RangeType;
-  typedef typename DiscreteFunctionSpace::JacobianRangeType
+  typedef typename DiscreteFunctionSpaceType::DomainType DomainType;
+  typedef typename DiscreteFunctionSpaceType::RangeType  RangeType;
+  typedef typename DiscreteFunctionSpaceType::JacobianRangeType
     JacobianRangeType;
   
-  static const int dimension = GridPart::GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
+  static const int dimension = GridPartType::GridType::dimension;
+  static const int polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder;
 
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
+  typedef typename DiscreteFunction::LocalFunctionType LocalFunctionType;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType                   BasisFunctionSetType;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType                  LagrangePointSet;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType                   BasisFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::LagrangePointSetType                  LagrangePointSet;
   typedef typename LagrangePointSet::Codim< 1 >::SubEntityIteratorType FaceDofIterator;
 
-  typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity                    Entity;
-  typedef typename Entity::Geometry                    Geometry;
+  typedef typename DiscreteFunctionSpaceType::IteratorType EntityIteratorType;
+  typedef typename EntityIteratorType::Entity                    EntityType;
+  typedef typename EntityType::Geometry                    GeometryType;
 
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
+  typedef typename GridPartType::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
 
-  typedef Fem::CachingQuadrature< GridPart, 0 > Quadrature;
+  typedef Fem::CachingQuadrature< GridPartType, 0 > QuadratureType;
 
   typedef typename SubGridList::HostDiscreteFunctionType HostDiscreteFunction;
-  typedef typename HostDiscreteFunction::DiscreteFunctionSpaceType HostDiscreteFunctionSpace;
-  typedef typename HostDiscreteFunctionSpace::GridPartType HostGridPart;
-  typedef typename HostDiscreteFunctionSpace::IteratorType HostIterator;
+  typedef typename HostDiscreteFunction::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
+  typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPart;
+  typedef typename HostDiscreteFunctionSpaceType::IteratorType HostIterator;
   typedef typename HostIterator::Entity                    HostEntity;
   typedef typename HostEntity::EntityPointer               HostEntityPointer;
   typedef typename HostDiscreteFunction::LocalFunctionType HostLocalFunction;
   typedef typename HostEntity::Geometry                    HostGeometry;
   typedef typename HostGridPart::IntersectionIteratorType  HostIntersectionIterator;
-  typedef typename HostDiscreteFunctionSpace::LagrangePointSetType HostLagrangePointSet;
+  typedef typename HostDiscreteFunctionSpaceType::LagrangePointSetType HostLagrangePointSet;
   typedef typename HostLagrangePointSet::Codim< faceCodim >::SubEntityIteratorType
     HostGridFaceDofIteratorType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
@@ -89,9 +89,10 @@ private:
   
   typedef Fem::CachingQuadrature< HostGridPart, 1 > HostFaceQuadrature;
 
+  typedef typename MsFEMTraits::SubGridListType::SubFaceQuadratureType FaceQuadratureType;
 public:
 
-  LocalProblemOperator(const DiscreteFunctionSpace& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
+  LocalProblemOperator(const DiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)
   void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix) const;
@@ -131,7 +132,7 @@ public:
 
   void assemble_local_RHS_Neumann_corrector(
     const NeumannBoundaryType& neumann_bc,
-    const HostDiscreteFunctionSpace& host_space,
+    const HostDiscreteFunctionSpaceType& host_space,
     const SubGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
     const int& oversampling_strategy,
     // rhs local msfem problem:
@@ -152,7 +153,7 @@ public:
 
   // given a discrete function (representing a right hands side of a local problem,
   // defined on a subgrid) set the boundary dofs to zero
-  void set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpace& host_space, DiscreteFunction& rhs) const;
+  void set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpaceType& host_space, DiscreteFunction& rhs) const;
   
   void printLocalRHS(const DiscreteFunction& rhs) const;
 
@@ -162,7 +163,7 @@ public:
   bool point_is_in_element( const DomainType& corner_0, const DomainType& corner_1, const DomainType& corner_2, const DomainType& point) const;
 
 private:
-  const DiscreteFunctionSpace& subDiscreteFunctionSpace_;
+  const DiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
 };
 

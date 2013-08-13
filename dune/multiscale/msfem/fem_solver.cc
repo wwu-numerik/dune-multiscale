@@ -146,9 +146,18 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     }
     // --- end boundary treatment ---
 
-    InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false) );
-    fem_rhs.communicate();
-    fem_biCGStab(fem_rhs, solution);
+    if (DSC_CONFIG_GET("fem.algebraic_solver", "bi_cg_stab" ) == "cg" )
+    {
+      const InverseFEMMatrix_CG fem_cg(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+      fem_rhs.communicate();
+      fem_cg(fem_rhs, solution);
+    }
+    else
+    {
+      const InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+      fem_rhs.communicate();
+      fem_biCGStab(fem_rhs, solution);
+    }
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
     DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
@@ -367,9 +376,18 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
     }
     // --- end boundary treatment ---
 
-    InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false) );
-    fem_rhs.communicate();
-    fem_biCGStab(fem_rhs, solution);
+    if (DSC_CONFIG_GET("fem.algebraic_solver", "bi_cg_stab" ) == "cg" )
+    {
+      const InverseFEMMatrix_CG fem_cg(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+      fem_rhs.communicate();
+      fem_cg(fem_rhs, solution);
+    }
+    else
+    {
+      const InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+      fem_rhs.communicate();
+      fem_biCGStab(fem_rhs, solution);
+    }
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
     DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl

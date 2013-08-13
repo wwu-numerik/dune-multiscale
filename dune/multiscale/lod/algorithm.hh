@@ -2,8 +2,8 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef DUNE_MULTISCALE_RIGOROUS_HH
-#define DUNE_MULTISCALE_RIGOROUS_HH
+#ifndef DUNE_MULTISCALE_LOD_ALGORITHM_HH
+#define DUNE_MULTISCALE_LOD_ALGORITHM_HH
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
@@ -37,4 +37,4 @@ void algorithm(const std::string& macroGridName,
 } //namespace Multiscale {
 } //namespace Dune {
 
-#endif // DUNE_MULTISCALE_RIGOROUS_HH
+#endif // DUNE_MULTISCALE_LOD_ALGORITHM_HH

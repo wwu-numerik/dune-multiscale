@@ -6,10 +6,12 @@
 #include "elliptic/example.hh"
 #include "elliptic/five.hh"
 #include "elliptic/four.hh"
+#include "elliptic/fourteen.hh"
 #include "elliptic/nine.hh"
 #include "elliptic/one.hh"
 #include "elliptic/seven.hh"
 #include "elliptic/six.hh"
+#include "elliptic/spe10.hh"
 #include "elliptic/ten.hh"
 #include "elliptic/thirteen.hh"
 #include "elliptic/three.hh"
@@ -34,9 +36,11 @@ using namespace Dune::Multiscale;
     MAP_ITEM(Two, ReturnType, FunctionName), \
     MAP_ITEM(Three, ReturnType, FunctionName), \
     MAP_ITEM(Four, ReturnType, FunctionName), \
+    MAP_ITEM(Fourteen, ReturnType, FunctionName), \
     MAP_ITEM(Five, ReturnType, FunctionName), \
     MAP_ITEM(Six, ReturnType, FunctionName), \
     MAP_ITEM(Seven, ReturnType, FunctionName), \
+    MAP_ITEM(SPE10, ReturnType, FunctionName), \
     MAP_ITEM(Eight, ReturnType, FunctionName), \
     MAP_ITEM(Nine, ReturnType, FunctionName), \
     MAP_ITEM(Ten, ReturnType, FunctionName), \
@@ -116,6 +120,55 @@ std::unique_ptr<const CommonTraits::DiffusionType> Dune::Multiscale::Problem::ge
   return find_and_call_item(funcs);
 }
 
+std::unique_ptr<const CommonTraits::DirichletDataType> Dune::Multiscale::Problem::getDirichletData()
+{
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::DirichletDataType>, DirichletData);
+  return find_and_call_item(funcs);
+}
+
+std::unique_ptr<const CommonTraits::NeumannDataType> Dune::Multiscale::Problem::getNeumannData()
+{
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::NeumannDataType>, NeumannData);
+  return find_and_call_item(funcs);
+}
+
+namespace Dune {
+namespace Multiscale {
+namespace Problem {
+//for some reason gcc 4.7 does not like the specializations if they're not in an explicit ns scope
+template< class GridImp, class IntersectionImp >
+bool isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+  return (face.boundary() && face.boundaryId()==2);
+}
+
+template< class GridImp, class IntersectionImp >
+bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
+  return (face.boundary() && face.boundaryId()==1);
+}
+
+template<>
+bool isNeumannBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==2);
+}
+
+template<>
+bool isDirichletBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==1);
+}
+
+template<>
+bool isNeumannBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==2);
+}
+
+template<>
+bool isDirichletBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+  return (face.boundary() && face.boundaryId()==1);
+}
+
+} // namespace Problem
+} // namespace Multiscale
+} // namespace Dune
 
 std::unique_ptr<const CommonTraits::DirichletBCType> Dune::Multiscale::Problem::getDirichletBC()
 {
@@ -135,3 +188,4 @@ std::string Dune::Multiscale::Problem::name()
 {
   return DSC_CONFIG_GET("problem.name", "Nine");
 }
+

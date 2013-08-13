@@ -81,11 +81,19 @@ namespace Dune {
         \
         template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
         { return readHostgridCommon(hostgrid, filename); }
-    #elif defined(HAVE_ALUGRID)
+    #elif USED_YASPGRID_GRIDTYPE
+            template<> bool writeHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
+        { /*YASPGrid can't be written to disk*/ return false; }
+        \
+        template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
+        { /*YASPGrid can't be read from disk*/ return false; }
+    #elif USED_ALUGRID_SIMPLEX_GRIDTYPE
         HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,2)
-        HOSTGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
-        HOSTGRID_IO_FUNCTION_PAIR(ALUCubeGrid,2)
         HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,3)
+    #elif USED_ALUGRID_CONFORM_GRIDTYPE
+        HOSTGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
+    #elif USED_ALUGRID_CUBE_GRIDTYPE
+        HOSTGRID_IO_FUNCTION_PAIR(ALUCubeGrid,2)
         HOSTGRID_IO_FUNCTION_PAIR(ALUCubeGrid,3)
     #endif
 #undef HOSTGRID_IO_FUNCTION_PAIR
