@@ -5,12 +5,7 @@
 #ifndef SUBGRIDLIST_HH
 #define SUBGRIDLIST_HH
 
-#ifdef HAVE_CMAKE_CONFIG
-  #include "cmake_config.h"
-#else
-  #include "config.h"
-#endif // ifdef HAVE_CMAKE_CONFIG
-
+#include <config.h>
 #include <boost/noncopyable.hpp>
 #include <boost/multi_array.hpp>
 

@@ -5,12 +5,7 @@
 #ifndef DUNE_MS_PROBLEMS_BASE_HH
 #define DUNE_MS_PROBLEMS_BASE_HH
 
-#ifdef HAVE_CMAKE_CONFIG
- #include "cmake_config.h"
-#elif defined (HAVE_CONFIG_H)
- #include <config.h>
-#endif // ifdef HAVE_CMAKE_CONFIG
-
+#include <config.h>
 #include <string>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/common/traits.hh>

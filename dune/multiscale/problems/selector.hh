@@ -5,13 +5,7 @@
 #ifndef DUNE_MS_PROBLEMS_SELECTOR_HH
 #define DUNE_MS_PROBLEMS_SELECTOR_HH
 
-#ifdef HAVE_CMAKE_CONFIG
- #include "cmake_config.h"
-#elif defined (HAVE_CONFIG_H)
- #include <config.h>
-#endif // ifdef HAVE_CMAKE_CONFIG
-
-
+#include <config.h>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
