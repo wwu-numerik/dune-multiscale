@@ -5,12 +5,7 @@
 #ifndef DUNE_LINEARLAGRANGEINTERPOLATION_HH
 #define DUNE_LINEARLAGRANGEINTERPOLATION_HH
 
-#ifdef HAVE_CMAKE_CONFIG
-  #include "cmake_config.h"
-#else
-  #include "config.h"
-#endif // ifdef HAVE_CMAKE_CONFIG
-
+#include <config.h>
 #include <dune/fem/function/common/function.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/aliases.hh>

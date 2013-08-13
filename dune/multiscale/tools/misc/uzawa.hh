@@ -5,12 +5,7 @@
 #ifndef DUNE_FEM_UZAWAINVERSEOPERATORS_HH
 #define DUNE_FEM_UZAWAINVERSEOPERATORS_HH
 
-#ifdef HAVE_CMAKE_CONFIG
-  #include "cmake_config.h"
-#else
-  #include "config.h"
-#endif // ifdef HAVE_CMAKE_CONFIG
-
+#include <config.h>
 #include <dune/common/static_assert.hh>
 
 #include <dune/fem/function/common/discretefunction.hh>

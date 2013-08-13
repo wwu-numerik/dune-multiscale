@@ -5,12 +5,7 @@
 #ifndef DUNE_DIVERGENCE_HH
 #define DUNE_DIVERGENCE_HH
 
-#ifdef HAVE_CMAKE_CONFIG
-  #include "cmake_config.h"
-#else
-  #include "config.h"
-#endif // ifdef HAVE_CMAKE_CONFIG
-
+#include <config.h>
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/fem/operator/common/operator.hh>

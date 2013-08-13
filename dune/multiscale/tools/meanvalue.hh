@@ -5,13 +5,7 @@
 #ifndef DUNE_MS_MEANVALUE_HH
 #define DUNE_MS_MEANVALUE_HH
 
-#ifdef HAVE_CMAKE_CONFIG
- #include "cmake_config.h"
-#else
- #include "config.h"
-#endif // ifdef HAVE_CMAKE_CONFIG
-
-// where the quadratures are defined
+#include <config.h>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/misc/l2error.hh>
 

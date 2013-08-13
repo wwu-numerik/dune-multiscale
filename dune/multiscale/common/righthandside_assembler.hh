@@ -5,13 +5,7 @@
 #ifndef DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
 #define DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
 
-#ifdef HAVE_CMAKE_CONFIG
-  #include "cmake_config.h"
-#else
-  #include "config.h"
-#endif // ifdef HAVE_CMAKE_CONFIG
-
-// - Dune includes
+#include <config.h>
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
