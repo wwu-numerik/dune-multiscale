@@ -58,6 +58,7 @@ set( PROBLEM_SOURCES
 	dune/multiscale/problems/elliptic/eleven.cc
 	dune/multiscale/problems/elliptic/five.cc
 	dune/multiscale/problems/elliptic/four.cc
+	dune/multiscale/problems/elliptic/fourteen.cc
 	dune/multiscale/problems/elliptic/nine.cc
 	dune/multiscale/problems/elliptic/one.cc
 	dune/multiscale/problems/elliptic/seven.cc
@@ -96,8 +97,8 @@ set( FEM_SOURCES
     )
     
 set( LODM_SOURCES 
-        dune/multiscale/msfem/rigorous.cc
-        dune/multiscale/msfem/rigorous_msfem_solver.cc
+        dune/multiscale/lod/algorithm.cc
+        dune/multiscale/lod/lod_solver.cc
     )
     
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")

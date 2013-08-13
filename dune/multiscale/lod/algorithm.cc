@@ -7,7 +7,7 @@
  #include <config.h>
 #endif // ifdef HAVE_CMAKE_CONFIG
 
-#include "rigorous.hh"
+#include "algorithm.hh"
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
@@ -30,7 +30,7 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/rigorous_msfem_solver.hh>
+#include <dune/multiscale/lod/lod_solver.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/tools/improved_l2error.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>

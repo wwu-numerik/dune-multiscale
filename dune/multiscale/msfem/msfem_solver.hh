@@ -60,49 +60,24 @@ private:
 
   typedef typename HostEntity::EntityPointer HostEntityPointer;
 
-  // typedef typename HostGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
-  // HostGridLevelEntityIterator;
-
   enum { faceCodim = 1 };
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   // --------------------------- subgrid typedefs ------------------------------------
-
-  typedef SubGrid< HostGrid::dimension, HostGrid > SubGridType;
-
-  typedef Fem::LeafGridPart< SubGridType > SubGridPart;
-
-  // typedef typename SubGridType ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
-  // SubGridLevelEntityIteratorType;
-
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpace, SubGridPart, 1 >  // 1=POLORDER
-    SubgridDiscreteFunctionSpace;
-
-  typedef Fem::AdaptiveDiscreteFunction< SubgridDiscreteFunctionSpace > SubgridDiscreteFunction;
-
-  typedef typename SubgridDiscreteFunctionSpace::IteratorType CoarseGridIterator;
-
-  typedef typename CoarseGridIterator::Entity CoarseGridEntity;
-
-  typedef typename CoarseGridEntity::EntityPointer CoarseGridEntityPointer;
-
-  typedef typename SubgridDiscreteFunction::LocalFunctionType CoarseGridLocalFunction;
-
-  typedef typename SubgridDiscreteFunctionSpace::LagrangePointSetType
-  CoarseGridLagrangePointSet;
-
-
+  typedef MsFEMTraits::SubGridListType SubGridListType;
+  typedef MsFEMTraits::SubGridType SubGridType;
+  typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType SubgridDiscreteFunctionSpaceType;
+  typedef MsFEMTraits::SubGridDiscreteFunctionType SubgridDiscreteFunctionType;
   //!-----------------------------------------------------------------------------------------
 
   //! --------------------- the standard matrix traits -------------------------------------
-
   struct MatrixTraits
   {
-    typedef SubgridDiscreteFunctionSpace                          RowSpaceType;
-    typedef SubgridDiscreteFunctionSpace                          ColumnSpaceType;
+    typedef SubgridDiscreteFunctionSpaceType                          RowSpaceType;
+    typedef SubgridDiscreteFunctionSpaceType                          ColumnSpaceType;
     typedef LagrangeMatrixSetup< false >                          StencilType;
-    typedef Fem::ParallelScalarProduct< SubgridDiscreteFunctionSpace > ParallelScalarProductType;
+    typedef Fem::ParallelScalarProduct< SubgridDiscreteFunctionSpaceType > ParallelScalarProductType;
 
     template< class M >
     struct Adapter
@@ -136,7 +111,7 @@ public:
 private:
   // create a hostgrid function from a subgridfunction (projection for global continuity)
   // Note: the maximum gride levels for both underlying grids must be the same
-  void subgrid_to_hostrid_projection(const SubgridDiscreteFunction& sub_func, DiscreteFunction& host_func) const;
+  void subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func, DiscreteFunction& host_func) const;
 
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid

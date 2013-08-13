@@ -21,7 +21,7 @@ std::string ModelProblemData::getMacroGridFile() const {
 }
 
 bool ModelProblemData::problemIsPeriodic() const {
-  return true; // = problem is periodic
+  return false; // = problem is periodic
 }
 
 bool ModelProblemData::problemAllowsStochastics() const {
@@ -57,7 +57,7 @@ void Diffusion::diffusiveFlux(const DomainType& x,
                    JacobianRangeType& flux) const {
 
   double isolater_thickness = 0.02;
-  double isolater_conductivity = 1e-3;
+  double isolater_conductivity = 1e-2;
   double coefficient = 0.0;
   
   bool x_0_qualifies = false;
@@ -139,7 +139,7 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
                            const JacobianRangeType& direction_gradient,
                            JacobianRangeType& flux) const {
   double isolater_thickness = 0.02;
-  double isolater_conductivity = 1e-3;
+  double isolater_conductivity = 1e-1;
   double coefficient = 0.0;
   
   bool x_0_qualifies = false;

@@ -269,6 +269,10 @@ public:
   void evaluate(const DomainType& x, const TimeType&, RangeType& y) const;
 };
 
+// set zero dirichlet and neumann-values by default
+class DirichletData : public ZeroDirichletData {};
+class NeumannData : public ZeroNeumannData {};
+
 } //! @} namespace Eleven {
 }
 } //namespace Multiscale {

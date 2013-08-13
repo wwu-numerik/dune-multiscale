@@ -17,7 +17,7 @@
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/stuff/function/interface.hh>
+#include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/function/constant.hh>
 
 namespace Dune {
@@ -49,6 +49,8 @@ namespace Problem {
 
 struct DiffusionBase;
 struct LowerOrderBase;
+class NeumannDataBase;
+class DirichletDataBase;
 class IModelProblemData;
 
 } //namespace Problem
@@ -92,6 +94,10 @@ struct CommonTraits {
   typedef FunctionBaseType DirichletBCType;
   // type of inhomogeneous Neumann boundary condition
   typedef FunctionBaseType NeumannBCType;
+  // type of dirichlet data
+  typedef Problem::DirichletDataBase DirichletDataType;
+  // type of neumann data
+  typedef Problem::NeumannDataBase NeumannDataType;
   // type of mass (or reaction) term (i.e. 'm' or 'c')
   typedef FunctionBaseType MassTermType;
   // default type for any missing coefficient function (e.g. advection,...)
@@ -113,13 +119,12 @@ struct CommonTraits {
   typedef DiscreteFunctionSpaceType::DomainFieldType            TimeType;
   typedef DiscreteFunctionSpaceType::JacobianRangeType          JacobianRangeType;
   typedef GridType::Codim< 0 >::Entity                          EntityType;
+  typedef GridPartType::IntersectionType                        FaceType;
   typedef GridType::Codim< 0 >::EntityPointer                   EntityPointerType;
   typedef GridType::Codim< 0 >::Geometry                        EntityGeometryType;
   typedef GridType::Codim< 1 >::Geometry                        FaceGeometryType;
   //!TODO carry the rename over to the type def'ed name
   typedef DiscreteFunctionSpaceType::BasisFunctionSetType        BasisFunctionSetType;
-  typedef Dune::Fem::CachingQuadrature< GridPartType, 0 >                  EntityQuadratureType;
-  typedef Dune::Fem::CachingQuadrature< GridPartType, 1 >                  FaceQuadratureType;
   typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
   typedef Dune::Fem::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
   typedef DiscreteFunctionType::LocalFunctionType               LocalFunctionType;

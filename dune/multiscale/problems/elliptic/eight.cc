@@ -41,7 +41,7 @@ void ExactSolution::evaluate(const ExactSolution::DomainType &x, const ExactSolu
   evaluate(x, y);
 }
 
-void ExactSolution::jacobian(const ExactSolution::DomainType &, ExactSolution::JacobianRangeType &) const {
+void ExactSolution::jacobian(const ExactSolution::DomainType &, ExactSolution::FunctionSpaceType::JacobianRangeType &) const {
   DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
 }
 

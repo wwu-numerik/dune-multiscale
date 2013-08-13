@@ -20,7 +20,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/stuff/function/interface.hh>
+#include <dune/stuff/functions/interfaces.hh>
 
 #include "algorithm_error.hh"
 

@@ -182,6 +182,10 @@ public:
   void jacobian(const DomainType& , typename FunctionSpaceType::JacobianRangeType& ) const;
 };
 
+// set zero dirichlet and neumann-values by default
+class DirichletData : public ZeroDirichletData {};
+class NeumannData : public ZeroNeumannData {};
+
 } //! @} namespace Eight {
 }
 } //namespace Multiscale {

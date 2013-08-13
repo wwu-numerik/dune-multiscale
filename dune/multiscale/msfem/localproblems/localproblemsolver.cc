@@ -95,10 +95,10 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   // ( effect of the discretized differential operator on a certain discrete function )
   LocalProblemOperator localProblemOperator(subDiscreteFunctionSpace, diffusion_);
 
-  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
-
-  typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
-  typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
+//  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
+//
+//  typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
+//  typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
 
   // right hand side vector of the algebraic local MsFEM problem
   SubDiscreteFunctionVectorType allLocalRHS(allLocalSolutions.size());
@@ -113,38 +113,38 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
     default: DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
   }
 
-  //! boundary treatment:
-  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
-
-  typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
-          FaceDofIteratorType;
-
-  const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
-
-  for (const auto& subgridEntity : subDiscreteFunctionSpace) {
-    LocalMatrix localMatrix = locProbSysMatrix.localMatrix(subgridEntity, subgridEntity);
-
-    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
-    for (auto& rhsIt : allLocalRHS) {
-
-      SubLocalFunctionType rhsLocal = rhsIt->localFunction(subgridEntity);
-
-      for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), subgridEntity)) {
-        // if there is a neighbor entity
-        if ( subgridIntersection.boundary() ) {
-          const int face = subgridIntersection.indexInInside();
-          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< faceCodim >(face);
-          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< faceCodim >(face); fdit != fdend; ++fdit) {
-            // zero boundary condition for 'cell problems':
-            // set unit row in matrix for any boundary dof ...
-            localMatrix.unitRow(*fdit);
-            // ... and set respective rhs dof to zero
-            rhsLocal[*fdit] = 0;
-          }
-        }
-      }
-    }
-  }
+//  //! boundary treatment:
+//  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
+//
+//  typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
+//          FaceDofIteratorType;
+//
+//  const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
+//
+//  for (const auto& subgridEntity : subDiscreteFunctionSpace) {
+//    LocalMatrix localMatrix = locProbSysMatrix.localMatrix(subgridEntity, subgridEntity);
+//
+//    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
+//    for (auto& rhsIt : allLocalRHS) {
+//
+//      SubLocalFunctionType rhsLocal = rhsIt->localFunction(subgridEntity);
+//
+//      for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), subgridEntity)) {
+//        // if there is a neighbor entity
+//        if ( subgridIntersection.boundary() ) {
+//          const int face = subgridIntersection.indexInInside();
+//          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< faceCodim >(face);
+//          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< faceCodim >(face); fdit != fdend; ++fdit) {
+//            // zero boundary condition for 'cell problems':
+//            // set unit row in matrix for any boundary dof ...
+//            localMatrix.unitRow(*fdit);
+//            // ... and set respective rhs dof to zero
+//            rhsLocal[*fdit] = 0;
+//          }
+//        }
+//      }
+//    }
+//  }
 
   for (int i=0; i!=allLocalSolutions.size(); ++i) {
     if (!allLocalRHS[i]->dofsValid())
@@ -419,10 +419,6 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
   }
   // ----------------------------------------------------------------------------------------------------
 
-  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                  1e-8, 1e-8, 20000,
-                                                                  DSC_CONFIG_GET("localproblemsolver_verbose", false));
-
   //! Essential pre-processing step
   // For each coarse node j in the subgrid (local internal numbering, i.e. 0 <= j < M_subgrid), solve
   // for b_h_j with S_h b_h_j = C_h^T e_j, where C_h describes the algebraic version of the weighted
@@ -492,10 +488,23 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
     }
   }
 
-  // solve the pre-processing problems:
-  for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+  if (DSC_CONFIG_GET("lod.local_solver", "bi_cg_stab" ) == "cg" )
   {
-     locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
+    const InverseLocProbFEMMatrixType_CG locprob_inverse_system_matrix(locprob_system_matrix,
+                                                                       1e-8, 1e-8, 20000,
+                                                                       DSC_CONFIG_GET("lod.local_problem_solver_verbose", false));
+    // solve the pre-processing problems:
+    for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
+  }
+  else
+  {
+    const InverseLocProbFEMMatrixType_BiCGStab locprob_inverse_system_matrix(locprob_system_matrix,
+                                                                              1e-8, 1e-8, 20000,
+                                                                              DSC_CONFIG_GET("lod.local_problem_solver_verbose", false));
+    // solve the pre-processing problems:
+    for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
   }
   
   // ----------------------------------------------------------------------------------------------------
@@ -1147,17 +1156,16 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
   for (const auto& coarseEntity : coarseSpace) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
-    const int coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
+     const int coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
 
     DSC_LOG_INFO << "-------------------------" << std::endl
             << "Coarse index " << coarse_index << std::endl;
 
-
+    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarseId).str();
     auto subGridPart = subgrid_list_.gridPart(coarse_index);
 
     const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
     Dune::Timer assembleTimer;
-    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarseId).str();
 
     bool uzawa = DSC_CONFIG_GET( "rigorous_msfem.uzawa_solver", false );
     bool clement = ( DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
@@ -1198,6 +1206,10 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
                                    local_problem_solution_0, coarse_index );
       solve_corrector_problem_lod( unitVectors[1], locprob_system_matrix, lagrange_multiplier_system_matrix,
                                    local_problem_solution_1, coarse_index );
+      
+      assert( local_problem_solution_0.dofsValid() );
+      assert( local_problem_solution_1.dofsValid() );
+      
       const std::string locprob_solution_location =
               (boost::format("local_problems/_localProblemSolutions_%d") % coarseId).str();
       DiscreteFunctionWriter dfw(locprob_solution_location);
@@ -1257,6 +1269,8 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
            solve_dirichlet_corrector_problem_lod( locprob_system_matrix, lagrange_multiplier_system_matrix,
                                                   dirichlet_boundary_corrector, coarse_index );
 
+           assert( dirichlet_boundary_corrector.dofsValid() );
+
            const std::string dirichlet_corrector_location = (boost::format("local_problems/_dirichletBoundaryCorrector_%d") % coarseId).str();
            DiscreteFunctionWriter dfw_dirichlet( dirichlet_corrector_location );
            dfw_dirichlet.append( dirichlet_boundary_corrector );
@@ -1280,7 +1294,9 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
            // also requires the pre-processing step:
            solve_neumann_corrector_problem_lod( locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                                  neumann_boundary_corrector, coarse_index );
+                                                 neumann_boundary_corrector, coarse_index );
+
+           assert( neumann_boundary_corrector.dofsValid() );
 
            const std::string neumann_corrector_location = (boost::format("local_problems/_neumannBoundaryCorrector_%d") % coarseId).str();
            DiscreteFunctionWriter dfw_neumann( neumann_corrector_location );

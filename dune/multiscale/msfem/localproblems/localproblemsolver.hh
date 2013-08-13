@@ -94,6 +94,7 @@ private:
   typedef typename HostDiscreteFunctionSpaceType::DomainType DomainType;
 
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
+  typedef typename HostGridType::Traits::GlobalIdSet::IdType IdType;
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
   typedef typename HostGridEntityIteratorType::Entity HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
@@ -110,12 +111,12 @@ private:
   //! type of grid part
   typedef typename SubGridList::SubGridPartType SubGridPartType;
   //! type of subgrid discrete function space
-  typedef typename SubGridList::SubGridDiscreteFunctionSpace SubDiscreteFunctionSpaceType;
+  typedef typename SubGridList::SubGridDiscreteFunctionSpaceType SubDiscreteFunctionSpaceType;
   
 
 public:
   //! type of subgrid discrete function
-  typedef typename SubGridList::SubGridDiscreteFunction SubDiscreteFunctionType;
+  typedef typename SubGridList::SubGridDiscreteFunctionType SubDiscreteFunctionType;
   typedef std::vector<std::unique_ptr<SubDiscreteFunctionType> > SubDiscreteFunctionVectorType;
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
@@ -170,6 +171,9 @@ private:
   // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
   typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrixType > InverseLocProbFEMMatrixType;
   #endif // ifdef SYMMETRIC_DIFFUSION_MATRIX
+  
+  typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrixType_CG;
+  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrixType > InverseLocProbFEMMatrixType_BiCGStab;
 
   typedef WeightedClementOperator WeightedClementOperatorType;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
