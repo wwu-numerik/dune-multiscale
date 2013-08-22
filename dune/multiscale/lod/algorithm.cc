@@ -1,11 +1,7 @@
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
-#ifdef HAVE_CMAKE_CONFIG
- #include "cmake_config.h"
-#elif defined (HAVE_CONFIG_H)
- #include <config.h>
-#endif // ifdef HAVE_CMAKE_CONFIG
+#include <config.h>
 
 #include "algorithm.hh"
 

@@ -29,6 +29,11 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   LINK_DIRECTORIES( /opt/local/lib/ )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
+foreach(_dep ${ALL_DEPENDENCIES})
+  FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
+  set( DUNE_HEADERS ${DUNE_HEADERS} ${dune} )
+endforeach(_dep ${ALL_DEPENDENCIES})
+
 FILE( GLOB_RECURSE header "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh" )
 FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 

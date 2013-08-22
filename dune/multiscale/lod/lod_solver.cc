@@ -1,8 +1,4 @@
-#ifdef HAVE_CMAKE_CONFIG
- #include "cmake_config.h"
-#elif defined (HAVE_CONFIG_H)
- #include <config.h>
-#endif // ifdef HAVE_CMAKE_CONFIG
+#include <config.h>
 
 #include "lod_solver.hh"
 
@@ -33,33 +29,6 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-#if 0
-template< class MatrixImp >
-void print_matrix( MatrixImp& system_matrix )
-{
- std::cout << "---------------------------" << std::endl;
- std::cout << "Matrix:" << std::endl << std::endl;
- for (int row = 0; row != system_matrix.N(); ++row) {
-   for (int col = 0; col != system_matrix.M(); ++col) {
-     std::cout << system_matrix[row][col] << "  ";}
-     std::cout << std::endl;
- }
- std::cout << "---------------------------" << std::endl;
- std::cout << std::endl << std::endl;
-}
-
-template< class VectorImp >
-void print_vector( VectorImp& vector )
-{
- std::cout << "---------------------------" << std::endl;
- std::cout << "Vector:" << std::endl << std::endl;
- for (int col = 0; col != vector.N(); ++col) {
-     std::cout << vector[col] << "  ";
- }
- std::cout << std::endl << "---------------------------" << std::endl;
- std::cout << std::endl << std::endl;
-}
-#endif
 
 Elliptic_Rigorous_MsFEM_Solver::Elliptic_Rigorous_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace)
 : discreteFunctionSpace_(discreteFunctionSpace)

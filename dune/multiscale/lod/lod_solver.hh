@@ -18,7 +18,7 @@
 #include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/common/logging.hh>
-#include <dune/stuff/function/interface.hh>
+#include <dune/stuff/functions/interfaces.hh>
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/lod/lod_traits.hh>
