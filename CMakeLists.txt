@@ -29,6 +29,8 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   LINK_DIRECTORIES( /opt/local/lib/ )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
+include(DuneMPI)
+
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
   set( DUNE_HEADERS ${DUNE_HEADERS} ${dune} )
@@ -112,13 +114,17 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DENABLE_PETSC=1)
-
-
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_lodm STATIC ${LODM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
 ADD_LIBRARY(multiscale_hmm STATIC ${HMM_SOURCES})
+
+add_dune_mpi_flags(OBJECT multiscale_common)
+add_dune_mpi_flags(OBJECT multiscale_problem)
+add_dune_mpi_flags(OBJECT multiscale_lodm)
+add_dune_mpi_flags(OBJECT multiscale_msfem)
+add_dune_mpi_flags(OBJECT multiscale_hmm)
 
 set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
 include_directories( ${PETSC_INCLUDES} )
@@ -126,21 +132,28 @@ set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON
 
 ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm multiscale_hmm ${COMMON_LIBS} )
+add_dune_mpi_flags(elliptic_hmm)
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${MSFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
+add_dune_mpi_flags(elliptic_msfem)
 
 ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
+add_dune_mpi_flags(elliptic_hom_fem)
 
 ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
+add_dune_mpi_flags(elliptic_fem)
 
 ADD_EXECUTABLE(elliptic_lodm src/elliptic_lodm.cc  ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_lodm multiscale_lodm ${COMMON_LIBS} )
+add_dune_mpi_flags(elliptic_lodm)
 
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
+add_dune_mpi_flags(msfem-1d)
+
 
 HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
