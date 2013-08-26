@@ -19,8 +19,6 @@ namespace Problem {
 // nonlinear elliptic model problem - heterogeneous setting
 // no exact solution available!
 
-
-
 namespace Three {
 
 //! model problem information
@@ -39,6 +37,7 @@ struct ModelProblemData
 
   //! does the problem allow a stochastic perturbation of the coefficients?
   bool problemAllowsStochastics() const;
+  bool symmetricDiffusion() const { return false; }
 };
 
 //! ----------------- Definition of ' f ' ------------------------

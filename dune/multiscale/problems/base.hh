@@ -234,6 +234,9 @@ public:
   // does the problem implement an exact solution?
   virtual bool hasExactSolution() const { return false; }
 
+  // is the diffusion matrix symmetric?
+  virtual bool symmetricDiffusion() const { return true; }
+
 };
 
 } //! @} namespace Problem
