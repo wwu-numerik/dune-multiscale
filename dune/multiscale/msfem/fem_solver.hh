@@ -5,6 +5,7 @@
 #ifndef MS_Elliptic_FEM_Solver_HH
 #define MS_Elliptic_FEM_Solver_HH
 
+#include <config.h>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
 
@@ -40,46 +41,6 @@ private:
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   typedef DummyMass< DiscreteFunctionSpace > DummyMassType;
-
-  //! --------------------- the standard matrix traits -------------------------------------
-
-  struct MatrixTraits
-  {
-    typedef DiscreteFunctionSpace                          RowSpaceType;
-    typedef DiscreteFunctionSpace                          ColumnSpaceType;
-    typedef LagrangeMatrixSetup< false >                   StencilType;
-    typedef Fem::ParallelScalarProduct< DiscreteFunctionSpace > ParallelScalarProductType;
-
-    template< class M >
-    struct Adapter
-    {
-      typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-    };
-  };
-
-  //! --------------------------------------------------------------------------------------
-
-  //! --------------------- type of fem stiffness matrix -----------------------------------
-
-  typedef Fem::SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > FEMMatrix;
-
-  //! --------------------------------------------------------------------------------------
-
-  //! --------------- solver for the linear system of equations ----------------------------
-
-  // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
-  // ones.
-  // GMRES seems to be more stable, but is extremely slow!
-  // typedef OEMBICGSQOp/*OEMBICGSTABOp*/< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
-  typedef Fem::CGInverseOperator< DiscreteFunction, FEMMatrix > InverseFEMMatrix;
-
-  typedef Fem::OEMCGOp
-    < DiscreteFunction, FEMMatrix > InverseFEMMatrix_CG;
-
-  typedef Fem::OEMBICGSTABOp
-    < DiscreteFunction, FEMMatrix > InverseFEMMatrix_BiCG_Stab;
- 
-  //! --------------------------------------------------------------------------------------
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;

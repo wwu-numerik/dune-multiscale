@@ -1,4 +1,4 @@
-#include <config.h>
+#include "msfem_solver.hh"
 
 #include <unordered_set>
 
@@ -10,8 +10,7 @@
 #include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
-
-#include "msfem_solver.hh"
+#include <dune/multiscale/fem/fem_traits.hh>
 
 
 namespace Dune {
@@ -22,7 +21,7 @@ Elliptic_MsFEM_Solver::Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discre
   : discreteFunctionSpace_(discreteFunctionSpace)
 {}
 
-void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func, DiscreteFunction& host_func) const {
+void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func, DiscreteFunctionType &host_func) const {
   host_func.clear();
 
   const SubgridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
@@ -51,9 +50,9 @@ void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteF
   }
 } // subgrid_to_hostrid_projection
 
-void Elliptic_MsFEM_Solver::identify_coarse_scale_part( MacroMicroGridSpecifier& specifier,
-                                 const DiscreteFunction& coarse_msfem_solution,
-                                 DiscreteFunction& coarse_scale_part ) const
+void Elliptic_MsFEM_Solver::identify_coarse_scale_part( MacroMicroGridSpecifier& /*specifier*/,
+                                 const DiscreteFunctionType& coarse_msfem_solution,
+                                 DiscreteFunctionType& coarse_scale_part ) const
 {
 
   DSC_LOG_INFO << "Indentifying coarse scale part of the MsFEM solution... ";
@@ -67,8 +66,8 @@ void Elliptic_MsFEM_Solver::identify_coarse_scale_part( MacroMicroGridSpecifier&
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& specifier,
                                                         MsFEMTraits::SubGridListType& subgrid_list,
-                                                        const DiscreteFunction& coarse_msfem_solution,
-                                                        DiscreteFunction& fine_scale_part ) const {
+                                                        const DiscreteFunctionType& coarse_msfem_solution,
+                                                        DiscreteFunctionType& fine_scale_part ) const {
   fine_scale_part.clear();
 
   const HostGrid& grid = discreteFunctionSpace_.gridPart().grid();
@@ -118,7 +117,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
     // oversampling strategy 3: just sum up the local correctors:
     if ( (specifier.getOversamplingStrategy() == 3) ) {
-      DiscreteFunction correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
+      DiscreteFunctionType correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
       subgrid_to_hostrid_projection(*localSolutions[0], correction_on_U_T);
       fine_scale_part += correction_on_U_T;
     }
@@ -182,20 +181,20 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
                           // n(T)-layers.
                           MacroMicroGridSpecifier& specifier,
                           MsFEMTraits::SubGridListType& subgrid_list,
-                          DiscreteFunction& coarse_scale_part,
-                          DiscreteFunction& fine_scale_part,
-                          DiscreteFunction& solution) const
+                          DiscreteFunctionType& coarse_scale_part,
+                          DiscreteFunctionType& fine_scale_part,
+                          DiscreteFunctionType& solution) const
 {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero");
 
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
 
-  DiscreteFunction coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
+  DiscreteFunctionType coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
   coarse_msfem_solution.clear();
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  typedef RightHandSideAssembler< DiscreteFunction > RhsAssembler;
+  typedef RightHandSideAssembler< DiscreteFunctionType > RhsAssembler;
 
   //! define the discrete (elliptic) operator that describes our problem
   // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
@@ -208,11 +207,11 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   // discrete elliptic operator (corresponds with FEM Matrix)
 
   //! (stiffness) matrix
-  MsFEMMatrix msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
+  MsFEMMatrixType msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
 
   //! right hand side vector
   // right hand side for the finite element method:
-  DiscreteFunction msfem_rhs("MsFEM right hand side", coarse_space);
+  DiscreteFunctionType msfem_rhs("MsFEM right hand side", coarse_space);
   msfem_rhs.clear();
 
   DSC_LOG_INFO << std::endl << "Solving MsFEM problem." << std::endl
@@ -266,7 +265,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
     }
   }
   //! --- end boundary treatment ---
-  const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true);
+  const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true, "bgcs", "ilu-n");
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
   DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
   DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
