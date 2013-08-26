@@ -111,15 +111,17 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias")
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
-add_definitions("-DSPGRID" "-DGRIDDIM=2")
+add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DENABLE_PETSC=1)
+
+
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_lodm STATIC ${LODM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
 ADD_LIBRARY(multiscale_hmm STATIC ${HMM_SOURCES})
 
-set( COMMON_LIBS multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS})
-
+set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
+include_directories( ${PETSC_INCLUDES} )
 set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
