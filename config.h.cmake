@@ -24,7 +24,6 @@
 #define ALBERTA_DEBUG 1
 #cmakedefine @ENABLE_ALUGRID@ 
 #cmakedefine @ENABLE_ABERTA@
-#define ENABLE_MPI @ENABLE_MPI@
 
 #define DUNE_COMMON_FIELDVECTOR_SIZE_IS_METHOD 1
 
