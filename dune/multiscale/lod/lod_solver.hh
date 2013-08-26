@@ -23,6 +23,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/lod/lod_traits.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 
 namespace Dune {
@@ -284,42 +285,43 @@ private:
       for (size_t col = 0; col != system_matrix.M(); ++col)
         system_matrix[row][col] = 0.0;
 
-#ifdef SYMMETRIC_DIFFUSION_MATRIX
+    if (Problem::getModelData().symmetricDiffusion())
+    {
 
-   for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
-   {
-      unsigned int row = get<0>(relevant_constellations[t]);
-      unsigned int col = get<1>(relevant_constellations[t]);
-      system_matrix[row][col]
-        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
-   }
+      for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
+      {
+        unsigned int row = get<0>(relevant_constellations[t]);
+        unsigned int col = get<1>(relevant_constellations[t]);
+        system_matrix[row][col]
+            = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
+      }
 
-   /* old version without 'relevant_constellations'-vector
-   for (size_t row = 0; row != system_matrix.N(); ++row)
-    for (size_t col = 0; col <= row; ++col)    
-      system_matrix[row][col]
-        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
-   */
-	
-   for (size_t col = 0; col != system_matrix.N(); ++col )
-    for (size_t row = 0; row < col; ++row)
-      system_matrix[row][col] = system_matrix[col][row];
+      /* old version without 'relevant_constellations'-vector
+      for (size_t row = 0; row != system_matrix.N(); ++row)
+      for (size_t col = 0; col <= row; ++col)
+        system_matrix[row][col]
+          = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
+      */
 
-#else
-     
-   for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
-   {
-      unsigned int row = get<0>(relevant_constellations[t]);
-      unsigned int col = get<1>(relevant_constellations[t]);
-      system_matrix[row][col]
-        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
+      for (size_t col = 0; col != system_matrix.N(); ++col )
+        for (size_t row = 0; row < col; ++row)
+          system_matrix[row][col] = system_matrix[col][row];
 
-      if ( row != col )
-      { system_matrix[col][row]
-        = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[col]), *(msfem_basis_function_list_2[row]), support_of_ms_basis_func_intersection[col][row] ); }
-   }
+    else
+    {
 
-#endif
+      for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
+      {
+        unsigned int row = get<0>(relevant_constellations[t]);
+        unsigned int col = get<1>(relevant_constellations[t]);
+        system_matrix[row][col]
+            = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[row]), *(msfem_basis_function_list_2[col]), support_of_ms_basis_func_intersection[row][col] );
+
+        if ( row != col )
+        { system_matrix[col][row]
+              = evaluate_bilinear_form( diffusion_op, *(msfem_basis_function_list_1[col]), *(msfem_basis_function_list_2[row]), support_of_ms_basis_func_intersection[col][row] ); }
+      }
+    }
   }
 
 

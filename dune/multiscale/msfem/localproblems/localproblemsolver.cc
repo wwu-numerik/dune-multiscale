@@ -11,6 +11,7 @@
 #include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
@@ -27,6 +28,14 @@ namespace MsFEM {
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/")
 {}
+
+std::unique_ptr<MsFEMLocalProblemSolver::InverseLocProbFEMMatrixType> MsFEMLocalProblemSolver::make_inverse_operator(const MsFEMLocalProblemSolver::LocProbFEMMatrixType& problem_matrix)
+{
+  const auto solver = Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
+  return DSC::make_unique<InverseLocProbFEMMatrixType>(problem_matrix, 1e-8, 1e-8, 20000,
+                                      DSC_CONFIG_GET("localproblemsolver_verbose", false),
+                                      solver, "ilu-n");
+}
 
 MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                                                  const MacroMicroGridSpecifierType& specifier,
@@ -156,8 +165,8 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
       continue;
     }
 
-    InverseLocProbFEMMatrixType localProblemSolver(locProbSysMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
-    localProblemSolver(*allLocalRHS[i], *allLocalSolutions[i]);
+    const auto localProblemSolver = make_inverse_operator(locProbSysMatrix);
+    localProblemSolver->apply(*allLocalRHS[i], *allLocalSolutions[i]);
 
     if ( !(allLocalSolutions[i]->dofsValid()) )
       DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
@@ -272,12 +281,10 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     return;
   }
 
-  InverseLocProbFEMMatrixType locprob_fem_biCGStab(locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
+  const auto locprob_fem_biCGStab = make_inverse_operator(locprob_system_matrix);
 
-  bool clement = false;
-  if ( specifier_.getOversamplingStrategy() == 3 ) {
-    clement = (DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" );
-  }
+  const bool clement = specifier_.getOversamplingStrategy() == 3 ?
+                         DSC_CONFIG_GET( "rigorous_msfem.oversampling_strategy", "Clement" ) == "Clement" : false;
 
   if ( clement ) {
     HostDiscreteFunctionType zero("zero", specifier_.coarseSpace());
@@ -315,12 +322,12 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     // saddle point problem solver with uzawa algorithm:
     {
       DSC::Profiler::ScopedTiming st("uzawa");
-      InverseUzawaOperatorType uzawa( locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
+      InverseUzawaOperatorType uzawa( *locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations, true);
       uzawa( local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier );
     }
   }
   else {
-    locprob_fem_biCGStab(local_problem_rhs, local_problem_solution);
+    locprob_fem_biCGStab->apply(local_problem_rhs, local_problem_solution);
   }
 
 
@@ -486,21 +493,23 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
 
   if (DSC_CONFIG_GET("lod.local_solver", "bi_cg_stab" ) == "cg" )
   {
-    const InverseLocProbFEMMatrixType_CG locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                       1e-8, 1e-8, 20000,
-                                                                       DSC_CONFIG_GET("lod.local_problem_solver_verbose", false));
+    const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
+                                                                    1e-8, 1e-8, 20000,
+                                                                    DSC_CONFIG_GET("lod.local_problem_solver_verbose", false),
+                                                                    "cg", "ilu-n");
     // solve the pre-processing problems:
     for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
-      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
+      locprob_inverse_system_matrix.apply( *(rhs_Chj[j]) , *(b_h[j]) );
   }
   else
   {
-    const InverseLocProbFEMMatrixType_BiCGStab locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                              1e-8, 1e-8, 20000,
-                                                                              DSC_CONFIG_GET("lod.local_problem_solver_verbose", false));
+    const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
+                                                                    1e-8, 1e-8, 20000,
+                                                                    DSC_CONFIG_GET("lod.local_problem_solver_verbose", false),
+                                                                    "bgcs", "ilu-n");
     // solve the pre-processing problems:
     for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
-      locprob_inverse_system_matrix( *(rhs_Chj[j]) , *(b_h[j]) );
+      locprob_inverse_system_matrix.apply( *(rhs_Chj[j]) , *(b_h[j]) );
   }
   
   // ----------------------------------------------------------------------------------------------------
@@ -591,22 +600,14 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(JacobianRangeType& e,
 
   const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = local_corrector.space();
 
-
-
-  int number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
+  const int number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
   const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
 
   //! define the discrete (elliptic) local MsFEM problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
   LocalProblemOperator local_problem_op(subDiscreteFunctionSpace, diffusion_);
   
-  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                  1e-8, 1e-8, 20000,
-                                                                  DSC_CONFIG_GET("localproblemsolver_verbose", false));
-
-
-
-
+  const auto locprob_inverse_system_matrix = make_inverse_operator(locprob_system_matrix);
 
   //! Solve the local corrector problem without constraint
   // (without condition that the Lagrange interpolation must be zero)
@@ -626,7 +627,7 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(JacobianRangeType& e,
 
   //oneLinePrint( DSC_LOG_DEBUG, corrector_problem_rhs );
  
-  locprob_inverse_system_matrix( corrector_problem_rhs , local_corrector );
+  locprob_inverse_system_matrix->apply( corrector_problem_rhs , local_corrector );
 
   // ----------------------------------------------------------------------------------------------------
 
@@ -736,7 +737,7 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(JacobianRangeType& e,
   SubDiscreteFunctionType preliminary_solution("preliminary_solution", subDiscreteFunctionSpace); // for e
   preliminary_solution.clear();
 
-  locprob_inverse_system_matrix( final_rhs_vector , preliminary_solution );
+  locprob_inverse_system_matrix->apply( final_rhs_vector , preliminary_solution );
 
   local_corrector -= preliminary_solution;
 
@@ -769,9 +770,7 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
   // ( effect of the discretized differential operator on a certain discrete function )
   LocalProblemOperator local_problem_op(subDiscreteFunctionSpace, diffusion_);
   
-  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                  1e-8, 1e-8, 20000,
-                                                                  DSC_CONFIG_GET("localproblemsolver_verbose", false));
+  const auto locprob_inverse_system_matrix = make_inverse_operator(locprob_system_matrix);
 
   //! Solve the local corrector problem without constraint
   // (without condition that the Lagrange interpolation must be zero)
@@ -792,7 +791,7 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
 
   //oneLinePrint( DSC_LOG_DEBUG, corrector_problem_rhs );
  
-  locprob_inverse_system_matrix( corrector_problem_rhs , local_corrector );
+  locprob_inverse_system_matrix->apply( corrector_problem_rhs , local_corrector );
 
   // ----------------------------------------------------------------------------------------------------
 
@@ -902,7 +901,7 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
   SubDiscreteFunctionType preliminary_solution("preliminary_solution", subDiscreteFunctionSpace); // for e
   preliminary_solution.clear();
 
-  locprob_inverse_system_matrix( final_rhs_vector , preliminary_solution );
+  locprob_inverse_system_matrix->apply( final_rhs_vector , preliminary_solution );
 
   local_corrector -= preliminary_solution;
 
@@ -934,9 +933,7 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
   // ( effect of the discretized differential operator on a certain discrete function )
   LocalProblemOperator local_problem_op(subDiscreteFunctionSpace, diffusion_);
   
-  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                  1e-8, 1e-8, 20000,
-                                                                  DSC_CONFIG_GET("localproblemsolver_verbose", false));
+  const auto locprob_inverse_system_matrix = make_inverse_operator(locprob_system_matrix);
 
   //! Solve the local corrector problem without constraint
   // (without condition that the Lagrange interpolation must be zero)
@@ -958,7 +955,7 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
 
   //oneLinePrint( DSC_LOG_DEBUG, corrector_problem_rhs );
  
-  locprob_inverse_system_matrix( corrector_problem_rhs , local_corrector );
+  locprob_inverse_system_matrix->apply( corrector_problem_rhs , local_corrector );
 
   // ----------------------------------------------------------------------------------------------------
 
@@ -1068,7 +1065,7 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
   SubDiscreteFunctionType preliminary_solution("preliminary_solution", subDiscreteFunctionSpace); // for e
   preliminary_solution.clear();
 
-  locprob_inverse_system_matrix( final_rhs_vector , preliminary_solution );
+  locprob_inverse_system_matrix->apply( final_rhs_vector , preliminary_solution );
 
   local_corrector -= preliminary_solution;
 

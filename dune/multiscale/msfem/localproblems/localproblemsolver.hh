@@ -7,6 +7,7 @@
 
 #include <config.h>
 #include <vector>
+#include <memory>
 
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
@@ -16,6 +17,8 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
+#include <dune/fem/solver/petscsolver.hh>
+#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
@@ -129,20 +132,6 @@ private:
   //! polynomial order of base functions
   enum { polynomialOrder = SubDiscreteFunctionSpaceType::polynomialOrder };
 
-  struct LocProbMatrixTraits
-  {
-    typedef SubDiscreteFunctionSpaceType                          RowSpaceType;
-    typedef SubDiscreteFunctionSpaceType                          ColumnSpaceType;
-    typedef LagrangeMatrixSetup< false >                          StencilType;
-    typedef Fem::ParallelScalarProduct< SubDiscreteFunctionSpaceType > ParallelScalarProductType;
-
-    template< class M >
-    struct Adapter
-    {
-      typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-    };
-  };
-
   //! --------------------- istl matrix and vector types -------------------------------------
 
   //! \TODO diese definitionen machen keinen sinn
@@ -153,22 +142,15 @@ private:
   typedef SeqSOR< MatrixType, VectorType, VectorType > PreconditionerType;
   //typedef BiCGSTABSolver< VectorType > SolverType;
   typedef InverseOperatorResult InverseOperatorResultType;
-  
-  //! ----------------------------------------------------------------------------------------
-  
+    
 public:
-  typedef Fem::SparseRowMatrixOperator< SubDiscreteFunctionType, SubDiscreteFunctionType,
-                                   LocProbMatrixTraits > LocProbFEMMatrixType;
+  typedef Dune::Fem::PetscLinearOperator< SubDiscreteFunctionType, SubDiscreteFunctionType > LocProbFEMMatrixType;
 private:
-  #ifdef SYMMETRIC_DIFFUSION_MATRIX
-  typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrixType;
-  #else
-  // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
-  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrixType > InverseLocProbFEMMatrixType;
-  #endif // ifdef SYMMETRIC_DIFFUSION_MATRIX
+  typedef Dune::Fem::PetscInverseOperator< SubDiscreteFunctionType,
+                                           LocProbFEMMatrixType >
+    InverseLocProbFEMMatrixType;
   
-  typedef Dune::Fem::CGInverseOperator< SubDiscreteFunctionType > InverseLocProbFEMMatrixType_CG;
-  typedef Dune::Fem::OEMBICGSTABOp< SubDiscreteFunctionType, LocProbFEMMatrixType > InverseLocProbFEMMatrixType_BiCGStab;
+  static std::unique_ptr<InverseLocProbFEMMatrixType> make_inverse_operator(const LocProbFEMMatrixType& problem_matrix);
 
   typedef WeightedClementOperator WeightedClementOperatorType;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;

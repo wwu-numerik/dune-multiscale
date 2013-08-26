@@ -7,6 +7,9 @@
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/subgrid/subgrid.hh>
+#include <dune/fem/function/adaptivefunction.hh>
+#include <dune/fem/space/lagrange.hh>
+#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
 
 namespace Dune {
 template< int D, class R >
@@ -27,7 +30,8 @@ struct MsFEMTraits
   typedef Dune::SubGrid< CommonTraits::GridType::dimension, typename CommonTraits::GridType > SubGridType;
   typedef Fem::AdaptiveLeafGridPart< SubGridType > SubGridPartType;
   typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, SubGridPartType, 1> SubGridDiscreteFunctionSpaceType;
-  typedef Fem::AdaptiveDiscreteFunction< SubGridDiscreteFunctionSpaceType > SubGridDiscreteFunctionType;
+
+  typedef Fem::PetscDiscreteFunction< SubGridDiscreteFunctionSpaceType > SubGridDiscreteFunctionType;
   typedef Fem::CachingQuadrature<SubGridPartType, 0> SubGridQuadratureType;
   typedef Fem::CachingQuadrature<SubGridPartType, 1> SubFaceQuadratureType;
   typedef SubGridList                                                                         SubGridListType;
