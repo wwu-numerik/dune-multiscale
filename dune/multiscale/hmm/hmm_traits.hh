@@ -12,6 +12,7 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/io/file/dataoutput.hh>
+#include <dune/fem/solver/petscsolver.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -34,15 +35,9 @@ struct HMMTraits {
     PeriodicDiscreteFunctionSpaceType;
   typedef Dune::Fem::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
 
-  /** \brief --------------- solver for the linear system of equations ----------------------------
-     * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
-     ****ones. GMRES seems to be more stable, but is extremely slow!
-     */
-  typedef Dune::
-    Fem::OEMBICGSQOp
-  //  OEMBICGSTABOp
-  //    OEMGMRESOp
-    < typename CommonTraits::DiscreteFunctionType, CommonTraits::FEMMatrix > InverseFEMMatrix;
+  typedef Dune::Fem::PetscInverseOperator< typename CommonTraits::DiscreteFunctionType,
+                                           typename CommonTraits::FEMMatrix >
+    InverseFEMMatrix;
 
   //! --------------- the discrete operators (standard FEM and HMM) ------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)

@@ -285,7 +285,7 @@ private:
       for (size_t col = 0; col != system_matrix.M(); ++col)
         system_matrix[row][col] = 0.0;
 
-    if (Problem::getModelData().symmetricDiffusion())
+    if (Problem::getModelData()->symmetricDiffusion())
     {
 
       for (unsigned int t = 0; t < relevant_constellations.size(); ++t)
@@ -306,7 +306,7 @@ private:
       for (size_t col = 0; col != system_matrix.N(); ++col )
         for (size_t row = 0; row < col; ++row)
           system_matrix[row][col] = system_matrix[col][row];
-
+    }
     else
     {
 

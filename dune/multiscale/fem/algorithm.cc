@@ -185,12 +185,16 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
 
     if (DSC_CONFIG_GET("fem.algebraic_solver", "bi_cg_stab" ) == "cg" )
     {
-      const typename FEMTraits::InverseFEMMatrix_CG fem_cg(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+      const typename FEMTraits::InverseOperatorType fem_cg(system_matrix, 1e-8, 1e-8, 20000,
+                                                        DSC_CONFIG_GET("global.cgsolver_verbose", false),
+                                                        "cg", "ilu-n");
       fem_cg(system_rhs, solution);
     }
     else
     {
-      const typename FEMTraits::InverseFEMMatrix fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+      const typename FEMTraits::InverseOperatorType fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000,
+                                                              DSC_CONFIG_GET("global.cgsolver_verbose", false),
+                                                              "cg", "ilu-n");
       fem_biCGStab(system_rhs, solution);
     }
 
@@ -243,7 +247,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
       // set Dirichlet Boundary to zero
       boundaryTreatment(system_rhs);
 
-      const typename FEMTraits::InverseFEMMatrix fem_newton_biCGStab(system_matrix, 1e-8, 1e-8, 20000, true);
+      const typename FEMTraits::InverseOperatorType fem_newton_biCGStab(system_matrix, 1e-8, 1e-8, 20000, true);
       fem_newton_biCGStab(system_rhs, residual);
 
       if ( residual.dofsValid() )
@@ -431,7 +435,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
   // set Dirichlet Boundary to zero
   boundaryTreatment(hom_rhs);
 
-  const typename FEMTraits::InverseFEMMatrix hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+  const typename FEMTraits::InverseOperatorType hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
   hom_biCGStab(hom_rhs, homogenized_solution);
 
   // write FEM solution to a file and produce a VTK output
