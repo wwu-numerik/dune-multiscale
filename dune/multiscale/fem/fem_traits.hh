@@ -23,8 +23,6 @@ namespace FEM {
 //! Type constructions for the FEM problem
 struct FEMTraits {
 
-
-
   typedef Dune::Fem::PetscInverseOperator< typename CommonTraits::DiscreteFunctionType,
                                            typename CommonTraits::FEMMatrix >
     InverseOperatorType;

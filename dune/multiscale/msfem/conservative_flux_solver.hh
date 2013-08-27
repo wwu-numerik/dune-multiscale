@@ -14,12 +14,6 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/geometry/quadraturerules.hh>
 
-// FLUX_SOLVER_VERBOSE: 0 = false, 1 = true
-#define FLUX_SOLVER_VERBOSE false
-
-// VTK output for conservative flux solution
-// #define VTK_OUTPUT
-
 // dune-subgrid include:
 #include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
@@ -27,7 +21,7 @@
 
 // dune-fem includes:
 #include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/operator/common/petsclinearoperator.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
 #include <dune/stuff/common/math.hh>
 
@@ -37,9 +31,12 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 
+
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
+static const bool FLUX_SOLVER_VERBOSE = false;
 
 /** \brief define output parameters for local problems
  *  appends "local_problems" for path
@@ -531,26 +528,11 @@ private:
   //! polynomial order of base functions
   enum { polynomialOrder = SubGridDiscreteFunctionSpaceType::polynomialOrder };
 
-  // flux problem matrix traits
-  struct FluxProbMatrixTraits
-  {
-    typedef SubGridDiscreteFunctionSpaceType                          RowSpaceType;
-    typedef SubGridDiscreteFunctionSpaceType                          ColumnSpaceType;
-    typedef LagrangeMatrixSetup< false >                              StencilType;
-    typedef Fem::ParallelScalarProduct< SubGridDiscreteFunctionSpaceType > ParallelScalarProductType;
+  typedef Dune::Fem::PetscLinearOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType > FluxProbFEMMatrix;
+  typedef Dune::Fem::PetscInverseOperator< SubGridDiscreteFunctionType,
+                                           FluxProbFEMMatrix >
+    InverseFluxProbFEMMatrix;
 
-    template< class M >
-    struct Adapter
-    {
-      typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-    };
-  };
-
-  typedef Fem::SparseRowMatrixOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType,
-                                   FluxProbMatrixTraits > FluxProbFEMMatrix;
-
-  // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp /*CGInverseOp*/
-  typedef Fem::CGInverseOperator< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
 
 private:
   const DiffusionOperatorType& diffusion_;
@@ -635,7 +617,9 @@ public:
       conservative_flux.clear();
       DSC_LOG_INFO << "Local Flux Problem with solution zero." << std::endl;
     } else {
-      InverseFluxProbFEMMatrix flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000, FLUX_SOLVER_VERBOSE);
+      InverseFluxProbFEMMatrix flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000,
+                                                  FLUX_SOLVER_VERBOSE,
+                                                  "cg", "ilu-n");
       flux_prob_biCGStab(rhs, conservative_flux);
     }
 
