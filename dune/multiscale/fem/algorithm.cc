@@ -187,14 +187,14 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
     {
       const typename FEMTraits::InverseOperatorType fem_cg(system_matrix, 1e-8, 1e-8, 20000,
                                                         DSC_CONFIG_GET("global.cgsolver_verbose", false),
-                                                        "cg", "ilu-n");
+                                                        "cg", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       fem_cg(system_rhs, solution);
     }
     else
     {
       const typename FEMTraits::InverseOperatorType fem_biCGStab(system_matrix, 1e-8, 1e-8, 20000,
                                                               DSC_CONFIG_GET("global.cgsolver_verbose", false),
-                                                              "cg", "ilu-n");
+                                                              "cg", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       fem_biCGStab(system_rhs, solution);
     }
 

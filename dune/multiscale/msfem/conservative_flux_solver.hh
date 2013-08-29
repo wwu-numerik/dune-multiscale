@@ -620,7 +620,7 @@ public:
     } else {
       InverseFluxProbFEMMatrix flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000,
                                                   FLUX_SOLVER_VERBOSE,
-                                                  "cg", "ilu-n");
+                                                  "cg", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       flux_prob_biCGStab(rhs, conservative_flux);
     }
 

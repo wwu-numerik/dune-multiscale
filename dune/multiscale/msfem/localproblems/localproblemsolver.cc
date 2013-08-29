@@ -34,7 +34,7 @@ std::unique_ptr<MsFEMLocalProblemSolver::InverseLocProbFEMMatrixType> MsFEMLocal
   const auto solver = Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
   return DSC::make_unique<InverseLocProbFEMMatrixType>(problem_matrix, 1e-8, 1e-8, 20000,
                                       DSC_CONFIG_GET("localproblemsolver_verbose", false),
-                                      solver, "ilu-n");
+                                      solver, DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
 }
 
 MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
@@ -496,7 +496,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
     const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
                                                                     1e-8, 1e-8, 20000,
                                                                     DSC_CONFIG_GET("lod.local_problem_solver_verbose", false),
-                                                                    "cg", "ilu-n");
+                                                                    "cg", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
     // solve the pre-processing problems:
     for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
       locprob_inverse_system_matrix.apply( *(rhs_Chj[j]) , *(b_h[j]) );
@@ -506,7 +506,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
     const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
                                                                     1e-8, 1e-8, 20000,
                                                                     DSC_CONFIG_GET("lod.local_problem_solver_verbose", false),
-                                                                    "bgcs", "ilu-n");
+                                                                    "bgcs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
     // solve the pre-processing problems:
     for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
       locprob_inverse_system_matrix.apply( *(rhs_Chj[j]) , *(b_h[j]) );

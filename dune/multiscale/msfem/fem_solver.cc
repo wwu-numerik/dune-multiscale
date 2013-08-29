@@ -247,7 +247,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
       }
       // --- end boundary treatment ---
 
-      const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 5000, true, "bcgs", "ilu-n");
+      const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 5000, true, "bcgs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       fem_newton_biCGStab(system_rhs, residual);
 
       if ( residual.dofsValid() )
@@ -471,7 +471,7 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
       }
       // --- end boundary treatment ---
 
-      const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 5000, true, "bcgs", "ilu-n");
+      const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 5000, true, "bcgs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       fem_newton_biCGStab(system_rhs, residual);
 
       if ( residual.dofsValid() )
