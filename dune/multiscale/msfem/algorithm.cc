@@ -355,7 +355,7 @@ bool algorithm(const std::string& macroGridName,
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine(coarse_grid_level_);
   //! ---- tools ----
-  L2Error< CommonTraits::DiscreteFunctionType > l2error;
+  Dune::Fem::L2Error< CommonTraits::DiscreteFunctionType > l2error;
 
   CommonTraits::GridType& grid = *macro_grid_pointer;
 

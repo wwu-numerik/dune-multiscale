@@ -22,7 +22,7 @@ class MsFEMErrorEstimator;
 // ! type construction for the MSFEM code
 struct MsFEMTraits
 {
-  typedef MacroMicroGridSpecifier                                                             MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
   typedef Dune::SubGrid< CommonTraits::GridType::dimension, typename CommonTraits::GridType > SubGridType;
   typedef Fem::AdaptiveLeafGridPart< SubGridType > SubGridPartType;
