@@ -311,7 +311,7 @@ void algorithm(const std::string& macroGridName,
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine(coarse_grid_level_);
   //! ---- tools ----
-  L2Error< CommonTraits::DiscreteFunctionType > l2error;
+  Dune::Fem::L2Error< CommonTraits::DiscreteFunctionType > l2error;
 
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for LOD-macro-problem

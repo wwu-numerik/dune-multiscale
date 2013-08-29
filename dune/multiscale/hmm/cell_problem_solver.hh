@@ -69,6 +69,7 @@ private:
     };
   };
 public:
+  //! HMM
   typedef Fem::SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType,
                                    CellMatrixTraits > CellFEMMatrix;
 private:
