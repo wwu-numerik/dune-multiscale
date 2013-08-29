@@ -219,7 +219,7 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
       typename CommonTraits::DiscreteFunctionType zero_func_coarse( " constant zero function coarse ", discreteFunctionSpace);
       zero_func_coarse.clear();
 
-      const Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
+      const Dune::Fem::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
       hmm_rhs_L2_norm = l2error.norm2< CommonTraits::assembler_order >(zero_func_coarse, hmm_newton_rhs);
 
       DSC_LOG_INFO << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
@@ -502,7 +502,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
               << CommonTraits::DiscreteFunctionSpaceType::polynomialOrder << "."
               << std::endl << std::endl;
 
-    const Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
+    const Dune::Fem::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
 
     // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
     CellProblemNumberingManager cp_num_manager(discreteFunctionSpace);

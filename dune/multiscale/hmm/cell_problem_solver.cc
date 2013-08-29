@@ -136,8 +136,8 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
     PeriodicDiscreteFunctionType cell_problem_residual("Cell Problem Residual", periodicDiscreteFunctionSpace_);
     cell_problem_residual.clear();
 
-    const Dune::L2Error< PeriodicDiscreteFunctionType > l2error;
-    RangeType relative_newton_error = 10000.0;
+    const Dune::Fem::L2Error< PeriodicDiscreteFunctionType > l2error;
+    RangeType relative_newton_error = std::numeric_limits<RangeType>::max();
 
     int iteration_step = 0;
 

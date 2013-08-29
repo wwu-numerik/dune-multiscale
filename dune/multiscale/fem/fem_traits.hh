@@ -5,6 +5,7 @@
 #ifndef DUNE_FEM_TYPES_HH
 #define DUNE_FEM_TYPES_HH
 
+#include <config.h>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/common/tuples.hh>
 
