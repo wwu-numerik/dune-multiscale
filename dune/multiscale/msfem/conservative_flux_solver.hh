@@ -7,30 +7,31 @@
 
 #include <config.h>
 #include <vector>
+
 #include <dune/common/fmatrix.hh>
+
+#include <dune/geometry/quadraturerules.hh>
+
+#include <dune/multiscale/tools/subgrid_io.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
+
+#include <dune/subgrid/subgrid.hh>
 
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
-#include <dune/geometry/quadraturerules.hh>
-
-// dune-subgrid include:
-#include <dune/multiscale/tools/subgrid_io.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/subgrid/subgrid.hh>
-
-// dune-fem includes:
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/common/petsclinearoperator.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
-#include <dune/stuff/common/math.hh>
+#include <dune/fem/operator/common/stencil.hh>
 
-#include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
-
+#include <dune/stuff/fem/matrix_object.hh>
+#include <dune/stuff/common/math.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -182,7 +183,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
   ::assemble_matrix(const int sub_grid_id, MatrixType& global_matrix) const {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   // local grid basis functions:
