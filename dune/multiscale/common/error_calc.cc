@@ -22,7 +22,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream &out)
     auto gridPart = fem_solution_ ? fem_solution_->gridPart()
                                   : msfem_solution_->gridPart();
     Dune::Fem::H1Norm< CommonTraits::GridPartType > h1norm(gridPart);
-    Dune::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
+    Dune::Fem::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
 
     std::map<std::string,double> csv;
 
