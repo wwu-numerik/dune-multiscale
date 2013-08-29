@@ -9,8 +9,11 @@
 #include <string>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
 #include <dune/stuff/functions/interfaces.hh>
+#include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/stuff/common/memory.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -97,11 +100,11 @@ public:
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef DomainFieldType TimeType;
 
-  virtual void evaluate(const DomainType& x, RangeType& y) const { y = RangeType(0.0); };
-  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); };
+  virtual void evaluate(const DomainType& x, RangeType& y) const { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); }
 
-  virtual void jacobian(const DomainType& x, JacobianRangeType& y) const { y = JacobianRangeType(0.0); };
-  virtual void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const { y = JacobianRangeType(0.0); };
+  virtual void jacobian(const DomainType& x, JacobianRangeType& y) const { y = JacobianRangeType(0.0); }
+  virtual void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const { y = JacobianRangeType(0.0); }
 };
 
 class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType
@@ -126,8 +129,8 @@ public:
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef DomainFieldType TimeType;
 
-  virtual void evaluate(const DomainType& x, RangeType& y) const { y = RangeType(0.0); };
-  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); };
+  virtual void evaluate(const DomainType& x, RangeType& y) const { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); }
 };
 
 
@@ -207,7 +210,10 @@ class IModelProblemData
 {
 protected:
   const Constants constants_;
-
+  typedef CommonTraits::GridType::LeafGridView View;
+  typedef Dune::Stuff::GridboundaryInterface<View> BoundaryInfoType;
+  typedef MsFEM::MsFEMTraits::SubGridType::LeafGridView SubView;
+  typedef Dune::Stuff::GridboundaryInterface<SubView> SubBoundaryInfoType;
 public:
 
   //! Constructor for ModelProblemData
@@ -233,6 +239,18 @@ public:
 
   // does the problem implement an exact solution?
   virtual bool hasExactSolution() const { return false; }
+
+  // is the diffusion matrix symmetric?
+  virtual bool symmetricDiffusion() const { return true; }
+
+  virtual std::unique_ptr<BoundaryInfoType> boundaryInfo() const
+  {
+    return std::unique_ptr<BoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<View>());
+  }
+  virtual std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const
+  {
+    return std::unique_ptr<SubBoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<SubView>());
+  }
 
 };
 

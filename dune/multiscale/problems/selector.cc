@@ -138,32 +138,38 @@ namespace Problem {
 //for some reason gcc 4.7 does not like the specializations if they're not in an explicit ns scope
 template< class GridImp, class IntersectionImp >
 bool isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
-  return (face.boundary() && face.boundaryId()==2);
+  static auto info = getModelData()->boundaryInfo();
+  return info->neumann(face);
 }
 
 template< class GridImp, class IntersectionImp >
 bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
-  return (face.boundary() && face.boundaryId()==1);
+  static auto info = getModelData()->boundaryInfo();
+  return info->dirichlet(face);
 }
 
 template<>
 bool isNeumannBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
-  return (face.boundary() && face.boundaryId()==2);
+  static auto info = getModelData()->boundaryInfo();
+  return info->neumann(face);
 }
 
 template<>
 bool isDirichletBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
-  return (face.boundary() && face.boundaryId()==1);
+  static auto info = getModelData()->boundaryInfo();
+  return info->dirichlet(face);
 }
 
 template<>
 bool isNeumannBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
-  return (face.boundary() && face.boundaryId()==2);
+  static auto info = getModelData()->subBoundaryInfo();
+  return info->neumann(face);
 }
 
 template<>
 bool isDirichletBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
-  return (face.boundary() && face.boundaryId()==1);
+  static auto info = getModelData()->subBoundaryInfo();
+  return info->dirichlet(face);
 }
 
 } // namespace Problem
