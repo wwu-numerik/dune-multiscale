@@ -5,6 +5,7 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/fem/matrix_object.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/problems/base.hh>
 
@@ -24,7 +25,7 @@ template< class MatrixType >
 void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matrix( MatrixType& global_matrix,
                                                                       bool boundary_treatment ) const
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   std::vector< typename BaseFunctionSet::JacobianRangeType >
@@ -213,7 +214,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_jaco
   MatrixType& global_matrix,
   bool boundary_treatment ) const
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   std::vector< typename BaseFunctionSet::JacobianRangeType >
@@ -329,7 +330,7 @@ const DiscreteFunction& dirichlet_extension,
       MatrixType& global_matrix,
       bool boundary_treatment ) const
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   std::vector< typename BaseFunctionSet::JacobianRangeType >

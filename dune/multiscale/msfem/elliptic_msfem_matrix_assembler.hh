@@ -25,6 +25,7 @@
 
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/stuff/fem/matrix_object.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -123,7 +124,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
   else  // if classical (symmetric) MsFEM
     DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
 
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();

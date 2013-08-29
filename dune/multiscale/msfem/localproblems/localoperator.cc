@@ -8,6 +8,7 @@
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/stuff/fem/matrix_object.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/problems/base.hh>
@@ -78,7 +79,7 @@ bool LocalProblemOperator::point_is_in_element( const DomainType& corner_0,
 void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix) const
 // x_T is the barycenter of the macro grid element T
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   // local grid basis functions:
@@ -138,7 +139,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
                                            const SubGridList::CoarseNodeVectorType& coarse_node_vector ) const
 // x_T is the barycenter of the macro grid element T
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   // local grid basis functions:

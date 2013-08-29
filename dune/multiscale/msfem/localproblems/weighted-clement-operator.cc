@@ -62,7 +62,7 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
     const DiscreteFunctionSpaceType &space = discreteFunctionSpace();
 
     // reserve memory for matrix
-    linearOperator_.reserve();
+    linearOperator_.reserve(sparsity_pattern_);
 
     // create timer (also stops time)
     Timer timer;
