@@ -87,6 +87,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     // discrete elliptic operator (corresponds with FEM Matrix)
 
 
+  //!TODO Split branch into functions
   if (DSC_CONFIG_GET("problem.linear", true))
   {
     DSC_LOG_INFO << "Solving linear problem." << std::endl;
