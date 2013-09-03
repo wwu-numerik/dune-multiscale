@@ -13,6 +13,7 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
+#include <dune/multiscale/common/dirichletconstraints.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
@@ -22,6 +23,7 @@
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
@@ -232,30 +234,9 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     }
   }
 
-  // boundary treatment
-  // !TODO use function call
-  const CoarseGridPart& coarseGridPart = coarseDiscreteFunctionSpace_.gridPart();
-  for (CoarseIterator it = coarseDiscreteFunctionSpace_.begin(); it != coarseDiscreteFunctionSpace_.end(); ++it) {
-    const CoarseEntity& entity = *it;
-    if (entity.hasBoundaryIntersections()) {
-      auto local_matrix = global_matrix.localMatrix(entity, entity);
-
-      const CoarseLagrangePointSet& lagrangePointSet = coarseDiscreteFunctionSpace_.lagrangePointSet(entity);
-
-      const CoarseIntersectionIterator iend = coarseGridPart.iend(entity);
-      for (CoarseIntersectionIterator iit = coarseGridPart.ibegin(entity); iit != iend; ++iit) {
-        const CoarseIntersection& intersection = *iit;
-        if (intersection.boundary()) {
-          const int                   face  = intersection.indexInInside();
-          const CoarseFaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-          for (CoarseFaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend;
-               ++fdit) {
-            local_matrix.unitRow(*fdit);
-          }
-        }
-      }
-    }
-  }
+  const auto boundary = Problem::getModelData()->boundaryInfo();
+  Dune::DirichletConstraints<CoarseDiscreteFunctionSpace> constraints(*boundary, coarseDiscreteFunctionSpace_);
+  constraints.applyToOperator(global_matrix);
 } // assemble_matrix
 } // namespace MsFEM {
 } // namespace Multiscale {
