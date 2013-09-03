@@ -149,7 +149,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
 
     const FEM::FEMTraits::InverseOperatorType inverse_op(fem_matrix, 1e-8, 1e-8, 5000,
                                                         DSC_CONFIG_GET("global.cgsolver_verbose", false),
-                                                        DSC_CONFIG_GET("fem.algebraic_solver", "bi_cg_stab" ),
+                                                        DSC_CONFIG_GET("fem.algebraic_solver", "bcgs" ),
                                                         DSC_CONFIG_GET("fem.precond", "asm" ), 1);
     fem_rhs.communicate();
     inverse_op(fem_rhs, solution);
@@ -373,7 +373,7 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
 
     const FEM::FEMTraits::InverseOperatorType inverse_op(fem_matrix, 1e-8, 1e-8, 5000,
                                                         DSC_CONFIG_GET("global.cgsolver_verbose", false),
-                                                        DSC_CONFIG_GET("fem.algebraic_solver", "bi_cg_stab" ),
+                                                        DSC_CONFIG_GET("fem.algebraic_solver", "bcgs" ),
                                                         DSC_CONFIG_GET("fem.precond", "asm" ), 1);
     fem_rhs.communicate();
     inverse_op(fem_rhs, solution);

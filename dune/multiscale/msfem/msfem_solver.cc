@@ -265,7 +265,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
     }
   }
   //! --- end boundary treatment ---
-  const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true, "bgcs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
+  const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true, "bcgs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
   DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
   DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl

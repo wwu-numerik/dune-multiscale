@@ -902,21 +902,21 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
      Dune::InverseOperatorResult result_data;
 
-     if ( DSC_CONFIG_GET("lod.algebraic_solver", "bi_cg_stab") == "bi_cg_stab" )
+     if ( DSC_CONFIG_GET("lod.algebraic_solver", "bcgs") == "bcgs" )
      {
        typedef Dune::BiCGSTABSolver< VectorType > SolverType;
 
        SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
        solver.apply( solution_vector, rhs, result_data);
      }
-     else if ( DSC_CONFIG_GET("lod.algebraic_solver", "bi_cg_stab") == "cg" )
+     else if ( DSC_CONFIG_GET("lod.algebraic_solver", "bcgs") == "cg" )
      {
        if ( DSC_CONFIG_GET("lod.petrov_galerkin", true) )
        {
          std::cout << "Warning! Key 'lod.petrov_galerkin' is set true (leading to an unsymetric system matrix)."
          << "This is incompatible with the key "
          << "'lod.algebraic_solver' which is set to 'cg' (only for symetric systems). "
-	 << "Automatically switched the key to 'bi_cg_stab'." << std::endl;
+   << "Automatically switched the key to 'bcgs'." << std::endl;
          typedef Dune::BiCGSTABSolver< VectorType > SolverType;
          SolverType solver( matrix_op, preconditioner, tol, num_iterations, true );
          solver.apply( solution_vector, rhs, result_data);
