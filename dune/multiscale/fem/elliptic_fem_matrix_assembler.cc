@@ -6,6 +6,7 @@
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/matrix_object.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/problems/base.hh>
 
@@ -25,7 +26,8 @@ template< class MatrixType >
 void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matrix( MatrixType& global_matrix,
                                                                       bool boundary_treatment ) const
 {
-  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
+  //!TODO diagonal stencil would be enough
+  DSFe::reserve_matrix(global_matrix);
   global_matrix.clear();
 
   std::vector< typename BaseFunctionSet::JacobianRangeType >
@@ -38,7 +40,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
     const Geometry& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
-    auto local_matrix = global_matrix.localMatrix(entity, entity);
+    DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, entity, entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -77,6 +79,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
     }
   }
 
+
   // boundary treatment
   if (boundary_treatment)
   {
@@ -86,7 +89,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
       if ( !entity.hasBoundaryIntersections() )
         continue;
 
-      auto local_matrix = global_matrix.localMatrix(entity, entity);
+      DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, entity, entity);
       const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
       const IntersectionIterator iend = gridPart.iend(entity);
       for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)

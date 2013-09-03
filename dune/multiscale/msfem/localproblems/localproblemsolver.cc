@@ -5,6 +5,8 @@
 #include <dune/subgrid/subgrid.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
+#include <dune/stuff/fem/matrix_object.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/memory.hh>
 
@@ -95,6 +97,7 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
   LocProbFEMMatrixType locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace);
+
 
   //! define the discrete (elliptic) local MsFEM problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -245,7 +248,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
 
   for (const auto& subgridEntity : subDiscreteFunctionSpace) {
-    LocalMatrix localMatrix = locprob_system_matrix.localMatrix(subgridEntity, subgridEntity);
+    DSFe::LocalMatrixProxy<LocProbFEMMatrixType> localMatrix(locprob_system_matrix, subgridEntity, subgridEntity);
 
     const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
     SubLocalFunctionType rhsLocal = local_problem_rhs.localFunction(subgridEntity);
@@ -394,7 +397,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
     HostEntityPointerType host_entity_pointer = subGrid.getHostEntity< 0 >(subgrid_entity);
     const HostEntityType& host_entity = *host_entity_pointer;
 
-    LocalMatrix local_matrix = locprob_system_matrix.localMatrix(subgrid_entity, subgrid_entity);
+    DSFe::LocalMatrixProxy<LocProbFEMMatrixType> local_matrix(locprob_system_matrix, subgrid_entity, subgrid_entity);
 
     const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);
 

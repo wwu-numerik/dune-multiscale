@@ -242,7 +242,7 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::boundaryTreatment() const
             if( entity.hasBoundaryIntersections() )
             {
                 // get local matrix from matrix object
-                LocalMatrixType localMatrix = linearOperator_.localMatrix(entity, coarse_entity);
+                DSFe::LocalMatrixProxy<LinearOperatorType> localMatrix(linearOperator_, entity, coarse_entity);
 
                 const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 

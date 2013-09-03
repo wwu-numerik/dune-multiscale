@@ -126,6 +126,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
   else  // if classical (symmetric) MsFEM
     DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
 
+  //!TODO diagonal stencil reicht
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
