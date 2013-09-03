@@ -1,34 +1,36 @@
 #ifndef DUNE_DIRICHLETCONSTRAINTS_HH
 #define DUNE_DIRICHLETCONSTRAINTS_HH
 
+#include <dune/stuff/grid/boundaryinfo.hh>
 #include <dune/fem/function/common/scalarproducts.hh>
 
 namespace Dune { 
 
-template < class Model, class DiscreteFunctionSpace >  
+template < class DomainSpace, class RangeSpace = DomainSpace >
 class DirichletConstraints 
 {
 public:
-  typedef Model ModelType;
-  typedef DiscreteFunctionSpace DiscreteFunctionSpaceType;
+  typedef Dune::Stuff::GridboundaryInterface<typename DomainSpace::GridType::LeafGridView> BoundaryType;
+  typedef DomainSpace DomainSpaceType;
+  typedef RangeSpace RangeSpaceType;
 
   //! type of grid partition
-  typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
+  typedef typename DomainSpaceType :: GridPartType GridPartType;
   //! type of grid
-  typedef typename DiscreteFunctionSpaceType :: GridType GridType;
+  typedef typename DomainSpaceType :: GridType GridType;
 
   // types for boundary treatment
   // ----------------------------
-  typedef typename DiscreteFunctionSpaceType :: MapperType MapperType;
-  typedef Fem::SlaveDofs< DiscreteFunctionSpaceType, MapperType > SlaveDofsType;
+  typedef typename DomainSpaceType :: MapperType MapperType;
+  typedef Fem::SlaveDofs< DomainSpaceType, MapperType > SlaveDofsType;
   typedef typename SlaveDofsType :: SingletonKey SlaveDofsKeyType; 
   typedef Fem::SingletonList< SlaveDofsKeyType, SlaveDofsType >
       SlaveDofsProviderType;
 
-  DirichletConstraints( const ModelType &model, const DiscreteFunctionSpaceType& space )
-    : model_(model),
-      space_( space ),
-      slaveDofs_( getSlaveDofs( space_ ) ),
+  DirichletConstraints( const BoundaryType &boundary, const DomainSpaceType& domain_space )
+    : boundary_(boundary),
+      domain_space_( domain_space ),
+      slaveDofs_( getSlaveDofs( domain_space_ ) ),
       dirichletBlocks_(),
       // mark DoFs on the Dirichlet boundary 
       hasDirichletDofs_( false ),
@@ -38,7 +40,7 @@ public:
 
   /*! treatment of Dirichlet-DoFs for given discrete function 
    *
-   *   \note A LagrangeDiscreteFunctionSpace is implicitly assumed.
+   *   \note A LagrangeDomainSpace is implicitly assumed.
    *
    *   \param[in]  u   discrete function providing the constraints 
    *   \param[out] w   discrete function the constraints are applied to
@@ -57,7 +59,7 @@ public:
       ConstDofIteratorType uIt = u.dbegin();
       DofIteratorType wIt = w.dbegin();
 
-      const unsigned int localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
+      const unsigned int localBlockSize = DiscreteFunctionType :: DomainSpaceType ::
         localBlockSize ;
       // loop over all blocks 
       const unsigned int blocks = u.space().blockMapper().size();
@@ -85,7 +87,7 @@ public:
 
   /*! treatment of Dirichlet-DoFs for given discrete function 
    *
-   *   \note A LagrangeDiscreteFunctionSpace is implicitly assumed.
+   *   \note A LagrangeDomainSpace is implicitly assumed.
    *
    *   \param[in]  u   discrete function providing the constraints 
    *   \param[out] w   discrete function the constraints are applied to
@@ -100,7 +102,7 @@ public:
    *
    *   delete rows for dirichlet-DoFs, setting diagonal element to 1.
    *
-   *   \note A LagrangeDiscreteFunctionSpace is implicitly assumed.
+   *   \note A LagrangeDomainSpace is implicitly assumed.
    *
    *   \param[out] linearOperator  linear operator to be adjusted 
    */
@@ -109,14 +111,14 @@ public:
   {
     updateDirichletDofs();
 
-    typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
+    typedef typename DomainSpaceType :: IteratorType IteratorType;
     typedef typename IteratorType :: Entity EntityType;
 
     // if Dirichlet Dofs have been found, treat them 
     if( hasDirichletDofs_ ) 
     {
-      const IteratorType end = space_.end();
-      for( IteratorType it = space_.begin(); it != end; ++it )
+      const IteratorType end = domain_space_.end();
+      for( IteratorType it = domain_space_.begin(); it != end; ++it )
       {
         const EntityType &entity = *it;
         // adjust linear operator 
@@ -131,14 +133,14 @@ protected:
   {
     updateDirichletDofs();
 
-    typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
+    typedef typename DomainSpaceType :: IteratorType IteratorType;
     typedef typename IteratorType :: Entity EntityType;
 
     // if Dirichlet Dofs have been found, treat them 
     if( hasDirichletDofs_ ) 
     {
-      const IteratorType end = space_.end();
-      for( IteratorType it = space_.begin(); it != end; ++it )
+      const IteratorType end = domain_space_.end();
+      for( IteratorType it = domain_space_.begin(); it != end; ++it )
       {
         const EntityType &entity = *it;
         dirichletDofTreatment( entity, u, w );
@@ -150,7 +152,7 @@ protected:
    *
    *   delete rows for dirichlet-DoFs, setting diagonal element to 1.
    *
-   *   \note A LagrangeDiscreteFunctionSpace is implicitly assumed.
+   *   \note A LagrangeDomainSpace is implicitly assumed.
    *
    *   \param[in]  entity  entity to perform Dirichlet treatment on
    */
@@ -162,9 +164,9 @@ protected:
     SlaveDofsType& slave_dofs = this->slaveDofs();
     const int numSlaveDofs = slave_dofs.size();
 
-    typedef typename DiscreteFunctionSpaceType :: LagrangePointSetType
+    typedef typename DomainSpaceType :: LagrangePointSetType
       LagrangePointSetType;
-    const LagrangePointSetType &lagrangePointSet = space_.lagrangePointSet( entity );
+    const LagrangePointSetType &lagrangePointSet = domain_space_.lagrangePointSet( entity );
 
     typedef typename LinearOperator :: LocalMatrixType LocalMatrixType;
 
@@ -173,14 +175,14 @@ protected:
 
     // get number of basis functions 
     const int localBlocks = lagrangePointSet.size();
-    const int localBlockSize = DiscreteFunctionSpaceType :: localBlockSize ;
+    const int localBlockSize = DomainSpaceType :: localBlockSize ;
 
     // map local to global dofs
     std::vector<std::size_t> globalDofs(localBlockSize);
     std::vector<std::size_t> globalBlockDofs(localBlocks);
     
-    space_.mapper().map(entity,globalDofs);
-    space_.blockMapper().map(entity,globalBlockDofs);
+    domain_space_.mapper().map(entity,globalDofs);
+    domain_space_.blockMapper().map(entity,globalBlockDofs);
     
     // counter for all local dofs (i.e. localBlockDof * localBlockSize + ... )
     int localDof = 0;
@@ -221,7 +223,7 @@ protected:
                               const GridFunctionType& u, 
                               DiscreteFunctionType &w ) const 
   { 
-    typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
+    typedef typename DiscreteFunctionType :: DomainSpaceType
       DiscreteSpaceType;
     typedef typename GridFunctionType :: LocalFunctionType GridLocalFunctionType;
     typedef typename DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
@@ -243,7 +245,7 @@ protected:
     // get local functions of argument 
     GridLocalFunctionType uLocal = u.localFunction( entity );
 
-    const LagrangePointSetType &lagrangePointSet = space_.lagrangePointSet( entity );
+    const LagrangePointSetType &lagrangePointSet = domain_space_.lagrangePointSet( entity );
 
     // get number of Lagrange Points 
     const int numBlocks = lagrangePointSet.size(); 
@@ -253,14 +255,14 @@ protected:
    
     // map local to global BlockDofs
     std::vector<std::size_t> globalBlockDofs(numBlocks);
-    space_.blockMapper().map(entity,globalBlockDofs);
+    domain_space_.blockMapper().map(entity,globalBlockDofs);
  
     // iterate over face dofs and set unit row
     for( int localBlock = 0 ; localBlock < numBlocks; ++ localBlock ) 
     {
       if( dirichletBlocks_[ globalBlockDofs[ localBlock ] ] ) 
       {
-        typedef typename DiscreteFunctionSpaceType :: RangeType RangeType;
+        typedef typename DomainSpaceType :: RangeType RangeType;
         RangeType phi( 0 );
 
         // evaluate data
@@ -286,52 +288,52 @@ protected:
   // detect all DoFs on the Dirichlet boundary 
   void updateDirichletDofs() const
   {
-    if( sequence_ != space_.sequence() ) 
+    if( sequence_ != domain_space_.sequence() )
     {
-      // only start search if Dirichlet boundary is present 
-      if( ! model_.hasDirichletBoundary() ) 
-      {
-        hasDirichletDofs_ = false ;
-        return ;
-      }
+//      // only start search if Dirichlet boundary is present
+//      if( ! boundary_.hasDirichletBoundary() )
+//      {
+//        hasDirichletDofs_ = false ;
+//        return ;
+//      }
 
       // resize flag vector with number of blocks and reset flags 
-      const int blocks = space_.blockMapper().size() ;
+      const int blocks = domain_space_.blockMapper().size() ;
       dirichletBlocks_.resize( blocks );
       for( int i=0; i<blocks; ++i ) 
         dirichletBlocks_[ i ] = false ;
 
-      typedef typename DiscreteFunctionSpaceType :: IteratorType IteratorType;
+      typedef typename DomainSpaceType :: IteratorType IteratorType;
       typedef typename IteratorType :: Entity EntityType;
 
       bool hasDirichletBoundary = false;
-      const IteratorType end = space_.end();
-      for( IteratorType it = space_.begin(); it != end; ++it )
+      const IteratorType end = domain_space_.end();
+      for( IteratorType it = domain_space_.begin(); it != end; ++it )
       {
         const EntityType &entity = *it;
         // if entity has boundary intersections 
         if( entity.hasBoundaryIntersections() )
         {
-          hasDirichletBoundary |= searchEntityDirichletDofs( entity, model_ );
+          hasDirichletBoundary |= searchEntityDirichletDofs( entity, boundary_ );
         }
       }
 
       // update sequence number 
-      sequence_ = space_.sequence();
+      sequence_ = domain_space_.sequence();
       hasDirichletDofs_ = hasDirichletBoundary ;
-      space_.gridPart().grid().comm().max( hasDirichletDofs_ );
+      domain_space_.gridPart().grid().comm().max( hasDirichletDofs_ );
     }
   }
 
   // detect all DoFs on the Dirichlet boundary of the given entity 
   template< class EntityType > 
-  bool searchEntityDirichletDofs( const EntityType &entity, const ModelType& model ) const
+  bool searchEntityDirichletDofs( const EntityType &entity, const BoundaryType& boundary ) const
   { 
 
-    typedef typename DiscreteFunctionSpaceType :: LagrangePointSetType
+    typedef typename DomainSpaceType :: LagrangePointSetType
       LagrangePointSetType;
 
-    typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
+    typedef typename DomainSpaceType :: GridPartType GridPartType;
 
     const int faceCodim = 1;
     typedef typename GridPartType :: IntersectionIteratorType
@@ -341,9 +343,9 @@ protected:
       :: template Codim< faceCodim > :: SubEntityIteratorType
       FaceDofIteratorType;
 
-    typedef typename DiscreteFunctionSpaceType :: DomainType DomainType ;
+    typedef typename DomainSpaceType :: DomainType DomainType ;
 
-    const GridPartType &gridPart = space_.gridPart();
+    const GridPartType &gridPart = domain_space_.gridPart();
 
     // default is false 
     bool hasDirichletBoundary = false;
@@ -352,15 +354,15 @@ protected:
     const Geometry& geo = entity.geometry();
 
     // get Lagrange pionts from space 
-    const LagrangePointSetType &lagrangePointSet = space_.lagrangePointSet( entity );
+    const LagrangePointSetType &lagrangePointSet = domain_space_.lagrangePointSet( entity );
    
     // get number of Lagrange Points 
     const int localBlocks = lagrangePointSet.size(); 
 
     //map local to global BlockDofs
     std::vector<size_t> globalBlockDofs(localBlocks);
-    // space_.blockMapper().mapEntityDofs(entity,globalBlockDofs);
-    space_.blockMapper().map(entity,globalBlockDofs);
+    // domain_space_.blockMapper().mapEntityDofs(entity,globalBlockDofs);
+    domain_space_.blockMapper().map(entity,globalBlockDofs);
 
     IntersectionIteratorType it = gridPart.ibegin( entity );
     const IntersectionIteratorType endit = gridPart.iend( entity );
@@ -372,35 +374,27 @@ protected:
       // if intersection is with boundary, adjust data  
       if( intersection.boundary() )
       {
-        // get face number of boundary intersection 
+        // get face number of boundary intersection
         const int face = intersection.indexInInside();
 
-        // get dof iterators 
-        FaceDofIteratorType faceIt
-          = lagrangePointSet.template beginSubEntity< faceCodim >( face );
-        const FaceDofIteratorType faceEndIt
-          = lagrangePointSet.template endSubEntity< faceCodim >( face );
-        for( ; faceIt != faceEndIt; ++faceIt )
+        if (boundary_.dirichlet(intersection))
         {
-          // get local dof number (expensive operation, therefore cache result)
-          const int localBlock = *faceIt;
-
-          // get global coordinate of point on boundary 
-          const DomainType global = geo.global( lagrangePointSet.point( localBlock ) );
-
-          // get dirichlet information from model
-          const bool isDirichletDof = model.isDirichletPoint( global );
-
-          // mark dof 
-          if( isDirichletDof ) 
+          // get dof iterators
+          FaceDofIteratorType faceIt
+            = lagrangePointSet.template beginSubEntity< faceCodim >( face );
+          const FaceDofIteratorType faceEndIt
+            = lagrangePointSet.template endSubEntity< faceCodim >( face );
+          for( ; faceIt != faceEndIt; ++faceIt )
           {
-            // mark global DoF number 
+            // get local dof number (expensive operation, therefore cache result)
+            const int localBlock = *faceIt;
+
+            // mark global DoF number
             assert( globalBlockDofs[ localBlock ] < dirichletBlocks_.size() );
             dirichletBlocks_[globalBlockDofs[ localBlock ] ] = true ;
 
-            // we have Dirichlet values 
-            hasDirichletBoundary = true ;
           }
+          hasDirichletBoundary = true;
         }
       }
     }
@@ -409,15 +403,15 @@ protected:
   } 
 
   //! pointer to slave dofs 
-  const ModelType& model_;
-  const DiscreteFunctionSpaceType& space_;
+  const BoundaryType& boundary_;
+  const DomainSpaceType& domain_space_;
   SlaveDofsType *const slaveDofs_;
   mutable std::vector< bool > dirichletBlocks_;
   mutable bool hasDirichletDofs_ ;
   mutable int sequence_ ;
 
   // return slave dofs         
-  static SlaveDofsType *getSlaveDofs ( const DiscreteFunctionSpaceType &space )
+  static SlaveDofsType *getSlaveDofs ( const DomainSpaceType &space )
   {
     SlaveDofsKeyType key( space, space.mapper() );
     return &(SlaveDofsProviderType :: getObject( key ));
