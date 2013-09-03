@@ -491,26 +491,14 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
     }
   }
 
-  if (DSC_CONFIG_GET("lod.local_solver", "bi_cg_stab" ) == "cg" )
-  {
-    const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                    1e-8, 1e-8, 20000,
-                                                                    DSC_CONFIG_GET("lod.local_problem_solver_verbose", false),
-                                                                    "cg", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
-    // solve the pre-processing problems:
-    for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
-      locprob_inverse_system_matrix.apply( *(rhs_Chj[j]) , *(b_h[j]) );
-  }
-  else
-  {
-    const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
-                                                                    1e-8, 1e-8, 20000,
-                                                                    DSC_CONFIG_GET("lod.local_problem_solver_verbose", false),
-                                                                    "bgcs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
-    // solve the pre-processing problems:
-    for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
-      locprob_inverse_system_matrix.apply( *(rhs_Chj[j]) , *(b_h[j]) );
-  }
+  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(locprob_system_matrix,
+                                                                  1e-8, 1e-8, 20000,
+                                                                  DSC_CONFIG_GET("lod.local_problem_solver_verbose", false),
+                                                                  DSC_CONFIG_GET("lod.local_solver", "bcgs" ),
+                                                                  DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
+  // solve the pre-processing problems:
+  for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+    locprob_inverse_system_matrix.apply( *(rhs_Chj[j]) , *(b_h[j]) );
   
   // ----------------------------------------------------------------------------------------------------
 
