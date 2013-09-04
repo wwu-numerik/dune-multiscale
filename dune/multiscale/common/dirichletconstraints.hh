@@ -59,7 +59,7 @@ public:
       ConstDofIteratorType uIt = u.dbegin();
       DofIteratorType wIt = w.dbegin();
 
-      const unsigned int localBlockSize = DiscreteFunctionType :: DomainSpaceType ::
+      const unsigned int localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
         localBlockSize ;
       // loop over all blocks 
       const unsigned int blocks = u.space().blockMapper().size();
@@ -223,7 +223,7 @@ protected:
                               const GridFunctionType& u, 
                               DiscreteFunctionType &w ) const 
   { 
-    typedef typename DiscreteFunctionType :: DomainSpaceType
+    typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
       DiscreteSpaceType;
     typedef typename GridFunctionType :: LocalFunctionType GridLocalFunctionType;
     typedef typename DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
