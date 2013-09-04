@@ -136,7 +136,7 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
     PeriodicDiscreteFunctionType cell_problem_residual("Cell Problem Residual", periodicDiscreteFunctionSpace_);
     cell_problem_residual.clear();
 
-    const Dune::Fem::L2Error< PeriodicDiscreteFunctionType > l2error;
+    const Dune::Fem::LPNorm< PeriodicDiscreteFunctionType::GridPartType> l2norm(cell_problem_residual.space().gridPart() ,2);
     RangeType relative_newton_error = std::numeric_limits<RangeType>::max();
 
     int iteration_step = 0;
@@ -208,9 +208,8 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
       cell_problem_solution += cell_problem_residual;
 
       constexpr int pol_order = (2* polynomialOrder) + 2;
-      relative_newton_error = l2error.norm2<pol_order>(cell_problem_residual, zero_func);
-      const RangeType norm_cell_solution = l2error.norm2<pol_order>(cell_problem_solution,
-                                                                                        zero_func);
+      relative_newton_error = l2norm.distance(cell_problem_residual, zero_func);
+      const RangeType norm_cell_solution = l2norm.distance(cell_problem_solution, zero_func);
       relative_newton_error = relative_newton_error / norm_cell_solution;
       cell_problem_residual.clear();
       if (iteration_step > 10)

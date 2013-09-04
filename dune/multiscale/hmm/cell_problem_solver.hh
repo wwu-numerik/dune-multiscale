@@ -13,7 +13,7 @@
 
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/solver/oemsolver.hh>
-#include <dune/fem/misc/l2error.hh>
+#include <dune/fem/misc/lpnorm.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
