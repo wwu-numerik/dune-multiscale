@@ -1122,7 +1122,15 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarse_index, cons
   DataOutputType localsol_dataoutput(
     hostDiscreteFunctionSpace_.gridPart().grid(), local_solution_series, outputparam);
   localsol_dataoutput.writeData( 1.0 /*dummy*/, (boost::format("local-problem-solution-%d") % which).str() );
+}
 
+void MsFEMLocalProblemSolver::output_local_solution(const int coarseIndex, const int which,
+        const SubDiscreteFunctionType& solution) const
+{
+  HostDiscreteFunctionType hostSolution( "Local Solution", hostDiscreteFunctionSpace_);
+  hostSolution.clear();
+  subgrid_to_hostrid_function(solution, hostSolution);
+  output_local_solution(coarseIndex, which, hostSolution);
 }
 
 void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
