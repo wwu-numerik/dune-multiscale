@@ -4,6 +4,7 @@
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/la/container/pattern.hh>
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/fem/operator/common/stencil.hh>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -39,8 +40,8 @@ std::vector<int> mapEach(const Dune::Fem::DiscreteFunctionSpaceInterface<Functio
 }
 
 template<class DomainSpace, class RangeSpace>
-class ClemementPattern : public DSL::SparsityPatternDefault {
-  typedef DSL::SparsityPatternDefault BaseType;
+class ClemementPattern : public Dune::Fem::Stencil<DomainSpace,RangeSpace> {
+  typedef Dune::Fem::Stencil<DomainSpace,RangeSpace> BaseType;
   typedef typename DomainSpace::EntityType::EntityPointer DomainEntityPointerType;
   typedef typename RangeSpace::EntityType::EntityPointer RangeEntityPointerType;
   typedef std::unordered_set<RangeEntityPointerType,
@@ -58,13 +59,12 @@ public:
   ClemementPattern(const DomainSpace& domainSpace,
                    const RangeSpace& rangeSpace,
                    const MacroMicroGridSpecifier& specifier)
-      : BaseType(domainSpace.size())
+      : BaseType(domainSpace, rangeSpace)
       , support_map_(domainSpace.gridPart().grid().size(0),
                      typename SupportMapType::hasher(domainSpace.indexSet()))
   {
       for (const auto& domain_entity : domainSpace)
       {
-          const auto globalI_vec = mapEach(domainSpace, domain_entity);
           FineEntitySetType range_set(specifier.getLevelDifference()*3,
                                       typename FineEntitySetType::hasher(rangeSpace.indexSet()));
           const auto father_of_loc_grid_ent =
@@ -73,15 +73,10 @@ public:
                                            specifier.getLevelDifference());
           for(const auto& range_entity : rangeSpace)
           {
-              if (!Stuff::Grid::entities_identical(range_entity, *father_of_loc_grid_ent))
-                  continue;
-              range_set.insert(RangeEntityPointerType(range_entity));
-              for (const auto i : globalI_vec) {
-                  const auto globalJ_vec = mapEach(rangeSpace,range_entity);
-                  auto& columns = BaseType::inner(i);
-                  for (const auto j : globalJ_vec) {
-                      columns.insert(j);
-                  }
+              if (Stuff::Grid::entities_identical(range_entity, *father_of_loc_grid_ent))
+              {
+                range_set.insert(RangeEntityPointerType(range_entity));
+                BaseType::fill(domain_entity, range_entity);
               }
           }
           support_map_.insert(std::make_pair(DomainEntityPointerType(domain_entity), range_set));

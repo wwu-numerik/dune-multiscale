@@ -97,9 +97,7 @@ private:
   typedef Dune::Fem::SparseRowMatrixTraits < typename SubGridList::SubGridDiscreteFunctionSpaceType,
                                        typename SubGridList::HostDiscreteFunctionSpaceType > WeightedClementMatrixObjectTraits;
 
-  typedef typename WeightedClementMatrixObjectTraits
-    :: MatrixObject< Dune::LagrangeMatrixTraits< WeightedClementMatrixObjectTraits > >
-    :: MatrixObjectType LinearOperatorType;
+  typedef typename WeightedClementMatrixObjectTraits::MatrixObjectType LinearOperatorType;
 
   //! get important types from the MatrixObject
   typedef typename LinearOperatorType :: LocalMatrixType LocalMatrixType;
