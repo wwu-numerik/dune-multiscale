@@ -77,33 +77,11 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
   }
 
   // boundary treatment
-  if (boundary_treatment)
-  {
-    const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-    for (const auto& entity : discreteFunctionSpace_)
-    {
-      if ( !entity.hasBoundaryIntersections() )
-        continue;
-
-      auto local_matrix = global_matrix.localMatrix(entity, entity);
-      const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-      const IntersectionIterator iend = gridPart.iend(entity);
-      for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit)
-      {
-        const Intersection& intersection = *iit;
-        if ( !intersection.boundary() )
-          continue;
-
-        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
-        if ( intersection.boundary() && (intersection.boundaryId() == 2) )
-          continue;
-      
-        const int face = intersection.indexInInside();
-        const FaceDofIterator fdend = lagrangePointSet.template endSubEntity< 1 >(face);
-        for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity< 1 >(face); fdit != fdend; ++fdit)
-          local_matrix.unitRow(*fdit);
-      }
-    }
+  if (boundary_treatment) {
+    // set unit rows for dirichlet dofs
+    const auto boundary = Problem::getModelData()->boundaryInfo();
+    Dune::DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
+    constraints.applyToOperator(global_matrix);
   }
 } // assemble_matrix
 
