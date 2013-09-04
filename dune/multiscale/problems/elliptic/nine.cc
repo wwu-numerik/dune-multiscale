@@ -30,6 +30,17 @@ bool ModelProblemData::problemAllowsStochastics() const {
   // by 'constants.hh' - see model problems 4 to 7 for examples )
 }
 
+std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
+  auto defaultBoundaryIds = Dune::Stuff::GridboundaryIdBased<View>::defaultSettings();
+  return std::unique_ptr<BoundaryInfoType>(Dune::Stuff::GridboundaryIdBased<View>::create(defaultBoundaryIds));
+}
+
+std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
+  auto defaultBoundaryIds = Dune::Stuff::GridboundaryIdBased<SubView>::defaultSettings();
+  return std::unique_ptr<SubBoundaryInfoType>(Dune::Stuff::GridboundaryIdBased<SubView>::create(defaultBoundaryIds));
+}
+
+
 FirstSource::FirstSource(){}
 
 // evaluate f, i.e. return y=f(x) for a given x
