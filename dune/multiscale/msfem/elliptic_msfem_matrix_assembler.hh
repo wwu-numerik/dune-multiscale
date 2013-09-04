@@ -233,6 +233,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     }
   }
 
+  // set dirichlet-dofs to zero
   const auto boundary = Problem::getModelData()->boundaryInfo();
   Dune::DirichletConstraints<CoarseDiscreteFunctionSpace> constraints(*boundary, coarseDiscreteFunctionSpace_);
   constraints.applyToOperator(global_matrix);
