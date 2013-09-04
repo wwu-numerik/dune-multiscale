@@ -46,6 +46,9 @@ struct ModelProblemData
 
   //! does the problem allow a stochastic perturbation of the coefficients?
   bool problemAllowsStochastics() const;
+
+  std::unique_ptr<BoundaryInfoType> boundaryInfo() const;
+  std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const;
 };
 
 //! ----------------- Definition of ' f ' ------------------------
