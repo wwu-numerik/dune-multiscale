@@ -113,7 +113,7 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias")
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
-add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DENABLE_PETSC=1)
+add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DENABLE_PETSC=1 -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1)
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_lodm STATIC ${LODM_SOURCES})
