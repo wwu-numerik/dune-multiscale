@@ -65,25 +65,18 @@ void setDirichletValues(DirichletBC &dirichlet_func, DiscreteFunctionType& func)
   using namespace Dune::Stuff;
   const auto& discreteFunctionSpace = func.space();
   static const unsigned int faceCodim = 1;
-  for (const auto& entity : discreteFunctionSpace)
-  {
-    for (const auto& intersection
-         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
-    {
-      if ( !intersection.boundary() )
-        continue;
-      if ( intersection.boundary() && (intersection.boundaryId() != 1) )
-        continue;
-
-      auto funcLocal = func.localFunction(entity);
-      const auto face = intersection.indexInInside();
-      for(auto loc_point
-          : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face))
-      {
-        const auto& global_point = entity.geometry().global( discreteFunctionSpace.lagrangePointSet(entity).point( loc_point ) );
-        CommonTraits::RangeType dirichlet_value(0.0);
-        dirichlet_func.evaluate( global_point, dirichlet_value);
-        funcLocal[loc_point] = dirichlet_value;
+  for (const auto& entity : discreteFunctionSpace) {
+    for (const auto& intersection : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
+      if (Dune::Multiscale::Problem::isDirichletBoundary(intersection)) {
+        auto funcLocal = func.localFunction(entity);
+        const auto face = intersection.indexInInside();
+        for(auto loc_point : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
+          const auto& global_point
+                  = entity.geometry().global( discreteFunctionSpace.lagrangePointSet(entity).point( loc_point ) );
+          CommonTraits::RangeType dirichlet_value(0.0);
+          dirichlet_func.evaluate( global_point, dirichlet_value);
+          funcLocal[loc_point] = dirichlet_value;
+        }
       }
     }
   }
