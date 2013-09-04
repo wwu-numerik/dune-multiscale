@@ -419,7 +419,7 @@ public:
                   corrector_phi_x += gradient_Phi_vec[coarseBF][0][0] * allLocalSolutionEvaluations[0][localQuadraturePoint];
                   corrector_phi_x += gradient_Phi_vec[coarseBF][0][1] * allLocalSolutionEvaluations[1][localQuadraturePoint];
                 } else {
-                  assert(localSolutions.size()==numLocalBaseFunctions);
+//                  assert(localSolutions.size()==numLocalBaseFunctions);
                   // local corrector for coarse base func
                   corrector_phi_x = allLocalSolutionEvaluations[coarseBF][localQuadraturePoint];
                 }
