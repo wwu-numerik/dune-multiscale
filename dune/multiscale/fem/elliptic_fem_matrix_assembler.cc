@@ -106,6 +106,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_matrix
 
 
@@ -204,6 +205,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_matrix
 
 
@@ -319,6 +321,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_jaco
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_jacobian_matrix
 
 
@@ -445,6 +448,7 @@ const DiscreteFunction& dirichlet_extension,
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_jacobian_matrix
 
 
