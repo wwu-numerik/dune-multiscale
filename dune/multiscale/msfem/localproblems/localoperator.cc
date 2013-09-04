@@ -131,6 +131,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_matrix
 
 
@@ -221,6 +222,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_matrix
 
 

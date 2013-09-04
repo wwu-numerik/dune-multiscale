@@ -201,7 +201,7 @@ SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex)
 {
   auto found = subGridList_.find(coarseCellIndex);
   assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!");
-
+  assert(found->second);
   return *(found->second);
 } // getSubGrid
 
@@ -214,7 +214,7 @@ const SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex) con
 {
   auto found = subGridList_.find(coarseCellIndex);
   assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!");
-
+  assert(found->second);
   return *(found->second);
 } // getSubGrid
 
