@@ -243,11 +243,17 @@ public:
 
   void output_local_solution(const int coarse_index, const int which,
                              const HostDiscreteFunctionType& host_local_solution) const;
+
+  void output_local_solution(const int coarseIndex, const int which,
+                             const SubDiscreteFunctionType& solution) const;
+
+
   //! method for solving and saving the solutions of the local msfem problems
   //! for the whole set of macro-entities and for every unit vector e_i
   //! ---- method: solve and save the whole set of local msfem problems -----
   //! Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
   void assemble_all(bool /*silent*/ = true /* state information on subgrids */);
+
 }; // end class
 
 } //namespace MsFEM {
