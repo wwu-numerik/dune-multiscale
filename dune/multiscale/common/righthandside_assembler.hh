@@ -35,11 +35,11 @@ class RightHandSideAssembler
 private:
   typedef DiscreteFunctionImp DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
-                              DiscreteFunctionSpaceType;
+    DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionType::LocalFunctionType
-                              LocalFunctionType;
+    LocalFunctionType;
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
-                                                              BasisFunctionSetType;
+    BasisFunctionSetType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
   typedef typename DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
   typedef DomainFieldType TimeType;
@@ -57,22 +57,6 @@ private:
   enum { dimension = GridType::dimension };
   enum {polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder};
 
-public:
-  static void printRHS(const DiscreteFunctionType& rhs) {
-    for (auto entity : rhs.space())
-    {
-      const LocalFunctionType elementOfRHS = rhs.localFunction(entity);
-      const int numDofs = elementOfRHS.numDofs();
-      for (int i = 0; i < numDofs; ++i)
-      {
-        DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
-      }
-    }
-  }  // end method
-
-  //! --------------- The rhs-assemble()-methods for linear elliptic problems -----------------
-
-private:
   // need a virtual base to work around local classes not being allowed in templated scopes
   struct FunctorBase {
     virtual RangeType operator()(const DomainType& global_quad_point, const JacobianRangeType& gradientPhi) const = 0;
@@ -777,7 +761,7 @@ public:
     typedef typename PeriodicDiscreteFunctionType::LocalFunctionType
       PeriodicLocalFunctionType;
 
-    typedef HMM::CellProblemSolver CellProblemSolverType;
+    typedef Multiscale::HMM::CellProblemSolver CellProblemSolverType;
     const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
     const std::string cell_solution_location_discFunc ="/cell_problems/_cellSolutions_discFunc";
 

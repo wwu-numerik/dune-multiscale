@@ -62,8 +62,8 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
       typename HMMTraits::PeriodicDiscreteFunctionType corrector_of_base_func("Corrector of macro base function",
                                                           periodicDiscreteFunctionSpace);
       corrector_of_base_func.clear();
-      typename CommonTraits::DiscreteFunctionType::LocalFunctionType local_hmm_solution = hmm_solution.localFunction(entity);
-      const typename CommonTraits::BasisFunctionSetType& baseSet = discreteFunctionSpace.basisFunctionSet(entity);
+      const auto local_hmm_solution = hmm_solution.localFunction(entity);
+      const auto& baseSet = discreteFunctionSpace.basisFunctionSet(entity);
       const unsigned int numMacroBaseFunctions = baseSet.size();
       std::vector<int> cell_problem_id(numMacroBaseFunctions);
       for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)

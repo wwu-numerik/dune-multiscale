@@ -186,28 +186,6 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(
   }
 } // assemble_jacobian_matrix
 
-void DiscreteCellProblemOperator::printCellRHS(const DiscreteFunction& rhs) const
-{
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
-  typedef typename DiscreteFunction::LocalFunctionType         LocalFunctionType;
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace
-    = rhs.space();
-
-  const IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-  {
-    const LocalFunctionType elementOfRHS = rhs.localFunction(*it);
-
-    const int numDofs = elementOfRHS.numDofs();
-    for (int i = 0; i < numDofs; ++i)
-    {
-      std::cout << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
-    }
-  }
-}  // end method
-
 
 double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const
 {

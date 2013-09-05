@@ -27,6 +27,7 @@
 
 #define DUNE_COMMON_FIELDVECTOR_SIZE_IS_METHOD 1
 
+#define HAVE_PETSC ENABLE_PETSC
 #ifdef NDEBUG
   #define DNDEBUG
 #endif

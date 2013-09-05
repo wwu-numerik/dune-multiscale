@@ -42,6 +42,7 @@ struct ModelProblemData
 
   //! does the problem allow a stochastic perturbation of the coefficients?
   bool problemAllowsStochastics() const;
+  bool symmetricDiffusion() const { return false; }
 };
 
 //! ----------------- Definition of ' f ' ------------------------

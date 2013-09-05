@@ -7,39 +7,37 @@
 
 #include <config.h>
 #include <vector>
+
 #include <dune/common/fmatrix.hh>
+
+#include <dune/geometry/quadraturerules.hh>
+
+#include <dune/multiscale/tools/subgrid_io.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
+
+#include <dune/subgrid/subgrid.hh>
 
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
-#include <dune/geometry/quadraturerules.hh>
-
-// FLUX_SOLVER_VERBOSE: 0 = false, 1 = true
-#define FLUX_SOLVER_VERBOSE false
-
-// VTK output for conservative flux solution
-// #define VTK_OUTPUT
-
-// dune-subgrid include:
-#include <dune/multiscale/tools/subgrid_io.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/subgrid/subgrid.hh>
-
-// dune-fem includes:
 #include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/operator/common/petsclinearoperator.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
-#include <dune/stuff/common/math.hh>
+#include <dune/fem/operator/common/stencil.hh>
 
-#include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/stuff/fem/matrix_object.hh>
+#include <dune/stuff/common/math.hh>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
+static const bool FLUX_SOLVER_VERBOSE = false;
 
 /** \brief define output parameters for local problems
  *  appends "local_problems" for path
@@ -155,8 +153,6 @@ public:
     // rhs local msfem problem:
     SubGridDiscreteFunction& rhs_flux_problem) const;
 
-  void printLocalRHS(SubGridDiscreteFunction& rhs) const;
-
   double normRHS(SubGridDiscreteFunction& rhs) const;
 
 private:
@@ -185,7 +181,7 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
   ::assemble_matrix(const int sub_grid_id, MatrixType& global_matrix) const {
   typedef typename MatrixType::LocalMatrixType LocalMatrix;
 
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   // local grid basis functions:
@@ -281,31 +277,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     }
   }
 } // assemble_matrix
-
-template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
-          class MacroMicroGridSpecifierImp >
-void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
-                               MacroMicroGridSpecifierImp >
-  ::printLocalRHS(SubGridDiscreteFunctionImp& rhs) const {
-  typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::IteratorType               IteratorType;
-  typedef typename DiscreteFunctionImp::LocalFunctionType                LocalFunctionType;
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace
-    = rhs.space();
-
-  const IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-  {
-    LocalFunctionType elementOfRHS = rhs.localFunction(*it);
-
-    const int numDofs = elementOfRHS.numDofs();
-    for (int i = 0; i < numDofs; ++i)
-    {
-      DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
-    }
-  }
-}  // end method
 
 template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp >
@@ -531,26 +502,11 @@ private:
   //! polynomial order of base functions
   enum { polynomialOrder = SubGridDiscreteFunctionSpaceType::polynomialOrder };
 
-  // flux problem matrix traits
-  struct FluxProbMatrixTraits
-  {
-    typedef SubGridDiscreteFunctionSpaceType                          RowSpaceType;
-    typedef SubGridDiscreteFunctionSpaceType                          ColumnSpaceType;
-    typedef LagrangeMatrixSetup< false >                              StencilType;
-    typedef Fem::ParallelScalarProduct< SubGridDiscreteFunctionSpaceType > ParallelScalarProductType;
+  typedef Dune::Fem::PetscLinearOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType > FluxProbFEMMatrix;
+  typedef Dune::Fem::PetscInverseOperator< SubGridDiscreteFunctionType,
+                                           FluxProbFEMMatrix >
+    InverseFluxProbFEMMatrix;
 
-    template< class M >
-    struct Adapter
-    {
-      typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-    };
-  };
-
-  typedef Fem::SparseRowMatrixOperator< SubGridDiscreteFunctionType, SubGridDiscreteFunctionType,
-                                   FluxProbMatrixTraits > FluxProbFEMMatrix;
-
-  // OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp /*CGInverseOp*/
-  typedef Fem::CGInverseOperator< SubGridDiscreteFunctionType, FluxProbFEMMatrix > InverseFluxProbFEMMatrix;
 
 private:
   const DiffusionOperatorType& diffusion_;
@@ -569,18 +525,6 @@ public:
       , specifier_(specifier)
       , filename_template_(boost::format("_conservativeFlux_e_%d_sg_%d"))
   {}
-
-  template< class Stream >
-  void oneLinePrint(Stream& stream, const SubGridDiscreteFunctionType& func) const {
-    typedef typename SubGridDiscreteFunctionType::ConstDofIteratorType
-    DofIteratorType;
-    DofIteratorType it = func.dbegin();
-    stream << "\n" << func.name() << ": [ ";
-    for ( ; it != func.dend(); ++it)
-      stream << std::setw(5) << *it << "  ";
-
-    stream << " ] " << std::endl;
-  } // oneLinePrint
 
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
@@ -621,8 +565,6 @@ public:
     // assemble right hand side of algebraic local msfem problem
     cf_problem_operator.assemble_RHS(e_i, local_corrector_e_i, sub_grid_id, rhs);
 
-    // oneLinePrint( DSC_LOG_DEBUG, rhs );
-
     const double norm_rhs = cf_problem_operator.normRHS(rhs);
 
     if ( !( rhs.dofsValid() ) )
@@ -635,7 +577,9 @@ public:
       conservative_flux.clear();
       DSC_LOG_INFO << "Local Flux Problem with solution zero." << std::endl;
     } else {
-      InverseFluxProbFEMMatrix flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000, FLUX_SOLVER_VERBOSE);
+      InverseFluxProbFEMMatrix flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000,
+                                                  FLUX_SOLVER_VERBOSE,
+                                                  "cg", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       flux_prob_biCGStab(rhs, conservative_flux);
     }
 

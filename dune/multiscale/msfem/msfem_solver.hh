@@ -15,10 +15,11 @@
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
+#include <dune/fem/solver/petscsolver.hh>
+#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
-
 
 namespace Dune {
 namespace Multiscale {
@@ -29,13 +30,12 @@ class Elliptic_MsFEM_Solver
 {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-  typedef DiscreteFunctionType DiscreteFunction;
 
-  typedef typename DiscreteFunction::FunctionSpaceType FunctionSpace;
+  typedef typename DiscreteFunctionType::FunctionSpaceType FunctionSpace;
 
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
+  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunction;
 
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
 
@@ -71,36 +71,10 @@ private:
   typedef MsFEMTraits::SubGridDiscreteFunctionType SubgridDiscreteFunctionType;
   //!-----------------------------------------------------------------------------------------
 
-  //! --------------------- the standard matrix traits -------------------------------------
-  struct MatrixTraits
-  {
-    typedef SubgridDiscreteFunctionSpaceType                          RowSpaceType;
-    typedef SubgridDiscreteFunctionSpaceType                          ColumnSpaceType;
-    typedef LagrangeMatrixSetup< false >                          StencilType;
-    typedef Fem::ParallelScalarProduct< SubgridDiscreteFunctionSpaceType > ParallelScalarProductType;
-
-    template< class M >
-    struct Adapter
-    {
-      typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-    };
-  };
-
-  //! --------------------------------------------------------------------------------------
-
-  //! --------------------- type of fem stiffness matrix -----------------------------------
-
-  typedef Fem::SparseRowMatrixOperator< DiscreteFunction, DiscreteFunction, MatrixTraits > MsFEMMatrix;
-
-  //! --------------------------------------------------------------------------------------
-
-  //! --------------- solver for the linear system of equations ----------------------------
-
-  // use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
-  // ones. GMRES seems to be more stable, but is extremely slow!
-  typedef /*OEMBICGSQOp*//*CGInverseOp*/ Fem::OEMBICGSTABOp< DiscreteFunction, MsFEMMatrix > InverseMsFEMMatrix;
-
-  //! --------------------------------------------------------------------------------------
+  typedef Dune::Fem::PetscLinearOperator< DiscreteFunctionType, DiscreteFunctionType > MsFEMMatrixType;
+  typedef Dune::Fem::PetscInverseOperator< DiscreteFunctionType,
+                                           MsFEMMatrixType >
+    InverseOperatorType;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
@@ -111,22 +85,22 @@ public:
 private:
   // create a hostgrid function from a subgridfunction (projection for global continuity)
   // Note: the maximum gride levels for both underlying grids must be the same
-  void subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func, DiscreteFunction& host_func) const;
+  void subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func, DiscreteFunctionType& host_func) const;
 
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
   // ------------------------------------------------------------------------------------
   void projectCoarseToFineScale(MacroMicroGridSpecifier &specifier,
-                                   const DiscreteFunction& coarse_msfem_solution,
-                                   DiscreteFunction& coarse_scale_part ) const;
+                                   const DiscreteFunctionType& coarse_msfem_solution,
+                                   DiscreteFunctionType& coarse_scale_part ) const;
 
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   // ------------------------------------------------------------------------------------
   void identify_fine_scale_part(MacroMicroGridSpecifier &specifier,
                                                           MsFEMTraits::SubGridListType& subgrid_list,
-                                                          const DiscreteFunction& coarse_msfem_solution,
-                                                          DiscreteFunction& fine_scale_part ) const;
+                                                          const DiscreteFunctionType& coarse_msfem_solution,
+                                                          DiscreteFunctionType& fine_scale_part ) const;
 
 public:
 
@@ -144,9 +118,9 @@ public:
                             // n(T)-layers.
                             MacroMicroGridSpecifier &specifier,
                             MsFEMTraits::SubGridListType& subgrid_list,
-                            DiscreteFunction& coarse_scale_part,
-                            DiscreteFunction& fine_scale_part,
-                            DiscreteFunction& solution) const;
+                            DiscreteFunctionType& coarse_scale_part,
+                            DiscreteFunctionType& fine_scale_part,
+                            DiscreteFunctionType& solution) const;
 };
 
 } //namespace MsFEM {
