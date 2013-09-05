@@ -225,26 +225,6 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   global_matrix.communicate();
 } // assemble_matrix
 
-
-void LocalProblemOperator::printLocalRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace
-    = rhs.space();
-
-  const EntityIteratorType endit = discreteFunctionSpace.end();
-  for (EntityIteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-  {
-    LocalFunctionType elementOfRHS = rhs.localFunction(*it);
-
-    const int numDofs = elementOfRHS.numDofs();
-    for (int i = 0; i < numDofs; ++i)
-    {
-      DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
-    }
-  }
-}  // end method
-
-
 void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpaceType& host_space,
                                                            LocalProblemOperator::DiscreteFunction& rhs ) const {
 

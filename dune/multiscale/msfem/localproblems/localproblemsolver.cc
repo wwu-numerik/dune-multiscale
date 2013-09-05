@@ -309,8 +309,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     //! It would be better to implement a mapping to a localized coarse space, since
     //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence).
 
-    //clement_interpolation_op.print();
-
     // saddle point problem solver:
     typedef UzawaInverseOp< SubDiscreteFunctionType,
     HostDiscreteFunctionType,
@@ -333,12 +331,9 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
     locprob_fem_biCGStab->apply(local_problem_rhs, local_problem_solution);
   }
 
-
   if ( !( local_problem_solution.dofsValid() ) ) {
     DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
   }
-
-  // oneLinePrint( DSC_LOG_DEBUG, local_problem_solution );
 } // solvelocalproblem
 
 // assemble the two relevant system matrices: one for the corrector problem without contraints
@@ -567,8 +562,6 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
           lm_system_matrix[i][j] += quad_weight * clement_weight[i] * value_b[j] * value_coarse_basis_func[i];
     }
   } // lagrange multplier problem system matrix assembled
-
-  //print_matrix( lm_system_matrix );
 }
 
 
@@ -615,11 +608,7 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(JacobianRangeType& e,
                                        corrector_problem_rhs );
   
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , corrector_problem_rhs );
-
-  //oneLinePrint( DSC_LOG_DEBUG, corrector_problem_rhs );
- 
   locprob_inverse_system_matrix->apply( corrector_problem_rhs , local_corrector );
-
   // ----------------------------------------------------------------------------------------------------
 
 
@@ -677,8 +666,6 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(JacobianRangeType& e,
       }
     }
   } // lagrange multplier problem system matrix assembled
-
-  //print_vector( lm_rhs );
   
   MatrixOperatorType lm_matrix_op( lm_system_matrix );
   
@@ -779,9 +766,6 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
                                        corrector_problem_rhs );
 
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , corrector_problem_rhs );
-
-  //oneLinePrint( DSC_LOG_DEBUG, corrector_problem_rhs );
- 
   locprob_inverse_system_matrix->apply( corrector_problem_rhs , local_corrector );
 
   // ----------------------------------------------------------------------------------------------------
@@ -841,8 +825,6 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
       }
     }
   } // lagrange multplier problem system matrix assembled
-
-  //print_vector( lm_rhs );
   
   MatrixOperatorType lm_matrix_op( lm_system_matrix );
   
@@ -943,11 +925,7 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
                                        corrector_problem_rhs );
 
   local_problem_op.set_zero_boundary_condition_RHS( hostDiscreteFunctionSpace_ , corrector_problem_rhs );
-
-  //oneLinePrint( DSC_LOG_DEBUG, corrector_problem_rhs );
- 
   locprob_inverse_system_matrix->apply( corrector_problem_rhs , local_corrector );
-
   // ----------------------------------------------------------------------------------------------------
 
 
@@ -956,7 +934,6 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
   VectorType lm_rhs( number_of_relevant_coarse_nodes_for_subgrid );
   for (size_t i = 0; i != number_of_relevant_coarse_nodes_for_subgrid; ++i) //columns
   { lm_rhs[i] = 0.0; }
-
 
   for (const auto& subgrid_entity : subDiscreteFunctionSpace)
   {
@@ -1006,8 +983,6 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
     }
   } // lagrange multplier problem system matrix assembled
 
-  //print_vector( lm_rhs );
-  
   MatrixOperatorType lm_matrix_op( lm_system_matrix );
   
   PreconditionerType lm_preconditioner( lm_system_matrix, 100, 0.9 );

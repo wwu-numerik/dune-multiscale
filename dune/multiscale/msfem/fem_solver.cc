@@ -114,8 +114,6 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     // assemble right hand side
     rhsassembler.assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, fem_rhs);
 
-    // oneLinePrint( DSC_LOG_DEBUG , fem_rhs );
-
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
     typedef typename DiscreteFunctionSpace::IteratorType EntityIterator;
@@ -275,10 +273,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
 
     DSC_LOG_INFO << "Nonlinear Finite Element Problem solved with Newton Method in " << assembleTimer.elapsed() << "s." << std::endl
                  << std::endl << std::endl;
-
   }// end 'problem.linear <-> else'
-
-    // oneLinePrint( DSC_LOG_DEBUG , solution );
 } // solve_dirichlet_zero
 
 
@@ -337,8 +332,6 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
     
     // assemble right hand side
     rhsassembler.assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, diffusion_op, dirichlet_extension, neumann_bc, fem_rhs);
-
-    // oneLinePrint( DSC_LOG_DEBUG , fem_rhs );
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
@@ -501,8 +494,6 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
                  << std::endl << std::endl;
 
   }// end 'problem.linear <-> else'
-
-    // oneLinePrint( DSC_LOG_DEBUG , solution );
 } // end solve()
 
 
