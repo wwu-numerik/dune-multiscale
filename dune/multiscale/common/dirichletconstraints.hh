@@ -5,6 +5,7 @@
 #include <dune/fem/function/common/scalarproducts.hh>
 
 namespace Dune { 
+namespace Multiscale {
 
 template < class DomainSpace, class RangeSpace = DomainSpace >
 class DirichletConstraints 
@@ -425,5 +426,7 @@ protected:
   } 
 };
 
-} // end namespace Dune 
+
+} // end namespace Multiscale
+} // end namespace Dune
 #endif
