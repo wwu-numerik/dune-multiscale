@@ -32,25 +32,23 @@ class RightHandSideAssembler
 private:
   typedef DiscreteFunctionImp DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
-    DiscreteFunctionSpaceType;
+                              DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionType::LocalFunctionType
-    LocalFunctionType;
+                              LocalFunctionType;
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
-    BasisFunctionSetType;
+                                                              BasisFunctionSetType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
   typedef typename DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
   typedef DomainFieldType TimeType;
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   typedef typename GridPartType::GridType GridType;
-  typedef typename DiscreteFunctionSpaceType::JacobianRangeType
-    JacobianRangeType;
-  typedef typename DiscreteFunctionSpaceType::DomainType
-    DomainType;
+  typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename DiscreteFunctionSpaceType::DomainType DomainType;
   typedef typename GridType::template Codim< 0 >::Entity EntityType;
   typedef typename EntityType::Geometry GeometryType;
   typedef Fem::CachingQuadrature< GridPartType, 0 > Quadrature;
-  typedef Fem::CachingQuadrature< GridPartType, 1 > FaceQuadrature;
-  
+  typedef Fem::CachingQuadrature< GridPartType, 1 > FaceQuadratureType;
+
   enum { dimension = GridType::dimension };
 
 public:
@@ -232,8 +230,7 @@ public:
       
       const auto& lagrangePointSet = rhsVector.space().lagrangePointSet( entity );
 
-      for (const auto& intersection
-         : Dune::Stuff::Common::intersectionRange(rhsVector.space().gridPart(), entity))
+      for (const auto& intersection : Dune::Stuff::Common::intersectionRange(rhsVector.space().gridPart(), entity))
       {
         if ( !intersection.boundary() )
           continue;
@@ -241,40 +238,37 @@ public:
         if ( intersection.boundary() && (intersection.boundaryId() != 2) )
           continue;
 
-        const auto face = intersection.indexInInside();
-      
-        const FaceQuadrature faceQuadrature( rhsVector.space().gridPart(),
-                                             intersection, polOrd, FaceQuadrature::INSIDE );
-        const int numFaceQuadraturePoints = faceQuadrature.nop();
+          const FaceQuadratureType faceQuadrature( rhsVector.space().gridPart(),
+                  intersection, polOrd, FaceQuadratureType::INSIDE );
+          const int numFaceQuadraturePoints = faceQuadrature.nop();
 
-        enum { faceCodim = 1 };
-        for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
-        {
-          baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi_x );
-          baseSet.jacobianAll( faceQuadrature[faceQuadraturePoint], grad_phi_x );
-
-          const auto local_point_entity = faceQuadrature.point( faceQuadraturePoint ); 
-          const auto global_point = geometry.global( local_point_entity ); 
-          const auto local_point_face = intersection.geometry().local( global_point );
-
-          RangeType neumann_value( 0.0 );
-          neumann_bc.evaluate( global_point, neumann_value );
-
-          const double face_weight = intersection.geometry().integrationElement( local_point_face )
-                          * faceQuadrature.weight( faceQuadraturePoint );
-
-          auto faceIterator = lagrangePointSet.template beginSubEntity< faceCodim >( face );
-          const auto faceEndIterator = lagrangePointSet.template endSubEntity< faceCodim >( face );
-
-          for ( ; faceIterator != faceEndIterator; ++faceIterator)
+          enum { faceCodim = 1 };
+          for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
           {
-             elementOfRHS[ *faceIterator ] += neumann_value * face_weight * phi_x[ *faceIterator ];
+            baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi_x );
+            baseSet.jacobianAll( faceQuadrature[faceQuadraturePoint], grad_phi_x );
+
+            const auto local_point_entity = faceQuadrature.point( faceQuadraturePoint );
+            const auto global_point = geometry.global( local_point_entity );
+            const auto local_point_face = intersection.geometry().local( global_point );
+
+            RangeType neumann_value( 0.0 );
+            neumann_bc.evaluate( global_point, neumann_value );
+
+            const double face_weight = intersection.geometry().integrationElement( local_point_face )
+                    * faceQuadrature.weight( faceQuadraturePoint );
+
+            auto faceIterator = lagrangePointSet.template beginSubEntity< faceCodim >( face );
+            const auto faceEndIterator = lagrangePointSet.template endSubEntity< faceCodim >( face );
+
+            for ( ; faceIterator != faceEndIterator; ++faceIterator)
+            {
+              elementOfRHS[ *faceIterator ] += neumann_value * face_weight * phi_x[ *faceIterator ];
+            }
+
           }
-
         }
-
       }
-
 
       const int numQuadraturePoints = quadrature.nop();
       // the return values:
@@ -318,9 +312,9 @@ public:
    **/
   template< int polOrd, class FirstSourceType, class MacroMicroGridSpecifierType, class SubGridListType >
   static void assemble_for_MsFEM_symmetric(const FirstSourceType& f,
-          MacroMicroGridSpecifierType& specifier,
-          SubGridListType& subgrid_list,
-          DiscreteFunctionType& rhsVector) {
+                                           MacroMicroGridSpecifierType& specifier,
+                                           SubGridListType& subgrid_list,
+                                           DiscreteFunctionType& rhsVector) {
     // set rhsVector to zero:
     rhsVector.clear();
     const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
@@ -606,8 +600,8 @@ public:
 
         const auto face = intersection.indexInInside();
       
-        const FaceQuadrature faceQuadrature( rhsVector.space().gridPart(),
-                                             intersection, polOrd, FaceQuadrature::INSIDE );
+        const FaceQuadratureType faceQuadrature( rhsVector.space().gridPart(),
+                                             intersection, polOrd, FaceQuadratureType::INSIDE );
         const int numFaceQuadraturePoints = faceQuadrature.nop();
 
         enum { faceCodim = 1 };
@@ -708,7 +702,7 @@ public:
     typedef typename PeriodicDiscreteFunctionType::LocalFunctionType
       PeriodicLocalFunctionType;
 
-    typedef Multiscale::HMM::CellProblemSolver CellProblemSolverType;
+    typedef HMM::CellProblemSolver CellProblemSolverType;
     const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
     const std::string cell_solution_location_discFunc ="/cell_problems/_cellSolutions_discFunc";
 
