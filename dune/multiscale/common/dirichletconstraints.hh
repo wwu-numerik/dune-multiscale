@@ -2,7 +2,13 @@
 #define DUNE_DIRICHLETCONSTRAINTS_HH
 
 #include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
+
 #include <dune/fem/function/common/scalarproducts.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/problems/selector.hh>
+
 
 namespace Dune { 
 namespace Multiscale {
@@ -470,6 +476,32 @@ protected:
     return *slaveDofs_;
   } 
 };
+
+/** Get the constraints for a given discrete function space.
+*
+* @param space The discrete function space.
+*
+* @attention As the dirichlet constraints are stored in a static variable in this function, probably something
+*            bad will happen if you run this function with spaces of the same type living on different grid(part)
+ *           instances. Therefore, this method should only be used for spaces on the coarse grid!
+*/
+DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
+getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space);
+
+/** Get the constraints for a given discrete function space.
+*
+* @param space The discrete function space.
+*
+* @attention As the dirichlet constraints are stored in a static variable in this function, probably something
+*            bad will happen if you run this function with spaces of the same type living on different grid(part)
+ *           instances. Therefore, this method should only be used for spaces on the fine grid!
+*/
+DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
+getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space);
+
+
+void projectDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
+                            CommonTraits::DiscreteFunctionType& function);
 
 
 } // end namespace Multiscale
