@@ -149,8 +149,6 @@ public:
   // given a discrete function (representing a right hands side of a local problem,
   // defined on a subgrid) set the boundary dofs to zero
   void set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpaceType& host_space, DiscreteFunction& rhs) const;
-  
-  void printLocalRHS(const DiscreteFunction& rhs) const;
 
   double normRHS(const DiscreteFunction& rhs) const;
 

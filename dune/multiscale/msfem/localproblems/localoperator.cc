@@ -9,6 +9,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/stuff/fem/matrix_object.hh>
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/problems/base.hh>
@@ -79,7 +80,7 @@ bool LocalProblemOperator::point_is_in_element( const DomainType& corner_0,
 void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix) const
 // x_T is the barycenter of the macro grid element T
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   // local grid basis functions:
@@ -131,6 +132,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_matrix
 
 
@@ -139,7 +141,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
                                            const SubGridList::CoarseNodeVectorType& coarse_node_vector ) const
 // x_T is the barycenter of the macro grid element T
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   // local grid basis functions:
@@ -221,27 +223,8 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_matrix
-
-
-void LocalProblemOperator::printLocalRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace
-    = rhs.space();
-
-  const EntityIteratorType endit = discreteFunctionSpace.end();
-  for (EntityIteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-  {
-    LocalFunctionType elementOfRHS = rhs.localFunction(*it);
-
-    const int numDofs = elementOfRHS.numDofs();
-    for (int i = 0; i < numDofs; ++i)
-    {
-      DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
-    }
-  }
-}  // end method
-
 
 void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpaceType& host_space,
                                                            LocalProblemOperator::DiscreteFunction& rhs ) const {

@@ -5,6 +5,8 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/fem/matrix_object.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/problems/base.hh>
 
@@ -24,7 +26,8 @@ template< class MatrixType >
 void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matrix( MatrixType& global_matrix,
                                                                       bool boundary_treatment ) const
 {
-  global_matrix.reserve();
+  //!TODO diagonal stencil would be enough
+  DSFe::reserve_matrix(global_matrix);
   global_matrix.clear();
 
   std::vector< typename BaseFunctionSet::JacobianRangeType >
@@ -37,7 +40,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
     const Geometry& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
-    auto local_matrix = global_matrix.localMatrix(entity, entity);
+    DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, entity, entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -76,6 +79,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
     }
   }
 
+
   // boundary treatment
   if (boundary_treatment) {
     // set unit rows for dirichlet dofs
@@ -83,6 +87,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
     DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
     constraints.applyToOperator(global_matrix);
   }
+  global_matrix.communicate();
 } // assemble_matrix
 
 
@@ -181,6 +186,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_matrix
 
 
@@ -191,7 +197,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_jaco
   MatrixType& global_matrix,
   bool boundary_treatment ) const
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   std::vector< typename BaseFunctionSet::JacobianRangeType >
@@ -296,6 +302,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_jaco
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_jacobian_matrix
 
 
@@ -307,7 +314,7 @@ const DiscreteFunction& dirichlet_extension,
       MatrixType& global_matrix,
       bool boundary_treatment ) const
 {
-  global_matrix.reserve();
+  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
   std::vector< typename BaseFunctionSet::JacobianRangeType >
@@ -422,6 +429,7 @@ const DiscreteFunction& dirichlet_extension,
       }
     }
   }
+  global_matrix.communicate();
 } // assemble_jacobian_matrix
 
 

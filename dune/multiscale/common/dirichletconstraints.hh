@@ -2,16 +2,9 @@
 #define DUNE_DIRICHLETCONSTRAINTS_HH
 
 #include <dune/stuff/grid/boundaryinfo.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
-
 #include <dune/fem/function/common/scalarproducts.hh>
-#include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/problems/selector.hh>
-
 
 namespace Dune { 
-namespace Multiscale {
 
 template < class DomainSpace, class RangeSpace = DomainSpace >
 class DirichletConstraints 
@@ -66,7 +59,7 @@ public:
       ConstDofIteratorType uIt = u.dbegin();
       DofIteratorType wIt = w.dbegin();
 
-      const unsigned int localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
+      const unsigned int localBlockSize = DiscreteFunctionType :: DomainSpaceType ::
         localBlockSize ;
       // loop over all blocks 
       const unsigned int blocks = u.space().blockMapper().size();
@@ -86,51 +79,6 @@ public:
         {
           // increase dof iterators anyway 
           for( unsigned int l = 0; l < localBlockSize ; ++ l, ++ wIt, ++ uIt ) 
-          {}
-        }
-      }
-    }
-  }
-
-  /*! treatment of Dirichlet-DoFs for given discrete function
- *
- *   \note A LagrangeDomainSpace is implicitly assumed.
- *
- *   \param[in]  val a value that will be used to set all dirichlet dofs
- *   \param[out] w   discrete function the constraints are applied to
- */
-  template < class DiscreteFunctionType >
-  void setValue(const typename DiscreteFunctionType::RangeFieldType val, DiscreteFunctionType& w ) const
-  {
-    updateDirichletDofs();
-
-    // if Dirichlet Dofs have been found, treat them
-    if( hasDirichletDofs_ )
-    {
-      typedef typename DiscreteFunctionType :: DofIteratorType DofIteratorType ;
-      typedef typename DiscreteFunctionType :: ConstDofIteratorType ConstDofIteratorType ;
-
-      DofIteratorType wIt = w.dbegin();
-
-      const unsigned int localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
-      localBlockSize ;
-      // loop over all blocks
-      const unsigned int blocks = w.space().blockMapper().size();
-      for( unsigned int blockDof = 0; blockDof < blocks ; ++ blockDof )
-      {
-        if( dirichletBlocks_[ blockDof ] )
-        {
-          // copy dofs of the block
-          for( unsigned int l = 0; l < localBlockSize ; ++ l, ++ wIt )
-          {
-            assert( wIt != w.dend() );
-            (*wIt) = val;
-          }
-        }
-        else
-        {
-          // increase dof iterators anyway
-          for( unsigned int l = 0; l < localBlockSize ; ++ l, ++ wIt )
           {}
         }
       }
@@ -275,7 +223,7 @@ protected:
                               const GridFunctionType& u, 
                               DiscreteFunctionType &w ) const 
   { 
-    typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
+    typedef typename DiscreteFunctionType :: DomainSpaceType
       DiscreteSpaceType;
     typedef typename GridFunctionType :: LocalFunctionType GridLocalFunctionType;
     typedef typename DiscreteFunctionType :: LocalFunctionType LocalFunctionType;
@@ -477,33 +425,5 @@ protected:
   } 
 };
 
-/** Get the constraints for a given discrete function space.
-*
-* @param space The discrete function space.
-*
-* @attention As the dirichlet constraints are stored in a static variable in this function, probably something
-*            bad will happen if you run this function with spaces of the same type living on different grid(part)
- *           instances. Therefore, this method should only be used for spaces on the coarse grid!
-*/
-DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
-getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space);
-
-/** Get the constraints for a given discrete function space.
-*
-* @param space The discrete function space.
-*
-* @attention As the dirichlet constraints are stored in a static variable in this function, probably something
-*            bad will happen if you run this function with spaces of the same type living on different grid(part)
- *           instances. Therefore, this method should only be used for spaces on the fine grid!
-*/
-DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
-getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space);
-
-
-void projectDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
-                            CommonTraits::DiscreteFunctionType& function);
-
-
-} // end namespace Multiscale
-} // end namespace Dune
+} // end namespace Dune 
 #endif

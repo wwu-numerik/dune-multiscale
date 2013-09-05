@@ -539,7 +539,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
       // project HMM solution in finer discrete function space
       typename CommonTraits::DiscreteFunctionType projected_hmm_solution("HMM Solution Projection", reference_solution.space());
       projected_hmm_solution.clear();
-      Dune::Stuff::HeterogenousProjection<Dune::Stuff::InlevelSearchStrategy>::project( hmm_solution/*source*/, projected_hmm_solution/*target*/ );
+      Dune::Stuff::HeterogenousProjection<DSG::EntityInlevelSearch>::project( hmm_solution/*source*/, projected_hmm_solution/*target*/ );
 
       const auto hmm_error = l2norm.distance(projected_hmm_solution, reference_solution);
 

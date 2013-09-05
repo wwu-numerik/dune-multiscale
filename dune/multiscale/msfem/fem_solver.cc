@@ -12,6 +12,7 @@
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/fem/fem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -86,6 +87,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     // discrete elliptic operator (corresponds with FEM Matrix)
 
 
+  //!TODO Split branch into functions
   if (DSC_CONFIG_GET("problem.linear", true))
   {
     DSC_LOG_INFO << "Solving linear problem." << std::endl;
@@ -94,7 +96,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     //! (stiffness) matrix
-    FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
+    CommonTraits::FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
     //! right hand side vector
     // right hand side for the finite element method:
@@ -111,8 +113,6 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     
     // assemble right hand side
     rhsassembler.assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, fem_rhs);
-
-    // oneLinePrint( DSC_LOG_DEBUG , fem_rhs );
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
@@ -146,18 +146,12 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     }
     // --- end boundary treatment ---
 
-    if (DSC_CONFIG_GET("fem.algebraic_solver", "bi_cg_stab" ) == "cg" )
-    {
-      const InverseFEMMatrix_CG fem_cg(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-      fem_rhs.communicate();
-      fem_cg(fem_rhs, solution);
-    }
-    else
-    {
-      const InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-      fem_rhs.communicate();
-      fem_biCGStab(fem_rhs, solution);
-    }
+    const FEM::FEMTraits::InverseOperatorType inverse_op(fem_matrix, 1e-8, 1e-8, 5000,
+                                                        DSC_CONFIG_GET("global.cgsolver_verbose", false),
+                                                        DSC_CONFIG_GET("fem.algebraic_solver", "bcgs" ),
+                                                        DSC_CONFIG_GET("fem.precond", "asm" ), 1);
+    fem_rhs.communicate();
+    inverse_op(fem_rhs, solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
     DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
@@ -187,7 +181,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
     RangeType rhs_L2_norm = 10000.0;
 
     //! (stiffness) matrix
-    FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
+    CommonTraits::FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
     
     int iteration_step = 1;
     // the Newton step for the FEM reference problem (solved with Newton Method):
@@ -252,7 +246,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
       }
       // --- end boundary treatment ---
 
-      const Fem::OEMBICGSTABOp< DiscreteFunction, FEMMatrix > fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, true);
+      const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 5000, true, "bcgs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       fem_newton_biCGStab(system_rhs, residual);
 
       if ( residual.dofsValid() )
@@ -279,10 +273,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionType
 
     DSC_LOG_INFO << "Nonlinear Finite Element Problem solved with Newton Method in " << assembleTimer.elapsed() << "s." << std::endl
                  << std::endl << std::endl;
-
   }// end 'problem.linear <-> else'
-
-    // oneLinePrint( DSC_LOG_DEBUG , solution );
 } // solve_dirichlet_zero
 
 
@@ -324,7 +315,7 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
     DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     //! (stiffness) matrix
-    FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
+    CommonTraits::FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
     //! right hand side vector
     // right hand side for the finite element method:
@@ -341,8 +332,6 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
     
     // assemble right hand side
     rhsassembler.assemble< 2* DiscreteFunctionSpace::polynomialOrder + 2 >(f, diffusion_op, dirichlet_extension, neumann_bc, fem_rhs);
-
-    // oneLinePrint( DSC_LOG_DEBUG , fem_rhs );
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
@@ -376,18 +365,12 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
     }
     // --- end boundary treatment ---
 
-    if (DSC_CONFIG_GET("fem.algebraic_solver", "bi_cg_stab" ) == "cg" )
-    {
-      const InverseFEMMatrix_CG fem_cg(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-      fem_rhs.communicate();
-      fem_cg(fem_rhs, solution);
-    }
-    else
-    {
-      const InverseFEMMatrix fem_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-      fem_rhs.communicate();
-      fem_biCGStab(fem_rhs, solution);
-    }
+    const FEM::FEMTraits::InverseOperatorType inverse_op(fem_matrix, 1e-8, 1e-8, 5000,
+                                                        DSC_CONFIG_GET("global.cgsolver_verbose", false),
+                                                        DSC_CONFIG_GET("fem.algebraic_solver", "bcgs" ),
+                                                        DSC_CONFIG_GET("fem.precond", "asm" ), 1);
+    fem_rhs.communicate();
+    inverse_op(fem_rhs, solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
     DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
@@ -417,7 +400,7 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
     RangeType rhs_L2_norm = 10000.0;
 
     //! (stiffness) matrix
-    FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
+    CommonTraits::FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
     
     int iteration_step = 1;
     // the Newton step for the FEM reference problem (solved with Newton Method):
@@ -482,7 +465,7 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
       }
       // --- end boundary treatment ---
 
-      const Fem::OEMBICGSTABOp< DiscreteFunction, FEMMatrix > fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 20000, true);
+      const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(fem_matrix, 1e-8, 1e-8, 5000, true, "bcgs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       fem_newton_biCGStab(system_rhs, residual);
 
       if ( residual.dofsValid() )
@@ -511,8 +494,6 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
                  << std::endl << std::endl;
 
   }// end 'problem.linear <-> else'
-
-    // oneLinePrint( DSC_LOG_DEBUG , solution );
 } // end solve()
 
 

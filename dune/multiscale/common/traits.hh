@@ -10,10 +10,12 @@
 #include <dune/fem/space/common/functionspace.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrange.hh>
-#include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/functions/constant.hh>
+
+#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
+#include <dune/fem/operator/common/petsclinearoperator.hh>
 
 namespace Dune {
 
@@ -121,27 +123,12 @@ struct CommonTraits {
   //!TODO carry the rename over to the type def'ed name
   typedef DiscreteFunctionSpaceType::BasisFunctionSetType        BasisFunctionSetType;
   typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
-  typedef Dune::Fem::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
+
+  typedef Dune::Fem::PetscDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
+  typedef Dune::Fem::PetscLinearOperator< DiscreteFunctionType, DiscreteFunctionType > FEMMatrix;
+
   typedef DiscreteFunctionType::LocalFunctionType               LocalFunctionType;
   typedef DiscreteFunctionType::DofIteratorType                 DofIteratorType;
-
-  //! --------------------- the standard matrix traits -------------------------------------
-  struct MatrixTraits
-  {
-    typedef DiscreteFunctionSpaceType                          RowSpaceType;
-    typedef DiscreteFunctionSpaceType                          ColumnSpaceType;
-    typedef Dune::LagrangeMatrixSetup< false >                       StencilType;
-    typedef Dune::Fem::ParallelScalarProduct< DiscreteFunctionSpaceType > ParallelScalarProductType;
-
-    template< class M >
-    struct Adapter
-    {
-      typedef Dune::Fem::LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
-    };
-  };
-
-
-
 
   //!------------------------- for adaptive grid refinement ---------------------------------
   //! type of restrict-prolong operator
@@ -154,9 +141,6 @@ struct CommonTraits {
   typedef std::vector< RangeVector > RangeVectorVector;
 
   static const int assembler_order = 2* DiscreteFunctionSpaceType::polynomialOrder + 2;
-
-  typedef Dune::Fem::SparseRowMatrixOperator< DiscreteFunctionType, DiscreteFunctionType, MatrixTraits > FEMMatrix;
-
 };
 
 } // namespace Multiscale

@@ -167,8 +167,6 @@ public:
     const JacobianRangeType& grad_coarse_base_function,
     DiscreteFunction& jac_corrector_cell_problem_RHS) const;
 
-  void printCellRHS(const DiscreteFunction& rhs) const;
-
   double normRHS(const DiscreteFunction& rhs) const;
 
 private:
