@@ -86,6 +86,51 @@ public:
     }
   }
 
+  /*! treatment of Dirichlet-DoFs for given discrete function
+ *
+ *   \note A LagrangeDomainSpace is implicitly assumed.
+ *
+ *   \param[in]  val a value that will be used to set all dirichlet dofs
+ *   \param[out] w   discrete function the constraints are applied to
+ */
+  template < class DiscreteFunctionType >
+  void setValue(const typename DiscreteFunctionType::RangeFieldType val, DiscreteFunctionType& w ) const
+  {
+    updateDirichletDofs();
+
+    // if Dirichlet Dofs have been found, treat them
+    if( hasDirichletDofs_ )
+    {
+      typedef typename DiscreteFunctionType :: DofIteratorType DofIteratorType ;
+      typedef typename DiscreteFunctionType :: ConstDofIteratorType ConstDofIteratorType ;
+
+      DofIteratorType wIt = w.dbegin();
+
+      const unsigned int localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
+      localBlockSize ;
+      // loop over all blocks
+      const unsigned int blocks = w.space().blockMapper().size();
+      for( unsigned int blockDof = 0; blockDof < blocks ; ++ blockDof )
+      {
+        if( dirichletBlocks_[ blockDof ] )
+        {
+          // copy dofs of the block
+          for( unsigned int l = 0; l < localBlockSize ; ++ l, ++ wIt )
+          {
+            assert( wIt != w.dend() );
+            (*wIt) = val;
+          }
+        }
+        else
+        {
+          // increase dof iterators anyway
+          for( unsigned int l = 0; l < localBlockSize ; ++ l, ++ wIt )
+          {}
+        }
+      }
+    }
+  }
+
   /*! treatment of Dirichlet-DoFs for given discrete function 
    *
    *   \note A LagrangeDomainSpace is implicitly assumed.
