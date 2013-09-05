@@ -22,7 +22,8 @@ Elliptic_MsFEM_Solver::Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discre
   : discreteFunctionSpace_(discreteFunctionSpace)
 {}
 
-void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func, DiscreteFunction& host_func) const {
+void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func,
+                                                          DiscreteFunction& host_func) const {
   host_func.clear();
 
   const SubgridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
@@ -51,9 +52,9 @@ void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteF
   }
 } // subgrid_to_hostrid_projection
 
-void Elliptic_MsFEM_Solver::identify_coarse_scale_part( MacroMicroGridSpecifier& specifier,
-                                 const DiscreteFunction& coarse_msfem_solution,
-                                 DiscreteFunction& coarse_scale_part ) const
+void Elliptic_MsFEM_Solver::projectCoarseToFineScale( MacroMicroGridSpecifier& specifier,
+                                                      const DiscreteFunction& coarse_msfem_solution,
+                                                      DiscreteFunction& coarse_scale_part ) const
 {
 
   DSC_LOG_INFO << "Indentifying coarse scale part of the MsFEM solution... ";
@@ -66,9 +67,9 @@ void Elliptic_MsFEM_Solver::identify_coarse_scale_part( MacroMicroGridSpecifier&
 
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& specifier,
-                                                        MsFEMTraits::SubGridListType& subgrid_list,
-                                                        const DiscreteFunction& coarse_msfem_solution,
-                                                        DiscreteFunction& fine_scale_part ) const {
+                                                      MsFEMTraits::SubGridListType& subgrid_list,
+                                                      const DiscreteFunction& coarse_msfem_solution,
+                                                      DiscreteFunction& fine_scale_part ) const {
   fine_scale_part.clear();
 
   const HostGrid& grid = discreteFunctionSpace_.gridPart().grid();
@@ -107,13 +108,26 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
       }
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-      assert(localSolutions.size()== coarseSolutionLF.numDofs() && "The current implementation relies on having the \
+      assert(localSolutions.size()-localSolManager.numBoundaryCorrectors()
+              == coarseSolutionLF.numDofs() && "The current implementation relies on having the \
               same types of elements on coarse and fine level!");
       for (int dof=0; dof< coarseSolutionLF.numDofs(); ++dof) {
         *localSolutions[dof] *= coarseSolutionLF[dof];
         if (dof>0)
           *localSolutions[0] += *localSolutions[dof];
       }
+
+      // add dirichlet corrector
+      DiscreteFunction boundaryCorrector("Boundary Corrector", discreteFunctionSpace_);
+      boundaryCorrector.clear();
+      subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs()+1], boundaryCorrector);
+      fine_scale_part += boundaryCorrector;
+
+      // substract neumann corrector
+      // boundaryCorrector.clear();
+      // subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs()], boundaryCorrector);
+      // fine_scale_part -= boundaryCorrector;
+
     }
 
     // oversampling strategy 3: just sum up the local correctors:
@@ -125,12 +139,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming projection:
     if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) ) {
+      assert(localSolManager.getLocalDiscreteFunctionSpace().gridPart().grid().maxLevel()
+             == discreteFunctionSpace_.gridPart().grid().maxLevel() &&
+             "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid.");
 
-      if ( localSolManager.getLocalDiscreteFunctionSpace().gridPart().grid().maxLevel()
-              != discreteFunctionSpace_.gridPart().grid().maxLevel() ) {
-        //! @todo Shouldn't we abort in this case?
-        DSC_LOG_ERROR << "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid." << std::endl;
-      }
 
       const auto& nodeToEntityMap = subgrid_list.getNodeEntityMap();
 
@@ -147,6 +159,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
         const int hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(fine_host_entity_pointer);
         if (hostFatherIndex== coarseCellIndex) {
           const SubgridLocalFunction sub_loc_value = localSolutions[0]->localFunction(subgridEntity);
+
+          assert(localSolutions.size()==coarseSolutionLF.numDofs()+localSolManager.numBoundaryCorrectors());
+          const SubgridLocalFunction dirichletLF = localSolutions[coarseSolutionLF.numDofs()+1]->localFunction(subgridEntity);
           LocalFunction host_loc_value = fine_scale_part.localFunction(fine_host_entity);
 
           int number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();
@@ -166,7 +181,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
               coarse_entities.insert(innerId);
             }
             host_loc_value[i] += ( sub_loc_value[i] / coarse_entities.size() );
-
           }
         }
       }
@@ -201,10 +215,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
   // ( effect of the discretized differential operator on a certain discrete function )
   // This will assemble and solve the local problems
-  const DiscreteEllipticMsFEMOperator elliptic_msfem_op(specifier,
-                                              coarse_space,
-                                              subgrid_list,
-                                              diffusion_op);
+  const DiscreteEllipticMsFEMOperator elliptic_msfem_op(specifier, coarse_space, subgrid_list, diffusion_op);
   // discrete elliptic operator (corresponds with FEM Matrix)
 
   //! (stiffness) matrix
@@ -238,34 +249,8 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
                                                                                                 msfem_rhs);
   }
   msfem_rhs.communicate();
+  assert(msfem_rhs.dofsValid() && "Coarse scale RHS DOFs need to be valid!");
 
-  // oneLinePrint( DSC_LOG_DEBUG, fem_rhs );
-  //! --- boundary treatment ---
-  // set the dirichlet points to zero (in right hand side of the fem problem)
-  const HostgridIterator endit = coarse_space.end();
-  for (HostgridIterator it = coarse_space.begin(); it != endit; ++it) {
-    IntersectionIterator iit = coarse_space.gridPart().ibegin(*it);
-    const IntersectionIterator endiit = coarse_space.gridPart().iend(*it);
-    for ( ; iit != endiit; ++iit) {
-      if ( iit->boundary() ) {
-        LocalFunction rhsLocal = msfem_rhs.localFunction(*it);
-
-        const LagrangePointSet& lagrangePointSet
-                = coarse_space.lagrangePointSet(*it);
-
-        const int face = iit->indexInInside();
-
-        auto faceIterator
-                = lagrangePointSet.beginSubEntity< faceCodim >(face);
-        const auto faceEndIterator
-                = lagrangePointSet.endSubEntity< faceCodim >(face);
-        for ( ; faceIterator != faceEndIterator; ++faceIterator) {
-          rhsLocal[*faceIterator] = 0;
-        }
-      }
-    }
-  }
-  //! --- end boundary treatment ---
   const InverseMsFEMMatrix msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true);
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
   DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
@@ -275,12 +260,12 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   if (!coarse_msfem_solution.dofsValid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
 
-  // oneLinePrint( DSC_LOG_DEBUG, solution );
-  // copy coarse grid function (defined on the subgrid) into a fine grid function
+  // get the dirichlet values
   solution.clear();
+  Dune::Multiscale::projectDirichletValues(coarse_space, solution);
 
-  //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
-  identify_coarse_scale_part( specifier, coarse_msfem_solution, coarse_scale_part );
+    //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
+  projectCoarseToFineScale( specifier, coarse_msfem_solution, coarse_scale_part );
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part( specifier, subgrid_list, coarse_msfem_solution, fine_scale_part );

@@ -13,9 +13,12 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
+#include <dune/multiscale/common/dirichletconstraints.hh>
+#include <dune/multiscale/common/traits.hh>
 
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/functions/interfaces.hh>
@@ -49,7 +52,10 @@ private:
   typedef Fem::CachingQuadrature< GridPartType, 0 > Quadrature;
   typedef Fem::CachingQuadrature< GridPartType, 1 > FaceQuadratureType;
 
+  typedef MsFEM::LocalSolutionManager LocalSolutionManagerType;
+
   enum { dimension = GridType::dimension };
+  enum {polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder};
 
 public:
   static void printRHS(const DiscreteFunctionType& rhs) {
@@ -312,14 +318,25 @@ public:
                                            MacroMicroGridSpecifierType& specifier,
                                            SubGridListType& subgrid_list,
                                            DiscreteFunctionType& rhsVector) {
+
+    // gather some problem data
+    auto diffusionPtr = Problem::getDiffusion();
+    const auto& diffusion = *diffusionPtr;
+    auto neumannDataPtr = Problem::getNeumannData();
+    const auto& neumannData = *neumannDataPtr;
+
+    DiscreteFunctionType dirichletExtension("Dirichlet Extension", specifier.fineSpace());
+    dirichletExtension.clear();
+    Dune::Multiscale::projectDirichletValues(rhsVector.space(), dirichletExtension);
+
     // set rhsVector to zero:
     rhsVector.clear();
     const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
     RangeType f_x;
     for (const auto& coarse_grid_entity : rhsVector.space()) {
-      const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
+      const int coarseEntityIndex = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
-      const GeometryType& coarse_grid_geometry = coarse_grid_entity.geometry();
+      const GeometryType& coarseGeometry= coarse_grid_entity.geometry();
       auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
       const int numLocalBaseFunctions = rhsLocalFunction.numDofs();
 
@@ -334,15 +351,14 @@ public:
 
       // --------- add standard contribution of right hand side -------------------------
       {
-        const Fem::CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);   // 0 --> codim 0
+        const Fem::CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);
         std::vector<RangeType> phi_x_vec(numLocalBaseFunctions);
         const int numQuadraturePoints = quadrature.nop();
         for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
         {
-          const double det
-                  = coarse_grid_geometry.integrationElement( quadrature.point(quadraturePoint) );
+          const double det = coarseGeometry.integrationElement( quadrature.point(quadraturePoint) );
           // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-          f.evaluate(coarse_grid_geometry.global( quadrature.point(quadraturePoint) ), f_x);
+          f.evaluate(coarseGeometry.global( quadrature.point(quadraturePoint) ), f_x);
           coarse_grid_baseSet.evaluateAll(quadrature[quadraturePoint], phi_x_vec);
           for (int i = 0; i < numLocalBaseFunctions; ++i) {
             rhsLocalFunction[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x_vec[i]);
@@ -351,76 +367,138 @@ public:
       }
       // ----------------------------------------------------------------------------------
 
-
       // --------- add corrector contribution of right hand side --------------------------
-      {
-        // Load local solutions
-        Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list, specifier);
-        localSolutionManager.loadLocalSolutions();
-        Multiscale::MsFEM::LocalSolutionManager::LocalSolutionVectorType& localSolutions
-                = localSolutionManager.getLocalSolutions();
-        assert(localSolutions.size()>0);
+      // Load local solutions
+      LocalSolutionManagerType localSolutionManager(coarse_grid_entity, subgrid_list, specifier);
+      localSolutionManager.loadLocalSolutions();
+      LocalSolutionManagerType::LocalSolutionVectorType& localSolutions = localSolutionManager.getLocalSolutions();
+      assert(localSolutions.size()>0);
 
-        for (int coarseBF = 0; coarseBF < numLocalBaseFunctions; ++coarseBF) {
-          // iterator for the micro grid ( grid for the reference element T_0 )
-          const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
-          for (const auto& localEntity : DSC::viewRange(subGrid.leafView())) {
-            const auto& hostCell = subGrid.template getHostEntity< 0 >(localEntity);
-            const int enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
-            if (enclosingCoarseCellIndex==global_index_entity) {
-              //! @todo This should be defined in a macro somewhere, I just couldn't find it...
-              const int order = localSolutions[0]->space().order();
-              LocalGridQuadrature localQuadrature(localEntity, 2 * order + 2);
-              std::vector<std::vector<typename LocalFunctionType::RangeType> >
-                      allLocalSolutionEvaluations(localSolutions.size(),
-                                                  std::vector<RangeType>(localQuadrature.nop(), 0.0));
-              for (int lsNum=0; lsNum < localSolutions.size(); ++lsNum) {
-                LocalFunctionType localFunction = localSolutions[lsNum]->localFunction(localEntity);
-                localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
-              }
+      // iterator for the micro grid ( grid for the reference element T_0 )
+      const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
+      for (const auto& localEntity : DSC::viewRange(subGrid.leafView())) {
+        const auto& hostCell = subGrid.template getHostEntity< 0 >(localEntity);
+        const int enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
+        auto dirichletExtensionLF = dirichletExtension.localFunction(*hostCell);
+        if (enclosingCoarseCellIndex== coarseEntityIndex) {
+          const int order = LocalSolutionManagerType::DiscreteFunctionSpaceType::polynomialOrder;
 
-              const auto& local_grid_geometry = localEntity.geometry();
+          // higher order quadrature, since A^{\epsilon} is highly variable
+          LocalGridQuadrature localQuadrature(localEntity, 2 * order + 2);
 
-              // higher order quadrature, since A^{\epsilon} is highly variable
+          // evaluate all local solutions and their jacobians in all quadrature points
+          std::vector<std::vector<typename LocalFunctionType::RangeType> >
+                  allLocalSolutionEvaluations(localSolutions.size(),
+                                              std::vector<RangeType>(localQuadrature.nop(), 0.0));
+          std::vector< std::vector<typename LocalFunctionType::JacobianRangeType> >
+                   allLocalSolutionJacobians(localSolutions.size(),
+                                             std::vector< JacobianRangeType >(localQuadrature.nop(), JacobianRangeType(0.0)));
+          for (int lsNum=0; lsNum < localSolutions.size(); ++lsNum) {
+            LocalFunctionType localFunction = localSolutions[lsNum]->localFunction(localEntity);
+            // this evaluates the local solutions in all quadrature points...
+            localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
+            // while this automatically evaluates their jacobians.
+            localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionJacobians[lsNum]);
 
-              RangeType corrector_phi_x;
-              for (size_t localQuadraturePoint = 0; localQuadraturePoint < localQuadrature.nop(); ++localQuadraturePoint) {
-                // local (barycentric) coordinates (with respect to entity)
-                const typename LocalGridQuadrature::CoordinateType& local_subgrid_point = localQuadrature.point(
-                        localQuadraturePoint);
-                const auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
+            const auto& subGridPart = localSolutionManager.getSubGridPart();
+            const auto intEnd = subGridPart.iend(localEntity);
+            for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafView(), localEntity)) {
+              if (Problem::isNeumannBoundary(intersection)) {
+                const int          orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
+                const int          quadOrder        = std::ceil((orderOfIntegrand + 1) / 2);
+                // get type of face quadrature. Is done in this scope because Patricks methods use another type.
+                typedef MsFEM::MsFEMTraits::SubGridListType::SubFaceQuadratureType MyFaceQuadType;
+                MyFaceQuadType faceQuad(subGridPart, intersection, quadOrder, MyFaceQuadType::INSIDE);
+                RangeType neumannValue(0.0);
+                const size_t numQuadPoints = faceQuad.nop();
+                // loop over all quadrature points
 
-                const double weight_local_quadrature
-                        = localQuadrature.weight(localQuadraturePoint)
-                                * local_grid_geometry.integrationElement(local_subgrid_point);
+                std::vector<RangeType> phi_x_vec(numLocalBaseFunctions);
+                std::vector<RangeType> localSolutionOnFace(numLocalBaseFunctions);
+                localFunction.evaluateQuadrature(faceQuad, localSolutionOnFace);
 
-                corrector_phi_x = 0.0;
+                for (unsigned int iqP = 0; iqP < numQuadPoints; ++iqP) {
+                  // get local coordinate of quadrature point
+                  const auto& xLocal = faceQuad.localPoint(iqP);
+                  const auto& faceGeometry  = intersection.geometry();
 
-                if (specifier.simplexCoarseGrid()) {
-                  assert(localSolutions.size()==GridSelector::dimgrid);
+                  // the following does not work because subgrid does not implement geometryInInside()
+                  // const auto& insideGeometry    = intersection.geometryInInside();
+                  // const typename FaceQuadratureType::CoordinateType& xInInside = insideGeometry.global(xLocal);
+                  // therefore, we have to do stupid things:
+                  const typename FaceQuadratureType::CoordinateType& xGlobal = faceGeometry.global(xLocal);
+                  auto insidePtr = intersection.inside();
+                  const auto& insideEntity = *insidePtr;
+                  const auto& xInInside = insideEntity.geometry().local(xGlobal);
+                  const auto& xInCoarseLocal = coarse_grid_entity.geometry().local(xGlobal);
+                  const double factor = faceGeometry.integrationElement(xLocal) * faceQuad.weight(iqP);
 
-                  // transposed of the the inverse jacobian
-                  const auto quadPointLocalInCoarse = coarse_grid_geometry.local(global_point_in_U_T);
-                  std::vector<JacobianRangeType> gradient_Phi_vec(numLocalBaseFunctions);
-                  coarse_grid_baseSet.jacobianAll(quadPointLocalInCoarse, gradient_Phi_vec);
-
-                  //assert(localSolutionValues.size()==2);
-                  corrector_phi_x += gradient_Phi_vec[coarseBF][0][0] * allLocalSolutionEvaluations[0][localQuadraturePoint];
-                  corrector_phi_x += gradient_Phi_vec[coarseBF][0][1] * allLocalSolutionEvaluations[1][localQuadraturePoint];
-                } else {
-                  assert(localSolutions.size()==numLocalBaseFunctions);
-                  // local corrector for coarse base func
-                  corrector_phi_x = allLocalSolutionEvaluations[coarseBF][localQuadraturePoint];
+                  neumannData.evaluate(xGlobal, neumannValue);
+                  coarse_grid_baseSet.evaluateAll(xInCoarseLocal, phi_x_vec);
+                  for (unsigned int i = 0; i < numLocalBaseFunctions; ++i) {
+                    assert(i<phi_x_vec.size());
+                    assert(iqP<localSolutionOnFace.size());
+                    rhsLocalFunction[i] += factor * (neumannValue * (phi_x_vec[i]+localSolutionOnFace[iqP]));
+                  }
                 }
-                f.evaluate(global_point_in_U_T , f_x);
-                rhsLocalFunction[coarseBF] += weight_local_quadrature * (f_x * corrector_phi_x);
-
               }
             }
           }
+
+          const auto& localGeometry = localEntity.geometry();
+          RangeType corrector_phi_x;
+          for (size_t qP = 0; qP < localQuadrature.nop(); ++qP) {
+            // local (barycentric) coordinates (with respect to entity)
+            const auto& quadPoint = localQuadrature.point(qP);
+            const auto quadPointGlobal = localGeometry.global(quadPoint);
+
+            const double quadWeight = localQuadrature.weight(qP) * localGeometry.integrationElement(quadPoint);
+
+            for (int coarseBF = 0; coarseBF < numLocalBaseFunctions; ++coarseBF) {
+              JacobianRangeType diffusive_flux(0.0);
+
+              // evaluate gradient of basis function
+              const auto quadPointLocalInCoarse = coarseGeometry.local(quadPointGlobal);
+              std::vector<JacobianRangeType> gradient_Phi_vec(numLocalBaseFunctions);
+              coarse_grid_baseSet.jacobianAll(quadPointLocalInCoarse, gradient_Phi_vec);
+
+              JacobianRangeType reconstructionGradPhi(gradient_Phi_vec[coarseBF]);
+
+              if (specifier.simplexCoarseGrid()) {
+                assert(localSolutions.size()==GridSelector::dimgrid+localSolutionManager.numBoundaryCorrectors());
+                DUNE_THROW(NotImplemented, "Boundary values are not implemented for simplex grids yet!");
+              } else {
+                assert(localSolutions.size()==numLocalBaseFunctions+localSolutionManager.numBoundaryCorrectors());
+                // local corrector for coarse base func
+                corrector_phi_x = allLocalSolutionEvaluations[coarseBF][qP];
+                // element part of boundary conditions
+                JacobianRangeType directionOfFlux(0.0);
+                //! @attention At this point we assume, that the quadrature points on the subgrid and hostgrid
+                //! are the same (dirichletExtensionLF is a localfunction on the hostgrid, quadPoint stems from
+                //! a quadrature on the subgrid)!!
+                dirichletExtensionLF.jacobian(quadPoint, directionOfFlux);
+                // add dirichlet-corrector
+                directionOfFlux += allLocalSolutionJacobians[numLocalBaseFunctions+1][qP];
+                // subtract neumann-corrector
+                // directionOfFlux -= allLocalSolutionJacobians[numLocalBaseFunctions][qP];
+
+                diffusion.diffusiveFlux(quadPointGlobal, directionOfFlux, diffusive_flux);
+                reconstructionGradPhi += allLocalSolutionJacobians[coarseBF][qP];
+              }
+              f.evaluate(quadPointGlobal, f_x);
+              double val = quadWeight * (f_x * corrector_phi_x);
+              rhsLocalFunction[coarseBF] += val;
+              val = quadWeight * (diffusive_flux[0] * reconstructionGradPhi[0]);
+              rhsLocalFunction[coarseBF] -= val;
+            }
+          }
+
         }
       }
     }
+
+    // set dirichlet dofs to zero
+    Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
   }  // end method
 
 

@@ -16,9 +16,12 @@
 
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/common/dirichletconstraints.hh>
 
 #include <memory>
 #include <vector>
+
 
 namespace Dune {
 namespace Multiscale {
@@ -78,6 +81,10 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
 
   const int coarseCellIndex = specifier_.coarseSpace().gridPart().grid().leafIndexSet().index(coarseCell);
 
+  const bool hasBoundary = coarseCell.hasBoundaryIntersections();
+  const int numBoundaryCorrectors = specifier_.simplexCoarseGrid() ? 1 : 2;
+  const int numInnerCorrectors = allLocalSolutions.size() - numBoundaryCorrectors;
+
   // clear return argument
   for (auto& localSol : allLocalSolutions) localSol->clear();
 
@@ -91,15 +98,10 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   // ( effect of the discretized differential operator on a certain discrete function )
   LocalProblemOperator localProblemOperator(subDiscreteFunctionSpace, diffusion_);
 
-//  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
-//
-//  typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
-//  typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
-
   // right hand side vector of the algebraic local MsFEM problem
   SubDiscreteFunctionVectorType allLocalRHS(allLocalSolutions.size());
   for (auto& it : allLocalRHS)
-          it = DSC::make_unique<SubDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
+    it = DSC::make_unique<SubDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
 
   switch ( specifier_.getOversamplingStrategy() ) {
     case 1:
@@ -109,42 +111,16 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
     default: DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
   }
 
-//  //! boundary treatment:
-//  typedef typename LocProbFEMMatrixType::LocalMatrixType LocalMatrix;
-//
-//  typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
-//          FaceDofIteratorType;
-//
-//  const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
-//
-//  for (const auto& subgridEntity : subDiscreteFunctionSpace) {
-//    LocalMatrix localMatrix = locProbSysMatrix.localMatrix(subgridEntity, subgridEntity);
-//
-//    const SGLagrangePointSetType& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
-//    for (auto& rhsIt : allLocalRHS) {
-//
-//      SubLocalFunctionType rhsLocal = rhsIt->localFunction(subgridEntity);
-//
-//      for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), subgridEntity)) {
-//        // if there is a neighbor entity
-//        if ( subgridIntersection.boundary() ) {
-//          const int face = subgridIntersection.indexInInside();
-//          const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity< faceCodim >(face);
-//          for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity< faceCodim >(face); fdit != fdend; ++fdit) {
-//            // zero boundary condition for 'cell problems':
-//            // set unit row in matrix for any boundary dof ...
-//            localMatrix.unitRow(*fdit);
-//            // ... and set respective rhs dof to zero
-//            rhsLocal[*fdit] = 0;
-//          }
-//        }
-//      }
-//    }
-//  }
+  // set dirichlet dofs to zero
+  Stuff::GridboundaryAllDirichlet<SubGridType::LeafGridView> boundaryInfo;
+  DirichletConstraints<SubDiscreteFunctionSpaceType> constraints(boundaryInfo, subDiscreteFunctionSpace);
+  for (auto& rhsIt : allLocalRHS)
+    constraints.setValue(0.0, *rhsIt);
+
 
   for (int i=0; i!=allLocalSolutions.size(); ++i) {
     if (!allLocalRHS[i]->dofsValid())
-      DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
+    DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 
     // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
@@ -156,8 +132,16 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
       continue;
     }
 
+    if (i>=numInnerCorrectors && !hasBoundary) {
+      allLocalRHS[i]->clear();
+      DSC_LOG_INFO << "Zero-Boundary corrector." << std::endl;
+      continue;
+    }
+
     InverseLocProbFEMMatrixType localProblemSolver(locProbSysMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false));
     localProblemSolver(*allLocalRHS[i], *allLocalSolutions[i]);
+
+    output_local_solution(coarseCellIndex, i, *allLocalSolutions[i]);
 
     if ( !(allLocalSolutions[i]->dofsValid()) )
       DUNE_THROW(Dune::InvalidStateException,"Current solution of the local msfem problem invalid!");
@@ -234,7 +218,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
       FaceDofIteratorType;
 
   const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
-
   for (const auto& subgridEntity : subDiscreteFunctionSpace) {
     LocalMatrix localMatrix = locprob_system_matrix.localMatrix(subgridEntity, subgridEntity);
 
@@ -1076,7 +1059,7 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
 
 
 void MsFEMLocalProblemSolver::subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func,
-                                 HostDiscreteFunctionType& host_func) {
+                                 HostDiscreteFunctionType& host_func) const {
   host_func.clear();
 
   const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
@@ -1269,7 +1252,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
            dirichlet_boundary_corrector.clear();
 
            // also requires the pre-processing step:
-	   std::cout << "Solve Dirichlet boundary corrector problem for subgrid " << coarse_index << std::endl;
+          std::cout << "Solve Dirichlet boundary corrector problem for subgrid " << coarse_index << std::endl;
            solve_dirichlet_corrector_problem_lod( locprob_system_matrix, lagrange_multiplier_system_matrix,
                                                   dirichlet_boundary_corrector, coarse_index );
 
@@ -1294,7 +1277,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
            const std::string name_neumann_corrector = (boost::format("Neumann Boundary Corrector %d") % coarseId).str();
            SubDiscreteFunctionType neumann_boundary_corrector( name_neumann_corrector , subDiscreteFunctionSpace);
            neumann_boundary_corrector.clear();
-	   std::cout << "Solve Neumann boundary corrector problem for subgrid " << coarse_index << std::endl;
+          std::cout << "Solve Neumann boundary corrector problem for subgrid " << coarse_index << std::endl;
 
            // also requires the pre-processing step:
            solve_neumann_corrector_problem_lod( locprob_system_matrix, lagrange_multiplier_system_matrix,
