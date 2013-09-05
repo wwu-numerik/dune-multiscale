@@ -194,12 +194,7 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
                     << norm_rhs << ". Therefore possibly inaccurate solution." << std::endl
                     << "Information:" << std::endl
                     << "x_T = globalQuadPoint = " << globalQuadPoint << "." << std::endl
-                    << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "." << std::endl
-                    << "Print right hand side? y/n: ";
-          char answer;
-          std::cin >> answer;
-          if ( !(answer == 'n') )
-          { cell_problem_op.printCellRHS(cell_problem_rhs); }
+                    << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "." << std::endl;
           DUNE_THROW(Dune::InvalidStateException, "");
         }
         biCG_tolerance *= 10.0;

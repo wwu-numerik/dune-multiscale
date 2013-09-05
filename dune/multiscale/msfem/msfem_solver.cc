@@ -238,7 +238,6 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   }
   msfem_rhs.communicate();
 
-  // oneLinePrint( DSC_LOG_DEBUG, fem_rhs );
   //! --- boundary treatment ---
   // set the dirichlet points to zero (in right hand side of the fem problem)
   const HostgridIterator endit = coarse_space.end();
@@ -274,7 +273,6 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
   if (!coarse_msfem_solution.dofsValid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
 
-  // oneLinePrint( DSC_LOG_DEBUG, solution );
   // copy coarse grid function (defined on the subgrid) into a fine grid function
   solution.clear();
 

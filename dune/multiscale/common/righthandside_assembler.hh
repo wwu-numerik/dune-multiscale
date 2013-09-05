@@ -55,22 +55,6 @@ private:
   
   enum { dimension = GridType::dimension };
 
-public:
-  static void printRHS(const DiscreteFunctionType& rhs) {
-    for (auto entity : rhs.space())
-    {
-      const LocalFunctionType elementOfRHS = rhs.localFunction(entity);
-      const int numDofs = elementOfRHS.numDofs();
-      for (int i = 0; i < numDofs; ++i)
-      {
-        DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
-      }
-    }
-  }  // end method
-
-  //! --------------- The rhs-assemble()-methods for linear elliptic problems -----------------
-
-private:
   // need a virtual base to work around local classes not being allowed in templated scopes
   struct FunctorBase {
     virtual RangeType operator()(const DomainType& global_quad_point, const JacobianRangeType& gradientPhi) const = 0;

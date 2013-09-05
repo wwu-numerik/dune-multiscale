@@ -879,8 +879,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
      DSC_LOG_INFO << ".. assembling of the stiffness matrix done." << std::endl;
      DSC_LOG_INFO << "Time to assemble Rigorous MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
-     //print_matrix( system_matrix );
-
      VectorType rhs( number_of_relevant_coarse_nodes );
      if ( DSC_CONFIG_GET("lod.petrov_galerkin", true) )
      { assemble_rhs( f, diffusion_op,
@@ -894,8 +892,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
                      global_dirichlet_corrector, global_neumann_corrector,
 //                     support_global_dirichlet_corrector, support_global_neumann_corrector,
                      msfem_basis_function, support_of_ms_basis_func_intersection, rhs ); }
-
-     //print_vector( rhs );
 
      MatrixOperatorType matrix_op( system_matrix );
      PreconditionerType preconditioner( system_matrix, 100, 0.9 );
@@ -1162,10 +1158,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
         }
 
      }
-   
-     //print_matrix( newton_system_matrix );
-     //print_vector( newton_step_rhs );
-      
+
      VectorType copy_newton_step_rhs( number_of_relevant_coarse_nodes );
      for (size_t col = 0; col != newton_step_rhs.N(); ++col)
        copy_newton_step_rhs[col] = newton_step_rhs[ col ];
@@ -1179,8 +1172,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
      
      for (size_t col = 0; col != newton_step_rhs.N(); ++col)
        newton_step_rhs[col] = copy_newton_step_rhs[ col ];
-   
-     //print_vector( newton_step_solution_vector );
    
      // assemble copys and check if the error is small and if damping is required
      double newton_error = 10000.0;
@@ -1358,8 +1349,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
 
      for (size_t col = 0; col != newton_solution_vector.N(); ++col)
        newton_solution_vector[col] += (damping_parameter * newton_step_solution_vector[col]);
-   
-     //print_vector( newton_solution_vector );
    
      // current solution:
      solution.clear();

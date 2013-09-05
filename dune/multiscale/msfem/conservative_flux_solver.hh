@@ -153,8 +153,6 @@ public:
     // rhs local msfem problem:
     SubGridDiscreteFunction& rhs_flux_problem) const;
 
-  void printLocalRHS(SubGridDiscreteFunction& rhs) const;
-
   double normRHS(SubGridDiscreteFunction& rhs) const;
 
 private:
@@ -279,31 +277,6 @@ void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, 
     }
   }
 } // assemble_matrix
-
-template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
-          class MacroMicroGridSpecifierImp >
-void ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
-                               MacroMicroGridSpecifierImp >
-  ::printLocalRHS(SubGridDiscreteFunctionImp& rhs) const {
-  typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::IteratorType               IteratorType;
-  typedef typename DiscreteFunctionImp::LocalFunctionType                LocalFunctionType;
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace
-    = rhs.space();
-
-  const IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-  {
-    LocalFunctionType elementOfRHS = rhs.localFunction(*it);
-
-    const int numDofs = elementOfRHS.numDofs();
-    for (int i = 0; i < numDofs; ++i)
-    {
-      DSC_LOG_DEBUG << "Number of Dof: " << i << " ; " << rhs.name() << " : " << elementOfRHS[i] << std::endl;
-    }
-  }
-}  // end method
 
 template< class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp >
@@ -553,18 +526,6 @@ public:
       , filename_template_(boost::format("_conservativeFlux_e_%d_sg_%d"))
   {}
 
-  template< class Stream >
-  void oneLinePrint(Stream& stream, const SubGridDiscreteFunctionType& func) const {
-    typedef typename SubGridDiscreteFunctionType::ConstDofIteratorType
-    DofIteratorType;
-    DofIteratorType it = func.dbegin();
-    stream << "\n" << func.name() << ": [ ";
-    for ( ; it != func.dend(); ++it)
-      stream << std::setw(5) << *it << "  ";
-
-    stream << " ] " << std::endl;
-  } // oneLinePrint
-
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
   void solve(JacobianRangeType& e_i,  // direction 'e_i'
@@ -603,8 +564,6 @@ public:
 
     // assemble right hand side of algebraic local msfem problem
     cf_problem_operator.assemble_RHS(e_i, local_corrector_e_i, sub_grid_id, rhs);
-
-    // oneLinePrint( DSC_LOG_DEBUG, rhs );
 
     const double norm_rhs = cf_problem_operator.normRHS(rhs);
 
