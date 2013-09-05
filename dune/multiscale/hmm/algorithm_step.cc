@@ -219,8 +219,8 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
       typename CommonTraits::DiscreteFunctionType zero_func_coarse( " constant zero function coarse ", discreteFunctionSpace);
       zero_func_coarse.clear();
 
-      const Dune::Fem::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
-      hmm_rhs_L2_norm = l2error.norm2< CommonTraits::assembler_order >(zero_func_coarse, hmm_newton_rhs);
+      const Dune::Fem::LPNorm< typename CommonTraits::GridPartType > l2norm(hmm_newton_rhs.space().gridPart(), 2);
+      hmm_rhs_L2_norm = l2norm.distance(zero_func_coarse, hmm_newton_rhs);
 
       DSC_LOG_INFO << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
       DSC_LOG_INFO << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
@@ -502,7 +502,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
               << CommonTraits::DiscreteFunctionSpaceType::polynomialOrder << "."
               << std::endl << std::endl;
 
-    const Dune::Fem::L2Error< typename CommonTraits::DiscreteFunctionType > l2error;
+    const Dune::Fem::LPNorm< typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(gridPart, 2);
 
     // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
     CellProblemNumberingManager cp_num_manager(discreteFunctionSpace);
@@ -541,7 +541,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
       projected_hmm_solution.clear();
       Dune::Stuff::HeterogenousProjection<Dune::Stuff::InlevelSearchStrategy>::project( hmm_solution/*source*/, projected_hmm_solution/*target*/ );
 
-      const auto hmm_error = l2error.norm2< hmm_polorder >(projected_hmm_solution, reference_solution);
+      const auto hmm_error = l2norm.distance(projected_hmm_solution, reference_solution);
 
       // old (expensive) hack to deal with discrete functions, defined on different grids
       // (should do the same as the heterogenous projection above - could therefore be used for comparison)
@@ -567,14 +567,14 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
     {
       int order_quadrature_rule = 13;
       const auto u = Problem::getExactSolution();
-      const auto exact_hmm_error
-          = l2error.norm(Dune::Stuff::timefunctionAdapted(*u), hmm_solution, order_quadrature_rule );
+      OutputTraits::DiscreteExactSolutionType gf("Exact Solution", *u, hmm_solution.space().gridPart());
+
+      const auto exact_hmm_error = l2norm.distance(gf, hmm_solution);
 
       DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
       if (DSC_CONFIG_GET("problem.reference_solution", false))
       {
-        const auto reference_sol_error
-            = l2error.norm(Dune::Stuff::timefunctionAdapted(*u), reference_solution, order_quadrature_rule );
+        const auto reference_sol_error = l2norm.distance(gf, reference_solution);
 
         DSC_LOG_INFO << "|| u_reference - u_exact ||_L2 =  " << reference_sol_error << std::endl << std::endl;
       }
