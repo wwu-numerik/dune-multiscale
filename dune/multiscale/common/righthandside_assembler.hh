@@ -21,9 +21,7 @@
 #include <dune/stuff/functions/interfaces.hh>
 
 namespace Dune {
-
-
-
+namespace Multiscale {
 
 //! Assembler for right rand side
 //! We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
@@ -882,6 +880,7 @@ public:
     }
   }  // end method
 }; // end class
-} // end namespace
+} // end namespace Multiscale
+} // end namespace Dune
 
 #endif // ifndef DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
