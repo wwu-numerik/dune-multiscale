@@ -715,9 +715,9 @@ public:
     const std::string cell_solution_location_discFunc ="/cell_problems/_cellSolutions_discFunc";
 
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);
+    Multiscale::DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);
+    Multiscale::DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);
 
     const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
     const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);

@@ -18,13 +18,26 @@
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
-//#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
 
 #include <boost/filesystem/path.hpp>
+
+namespace Dune {
+namespace Multiscale {
+
+//! tiny struct to ensure i/o type don't diverge
+struct IOTraits {
+#if HAVE_SIONLIB && HAVE_MPI
+  typedef Dune::Fem::SIONlibOutStream OutstreamType;
+  typedef Dune::Fem::SIONlibInStream InstreamType;
+#else
+  typedef Dune::Fem::BinaryFileOutStream OutstreamType;
+  typedef Dune::Fem::BinaryFileInStream InstreamType;
+#endif
+};
 
 /**
  * \brief simple discrete function to disk writer
@@ -61,7 +74,7 @@ public:
   void append(const Dune::Fem::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
     const std::string fn = (dir_ / DSC::toString(size_++)).string();
     DSC::testCreateDirectory(fn);
-    Dune::Fem::BinaryFileOutStream stream(fn);
+    IOTraits::OutstreamType stream(fn);
     df.write(stream);
   } // append
 
@@ -104,7 +117,7 @@ public:
   void read(const unsigned long index,
             Dune::Fem::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
     const std::string fn = (dir_ / DSC::toString(index)).string();
-    Dune::Fem::BinaryFileInStream stream(fn);
+    IOTraits::InstreamType stream(fn);
     df.read(stream);
   } // read
 
@@ -112,5 +125,9 @@ private:
   long size_;
   const boost::filesystem::path dir_;
 };
+
+} // namespace Multiscale {
+} // namespace Dune {
+
 
 #endif // ifndef DISCRETEFUNCTIONWRITER_HEADERGUARD
