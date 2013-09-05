@@ -1140,7 +1140,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
   for (const auto& coarseEntity : coarseSpace) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
-     const int coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
+     const auto coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
 
     DSC_LOG_INFO << "-------------------------" << std::endl
             << "Coarse index " << coarse_index << std::endl;
