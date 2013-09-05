@@ -22,7 +22,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
            const typename CommonTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
            const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
            const std::string& filename,
-           const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler);
+           const RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler);
 
 //! the main FEM computation
 void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
