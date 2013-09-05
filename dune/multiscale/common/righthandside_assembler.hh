@@ -232,11 +232,8 @@ public:
 
       for (const auto& intersection : Dune::Stuff::Common::intersectionRange(rhsVector.space().gridPart(), entity))
       {
-        if ( !intersection.boundary() )
-          continue;
-        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
-        if ( intersection.boundary() && (intersection.boundaryId() != 2) )
-          continue;
+        if (Problem::isNeumannBoundary(intersection)) {
+          const auto face = intersection.indexInInside();
 
           const FaceQuadratureType faceQuadrature( rhsVector.space().gridPart(),
                   intersection, polOrd, FaceQuadratureType::INSIDE );
