@@ -239,7 +239,7 @@ public:
 
   //! create a hostgrid function from a subgridfunction
   void subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func,
-                                   HostDiscreteFunctionType& host_func);
+                                   HostDiscreteFunctionType& host_func) const;
 
   void output_local_solution(const int coarse_index, const int which,
                              const HostDiscreteFunctionType& host_local_solution) const;

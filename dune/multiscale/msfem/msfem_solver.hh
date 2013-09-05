@@ -116,7 +116,7 @@ private:
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
   // ------------------------------------------------------------------------------------
-  void identify_coarse_scale_part(MacroMicroGridSpecifier &specifier,
+  void projectCoarseToFineScale(MacroMicroGridSpecifier &specifier,
                                    const DiscreteFunction& coarse_msfem_solution,
                                    DiscreteFunction& coarse_scale_part ) const;
 

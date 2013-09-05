@@ -156,7 +156,7 @@ public:
 
   // is a given 'point' in the convex hull of corner 0, corner 1 and corner 2 (which forms a codim 0 entity)
   bool point_is_in_element( const DomainType& corner_0, const DomainType& corner_1, const DomainType& corner_2, const DomainType& point) const;
-
+  void projectDirichletValues(HostDiscreteFunction& function) const;
 private:
   const DiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
