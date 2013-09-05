@@ -80,7 +80,7 @@ void DiscreteEllipticOperator< DiscreteFunctionImp, DiffusionImp>::assemble_matr
   if (boundary_treatment) {
     // set unit rows for dirichlet dofs
     const auto boundary = Problem::getModelData()->boundaryInfo();
-    Dune::DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
+    DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
     constraints.applyToOperator(global_matrix);
   }
 } // assemble_matrix

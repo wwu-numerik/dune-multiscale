@@ -9,11 +9,11 @@
 #include <dune/multiscale/common/traits.hh>
 
 namespace Dune {
+namespace Multiscale {
 
 template< class R>
 class RightHandSideAssembler;
 
-namespace Multiscale {
 namespace HMM {
 
 struct HMMResult;
@@ -36,7 +36,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
         typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename CommonTraits::DiffusionType& diffusion_op,
-        const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
+        const RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
         typename CommonTraits::DiscreteFunctionType& hmm_solution,
         const typename CommonTraits::DiscreteFunctionType& reference_solution,
         const int loop_cycle );

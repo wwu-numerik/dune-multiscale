@@ -100,7 +100,7 @@ void solve_hmm_problem_nonlinear(const typename HMMTraits::PeriodicDiscreteFunct
                                    typename CommonTraits::DiscreteFunctionType& hmm_solution,
                                    const CellProblemNumberingManager& cp_num_manager,
                                    const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-                                   const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
+                                   const RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
                                    const int loop_cycle)
 {
   // the nonlinear case
@@ -283,7 +283,7 @@ void solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunction
                               typename CommonTraits::DiscreteFunctionType& hmm_solution,
                               const CellProblemNumberingManager& cp_num_manager,
                               const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-                              const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler)
+                              const RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler)
 {
   {
     //! -------------- solve and save the cell problems for the base function set --------------------------------------
@@ -492,7 +492,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
         typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
         typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
         const typename CommonTraits::DiffusionType& diffusion_op,
-        const Dune::RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
+        const RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
         typename CommonTraits::DiscreteFunctionType& hmm_solution,
         const typename CommonTraits::DiscreteFunctionType& reference_solution,
         const int loop_cycle ) {
