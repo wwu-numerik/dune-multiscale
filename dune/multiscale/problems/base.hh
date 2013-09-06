@@ -86,9 +86,6 @@ public:
 
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
   virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
-
-  virtual void jacobian(const DomainType& x, JacobianRangeType& y) const = 0;
-  virtual void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const = 0;
 };
 
 class ZeroDirichletData : public DirichletDataBase
@@ -102,9 +99,6 @@ public:
 
   virtual void evaluate(const DomainType& x, RangeType& y) const { y = RangeType(0.0); }
   virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); }
-
-  virtual void jacobian(const DomainType& x, JacobianRangeType& y) const { y = JacobianRangeType(0.0); }
-  virtual void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const { y = JacobianRangeType(0.0); }
 };
 
 class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType
