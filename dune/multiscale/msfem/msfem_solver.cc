@@ -70,8 +70,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
                                                         DiscreteFunctionType& fine_scale_part ) const {
   fine_scale_part.clear();
 
-  const HostGrid& grid = discreteFunctionSpace_.gridPart().grid();
   const GridPart& gridPart = discreteFunctionSpace_.gridPart();
+  const HostGrid& grid = gridPart.grid();
 
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
   const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
