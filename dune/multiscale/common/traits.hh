@@ -15,7 +15,7 @@
 #include <dune/stuff/functions/constant.hh>
 
 #include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
-#include <dune/fem/operator/common/petsclinearoperator.hh>
+#include <dune/fem/operator/linear/petscoperator.hh>
 
 namespace Dune {
 
