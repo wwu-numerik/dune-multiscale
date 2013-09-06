@@ -50,7 +50,7 @@ void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteF
   }
 } // subgrid_to_hostrid_projection
 
-void Elliptic_MsFEM_Solver::identify_coarse_scale_part( MacroMicroGridSpecifier& /*specifier*/,
+void Elliptic_MsFEM_Solver::projectCoarseToFineScale( MacroMicroGridSpecifier& /*specifier*/,
                                  const DiscreteFunctionType& coarse_msfem_solution,
                                  DiscreteFunctionType& coarse_scale_part ) const
 {
@@ -116,7 +116,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
       }
 
       // add dirichlet corrector
-      DiscreteFunction boundaryCorrector("Boundary Corrector", discreteFunctionSpace_);
+      DiscreteFunctionType boundaryCorrector("Boundary Corrector", discreteFunctionSpace_);
       boundaryCorrector.clear();
       subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs()+1], boundaryCorrector);
       fine_scale_part += boundaryCorrector;
