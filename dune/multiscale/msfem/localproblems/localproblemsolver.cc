@@ -33,7 +33,8 @@ LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/")
 {}
 
-std::unique_ptr<MsFEMLocalProblemSolver::InverseLocProbFEMMatrixType> MsFEMLocalProblemSolver::make_inverse_operator(const MsFEMLocalProblemSolver::LocProbFEMMatrixType& problem_matrix)
+std::unique_ptr<MsFEMLocalProblemSolver::InverseLocProbFEMMatrixType>
+MsFEMLocalProblemSolver::make_inverse_operator(const MsFEMLocalProblemSolver::LocProbFEMMatrixType& problem_matrix)
 {
   const auto solver = Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
   return DSC::make_unique<InverseLocProbFEMMatrixType>(problem_matrix, 1e-8, 1e-8, 20000,
