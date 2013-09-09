@@ -126,9 +126,11 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   // set dirichlet dofs to zero
   Stuff::GridboundaryAllDirichlet<SubGridType::LeafGridView> boundaryInfo;
   DirichletConstraints<SubDiscreteFunctionSpaceType> constraints(boundaryInfo, subDiscreteFunctionSpace);
-  for (auto& rhsIt : allLocalRHS)
-    constraints.setValue(0.0, *rhsIt);
+  constraints.applyToOperator(locProbSysMatrix);
 
+  for (auto& rhsIt : allLocalRHS) {
+    constraints.setValue(0.0, *rhsIt);
+  }
   for (int i=0; i!=allLocalSolutions.size(); ++i) {
     if (!allLocalRHS[i]->dofsValid())
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");

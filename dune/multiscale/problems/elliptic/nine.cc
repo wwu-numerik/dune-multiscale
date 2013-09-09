@@ -32,12 +32,12 @@ bool ModelProblemData::problemAllowsStochastics() const {
 
 std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
   auto defaultBoundaryIds = Dune::Stuff::GridboundaryIdBased<View>::defaultSettings();
-  return std::unique_ptr<BoundaryInfoType>(Dune::Stuff::GridboundaryIdBased<View>::create(defaultBoundaryIds));
+  return std::unique_ptr<BoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<View>());
 }
 
 std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
   auto defaultBoundaryIds = Dune::Stuff::GridboundaryIdBased<SubView>::defaultSettings();
-  return std::unique_ptr<SubBoundaryInfoType>(Dune::Stuff::GridboundaryIdBased<SubView>::create(defaultBoundaryIds));
+  return std::unique_ptr<SubBoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<SubView>());
 }
 
 
