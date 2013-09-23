@@ -512,7 +512,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
       // check if we use a correct numeration of the cell problems:
       const EntityPointerType entity_pointer(*it);
-      if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
+      if (cp_num_manager.get_number_of_cell_problem(entity_pointer, i) != number_of_cell_problem)
       {
         DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
       }
