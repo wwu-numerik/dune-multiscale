@@ -249,9 +249,6 @@ void DiscreteEllipticHMMOperator
     const double macro_entity_volume = one_point_quadrature.weight(0 /*=quadraturePoint*/)
                                        * macro_grid_geometry.integrationElement(local_macro_point);
 
-    // transposed of the the inverse jacobian
-    const auto& inverse_jac = macro_grid_geometry.jacobianInverseTransposed(local_macro_point);
-
     std::vector<int> cell_problem_id(numMacroBaseFunctions, -1);
 
     // \nabla_x u_H^{(n-1})(x_T)

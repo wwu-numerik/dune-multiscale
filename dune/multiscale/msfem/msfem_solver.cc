@@ -159,7 +159,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
           const SubgridLocalFunction sub_loc_value = localSolutions[0]->localFunction(subgridEntity);
 
           assert(localSolutions.size()==coarseSolutionLF.numDofs()+localSolManager.numBoundaryCorrectors());
-          const SubgridLocalFunction dirichletLF = localSolutions[coarseSolutionLF.numDofs()+1]->localFunction(subgridEntity);
           LocalFunction host_loc_value = fine_scale_part.localFunction(fine_host_entity);
 
           int number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();

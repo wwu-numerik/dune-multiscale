@@ -370,7 +370,6 @@ private:
            if ( intersection.boundary() && (intersection.boundaryId() != 2) )
              continue;
 
-           const auto face = intersection.indexInInside();
            const HostFaceQuadrature faceQuadrature( discreteFunctionSpace_.gridPart(),
                                                     intersection, polOrder, HostFaceQuadrature::INSIDE );
            const int numFaceQuadraturePoints = faceQuadrature.nop();

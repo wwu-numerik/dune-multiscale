@@ -90,8 +90,6 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
         SubDiscreteFunctionVectorType& allLocalSolutions) const {
   assert(allLocalSolutions.size()>0);
 
-  const int coarseCellIndex = specifier_.coarseSpace().gridPart().grid().leafIndexSet().index(coarseCell);
-
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
   const int numBoundaryCorrectors = specifier_.simplexCoarseGrid() ? 1 : 2;
   const int numInnerCorrectors = allLocalSolutions.size() - numBoundaryCorrectors;
@@ -184,8 +182,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   // ( effect of the discretized differential operator on a certain discrete function )
   LocalProblemOperator local_problem_op(subDiscreteFunctionSpace, diffusion_);
 
-  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
-
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SGIteratorType;
   typedef typename SubGridPartType::IntersectionIteratorType  SGIntersectionIteratorType;
 
@@ -228,7 +224,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e,
   typedef typename SGLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
       FaceDofIteratorType;
 
-  const HostGridPartType& hostGridPart = hostDiscreteFunctionSpace_.gridPart();
   for (const auto& subgridEntity : subDiscreteFunctionSpace) {
     DSFe::LocalMatrixProxy<LocProbFEMMatrixType> localMatrix(locprob_system_matrix, subgridEntity, subgridEntity);
 

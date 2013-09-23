@@ -310,8 +310,6 @@ void algorithm(const std::string& macroGridName,
   CommonTraits::GridPointerType macro_grid_pointer(macroGridName);
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine(coarse_grid_level_);
-  //! ---- tools ----
-  Dune::Fem::L2Error< CommonTraits::DiscreteFunctionType > l2error;
 
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for LOD-macro-problem
@@ -342,7 +340,7 @@ void algorithm(const std::string& macroGridName,
   auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
   const auto& f = *f_ptr;
   const auto F_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-  const auto& F = *F_ptr; // lower term F(x,u ,\nabla u )
+
   // Dirichlet boundary condition
   const auto dirichlet_bc_ptr = Problem::getDirichletBC();
   const auto& dirichlet_bc = *dirichlet_bc_ptr; 

@@ -534,8 +534,6 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
     {
       DSC_PROFILER.startTiming("hmm.timeadapt");
 
-      static const int hmm_polorder = 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
-
       // project HMM solution in finer discrete function space
       typename CommonTraits::DiscreteFunctionType projected_hmm_solution("HMM Solution Projection", reference_solution.space());
       projected_hmm_solution.clear();
@@ -546,6 +544,7 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
       // old (expensive) hack to deal with discrete functions, defined on different grids
       // (should do the same as the heterogenous projection above - could therefore be used for comparison)
       /*
+      static const int hmm_polorder = 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
       Dune::ImprovedL2Error< typename CommonTraits::DiscreteFunctionType > impL2error;
       typename CommonTraits::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
         hmm_solution,
@@ -565,7 +564,6 @@ HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
     // L2 errors with exact solution
     if (Problem::getModelData()->hasExactSolution())
     {
-      int order_quadrature_rule = 13;
       const auto u = Problem::getExactSolution();
       OutputTraits::DiscreteExactSolutionType gf("Exact Solution", *u, hmm_solution.space().gridPart());
 

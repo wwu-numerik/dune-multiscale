@@ -51,7 +51,6 @@ void Diffusion::diffusiveFlux(const DomainType& x,
                    JacobianRangeType& flux) const {
   
   const double eps = constants().epsilon;
-  const double pi_square = pow(M_PI, 2.0);
   const double x0_eps = (x[0] / eps);
   const double cos_2_pi_x0_eps = cos( 2.0 * M_PI * x0_eps );
 
@@ -72,7 +71,6 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
                            const JacobianRangeType& direction_gradient,
                            JacobianRangeType& flux) const {
   const double eps = constants().epsilon;
-  const double pi_square = pow(M_PI, 2.0);
   const double x0_eps = (x[0] / eps);
   const double cos_2_pi_x0_eps = cos( 2.0 * M_PI * x0_eps );
 
