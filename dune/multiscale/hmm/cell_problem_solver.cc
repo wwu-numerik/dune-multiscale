@@ -202,7 +202,6 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
 
       cell_problem_solution += cell_problem_residual;
 
-      constexpr int pol_order = (2* polynomialOrder) + 2;
       relative_newton_error = l2norm.distance(cell_problem_residual, zero_func);
       const RangeType norm_cell_solution = l2norm.distance(cell_problem_solution, zero_func);
       relative_newton_error = relative_newton_error / norm_cell_solution;
@@ -478,9 +477,6 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     const EntityGeometryType& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
     const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
-
-    // number of base functions on entity
-    const int numBaseFunctions = baseSet.size();
 
     LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
     JacobianRangeType grad_macro_discrete_function;

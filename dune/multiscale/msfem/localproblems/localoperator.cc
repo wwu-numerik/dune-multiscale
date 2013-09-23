@@ -407,8 +407,6 @@ void LocalProblemOperator
   }
 
   // get dirichlet and neumann data
-  auto dirichletDataPtr = Dune::Multiscale::Problem::getDirichletData();
-  const auto& dirichletData = *dirichletDataPtr;
   auto neumannDataPtr = Dune::Multiscale::Problem::getNeumannData();
   const auto& neumannData = *neumannDataPtr;
 

@@ -96,7 +96,6 @@ void Diffusion::diffusiveFlux(const DomainType& x,
     coefficient = isolater_conductivity;
   else
   {
-      const double pi_square = pow(M_PI, 2.0);
       const double x0_eps = (x[0] / eps_0);
       const double cos_2_pi_x0_eps = cos( 2.0 * M_PI * x0_eps );
       coefficient = 0.1 * ( 2.0 + cos_2_pi_x0_eps );
@@ -178,7 +177,6 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
     coefficient = isolater_conductivity;
   else
   {
-      const double pi_square = pow(M_PI, 2.0);
       const double x0_eps = (x[0] / eps_0);
       const double cos_2_pi_x0_eps = cos( 2.0 * M_PI * x0_eps );
       coefficient = 0.1 * ( 2.0 + cos_2_pi_x0_eps );

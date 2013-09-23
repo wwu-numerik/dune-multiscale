@@ -354,17 +354,9 @@ bool algorithm(const std::string& macroGridName,
   CommonTraits::GridPointerType macro_grid_pointer(macroGridName);
   // refine the grid 'starting_refinement_level' times:
   macro_grid_pointer->globalRefine(coarse_grid_level_);
-  //! ---- tools ----
-  Dune::Fem::L2Error< CommonTraits::DiscreteFunctionType > l2error;
 
   CommonTraits::GridType& grid = *macro_grid_pointer;
-
-  //! ---------------------------- grid parts ----------------------------------------------
-  // grid part for the global function space, required for MsFEM-macro-problem
   CommonTraits::GridPartType gridPart(grid);
-
-  //! --------------------------------------------------------------------------------------
-
   // coarse grid
   CommonTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
   CommonTraits::GridType& grid_coarse = *macro_grid_pointer_coarse;

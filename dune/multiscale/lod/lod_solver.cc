@@ -347,8 +347,6 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution( MacroMicroGridS
 
   for (const CoarseEntity& coarse_grid_entity : specifier.coarseSpace())
   {
-
-    const CoarseGeometry& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
     const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
@@ -1046,7 +1044,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
                  if ( intersection.boundary() && (intersection.boundaryId() != 2) )
                    continue;
 
-                 const auto face = intersection.indexInInside();
                  const HostFaceQuadrature faceQuadrature( discreteFunctionSpace_.gridPart(),
                                                           intersection, polOrder, HostFaceQuadrature::INSIDE );
                  const int numFaceQuadraturePoints = faceQuadrature.nop();
@@ -1240,7 +1237,6 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
                  if ( intersection.boundary() && (intersection.boundaryId() != 2) )
                    continue;
 
-                 const auto face = intersection.indexInInside();
                  const HostFaceQuadrature faceQuadrature( discreteFunctionSpace_.gridPart(),
                                                           intersection, polOrder, HostFaceQuadrature::INSIDE );
                  const int numFaceQuadraturePoints = faceQuadrature.nop();

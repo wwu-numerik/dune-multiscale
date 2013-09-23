@@ -349,11 +349,6 @@ protected:
 //      }
 
       // resize flag vector with number of blocks and reset flags 
-      const int blocks = domain_space_.blockMapper().size() ;
-      dirichletBlocks_.resize( blocks );
-      for( int i=0; i<blocks; ++i ) 
-        dirichletBlocks_[ i ] = false ;
-
       const auto blocks = domain_space_.blockMapper().size() ;
       dirichletBlocks_ = std::vector< bool >( blocks, false );
 
@@ -402,7 +397,6 @@ protected:
     bool hasDirichletBoundary = false;
 
     typedef typename EntityType :: Geometry Geometry; 
-    const Geometry& geo = entity.geometry();
 
     // get Lagrange pionts from space 
     const LagrangePointSetType &lagrangePointSet = domain_space_.lagrangePointSet( entity );

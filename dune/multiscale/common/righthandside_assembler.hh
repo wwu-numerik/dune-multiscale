@@ -383,7 +383,6 @@ public:
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionJacobians[lsNum]);
 
             const auto& subGridPart = localSolutionManager.getSubGridPart();
-            const auto intEnd = subGridPart.iend(localEntity);
             for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafView(), localEntity)) {
               if (Problem::isNeumannBoundary(intersection)) {
                 const int          orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
@@ -409,9 +408,6 @@ public:
                   // const typename FaceQuadratureType::CoordinateType& xInInside = insideGeometry.global(xLocal);
                   // therefore, we have to do stupid things:
                   const typename FaceQuadratureType::CoordinateType& xGlobal = faceGeometry.global(xLocal);
-                  auto insidePtr = intersection.inside();
-                  const auto& insideEntity = *insidePtr;
-                  const auto& xInInside = insideEntity.geometry().local(xGlobal);
                   const auto& xInCoarseLocal = coarse_grid_entity.geometry().local(xGlobal);
                   const double factor = faceGeometry.integrationElement(xLocal) * faceQuad.weight(iqP);
 
