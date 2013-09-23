@@ -379,7 +379,7 @@ protected:
 
   // detect all DoFs on the Dirichlet boundary of the given entity 
   template< class EntityType > 
-  bool searchEntityDirichletDofs( const EntityType &entity, const BoundaryType& boundary ) const
+  bool searchEntityDirichletDofs( const EntityType &entity, const BoundaryType& /*boundary*/ ) const
   { 
 
     typedef typename DomainSpaceType :: LagrangePointSetType

@@ -33,7 +33,7 @@ bool ModelProblemData::problemAllowsStochastics() const {
 
 // evaluate f, i.e. return y=f(x) for a given x
 // the following method defines 'f':
-void FirstSource::evaluate(const DomainType& x,
+void FirstSource::evaluate(const DomainType& /*x*/,
                      RangeType& y) const
 {
   y = 1.0;
@@ -112,7 +112,7 @@ void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /
 // evaluate Neumann Boundary Function 'q'
 // q = A( \nabla u ) \cdot n    (on the Neumann boundary)
 // ( A denotes the above diffusion operator and can be nonlinear )
-void NeumannBoundaryCondition::evaluate(const DomainType& x,
+void NeumannBoundaryCondition::evaluate(const DomainType& /*x*/,
                                         RangeType& y) const
 {
    y = 0.0;

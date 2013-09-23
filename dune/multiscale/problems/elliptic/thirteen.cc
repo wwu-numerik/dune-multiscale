@@ -33,7 +33,7 @@ bool ModelProblemData::problemAllowsStochastics() const {
 
 // evaluate f, i.e. return y=f(x) for a given x
 // the following method defines 'f':
-void FirstSource::evaluate(const DomainType& x,
+void FirstSource::evaluate(const DomainType& /*x*/,
                      RangeType& y) const
 {
   y = 0.0;
@@ -227,7 +227,7 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
 
 
 // evaluate Dirichlet Boundary Function
-void DirichletBoundaryCondition::evaluate(const DomainType& x,
+void DirichletBoundaryCondition::evaluate(const DomainType& /*x*/,
                                           RangeType& y) const
 {
   y = 0.0;//0.5 * exp( 1.0 - x[0] );
