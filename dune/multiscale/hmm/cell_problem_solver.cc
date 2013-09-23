@@ -306,7 +306,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
       // check if we use a correct numeration of the cell problems:
       typename EntityType::EntityPointer entity_pointer(*it);
-      if ( !(cp_num_manager.get_number_of_cell_problem(entity_pointer, i) == number_of_cell_problem) )
+      if (cp_num_manager.get_number_of_cell_problem(entity_pointer, i) != number_of_cell_problem)
       {
         DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
       }
