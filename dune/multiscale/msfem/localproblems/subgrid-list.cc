@@ -7,6 +7,7 @@
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/common/float_cmp.hh>
 
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/tools/subgrid_io.hh>
@@ -87,7 +88,7 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
             for (size_t cn = 0; cn < extended_coarse_node_store_[subgrid_index].size(); ++cn) {
             // ! not an effective search algorithm (should be improved eventually):
                for (unsigned int d = 0; d < DomainType::dimension; ++d) {
-                 if ( !(extended_coarse_node_store_[subgrid_index][cn][d] == coarse_father->geometry().corner(c)[d]) )
+                  if (DSC::FloatCmp::ne(extended_coarse_node_store_[subgrid_index][cn][d], coarse_father->geometry().corner(c)[d]))
                   {
                      break;
                   }
@@ -106,7 +107,7 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
               // if we find such a corner, (and if it is not already contained) it must be added to the coarse_node_store_
               bool fine_corner_is_coarse_corner = false;
               for (unsigned int d = 0; d < DomainType::dimension; ++d) {
-                 if ( !(current_fine_entity->geometry().corner(c_fine)[d] == coarse_father->geometry().corner(c)[d]) )
+                 if (DSC::FloatCmp::ne(current_fine_entity->geometry().corner(c_fine)[d], coarse_father->geometry().corner(c)[d]))
                   {
                      break;
                   }
@@ -122,7 +123,7 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
                  for (size_t cn = 0; cn < coarse_node_store_[subgrid_index].size(); ++cn) {
 
                      for (unsigned int d = 0; d < DomainType::dimension; ++d) {
-                     if ( !(coarse_node_store_[subgrid_index][cn][d] == coarse_father->geometry().corner(c)[d]) )
+                     if (DSC::FloatCmp::ne(coarse_node_store_[subgrid_index][cn][d], coarse_father->geometry().corner(c)[d]))
                       {
                          break;
                       }
