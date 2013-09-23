@@ -70,12 +70,13 @@ namespace Dune {
     //! careful, this only works when using grid selector
     #if defined(USED_ALBERTAGRID_GRIDTYPE)
         HOSTGRID_IO_FUNCTION_PAIR(AlbertaGrid,2)
-        template<> bool writeHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
-        { return writeHostgridCommon(hostgrid, filename); }
-        \
-        template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
-        { return readHostgridCommon(hostgrid, filename); }
     #elif defined(USED_SPGRID_GRIDTYPE)
+//        template<> bool writeHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
+//        { return writeHostgridCommon(hostgrid, filename); }
+//        \
+//        template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
+//        { return readHostgridCommon(hostgrid, filename); }
+    #elif defined(USED_YASPGRID_GRIDTYPE)
             template<> bool writeHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
         { /*YASPGrid can't be written to disk*/ return false; }
         \

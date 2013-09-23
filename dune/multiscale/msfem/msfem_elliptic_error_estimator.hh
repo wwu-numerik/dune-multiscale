@@ -232,7 +232,7 @@ private:
                             * geometry.integrationElement( entityQuadrature.point(quadraturePoint) );
 
       f_.evaluate(geometry.global( entityQuadrature.point(quadraturePoint) ), y);
-      y = y * y;
+      y *= y;
 
       local_indicator += weight * y;
     }

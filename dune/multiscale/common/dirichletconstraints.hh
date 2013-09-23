@@ -353,10 +353,8 @@ protected:
       dirichletBlocks_ = std::vector< bool >( blocks, false );
 
       bool hasDirichletBoundary = false;
-      const IteratorType end = domain_space_.end();
-      for( IteratorType it = domain_space_.begin(); it != end; ++it )
+      for( const auto& entity : domain_space_)
       {
-        const EntityType &entity = *it;
         // if entity has boundary intersections 
         if( entity.hasBoundaryIntersections() )
         {
