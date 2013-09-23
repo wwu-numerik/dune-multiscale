@@ -31,7 +31,7 @@ class LocalProblemOperator
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
-  enum { faceCodim = 1 };
+  static const int faceCodim = 1;
 
 private:
   typedef SubDiscreteFunctionType DiscreteFunction;

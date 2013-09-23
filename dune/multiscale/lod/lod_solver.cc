@@ -1051,7 +1051,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
                                                           intersection, polOrder, HostFaceQuadrature::INSIDE );
                  const int numFaceQuadraturePoints = faceQuadrature.nop();
 
-                 enum { faceCodim = 1 };
+                 static const int faceCodim = 1;
                  for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
                  {
                     RangeType func_in_x;
@@ -1245,7 +1245,7 @@ void  Elliptic_Rigorous_MsFEM_Solver::solve(const CommonTraits::DiffusionType& d
                                                           intersection, polOrder, HostFaceQuadrature::INSIDE );
                  const int numFaceQuadraturePoints = faceQuadrature.nop();
 
-                 enum { faceCodim = 1 };
+                 static const int faceCodim = 1;
                  for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
                  {
                     RangeType func_in_x;

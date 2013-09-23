@@ -386,7 +386,7 @@ protected:
 
     typedef typename DomainSpaceType :: GridPartType GridPartType;
 
-    const int faceCodim = 1;
+    static const int faceCodim = 1;
     typedef typename GridPartType :: IntersectionIteratorType
       IntersectionIteratorType;
 

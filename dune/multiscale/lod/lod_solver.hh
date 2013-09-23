@@ -151,7 +151,7 @@ private:
   // typedef typename HostGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
   // HostGridLevelEntityIterator;
 
-  enum { faceCodim = 1 };
+  static const int faceCodim = 1;
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
@@ -375,7 +375,7 @@ private:
                                                     intersection, polOrder, HostFaceQuadrature::INSIDE );
            const int numFaceQuadraturePoints = faceQuadrature.nop();
 
-           enum { faceCodim = 1 };
+           static const int faceCodim = 1;
            for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
            {
              RangeType func_in_x;
