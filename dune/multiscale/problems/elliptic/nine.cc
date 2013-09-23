@@ -141,7 +141,7 @@ void ExactSolution::evaluate(const DomainType& x,
 }
 
 // evaluate Dirichlet Boundary Function
-void DirichletData::evaluate(const DomainType& x,
+void DirichletData::evaluate(const DomainType& /*x*/,
         RangeType& y) const
 {
   y = 0.0;
@@ -153,7 +153,7 @@ void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, Rang
 }
 
 // evaluate jacobian of dirichlet boundary function
-void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y) const
+void DirichletData::jacobian(const DomainType& /*x*/, JacobianRangeType& y) const
 {
   y[0] = 0.0;
 } // jacobian
@@ -165,7 +165,7 @@ void DirichletData::jacobian(const DomainType& x, const TimeType& /*time*/, Jaco
 } // jacobian
 
 // evaluate Neumann Boundary Function
-void NeumannData::evaluate(const DomainType& x,
+void NeumannData::evaluate(const DomainType& /*x*/,
         RangeType& y) const
 {
   y = 1.0;

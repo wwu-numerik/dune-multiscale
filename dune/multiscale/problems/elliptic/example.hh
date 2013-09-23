@@ -208,23 +208,23 @@ public:
   LowerOrderTerm( /*double scaling_factor = 1.0*/ ){} // : scaling_factor_( scaling_factor ) {}
 
   template< class DomainType , class RangeType >
-  void evaluate(const DomainType& x, RangeType& y) const
+  void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const
   {}
 
   template< class DomainType , class TimeType, class RangeType >
-  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const
+  void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& /*y*/) const
   {}
   
   template< class DomainType , class RangeType, class JacobianRangeType >
-  void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, RangeType& y) const
+  void evaluate(const DomainType& /*x*/, const RangeType& /*position*/, const JacobianRangeType& /*direction_gradient*/, RangeType& /*y*/) const
   {}
 
   template< class DomainType , class RangeType, class JacobianRangeType >
-  void position_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, RangeType& y) const
+  void position_derivative(const DomainType& /*x*/, const RangeType& /*position*/, const JacobianRangeType& /*direction_gradient*/, RangeType& /*y*/) const
   {}
 
   template< class DomainType , class RangeType, class JacobianRangeType >
-  void direction_derivative(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient, JacobianRangeType& y) const
+  void direction_derivative(const DomainType& /*x*/, const RangeType& /*position*/, const JacobianRangeType& /*direction_gradient*/, JacobianRangeType& /*y*/) const
   {}
   
 };

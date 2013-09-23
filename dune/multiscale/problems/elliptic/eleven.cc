@@ -53,7 +53,7 @@ void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeT
 
 Diffusion::Diffusion(){}
 
-void Diffusion::diffusiveFlux(const DomainType& x,
+void Diffusion::diffusiveFlux(const DomainType& /*x*/,
                    const JacobianRangeType& direction,
                    JacobianRangeType& flux) const {
   double a_0_0 = 3.0;
@@ -65,7 +65,7 @@ void Diffusion::diffusiveFlux(const DomainType& x,
   flux[0][1] = a_1_0 * direction[0][0] + a_1_1 * direction[0][1];
 } // diffusiveFlux
 
-void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
+void Diffusion::jacobianDiffusiveFlux(const DomainType& /*x*/,
                            const JacobianRangeType& /*position_gradient*/,
                            const JacobianRangeType& direction_gradient,
                            JacobianRangeType& flux) const {
@@ -93,7 +93,7 @@ void LowerOrderTerm::evaluate(const DomainType& /*x*/, const TimeType& /*time*/,
 //! rename this into 'lower order term' or something similar
 void LowerOrderTerm::evaluate(const DomainType& x,
                             const RangeType& position,
-                            const JacobianRangeType& direction_gradient,
+                            const JacobianRangeType& /*direction_gradient*/,
                             RangeType& y) const {
 
    // F(x,p, (z_1,z_2) ) = c g(p) z_2
@@ -112,7 +112,7 @@ void LowerOrderTerm::evaluate(const DomainType& x,
 // 'position = u(x)', 'direction_gradient = \grad u(x)'
 void LowerOrderTerm::position_derivative(const DomainType& x,
                                        const RangeType& position,
-                                       const JacobianRangeType& direction_gradient,
+                                       const JacobianRangeType& /*direction_gradient*/,
                                        RangeType& y) const {
 
    // \partial_p F(x,p, (z_1,z_2) ) = ..
@@ -129,9 +129,9 @@ void LowerOrderTerm::position_derivative(const DomainType& x,
 
 // evaluate position derivative y = d_2 F (x, u(x), \grad u(x))  (derivative with respect to the third componenent 'grad u(x)')
 // 'position = u(x)', 'direction_gradient = \grad u(x)'
-void LowerOrderTerm::direction_derivative(const DomainType& x,
-                                        const RangeType& position,
-                                        const JacobianRangeType& direction_gradient,
+void LowerOrderTerm::direction_derivative(const DomainType& /*x*/,
+                                        const RangeType& /*position*/,
+                                        const JacobianRangeType& /*direction_gradient*/,
                                         JacobianRangeType& y) const {
    // \grad_z F(x,p, (z_1,z_2) ) = ...
    y[0][1] = 0.0;
