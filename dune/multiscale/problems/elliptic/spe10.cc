@@ -34,7 +34,7 @@ FirstSource::FirstSource(){}
 
 // evaluate f, i.e. return y=f(x) for a given x
 // the following method defines 'f':
-void __attribute__((hot)) FirstSource::evaluate(const DomainType& x,
+void __attribute__((hot)) FirstSource::evaluate(const DomainType& /*x*/,
         RangeType& y) const {
   y = RangeType(1.0);
 } // evaluate
@@ -91,10 +91,10 @@ void Diffusion::diffusiveFlux(const DomainType& x,
   permeability.mv(direction[0], flux[0]);
 } // diffusiveFlux
 
-void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
+void Diffusion::jacobianDiffusiveFlux(const DomainType& /*x*/,
                            const JacobianRangeType& /*position_gradient*/,
-                           const JacobianRangeType& direction_gradient,
-                           JacobianRangeType& flux) const {
+                           const JacobianRangeType& /*direction_gradient*/,
+                           JacobianRangeType& /*flux*/) const {
   DUNE_THROW(NotImplemented, "Jacobian of Flux is not implemented at the moment!");
 } // jacobianDiffusiveFlux
 
