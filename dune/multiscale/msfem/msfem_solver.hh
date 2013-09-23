@@ -60,7 +60,7 @@ private:
 
   typedef typename HostEntity::EntityPointer HostEntityPointer;
 
-  enum { faceCodim = 1 };
+  static const int faceCodim = 1;
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 

@@ -228,7 +228,7 @@ public:
                   intersection, polOrd, FaceQuadratureType::INSIDE );
           const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
-          enum { faceCodim = 1 };
+          static const int faceCodim = 1;
           for (auto faceQuadraturePoint : DSC::valueRange(numFaceQuadraturePoints))
           {
             baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi_x );
@@ -658,7 +658,7 @@ public:
       
         const FaceQuadratureType faceQuadrature( rhsVector.space().gridPart(),
                                              intersection, polOrd, FaceQuadratureType::INSIDE );
-        enum { faceCodim = 1 };
+        static const int faceCodim = 1;
         for (auto faceQuadraturePoint : DSC::valueRange(faceQuadrature.nop()))
         {
           baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi_x );

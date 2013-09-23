@@ -99,7 +99,7 @@ private:
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
   typedef typename SubGridType::Codim< 0 >::Geometry SubGridEntityGeometry;
   
-  enum { faceCodim = 1 };
+  static const int faceCodim = 1;
   typedef typename SubgridLagrangePointSetType::Codim< faceCodim >::SubEntityIteratorType
     SubgridFaceDofIteratorType;
 

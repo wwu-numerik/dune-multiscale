@@ -845,7 +845,7 @@ void LocalProblemOperator
                                                  intersection, 2 * host_space.order() + 2, HostFaceQuadrature::INSIDE );
         const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
-        enum { faceCodim = 1 };
+        static const int faceCodim = 1;
         for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
         {
           baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi );

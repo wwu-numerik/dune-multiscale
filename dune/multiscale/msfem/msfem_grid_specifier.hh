@@ -18,7 +18,7 @@ class MacroMicroGridSpecifier
   typedef typename CommonTraits::DiscreteFunctionSpaceType  DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
 
-  enum { faceCodim = 1 };
+  static const int faceCodim = 1;
 
 public:
   MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space,
