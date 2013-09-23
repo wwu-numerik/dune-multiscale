@@ -111,10 +111,11 @@ set( LODM_SOURCES
     
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native" 
-  "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias")
+  "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias" )
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
-add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DENABLE_PETSC=1 -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1)
+
+add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DENABLE_PETSC=1 -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_lodm STATIC ${LODM_SOURCES})
@@ -175,5 +176,16 @@ DEPENDENCYCHECK( ${header} ${dune} )
 add_subdirectory(doc)
 add_subdirectory(dune)
 
+#disable most warnings from dependent modules
+foreach(_mod ${ALL_DEPENDENCIES})
+      dune_module_to_uppercase(_upper_case "${_mod}")
+      if(${_mod}_INCLUDE_DIRS)
+        foreach( _idir ${${_mod}_INCLUDE_DIRS} )
+            add_definitions("-isystem ${_idir}")
+        endforeach( _idir )
+      endif(${_mod}_INCLUDE_DIRS)
+endforeach(_mod DEPENDENCIES)
+  
 ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
+
