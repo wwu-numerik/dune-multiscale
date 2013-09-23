@@ -262,7 +262,7 @@ public:
                        RangeType& y) const {
     RangeType lambda_1;
     RangeType lambda_0;
-    if (a_0_[0] == a_2_[0])
+    if (DSC::FloatCmp::eq(a_0_[0],a_2_[0]))
     {
       lambda_1 = (x[0] - a_2_[0]) / (a_1_[0] - a_2_[0]);
 
