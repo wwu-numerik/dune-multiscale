@@ -73,7 +73,7 @@ bool LocalSolutionManager::solutionsWereLoaded() const
   return loaded_;
 }
 
-int LocalSolutionManager::numBoundaryCorrectors() const {
+std::size_t LocalSolutionManager::numBoundaryCorrectors() const {
   return numBoundaryCorrectors_;
 }
 }

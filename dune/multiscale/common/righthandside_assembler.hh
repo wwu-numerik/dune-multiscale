@@ -88,9 +88,8 @@ private:
                                                           // functionSpace
 
       const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);   // 0 --> codim 0
-      const int numQuadraturePoints = quadrature.nop();
-      const int numDofs = elementOfRHS.numDofs();
-      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+      const auto numDofs = elementOfRHS.numDofs();
+      for (auto quadraturePoint : DSC::valueRange(quadrature.nop()))
       {
         // the return values:
         RangeType f_x;
@@ -227,10 +226,10 @@ public:
 
           const FaceQuadratureType faceQuadrature( rhsVector.space().gridPart(),
                   intersection, polOrd, FaceQuadratureType::INSIDE );
-          const int numFaceQuadraturePoints = faceQuadrature.nop();
+          const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
           enum { faceCodim = 1 };
-          for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
+          for (auto faceQuadraturePoint : DSC::valueRange(numFaceQuadraturePoints))
           {
             baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi_x );
             baseSet.jacobianAll( faceQuadrature[faceQuadraturePoint], grad_phi_x );
@@ -257,14 +256,13 @@ public:
         }
       }
 
-      const int numQuadraturePoints = quadrature.nop();
       // the return values:
       RangeType f_x;
 
       JacobianRangeType gradient_dirichlet_extension;
       JacobianRangeType diffusive_flux_in_gradient_dirichlet_extension;
   
-      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+      for (auto quadraturePoint : DSC::valueRange(quadrature.nop()))
       {
         // local (barycentric) coordinates (with respect to entity)
         const auto& local_point = quadrature.point(quadraturePoint);
@@ -322,7 +320,7 @@ public:
 
       const GeometryType& coarseGeometry= coarse_grid_entity.geometry();
       auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
-      const int numLocalBaseFunctions = rhsLocalFunction.numDofs();
+      const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
 
       const BasisFunctionSetType& coarse_grid_baseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
 
@@ -337,7 +335,7 @@ public:
       {
         const Fem::CachingQuadrature< GridPartType, 0 > quadrature(coarse_grid_entity, polOrd+5);
         std::vector<RangeType> phi_x_vec(numLocalBaseFunctions);
-        const int numQuadraturePoints = quadrature.nop();
+        const auto numQuadraturePoints = quadrature.nop();
         for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
         {
           const double det = coarseGeometry.integrationElement( quadrature.point(quadraturePoint) );
@@ -377,7 +375,7 @@ public:
           std::vector< std::vector<typename LocalFunctionType::JacobianRangeType> >
                    allLocalSolutionJacobians(localSolutions.size(),
                                              std::vector< JacobianRangeType >(localQuadrature.nop(), JacobianRangeType(0.0)));
-          for (int lsNum=0; lsNum < localSolutions.size(); ++lsNum) {
+          for (auto lsNum : DSC::valueRange(localSolutions.size())) {
             LocalFunctionType localFunction = localSolutions[lsNum]->localFunction(localEntity);
             // this evaluates the local solutions in all quadrature points...
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
@@ -419,7 +417,7 @@ public:
 
                   neumannData.evaluate(xGlobal, neumannValue);
                   coarse_grid_baseSet.evaluateAll(xInCoarseLocal, phi_x_vec);
-                  for (unsigned int i = 0; i < numLocalBaseFunctions; ++i) {
+                  for (auto i : DSC::valueRange(numLocalBaseFunctions)) {
                     assert(i<phi_x_vec.size());
                     assert(iqP<localSolutionOnFace.size());
                     rhsLocalFunction[i] += factor * (neumannValue * (phi_x_vec[i]+localSolutionOnFace[iqP]));
@@ -567,8 +565,7 @@ public:
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
 
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
-      const int numQuadraturePoints = quadrature.nop();
+      const auto numDofs = elementOfRHS.numDofs();
       // the return values:
       RangeType f_x;
       std::vector<RangeType> phi_x(numDofs);
@@ -579,7 +576,7 @@ public:
       // Let A denote the diffusion operator, then we save
       // A( \gradient old_u_H )
       JacobianRangeType diffusive_flux_in_grad_old_u_H;
-      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+      for (auto quadraturePoint : DSC::valueRange(quadrature.nop()))
       {
         // local (barycentric) coordinates (with respect to entity)
         const auto& local_point = quadrature.point(quadraturePoint);
@@ -661,10 +658,8 @@ public:
       
         const FaceQuadratureType faceQuadrature( rhsVector.space().gridPart(),
                                              intersection, polOrd, FaceQuadratureType::INSIDE );
-        const int numFaceQuadraturePoints = faceQuadrature.nop();
-
         enum { faceCodim = 1 };
-        for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
+        for (auto faceQuadraturePoint : DSC::valueRange(faceQuadrature.nop()))
         {
           baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi_x );
           baseSet.jacobianAll( faceQuadrature[faceQuadraturePoint], grad_phi_x );
@@ -691,7 +686,6 @@ public:
 
       }
 
-      const int numQuadraturePoints = quadrature.nop();
       // the return values:
       RangeType f_x;
 
@@ -705,7 +699,7 @@ public:
       
       JacobianRangeType direction;
 
-      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint)
+      for (auto quadraturePoint : DSC::valueRange(quadrature.nop()))
       {
         // local (barycentric) coordinates (with respect to entity)
         const auto& local_point = quadrature.point(quadraturePoint);

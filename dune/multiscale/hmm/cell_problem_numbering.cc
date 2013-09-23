@@ -1,5 +1,7 @@
 #include "cell_problem_numbering.hh"
 
+#include <dune/stuff/common/ranges.hh>
+
 namespace Dune {
 namespace Multiscale {
 namespace HMM {
@@ -12,8 +14,7 @@ CellProblemNumberingManager::CellProblemNumberingManager(const DiscreteFunctionS
   {
     EntityPointerType ep(entity);
     cell_numbering_map_NL_.insert( std::make_pair(ep, number_of_entity) );
-    const int numBaseFunctions = discreteFunctionSpace.basisFunctionSet(entity).size();
-    for (int i = 0; i < numBaseFunctions; ++i)
+    for (auto i : DSC::valueRange(discreteFunctionSpace.basisFunctionSet(entity).size()))
     {
       const std::pair< EntityPointerType, int > idPair(ep, i);
       cell_numbering_map_.insert( std::make_pair(idPair, counter) );

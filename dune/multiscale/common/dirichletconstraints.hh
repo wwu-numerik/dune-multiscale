@@ -112,10 +112,9 @@ public:
 
       DofIteratorType wIt = w.dbegin();
 
-      const unsigned int localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
-      localBlockSize ;
+      const auto localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType :: localBlockSize;
       // loop over all blocks
-      const unsigned int blocks = w.space().blockMapper().size();
+      const auto blocks = w.space().blockMapper().size();
       for( unsigned int blockDof = 0; blockDof < blocks ; ++ blockDof )
       {
         if( dirichletBlocks_[ blockDof ] )
@@ -226,8 +225,8 @@ protected:
     LocalMatrixType localMatrix = linearOperator.localMatrix( entity, entity );
 
     // get number of basis functions 
-    const int localBlocks = lagrangePointSet.size();
-    const int localBlockSize = DomainSpaceType :: localBlockSize ;
+    const auto localBlocks = lagrangePointSet.size();
+    const auto localBlockSize = DomainSpaceType :: localBlockSize ;
 
     // map local to global dofs
     std::vector<std::size_t> globalDofs(localBlockSize);
@@ -239,7 +238,7 @@ protected:
     // counter for all local dofs (i.e. localBlockDof * localBlockSize + ... )
     int localDof = 0;
     // iterate over face dofs and set unit row
-    for( int localBlockDof = 0 ; localBlockDof < localBlocks; ++ localBlockDof )
+    for(auto localBlockDof : DSC::valueRange(localBlocks))
     {
       
       if( dirichletBlocks_[ globalBlockDofs[localBlockDof]] ) 
@@ -355,8 +354,8 @@ protected:
       for( int i=0; i<blocks; ++i ) 
         dirichletBlocks_[ i ] = false ;
 
-      typedef typename DomainSpaceType :: IteratorType IteratorType;
-      typedef typename IteratorType :: Entity EntityType;
+      const auto blocks = domain_space_.blockMapper().size() ;
+      dirichletBlocks_ = std::vector< bool >( blocks, false );
 
       bool hasDirichletBoundary = false;
       const IteratorType end = domain_space_.end();
@@ -409,7 +408,7 @@ protected:
     const LagrangePointSetType &lagrangePointSet = domain_space_.lagrangePointSet( entity );
    
     // get number of Lagrange Points 
-    const int localBlocks = lagrangePointSet.size(); 
+    const auto localBlocks = lagrangePointSet.size();
 
     //map local to global BlockDofs
     std::vector<size_t> globalBlockDofs(localBlocks);

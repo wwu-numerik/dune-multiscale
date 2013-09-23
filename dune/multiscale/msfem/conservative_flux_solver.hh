@@ -312,8 +312,7 @@ double ConservativeFluxOperator< SubGridDiscreteFunctionImp, DiscreteFunctionImp
     LocalFunctionType localRHS = rhs.localFunction(*it);
 
     // integrate
-    const int quadratureNop = quadrature.nop();
-    for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
+    for (auto quadraturePoint : DSC::valueRange(quadrature.nop()))
     {
       const double weight = quadrature.weight(quadraturePoint)
                             * geo.integrationElement( quadrature.point(quadraturePoint) );

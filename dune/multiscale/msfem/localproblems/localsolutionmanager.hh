@@ -44,17 +44,17 @@ public:
 
   bool solutionsWereLoaded() const;
 
-  int numBoundaryCorrectors() const;
+  std::size_t numBoundaryCorrectors() const;
 
 private:
   SubGridListType&                   subgridList_;
   const MacroMicroGridSpecifierType& gridSpecifier_;
   SubGridPartType                    subGridPart_;
   DiscreteFunctionSpaceType          localDiscreteFunctionSpace_;
-  const IdType                          coarseId_;
+  const IdType                       coarseId_;
   bool                               loaded_;
-  const int                          numBoundaryCorrectors_;
-  const int                          numLocalProblems_;
+  const std::size_t                  numBoundaryCorrectors_;
+  const std::size_t                  numLocalProblems_;
   LocalSolutionVectorType            localSolutions_;
   const std::string                  localSolutionLocation_;
 };

@@ -461,7 +461,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
   // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
   Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
-  int number_of_cell_problem = 0;
+  std::size_t number_of_cell_problem = 0;
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace = macro_discrete_function.space();
 
@@ -495,7 +495,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
     baseSet.jacobianAll(quadrature[0 /*=quadraturePoint*/], gradientPhi);
 
-    for (int i = 0; i < numBaseFunctions; ++i)
+    for (auto i : DSC::valueRange(baseSet.size()))
     {
       jac_corrector_Phi_i.clear();
 

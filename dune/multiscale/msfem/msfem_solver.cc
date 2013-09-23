@@ -106,8 +106,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
       }
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-      assert(localSolutions.size()-localSolManager.numBoundaryCorrectors()
-              == coarseSolutionLF.numDofs() && "The current implementation relies on having the \
+      assert((localSolutions.size()-localSolManager.numBoundaryCorrectors()
+              == coarseSolutionLF.numDofs()) && "The current implementation relies on having the \
               same types of elements on coarse and fine level!");
       for (int dof=0; dof< coarseSolutionLF.numDofs(); ++dof) {
         *localSolutions[dof] *= coarseSolutionLF[dof];
@@ -171,7 +171,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
             // count the number of different coarse-grid-entities that share the above node
             std::unordered_set< SubGridListType::IdType > coarse_entities;
-            const int numEntitiesSharingNode = nodeToEntityMap[global_index_node].size();
+            const auto numEntitiesSharingNode = nodeToEntityMap[global_index_node].size();
             for (size_t j = 0; j < numEntitiesSharingNode; ++j) {
               // get the id of the macro element enclosing the current element
               const auto innerId = subgrid_list.getEnclosingMacroCellId(nodeToEntityMap[global_index_node][j]);

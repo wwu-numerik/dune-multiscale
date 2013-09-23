@@ -8,6 +8,7 @@
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/stuff/common/ranges.hh>
 
 // artificical mass coefficient to guarantee uniqueness and existence of the cell problem solution
 // (should be as small as possible)
@@ -125,7 +126,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(
     auto local_fine_function = old_fine_function.localFunction(cell_grid_entity);
 
     const BaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*periodicDiscreteFunctionSpace_.order()" is sufficient, for the general case, it is
     // better to use a higher order quadrature:
@@ -218,12 +219,10 @@ double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const
     const LocalFunctionType localRHS = rhs.localFunction(*it);
 
     // integrate
-    const int quadratureNop = quadrature.nop();
-    for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
+    for (auto quadraturePoint : DSC::valueRange(quadrature.nop()))
     {
       const double weight = quadrature.weight(quadraturePoint)
                             * geo.integrationElement( quadrature.point(quadraturePoint) );
-
       RangeType value(0.0);
       localRHS.evaluate(quadrature[quadraturePoint], value);
 
@@ -343,7 +342,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
     LocalFunction elementOfRHS = cell_problem_RHS.localFunction(cell_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
@@ -436,7 +435,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS
     LocalFunction elementOfRHS = jac_corrector_cell_problem_RHS.localFunction(cell_grid_entity);
 
     const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
-    const unsigned int numBaseFunctions = baseSet.size();
+    const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
     const size_t numQuadraturePoints = quadrature.nop();
