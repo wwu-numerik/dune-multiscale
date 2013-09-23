@@ -66,11 +66,10 @@ public:
       ConstDofIteratorType uIt = u.dbegin();
       DofIteratorType wIt = w.dbegin();
 
-      const unsigned int localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
+      constexpr auto localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
         localBlockSize ;
       // loop over all blocks 
-      const unsigned int blocks = u.space().blockMapper().size();
-      for( unsigned int blockDof = 0; blockDof < blocks ; ++ blockDof )
+      for(auto blockDof : DSC::valueRange(u.space().blockMapper().size()))
       {
         if( dirichletBlocks_[ blockDof ] )
         {
@@ -283,7 +282,7 @@ protected:
       LagrangePointSetType;
     typedef typename DiscreteSpaceType :: GridPartType GridPartType;
 
-    const int faceCodim = 1;
+    static const int faceCodim = 1;
     typedef typename GridPartType :: IntersectionIteratorType
       IntersectionIteratorType;
     typedef typename LagrangePointSetType
@@ -299,7 +298,7 @@ protected:
     const LagrangePointSetType &lagrangePointSet = domain_space_.lagrangePointSet( entity );
 
     // get number of Lagrange Points 
-    const int numBlocks = lagrangePointSet.size(); 
+    const auto numBlocks = lagrangePointSet.size();
 
     int localDof = 0;
     const int localBlockSize = DiscreteSpaceType :: localBlockSize ;
@@ -309,7 +308,7 @@ protected:
     domain_space_.blockMapper().map(entity,globalBlockDofs);
  
     // iterate over face dofs and set unit row
-    for( int localBlock = 0 ; localBlock < numBlocks; ++ localBlock ) 
+    for(auto localBlock : DSC::valueRange(numBlocks))
     {
       if( dirichletBlocks_[ globalBlockDofs[ localBlock ] ] ) 
       {
