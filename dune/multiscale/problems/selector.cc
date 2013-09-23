@@ -54,7 +54,7 @@ using namespace Dune::Multiscale;
 */
 
 // Toy doesn't comply with interface
-// MAP_ITEM(Toy, ReturnType, FunctionName) \
+// MAP_ITEM(Toy, ReturnType, FunctionName)
 
 template<class FunctionType>
 typename FunctionType::result_type find_and_call_item(const std::map<std::string, FunctionType>& rets)

@@ -68,26 +68,25 @@ namespace Dune {
     { return readHostgridCommon(hostgrid, filename); }
 
     //! careful, this only works when using grid selector
-    #if USED_ALBERTAGRID_GRIDTYPE
+    #if defined(USED_ALBERTAGRID_GRIDTYPE)
         HOSTGRID_IO_FUNCTION_PAIR(AlbertaGrid,2)
-    #elif USED_SPGRID_GRIDTYPE
         template<> bool writeHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
         { return writeHostgridCommon(hostgrid, filename); }
         \
         template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
         { return readHostgridCommon(hostgrid, filename); }
-    #elif USED_YASPGRID_GRIDTYPE
+    #elif defined(USED_SPGRID_GRIDTYPE)
             template<> bool writeHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
         { /*YASPGrid can't be written to disk*/ return false; }
         \
         template<> bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename)
         { /*YASPGrid can't be read from disk*/ return false; }
-    #elif USED_ALUGRID_SIMPLEX_GRIDTYPE
+    #elif defined(USED_ALUGRID_SIMPLEX_GRIDTYPE)
         HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,2)
         HOSTGRID_IO_FUNCTION_PAIR(ALUSimplexGrid,3)
-    #elif USED_ALUGRID_CONFORM_GRIDTYPE
+    #elif defined(USED_ALUGRID_CONFORM_GRIDTYPE)
         HOSTGRID_IO_FUNCTION_PAIR(ALUConformGrid,2)
-    #elif USED_ALUGRID_CUBE_GRIDTYPE
+    #elif defined(USED_ALUGRID_CUBE_GRIDTYPE)
         HOSTGRID_IO_FUNCTION_PAIR(ALUCubeGrid,2)
         HOSTGRID_IO_FUNCTION_PAIR(ALUCubeGrid,3)
     #endif
