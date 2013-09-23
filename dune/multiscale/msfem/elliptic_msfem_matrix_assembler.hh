@@ -140,8 +140,8 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
     DSFe::LocalMatrixProxy< SPMatrixObject > local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
 
-    const CoarseBaseFunctionSet& coarse_grid_baseSet   = local_matrix.domainBasisFunctionSet();
-    const unsigned int           numMacroBaseFunctions = coarse_grid_baseSet.size();
+    const auto& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
+    const auto numMacroBaseFunctions = coarse_grid_baseSet.size();
 
     // Load local solutions
     Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list_, specifier_);
@@ -168,15 +168,16 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
         // higher order quadrature, since A^{\epsilon} is highly variable
         SubGridQuadratureType localQuadrature(localGridEntity, localQuadratureOrder);
-        const size_t       numQuadraturePoints = localQuadrature.nop();
+        const auto numQuadraturePoints = localQuadrature.nop();
 
         // number of local solutions without the boundary correctors. Those are only needed for the right hand side
-        const int numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
+        const auto numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
         // evaluate the jacobians of all local solutions in all quadrature points
         std::vector< std::vector< JacobianRangeType > >
         allLocalSolutionEvaluations(numLocalSolutions,
                                     std::vector< JacobianRangeType >(localQuadrature.nop(), JacobianRangeType(0.0)));
-        for (int lsNum = 0; lsNum < numLocalSolutions; ++lsNum) {
+        for (auto lsNum : DSC::valueRange(numLocalSolutions))
+        {
           auto localFunction = localSolutions[lsNum]->localFunction(localGridEntity);
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
         }

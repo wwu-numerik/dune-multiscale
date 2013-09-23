@@ -306,12 +306,10 @@ double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunctio
     const LocalFunctionType localRHS = rhs.localFunction(*it);
 
     // integrate
-    const int quadratureNop = quadrature.nop();
-    for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
+    for (auto quadraturePoint : DSC::valueRange(quadrature.nop()))
     {
       const double weight = quadrature.weight(quadraturePoint)
                             * geo.integrationElement( quadrature.point(quadraturePoint) );
-
       RangeType value(0.0);
       localRHS.evaluate(quadrature[quadraturePoint], value);
 
@@ -436,8 +434,8 @@ void LocalProblemOperator
   std::vector< JacobianRangeType > gradient_phi( discreteFunctionSpace.mapper().maxNumDofs() );
   std::vector< RangeType > phi( discreteFunctionSpace.mapper().maxNumDofs() );
 
-  const int numBoundaryCorrectors = specifier.simplexCoarseGrid() ? 1 : 2;
-  const int numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
+  const auto numBoundaryCorrectors = specifier.simplexCoarseGrid() ? 1u : 2u;
+  const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
   for (auto& localGridCell : discreteFunctionSpace) {
     const GeometryType& geometry = localGridCell.geometry();
@@ -445,7 +443,7 @@ void LocalProblemOperator
     LocalFunctionType dirichletLF = dirichletExtension.localFunction(localGridCell);
     JacobianRangeType dirichletJac(0.0);
 
-    for (int coarseBaseFunc=0; coarseBaseFunc<allLocalRHS.size(); ++coarseBaseFunc) {
+    for (std::size_t coarseBaseFunc=0; coarseBaseFunc<allLocalRHS.size(); ++coarseBaseFunc) {
       LocalFunctionType rhsLocalFunction = allLocalRHS[coarseBaseFunc]->localFunction(localGridCell);
 
       const BasisFunctionSetType& baseSet = rhsLocalFunction.basisFunctionSet();
@@ -845,7 +843,7 @@ void LocalProblemOperator
 
         const HostFaceQuadrature faceQuadrature( host_space.gridPart(),
                                                  intersection, 2 * host_space.order() + 2, HostFaceQuadrature::INSIDE );
-        const int numFaceQuadraturePoints = faceQuadrature.nop();
+        const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
         enum { faceCodim = 1 };
         for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)

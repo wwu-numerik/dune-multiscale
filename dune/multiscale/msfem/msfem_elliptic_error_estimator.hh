@@ -226,8 +226,7 @@ private:
     RangeType y(0);
     RangeType local_indicator(0);
 
-    const int quadratureNop = entityQuadrature.nop();
-    for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
+    for (auto quadraturePoint : DSC::valueRange(entityQuadrature.nop()))
     {
       const double weight = entityQuadrature.weight(quadraturePoint)
                             * geometry.integrationElement( entityQuadrature.point(quadraturePoint) );
@@ -382,8 +381,7 @@ private:
 
       const EntityQuadratureType highOrder_entityQuadrature(entity, 2 * spacePolOrd + 2);
 
-      const int quadratureNop = highOrder_entityQuadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
+      for (auto quadraturePoint : DSC::valueRange(highOrder_entityQuadrature.nop()))
       {
         const double weight = highOrder_entityQuadrature.weight(quadraturePoint)
                               * entityGeometry.integrationElement( highOrder_entityQuadrature.point(quadraturePoint) );
