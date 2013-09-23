@@ -91,8 +91,8 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   assert(allLocalSolutions.size()>0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
-  const int numBoundaryCorrectors = specifier_.simplexCoarseGrid() ? 1 : 2;
-  const int numInnerCorrectors = allLocalSolutions.size() - numBoundaryCorrectors;
+  const auto numBoundaryCorrectors = specifier_.simplexCoarseGrid() ? 1u : 2u;
+  const auto numInnerCorrectors = allLocalSolutions.size() - numBoundaryCorrectors;
 
   // clear return argument
   for (auto& localSol : allLocalSolutions) localSol->clear();
@@ -129,7 +129,7 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   for (auto& rhsIt : allLocalRHS) {
     constraints.setValue(0.0, *rhsIt);
   }
-  for (int i=0; i!=allLocalSolutions.size(); ++i) {
+  for (auto i : DSC::valueRange(allLocalSolutions.size())) {
     if (!allLocalRHS[i]->dofsValid())
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 
@@ -402,7 +402,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
   // for b_h_j with S_h b_h_j = C_h^T e_j, where C_h describes the algebraic version of the weighted
   // Clement interpolation operator
   // ----------------------------------------------------------------------------------------------------
-  int number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
+  auto number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
     
   assert( number_of_relevant_coarse_nodes_for_subgrid );
   std::vector<std::unique_ptr<SubDiscreteFunctionType>> b_h(number_of_relevant_coarse_nodes_for_subgrid);
@@ -561,7 +561,7 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(JacobianRangeType& e,
 
   const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = local_corrector.space();
 
-  const int number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
+  const auto number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
   const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
 
   //! define the discrete (elliptic) local MsFEM problem operator
@@ -718,7 +718,7 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
 
   const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = local_corrector.space();
 
-  int number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
+  auto number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
   const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
 
   //! define the discrete (elliptic) local MsFEM problem operator
@@ -876,7 +876,7 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
 
   const SubDiscreteFunctionSpaceType& subDiscreteFunctionSpace = local_corrector.space();
 
-  int number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
+  auto number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
   const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
 
   //! define the discrete (elliptic) local MsFEM problem operator
@@ -1129,7 +1129,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
                                                   subDiscreteFunctionSpace,
                                                   subDiscreteFunctionSpace);
       
-      int number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size(); 
+      auto number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[ coarse_index ].size();
       MatrixType lagrange_multiplier_system_matrix( number_of_relevant_coarse_nodes_for_subgrid, number_of_relevant_coarse_nodes_for_subgrid );
 
       std::cout << "Start preprocessing for subgrid " << coarse_index << "." << std::endl;

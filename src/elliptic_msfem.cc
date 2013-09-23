@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     // Compute the peak memory consumption of each processes
     int who = RUSAGE_SELF;
     struct rusage usage;
-    int ret = getrusage(who, &usage);
+    getrusage(who, &usage);
     long peakMemConsumption = usage.ru_maxrss;
     // compute the maximum and mean peak memory consumption over all processes
     long maxPeakMemConsumption = Dune::Fem::MPIManager::comm().max(peakMemConsumption);
