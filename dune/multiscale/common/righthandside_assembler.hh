@@ -500,7 +500,7 @@ public:
       const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
 
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
+      const int numDofs = elementOfRHS.numDofs();
       const int numQuadraturePoints = quadrature.nop();
       // the return values:
       RangeType f_x;
@@ -629,7 +629,7 @@ public:
       auto elementOfRHS = rhsVector.localFunction(entity);
       const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade (also die Unbekannten)
+      const int numDofs = elementOfRHS.numDofs();
 
       std::vector<RangeType> phi_x(numDofs);
       // gradient of base function and gradient of old_u_H

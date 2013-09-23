@@ -10,21 +10,28 @@
 #include <dune/stuff/grid/entity.hh>
 
 
-Dune::Multiscale::MsFEM::WeightedClementOperator::WeightedClementOperator(const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionSpaceType &space, const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionSpaceType &coarse_space, const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseNodeVectorType &coarse_nodes, const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseBasisFunctionList &coarse_basis, const std::map<int, int> &global_id_to_internal_id, const Dune::Multiscale::MsFEM::MacroMicroGridSpecifier &specifier) : discreteFunctionSpace_( space ),
-    coarse_space_( coarse_space ),
-    coarse_nodes_( coarse_nodes ),
-    coarse_basis_( coarse_basis ),
-    global_id_to_internal_id_( global_id_to_internal_id ),
-    dofManager_( DofManagerType :: instance( space.grid() ) ),
-    specifier_( specifier )
-  , sparsity_pattern_(discreteFunctionSpace_, coarse_space_, specifier_)
-  , linearOperator_( discreteFunctionSpace_, coarse_space_ ),
-    sequence_( -1 ),
-    gradCache_( discreteFunctionSpace_.mapper().maxNumDofs() ),
-    values_( discreteFunctionSpace_.mapper().maxNumDofs() ) {
-}
+Dune::Multiscale::MsFEM::WeightedClementOperator::WeightedClementOperator(const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionSpaceType &space,
+                                                                          const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionSpaceType &coarse_space,
+                                                                          const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseNodeVectorType &coarse_nodes,
+                                                                          const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseBasisFunctionList &coarse_basis,
+                                                                          const std::map<int, int> &global_id_to_internal_id, const Dune::Multiscale::MsFEM::MacroMicroGridSpecifier &specifier)
+    : discreteFunctionSpace_( space )
+    , coarse_space_( coarse_space )
+    , coarse_nodes_( coarse_nodes )
+    , coarse_basis_( coarse_basis )
+    , dofManager_( DofManagerType :: instance( space.grid() ) )
+    , global_id_to_internal_id_( global_id_to_internal_id )
+    , specifier_( specifier )
+    , sparsity_pattern_(discreteFunctionSpace_, coarse_space_, specifier_)
+    , linearOperator_( discreteFunctionSpace_, coarse_space_ )
+    , sequence_( -1 )
+    , gradCache_( discreteFunctionSpace_.mapper().maxNumDofs() )
+    , values_( discreteFunctionSpace_.mapper().maxNumDofs() )
+{}
 
-void Dune::Multiscale::MsFEM::WeightedClementOperator::operator ()(const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionType &u, Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionType &w) const {
+void Dune::Multiscale::MsFEM::WeightedClementOperator::operator ()(const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionType &u,
+                                                                   Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionType &w) const
+{
     systemMatrix().apply( u, w );                                 /*@\label{sto:matrixEval}@*/
 }
 
@@ -32,7 +39,9 @@ const Dune::Multiscale::MsFEM::WeightedClementOperator::PreconditionMatrixType &
     return systemMatrix().preconditionMatrix();
 }
 
-void Dune::Multiscale::MsFEM::WeightedClementOperator::applyTransposed(const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionType &u, Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionType &w) const {
+void Dune::Multiscale::MsFEM::WeightedClementOperator::applyTransposed(const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionType &u,
+                                                                       Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionType &w) const
+{
     systemMatrix().apply_t(u,w);                /*@\label{sto:applytransposed}@*/
 }
 
