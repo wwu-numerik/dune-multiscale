@@ -34,7 +34,8 @@ private:
 
   typedef classcomp< GridPartType, DomainType, EntityPointerType > CompClass;
 
-  typedef std::map< std::pair< EntityPointerType, int >, int, CompClass > CellNumMapType;
+  typedef std::pair< EntityPointerType, std::size_t > KeyType;
+  typedef std::map< KeyType, std::size_t, CompClass > CellNumMapType;
 
   // for the comparison of two entities:
   typedef entity_compare< GridPartType, DomainType, EntityPointerType > CompEntityClass;
@@ -52,12 +53,12 @@ public:
   explicit CellProblemNumberingManager(const DiscreteFunctionSpaceType& discreteFunctionSpace);
 
   //! use 'cp_num_manager.get_number_of_cell_problem( it, i )'
-  int get_number_of_cell_problem(const EntityPointerType& ent, const int& numOfBaseFunction) const;
+  std::size_t get_number_of_cell_problem(const EntityPointerType& ent, const std::size_t& numOfBaseFunction) const;
 
   /** use 'cp_num_manager.get_number_of_cell_problem( it )'
    * \attention 'get_number_of_cell_problem( it )' is NOT equal to 'get_number_of_cell_problem( it , 0 )'!
    **/
-  int get_number_of_cell_problem(const EntityPointerType& ent) const;
+  std::size_t get_number_of_cell_problem(const EntityPointerType& ent) const;
 };
 
 } //namespace HMM {
