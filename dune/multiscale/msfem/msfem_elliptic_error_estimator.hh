@@ -599,7 +599,7 @@ public:
     DSC_LOG_INFO << "Conservative fluxes computed successfully." << std::endl;
     DSC_LOG_INFO << "Starting error estimation..." << std::endl;
 
-    const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+    const auto number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
     specifier_.initialize_local_error_manager();
 
     ErrormapType errors({
@@ -636,7 +636,7 @@ public:
                       loc_fine_grid_jumps,
                       errors);
 
-    for (int m = 0; m < number_of_coarse_grid_entities; ++m)
+    for (auto m : DSC::valueRange(number_of_coarse_grid_entities))
     {
       loc_approximation_error[m] = sqrt(loc_approximation_error[m]);
       loc_fine_grid_jumps[m] = sqrt(loc_fine_grid_jumps[m]);

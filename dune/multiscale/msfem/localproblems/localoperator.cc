@@ -841,10 +841,8 @@ void LocalProblemOperator
 
         const HostFaceQuadrature faceQuadrature( host_space.gridPart(),
                                                  intersection, 2 * host_space.order() + 2, HostFaceQuadrature::INSIDE );
-        const auto numFaceQuadraturePoints = faceQuadrature.nop();
-
         static const int faceCodim = 1;
-        for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint)
+        for (auto faceQuadraturePoint : DSC::valueRange(faceQuadrature.nop()))
         {
           baseSet.evaluateAll( faceQuadrature[faceQuadraturePoint], phi );
 

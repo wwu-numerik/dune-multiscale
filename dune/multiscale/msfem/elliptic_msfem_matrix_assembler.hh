@@ -136,7 +136,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     const CoarseGeometry& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
-    const int global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
+    const auto global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
     DSFe::LocalMatrixProxy< SPMatrixObject > local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
 
@@ -162,7 +162,6 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
       // ignore overlay elements
       if (global_index_entity == subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
         assert(hostEntity->partitionType() == InteriorEntity);
-
 
         const auto& local_grid_geometry = localGridEntity.geometry();
 

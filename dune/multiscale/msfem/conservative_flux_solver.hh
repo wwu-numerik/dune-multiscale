@@ -669,7 +669,7 @@ public:
     }
 
     // number of coarse grid entities (of codim 0).
-    const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+    const auto number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
 
     DSC_PROFILER.startTiming("msfem.conservative_flux_solver.solve_all_subgrids");
 
