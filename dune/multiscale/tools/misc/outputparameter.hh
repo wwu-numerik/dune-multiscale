@@ -14,12 +14,9 @@
 namespace Dune {
 namespace Multiscale {
 //! define output parameters for \ref Dune::DataOutput
-struct OutputParameters
-  : public Dune::Fem::DataWriterParameters
-{
+struct OutputParameters : public Dune::Fem::DataWriterParameters {
 public:
-  explicit OutputParameters(const std::string _path
-                                  = DSC_CONFIG_GET("global.datadir", "data"));
+  explicit OutputParameters(const std::string _path = DSC_CONFIG_GET("global.datadir", "data"));
 
   std::string my_prefix_;
   const std::string my_path_;
@@ -39,16 +36,16 @@ public:
   int outputformat() const;
 
   //! return true if all data should be written to a spearate path per rank
-  virtual bool separateRankPath () const;
+  virtual bool separateRankPath() const;
 
-  virtual std::string macroGridName (const int dim) const;
+  virtual std::string macroGridName(const int dim) const;
 
 private:
   //! to avoid confusion path is only changeable in ctor
   void set_path(std::string my_path) = delete;
 };
 
-} //namespace Multiscale
-} //namespace Dune
+} // namespace Multiscale
+} // namespace Dune
 
 #endif // OUTPUTPARAMETER_HH

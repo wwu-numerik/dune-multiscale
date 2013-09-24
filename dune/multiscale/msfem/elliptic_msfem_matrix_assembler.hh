@@ -35,61 +35,59 @@ namespace MsFEM {
 /**
  * \todo docme
  */
-class DiscreteEllipticMsFEMOperator
-  : boost::noncopyable
-{
+class DiscreteEllipticMsFEMOperator : boost::noncopyable {
 private:
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
   typedef CommonTraits::DiscreteFunctionType FineDiscreteFunction;
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
 
-  typedef CommonTraits::DiffusionType                                DiffusionModel;
+  typedef CommonTraits::DiffusionType DiffusionModel;
 
   typedef typename CoarseDiscreteFunction::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
-  typedef typename FineDiscreteFunction::DiscreteFunctionSpaceType   FineDiscreteFunctionSpace;
+  typedef typename FineDiscreteFunction::DiscreteFunctionSpaceType FineDiscreteFunctionSpace;
 
-  typedef typename FineDiscreteFunctionSpace::FunctionSpaceType      FunctionSpace;
+  typedef typename FineDiscreteFunctionSpace::FunctionSpaceType FunctionSpace;
 
-  typedef typename FineDiscreteFunctionSpace::GridPartType           FineGridPart;
-  typedef typename FineDiscreteFunctionSpace::GridType               FineGrid;
+  typedef typename FineDiscreteFunctionSpace::GridPartType FineGridPart;
+  typedef typename FineDiscreteFunctionSpace::GridType FineGrid;
 
-  typedef typename FineDiscreteFunctionSpace::RangeFieldType         RangeFieldType;
-  typedef typename FineDiscreteFunctionSpace::DomainType             DomainType;
-  typedef typename FineDiscreteFunctionSpace::RangeType              RangeType;
-  typedef typename FineDiscreteFunctionSpace::JacobianRangeType      JacobianRangeType;
+  typedef typename FineDiscreteFunctionSpace::RangeFieldType RangeFieldType;
+  typedef typename FineDiscreteFunctionSpace::DomainType DomainType;
+  typedef typename FineDiscreteFunctionSpace::RangeType RangeType;
+  typedef typename FineDiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
-  typedef MsFEMLocalProblemSolver                                    MsFEMLocalProblemSolverType;
+  typedef MsFEMLocalProblemSolver MsFEMLocalProblemSolverType;
 
-  static const int dimension       = FineGridPart::GridType::dimension;
+  static const int dimension = FineGridPart::GridType::dimension;
   static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
 
-  typedef typename FineDiscreteFunction::LocalFunctionType                   FineLocalFunction;
-  typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType           FineBaseFunctionSet;
-  typedef typename FineDiscreteFunctionSpace::LagrangePointSetType           FineLagrangePointSet;
-  typedef typename FineLagrangePointSet::Codim< 1 >::SubEntityIteratorType   FineFaceDofIterator;
-  typedef typename FineGrid::Traits::LeafIndexSet                            FineGridLeafIndexSet;
-  typedef typename FineDiscreteFunctionSpace::IteratorType                   FineIterator;
-  typedef typename FineIterator::Entity                                      FineEntity;
-  typedef typename FineEntity::EntityPointer                                 FineEntityPointer;
-  typedef typename FineEntity::Geometry                                      FineGeometry;
-  typedef typename FineGridPart::IntersectionIteratorType                    FineIntersectionIterator;
-  typedef typename FineIntersectionIterator::Intersection                    FineIntersection;
-  typedef Fem::CachingQuadrature< FineGridPart, 0 >                          FineQuadratureType;
+  typedef typename FineDiscreteFunction::LocalFunctionType FineLocalFunction;
+  typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType FineBaseFunctionSet;
+  typedef typename FineDiscreteFunctionSpace::LagrangePointSetType FineLagrangePointSet;
+  typedef typename FineLagrangePointSet::Codim<1>::SubEntityIteratorType FineFaceDofIterator;
+  typedef typename FineGrid::Traits::LeafIndexSet FineGridLeafIndexSet;
+  typedef typename FineDiscreteFunctionSpace::IteratorType FineIterator;
+  typedef typename FineIterator::Entity FineEntity;
+  typedef typename FineEntity::EntityPointer FineEntityPointer;
+  typedef typename FineEntity::Geometry FineGeometry;
+  typedef typename FineGridPart::IntersectionIteratorType FineIntersectionIterator;
+  typedef typename FineIntersectionIterator::Intersection FineIntersection;
+  typedef Fem::CachingQuadrature<FineGridPart, 0> FineQuadratureType;
 
-  typedef typename CoarseDiscreteFunctionSpace::GridPartType                 CoarseGridPart;
-  typedef typename CoarseDiscreteFunctionSpace::GridType                     CoarseGrid;
+  typedef typename CoarseDiscreteFunctionSpace::GridPartType CoarseGridPart;
+  typedef typename CoarseDiscreteFunctionSpace::GridType CoarseGrid;
 
-  typedef typename CoarseDiscreteFunction::LocalFunctionType                 CoarseLocalFunction;
-  typedef typename CoarseDiscreteFunctionSpace::BasisFunctionSetType         CoarseBaseFunctionSet;
-  typedef typename CoarseDiscreteFunctionSpace::LagrangePointSetType         CoarseLagrangePointSet;
-  typedef typename CoarseLagrangePointSet::Codim< 1 >::SubEntityIteratorType CoarseFaceDofIterator;
-  typedef typename CoarseDiscreteFunctionSpace::IteratorType                 CoarseIterator;
-  typedef typename CoarseGrid::Traits::LeafIndexSet                          CoarseGridLeafIndexSet;
-  typedef typename CoarseIterator::Entity                                    CoarseEntity;
-  typedef typename CoarseEntity::Geometry                                    CoarseGeometry;
-  typedef typename CoarseGridPart::IntersectionIteratorType                  CoarseIntersectionIterator;
-  typedef typename CoarseIntersectionIterator::Intersection                  CoarseIntersection;
-  typedef Fem::CachingQuadrature< CoarseGridPart, 0 >                        CoarseQuadrature;
+  typedef typename CoarseDiscreteFunction::LocalFunctionType CoarseLocalFunction;
+  typedef typename CoarseDiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
+  typedef typename CoarseDiscreteFunctionSpace::LagrangePointSetType CoarseLagrangePointSet;
+  typedef typename CoarseLagrangePointSet::Codim<1>::SubEntityIteratorType CoarseFaceDofIterator;
+  typedef typename CoarseDiscreteFunctionSpace::IteratorType CoarseIterator;
+  typedef typename CoarseGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
+  typedef typename CoarseIterator::Entity CoarseEntity;
+  typedef typename CoarseEntity::Geometry CoarseGeometry;
+  typedef typename CoarseGridPart::IntersectionIteratorType CoarseIntersectionIterator;
+  typedef typename CoarseIntersectionIterator::Intersection CoarseIntersection;
+  typedef Fem::CachingQuadrature<CoarseGridPart, 0> CoarseQuadrature;
 
   typedef MsFEMTraits::SubGridListType SubGridListType;
   typedef typename SubGridListType::SubGridQuadratureType SubGridQuadratureType;
@@ -99,23 +97,21 @@ public:
                                 const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
                                 // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                                 // n(T)-layers:
-                                MsFEMTraits::SubGridListType& subgrid_list,
-                                const DiffusionModel& diffusion_op);
+                                MsFEMTraits::SubGridListType& subgrid_list, const DiffusionModel& diffusion_op);
 
-  template< class SPMatrixObject >
+  template <class SPMatrixObject>
   void assemble_matrix(SPMatrixObject& global_matrix) const;
 
 private:
-  MacroMicroGridSpecifierType&       specifier_;
+  MacroMicroGridSpecifierType& specifier_;
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
-  MsFEMTraits::SubGridListType&      subgrid_list_;
-  const DiffusionModel&              diffusion_operator_;
-  const bool                         petrovGalerkin_;
+  MsFEMTraits::SubGridListType& subgrid_list_;
+  const DiffusionModel& diffusion_operator_;
+  const bool petrovGalerkin_;
 };
 
-template< class SPMatrixObject >
-void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matrix) const
-{
+template <class SPMatrixObject>
+void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matrix) const {
   // the local problem:
   // Let 'T' denote a coarse grid element and
   // let 'U(T)' denote the environment of 'T' that corresponds with the subgrid.
@@ -123,7 +119,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
   // if Petrov-Galerkin-MsFEM
   if (petrovGalerkin_)
     DSC_LOG_INFO << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
-  else  // if classical (symmetric) MsFEM
+  else // if classical (symmetric) MsFEM
     DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
 
   //!TODO diagonal stencil reicht
@@ -138,7 +134,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
     const auto global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
-    DSFe::LocalMatrixProxy< SPMatrixObject > local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
+    DSFe::LocalMatrixProxy<SPMatrixObject> local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
 
     const auto& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = coarse_grid_baseSet.size();
@@ -146,10 +142,10 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     // Load local solutions
     Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list_, specifier_);
     localSolutionManager.loadLocalSolutions();
-    Multiscale::MsFEM::LocalSolutionManager::LocalSolutionVectorType& localSolutions
-      = localSolutionManager.getLocalSolutions();
+    Multiscale::MsFEM::LocalSolutionManager::LocalSolutionVectorType& localSolutions =
+        localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
-    std::vector< typename CoarseBaseFunctionSet::JacobianRangeType > gradientPhi(numMacroBaseFunctions);
+    std::vector<typename CoarseBaseFunctionSet::JacobianRangeType> gradientPhi(numMacroBaseFunctions);
 
     const int localQuadratureOrder = 2 * localSolutionManager.getLocalDiscreteFunctionSpace().order() + 2;
 
@@ -157,8 +153,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     for (const auto& localGridEntity : localSolutionManager.getLocalDiscreteFunctionSpace()) {
       // check if "localGridEntity" (which is an entity of U(T)) is in T:
       // -------------------------------------------------------------------
-      const auto& hostEntity
-        = localSolutionManager.getSubGridPart().grid().template getHostEntity< 0 >(localGridEntity);
+      const auto& hostEntity = localSolutionManager.getSubGridPart().grid().template getHostEntity<0>(localGridEntity);
       // ignore overlay elements
       if (global_index_entity == subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
         assert(hostEntity->partitionType() == InteriorEntity);
@@ -172,29 +167,25 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
         // number of local solutions without the boundary correctors. Those are only needed for the right hand side
         const auto numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
         // evaluate the jacobians of all local solutions in all quadrature points
-        std::vector< std::vector< JacobianRangeType > >
-        allLocalSolutionEvaluations(numLocalSolutions,
-                                    std::vector< JacobianRangeType >(localQuadrature.nop(), JacobianRangeType(0.0)));
-        for (auto lsNum : DSC::valueRange(numLocalSolutions))
-        {
+        std::vector<std::vector<JacobianRangeType>> allLocalSolutionEvaluations(
+            numLocalSolutions, std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
+        for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
           auto localFunction = localSolutions[lsNum]->localFunction(localGridEntity);
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
         }
 
         for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
           // local (barycentric) coordinates (with respect to entity)
-          const typename FineQuadratureType::CoordinateType& local_subgrid_point = localQuadrature.point(
-            localQuadraturePoint);
+          const typename FineQuadratureType::CoordinateType& local_subgrid_point =
+              localQuadrature.point(localQuadraturePoint);
 
-          DomainType   global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
-          const double weight_local_quadrature
-            = localQuadrature.weight(localQuadraturePoint) * local_grid_geometry.integrationElement(
-            local_subgrid_point);
+          DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
+          const double weight_local_quadrature = localQuadrature.weight(localQuadraturePoint) *
+                                                 local_grid_geometry.integrationElement(local_subgrid_point);
 
           // evaluate the jacobian of the coarse grid base set
           const DomainType& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
           coarse_grid_baseSet.jacobianAll(local_coarse_point, gradientPhi);
-
 
           for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
             for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
@@ -203,14 +194,14 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
               // Compute the gradients of the i'th and j'th local problem solutions
               JacobianRangeType gradLocProbSoli(0.0), gradLocProbSolj(0.0);
               if (specifier_.simplexCoarseGrid()) {
-                assert(allLocalSolutionEvaluations.size()==dimension);
+                assert(allLocalSolutionEvaluations.size() == dimension);
                 // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
                 for (int k = 0; k < dimension; ++k) {
                   gradLocProbSoli.axpy(gradientPhi[i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                   gradLocProbSolj.axpy(gradientPhi[j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                 }
               } else {
-                assert(allLocalSolutionEvaluations.size()==numMacroBaseFunctions);
+                assert(allLocalSolutionEvaluations.size() == numMacroBaseFunctions);
                 gradLocProbSoli = allLocalSolutionEvaluations[i][localQuadraturePoint];
                 gradLocProbSolj = allLocalSolutionEvaluations[j][localQuadraturePoint];
               }

@@ -4,8 +4,7 @@ namespace Dune {
 namespace Multiscale {
 
 DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
-getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space)
-{
+getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space) {
   // set dirichlet dofs to zero
   static const auto boundary = Problem::getModelData()->boundaryInfo();
   static DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, space);
@@ -13,8 +12,7 @@ getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space)
 }
 
 DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
-getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space)
-{
+getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space) {
   // set dirichlet dofs to zero
   static const auto boundary = Problem::getModelData()->boundaryInfo();
   static DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, space);
@@ -36,7 +34,9 @@ void projectDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coars
     const auto& dirichletData = *dirichletDataPtr;
 
     Dune::Fem::GridFunctionAdapter<CommonTraits::DirichletDataType,
-    CommonTraits::DiscreteFunctionSpaceType::GridPartType> gf("Dirichlet Data", dirichletData, coarseSpace.gridPart());
+                                   CommonTraits::DiscreteFunctionSpaceType::GridPartType> gf("Dirichlet Data",
+                                                                                             dirichletData,
+                                                                                             coarseSpace.gridPart());
     static CommonTraits::DiscreteFunctionType dirichletExtensionCoarse("Dirichlet Extension Coarse", coarseSpace);
     dirichletExtensionCoarse.clear();
     getConstraintsCoarse(coarseSpace)(gf, dirichletExtensionCoarse);
@@ -44,10 +44,7 @@ void projectDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coars
     static Dune::Stuff::HeterogenousProjection<> projection;
     projection.project(dirichletExtensionCoarse, dirichletExtension);
   }
-
   getConstraintsFine(function.space())(dirichletExtension, function);
-
-  return;
 }
 
 } // namespace Multiscale

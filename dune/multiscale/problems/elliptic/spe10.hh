@@ -24,12 +24,8 @@ namespace Problem {
 namespace SPE10 {
 
 //! model problem information
-struct ModelProblemData
-  : public IModelProblemData
-{
-  virtual bool hasExactSolution() const {
-    return false;
-  }
+struct ModelProblemData : public IModelProblemData {
+  virtual bool hasExactSolution() const { return false; }
 
   ModelProblemData();
 
@@ -45,23 +41,20 @@ struct ModelProblemData
 };
 
 //! ----------------- Definition of ' f ' ------------------------
-class FirstSource
-        : public Dune::Multiscale::CommonTraits::FunctionBaseType
-
-{
+class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   static const int dimDomain = DomainType::dimension;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
@@ -74,30 +67,28 @@ public:
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 
-  virtual RangeType evaluate(const DomainType& x) const { return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x); }
+  virtual RangeType evaluate(const DomainType& x) const {
+    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
+  }
 };
-
 
 /** \brief default class for the second source term G.
  * Realization: set G(x) = 0: **/
 MSNULLFUNCTION(SecondSource)
 
-
-
 //! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 //! A^{\epsilon} : \Omega × R² -> R²
-class Diffusion : public DiffusionBase
-{
+class Diffusion : public DiffusionBase {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
@@ -109,22 +100,17 @@ public:
   //! A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
   //! (diffusive) flux = A^{\epsilon}( x , direction )
   //! (typically direction is some 'gradient_of_a_function')
-  void diffusiveFlux(const DomainType& x,
-                     const JacobianRangeType& direction,
-                     JacobianRangeType& flux) const;
+  void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const;
 
   //! the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
   //! "nabla w", i.e.
   //! jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
   //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& x,
-                             const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const;
+  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
+                             const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 
 private:
   void readPermeability();
-
 
   std::vector<double> deltas_;
   double* permeability_;
@@ -137,7 +123,7 @@ private:
 class LowerOrderTerm : public ZeroLowerOrder {};
 
 //! ----------------- Definition of ' m ' ----------------------------
-MSCONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm, 0.0)
 
 //! ------------ Definition of homogeneous boundary conditions ----------
 MSNULLFUNCTION(DirichletBoundaryCondition)
@@ -155,8 +141,7 @@ class NeumannData : public ZeroNeumannData {};
 
 } //! @} namespace SPE10 {
 }
-} //namespace Multiscale {
-} //namespace Dune {
-
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE

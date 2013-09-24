@@ -25,9 +25,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-
-class Elliptic_MsFEM_Solver
-{
+class Elliptic_MsFEM_Solver {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
 
@@ -47,8 +45,8 @@ private:
 
   typedef typename HostGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
 
-  typedef typename DiscreteFunctionSpace::DomainType        DomainType;
-  typedef typename DiscreteFunctionSpace::RangeType         RangeType;
+  typedef typename DiscreteFunctionSpace::DomainType DomainType;
+  typedef typename DiscreteFunctionSpace::RangeType RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
   // typedef typename HostGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
@@ -71,10 +69,8 @@ private:
   typedef MsFEMTraits::SubGridDiscreteFunctionType SubgridDiscreteFunctionType;
   //!-----------------------------------------------------------------------------------------
 
-  typedef Dune::Fem::PetscLinearOperator< DiscreteFunctionType, DiscreteFunctionType > MsFEMMatrixType;
-  typedef Dune::Fem::PetscInverseOperator< DiscreteFunctionType,
-                                           MsFEMMatrixType >
-    InverseOperatorType;
+  typedef Dune::Fem::PetscLinearOperator<DiscreteFunctionType, DiscreteFunctionType> MsFEMMatrixType;
+  typedef Dune::Fem::PetscInverseOperator<DiscreteFunctionType, MsFEMMatrixType> InverseOperatorType;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
@@ -85,22 +81,19 @@ public:
 private:
   // create a hostgrid function from a subgridfunction (projection for global continuity)
   // Note: the maximum gride levels for both underlying grids must be the same
-  void subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func, DiscreteFunctionType& host_func) const;
-
+  void subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func,
+                                     DiscreteFunctionType& host_func) const;
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
   // ------------------------------------------------------------------------------------
-  void projectCoarseToFineScale(MacroMicroGridSpecifier &specifier,
-                                   const DiscreteFunctionType& coarse_msfem_solution,
-                                   DiscreteFunctionType& coarse_scale_part ) const;
-
+  void projectCoarseToFineScale(MacroMicroGridSpecifier& specifier, const DiscreteFunctionType& coarse_msfem_solution,
+                                DiscreteFunctionType& coarse_scale_part) const;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   // ------------------------------------------------------------------------------------
-  void identify_fine_scale_part(MacroMicroGridSpecifier &specifier,
-                                                          MsFEMTraits::SubGridListType& subgrid_list,
-                                                          const DiscreteFunctionType& coarse_msfem_solution,
-                                                          DiscreteFunctionType& fine_scale_part ) const;
+  void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+                                const DiscreteFunctionType& coarse_msfem_solution,
+                                DiscreteFunctionType& fine_scale_part) const;
 
 public:
 
@@ -112,19 +105,16 @@ public:
   //! f --> 'first' source term, scalar ('SourceTermType')
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   //! homogenous Dirchilet boundary condition!:
-  void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
-                            const CommonTraits::FirstSourceType& f,
+  void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
                             // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                             // n(T)-layers.
-                            MacroMicroGridSpecifier &specifier,
-                            MsFEMTraits::SubGridListType& subgrid_list,
-                            DiscreteFunctionType& coarse_scale_part,
-                            DiscreteFunctionType& fine_scale_part,
+                            MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+                            DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
                             DiscreteFunctionType& solution) const;
 };
 
-} //namespace MsFEM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace MsFEM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // #ifndef Elliptic_MSEM_Solver_HH

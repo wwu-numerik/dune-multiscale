@@ -34,98 +34,87 @@ namespace Dune {
    *
    * \TODO use stuff/fem/funtions/integrals.hh instead
    **/
-template< class DiscreteFunctionType >
-class Meanvalue
-{
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
-  DiscreteFunctionSpaceType;
+template <class DiscreteFunctionType>
+class Meanvalue {
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
-  typedef typename DiscreteFunctionType::RangeType
-  RangeType;
-  typedef typename DiscreteFunctionType::DomainType
-  DomainType;
+  typedef typename DiscreteFunctionType::RangeType RangeType;
+  typedef typename DiscreteFunctionType::DomainType DomainType;
 
-  typedef typename DiscreteFunctionSpaceType::IteratorType
-  IteratorType;
+  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
-  typedef typename DiscreteFunctionSpaceType::GridType
-  GridType;
+  typedef typename DiscreteFunctionSpaceType::GridType GridType;
 
   typedef typename DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef DomainFieldType                                     TimeType;
+  typedef DomainFieldType TimeType;
 
-  typedef typename DiscreteFunctionSpaceType::GridPartType
-  GridPartType;
+  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
 
-  typedef typename GridType::template Codim< 0 >::Entity
-  EntityType;
+  typedef typename GridType::template Codim<0>::Entity EntityType;
 
-  typedef typename GridType::template Codim< 0 >::Geometry
-  EnGeometryType;
+  typedef typename GridType::template Codim<0>::Geometry EnGeometryType;
 
-  typedef typename EntityType::ctype
-  coordType;
+  typedef typename EntityType::ctype coordType;
 
-  typedef typename DiscreteFunctionType::LocalFunctionType
-  LocalFunctionType;
+  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
 
-  enum { dimension = GridType::dimension };
-  enum { spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder };
+  enum {
+    dimension = GridType::dimension
+  };
+  enum {
+    spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder
+  };
 
   struct FunctorBase {
     virtual void evaluate(const DomainType& global_point, RangeType& y) const = 0;
   };
 
-  RangeType getMeanvalue_common(const DiscreteFunctionSpaceType& space,
-                                const FunctorBase& function) const {
+  RangeType getMeanvalue_common(const DiscreteFunctionSpaceType& space, const FunctorBase& function) const {
     const int polOrd = (2 * spacePolOrd + 2);
 
-    RangeType y(0.0);    // return value
+    RangeType y(0.0); // return value
     RangeType theMeanValue(0.0);
 
-    for (const auto& entity : space)
-    {
+    for (const auto& entity : space) {
       // create quadrature for given geometry type
-      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geo = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
+      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint) {
+        const double det =
+            quadrature.weight(quadraturePoint) * geo.integrationElement(quadrature.point(quadraturePoint));
 
-        y = function(geo.global( quadrature.point(quadraturePoint)));
+        y = function(geo.global(quadrature.point(quadraturePoint)));
 
         theMeanValue += det * y;
       }
     }
   }
+
 public:
   RangeType getMeanvalue(const DiscreteFunctionType& discFunc) const {
     const int polOrd = (2 * spacePolOrd + 2);
 
     // get function space
     const DiscreteFunctionSpaceType& space = discFunc.space();
-    RangeType y(0.0);    // return value
+    RangeType y(0.0); // return value
     RangeType theMeanValue(0.0);
 
-    for (const auto& entity : space)
-    {
+    for (const auto& entity : space) {
       // create quadrature for given geometry type
-      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
       const LocalFunctionType localfunc = discFunc.localFunction(entity);
       const EnGeometryType& geo = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.size();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geo.integrationElement( quadrature.point(quadraturePoint) );
+      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint) {
+        const double det =
+            quadrature.weight(quadraturePoint) * geo.integrationElement(quadrature.point(quadraturePoint));
 
         localfunc.evaluate(quadrature, quadraturePoint, y);
 
@@ -137,11 +126,10 @@ public:
     theMeanValue = comm.sum(theMeanValue);
 
     return theMeanValue;
-  }   // end of method
+  } // end of method
 
-  template< class FunctionType >
-  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space,
-                         const FunctionType& function) const {
+  template <class FunctionType>
+  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space, const FunctionType& function) const {
     struct Functor : public FunctorBase {
       const FunctionType& function;
       Functor(const FunctionType& f) : function(f) {}
@@ -150,47 +138,47 @@ public:
       }
     } f{function};
     return getMeanvalue_common(space, f);
-  }   // end of method
+  } // end of method
 
   // the case the function is a vector (for instance advection)
-  template< class FunctionType >
-  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space,
-                         const FunctionType& function,
+  template <class FunctionType>
+  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space, const FunctionType& function,
                          const int& i /*in case there are several components*/) const {
     struct Functor : public FunctorBase {
       const FunctionType& function;
       const int i;
-      Functor(const FunctionType& f, const int _i) : function(f), i(_i) {}
+      Functor(const FunctionType& f, const int _i)
+        : function(f)
+        , i(_i) {}
       virtual RangeType operator()(const DomainType& global_point, RangeType& y) const {
         function.evaluate(i, global_point, y);
       }
     } f{function, i};
     return getMeanvalue_common(space, f);
-  }   // end of method
+  } // end of method
 
   // the case the function is a time-dependent vector (for instance advection). The Time t is fixed.
-  template< class FunctionType >
-  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space,
-                         const FunctionType& function,
-                         const TimeType& t,
+  template <class FunctionType>
+  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space, const FunctionType& function, const TimeType& t,
                          const int& i /*in case there are several components*/) const {
     struct Functor : public FunctorBase {
       const FunctionType& function;
       const int i;
       const TimeType t;
-      Functor(const FunctionType& f, const int _i, const TimeType _t) : function(f), i(_i), t(_t) {}
+      Functor(const FunctionType& f, const int _i, const TimeType _t)
+        : function(f)
+        , i(_i)
+        , t(_t) {}
       virtual RangeType operator()(const DomainType& global_point, RangeType& y) const {
-        function.evaluate(i, global_point,t, y);
+        function.evaluate(i, global_point, t, y);
       }
     } f{function, i, t};
     return getMeanvalue_common(space, f);
-  }   // end of method
+  } // end of method
 
   // the case the function is a matrix (for instance diffusion)
-  template< class FunctionType >
-  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space,
-                         const FunctionType& function,
-                         const int& i,
+  template <class FunctionType>
+  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space, const FunctionType& function, const int& i,
                          const int& j) const {
     struct Functor : public FunctorBase {
       const FunctionType& function;
@@ -201,30 +189,31 @@ public:
       }
     } f{function, i, j};
     return getMeanvalue_common(space, f);
-  }   // end of method
+  } // end of method
 
   // the case the function is a matrix (for instance diffusion) with Time t
-  template< class FunctionType >
-  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space,
-                         const FunctionType& function,
-                         const TimeType& t,
-                         const int& i,
-                         const int& j) const {
+  template <class FunctionType>
+  RangeType getMeanvalue(const DiscreteFunctionSpaceType& space, const FunctionType& function, const TimeType& t,
+                         const int& i, const int& j) const {
     struct Functor : public FunctorBase {
       const FunctionType& function;
       const int i;
       const int j;
       const TimeType t;
-      Functor(const FunctionType& f, const int _i, const int _j, const TimeType _t) : function(f), i(_i), j(_j), t(_t) {}
+      Functor(const FunctionType& f, const int _i, const int _j, const TimeType _t)
+        : function(f)
+        , i(_i)
+        , j(_j)
+        , t(_t) {}
       virtual RangeType operator()(const DomainType& global_point, RangeType& y) const {
-        function.evaluate(i, j, global_point,t, y);
+        function.evaluate(i, j, global_point, t, y);
       }
     } f{function, i, j, t};
     return getMeanvalue_common(space, f);
-  }   // end of method
+  } // end of method
 
   //! Subdraktion des Mittelwertes von der DiscreteFunction
-  template< class FunctionType >
+  template <class FunctionType>
   static void adapt(FunctionType& discreteFunction, RangeType& meanvalue) {
     typedef typename FunctionType::DofIteratorType DofIteratorType;
 
@@ -234,7 +223,7 @@ public:
     // Dof Iterator verwenden um Verschiebung um Mittelwert
 
   } // adapt
-}; // end of class Meanvalue
+};  // end of class Meanvalue
 
 } // end namespace DUNE
 

@@ -11,18 +11,16 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-class MacroMicroGridSpecifier
-{
+class MacroMicroGridSpecifier {
   //! \todo DiscreteFunctionSpaceType should be replaced be something like "CoarseDiscreteFunctionSpace" and
   // "FineDiscreteFunctionSpace"
-  typedef typename CommonTraits::DiscreteFunctionSpaceType  DiscreteFunctionSpaceType;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
 
   static const int faceCodim = 1;
 
 public:
-  MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space,
-                          DiscreteFunctionSpaceType& fine_scale_space);
+  MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space, DiscreteFunctionSpaceType& fine_scale_space);
 
   // get number of coarse grid entities
   std::size_t getNumOfCoarseEntities() const;
@@ -55,7 +53,7 @@ public:
   const DiscreteFunctionSpaceType& fineSpace() const;
   DiscreteFunctionSpaceType& fineSpace();
 
-  void setOversamplingStrategy( int oversampling_strategy );
+  void setOversamplingStrategy(int oversampling_strategy);
   int getOversamplingStrategy() const;
 
   void initialize_local_error_manager();
@@ -79,8 +77,8 @@ public:
   std::size_t get_number_of_coarse_boundary_nodes() const;
   std::size_t get_number_of_coarse_dirichlet_nodes() const;
 
-  bool is_coarse_boundary_node(std::size_t global_index ) const;
-  bool is_coarse_dirichlet_node(std::size_t global_index ) const;
+  bool is_coarse_boundary_node(std::size_t global_index) const;
+  bool is_coarse_dirichlet_node(std::size_t global_index) const;
 
   bool simplexCoarseGrid() const;
 
@@ -98,7 +96,7 @@ private:
   int oversampling_strategy_;
 
   // layers for each coarse grid entity
-  std::vector< std::size_t > number_of_layers;
+  std::vector<std::size_t> number_of_layers;
 
   // have the boundary nodes been identified?
   bool boundary_nodes_identified_;
@@ -107,21 +105,21 @@ private:
   bool dirichlet_nodes_identified_;
 
   // is a given coarse node a boundary node of the coarse grid? true/false
-  std::vector< bool > is_boundary_node_;
+  std::vector<bool> is_boundary_node_;
 
   // is a given coarse node a Dirichlet boundary node of the coarse grid? true/false
-  std::vector< bool > is_dirichlet_node_;
+  std::vector<bool> is_dirichlet_node_;
 
   // number of coarse grid boundary nodes
   std::size_t number_of_coarse_boundary_nodes_;
 
   // number of coarse grid boundary nodes
   std::size_t number_of_coarse_dirichlet_nodes_;
-  
+
   // ----- local error indicators (for each coarse grid element T) -------------
 
   // local coarse residual, i.e. H ||f||_{L^2(T)}
-  typedef std::vector< RangeType > RangeTypeVector;
+  typedef std::vector<RangeType> RangeTypeVector;
   RangeTypeVector loc_coarse_residual_;
 
   // local coarse grid jumps (contribute to the total coarse residual)
@@ -142,8 +140,8 @@ private:
   const bool coarseGridIsSimplex_;
 };
 
-} //namespace MsFEM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace MsFEM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif

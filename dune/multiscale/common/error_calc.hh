@@ -9,13 +9,14 @@ namespace Multiscale {
 class ErrorCalculator {
 
 public:
-    ErrorCalculator(const CommonTraits::DiscreteFunctionType* msfem_solution,
-                    const CommonTraits::DiscreteFunctionType* fem_solution);
+  ErrorCalculator(const CommonTraits::DiscreteFunctionType* msfem_solution,
+                  const CommonTraits::DiscreteFunctionType* fem_solution);
 
-    void print(std::ostream& out);
+  void print(std::ostream& out);
+
 private:
-    const CommonTraits::DiscreteFunctionType* msfem_solution_;
-    const CommonTraits::DiscreteFunctionType* fem_solution_;
+  const CommonTraits::DiscreteFunctionType* msfem_solution_;
+  const CommonTraits::DiscreteFunctionType* fem_solution_;
 };
 
 } // namespace Multiscale

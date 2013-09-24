@@ -13,9 +13,10 @@ int main(int argc, char** argv) {
     using namespace Dune::Multiscale::FEM;
     init(argc, argv);
 
-    if ( !DSC_CONFIG_GET("problem.linear", 1 ) )
-     DUNE_THROW(Dune::InvalidStateException, "Problem is declared to be nonlinear. Homogenizers are only available for linear homogenization problems.");
-
+    if (!DSC_CONFIG_GET("problem.linear", 1))
+      DUNE_THROW(
+          Dune::InvalidStateException,
+          "Problem is declared to be nonlinear. Homogenizers are only available for linear homogenization problems.");
 
     DSC_PROFILER.startTiming("total_cpu");
 
@@ -28,12 +29,14 @@ int main(int argc, char** argv) {
     std::string filename_;
     const auto info = Dune::Multiscale::Problem::getModelData();
 
-    if ( !info->problemIsPeriodic() )
-     DUNE_THROW(Dune::InvalidStateException, "Problem is declared to be non-periodic. Homogenizers are only available for periodic homogenization problems.");
+    if (!info->problemIsPeriodic())
+      DUNE_THROW(Dune::InvalidStateException, "Problem is declared to be non-periodic. Homogenizers are only available "
+                                              "for periodic homogenization problems.");
 
-    if ( DSC_CONFIG_GET("problem.stochastic_pertubation", false) )
-     DUNE_THROW(Dune::InvalidStateException, "Homogenizers are only available for non-stochastically perturbed problems. Please, switch off the key 'problem.stochastic_pertubation'.");
-    
+    if (DSC_CONFIG_GET("problem.stochastic_pertubation", false))
+      DUNE_THROW(Dune::InvalidStateException, "Homogenizers are only available for non-stochastically perturbed "
+                                              "problems. Please, switch off the key 'problem.stochastic_pertubation'.");
+
     const std::string save_filename = std::string(path + "/logdata/ms.log.log");
     DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
     std::cout << "Data will be saved under: " << save_filename << std::endl;
@@ -57,7 +60,8 @@ int main(int argc, char** argv) {
     const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
     return 0;
-  } catch (Dune::Exception& e) {
+  }
+  catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;
   }
   return 1;

@@ -24,8 +24,7 @@ namespace Dune {
 namespace Multiscale {
 namespace HMM {
 
-class CellProblemSolver
-{
+class CellProblemSolver {
 private:
   typedef typename HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionImp;
   typedef typename CommonTraits::DiffusionType DiffusionImp;
@@ -33,8 +32,7 @@ private:
   typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
 
   //! type of discrete function space
-  typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType
-  PeriodicDiscreteFunctionSpaceType;
+  typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpaceType;
 
   //! type of grid partition
   typedef typename PeriodicDiscreteFunctionSpaceType::GridPartType PeriodicGridPartType;
@@ -49,32 +47,34 @@ private:
   typedef typename PeriodicDiscreteFunctionSpaceType::DomainType DomainType;
 
   //! polynomial order of base functions
-  enum { polynomialOrder = PeriodicDiscreteFunctionSpaceType::polynomialOrder };
+  enum {
+    polynomialOrder = PeriodicDiscreteFunctionSpaceType::polynomialOrder
+  };
 
   //! type of the (possibly non-linear) diffusion operator
   typedef DiffusionImp DiffusionType;
 
-  struct CellMatrixTraits
-  {
-    typedef PeriodicDiscreteFunctionSpaceType                          RowSpaceType;
-    typedef PeriodicDiscreteFunctionSpaceType                          ColumnSpaceType;
-    typedef LagrangeMatrixSetup< false >     StencilType;
-    typedef Fem::ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
+  struct CellMatrixTraits {
+    typedef PeriodicDiscreteFunctionSpaceType RowSpaceType;
+    typedef PeriodicDiscreteFunctionSpaceType ColumnSpaceType;
+    typedef LagrangeMatrixSetup<false> StencilType;
+    typedef Fem::ParallelScalarProduct<PeriodicDiscreteFunctionSpaceType> ParallelScalarProductType;
 
-    template< class M >
-    struct Adapter
-    {
+    template <class M>
+    struct Adapter {
       //!TODO this works only with ISTL present
-      typedef Dune::LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
+      typedef Dune::LagrangeParallelMatrixAdapter<M> MatrixAdapterType;
     };
   };
+
 public:
   //! HMM
-  typedef Fem::SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType,
-                                   CellMatrixTraits > CellFEMMatrix;
+  typedef Fem::SparseRowMatrixOperator<PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, CellMatrixTraits>
+  CellFEMMatrix;
+
 private:
   //! OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
-  typedef Dune::Fem::OEMBICGSTABOp< PeriodicDiscreteFunctionType, CellFEMMatrix > InverseCellFEMMatrix;
+  typedef Dune::Fem::OEMBICGSTABOp<PeriodicDiscreteFunctionType, CellFEMMatrix> InverseCellFEMMatrix;
 
 private:
   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_; // Referenz &, wenn & verwendet, dann unten:
@@ -87,15 +87,14 @@ public:
   CellProblemSolver(const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                     const DiffusionType& diffusion_operator)
     : periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
-      , diffusion_(diffusion_operator)
-  {}
+    , diffusion_(diffusion_operator) {}
 
 private:
   //! ----------- method: solve cell problem ------------------------------------------
-  void solvecellproblem(const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
-                        // the barycenter x_T of a macro grid element 'T'
-                        const DomainType& globalQuadPoint,
-                        PeriodicDiscreteFunctionType& cell_problem_solution) const;
+  void solvecellproblem(
+      const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
+      // the barycenter x_T of a macro grid element 'T'
+      const DomainType& globalQuadPoint, PeriodicDiscreteFunctionType& cell_problem_solution) const;
 
   /** -------- method: solve the jacobian corrector cell problem ----------------------------
    * Problem to determine the Jacobian operator of the correction operator
@@ -107,11 +106,11 @@ private:
    * \arg the barycenter x_T of a macro grid element 'T'
    **/
   void solve_jacobiancorrector_cellproblem(
-    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
-    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& grad_old_coarse_function,
-    const PeriodicDiscreteFunctionType& corrector_of_old_coarse_function,
-    const DomainType& globalQuadPoint,
-    PeriodicDiscreteFunctionType& jac_cor_cell_problem_solution) const;
+      const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
+      const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType&
+          grad_old_coarse_function,
+      const PeriodicDiscreteFunctionType& corrector_of_old_coarse_function, const DomainType& globalQuadPoint,
+      PeriodicDiscreteFunctionType& jac_cor_cell_problem_solution) const;
 
 public:
   /** two methods for solving and saving the solutions of the cell problems.
@@ -138,34 +137,28 @@ public:
    * requires cell problem numbering manager
    **/
   void saveTheSolutions_baseSet(
-    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType& discreteFunctionSpace,
-    const CellProblemNumberingManager& cp_num_manager   // just to check, if we use the correct numeration
+      const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType& discreteFunctionSpace,
+      const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
       ) const;
-
 
   /** this method does not require a cell problem numbering manager
    * (it uses the standard counter for entities, provided by the corrsponding iterator)
    * compute and save solutions of the cell problems for a fixed macroscopic discrete function
    * (in gerneral it is the macro solution from the last iteration step)
    **/
-  void saveTheSolutions_discFunc(
-    const CommonTraits::DiscreteFunctionType& macro_discrete_function) const;
+  void saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctionType& macro_discrete_function) const;
 
   //! compute and save solutions of the jacobian corrector cell problems for the base function set of the
   //! 'discreteFunctionSpace' and for a fixed macroscopic discrete function
   //! requires cell problem numbering manager
   void saveTheJacCorSolutions_baseSet_discFunc(
-    const CommonTraits::DiscreteFunctionType& macro_discrete_function,
-    const CellProblemNumberingManager& cp_num_manager   // just to check, if we use the correct numeration
-    ) const;
+      const CommonTraits::DiscreteFunctionType& macro_discrete_function,
+      const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
+      ) const;
 }; // end class
 
-
-
-
-} //namespace HMM {
-} //namespace Multiscale {
-} //namespace Dune {
-
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // DUNEMS_HMM_CELL_SOLVER_HH

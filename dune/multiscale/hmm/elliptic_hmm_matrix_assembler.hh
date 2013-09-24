@@ -8,7 +8,6 @@
 #include <boost/noncopyable.hpp>
 #include <memory>
 
-
 #include <dune/multiscale/hmm/hmm_traits.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -23,58 +22,55 @@ class CellProblemNumberingManager;
 
 //! \TODO docme
 class DiscreteEllipticHMMOperator
-  : public Operator< typename CommonTraits::DiscreteFunctionType::RangeFieldType, typename CommonTraits::DiscreteFunctionType::RangeFieldType,
-                     CommonTraits::DiscreteFunctionType, CommonTraits::DiscreteFunctionType >
-    , boost::noncopyable
-{
+    : public Operator<typename CommonTraits::DiscreteFunctionType::RangeFieldType,
+                      typename CommonTraits::DiscreteFunctionType::RangeFieldType, CommonTraits::DiscreteFunctionType,
+                      CommonTraits::DiscreteFunctionType>,
+      boost::noncopyable {
 
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunction;
   typedef HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunction;
   typedef CommonTraits::DiffusionType DiffusionModel;
 
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType         DiscreteFunctionSpace;
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename PeriodicDiscreteFunction::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpace;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename DiscreteFunctionSpace::GridType     GridType;
+  typedef typename DiscreteFunctionSpace::GridType GridType;
 
   typedef typename PeriodicDiscreteFunctionSpace::GridPartType PeriodicGridPart;
-  typedef typename PeriodicDiscreteFunctionSpace::GridType     PeriodicGridType;
+  typedef typename PeriodicDiscreteFunctionSpace::GridType PeriodicGridType;
 
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
-  typedef typename DiscreteFunctionSpace::DomainType     DomainType;
-  typedef typename DiscreteFunctionSpace::RangeType      RangeType;
-  typedef typename DiscreteFunctionSpace::JacobianRangeType
-  JacobianRangeType;
+  typedef typename DiscreteFunctionSpace::DomainType DomainType;
+  typedef typename DiscreteFunctionSpace::RangeType RangeType;
+  typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
   typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType                   BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType                  LagrangePointSet;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
 
   typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity                    Entity;
-  typedef typename Entity::Geometry                    Geometry;
+  typedef typename Iterator::Entity Entity;
+  typedef typename Entity::Geometry Geometry;
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
 
-  typedef Fem::CachingQuadrature< GridPart, 0 > Quadrature;
+  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
 public:
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                               const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
-                              const DiffusionModel& diffusion_op,
-                              const CellProblemNumberingManager& cp_num_manager)
+                              const DiffusionModel& diffusion_op, const CellProblemNumberingManager& cp_num_manager)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
-    , cp_num_manager_(cp_num_manager)
-  {}
+    , cp_num_manager_(cp_num_manager) {}
 
 private:
   // dummy operator
@@ -94,8 +90,6 @@ private:
   // name of data file, e.g. required if we want to use the saved solutions of the cell problems
   const std::string filename_;
 };
-
-
 
 } // namespace HMM {
 } // namespace Multiscale {
