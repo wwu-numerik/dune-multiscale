@@ -311,7 +311,7 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& msfem_solution,
     for(auto loc : locals) (*loc)[loop_number] = CommonTraits::RangeVector(specifier.getNumOfCoarseEntities(),0.0);
     for(auto total : totals) (*total)[loop_number] = 0.0;
 
-    for (int m = 0; m < specifier.getNumOfCoarseEntities(); ++m) {
+    for (auto m : DSC::valueRange(specifier.getNumOfCoarseEntities())) {
       (*locals[0])[loop_number][m] = specifier.get_loc_coarse_residual(m);
       (*locals[1])[loop_number][m] = specifier.get_loc_coarse_grid_jumps(m);
       (*locals[2])[loop_number][m] = specifier.get_loc_projection_error(m);

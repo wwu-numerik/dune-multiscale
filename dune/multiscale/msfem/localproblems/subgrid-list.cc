@@ -39,19 +39,18 @@ bool SubGridList::entityPatchInSubgrid(const HostEntityPointerType& hit,
 
 void SubGridList::enrichment(const HostEntityPointerType& hit,
 //                             const HostEntityPointerType& level_father_it,
-                             const int& subgrid_index, // subgrid_index = father_index = index/number of current subgrid
-                             shared_ptr< SubGridType > subGrid,
-                             int& layer)
+                             const std::size_t& subgrid_index, // subgrid_index = father_index = index/number of current subgrid
+                             std::shared_ptr< SubGridType > subGrid,
+                             std::size_t& layer)
 {
+  assert(layer>=1);
   // difference in levels between coarse and fine grid
-  const int                      level_difference = specifier_.getLevelDifference();
-  HostDiscreteFunctionSpaceType& coarseSpace      = specifier_.coarseSpace();
+  const auto level_difference = specifier_.getLevelDifference();
+  const auto& coarseSpace = specifier_.coarseSpace();
+  const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+  const auto& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
 
-  const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-
-  const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
-
-  for (int l = 0; l <= layer; ++l) {
+  for (auto l : DSC::valueRange(layer)) {
     enriched_[subgrid_index][hostGridLeafIndexSet.index(*hit)][l] = true;
   }
 
@@ -142,7 +141,7 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
       }
 
       if (layer > 0) {
-        const int otherEnclosingCoarseCellIndex
+        const auto otherEnclosingCoarseCellIndex
                 = getEnclosingMacroCellIndex(entities_sharing_same_node_[global_index_node][j]);
         if (subgrid_index!=otherEnclosingCoarseCellIndex) {
           const auto& tmp_entity_ptr = entities_sharing_same_node_[global_index_node][j];
@@ -198,7 +197,7 @@ SubGridList::~SubGridList(){}
 * @param[in] coarseCellIndex The index of a coarse cell.
 * @return Returns the subgrid belonging to the coarse cell with the given index.
 */
-SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex)
+SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex)
 {
   auto found = subGridList_.find(coarseCellIndex);
   assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!");
@@ -211,7 +210,7 @@ SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex)
 * @param[in] coarseCellIndex The index of a coarse cell.
 * @return Returns the subgrid belonging to the coarse cell with the given index.
 */
-const SubGridList::SubGridType& SubGridList::getSubGrid(int coarseCellIndex) const
+const SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex) const
 {
   auto found = subGridList_.find(coarseCellIndex);
   assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!");
@@ -253,7 +252,7 @@ const SubGridList::CoarseGridEntitySeed& SubGridList::get_coarse_entity_seed( in
 }
 
 // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
-const std::vector< int >& SubGridList::getSubgridIDs_that_contain_entity (int host_enitity_index) const {
+const std::vector<std::size_t>& SubGridList::getSubgridIDs_that_contain_entity (std::size_t host_enitity_index) const {
   return fine_id_to_subgrid_ids_[ host_enitity_index ];
 }
 
@@ -261,7 +260,7 @@ const std::vector< int >& SubGridList::getSubgridIDs_that_contain_entity (int ho
 // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
 // for each given subgrid index return the vecor of ALL coarse nodes (global coordinates) that are in the subgrid,
 // this also includes the coarse nodes on the boundary of U(T), even if this is a global Dirichlet node!
-const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i) const
+const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(std::size_t i) const
 {
   if (specifier_.getOversamplingStrategy() == 1)
     DUNE_THROW(Dune::InvalidStateException,
@@ -281,7 +280,7 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getCoarseNodeVector(int i)
 // According to the definition of the LOD 'not full coarse layers' require that the averaging
 // property of the weighted Clement operator is also applied to those coarse nodes, where
 // the corresponding basis function has a nonempty intersection with the patch
-const SubGridList::CoarseNodeVectorType& SubGridList::getExtendedCoarseNodeVector(int i) const
+const SubGridList::CoarseNodeVectorType& SubGridList::getExtendedCoarseNodeVector(std::size_t  i) const
 {
   if ( (specifier_.getOversamplingStrategy() == 1) || (specifier_.getOversamplingStrategy() == 2) )
     DUNE_THROW(Dune::InvalidStateException,
@@ -295,12 +294,12 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getExtendedCoarseNodeVecto
 } // getSubGrid
 
 // get number of sub grids
-int SubGridList::getNumberOfSubGrids() const
+std::size_t SubGridList::getNumberOfSubGrids() const
 {
   return specifier_.getNumOfCoarseEntities();
 }
 
-SubGridList::SubGridPartType SubGridList::gridPart(int i)
+SubGridList::SubGridPartType SubGridList::gridPart(std::size_t i)
 {
   return SubGridPartType(getSubGrid(i));
 }
@@ -318,11 +317,11 @@ SubGridList::SubGridPartType SubGridList::gridPart(int i)
 * @param[in] coarseGridLeafIndexSet_ The index set of the coarse grid.
 *
 */
-int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer) {
+std::size_t SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer) {
   // first check, whether we looked for this host entity already
-  int myRank = Fem::MPIManager::rank();
-  int hostEntityIndex = hostGridLeafIndexSet_.index(*hostEntityPointer);
-  auto itFound = fineToCoarseMap_[myRank].find(hostEntityIndex);
+  const auto myRank = Fem::MPIManager::rank();
+  const auto hostEntityIndex = hostGridLeafIndexSet_.index(*hostEntityPointer);
+  const auto itFound = fineToCoarseMap_[myRank].find(hostEntityIndex);
   if (itFound!=fineToCoarseMap_[myRank].end()) {
     // if so, return the index that was found last time
     return itFound->second;
@@ -353,7 +352,7 @@ int SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType& hostEnt
       bool hostEnIsInMacroCell = refElement.checkInside(macroGeo.local(baryCenter));
       if (hostEnIsInMacroCell) {
         lastIterator = macroCellIterator;
-        int macroIndex = coarseGridLeafIndexSet_.index(*macroCellIterator);
+        auto macroIndex = coarseGridLeafIndexSet_.index(*macroCellIterator);
         fineToCoarseMap_[myRank][hostEntityIndex] = macroIndex;
         return macroIndex;
       }
@@ -438,8 +437,8 @@ void SubGridList::identifySubGrids() {
   }
 
   // the number of coarse grid entities (of codim 0).
-  const int number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
-  const int oversampling_strategy          = specifier_.getOversamplingStrategy();
+  const auto number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+  const auto oversampling_strategy          = specifier_.getOversamplingStrategy();
   DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
   if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
@@ -465,7 +464,7 @@ void SubGridList::identifySubGrids() {
     subGridList_[coarse_index]->createBegin();
 
     if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
-      assert(coarse_index >= 0 && coarse_index < int(coarse_node_store_.size())
+      assert(coarse_index >= 0 && coarse_index < coarse_node_store_.size()
               && "Index set is not suitable for the current implementation!");
       for (int c = 0; c < coarse_entity.geometry().corners(); ++c)
       {
@@ -494,7 +493,7 @@ void SubGridList::createSubGrids() {
 //            specifier_.getLevelDifference());
     //// ... and its index
 
-    int  macroCellIndex = getEnclosingMacroCellIndex(host_entity);
+    const auto macroCellIndex = getEnclosingMacroCellIndex(host_entity);
     // if macroCellIndex is smaller than zero, the enclosing coarse cell was
     // not found. This may be the case if the host cell does not belong to the
     // grid part for the current process.
@@ -509,8 +508,8 @@ void SubGridList::createSubGrids() {
       // check the neighbor entities and look if they belong to the same father
       // if yes, continue
       // if not, enrichment with 'n(T)' layers
-      bool                           all_neighbors_have_same_father = true;
-      const HostIntersectionIterator iend                           = hostGridPart_.iend(host_entity);
+      bool all_neighbors_have_same_father = true;
+      const HostIntersectionIterator iend = hostGridPart_.iend(host_entity);
       for (HostIntersectionIterator iit = hostGridPart_.ibegin(host_entity); (iit != iend) && all_neighbors_have_same_father; ++iit) {
         if (iit->neighbor()) {
           // if there is a neighbor entity
@@ -523,7 +522,7 @@ void SubGridList::createSubGrids() {
       }
 
       if (!all_neighbors_have_same_father) {
-        int layers = specifier_.getNoOfLayers(macroCellIndex);
+        auto layers = specifier_.getNoOfLayers(macroCellIndex);
         if (layers > 0) {
           DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
           const HostEntityPointerType hep(host_entity);
@@ -556,7 +555,7 @@ void SubGridList::finalizeSubGrids() {
               << "Error. Created Subgrid with 0 nodes." << std::endl;
 
       for (const auto& coarse_it : coarseSpace_) {
-        const int             index         = coarseGridLeafIndexSet_.index(coarse_it);
+        const auto index = coarseGridLeafIndexSet_.index(coarse_it);
         if (subGridIt.first == index) {
           DSC_LOG_ERROR << "We have a problem with the following coarse-grid element:" << std::endl
                   << "coarse element corner(0) = " << coarse_it.geometry().corner(0) << std::endl

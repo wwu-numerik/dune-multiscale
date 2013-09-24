@@ -25,7 +25,7 @@ public:
                           DiscreteFunctionSpaceType& fine_scale_space);
 
   // get number of coarse grid entities
-  int getNumOfCoarseEntities() const;
+  std::size_t getNumOfCoarseEntities() const;
 
   /** Set the number of overlay layers for each coarse element.
   *
@@ -33,19 +33,19 @@ public:
   * @param[in] number_of_layers_for_entity The number of overlay layers that shall be provided for the given coarse
   * element
   */
-  void setNoOfLayers(int i, int number_of_layers_for_entity);
+  void setNoOfLayers(std::size_t i, std::size_t number_of_layers_for_entity);
 
   /** Get the number of overlay layers for a given coarse element.
   *
   * @param[in] i The number of the coarse element
   * @return Returns the number of overlay layers for the given coarse element.
   */
-  int getNoOfLayers(int i) const;
+  std::size_t getNoOfLayers(std::size_t i) const;
 
   /** Get the maximum number of overlay layers for the whole coarse grid.
   * @return Returns the maximum number of overlay layers for the whole coarse grid.
   */
-  int maxNumberOverlayLayers() const;
+  std::size_t maxNumberOverlayLayers() const;
 
   //! Get the difference between coarse and fine level
   int getLevelDifference() const;
@@ -60,27 +60,27 @@ public:
 
   void initialize_local_error_manager();
 
-  void set_loc_coarse_residual(int index, const RangeType& loc_coarse_residual);
-  void set_loc_coarse_grid_jumps(int index, const RangeType& loc_coarse_grid_jumps);
-  void set_loc_projection_error(int index, const RangeType& loc_projection_error);
-  void set_loc_conservative_flux_jumps(int index, const RangeType& loc_conservative_flux_jumps);
-  void set_loc_approximation_error(int index, const RangeType& loc_approximation_error);
-  void set_loc_fine_grid_jumps(int index, const RangeType& loc_fine_grid_jumps);
-  RangeType get_loc_coarse_residual(int index) const;
-  RangeType get_loc_coarse_grid_jumps(int index) const;
-  RangeType get_loc_projection_error(int index) const;
-  RangeType get_loc_conservative_flux_jumps(int index) const;
-  RangeType get_loc_approximation_error(int index) const;
-  RangeType get_loc_fine_grid_jumps(int index) const;
+  void set_loc_coarse_residual(std::size_t index, const RangeType& loc_coarse_residual);
+  void set_loc_coarse_grid_jumps(std::size_t index, const RangeType& loc_coarse_grid_jumps);
+  void set_loc_projection_error(std::size_t index, const RangeType& loc_projection_error);
+  void set_loc_conservative_flux_jumps(std::size_t index, const RangeType& loc_conservative_flux_jumps);
+  void set_loc_approximation_error(std::size_t index, const RangeType& loc_approximation_error);
+  void set_loc_fine_grid_jumps(std::size_t index, const RangeType& loc_fine_grid_jumps);
+  RangeType get_loc_coarse_residual(std::size_t index) const;
+  RangeType get_loc_coarse_grid_jumps(std::size_t index) const;
+  RangeType get_loc_projection_error(std::size_t index) const;
+  RangeType get_loc_conservative_flux_jumps(std::size_t index) const;
+  RangeType get_loc_approximation_error(std::size_t index) const;
+  RangeType get_loc_fine_grid_jumps(std::size_t index) const;
 
   void identify_coarse_boundary_nodes();
   void identify_coarse_dirichlet_nodes();
 
-  int get_number_of_coarse_boundary_nodes() const;
-  int get_number_of_coarse_dirichlet_nodes() const;
+  std::size_t get_number_of_coarse_boundary_nodes() const;
+  std::size_t get_number_of_coarse_dirichlet_nodes() const;
 
-  bool is_coarse_boundary_node( int global_index ) const;
-  bool is_coarse_dirichlet_node( int global_index ) const;
+  bool is_coarse_boundary_node(std::size_t global_index ) const;
+  bool is_coarse_dirichlet_node(std::size_t global_index ) const;
 
   bool simplexCoarseGrid() const;
 
@@ -92,13 +92,13 @@ private:
   const int coarse_level_fine_level_difference_;
 
   // number of coarse grid entities
-  const int number_of_level_host_entities_;
+  const std::size_t number_of_level_host_entities_;
 
   // oversampling strategy - 1, 2 or 3. (1 and 2 for MsFEM and 3 for Rigorous MsFEM)
   int oversampling_strategy_;
 
   // layers for each coarse grid entity
-  std::vector< int > number_of_layers;
+  std::vector< std::size_t > number_of_layers;
 
   // have the boundary nodes been identified?
   bool boundary_nodes_identified_;
@@ -113,10 +113,10 @@ private:
   std::vector< bool > is_dirichlet_node_;
 
   // number of coarse grid boundary nodes
-  int number_of_coarse_boundary_nodes_;
+  std::size_t number_of_coarse_boundary_nodes_;
 
   // number of coarse grid boundary nodes
-  int number_of_coarse_dirichlet_nodes_;
+  std::size_t number_of_coarse_dirichlet_nodes_;
   
   // ----- local error indicators (for each coarse grid element T) -------------
 

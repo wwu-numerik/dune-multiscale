@@ -316,7 +316,7 @@ public:
     const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
     RangeType f_x;
     for (const auto& coarse_grid_entity : rhsVector.space()) {
-      const int coarseEntityIndex = coarseGridLeafIndexSet.index(coarse_grid_entity);
+      const auto coarseEntityIndex = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
       const GeometryType& coarseGeometry= coarse_grid_entity.geometry();
       auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
@@ -360,9 +360,9 @@ public:
       const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
       for (const auto& localEntity : DSC::viewRange(subGrid.leafView())) {
         const auto& hostCell = subGrid.template getHostEntity< 0 >(localEntity);
-        const int enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
+        const auto enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
         auto dirichletExtensionLF = dirichletExtension.localFunction(*hostCell);
-        if (enclosingCoarseCellIndex== coarseEntityIndex) {
+        if (enclosingCoarseCellIndex == coarseEntityIndex) {
           const int order = LocalSolutionManagerType::DiscreteFunctionSpaceType::polynomialOrder;
 
           // higher order quadrature, since A^{\epsilon} is highly variable
@@ -414,7 +414,7 @@ public:
                   neumannData.evaluate(xGlobal, neumannValue);
                   coarse_grid_baseSet.evaluateAll(xInCoarseLocal, phi_x_vec);
                   for (auto i : DSC::valueRange(numLocalBaseFunctions)) {
-                    assert(i<phi_x_vec.size());
+                    assert((long long)i<(long long)phi_x_vec.size());
                     assert(iqP<localSolutionOnFace.size());
                     rhsLocalFunction[i] += factor * (neumannValue * (phi_x_vec[i]+localSolutionOnFace[iqP]));
                   }

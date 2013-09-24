@@ -18,7 +18,7 @@ MacroMicroGridSpecifier::MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coar
   boundary_nodes_identified_ = false;
 }
 // get number of coarse grid entities
-int MacroMicroGridSpecifier::getNumOfCoarseEntities() const {
+std::size_t MacroMicroGridSpecifier::getNumOfCoarseEntities() const {
     return number_of_level_host_entities_;
 }
 
@@ -28,8 +28,8 @@ int MacroMicroGridSpecifier::getNumOfCoarseEntities() const {
   * @param[in] number_of_layers_for_entity The number of overlay layers that shall be provided for the given coarse
   * element
   */
-void MacroMicroGridSpecifier::setNoOfLayers(int i, int number_of_layers_for_entity) {
-    if (i<0 || i >= number_of_level_host_entities_)
+void MacroMicroGridSpecifier::setNoOfLayers(std::size_t i, std::size_t number_of_layers_for_entity) {
+    if (i > number_of_level_host_entities_)
       DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
 
   number_of_layers[i] = number_of_layers_for_entity;
@@ -40,7 +40,7 @@ void MacroMicroGridSpecifier::setNoOfLayers(int i, int number_of_layers_for_enti
   * @param[in] i The number of the coarse element
   * @return Returns the number of overlay layers for the given coarse element.
   */
-int MacroMicroGridSpecifier::getNoOfLayers(int i) const {
+std::size_t MacroMicroGridSpecifier::getNoOfLayers(std::size_t i) const {
   if (i<0 || i>=number_of_level_host_entities_)
     DUNE_THROW(Dune::InvalidStateException,"Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
 
@@ -50,7 +50,7 @@ int MacroMicroGridSpecifier::getNoOfLayers(int i) const {
 /** Get the maximum number of overlay layers for the whole coarse grid.
 * @return Returns the maximum number of overlay layers for the whole coarse grid.
 */
-int MacroMicroGridSpecifier::maxNumberOverlayLayers() const {
+std::size_t MacroMicroGridSpecifier::maxNumberOverlayLayers() const {
   return *std::max_element(number_of_layers.begin(), number_of_layers.end());
 }
 
@@ -111,32 +111,32 @@ void MacroMicroGridSpecifier::initialize_local_error_manager() {
     loc_fine_grid_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
 } // initialize_local_error_manager
 
-void MacroMicroGridSpecifier::set_loc_coarse_residual(int index, const RangeType& loc_coarse_residual) {
+void MacroMicroGridSpecifier::set_loc_coarse_residual(std::size_t index, const RangeType& loc_coarse_residual) {
     loc_coarse_residual_[index] = loc_coarse_residual;
 }
 
-void MacroMicroGridSpecifier::set_loc_coarse_grid_jumps(int index, const RangeType& loc_coarse_grid_jumps) {
+void MacroMicroGridSpecifier::set_loc_coarse_grid_jumps(std::size_t index, const RangeType& loc_coarse_grid_jumps) {
     loc_coarse_grid_jumps_[index] = loc_coarse_grid_jumps;
 }
 
-void MacroMicroGridSpecifier::set_loc_projection_error(int index, const RangeType& loc_projection_error) {
+void MacroMicroGridSpecifier::set_loc_projection_error(std::size_t index, const RangeType& loc_projection_error) {
     loc_projection_error_[index] = loc_projection_error;
 }
 
-void MacroMicroGridSpecifier::set_loc_conservative_flux_jumps(int index, const RangeType& loc_conservative_flux_jumps) {
+void MacroMicroGridSpecifier::set_loc_conservative_flux_jumps(std::size_t index, const RangeType& loc_conservative_flux_jumps) {
     loc_conservative_flux_jumps_[index] = loc_conservative_flux_jumps;
 }
 
-void MacroMicroGridSpecifier::set_loc_approximation_error(int index, const RangeType& loc_approximation_error) {
+void MacroMicroGridSpecifier::set_loc_approximation_error(std::size_t index, const RangeType& loc_approximation_error) {
     loc_approximation_error_[index] = loc_approximation_error;
 }
 
-void MacroMicroGridSpecifier::set_loc_fine_grid_jumps(int index, const MacroMicroGridSpecifier::RangeType& loc_fine_grid_jumps) {
+void MacroMicroGridSpecifier::set_loc_fine_grid_jumps(std::size_t index, const MacroMicroGridSpecifier::RangeType& loc_fine_grid_jumps) {
     loc_fine_grid_jumps_[index] = loc_fine_grid_jumps;
 }
 
-MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_coarse_residual(int index) const {
-    if (loc_coarse_residual_.size() == 0)
+MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_coarse_residual(std::size_t index) const {
+    if (loc_coarse_residual_.empty())
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
@@ -144,8 +144,8 @@ MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_coarse_resid
     return loc_coarse_residual_[index];
 } // get_loc_coarse_residual
 
-MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_coarse_grid_jumps(int index) const {
-    if (loc_coarse_grid_jumps_.size() == 0)
+MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_coarse_grid_jumps(std::size_t index) const {
+    if (loc_coarse_grid_jumps_.empty())
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
@@ -153,8 +153,8 @@ MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_coarse_grid_
     return loc_coarse_grid_jumps_[index];
 } // get_loc_coarse_grid_jumps
 
-MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_projection_error(int index) const {
-    if (loc_projection_error_.size() == 0)
+MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_projection_error(std::size_t index) const {
+    if (loc_projection_error_.empty())
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
@@ -162,8 +162,8 @@ MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_projection_e
     return loc_projection_error_[index];
 } // get_loc_projection_error
 
-MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_conservative_flux_jumps(int index) const {
-    if (loc_conservative_flux_jumps_.size() == 0)
+MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_conservative_flux_jumps(std::size_t index) const {
+    if (loc_conservative_flux_jumps_.empty())
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
@@ -171,8 +171,8 @@ MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_conservative
     return loc_conservative_flux_jumps_[index];
 } // get_loc_conservative_flux_jumps
 
-MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_approximation_error(int index) const {
-    if (loc_approximation_error_.size() == 0)
+MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_approximation_error(std::size_t index) const {
+    if (loc_approximation_error_.empty())
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
@@ -180,8 +180,8 @@ MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_approximatio
     return loc_approximation_error_[index];
 } // get_loc_approximation_error
 
-MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_fine_grid_jumps(int index) const {
-    if (loc_fine_grid_jumps_.size() == 0)
+MacroMicroGridSpecifier::RangeType MacroMicroGridSpecifier::get_loc_fine_grid_jumps(std::size_t index) const {
+    if (loc_fine_grid_jumps_.empty())
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
@@ -286,25 +286,25 @@ void MacroMicroGridSpecifier::identify_coarse_dirichlet_nodes()
 
 }
 
-int MacroMicroGridSpecifier::get_number_of_coarse_boundary_nodes() const
+std::size_t MacroMicroGridSpecifier::get_number_of_coarse_boundary_nodes() const
 {
     assert( boundary_nodes_identified_ );
     return number_of_coarse_boundary_nodes_;
 }
 
-bool MacroMicroGridSpecifier::is_coarse_boundary_node( int global_index ) const
+bool MacroMicroGridSpecifier::is_coarse_boundary_node( std::size_t global_index ) const
 {
     assert( boundary_nodes_identified_ );
     return is_boundary_node_[global_index];
 }
 
-int MacroMicroGridSpecifier::get_number_of_coarse_dirichlet_nodes() const
+std::size_t MacroMicroGridSpecifier::get_number_of_coarse_dirichlet_nodes() const
 {
     assert( dirichlet_nodes_identified_ );
     return number_of_coarse_dirichlet_nodes_;
 }
 
-bool MacroMicroGridSpecifier::is_coarse_dirichlet_node( int global_index ) const
+bool MacroMicroGridSpecifier::is_coarse_dirichlet_node( std::size_t global_index ) const
 {
     assert( dirichlet_nodes_identified_ );
     return is_dirichlet_node_[global_index];

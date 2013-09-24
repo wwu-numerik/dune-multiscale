@@ -97,21 +97,21 @@ public:
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true);
   ~SubGridList();
 private:
-  SubGridType& getSubGrid(int i);
-  const SubGridType& getSubGrid(int i) const;
+  SubGridType& getSubGrid(std::size_t i);
+  const SubGridType& getSubGrid(std::size_t i) const;
 public:
   const SubGridType& getSubGrid(const CoarseEntityType& entity) const;
   SubGridType& getSubGrid(const CoarseEntityType& entity);
 
-  int getNumberOfSubGrids() const;
+  std::size_t getNumberOfSubGrids() const;
 
-  SubGridPartType gridPart(int i);
+  SubGridPartType gridPart(std::size_t i);
 
   // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
-  const std::vector< int >& getSubgridIDs_that_contain_entity (int host_enitity_index) const;
+  const std::vector<std::size_t>& getSubgridIDs_that_contain_entity (std::size_t host_enitity_index) const;
   
   // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
-  const CoarseNodeVectorType& getCoarseNodeVector(int i) const;
+  const CoarseNodeVectorType& getCoarseNodeVector(std::size_t i) const;
 
   // only required for oversampling strategy 3:
   // this method only differs from the method 'getCoarseNodeVector' if the oversampling patch
@@ -119,7 +119,7 @@ public:
   // According to the definition of the LOD 'not full coarse layers' require that the averaging
   // property of the weighted Clement operator is also applied to those coarse nodes, where
   // the corresponding basis function has a nonempty intersection with the patch
-  const CoarseNodeVectorType& getExtendedCoarseNodeVector(int i) const;
+  const CoarseNodeVectorType& getExtendedCoarseNodeVector(std::size_t i) const;
   
   /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
 *
@@ -133,7 +133,7 @@ public:
 * @param[in] coarseGridLeafIndexSet The index set of the coarse grid.
 *
 */
-  int getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
+  std::size_t getEnclosingMacroCellIndex(const HostEntityPointerType& hostEntityPointer);
 
   IdType getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer);
 
@@ -147,15 +147,15 @@ public:
   const CoarseGridEntitySeed& get_coarse_entity_seed( int i ) const;
 
 private:
-  typedef std::map<int, std::shared_ptr<SubGridType> > SubGridStorageType;
+  typedef std::map<std::size_t, std::shared_ptr<SubGridType> > SubGridStorageType;
   /**
    * \note called in SubGridList constructor only
    */
   void enrichment(const HostEntityPointerType& hit,
 //          const HostEntityPointerType& level_father_it,
-          const int& father_index, // father_index = index/number of current subgrid
-          shared_ptr<SubGridType> subGrid,
-          int& layer);
+          const std::size_t &father_index, // father_index = index/number of current subgrid
+          std::shared_ptr<SubGridType> subGrid,
+          std::size_t& layer);
   bool entityPatchInSubgrid(const HostEntityPointerType& hit,
           const HostGridPartType& hostGridPart,
           shared_ptr<const SubGridType> subGrid,
@@ -177,10 +177,10 @@ private:
   const HostGridPartType& hostGridPart_;
   EntityPointerCollectionType entities_sharing_same_node_;
   EnrichmentMatrixType enriched_;
-  std::vector<std::map<int, int> > fineToCoarseMap_;
+  std::vector<std::map<std::size_t, std::size_t>> fineToCoarseMap_;
   std::map<IdType, IdType> fineToCoarseMapID_;
   // given the id of a fine grid element, the vector returns the ids of all subgrids that share that element
-  std::vector < std::vector< int > > fine_id_to_subgrid_ids_;
+  std::vector<std::vector<std::size_t>> fine_id_to_subgrid_ids_;
   
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )

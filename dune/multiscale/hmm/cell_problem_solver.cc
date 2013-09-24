@@ -268,7 +268,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
   // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
   Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
-  int number_of_cell_problem = 0;
+  std::size_t number_of_cell_problem = 0;
 
   IteratorType endit = discreteFunctionSpace.end();
   for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)

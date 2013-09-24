@@ -82,7 +82,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
   // traverse coarse space
   for (auto& coarseCell : coarse_space) {
-    const int coarseCellIndex = coarseGridLeafIndexSet.index(coarseCell);
+    const auto coarseCellIndex = coarseGridLeafIndexSet.index(coarseCell);
 
     LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
     localSolManager.loadLocalSolutions();
@@ -154,19 +154,19 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
                 = localSolManager.getSubGridPart().grid().getHostEntity< 0 >(subgridEntity);
         const HostEntity& fine_host_entity = *fine_host_entity_pointer;
 
-        const int hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(fine_host_entity_pointer);
-        if (hostFatherIndex== coarseCellIndex) {
+        const auto hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(fine_host_entity_pointer);
+        if (hostFatherIndex == coarseCellIndex) {
           const SubgridLocalFunction sub_loc_value = localSolutions[0]->localFunction(subgridEntity);
 
           assert(localSolutions.size()==coarseSolutionLF.numDofs()+localSolManager.numBoundaryCorrectors());
           LocalFunction host_loc_value = fine_scale_part.localFunction(fine_host_entity);
 
-          int number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();
+          auto number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();
 
-          for (int i = 0; i < number_of_nodes_entity; ++i)
+          for (auto i : DSC::valueRange(number_of_nodes_entity))
           {
-            const typename HostEntity::Codim< HostGrid::dimension >::EntityPointer node = fine_host_entity.subEntity< HostGrid::dimension >(i);
-            const int global_index_node = gridPart.grid().leafIndexSet().index(*node);
+            const auto node = fine_host_entity.subEntity< HostGrid::dimension >(i);
+            const auto global_index_node = gridPart.grid().leafIndexSet().index(*node);
 
             // count the number of different coarse-grid-entities that share the above node
             std::unordered_set< SubGridListType::IdType > coarse_entities;

@@ -407,7 +407,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
   assert( number_of_relevant_coarse_nodes_for_subgrid );
   std::vector<std::unique_ptr<SubDiscreteFunctionType>> b_h(number_of_relevant_coarse_nodes_for_subgrid);
   std::vector<std::unique_ptr<SubDiscreteFunctionType>> rhs_Chj(number_of_relevant_coarse_nodes_for_subgrid);
-  for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+  for (auto j : DSC::valueRange(number_of_relevant_coarse_nodes_for_subgrid))
   {
       b_h[j] = DSC::make_unique<SubDiscreteFunctionType>("q_h", subDiscreteFunctionSpace);
       rhs_Chj[j] = DSC::make_unique<SubDiscreteFunctionType>("rhs_Chj_h", subDiscreteFunctionSpace);
@@ -461,7 +461,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
           = lagrangePointSet.endSubEntity< faceCodim >(face);
 
       for ( ; faceIterator != faceEndIterator; ++faceIterator)
-        for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+        for (auto j : DSC::valueRange(number_of_relevant_coarse_nodes_for_subgrid))
           ((rhs_Chj[j])->localFunction(subgrid_entity))[*faceIterator] = 0;
     }
   }
@@ -472,7 +472,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems( const int coarse_in
                                                                   DSC_CONFIG_GET("lod.local_solver", "bcgs" ),
                                                                   DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
   // solve the pre-processing problems:
-  for (int j = 0; j < number_of_relevant_coarse_nodes_for_subgrid ; ++j)
+  for (auto j : DSC::valueRange(number_of_relevant_coarse_nodes_for_subgrid))
     locprob_inverse_system_matrix.apply( *(rhs_Chj[j]) , *(b_h[j]) );
   
   // ----------------------------------------------------------------------------------------------------
@@ -1087,7 +1087,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     }
 
   // number of coarse grid entities (of codim 0).
-  int coarseGridSize = specifier_.getNumOfCoarseEntities();
+  const auto coarseGridSize = specifier_.getNumOfCoarseEntities();
 
   DSC_LOG_INFO << "in method 'assemble_all': coarseGridSize = " << coarseGridSize
             << std::endl;
