@@ -60,11 +60,10 @@ public:
     // if Dirichlet Dofs have been found, treat them 
     if( hasDirichletDofs_ ) 
     {
-      typedef typename DiscreteFunctionType :: DofIteratorType DofIteratorType ; 
       typedef typename DiscreteFunctionType :: ConstDofIteratorType ConstDofIteratorType ; 
     
       ConstDofIteratorType uIt = u.dbegin();
-      DofIteratorType wIt = w.dbegin();
+      auto wIt = w.dbegin();
 
       constexpr auto localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType ::
         localBlockSize ;
@@ -106,10 +105,7 @@ public:
     // if Dirichlet Dofs have been found, treat them
     if( hasDirichletDofs_ )
     {
-      typedef typename DiscreteFunctionType :: DofIteratorType DofIteratorType ;
-      typedef typename DiscreteFunctionType :: ConstDofIteratorType ConstDofIteratorType ;
-
-      DofIteratorType wIt = w.dbegin();
+      auto wIt = w.dbegin();
 
       const auto localBlockSize = DiscreteFunctionType :: DiscreteFunctionSpaceType :: localBlockSize;
       // loop over all blocks
@@ -160,17 +156,11 @@ public:
   void applyToOperator( LinearOperator& linearOperator ) const 
   {
     updateDirichletDofs();
-
-    typedef typename DomainSpaceType :: IteratorType IteratorType;
-    typedef typename IteratorType :: Entity EntityType;
-
     // if Dirichlet Dofs have been found, treat them 
     if( hasDirichletDofs_ ) 
     {
-      const IteratorType end = domain_space_.end();
-      for( IteratorType it = domain_space_.begin(); it != end; ++it )
+      for(const auto& entity : domain_space_)
       {
-        const EntityType &entity = *it;
         // adjust linear operator 
         dirichletDofsCorrectOnEntity( linearOperator, entity );
       }
@@ -182,17 +172,11 @@ protected:
   void apply( const GridFunctionType& u, DiscreteFunctionType& w ) const 
   {
     updateDirichletDofs();
-
-    typedef typename DomainSpaceType :: IteratorType IteratorType;
-    typedef typename IteratorType :: Entity EntityType;
-
     // if Dirichlet Dofs have been found, treat them 
     if( hasDirichletDofs_ ) 
     {
-      const IteratorType end = domain_space_.end();
-      for( IteratorType it = domain_space_.begin(); it != end; ++it )
+      for(const auto& entity : domain_space_)
       {
-        const EntityType &entity = *it;
         dirichletDofTreatment( entity, u, w );
       }
     }
@@ -211,16 +195,9 @@ protected:
                                       const EntityType &entity ) const
   { 
     // get slave dof structure (for parallel runs)   /*@LST0S@*/ 
-    SlaveDofsType& slave_dofs = this->slaveDofs();
-    const int numSlaveDofs = slave_dofs.size();
-
-    typedef typename DomainSpaceType :: LagrangePointSetType
-      LagrangePointSetType;
-    const LagrangePointSetType &lagrangePointSet = domain_space_.lagrangePointSet( entity );
-
-    typedef typename LinearOperator :: LocalMatrixType LocalMatrixType;
-
-    // get local matrix from linear operator  
+    auto& slave_dofs = this->slaveDofs();
+    const auto numSlaveDofs = slave_dofs.size();
+    const auto& lagrangePointSet = domain_space_.lagrangePointSet( entity );
     LocalMatrixType localMatrix = linearOperator.localMatrix( entity, entity );
 
     // get number of basis functions 

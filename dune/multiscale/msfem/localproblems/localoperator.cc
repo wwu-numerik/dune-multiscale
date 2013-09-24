@@ -429,7 +429,7 @@ void LocalProblemOperator
   for (auto& rhs : allLocalRHS) rhs->clear();
 
   // get the base function set of the coarse space for the given coarse entity
-  auto& coarseBaseSet = specifier.coarseSpace().basisFunctionSet(coarseEntity);
+  const auto& coarseBaseSet = specifier.coarseSpace().basisFunctionSet(coarseEntity);
   std::vector< CoarseBaseFunctionSetType::JacobianRangeType > coarseBaseFuncJacs(coarseBaseSet.size());
 
   // gradient of micro scale base function:
@@ -504,7 +504,7 @@ void LocalProblemOperator
               // const auto& insideGeometry    = intersection.geometryInInside();
               // const typename FaceQuadratureType::CoordinateType& xInInside = insideGeometry.global(xLocal);
               // therefore, we have to do stupid things:
-              const typename FaceQuadratureType::CoordinateType& xGlobal = faceGeometry.global(xLocal);
+              const auto& xGlobal = faceGeometry.global(xLocal);
               auto insidePtr = intersection.inside();
               const auto& insideEntity = *insidePtr;
               const auto& xInInside = insideEntity.geometry().local(xGlobal);
