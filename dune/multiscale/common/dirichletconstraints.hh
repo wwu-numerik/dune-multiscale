@@ -169,7 +169,7 @@ protected:
     auto& slave_dofs = this->slaveDofs();
     const auto numSlaveDofs = slave_dofs.size();
     const auto& lagrangePointSet = domain_space_.lagrangePointSet(entity);
-    LocalMatrixType localMatrix = linearOperator.localMatrix(entity, entity);
+    auto localMatrix = linearOperator.localMatrix(entity, entity);
 
     // get number of basis functions
     const auto localBlocks = lagrangePointSet.size();
