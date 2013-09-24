@@ -11,7 +11,7 @@
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
-
+#include <boost/assert.hpp>
 
 namespace Dune {
 namespace Multiscale {
@@ -91,8 +91,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
     LocalFunction coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
 
     if ((specifier.getOversamplingStrategy()==3) || specifier.simplexCoarseGrid()) {
-      assert(localSolutions.size()==Dune::GridSelector::dimgrid
-              && "We should have dim local solutions per coarse element on triangular meshes!");
+      BOOST_ASSERT_MSG(localSolutions.size()==Dune::GridSelector::dimgrid,
+              "We should have dim local solutions per coarse element on triangular meshes!");
 
       JacobianRangeType grad_coarse_msfem_on_entity;
       // We only need the gradient of the coarse scale part on the element, which is a constant.
@@ -106,9 +106,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
       }
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-      assert((localSolutions.size()-localSolManager.numBoundaryCorrectors()
-              == coarseSolutionLF.numDofs()) && "The current implementation relies on having the \
-              same types of elements on coarse and fine level!");
+      BOOST_ASSERT_MSG(static_cast<long long>(localSolutions.size()-localSolManager.numBoundaryCorrectors())
+                          == static_cast<long long>(coarseSolutionLF.numDofs()),
+                        "The current implementation relies on having thesame types of elements on coarse and fine level!");
       for (int dof=0; dof< coarseSolutionLF.numDofs(); ++dof) {
         *localSolutions[dof] *= coarseSolutionLF[dof];
         if (dof>0)
@@ -137,8 +137,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part( MacroMicroGridSpecifier& s
 
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming projection:
     if ( ( specifier.getOversamplingStrategy() == 1 ) || ( specifier.getOversamplingStrategy() == 2 ) ) {
-      assert(localSolManager.getLocalDiscreteFunctionSpace().gridPart().grid().maxLevel()
-             == discreteFunctionSpace_.gridPart().grid().maxLevel() &&
+      BOOST_ASSERT_MSG(localSolManager.getLocalDiscreteFunctionSpace().gridPart().grid().maxLevel()
+             == discreteFunctionSpace_.gridPart().grid().maxLevel(),
              "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid.");
 
 
@@ -246,7 +246,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
                                                                                                 msfem_rhs);
   }
   msfem_rhs.communicate();
-  assert(msfem_rhs.dofsValid() && "Coarse scale RHS DOFs need to be valid!");
+  BOOST_ASSERT_MSG(msfem_rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
 
   const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true, "bcgs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
@@ -271,8 +271,8 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(const CommonTraits::DiffusionTy
     fine_scale_part.communicate();
   }
 
-  assert(coarse_scale_part.dofsValid() && "Coarse scale part DOFs need to be valid!");
-  assert(fine_scale_part.dofsValid() && "Fine scale part DOFs need to be valid!");
+  BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
+  BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
 
   // add coarse and fine scale part to solution
   solution += coarse_scale_part;

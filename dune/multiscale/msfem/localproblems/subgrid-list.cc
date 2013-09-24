@@ -12,6 +12,8 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/tools/subgrid_io.hh>
 
+#include <boost/assert.hpp>
+
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
@@ -200,7 +202,7 @@ SubGridList::~SubGridList(){}
 SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex)
 {
   auto found = subGridList_.find(coarseCellIndex);
-  assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!");
+  BOOST_ASSERT_MSG(found!=subGridList_.end(), "There is no subgrid for the index you provided!");
   assert(found->second);
   return *(found->second);
 } // getSubGrid
@@ -213,7 +215,7 @@ SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex)
 const SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex) const
 {
   auto found = subGridList_.find(coarseCellIndex);
-  assert(found!=subGridList_.end() && "There is no subgrid for the index you provided!");
+  BOOST_ASSERT_MSG(found!=subGridList_.end(), "There is no subgrid for the index you provided!");
   assert(found->second);
   return *(found->second);
 } // getSubGrid

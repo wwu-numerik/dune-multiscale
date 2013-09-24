@@ -1,5 +1,7 @@
 #include "spe10.hh"
 
+#include <boost/assert.hpp>
+
 namespace Dune {
 namespace Multiscale {
 namespace Problem {
@@ -51,8 +53,7 @@ permeability_(nullptr)
 }
 
 Diffusion::~Diffusion() {
-  if (permeability_!=nullptr)
-    delete permeability_;
+  delete permeability_;
   permeability_=nullptr;
 }
 
