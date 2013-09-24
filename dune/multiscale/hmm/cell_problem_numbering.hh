@@ -17,30 +17,29 @@ namespace Multiscale {
 namespace HMM {
 
 //! only for the combination entity + number of local base function on entity
-class CellProblemNumberingManager
-{
+class CellProblemNumberingManager {
 private:
-  typedef Multiscale::CommonTraits::DiscreteFunctionSpaceType  DiscreteFunctionSpaceType;
+  typedef Multiscale::CommonTraits::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename GridPartType::GridType                  GridType;
+  typedef typename GridPartType::GridType GridType;
 
-  typedef typename GridType::Codim< 0 >::Entity         EntityType;
-  typedef typename GridType::Codim< 0 >::EntityPointer EntityPointerType;
+  typedef typename GridType::Codim<0>::Entity EntityType;
+  typedef typename GridType::Codim<0>::EntityPointer EntityPointerType;
 
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef typename DiscreteFunctionSpaceType::IteratorType        IteratorType;
+  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
   typedef typename DiscreteFunctionSpaceType::DomainType DomainType;
 
-  typedef classcomp< GridPartType, DomainType, EntityPointerType > CompClass;
+  typedef classcomp<GridPartType, DomainType, EntityPointerType> CompClass;
 
-  typedef std::pair< EntityPointerType, std::size_t > KeyType;
-  typedef std::map< KeyType, std::size_t, CompClass > CellNumMapType;
+  typedef std::pair<EntityPointerType, std::size_t> KeyType;
+  typedef std::map<KeyType, std::size_t, CompClass> CellNumMapType;
 
   // for the comparison of two entities:
-  typedef entity_compare< GridPartType, DomainType, EntityPointerType > CompEntityClass;
+  typedef entity_compare<GridPartType, DomainType, EntityPointerType> CompEntityClass;
 
-  typedef std::map< EntityPointerType, int, CompEntityClass > CellNumMapNLType;
+  typedef std::map<EntityPointerType, int, CompEntityClass> CellNumMapNLType;
 
   CellNumMapType cell_numbering_map_;
   CellNumMapNLType cell_numbering_map_NL_;
@@ -61,8 +60,8 @@ public:
   std::size_t get_number_of_cell_problem(const EntityPointerType& ent) const;
 };
 
-} //namespace HMM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // DUNEMS_HMM_CELL_NUMBERING_HH

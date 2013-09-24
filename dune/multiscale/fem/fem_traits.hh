@@ -24,25 +24,24 @@ namespace FEM {
 //! Type constructions for the FEM problem
 struct FEMTraits {
 
-  typedef Dune::Fem::PetscInverseOperator< typename CommonTraits::DiscreteFunctionType,
-                                           typename CommonTraits::FEMMatrix >
-    InverseOperatorType;
+  typedef Dune::Fem::PetscInverseOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix>
+  InverseOperatorType;
   /** \brief --------------- solver for the linear system of equations ----------------------------
-     * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for symmetric
+     * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for
+    *symmetric
      ****ones. GMRES seems to be more stable, but is extremely slow!
      */
-
 
   //! --------------- the discrete operators (standard FEM) ----------------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)
   typedef DiscreteEllipticOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType>
-       EllipticOperatorType;
+  EllipticOperatorType;
   //! ----------------------------------------------------------------------------------------
 
 }; // struct  FEMTraits
 
-} //namespace FEM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace FEM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // DUNE_FEM_TYPES_HH

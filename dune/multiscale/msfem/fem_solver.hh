@@ -18,12 +18,11 @@ namespace Dune {
 namespace Multiscale {
 
 //! define a dummy mass term:
-template< class FunctionSpaceImp >
+template <class FunctionSpaceImp>
 class DummyMass;
 
 //! \todo docme
-class Elliptic_FEM_Solver
-{
+class Elliptic_FEM_Solver {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
   typedef DiscreteFunctionType DiscreteFunction;
@@ -40,7 +39,7 @@ private:
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
-  typedef DummyMass< DiscreteFunctionSpace > DummyMassType;
+  typedef DummyMass<DiscreteFunctionSpace> DummyMassType;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
@@ -57,15 +56,12 @@ public:
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   void solve(const CommonTraits::DiffusionType& diffusion_op,
              const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-             const CommonTraits::FirstSourceType& f,
-             const CommonTraits::DiscreteFunctionType& dirichlet_extension,
-             const CommonTraits::NeumannBCType& neumann_bc,
-                   DiscreteFunction& solution) const;
-		   
+             const CommonTraits::FirstSourceType& f, const CommonTraits::DiscreteFunctionType& dirichlet_extension,
+             const CommonTraits::NeumannBCType& neumann_bc, DiscreteFunction& solution) const;
+
   void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
                             const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                            const CommonTraits::FirstSourceType& f,
-                                  DiscreteFunction& solution) const;
+                            const CommonTraits::FirstSourceType& f, DiscreteFunction& solution) const;
 };
 
 } // namespace Multiscale

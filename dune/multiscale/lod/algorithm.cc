@@ -39,39 +39,38 @@ namespace Multiscale {
 namespace MsFEM {
 
 //! set the dirichlet points to the Dirichlet BC
-template< class DirichletBC, class DiscreteFunctionType >
-void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, DirichletBC &dirichlet_func, DiscreteFunctionType& func) {
+template <class DirichletBC, class DiscreteFunctionType>
+void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, DirichletBC& dirichlet_func,
+                        DiscreteFunctionType& func) {
   using namespace Dune::Stuff;
   const auto& discreteFunctionSpace = func.space();
   static const unsigned int faceCodim = 1;
-  for (const auto& entity : discreteFunctionSpace)
-  {
+  for (const auto& entity : discreteFunctionSpace) {
 
-     // we might look for a better Dirichlet Extension in the case of a Neumann boundary part ..
+// we might look for a better Dirichlet Extension in the case of a Neumann boundary part ..
 
 #if 1
-     auto funcLocal = func.localFunction(entity);
+    auto funcLocal = func.localFunction(entity);
 
-     // ------------- first, use a coarse grid interpolation ----------------
-     bool intersects_dirichlet_boundary = false;
+    // ------------- first, use a coarse grid interpolation ----------------
+    bool intersects_dirichlet_boundary = false;
 
-     const int level_difference = specifier.getLevelDifference();
-     CommonTraits::DiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
+    const int level_difference = specifier.getLevelDifference();
+    CommonTraits::DiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
 
-     typedef typename CommonTraits::GridType::Traits::LeafIndexSet HostGridLeafIndexSet;
-     const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+    typedef typename CommonTraits::GridType::Traits::LeafIndexSet HostGridLeafIndexSet;
+    const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
-     const auto& entity_ptr = coarseSpace.grid().entityPointer( entity.seed() );
-     const CommonTraits::EntityPointerType& coarse_father = Stuff::Grid::make_father( coarseGridLeafIndexSet,
-                                                                                      entity_ptr,
-                                                                                      level_difference );
-     CommonTraits::EntityType& coarse_grid_entity = *coarse_father;
+    const auto& entity_ptr = coarseSpace.grid().entityPointer(entity.seed());
+    const CommonTraits::EntityPointerType& coarse_father =
+        Stuff::Grid::make_father(coarseGridLeafIndexSet, entity_ptr, level_difference);
+    CommonTraits::EntityType& coarse_grid_entity = *coarse_father;
 
-     const auto& lagrangePointSet = specifier.coarseSpace().lagrangePointSet( coarse_grid_entity );
-     const auto number_of_points = lagrangePointSet.nop();
-     
-     std::vector< std::size_t > indices;
-     specifier.coarseSpace().mapper().map( coarse_grid_entity, indices );
+    const auto& lagrangePointSet = specifier.coarseSpace().lagrangePointSet(coarse_grid_entity);
+    const auto number_of_points = lagrangePointSet.nop();
+
+    std::vector<std::size_t> indices;
+    specifier.coarseSpace().mapper().map(coarse_grid_entity, indices);
 
 #if 0
      int neumann_element = 0;
@@ -99,73 +98,66 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
      { continue; }
 #endif
 
-     assert( number_of_points == 3 );
-     std::vector< CommonTraits::RangeType > dirichlet_values_coarse_corners( number_of_points );
-     std::vector< CommonTraits::DomainType > corners( number_of_points );
-     std::vector< CommonTraits::DomainType > dirichlet_corners;
-     
-     for(size_t loc_point = 0; loc_point < number_of_points ; ++loc_point ) {
-        corners[ loc_point ] = coarse_grid_entity.geometry().global(lagrangePointSet.point( loc_point ) );
-        
-        if ( specifier.is_coarse_dirichlet_node( indices[ loc_point ] ) )
-        {  dirichlet_func.evaluate( corners[ loc_point ], dirichlet_values_coarse_corners[ loc_point ] ); 
-           intersects_dirichlet_boundary = true;
-           dirichlet_corners.push_back( corners[ loc_point ] );
-        }
-        else
-        { dirichlet_values_coarse_corners[ loc_point ] = 0.0; }
+    assert(number_of_points == 3);
+    std::vector<CommonTraits::RangeType> dirichlet_values_coarse_corners(number_of_points);
+    std::vector<CommonTraits::DomainType> corners(number_of_points);
+    std::vector<CommonTraits::DomainType> dirichlet_corners;
+
+    for (size_t loc_point = 0; loc_point < number_of_points; ++loc_point) {
+      corners[loc_point] = coarse_grid_entity.geometry().global(lagrangePointSet.point(loc_point));
+
+      if (specifier.is_coarse_dirichlet_node(indices[loc_point])) {
+        dirichlet_func.evaluate(corners[loc_point], dirichlet_values_coarse_corners[loc_point]);
+        intersects_dirichlet_boundary = true;
+        dirichlet_corners.push_back(corners[loc_point]);
+      } else {
+        dirichlet_values_coarse_corners[loc_point] = 0.0;
       }
-    
-     // LinearLagrangeInterpolation2D should be eventually replaced by
-     // LinearLagrangeFunction2D< DiscreteFunctionSpace > dirichlet_interpolation
-     LinearLagrangeInterpolation2D< CommonTraits::DiscreteFunctionSpaceType > dirichlet_interpolation
-          ( corners[0], dirichlet_values_coarse_corners[0],
-            corners[1], dirichlet_values_coarse_corners[1],
-            corners[2], dirichlet_values_coarse_corners[2] );
-     // --------------------------------------------------------------------------------
-  
-     if ( intersects_dirichlet_boundary == true ) 
-     {
-       for (const auto& intersection
-         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
-       {
+    }
 
-         const auto face = intersection.indexInInside();
+    // LinearLagrangeInterpolation2D should be eventually replaced by
+    // LinearLagrangeFunction2D< DiscreteFunctionSpace > dirichlet_interpolation
+    LinearLagrangeInterpolation2D<CommonTraits::DiscreteFunctionSpaceType> dirichlet_interpolation(
+        corners[0], dirichlet_values_coarse_corners[0], corners[1], dirichlet_values_coarse_corners[1], corners[2],
+        dirichlet_values_coarse_corners[2]);
+    // --------------------------------------------------------------------------------
 
-         for(auto loc_point
-           : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face))
-         {
-           const auto& global_point = entity.geometry().global( discreteFunctionSpace.lagrangePointSet(entity).point( loc_point ) );
-           CommonTraits::RangeType dirichlet_value(0.0);
-           
-           if ( intersection.boundary() && (intersection.boundaryId() == 2) )
-           {
-             bool point_is_dirichlet_point_on_neumann_boundary_piece = false;
-             for ( int c = 0; c < dirichlet_corners.size(); c++ )
-             {
-                if ( global_point == dirichlet_corners[c] )
-                { point_is_dirichlet_point_on_neumann_boundary_piece = true; }
-             }
-             if ( point_is_dirichlet_point_on_neumann_boundary_piece )
-             { dirichlet_func.evaluate( global_point, dirichlet_value); }
-             else
-             { dirichlet_value = 0.0; }
-             funcLocal[loc_point] = dirichlet_value;
-           }
-           else
-           {
-             // use the coarse grid interpolation, but on the Dirichlet boundary, use a fine grid interpolation
-             if ( !intersection.boundary() )
-             { 
-               dirichlet_interpolation.evaluate( global_point, dirichlet_value);
-             }
-             else
-             { dirichlet_func.evaluate( global_point, dirichlet_value); }
-             funcLocal[loc_point] = dirichlet_value;
-           }
-         }
-       }
-     }
+    if (intersects_dirichlet_boundary == true) {
+      for (const auto& intersection :
+           Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
+
+        const auto face = intersection.indexInInside();
+
+        for (auto loc_point : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
+          const auto& global_point =
+              entity.geometry().global(discreteFunctionSpace.lagrangePointSet(entity).point(loc_point));
+          CommonTraits::RangeType dirichlet_value(0.0);
+
+          if (intersection.boundary() && (intersection.boundaryId() == 2)) {
+            bool point_is_dirichlet_point_on_neumann_boundary_piece = false;
+            for (int c = 0; c < dirichlet_corners.size(); c++) {
+              if (global_point == dirichlet_corners[c]) {
+                point_is_dirichlet_point_on_neumann_boundary_piece = true;
+              }
+            }
+            if (point_is_dirichlet_point_on_neumann_boundary_piece) {
+              dirichlet_func.evaluate(global_point, dirichlet_value);
+            } else {
+              dirichlet_value = 0.0;
+            }
+            funcLocal[loc_point] = dirichlet_value;
+          } else {
+            // use the coarse grid interpolation, but on the Dirichlet boundary, use a fine grid interpolation
+            if (!intersection.boundary()) {
+              dirichlet_interpolation.evaluate(global_point, dirichlet_value);
+            } else {
+              dirichlet_func.evaluate(global_point, dirichlet_value);
+            }
+            funcLocal[loc_point] = dirichlet_value;
+          }
+        }
+      }
+    }
 #endif
 #if 0
     for (const auto& intersection
@@ -190,16 +182,14 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
 #endif
   }
 } // setDirichletValues
-  
+
 //! \TODO docme
 void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_lod_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_lod_solution,
                      const CommonTraits::DiscreteFunctionType& dirichlet_extension,
-                     Dune::Multiscale::OutputParameters& outputparam,
-                     int& total_refinement_level_,
-                     int& coarse_grid_level_)
-{
+                     Dune::Multiscale::OutputParameters& outputparam, int& total_refinement_level_,
+                     int& coarse_grid_level_) {
   using namespace Dune;
   //! ----------------- writing data output LOD Solution -----------------
   // --------- VTK data output for LOD solution --------------------------
@@ -211,7 +201,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
   outstring = "lod_solution";
 
   OutputTraits::DataOutputType lod_dataoutput(gridPart.grid(), lod_solution_series, outputparam);
-  lod_dataoutput.writeData( 1.0 /*dummy*/, outstring );
+  lod_dataoutput.writeData(1.0 /*dummy*/, outstring);
 
   // ---------------------------------------------------------------------------
   // create and initialize output class
@@ -221,7 +211,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
   outstring = "coarse_part_lod_solution";
 
   OutputTraits::DataOutputType coarse_lod_dataoutput(gridPart.grid(), coarse_lod_solution_series, outputparam);
-  coarse_lod_dataoutput.writeData( 1.0 /*dummy*/, outstring );
+  coarse_lod_dataoutput.writeData(1.0 /*dummy*/, outstring);
 
   // ---------------------------------------------------------------------------
   // create and initialize output class
@@ -232,8 +222,8 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
   outstring = "fine_lod_solution";
 
   OutputTraits::DataOutputType fine_lod_dataoutput(gridPart.grid(), fine_lod_solution_series, outputparam);
-  fine_lod_dataoutput.writeData( 1.0 /*dummy*/, outstring);
-  
+  fine_lod_dataoutput.writeData(1.0 /*dummy*/, outstring);
+
   // ---------------------------------------------------------------------------
   // create and initialize output class
   OutputTraits::IOTupleType dirichlet_extension_series(&dirichlet_extension);
@@ -243,12 +233,12 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
   outstring = "dirichlet_extension";
 
   OutputTraits::DataOutputType dirichlet_extension_dataoutput(gridPart.grid(), dirichlet_extension_series, outputparam);
-  dirichlet_extension_dataoutput.writeData( 1.0 /*dummy*/, outstring);
+  dirichlet_extension_dataoutput.writeData(1.0 /*dummy*/, outstring);
 
   // ----------------------------------------------------------------------
   // ---------------------- write discrete lod solution to file ---------
-  const std::string location = (boost::format("msfem_solution_discFunc_refLevel_%d_%d")
-                                %  total_refinement_level_ % coarse_grid_level_).str();
+  const std::string location =
+      (boost::format("msfem_solution_discFunc_refLevel_%d_%d") % total_refinement_level_ % coarse_grid_level_).str();
   DiscreteFunctionWriter(location).append(lod_solution);
   //! --------------------------------------------------------------------
 }
@@ -256,15 +246,13 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
-                 Dune::Multiscale::OutputParameters& outputparam )
-{
+                 Dune::Multiscale::OutputParameters& outputparam) {
   using namespace Dune;
   // sequence stamp
   //! --------------------------------------------------------------------------------------
 
   //! -------------------------- writing data output Exact Solution ------------------------
-  if (Problem::getModelData()->hasExactSolution())
-  { 
+  if (Problem::getModelData()->hasExactSolution()) {
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
@@ -273,14 +261,14 @@ void data_output(const CommonTraits::GridPartType& gridPart,
     outputparam.set_prefix("exact_solution");
     OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
     // write data
-    exactsol_dataoutput.writeData( 1.0 /*dummy*/, "exact-solution" );
+    exactsol_dataoutput.writeData(1.0 /*dummy*/, "exact-solution");
     // -------------------------------------------------------
   }
   //! --------------------------------------------------------------------------------------
 
   //! --------------- writing data output for the coarse grid visualization ------------------
   CommonTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
-                                                 discreteFunctionSpace_coarse);
+                                                               discreteFunctionSpace_coarse);
   coarse_grid_visualization.clear();
   // -------------------------- data output -------------------------
   // create and initialize output class
@@ -288,19 +276,17 @@ void data_output(const CommonTraits::GridPartType& gridPart,
 
   const auto coarse_grid_fname = (boost::format("coarse_grid_visualization_")).str();
   outputparam.set_prefix(coarse_grid_fname);
-  OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
+  OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(),
+                                                      coarse_grid_series, outputparam);
   // write data
-  coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, coarse_grid_fname );
+  coarse_grid_dataoutput.writeData(1.0 /*dummy*/, coarse_grid_fname);
   // -------------------------------------------------------
   //! --------------------------------------------------------------------------------------
 }
 
-
 //! \TODO docme
-void algorithm(const std::string& macroGridName,
-               int& total_refinement_level_,
-               int& coarse_grid_level_,
-               int& number_of_layers_ ) {
+void algorithm(const std::string& macroGridName, int& total_refinement_level_, int& coarse_grid_level_,
+               int& number_of_layers_) {
   using namespace Dune;
 
   DSC_LOG_INFO << "loading dgf: " << macroGridName << std::endl;
@@ -343,7 +329,7 @@ void algorithm(const std::string& macroGridName,
 
   // Dirichlet boundary condition
   const auto dirichlet_bc_ptr = Problem::getDirichletBC();
-  const auto& dirichlet_bc = *dirichlet_bc_ptr; 
+  const auto& dirichlet_bc = *dirichlet_bc_ptr;
   // Neumann boundary condition
   const auto neumann_bc_ptr = Problem::getNeumannBC();
   const auto& neumann_bc = *neumann_bc_ptr;
@@ -351,7 +337,7 @@ void algorithm(const std::string& macroGridName,
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
-  data_output(gridPart, discreteFunctionSpace_coarse, outputparam );
+  data_output(gridPart, discreteFunctionSpace_coarse, outputparam);
 
   //! ---------------------- solve LOD problem ---------------------------
   //! solution vector
@@ -369,12 +355,11 @@ void algorithm(const std::string& macroGridName,
 
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
-  for (int i = 0; i < number_of_level_host_entities; i += 1)
-  {
+  for (int i = 0; i < number_of_level_host_entities; i += 1) {
     specifier.setNoOfLayers(i, number_of_layers_);
   }
   //! \todo Important why? (Sven)
-  specifier.setOversamplingStrategy( 3 ); //! Important!
+  specifier.setOversamplingStrategy(3); //! Important!
   specifier.identify_coarse_dirichlet_nodes();
   //!specifier.identify_coarse_boundary_nodes();//!DELETE ME SOON!!!!!!!!!!!!
 
@@ -382,25 +367,23 @@ void algorithm(const std::string& macroGridName,
   // and that is zero elsewhere
   CommonTraits::DiscreteFunctionType dirichlet_extension("Dirichlet extension", discreteFunctionSpace);
   dirichlet_extension.clear();
-  setDirichletValues( specifier, dirichlet_bc, dirichlet_extension );
+  setDirichletValues(specifier, dirichlet_bc, dirichlet_extension);
 
   //! create subgrids:
-  {//this scopes subgridlist
+  { // this scopes subgridlist
     MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
     Elliptic_Rigorous_MsFEM_Solver lod_solver(discreteFunctionSpace);
-    lod_solver.solve(diffusion_op, f, dirichlet_extension, neumann_bc,
-                     specifier, subgrid_list,
+    lod_solver.solve(diffusion_op, f, dirichlet_extension, neumann_bc, specifier, subgrid_list,
                      coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
 
     coarse_part_msfem_solution += dirichlet_extension;
     msfem_solution += dirichlet_extension;
 
     DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
-    solution_output(msfem_solution, coarse_part_msfem_solution,
-                    fine_part_msfem_solution, dirichlet_extension, outputparam,
-                    total_refinement_level_, coarse_grid_level_);
+    solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, dirichlet_extension,
+                    outputparam, total_refinement_level_, coarse_grid_level_);
   }
 
   //! ---------------------- solve FEM problem with same (fine) resolution ---------------------------
@@ -409,9 +392,8 @@ void algorithm(const std::string& macroGridName,
   CommonTraits::DiscreteFunctionType fem_solution("FEM Solution", discreteFunctionSpace);
   fem_solution.clear();
 
-  if ( DSC_CONFIG_GET("rigorous_msfem.fem_comparison",false) )
-  {
-   
+  if (DSC_CONFIG_GET("rigorous_msfem.fem_comparison", false)) {
+
     // just for Dirichlet zero-boundary condition
     const Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
     fem_solver.solve(diffusion_op, F_ptr, f, dirichlet_extension, neumann_bc, fem_solution);
@@ -428,17 +410,14 @@ void algorithm(const std::string& macroGridName,
     OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
     // write data
-    fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );
+    fem_dataoutput.writeData(1.0 /*dummy*/, "fem_solution");
     // -------------------------------------------------------------
-
   }
 
   ErrorCalculator(&msfem_solution, &fem_solution).print(DSC_LOG_INFO_0);
 
 } // function algorithm
 
-} //namespace MsFEM {
-} //namespace Multiscale {
-} //namespace Dune {
-
-
+} // namespace MsFEM {
+} // namespace Multiscale {
+} // namespace Dune {

@@ -21,54 +21,50 @@ namespace Dune {
 namespace Multiscale {
 namespace HMM {
 
-
-class DiscreteCellProblemOperator
-  : public Operator< typename HMMTraits::PeriodicDiscreteFunctionType::RangeFieldType,
-                     typename HMMTraits::PeriodicDiscreteFunctionType::RangeFieldType, typename HMMTraits::PeriodicDiscreteFunctionType,
-                     typename HMMTraits::PeriodicDiscreteFunctionType >
-    , boost::noncopyable
-{
+class DiscreteCellProblemOperator : public Operator<typename HMMTraits::PeriodicDiscreteFunctionType::RangeFieldType,
+                                                    typename HMMTraits::PeriodicDiscreteFunctionType::RangeFieldType,
+                                                    typename HMMTraits::PeriodicDiscreteFunctionType,
+                                                    typename HMMTraits::PeriodicDiscreteFunctionType>,
+                                    boost::noncopyable {
   typedef typename HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionImp;
   typedef typename CommonTraits::DiffusionType DiffusionImp;
 
   typedef PeriodicDiscreteFunctionImp DiscreteFunction;
-  typedef DiffusionImp                DiffusionModel;
+  typedef DiffusionImp DiffusionModel;
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
-  typedef typename DiscreteFunctionSpace::GridPartType   GridPart;
-  typedef typename DiscreteFunctionSpace::GridType       GridType;
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef typename DiscreteFunctionSpace::GridType GridType;
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
 
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
-  typedef typename DiscreteFunctionSpace::RangeType  RangeType;
-  typedef typename DiscreteFunctionSpace::JacobianRangeType
-  JacobianRangeType;
+  typedef typename DiscreteFunctionSpace::RangeType RangeType;
+  typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
   typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType                   BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType                  LagrangePointSet;
-  typedef typename LagrangePointSet::Codim< 1 >::SubEntityIteratorType FaceDofIterator;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
+  typedef typename LagrangePointSet::Codim<1>::SubEntityIteratorType FaceDofIterator;
 
   typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity                    Entity;
-  typedef typename Entity::Geometry                    Geometry;
+  typedef typename Iterator::Entity Entity;
+  typedef typename Entity::Geometry Geometry;
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
 
-  typedef Fem::CachingQuadrature< GridPart, 0 > Quadrature;
+  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
 public:
   DiscreteCellProblemOperator(const DiscreteFunctionSpace& periodicDiscreteFunctionSpace,
                               const DiffusionModel& diffusion_op)
     : periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
-      , diffusion_operator_(diffusion_op)
-  {}
+    , diffusion_operator_(diffusion_op) {}
 
 public:
   /**
@@ -107,11 +103,11 @@ public:
  (here, JA^{\eps} denotes the jacobian matrix of the diffusion operator A^{\eps},
  x_T denotes the barycenter of T, \delta denotes the cell size )
    * \param x_T macroscopic quadrature point
-   * \param old_fine_function the microscopic function (fine-scale correction) from the last iteration step of the Newton method
+   * \param old_fine_function the microscopic function (fine-scale correction) from the last iteration step of the
+ Newton method
    * \param grad_coarse_function the gradient of the macroscopic function (that we want to reconstruct) evaluated in x_T
    */
-  void assemble_jacobian_matrix(const DomainType& x_T,
-                                const JacobianRangeType& grad_coarse_function,
+  void assemble_jacobian_matrix(const DomainType& x_T, const JacobianRangeType& grad_coarse_function,
                                 const DiscreteFunction& old_fine_function,
                                 typename CellProblemSolver::CellFEMMatrix& global_matrix) const;
 
@@ -128,9 +124,8 @@ public:
    * @param grad_coarse_function \nabla_x \Phi_H(x_T) (the coarse function to reconstruct)
    * @param cell_problem_RHS rhs cell problem
    */
-  void assembleCellRHS_linear( const DomainType& x_T,
-    const JacobianRangeType& grad_coarse_function,
-    DiscreteFunction& cell_problem_RHS) const;
+  void assembleCellRHS_linear(const DomainType& x_T, const JacobianRangeType& grad_coarse_function,
+                              DiscreteFunction& cell_problem_RHS) const;
 
   /**
    * assemble method for the case of a nonlinear diffusion operator
@@ -148,24 +143,23 @@ public:
    * @param old_fine_function old solution from the last iteration step
    * @param cell_problem_RHS rhs cell problem
    */
-  void assembleCellRHS_nonlinear( const DomainType& x_T,
-    const JacobianRangeType& grad_coarse_function,
-    const DiscreteFunction& old_fine_function,
-    DiscreteFunction& cell_problem_RHS) const;
+  void assembleCellRHS_nonlinear(const DomainType& x_T, const JacobianRangeType& grad_coarse_function,
+                                 const DiscreteFunction& old_fine_function, DiscreteFunction& cell_problem_RHS) const;
 
   /**
-   * @brief assemble_jacobian_corrector_cell_prob_RHS assemble method for the right hand side of the jacobian corrector cell problem
+   * @brief assemble_jacobian_corrector_cell_prob_RHS assemble method for the right hand side of the jacobian corrector
+   * cell problem
    * @param x_T the global quadrature point in the macro grid element T
    * @param grad_old_coarse_function gradient of the old coarse function (old means last iteration step)
    * @param corrector_of_old_coarse_function gradient of the corrector of the old coarse function
    * @param grad_coarse_base_function gradient of the current macroscopic base function
    * @param jac_corrector_cell_problem_RHS rhs cell problem
    */
-  void assemble_jacobian_corrector_cell_prob_RHS( const DomainType& x_T,
-    const JacobianRangeType& grad_old_coarse_function,
-    const DiscreteFunction& corrector_of_old_coarse_function,
-    const JacobianRangeType& grad_coarse_base_function,
-    DiscreteFunction& jac_corrector_cell_problem_RHS) const;
+  void assemble_jacobian_corrector_cell_prob_RHS(const DomainType& x_T,
+                                                 const JacobianRangeType& grad_old_coarse_function,
+                                                 const DiscreteFunction& corrector_of_old_coarse_function,
+                                                 const JacobianRangeType& grad_coarse_base_function,
+                                                 DiscreteFunction& jac_corrector_cell_problem_RHS) const;
 
   double normRHS(const DiscreteFunction& rhs) const;
 
@@ -174,9 +168,8 @@ private:
   const DiffusionModel& diffusion_operator_;
 };
 
-} //namespace HMM {
-} //namespace Multiscale {
-} //namespace Dune {
-
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // #ifndef DiscreteElliptic_HH

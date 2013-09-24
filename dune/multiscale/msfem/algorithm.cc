@@ -46,43 +46,36 @@ namespace Multiscale {
 namespace MsFEM {
 
 //! \TODO docme
-void adapt(CommonTraits::GridType& grid,
-           CommonTraits::GridType& grid_coarse,
-           const int loop_number,
-           int& total_refinement_level_,
-           int& coarse_grid_level_,
-           int& number_of_layers_,
+void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, const int loop_number,
+           int& total_refinement_level_, int& coarse_grid_level_, int& number_of_layers_,
            const std::vector<CommonTraits::RangeVectorVector*>& locals,
            const std::vector<CommonTraits::RangeVector*>& totals,
-           const CommonTraits::RangeVector& total_estimated_H1_error_)
-{
+           const CommonTraits::RangeVector& total_estimated_H1_error_) {
   using namespace Dune;
-  typedef CommonTraits::GridType::LeafGridView         GridView;
-  typedef GridView::Codim< 0 >::Iterator ElementLeafIterator;
+  typedef CommonTraits::GridType::LeafGridView GridView;
+  typedef GridView::Codim<0>::Iterator ElementLeafIterator;
   typedef CommonTraits::GridType::Traits::LeafIndexSet GridLeafIndexSet;
 
   bool coarse_scale_error_dominant = false;
   // identify the dominant contribution:
-  const double average_est_error = total_estimated_H1_error_[loop_number - 1] / 6.0;     // 6 contributions
+  const double average_est_error = total_estimated_H1_error_[loop_number - 1] / 6.0; // 6 contributions
 
   const auto& total_approximation_error_ = *totals[4];
   const auto& total_fine_grid_jumps_ = *totals[5];
-  if ( (total_approximation_error_[loop_number - 1] >= average_est_error)
-       || (total_fine_grid_jumps_[loop_number - 1] >= average_est_error) )
-  {
-    total_refinement_level_ += 2;   // 'the fine grid level'
+  if ((total_approximation_error_[loop_number - 1] >= average_est_error) ||
+      (total_fine_grid_jumps_[loop_number - 1] >= average_est_error)) {
+    total_refinement_level_ += 2; // 'the fine grid level'
     DSC_LOG_INFO_0 << "Fine scale error identified as being dominant. Decrease the number of global refinements by 2."
-              << std::endl;
+                   << std::endl;
     DSC_LOG_INFO_0 << "NEW: Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
     DSC_LOG_INFO_0 << "Note that this means: the fine grid is " << total_refinement_level_ - coarse_grid_level_
-              << " refinement levels finer than the coarse grid." << std::endl;
+                   << " refinement levels finer than the coarse grid." << std::endl;
   }
 
   const auto& total_projection_error_ = *totals[1];
   const auto& total_conservative_flux_jumps_ = *totals[3];
-  if ( (total_projection_error_[loop_number - 1] >= average_est_error)
-       || (total_conservative_flux_jumps_[loop_number - 1] >= average_est_error) )
-  {
+  if ((total_projection_error_[loop_number - 1] >= average_est_error) ||
+      (total_conservative_flux_jumps_[loop_number - 1] >= average_est_error)) {
     number_of_layers_ += 1;
     DSC_LOG_INFO_0
     << "Oversampling error identified as being dominant. Increase the number of layers for each subgrid by 5."
@@ -92,23 +85,20 @@ void adapt(CommonTraits::GridType& grid,
 
   const auto& total_coarse_residual_ = *totals[0];
   const auto& total_coarse_grid_jumps_ = *totals[2];
-  if ( (total_coarse_residual_[loop_number - 1] >= average_est_error)
-       || (total_coarse_grid_jumps_[loop_number - 1] >= average_est_error) )
-  {
+  if ((total_coarse_residual_[loop_number - 1] >= average_est_error) ||
+      (total_coarse_grid_jumps_[loop_number - 1] >= average_est_error)) {
     DSC_LOG_INFO_0 << "Coarse scale error identified as being dominant. Start adaptive coarse grid refinment."
-              << std::endl;
-    coarse_scale_error_dominant = true;   /* mark elementwise for 2 refinments */
+                   << std::endl;
+    coarse_scale_error_dominant = true; /* mark elementwise for 2 refinments */
   }
 
   const auto& loc_coarse_residual_ = *locals[0];
   const auto& loc_coarse_grid_jumps_ = *totals[1];
-  std::vector< CommonTraits::RangeType > average_coarse_error_indicator(loop_number);        // arithmetic average
-  for (int l = 0; l < loop_number; ++l)
-  {
-    assert( loc_coarse_residual_[l].size() == loc_coarse_grid_jumps_[l].size() );
+  std::vector<CommonTraits::RangeType> average_coarse_error_indicator(loop_number); // arithmetic average
+  for (int l = 0; l < loop_number; ++l) {
+    assert(loc_coarse_residual_[l].size() == loc_coarse_grid_jumps_[l].size());
     average_coarse_error_indicator[l] = 0.0;
-    for (size_t i = 0; i < loc_coarse_grid_jumps_[l].size(); ++i)
-    {
+    for (size_t i = 0; i < loc_coarse_grid_jumps_[l].size(); ++i) {
       average_coarse_error_indicator[l] += loc_coarse_residual_[l][i] + loc_coarse_grid_jumps_[l][i];
     }
     average_coarse_error_indicator[l] = average_coarse_error_indicator[l] / loc_coarse_residual_[l].size();
@@ -116,36 +106,30 @@ void adapt(CommonTraits::GridType& grid,
 
   // allgemeineren Algorithmus vorgestellt, aber noch nicht implementiert
 
-  if (coarse_scale_error_dominant)
-  {
+  if (coarse_scale_error_dominant) {
     int number_of_refinements = 4;
     // allowed varianve from average ( in percent )
-    double variance = 1.1;   // = 110 % of the average
-    for (int l = 0; l < loop_number; ++l)
-    {
+    double variance = 1.1; // = 110 % of the average
+    for (int l = 0; l < loop_number; ++l) {
       const auto& gridLeafIndexSet = grid.leafIndexSet();
       auto gridView = grid.leafView();
 
       int total_number_of_entities = 0;
       int number_of_marked_entities = 0;
-      for (ElementLeafIterator it = gridView.begin< 0 >();
-           it != gridView.end< 0 >(); ++it)
-      {
-        CommonTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet.index(*it)]
-                                               + loc_coarse_residual_[l][gridLeafIndexSet.index(*it)];
+      for (ElementLeafIterator it = gridView.begin<0>(); it != gridView.end<0>(); ++it) {
+        CommonTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet.index(*it)] +
+                                                             loc_coarse_residual_[l][gridLeafIndexSet.index(*it)];
         total_number_of_entities += 1;
 
-        if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l])
-        {
+        if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l]) {
           grid.mark(number_of_refinements, *it);
           number_of_marked_entities += 1;
         }
       }
 
-      if ( l == (loop_number - 1) )
-      {
+      if (l == (loop_number - 1)) {
         DSC_LOG_INFO_0 << number_of_marked_entities << " of " << total_number_of_entities
-                  << " coarse grid entities marked for mesh refinement." << std::endl;
+                       << " coarse grid entities marked for mesh refinement." << std::endl;
       }
 
       grid.preAdapt();
@@ -156,14 +140,12 @@ void adapt(CommonTraits::GridType& grid,
       GridView gridView_coarse = grid_coarse.leafView();
       const GridLeafIndexSet& gridLeafIndexSet_coarse = grid_coarse.leafIndexSet();
 
-      for (ElementLeafIterator it = gridView_coarse.begin< 0 >();
-           it != gridView_coarse.end< 0 >(); ++it)
-      {
-        CommonTraits::RangeType loc_coarse_error_indicator = loc_coarse_grid_jumps_[l][gridLeafIndexSet_coarse.index(*it)]
-                                               + loc_coarse_residual_[l][gridLeafIndexSet_coarse.index(*it)];
+      for (ElementLeafIterator it = gridView_coarse.begin<0>(); it != gridView_coarse.end<0>(); ++it) {
+        CommonTraits::RangeType loc_coarse_error_indicator =
+            loc_coarse_grid_jumps_[l][gridLeafIndexSet_coarse.index(*it)] +
+            loc_coarse_residual_[l][gridLeafIndexSet_coarse.index(*it)];
 
-        if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l])
-        {
+        if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l]) {
           grid_coarse.mark(number_of_refinements, *it);
         }
       }
@@ -178,11 +160,8 @@ void adapt(CommonTraits::GridType& grid,
 void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                     Dune::Multiscale::OutputParameters& outputparam,
-                     const int loop_number,
-                     int& total_refinement_level_,
-                     int& coarse_grid_level_)
-{
+                     Dune::Multiscale::OutputParameters& outputparam, const int loop_number,
+                     int& total_refinement_level_, int& coarse_grid_level_) {
   using namespace Dune;
   //! ----------------- writing data output MsFEM Solution -----------------
   // --------- VTK data output for MsFEM solution --------------------------
@@ -200,7 +179,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   }
 
   OutputTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
-  msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring );
+  msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
 
   // create and initialize output class
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
@@ -215,7 +194,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   }
 
   OutputTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
-  coarse_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring );
+  coarse_msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
 
   // create and initialize output class
   OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
@@ -232,31 +211,27 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   }
 
   OutputTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
-  fine_msfem_dataoutput.writeData( 1.0 /*dummy*/, outstring);
+  fine_msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
 
   // ---------------------- write discrete msfem solution to file ---------
-  const std::string location = (boost::format("msfem_solution_discFunc_refLevel_%d_%d")
-                                %  total_refinement_level_ % coarse_grid_level_).str();
+  const std::string location =
+      (boost::format("msfem_solution_discFunc_refLevel_%d_%d") % total_refinement_level_ % coarse_grid_level_).str();
   DiscreteFunctionWriter(location).append(msfem_solution);
 
-  DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(),
-                                 Dune::Fem::MPIManager::helper(),
+  DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(), Dune::Fem::MPIManager::helper(),
                                  outputparam.path());
 }
 
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
-                 Dune::Multiscale::OutputParameters& outputparam,
-                 const int loop_number)
-{
+                 Dune::Multiscale::OutputParameters& outputparam, const int loop_number) {
   using namespace Dune;
   // sequence stamp
   //! --------------------------------------------------------------------------------------
 
   //! -------------------------- writing data output Exact Solution ------------------------
-  if (Problem::getModelData()->hasExactSolution())
-  {
+  if (Problem::getModelData()->hasExactSolution()) {
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
@@ -265,14 +240,14 @@ void data_output(const CommonTraits::GridPartType& gridPart,
     outputparam.set_prefix("exact_solution");
     OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
     // write data
-    exactsol_dataoutput.writeData( 1.0 /*dummy*/, "exact-solution" );
+    exactsol_dataoutput.writeData(1.0 /*dummy*/, "exact-solution");
     // -------------------------------------------------------
   }
   //! --------------------------------------------------------------------------------------
 
   //! --------------- writing data output for the coarse grid visualization ------------------
   CommonTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
-                                                 discreteFunctionSpace_coarse);
+                                                               discreteFunctionSpace_coarse);
   coarse_grid_visualization.clear();
   // -------------------------- data output -------------------------
   // create and initialize output class
@@ -280,9 +255,10 @@ void data_output(const CommonTraits::GridPartType& gridPart,
 
   const auto coarse_grid_fname = (boost::format("coarse_grid_visualization_%d_") % loop_number).str();
   outputparam.set_prefix(coarse_grid_fname);
-  OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(), coarse_grid_series, outputparam);
+  OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(),
+                                                      coarse_grid_series, outputparam);
   // write data
-  coarse_grid_dataoutput.writeData( 1.0 /*dummy*/, coarse_grid_fname );
+  coarse_grid_dataoutput.writeData(1.0 /*dummy*/, coarse_grid_fname);
   // -------------------------------------------------------
   //! --------------------------------------------------------------------------------------
 }
@@ -292,24 +268,23 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& msfem_solution,
                       const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                       const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
                       MsFEMTraits::MsFEMErrorEstimatorType& estimator,
-                      MsFEMTraits::MacroMicroGridSpecifierType& specifier,
-                      const int loop_number,
+                      MsFEMTraits::MacroMicroGridSpecifierType& specifier, const int loop_number,
                       std::vector<CommonTraits::RangeVectorVector*>& locals,
                       std::vector<CommonTraits::RangeVector*>& totals,
-                      CommonTraits::RangeVector& total_estimated_H1_error_)
-{
+                      CommonTraits::RangeVector& total_estimated_H1_error_) {
   using namespace Dune;
 
   CommonTraits::RangeType total_estimated_H1_error(0.0);
 
   // error estimation
-  total_estimated_H1_error = estimator.adaptive_refinement(msfem_solution,
-                                                           coarse_part_msfem_solution,
-                                                           fine_part_msfem_solution);
-  {//intentional scope
+  total_estimated_H1_error =
+      estimator.adaptive_refinement(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
+  { // intentional scope
     assert(locals.size() == totals.size());
-    for(auto loc : locals) (*loc)[loop_number] = CommonTraits::RangeVector(specifier.getNumOfCoarseEntities(),0.0);
-    for(auto total : totals) (*total)[loop_number] = 0.0;
+    for (auto loc : locals)
+      (*loc)[loop_number] = CommonTraits::RangeVector(specifier.getNumOfCoarseEntities(), 0.0);
+    for (auto total : totals)
+      (*total)[loop_number] = 0.0;
 
     for (auto m : DSC::valueRange(specifier.getNumOfCoarseEntities())) {
       (*locals[0])[loop_number][m] = specifier.get_loc_coarse_residual(m);
@@ -319,28 +294,24 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& msfem_solution,
       (*locals[4])[loop_number][m] = specifier.get_loc_approximation_error(m);
       (*locals[5])[loop_number][m] = specifier.get_loc_fine_grid_jumps(m);
 
-      for (size_t i = 0; i < totals.size(); ++i) (*totals[i])[loop_number] += std::pow((*locals[i])[loop_number][m], 2.0);
+      for (size_t i = 0; i < totals.size(); ++i)
+        (*totals[i])[loop_number] += std::pow((*locals[i])[loop_number][m], 2.0);
     }
     total_estimated_H1_error_[loop_number] = 0.0;
-    for(auto total : totals) {
+    for (auto total : totals) {
       (*total)[loop_number] = std::sqrt((*total)[loop_number]);
       total_estimated_H1_error_[loop_number] += (*total)[loop_number];
     }
   }
 
-  return DSC_CONFIG_GET("adaptive", false)
-      ? total_estimated_H1_error > DSC_CONFIG_GET("msfem.error_tolerance", 1e-6) : false;
+  return DSC_CONFIG_GET("adaptive", false) ? total_estimated_H1_error > DSC_CONFIG_GET("msfem.error_tolerance", 1e-6)
+                                           : false;
 }
 
 //! algorithm
-bool algorithm(const std::string& macroGridName,
-               const int loop_number,
-               int& total_refinement_level_,
-               int& coarse_grid_level_,
-               int& number_of_layers_,
-               std::vector<CommonTraits::RangeVectorVector*>& locals,
-               std::vector<CommonTraits::RangeVector*>& totals,
-               CommonTraits::RangeVector& total_estimated_H1_error_) {
+bool algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,
+               int& coarse_grid_level_, int& number_of_layers_, std::vector<CommonTraits::RangeVectorVector*>& locals,
+               std::vector<CommonTraits::RangeVector*>& totals, CommonTraits::RangeVector& total_estimated_H1_error_) {
   using namespace Dune;
   bool local_indicators_available_ = false;
 
@@ -366,8 +337,8 @@ bool algorithm(const std::string& macroGridName,
 
   // strategy for adaptivity:
   if (DSC_CONFIG_GET("adaptive", false) && local_indicators_available_)
-    adapt(grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_,
-          number_of_layers_, locals, totals, total_estimated_H1_error_);
+    adapt(grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_, locals,
+          totals, total_estimated_H1_error_);
 
   grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
 
@@ -406,39 +377,35 @@ bool algorithm(const std::string& macroGridName,
 
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
   MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
-  for (int i = 0; i < number_of_level_host_entities; ++i)
-  {
+  for (int i = 0; i < number_of_level_host_entities; ++i) {
     specifier.setNoOfLayers(i, number_of_layers_);
   }
-  specifier.setOversamplingStrategy( DSC_CONFIG_GET( "msfem.oversampling_strategy", 1 ) );
+  specifier.setOversamplingStrategy(DSC_CONFIG_GET("msfem.oversampling_strategy", 1));
 
-  //default to false, error_estimation might change it
+  // default to false, error_estimation might change it
   bool repeat_algorithm = false;
 
   //! create subgrids:
-  {//this scopes subgridlist
+  { // this scopes subgridlist
     MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
     Elliptic_MsFEM_Solver msfem_solver(discreteFunctionSpace);
-    msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list,
-                                      coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
+    msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
+                                      fine_part_msfem_solution, msfem_solution);
 
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-    solution_output(msfem_solution, coarse_part_msfem_solution,
-                    fine_part_msfem_solution, outputparam, loop_number,
+    solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, outputparam, loop_number,
                     total_refinement_level_, coarse_grid_level_);
 
     // error estimation
-    if ( DSC_CONFIG_GET("msfem.error_estimation", 0) ) {
+    if (DSC_CONFIG_GET("msfem.error_estimation", 0)) {
       MsFEMTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
-      error_estimation(msfem_solution, coarse_part_msfem_solution,
-                       fine_part_msfem_solution, estimator, specifier, loop_number,
-                       locals, totals, total_estimated_H1_error_);
+      error_estimation(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, estimator, specifier,
+                       loop_number, locals, totals, total_estimated_H1_error_);
       local_indicators_available_ = true;
     }
   }
-
 
   //! ---------------------- solve FEM problem with same (fine) resolution ---------------------------
   //! solution vector
@@ -446,8 +413,7 @@ bool algorithm(const std::string& macroGridName,
   CommonTraits::DiscreteFunctionType fem_solution("FEM Solution", discreteFunctionSpace);
   fem_solution.clear();
 
-  if ( DSC_CONFIG_GET("msfem.fem_comparison",false) )
-  {
+  if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     // just for Dirichlet zero-boundary condition
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
@@ -463,7 +429,7 @@ bool algorithm(const std::string& macroGridName,
     OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
 
     // write data
-    fem_dataoutput.writeData( 1.0 /*dummy*/, "fem_solution" );
+    fem_dataoutput.writeData(1.0 /*dummy*/, "fem_solution");
     // -------------------------------------------------------------
   }
 
@@ -477,6 +443,6 @@ bool algorithm(const std::string& macroGridName,
   return repeat_algorithm;
 } // function algorithm
 
-} //namespace MsFEM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace MsFEM {
+} // namespace Multiscale {
+} // namespace Dune {

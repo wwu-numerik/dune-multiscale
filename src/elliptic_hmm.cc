@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     // generate directories for data output
     DSC::testCreateDirectory(path);
 
-    if ( DSC_CONFIG_GET("problem.stochastic_pertubation", false)) {
+    if (DSC_CONFIG_GET("problem.stochastic_pertubation", false)) {
       //! Do we want to force the algorithm to come to an end?
       // (was auch immer der Grund war, dass das Programm zuvor endlos lange weiter gelaufen ist. z.B. Tolerenzen nicht
       // erreicht etc.)
@@ -33,13 +33,13 @@ int main(int argc, char** argv) {
 
     // name of the error file in which the data will be saved
     std::string filename_;
-    const auto info = Problem::getModelData() ;
+    const auto info = Problem::getModelData();
 
     // man koennte hier noch den genauen Iterationsschritt in den Namen mit einfliessen lassen:
     // (vorlauefig sollte diese Variante aber reichen)
     const std::string save_filename = DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)
-                                      ? std::string(path + "problem-info-resumed-computation.txt")
-                                      : std::string(path + "/logdata/ms.log.log");
+                                          ? std::string(path + "problem-info-resumed-computation.txt")
+                                          : std::string(path + "/logdata/ms.log.log");
     DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
     DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
 
@@ -79,35 +79,32 @@ int main(int argc, char** argv) {
     // to solve the cell problems, we always need a periodic gridPart.
     // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated
     // on such a grid )
-    Dune::GridPtr< CommonTraits::GridType > periodic_grid_pointer(unitCubeName.string());
+    Dune::GridPtr<CommonTraits::GridType> periodic_grid_pointer(unitCubeName.string());
     periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
 
-    algorithm(macro_grid_pointer, fine_macro_grid_pointer,
-              periodic_grid_pointer, filename_);
+    algorithm(macro_grid_pointer, fine_macro_grid_pointer, periodic_grid_pointer, filename_);
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
-    //normal
+    // normal
     // macro problem
 
     const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
     return 0;
-  } catch (Dune::Exception& e) {
+  }
+  catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;
   }
   return 1;
 } // main
 
 //! \brief sanity checks for our configuration
-void check_config()
-{
-  if ( !DSC_CONFIG_GET("hmm.error_estimation", false) && DSC_CONFIG_GET("hmm.adaptivity", false) )
+void check_config() {
+  if (!DSC_CONFIG_GET("hmm.error_estimation", false) && DSC_CONFIG_GET("hmm.adaptivity", false))
     DUNE_THROW(Dune::InvalidStateException, "Error estimation must be activated to use adaptivity.");
 
   if (DSC_CONFIG_GET("RESUME_TO_BROKEN_COMPUTATION", false)) {
     DSC_CONFIG.set("HMM_NEWTON_ITERATION_STEP", 2);
-  }
-  else {
+  } else {
     DSC_CONFIG.set("HMM_NEWTON_ITERATION_STEP", 0);
   }
-
 }

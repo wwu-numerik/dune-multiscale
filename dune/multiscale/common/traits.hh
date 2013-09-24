@@ -50,33 +50,26 @@ class NeumannDataBase;
 class DirichletDataBase;
 class IModelProblemData;
 
-} //namespace Problem
+} // namespace Problem
 
 //! type construction for the HMM algorithm
 struct CommonTraits {
   //! --------- typedefs for the macro grid and the corresponding discrete space -------------
-  typedef Dune::GridSelector::GridType
-      GridType;
+  typedef Dune::GridSelector::GridType GridType;
   // Dune::InteriorBorder_Partition or Dune::All_Partition >?
   // see:
   // http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
-  typedef Dune::Fem::AdaptiveLeafGridPart< GridType /*,Dune::All_Partition*/ > GridPartType;
-  typedef Dune::GridPtr< GridType >                                       GridPointerType;
-  typedef Dune::Fem::FunctionSpace< double, double, GridType::dimension, 1 >              FunctionSpaceType;
+  typedef Dune::Fem::AdaptiveLeafGridPart<GridType /*,Dune::All_Partition*/> GridPartType;
+  typedef Dune::GridPtr<GridType> GridPointerType;
+  typedef Dune::Fem::FunctionSpace<double, double, GridType::dimension, 1> FunctionSpaceType;
   //!-----------------------------------------------------------------------------------------
 
-  typedef Dune::Stuff::FunctionInterface<
-                              FunctionSpaceType::DomainFieldType,
-                              FunctionSpaceType::dimDomain,
-                              FunctionSpaceType::RangeFieldType,
-                              FunctionSpaceType::dimRange, 1>
-    FunctionBaseType;
-  typedef Dune::Stuff::FunctionConstant<
-                              FunctionSpaceType::DomainFieldType,
-                              FunctionSpaceType::dimDomain,
-                              FunctionSpaceType::RangeFieldType,
-                              FunctionSpaceType::dimRange>
-    ConstantFunctionBaseType;
+  typedef Dune::Stuff::FunctionInterface<FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
+                                         FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange,
+                                         1> FunctionBaseType;
+  typedef Dune::Stuff::FunctionConstant<FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
+                                        FunctionSpaceType::RangeFieldType,
+                                        FunctionSpaceType::dimRange> ConstantFunctionBaseType;
   //! --------- typedefs for the coefficient and data functions ------------------------------
   typedef Problem::IModelProblemData ModelProblemDataType;
   // type of first source term (right hand side of differential equation or type of 'f')
@@ -111,36 +104,36 @@ struct CommonTraits {
   typedef FunctionSpaceType::RangeType RangeType;
   //! defines the function space to which the numerical solution belongs to
   //! see dune/fem/lagrangebase.hh
-  typedef Dune::Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >  // 1=POLORDER
+  typedef Dune::Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, 1> // 1=POLORDER
       DiscreteFunctionSpaceType;
-  typedef DiscreteFunctionSpaceType::DomainFieldType            TimeType;
-  typedef DiscreteFunctionSpaceType::JacobianRangeType          JacobianRangeType;
-  typedef GridType::Codim< 0 >::Entity                          EntityType;
-  typedef GridPartType::IntersectionType                        FaceType;
-  typedef GridType::Codim< 0 >::EntityPointer                   EntityPointerType;
-  typedef GridType::Codim< 0 >::Geometry                        EntityGeometryType;
-  typedef GridType::Codim< 1 >::Geometry                        FaceGeometryType;
+  typedef DiscreteFunctionSpaceType::DomainFieldType TimeType;
+  typedef DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef GridType::Codim<0>::Entity EntityType;
+  typedef GridPartType::IntersectionType FaceType;
+  typedef GridType::Codim<0>::EntityPointer EntityPointerType;
+  typedef GridType::Codim<0>::Geometry EntityGeometryType;
+  typedef GridType::Codim<1>::Geometry FaceGeometryType;
   //!TODO carry the rename over to the type def'ed name
-  typedef DiscreteFunctionSpaceType::BasisFunctionSetType        BasisFunctionSetType;
-  typedef DiscreteFunctionSpaceType::RangeFieldType             RangeFieldType;
+  typedef DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
+  typedef DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef Dune::Fem::PetscDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
-  typedef Dune::Fem::PetscLinearOperator< DiscreteFunctionType, DiscreteFunctionType > FEMMatrix;
+  typedef Dune::Fem::PetscDiscreteFunction<DiscreteFunctionSpaceType> DiscreteFunctionType;
+  typedef Dune::Fem::PetscLinearOperator<DiscreteFunctionType, DiscreteFunctionType> FEMMatrix;
 
-  typedef DiscreteFunctionType::LocalFunctionType               LocalFunctionType;
-  typedef DiscreteFunctionType::DofIteratorType                 DofIteratorType;
+  typedef DiscreteFunctionType::LocalFunctionType LocalFunctionType;
+  typedef DiscreteFunctionType::DofIteratorType DofIteratorType;
 
   //!------------------------- for adaptive grid refinement ---------------------------------
   //! type of restrict-prolong operator
-  typedef Dune::Fem::RestrictProlongDefault< DiscreteFunctionType > RestrictProlongOperatorType;
+  typedef Dune::Fem::RestrictProlongDefault<DiscreteFunctionType> RestrictProlongOperatorType;
   //! type of the adaption manager
-  typedef Dune::Fem::AdaptationManager< GridType, RestrictProlongOperatorType > AdaptationManagerType;
+  typedef Dune::Fem::AdaptationManager<GridType, RestrictProlongOperatorType> AdaptationManagerType;
   //!---------------------------------------------------------------------------------------
 
-  typedef std::vector< RangeType > RangeVector;
-  typedef std::vector< RangeVector > RangeVectorVector;
+  typedef std::vector<RangeType> RangeVector;
+  typedef std::vector<RangeVector> RangeVectorVector;
 
-  static const int assembler_order = 2* DiscreteFunctionSpaceType::polynomialOrder + 2;
+  static const int assembler_order = 2 * DiscreteFunctionSpaceType::polynomialOrder + 2;
 };
 
 } // namespace Multiscale

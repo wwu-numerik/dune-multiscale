@@ -30,7 +30,7 @@ namespace Multiscale {
 
 //! tiny struct to ensure i/o type don't diverge
 struct IOTraits {
-#if HAVE_SIONLIB && HAVE_MPI
+#if HAVE_SIONLIB&& HAVE_MPI
   typedef Dune::Fem::SIONlibOutStream OutstreamType;
   typedef Dune::Fem::SIONlibInStream InstreamType;
 #else
@@ -44,8 +44,7 @@ struct IOTraits {
  * this class isn't type safe in the sense that different appends may append
  * non-convertible discrete function implementations
  */
-class DiscreteFunctionWriter
-{
+class DiscreteFunctionWriter {
 public:
   /**
    * \brief DiscreteFunctionWriter
@@ -55,8 +54,7 @@ public:
    */
   DiscreteFunctionWriter(const std::string filename)
     : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-    , size_(0)
-  {
+    , size_(0) {
     DSC::testCreateDirectory(dir_.string());
   }
 
@@ -65,21 +63,20 @@ public:
    */
   DiscreteFunctionWriter(const boost::filesystem::path& path)
     : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path)
-    , size_(0)
-  {
+    , size_(0) {
     DSC::testCreateDirectory(dir_.string());
   }
 
-  template < class DiscreteFunctionTraits >
-  void append(const Dune::Fem::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
+  template <class DiscreteFunctionTraits>
+  void append(const Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>& df) {
     const std::string fn = (dir_ / DSC::toString(size_++)).string();
     DSC::testCreateDirectory(fn);
     IOTraits::OutstreamType stream(fn);
     df.write(stream);
   } // append
 
-  template < class DiscreteFunctionTraits >
-  void append(const std::vector<const Dune::Fem::DiscreteFunctionInterface< DiscreteFunctionTraits >>& df_vec)  {
+  template <class DiscreteFunctionTraits>
+  void append(const std::vector<const Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>>& df_vec) {
     for (const auto& df : df_vec)
       append(df);
   } // append
@@ -95,27 +92,21 @@ private:
  * non-convertible discrete function implementations
  * \todo base on discrete's functions write_xdr functionality
  */
-class DiscreteFunctionReader
-{
+class DiscreteFunctionReader {
 
 public:
   DiscreteFunctionReader(const std::string filename)
     : size_(0)
-    , dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-  {}
+    , dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename) {}
 
   DiscreteFunctionReader(const boost::filesystem::path path)
     : size_(0)
-    , dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path)
-  {}
+    , dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path) {}
 
-  long size() const {
-    return size_;
-  }
+  long size() const { return size_; }
 
-  template < class DiscreteFunctionTraits >
-  void read(const unsigned long index,
-            Dune::Fem::DiscreteFunctionInterface< DiscreteFunctionTraits >& df) {
+  template <class DiscreteFunctionTraits>
+  void read(const unsigned long index, Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>& df) {
     const std::string fn = (dir_ / DSC::toString(index)).string();
     IOTraits::InstreamType stream(fn);
     df.read(stream);
@@ -128,6 +119,5 @@ private:
 
 } // namespace Multiscale {
 } // namespace Dune {
-
 
 #endif // ifndef DISCRETEFUNCTIONWRITER_HEADERGUARD

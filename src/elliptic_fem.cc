@@ -10,7 +10,6 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 
-
 int main(int argc, char** argv) {
   try {
     using namespace Dune::Multiscale;
@@ -50,9 +49,9 @@ int main(int argc, char** argv) {
     const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
     return 0;
-  } catch (Dune::Exception& e) {
+  }
+  catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;
   }
   return 1;
 } // main
-

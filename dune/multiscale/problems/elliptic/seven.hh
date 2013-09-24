@@ -22,13 +22,10 @@ namespace Problem {
 //! For more further details about the implementation see '../base.hh'
 //! For details on the classes, see 'example.hh'
 
-
 namespace Seven {
 
 //! model problem information
-struct ModelProblemData
-  : public IModelProblemData
-{
+struct ModelProblemData : public IModelProblemData {
   static const bool has_exact_solution = false;
 
   ModelProblemData();
@@ -48,37 +45,31 @@ struct ModelProblemData
 //! ----------------- Definition of ' f ' ------------------------
 MSCONSTANTFUNCTION(FirstSource, 1.0)
 
-
-
 //! ----------------- Definition of ' G ' ------------------------
 MSNULLFUNCTION(SecondSource)
-
-
 
 //! ----------------- Definition of ' A ' ------------------------
 //! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 //! A^{\epsilon} : \Omega × R² -> R²
-class Diffusion: public DiffusionBase
-{
+class Diffusion : public DiffusionBase {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
 public:
-   Diffusion(){}
+  Diffusion() {}
 
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& x,
-                     const JacobianRangeType& gradient,
+  void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const; // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -86,13 +77,9 @@ public:
   // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
 
   // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& x,
-                             const JacobianRangeType& position_gradient,
-                             const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const;
+  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& position_gradient,
+                             const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
-
-
 
 // dummmy for a lower order term F( x , u(x) , grad u(x) ) in a PDE like
 // - div ( A grad u ) + F ( x , u(x) , grad u(x) ) = f
@@ -101,60 +88,49 @@ public:
 class LowerOrderTerm : public ZeroLowerOrder {};
 
 //! ----------------- Definition of ' m ' ----------------------------
-MSCONSTANTFUNCTION(MassTerm,  0.0)
-
+MSCONSTANTFUNCTION(MassTerm, 0.0)
 
 //! ------------ Definition of homogeneous boundary conditions ----------
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 
-
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
-
-
 
 // Exact solution is unknown:
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution is unknown for this model problem
-class ExactSolution
-  : public Dune::Multiscale::CommonTraits::FunctionBaseType
-{
+class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
-
-
-
-
 public:
-  ExactSolution(){}
+  ExactSolution() {}
 
   // in case 'u' has NO time-dependency use the following method:
-  void evaluate(const DomainType& /*x*/,
-                       RangeType& /*y*/) const;
+  void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const;
 
   void jacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
-  void evaluate(const DomainType& x,
-                       const TimeType& /*timedummy*/,
-                       RangeType& y) const;
+  void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
 
-  virtual RangeType evaluate(const DomainType& x) const { return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x); }
+  virtual RangeType evaluate(const DomainType& x) const {
+    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
+  }
 };
 
 // set zero dirichlet and neumann-values by default
@@ -163,7 +139,7 @@ class NeumannData : public ZeroNeumannData {};
 
 } //! @} namespace Seven {
 }
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SEVEN

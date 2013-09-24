@@ -11,7 +11,7 @@
 namespace Dune {
 namespace Multiscale {
 
-template< class R>
+template <class R>
 class RightHandSideAssembler;
 
 namespace HMM {
@@ -25,24 +25,19 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
                                  typename CommonTraits::DiscreteFunctionType& hmm_solution,
                                  const typename CommonTraits::FEMMatrix& hmm_newton_matrix,
                                  const typename CommonTraits::DiscreteFunctionType& hmm_newton_rhs,
-                                 const int hmm_iteration_step,
-                                 const int loop_cycle,
-                                 const double hmm_tolerance );
-
+                                 const int hmm_iteration_step, const int loop_cycle, const double hmm_tolerance);
 
 //! \TODO docme
-HMMResult single_step( typename CommonTraits::GridPartType& gridPart,
-        typename CommonTraits::GridPartType& gridPartFine,
-        typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-        typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-        const typename CommonTraits::DiffusionType& diffusion_op,
-        const RightHandSideAssembler< typename CommonTraits::DiscreteFunctionType >& rhsassembler,
-        typename CommonTraits::DiscreteFunctionType& hmm_solution,
-        const typename CommonTraits::DiscreteFunctionType& reference_solution,
-        const int loop_cycle );
+HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename CommonTraits::GridPartType& gridPartFine,
+                      typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+                      typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
+                      const typename CommonTraits::DiffusionType& diffusion_op,
+                      const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType>& rhsassembler,
+                      typename CommonTraits::DiscreteFunctionType& hmm_solution,
+                      const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle);
 
-} //namespace HMM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // ALGORITHM_STEP_HH

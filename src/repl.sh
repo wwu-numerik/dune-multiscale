@@ -1,69 +1,58 @@
-while read data; do
-	result=$data
+while
+  read data;
+do
+	result = $data
 
 #some color declarations
-	GREEN=`echo -e '\033[49;32m'`
-	NORMAL=`echo -e '\033[0m'`
-	RED=`echo -e '\033[49;31m'`
-	BROWN=`echo -e '\033[49;33m'`
-	BLUE=`echo -e '\033[49;34m'`
-	PINK=`echo -e '\033[49;35m'`
-	CYAN=`echo -e '\033[49;36m'`
-	WHITE=`echo -e '\033[49;1;37m'`
-	LIGHTGRAY=`echo -e '\033[49;0;37m'`
-	ULINE=`echo -e '\033[49;4;30m'`
-	REDINVERTED=`echo -e '\033[49;7;31m'`
-	BROWNINVERTED=`echo -e '\033[49;7;33m'`
-	BLACK=`echo -e '\033[49;30m'`
-	BLACK=$WHITE
+  GREEN = echo - e '\033[49;32m' NORMAL =
+              echo - e '\033[0m' RED = echo - e '\033[49;31m' BROWN =
+                                           echo - e '\033[49;33m' BLUE =
+                                               echo - e '\033[49;34m' PINK =
+                                                   echo - e '\033[49;35m' CYAN =
+                                                       echo - e '\033[49;36m' WHITE =
+                                                           echo - e '\033[49;1;37m' LIGHTGRAY =
+                                                               echo - e '\033[49;0;37m' ULINE =
+                                                                   echo - e '\033[49;4;30m' REDINVERTED =
+                                                                       echo - e '\033[49;7;31m' BROWNINVERTED =
+                                                                           echo - e '\033[49;7;33m' BLACK =
+                                                                               echo - e '\033[49;30m' BLACK = $WHITE
 
 #some colorings
 #change it - if needed
 #change with care
-	COLORTEMPLATEBRACKET1=`echo -e '\033[38;5;21m'`
-	COLORTEMPLATEBRACKET2=`echo -e '\033[38;5;93m'`
-	COLORTEMPLATEBRACKET3=`echo -e '\033[38;5;129m'`
-	COLORTEMPLATEBRACKET4=`echo -e '\033[38;5;165m'`
-	COLORTEMPLATEBRACKET5=`echo -e '\033[38;5;162m'`
-	COLORTEMPLATEBRACKET6=`echo -e '\033[38;5;160m'`
-	COLORTEMPLATEBRACKET7=`echo -e '\033[38;5;166m'`
-	COLORTEMPLATEBRACKET8=`echo -e '\033[38;5;172m'`
-	COLORTEMPLATEBRACKET9=`echo -e '\033[38;5;176m'`
-	COLORTEMPLATEBRACKET10=`echo -e '\033[38;5;184m'`
-	COLORTEMPLATEBRACKET11=`echo -e '\033[38;5;1m'`
-	COLORTEMPLATEBRACKET12=`echo -e '\033[38;5;3m'`
-	COLORTEMPLATEBRACKET13=`echo -e '\033[38;5;29m'`
-	COLORTEMPLATEBRACKET14=`echo -e '\033[38;5;65m'`
-	COLORTEMPLATEBRACKET15=`echo -e '\033[38;5;62m'`
-	COLORTEMPLATEBRACKET16=`echo -e '\033[38;5;60m'`
-	COLORTEMPLATEBRACKET17=`echo -e '\033[38;5;66m'`
-	COLORTEMPLATEBRACKET18=`echo -e '\033[38;5;72m'`
-	COLORTEMPLATEBRACKET19=`echo -e '\033[38;5;78m'`
-	COLORTEMPLATEBRACKET20=`echo -e '\033[38;5;84m'`
-
-	COLORFILEPATH=$LIGHTGRAY
-	COLORTEMPLATEREPLACE=$BLUE	
-	COLORERROR=$REDINVERTED
-	COLORWARNING=$BROWNINVERTED
-	COLORIMPORTANTWORD=$BLUE
-
-	REMOVEPATH="\/u\/s_girk01\/"
-
-
-
-echo -e "$result" | sed -e "s/\([^\-]\)\([<>]\)/\1 \2 /g" | awk '{
-												auf = 0
-												Anz = split($0, array, " ")
-												for(i=1; i <= Anz; i++){
-													if ( match (array[i],"<") ){
-														printf "%s%i ", array[i], auf
-														auf++;
-													}
-													else if( match (array[i],">") &&  !match (array[i],"->") ){
-														auf--
-														printf "%s%i ", array[i], auf																
-													}
-													else
+  COLORTEMPLATEBRACKET1 =
+      echo - e '\033[38;5;21m' COLORTEMPLATEBRACKET2 =
+          echo - e '\033[38;5;93m' COLORTEMPLATEBRACKET3 =
+              echo - e '\033[38;5;129m' COLORTEMPLATEBRACKET4 =
+                  echo - e '\033[38;5;165m' COLORTEMPLATEBRACKET5 =
+                      echo - e '\033[38;5;162m' COLORTEMPLATEBRACKET6 =
+                          echo - e '\033[38;5;160m' COLORTEMPLATEBRACKET7 =
+                              echo - e '\033[38;5;166m' COLORTEMPLATEBRACKET8 =
+                                  echo - e '\033[38;5;172m' COLORTEMPLATEBRACKET9 =
+                                      echo - e '\033[38;5;176m' COLORTEMPLATEBRACKET10 =
+                                          echo - e '\033[38;5;184m' COLORTEMPLATEBRACKET11 =
+                                              echo - e '\033[38;5;1m' COLORTEMPLATEBRACKET12 =
+                                                  echo - e '\033[38;5;3m' COLORTEMPLATEBRACKET13 =
+                                                      echo - e '\033[38;5;29m' COLORTEMPLATEBRACKET14 =
+                                                          echo - e '\033[38;5;65m' COLORTEMPLATEBRACKET15 =
+                                                              echo - e '\033[38;5;62m' COLORTEMPLATEBRACKET16 =
+                                                                  echo - e '\033[38;5;60m' COLORTEMPLATEBRACKET17 =
+                                                                      echo - e '\033[38;5;66m' COLORTEMPLATEBRACKET18 =
+                                                                          echo -
+                                                                          e '\033[38;5;72m' COLORTEMPLATEBRACKET19 =
+                                                                              echo -
+                                                                              e '\033[38;5;78m' COLORTEMPLATEBRACKET20 =
+                                                                                  echo -
+                                                                                  e '\033[38;5;84m' COLORFILEPATH =
+                                                                                      $LIGHTGRAY
+  COLORTEMPLATEREPLACE = $BLUE COLORERROR = $REDINVERTED COLORWARNING = $BROWNINVERTED COLORIMPORTANTWORD =
+      $BLUE REMOVEPATH = "\/u\/s_girk01\/" echo - e "$result" | sed - e "s/\([^\-]\)\([<>]\)/\1 \2 /g" | awk auf =
+                             0 Anz = split($0, array, " ") for (i = 1; i <= Anz; i++) {
+													if (match(array[i], "<")) {
+														printf "%s%i ", array[i], auf auf++;
+													} else if (match(array[i], ">") && !match(array[i], "->")) {
+														auf-- printf "%s%i ", array[i], auf																
+													} else
 														printf "%s ", array[i]														
 												}
 												printf "\n"
@@ -162,6 +151,4 @@ echo -e "$result" | sed -e "s/\([^\-]\)\([<>]\)/\1 \2 /g" | awk '{
 												s/configure/$COLORIMPORTANTWORD&$BLACK/g;\
 												s/*/\*/g"
 
-											 	#s/= \([^, ]*\),/= $COLORTEMPLATEREPLACE\1$BLACK,/g;\
-done
-
+											 	#s /= ([^, ]*), /= $COLORTEMPLATEREPLACE 1 $BLACK, / g; done

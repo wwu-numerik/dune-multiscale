@@ -9,12 +9,11 @@ namespace HMM {
 const std::string CellProblemSolver::subdir_ = "cell_problems";
 
 void CellProblemSolver::solve_jacobiancorrector_cellproblem(
-  const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
-  const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& grad_old_coarse_function,
-  const PeriodicDiscreteFunctionType& corrector_of_old_coarse_function,
-  const DomainType& globalQuadPoint,
-  PeriodicDiscreteFunctionType& jac_cor_cell_problem_solution) const
-{
+    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
+    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType&
+        grad_old_coarse_function,
+    const PeriodicDiscreteFunctionType& corrector_of_old_coarse_function, const DomainType& globalQuadPoint,
+    PeriodicDiscreteFunctionType& jac_cor_cell_problem_solution) const {
   // set solution equal to zero:
   jac_cor_cell_problem_solution.clear();
 
@@ -25,8 +24,7 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
   // \phi_h_i(y) \nablay_y \phi_h_j(y) dy
   // ( \phi_h_i and \phi_h_j denote microscopic base functions.)
   CellFEMMatrix jac_cor_cell_system_matrix("Jacobian Corrector Cell Problem System Matrix",
-                                           periodicDiscreteFunctionSpace_,
-                                           periodicDiscreteFunctionSpace_);
+                                           periodicDiscreteFunctionSpace_, periodicDiscreteFunctionSpace_);
 
   //! define the discrete (elliptic) cell problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -45,31 +43,24 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
   jac_cor_cell_problem_rhs.clear();
 
   // assemble the stiffness matrix
-  cell_problem_op.assemble_jacobian_matrix(globalQuadPoint,
-                                           grad_old_coarse_function,
-                                           corrector_of_old_coarse_function,
+  cell_problem_op.assemble_jacobian_matrix(globalQuadPoint, grad_old_coarse_function, corrector_of_old_coarse_function,
                                            jac_cor_cell_system_matrix);
 
   // assemble right hand side of algebraic jacobian corrector cell problem
-  cell_problem_op.assemble_jacobian_corrector_cell_prob_RHS
-    (globalQuadPoint,
-    grad_old_coarse_function,
-    corrector_of_old_coarse_function,
-    gradient_PHI_H,
-    jac_cor_cell_problem_rhs);
+  cell_problem_op.assemble_jacobian_corrector_cell_prob_RHS(globalQuadPoint, grad_old_coarse_function,
+                                                            corrector_of_old_coarse_function, gradient_PHI_H,
+                                                            jac_cor_cell_problem_rhs);
 
   const double norm_rhs = cell_problem_op.normRHS(jac_cor_cell_problem_rhs);
 
-  if ( !( jac_cor_cell_problem_rhs.dofsValid() ) )
-  {
+  if (!(jac_cor_cell_problem_rhs.dofsValid())) {
     DUNE_THROW(Dune::InvalidStateException, "Jacobian Corrector Cell Problem RHS invalid.");
   }
 
   // is the right hand side of the jacobian corrector cell problem equal to zero or almost identical to zero?
   // if yes, the solution of the cell problem is also identical to zero. The solver is getting a problem with this
   // situation, which is why we do not solve cell problems for zero-right-hand-side, since we already know the result.
-  if (norm_rhs < 1e-10)
-  {
+  if (norm_rhs < 1e-10) {
     jac_cor_cell_problem_solution.clear();
     // std :: cout << "Jacobian Corrector Cell Problem with solution zero." << std :: endl;
   } else {
@@ -79,17 +70,16 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
   }
 } // solve_jacobiancorrector_cellproblem
 
-void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
-                      // the barycenter x_T of a macro grid element 'T'
-                      const DomainType& globalQuadPoint,
-                      PeriodicDiscreteFunctionType& cell_problem_solution) const {
+void CellProblemSolver::solvecellproblem(
+    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
+    // the barycenter x_T of a macro grid element 'T'
+    const DomainType& globalQuadPoint, PeriodicDiscreteFunctionType& cell_problem_solution) const {
   // set solution equal to zero:
   cell_problem_solution.clear();
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  CellFEMMatrix cell_system_matrix("Cell Problem System Matrix",
-                                   periodicDiscreteFunctionSpace_,
+  CellFEMMatrix cell_system_matrix("Cell Problem System Matrix", periodicDiscreteFunctionSpace_,
                                    periodicDiscreteFunctionSpace_);
 
   //! define the discrete (elliptic) cell problem operator
@@ -113,13 +103,11 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
     // assemble right hand side of algebraic cell problem
     cell_problem_op.assembleCellRHS_linear(globalQuadPoint, gradient_PHI_H, cell_problem_rhs);
     const double norm_rhs = cell_problem_op.normRHS(cell_problem_rhs);
-    if ( !( cell_problem_rhs.dofsValid() ) )
-    {
-      DUNE_THROW(Dune::InvalidStateException,"Cell Problem RHS invalid.");
+    if (!(cell_problem_rhs.dofsValid())) {
+      DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
     }
 
-    if (norm_rhs < /*1e-06*/ 1e-10)
-    {
+    if (norm_rhs < /*1e-06*/ 1e-10) {
       cell_problem_solution.clear();
       // std :: cout << "Cell problem with solution zero." << std :: endl;
     } else {
@@ -136,7 +124,8 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
     PeriodicDiscreteFunctionType cell_problem_residual("Cell Problem Residual", periodicDiscreteFunctionSpace_);
     cell_problem_residual.clear();
 
-    const Dune::Fem::LPNorm< PeriodicDiscreteFunctionType::GridPartType> l2norm(cell_problem_residual.space().gridPart() ,2);
+    const Dune::Fem::LPNorm<PeriodicDiscreteFunctionType::GridPartType> l2norm(cell_problem_residual.space().gridPart(),
+                                                                               2);
     RangeType relative_newton_error = std::numeric_limits<RangeType>::max();
 
     int iteration_step = 0;
@@ -144,57 +133,48 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
     // the Newton step for for solving the current cell problem (solved with Newton Method):
     // L2-Norm of residual < tolerance ?
     const double tolerance = DSC_CONFIG_GET("problem.stochastic_pertubation", false)
-                             ? 1e-01 * DSC_CONFIG_GET("problem.stochastic_variance",  0.01)
-                             : 1e-06;
+                                 ? 1e-01 * DSC_CONFIG_GET("problem.stochastic_variance", 0.01)
+                                 : 1e-06;
 
-    while (relative_newton_error > tolerance)
-    {
+    while (relative_newton_error > tolerance) {
       // (here: cellproblem_solution = solution from the last iteration step)
 
       // assemble the stiffness matrix
-      cell_problem_op.assemble_jacobian_matrix(globalQuadPoint,
-                                               gradient_PHI_H,
-                                               cell_problem_solution,
+      cell_problem_op.assemble_jacobian_matrix(globalQuadPoint, gradient_PHI_H, cell_problem_solution,
                                                cell_system_matrix);
 
       // assemble right hand side of algebraic cell problem (for the current iteration step)
-      cell_problem_op.assembleCellRHS_nonlinear(globalQuadPoint,
-                                                gradient_PHI_H,
-                                                cell_problem_solution,
+      cell_problem_op.assembleCellRHS_nonlinear(globalQuadPoint, gradient_PHI_H, cell_problem_solution,
                                                 cell_problem_rhs);
 
       const double norm_rhs = cell_problem_op.normRHS(cell_problem_rhs);
-      if ( !( cell_problem_rhs.dofsValid() ) )
-      {
+      if (!(cell_problem_rhs.dofsValid())) {
         DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
       }
-      if ((norm_rhs < DSC_CONFIG_GET("max_norm_rhs", 1e-10)))
-      {
+      if ((norm_rhs < DSC_CONFIG_GET("max_norm_rhs", 1e-10))) {
         break;
       }
       double biCG_tolerance = 1e-8;
       bool cell_solution_convenient = false;
-      while (!cell_solution_convenient)
-      {
+      while (!cell_solution_convenient) {
         cell_problem_residual.clear();
-        const InverseCellFEMMatrix cell_fem_newton_biCGStab(cell_system_matrix,
-                                                      1e-8, biCG_tolerance, 20000, CELLSOLVER_VERBOSE);
+        const InverseCellFEMMatrix cell_fem_newton_biCGStab(cell_system_matrix, 1e-8, biCG_tolerance, 20000,
+                                                            CELLSOLVER_VERBOSE);
 
         cell_fem_newton_biCGStab(cell_problem_rhs, cell_problem_residual);
 
-        if ( cell_problem_residual.dofsValid() )
-        { cell_solution_convenient = true; }
+        if (cell_problem_residual.dofsValid()) {
+          cell_solution_convenient = true;
+        }
 
-        if (biCG_tolerance > 1e-4)
-        {
+        if (biCG_tolerance > 1e-4) {
           DSC_LOG_ERROR << "WARNING! Iteration step " << iteration_step
-                    << ". Invalid dofs in 'cell_problem_residual', but '" << relative_newton_error
-                    <<
-          " = relative_newton_error > 1e-01' and 'biCG_tolerance > 1e-4'. L^2-Norm of right hand side of cell problem: "
-                    << norm_rhs << ". Therefore possibly inaccurate solution." << std::endl
-                    << "Information:" << std::endl
-                    << "x_T = globalQuadPoint = " << globalQuadPoint << "." << std::endl
-                    << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "." << std::endl;
+                        << ". Invalid dofs in 'cell_problem_residual', but '" << relative_newton_error
+                        << " = relative_newton_error > 1e-01' and 'biCG_tolerance > 1e-4'. L^2-Norm of right hand side "
+                           "of cell problem: " << norm_rhs << ". Therefore possibly inaccurate solution." << std::endl
+                        << "Information:" << std::endl << "x_T = globalQuadPoint = " << globalQuadPoint << "."
+                        << std::endl << "nabla u_H^{(n-1)} = gradient_PHI_H = " << gradient_PHI_H[0] << "."
+                        << std::endl;
           DUNE_THROW(Dune::InvalidStateException, "");
         }
         biCG_tolerance *= 10.0;
@@ -206,59 +186,55 @@ void CellProblemSolver::solvecellproblem(const typename CommonTraits::DiscreteFu
       const RangeType norm_cell_solution = l2norm.distance(cell_problem_solution, zero_func);
       relative_newton_error = relative_newton_error / norm_cell_solution;
       cell_problem_residual.clear();
-      if (iteration_step > 10)
-      {
+      if (iteration_step > 10) {
         DSC_LOG_ERROR << "Warning! Algorithm already reached Newton-iteration step " << iteration_step
                       << " for computing the nonlinear cellproblem." << std::endl
                       << "relative_newton_error = " << relative_newton_error << std::endl << std::endl;
-        #ifdef FORCE
+#ifdef FORCE
         residual_L2_norm = 0.0;
-        #endif
+#endif
       }
       iteration_step += 1;
     }
   }
   // end nonlinear case.
 
-  if ( !( cell_problem_solution.dofsValid() ) )
-  {
+  if (!(cell_problem_solution.dofsValid())) {
     DUNE_THROW(Dune::InvalidStateException, "Current solution of the cell problem invalid!");
   }
 } // solvecellproblem
 
-
 void CellProblemSolver::saveTheSolutions_baseSet(
-  const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType& discreteFunctionSpace,
-  const CellProblemNumberingManager& cp_num_manager   // just to check, if we use the correct numeration
-    ) const
-{
+    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType& discreteFunctionSpace,
+    const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
+    ) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
 
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
-  DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
 
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
 
-  typedef typename DiscreteFunctionSpaceType::JacobianRangeType
-  JacobianRangeType;
+  typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
-  BasisFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
-  typedef typename DiscreteFunctionType::LocalFunctionType
-  LocalFunctionType;
+  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
 
-  typedef typename GridType::Codim< 0 >::Entity EntityType;
-  typedef typename EntityType::Geometry                  EntityGeometryType;
+  typedef typename GridType::Codim<0>::Entity EntityType;
+  typedef typename EntityType::Geometry EntityGeometryType;
 
-  typedef Fem::CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
+  typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
 
-  enum { dimension = GridType::dimension };
-  enum { maxnumOfBaseFct = 100 };
+  enum {
+    dimension = GridType::dimension
+  };
+  enum {
+    maxnumOfBaseFct = 100
+  };
 
   std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
   DiscreteFunctionWriter dfw(cell_solution_location);
@@ -271,8 +247,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
   std::size_t number_of_cell_problem = 0;
 
   IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-  {
+  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
     // gradients of the macroscopic base functions
     std::vector<JacobianRangeType> gradientPhi(maxnumOfBaseFct);
 
@@ -281,7 +256,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     const BasisFunctionSetType baseSet = discreteFunctionSpace.basisFunctionSet(entity);
     const EntityGeometryType& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
-    const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+    const DomainType barycenter_of_entity = geometry.global(quadrature.point(0));
 
     // number of base functions on entity
     const auto numBaseFunctions = baseSet.size();
@@ -290,8 +265,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     baseSet.jacobianAll(quadrature[0], gradientPhi);
 
     PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
-    for (size_t i = 0; i < numBaseFunctions; ++i)
-    {
+    for (size_t i = 0; i < numBaseFunctions; ++i) {
       correctorPhi_i.clear();
 
       // take time
@@ -306,57 +280,53 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
       // check if we use a correct numeration of the cell problems:
       typename EntityType::EntityPointer entity_pointer(*it);
-      if (cp_num_manager.get_number_of_cell_problem(entity_pointer, i) != number_of_cell_problem)
-      {
+      if (cp_num_manager.get_number_of_cell_problem(entity_pointer, i) != number_of_cell_problem) {
         DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
       }
       number_of_cell_problem++;
     }
   } // end: for-loop: IteratorType it
 
-
   const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_baseSet") / 1000.f;
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: saveTheSolutions_baseSet." << std::endl << std::endl;
-  DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
-                << std::endl;
+  DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std::endl;
   DSC_LOG_INFO << "Minimum time for solving a cell problem = " << cell_time.min() << "s." << std::endl;
-  DSC_LOG_INFO << "Maximum time for solving a cell problem = " << cell_time.max()  << "s." << std::endl;
-  DSC_LOG_INFO << "Average time for solving a cell problem = "
-                << cell_time.average() << "s." << std::endl;
-  DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
-                << total_time << "s," << std::endl << std::endl;
+  DSC_LOG_INFO << "Maximum time for solving a cell problem = " << cell_time.max() << "s." << std::endl;
+  DSC_LOG_INFO << "Average time for solving a cell problem = " << cell_time.average() << "s." << std::endl;
+  DSC_LOG_INFO << "Total time for computing and saving the cell problems = " << total_time << "s," << std::endl
+               << std::endl;
 } // saveTheSolutions_baseSet
 
-void CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctionType& macro_discrete_function) const
-{
+void
+CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctionType& macro_discrete_function) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
 
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
-  DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
 
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
 
-  typedef typename DiscreteFunctionSpaceType::JacobianRangeType
-  JacobianRangeType;
+  typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
-  BasisFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
-  typedef typename DiscreteFunctionType::LocalFunctionType
-  LocalFunctionType;
+  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
 
-  typedef typename GridType::Codim< 0 >::Entity EntityType;
-  typedef typename EntityType::Geometry                  EntityGeometryType;
+  typedef typename GridType::Codim<0>::Entity EntityType;
+  typedef typename EntityType::Geometry EntityGeometryType;
 
-  typedef Fem::CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
+  typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
 
-  enum { dimension = GridType::dimension };
-  enum { maxnumOfBaseFct = 100 };
+  enum {
+    dimension = GridType::dimension
+  };
+  enum {
+    maxnumOfBaseFct = 100
+  };
   std::string cell_solution_location = subdir_ + "/_cellSolutions_discFunc";
   DiscreteFunctionWriter dfw(cell_solution_location);
 
@@ -369,13 +339,12 @@ void CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFu
 
   int number_of_entity = 0;
   const IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-  {
+  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
     // entity
     const EntityType& entity = *it;
     const EntityGeometryType& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
-    const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+    const DomainType barycenter_of_entity = geometry.global(quadrature.point(0));
 
     LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
     JacobianRangeType grad_macro_discrete_function;
@@ -387,8 +356,7 @@ void CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFu
     // take time
     DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_discFunc.solvecellproblem");
 
-    solvecellproblem
-      (grad_macro_discrete_function, barycenter_of_entity, cell_solution_on_entity);
+    solvecellproblem(grad_macro_discrete_function, barycenter_of_entity, cell_solution_on_entity);
 
     // min/max time
     cell_time(DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc.solvecellproblem"));
@@ -401,50 +369,46 @@ void CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFu
   const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc");
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: saveTheSolutions_discFunc." << std::endl << std::endl;
-  DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
-                << std::endl;
+  DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std::endl;
   DSC_LOG_INFO << "Minimum time for solving a cell problem = " << cell_time.min() << "s." << std::endl;
   DSC_LOG_INFO << "Maximum time for solving a cell problem = " << cell_time.max() << "s." << std::endl;
-  DSC_LOG_INFO << "Average time for solving a cell problem = "
-                << cell_time.average() << "s." << std::endl;
-  DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
-                << total_time << "s," << std::endl << std::endl;
+  DSC_LOG_INFO << "Average time for solving a cell problem = " << cell_time.average() << "s." << std::endl;
+  DSC_LOG_INFO << "Total time for computing and saving the cell problems = " << total_time << "s," << std::endl
+               << std::endl;
 } // saveTheSolutions_discFunc
 
 void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
-  const CommonTraits::DiscreteFunctionType& macro_discrete_function,
-  const CellProblemNumberingManager& cp_num_manager   // just to check, if we use the correct numeration
-  ) const
-{
+    const CommonTraits::DiscreteFunctionType& macro_discrete_function,
+    const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
+    ) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
 
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType
-  DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
 
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
 
-  typedef typename DiscreteFunctionSpaceType::JacobianRangeType
-  JacobianRangeType;
+  typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType
-  BasisFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
-  typedef typename DiscreteFunctionType::LocalFunctionType
-  LocalFunctionType;
+  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
 
-  typedef typename GridType::Codim< 0 >::Entity EntityType;
-  typedef typename EntityType::EntityPointer
-  EntityPointerType;
+  typedef typename GridType::Codim<0>::Entity EntityType;
+  typedef typename EntityType::EntityPointer EntityPointerType;
   typedef typename EntityType::Geometry EntityGeometryType;
 
-  typedef Fem::CachingQuadrature< GridPartType, 0 > EntityQuadratureType;
+  typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
 
-  enum { dimension = GridType::dimension };
-  enum { maxnumOfBaseFct = 100 };
+  enum {
+    dimension = GridType::dimension
+  };
+  enum {
+    maxnumOfBaseFct = 100
+  };
   // where we save the solutions:
   const std::string cell_solution_location = subdir_ + "/_JacCorCellSolutions_baseSet_discFunc";
   DiscreteFunctionWriter dfw(cell_solution_location);
@@ -466,8 +430,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
   int number_of_entity = 0;
   const IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it)
-  {
+  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
     // gradients of the macroscopic base functions
     std::vector<JacobianRangeType> gradientPhi(maxnumOfBaseFct);
 
@@ -476,7 +439,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     const BasisFunctionSetType baseSet = discreteFunctionSpace.basisFunctionSet(entity);
     const EntityGeometryType& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
-    const DomainType barycenter_of_entity = geometry.global( quadrature.point(0) );
+    const DomainType barycenter_of_entity = geometry.global(quadrature.point(0));
 
     LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
     JacobianRangeType grad_macro_discrete_function;
@@ -491,29 +454,25 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
     baseSet.jacobianAll(quadrature[0 /*=quadraturePoint*/], gradientPhi);
 
-    for (auto i : DSC::valueRange(baseSet.size()))
-    {
+    for (auto i : DSC::valueRange(baseSet.size())) {
       jac_corrector_Phi_i.clear();
 
       // take time
-      DSC_PROFILER.startTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem");
+      DSC_PROFILER.startTiming(
+          "hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem");
 
-      solve_jacobiancorrector_cellproblem
-        (gradientPhi[i],
-        grad_macro_discrete_function,
-        corrector_macro_discrete_function,
-        barycenter_of_entity,
-        jac_corrector_Phi_i);
+      solve_jacobiancorrector_cellproblem(gradientPhi[i], grad_macro_discrete_function,
+                                          corrector_macro_discrete_function, barycenter_of_entity, jac_corrector_Phi_i);
 
       // min/max time
-      cell_time(DSC_PROFILER.stopTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem"));
+      cell_time(DSC_PROFILER.stopTiming(
+          "hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem"));
 
       dfw.append(jac_corrector_Phi_i);
 
       // check if we use a correct numeration of the cell problems:
       const EntityPointerType entity_pointer(*it);
-      if (cp_num_manager.get_number_of_cell_problem(entity_pointer, i) != number_of_cell_problem)
-      {
+      if (cp_num_manager.get_number_of_cell_problem(entity_pointer, i) != number_of_cell_problem) {
         DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
       }
 
@@ -526,16 +485,14 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
   const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc");
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: saveTheJacCorSolutions_baseSet_discFunc." << std::endl << std::endl;
-  DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities."
-                << std::endl;
+  DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std::endl;
   DSC_LOG_INFO << "Minimum time for solving a cell problem = " << cell_time.min() << "s." << std::endl;
   DSC_LOG_INFO << "Maximum time for solving a cell problem = " << cell_time.max() << "s." << std::endl;
-  DSC_LOG_INFO << "Average time for solving a cell problem = "
-                << cell_time.average()<< "s." << std::endl;
-  DSC_LOG_INFO << "Total time for computing and saving the cell problems = "
-                << total_time << "s," << std::endl << std::endl;
+  DSC_LOG_INFO << "Average time for solving a cell problem = " << cell_time.average() << "s." << std::endl;
+  DSC_LOG_INFO << "Total time for computing and saving the cell problems = " << total_time << "s," << std::endl
+               << std::endl;
 } // saveTheJacCorSolutions_baseSet_discFunc
 
-} //namespace HMM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {

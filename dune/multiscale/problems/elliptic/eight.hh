@@ -21,16 +21,13 @@ namespace Problem {
 
 // For details, see 'example.hh'
 
-
 namespace Eight {
 // description see below
 
 // NOTE that (delta/epsilon_est) needs to be a positive integer!
 
 //! model problem information
-struct ModelProblemData
-  : public IModelProblemData
-{
+struct ModelProblemData : public IModelProblemData {
   static const bool has_exact_solution = true;
 
   ModelProblemData();
@@ -47,61 +44,53 @@ struct ModelProblemData
   bool symmetricDiffusion() const { return false; }
 };
 
-
 //! ----------------- Definition of ' f ' ------------------------
 
-
-class FirstSource
-  : public Dune::Multiscale::CommonTraits::FunctionBaseType
-
-{
+class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   static const int dimDomain = DomainType::dimension;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
 public:
-  FirstSource(){}
+  FirstSource() {}
 
-  void evaluate(const DomainType& x,
-                       RangeType& y) const; // evaluate
+  void evaluate(const DomainType& x, RangeType& y) const; // evaluate
 
-  void evaluate(const DomainType& x,
-                       const TimeType& /*time*/,
-                       RangeType& y) const;
+  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 
-  virtual RangeType evaluate(const DomainType& x) const { return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x); }
+  virtual RangeType evaluate(const DomainType& x) const {
+    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
+  }
 };
 
 /** \brief default class for the second source term G.
  * Realization: set G(x) = 0: **/
 MSNULLFUNCTION(SecondSource)
 
-
 //! the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
 //! A^{\epsilon} : \Omega × R² -> R²
 //!
-class Diffusion: public DiffusionBase
-{
+class Diffusion : public DiffusionBase {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
@@ -113,11 +102,10 @@ private:
   // instantiate all possible cases of the evaluate-method:
 
 public:
-  Diffusion(){}
+  Diffusion() {}
 
   // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
-  void diffusiveFlux(const DomainType& x,
-                     const JacobianRangeType& gradient,
+  void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const; // diffusiveFlux
 
   // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
@@ -125,8 +113,7 @@ public:
   // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
 
   // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& x,
-                             const JacobianRangeType& position_gradient,
+  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
                              JacobianRangeType& flux) const; // jacobianDiffusiveFlux
 };
@@ -138,7 +125,7 @@ public:
 class LowerOrderTerm : public ZeroLowerOrder {};
 
 //! ----------------- Definition of ' m ' ----------------------------
-MSCONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm, 0.0)
 
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
@@ -149,42 +136,35 @@ MSNULLFUNCTION(NeumannBoundaryCondition)
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
-class ExactSolution
-  : public Dune::Multiscale::CommonTraits::FunctionBaseType
-{
+class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
-
-
-
-
 public:
-  ExactSolution(){}
+  ExactSolution() {}
 
   // in case 'u' has NO time-dependency use the following method:
-  void evaluate(const DomainType& x,
-                       RangeType& y) const;
+  void evaluate(const DomainType& x, RangeType& y) const;
 
   // in case 'u' HAS a time-dependency use the following method:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
-  void evaluate(const DomainType& x,
-                       const TimeType& /*timedummy*/,
-                       RangeType& y) const;
+  void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
 
-  virtual RangeType evaluate(const DomainType& x) const { return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x); }
+  virtual RangeType evaluate(const DomainType& x) const {
+    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
+  }
 
-  void jacobian(const DomainType& , typename FunctionSpaceType::JacobianRangeType& ) const;
+  void jacobian(const DomainType&, typename FunctionSpaceType::JacobianRangeType&) const;
 };
 
 // set zero dirichlet and neumann-values by default
@@ -193,7 +173,7 @@ class NeumannData : public ZeroNeumannData {};
 
 } //! @} namespace Eight {
 }
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EIGHT

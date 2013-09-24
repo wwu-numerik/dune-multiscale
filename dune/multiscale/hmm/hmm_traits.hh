@@ -17,7 +17,7 @@
 namespace Dune {
 namespace Multiscale {
 
-namespace FEM{
+namespace FEM {
 template <class R, class S>
 class DiscreteEllipticOperator;
 }
@@ -30,31 +30,29 @@ class ErrorEstimator;
 struct HMMTraits {
 
   //! --------- typedefs for the periodic micro grid and the corresponding discrete space ----
-  typedef Dune::Fem::PeriodicLeafGridPart< typename CommonTraits::GridType > PeriodicGridPartType;
-  typedef Dune::Fem::LagrangeDiscreteFunctionSpace< typename CommonTraits::FunctionSpaceType, PeriodicGridPartType, 1 > // 1 =POLORDER
-    PeriodicDiscreteFunctionSpaceType;
-  typedef Dune::Fem::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
+  typedef Dune::Fem::PeriodicLeafGridPart<typename CommonTraits::GridType> PeriodicGridPartType;
+  typedef Dune::Fem::LagrangeDiscreteFunctionSpace<typename CommonTraits::FunctionSpaceType, PeriodicGridPartType,
+                                                   1> // 1 =POLORDER
+      PeriodicDiscreteFunctionSpaceType;
+  typedef Dune::Fem::AdaptiveDiscreteFunction<PeriodicDiscreteFunctionSpaceType> PeriodicDiscreteFunctionType;
 
-  typedef Dune::Fem::PetscInverseOperator< typename CommonTraits::DiscreteFunctionType,
-                                           typename CommonTraits::FEMMatrix >
-    InverseFEMMatrix;
+  typedef Dune::Fem::PetscInverseOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix>
+  InverseFEMMatrix;
 
   //! --------------- the discrete operators (standard FEM and HMM) ------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)
-  typedef Dune::Multiscale::FEM::DiscreteEllipticOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType>
-    EllipticOperatorType;
+  typedef Dune::Multiscale::FEM::DiscreteEllipticOperator<typename CommonTraits::DiscreteFunctionType,
+                                                          typename CommonTraits::DiffusionType> EllipticOperatorType;
 
   //! --------------------------------------------------------------------------------------
 
-
   //! --------------- ERROR ESTIMATOR NOT YET IMPLEMENTED ------------------------
-    typedef ErrorEstimator< PeriodicDiscreteFunctionType,
-                            typename CommonTraits::DiscreteFunctionType,
-                            typename CommonTraits::DiffusionType > ErrorEstimatorType;
+  typedef ErrorEstimator<PeriodicDiscreteFunctionType, typename CommonTraits::DiscreteFunctionType,
+                         typename CommonTraits::DiffusionType> ErrorEstimatorType;
 }; // struct  HMMTraits
 
-} //namespace HMM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // DUNE_MS_HMM_TYPES_HH

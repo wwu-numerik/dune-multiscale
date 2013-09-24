@@ -22,20 +22,18 @@ namespace Dune {
 //! 2. A(x,y) = A(y)
 //! 3. a_i_j(y) = a_i_j(y_1,y_2) = a_i_j(y_1)
 //! 4. symmetrisch
-template< class GridImp, class TensorImp >
-class AnalyticalHomogenizer
-{
+template <class GridImp, class TensorImp>
+class AnalyticalHomogenizer {
 private:
   typedef GridImp GridType;
 
-  typedef Fem::LeafGridPart< GridType > GridPartType;
+  typedef Fem::LeafGridPart<GridType> GridPartType;
 
-  typedef Fem::FunctionSpace< double, double, 2, 1 > FunctionSpaceType;
+  typedef Fem::FunctionSpace<double, double, 2, 1> FunctionSpaceType;
 
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, GridPartType, 1 >
-  DiscreteFunctionSpaceType;
+  typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, 1> DiscreteFunctionSpaceType;
 
-  typedef Fem::AdaptiveDiscreteFunction< DiscreteFunctionSpaceType > DiscreteFunctionType;
+  typedef Fem::AdaptiveDiscreteFunction<DiscreteFunctionSpaceType> DiscreteFunctionType;
 
   typedef typename FunctionSpaceType::DomainType DomainType;
 
@@ -43,64 +41,57 @@ private:
 
   typedef TensorImp TensorType;
 
-  typedef typename DiscreteFunctionSpaceType::IteratorType
-  IteratorType;
+  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
-  typedef typename GridType::template Codim< 0 >::Entity
-  EntityType;
+  typedef typename GridType::template Codim<0>::Entity EntityType;
 
-  typedef typename GridType::template Codim< 0 >::Geometry
-  EnGeometryType;
+  typedef typename GridType::template Codim<0>::Geometry EnGeometryType;
 
-  typedef typename EntityType::ctype
-  coordType;
+  typedef typename EntityType::ctype coordType;
 
-  enum { dimension = GridType::dimension };
-  enum { spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder };
+  enum {
+    dimension = GridType::dimension
+  };
+  enum {
+    spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder
+  };
 
-  typedef FieldMatrix< RangeType, dimension, dimension > TensorMatrixType;
-
+  typedef FieldMatrix<RangeType, dimension, dimension> TensorMatrixType;
 
   // dgf file that describes the perforated domain
   std::string& filename_;
 
 public:
-  AnalyticalHomogenizer(std::string& filename)
-    : filename_(filename)
-  {}
+  AnalyticalHomogenizer(std::string& filename) : filename_(filename) {}
 
-  FieldMatrix< RangeType, dimension, dimension > getHomTensor
-    ( const TensorType& tensor, int polOrd = (2 * spacePolOrd + 2) ) const {
+  FieldMatrix<RangeType, dimension, dimension> getHomTensor(const TensorType& tensor,
+                                                            int polOrd = (2 * spacePolOrd + 2)) const {
     std::cout
-    << "WARNING! Use of deprecated homogenizer, which requires deprecated use of 'evaluate' in Diffusion-class!"
-    << std::endl;
+        << "WARNING! Use of deprecated homogenizer, which requires deprecated use of 'evaluate' in Diffusion-class!"
+        << std::endl;
 
-    GridPtr< GridType > gridptr(filename_);
+    GridPtr<GridType> gridptr(filename_);
     gridptr->globalRefine(12);
     GridPartType gridPart(*gridptr);
 
     DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
 
-    FieldMatrix< RangeType, dimension, dimension > tensorHom(0.0);
+    FieldMatrix<RangeType, dimension, dimension> tensorHom(0.0);
 
     TensorMatrixType a;
-    for (const EntityType& entity : discreteFunctionSpace)
-    {
-      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+    for (const EntityType& entity : discreteFunctionSpace) {
+      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geometry.integrationElement( quadrature.point(quadraturePoint) );
+      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint) {
+        const double det =
+            quadrature.weight(quadraturePoint) * geometry.integrationElement(quadrature.point(quadraturePoint));
 
-        tensor.evaluate(0, 0,
-                        geometry.global( quadrature.point(quadraturePoint) ),
-                        a[0][0]);
+        tensor.evaluate(0, 0, geometry.global(quadrature.point(quadraturePoint)), a[0][0]);
 
         tensorHom[0][0] += det * (1 / a[0][0]);
       }
@@ -108,27 +99,21 @@ public:
 
     tensorHom[0][0] = 1 / tensorHom[0][0];
 
-    for (const EntityType& entity : discreteFunctionSpace)
-    {
-      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+    for (const EntityType& entity : discreteFunctionSpace) {
+      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geometry.integrationElement( quadrature.point(quadraturePoint) );
+      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint) {
+        const double det =
+            quadrature.weight(quadraturePoint) * geometry.integrationElement(quadrature.point(quadraturePoint));
 
-        tensor.evaluate(0, 0,
-                        geometry.global( quadrature.point(quadraturePoint) ),
-                        a[0][0]);
+        tensor.evaluate(0, 0, geometry.global(quadrature.point(quadraturePoint)), a[0][0]);
 
-        tensor.evaluate(0, 1,
-                        geometry.global( quadrature.point(quadraturePoint) ),
-                        a[0][1]);
+        tensor.evaluate(0, 1, geometry.global(quadrature.point(quadraturePoint)), a[0][1]);
 
         tensorHom[0][1] += det * (a[0][1] / a[0][0]);
       }
@@ -137,43 +122,31 @@ public:
     tensorHom[0][1] *= tensorHom[0][0];
     tensorHom[1][0] = tensorHom[0][1];
 
-    for (const EntityType& entity : discreteFunctionSpace)
-    {
-      const Fem::CachingQuadrature< GridPartType, 0 > quadrature(entity, polOrd);
+    for (const EntityType& entity : discreteFunctionSpace) {
+      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
 
       // get geoemetry of entity
       const EnGeometryType& geometry = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint)
-      {
-        const double det = quadrature.weight(quadraturePoint)
-                           * geometry.integrationElement( quadrature.point(quadraturePoint) );
+      for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint) {
+        const double det =
+            quadrature.weight(quadraturePoint) * geometry.integrationElement(quadrature.point(quadraturePoint));
 
-        tensor.evaluate(0, 0,
-                        geometry.global( quadrature.point(quadraturePoint) ),
-                        a[0][0]);
+        tensor.evaluate(0, 0, geometry.global(quadrature.point(quadraturePoint)), a[0][0]);
 
-        tensor.evaluate(0, 1,
-                        geometry.global( quadrature.point(quadraturePoint) ),
-                        a[0][1]);
+        tensor.evaluate(0, 1, geometry.global(quadrature.point(quadraturePoint)), a[0][1]);
 
-        tensor.evaluate(1, 0,
-                        geometry.global( quadrature.point(quadraturePoint) ),
-                        a[1][0]);
+        tensor.evaluate(1, 0, geometry.global(quadrature.point(quadraturePoint)), a[1][0]);
 
-        tensor.evaluate(1, 1,
-                        geometry.global( quadrature.point(quadraturePoint) ),
-                        a[1][1]);
+        tensor.evaluate(1, 1, geometry.global(quadrature.point(quadraturePoint)), a[1][1]);
 
-        tensorHom[1][1] += det
-                           * ( a[1][1] - ( (a[0][1] * a[1][0]) / a[0][0] ) );
+        tensorHom[1][1] += det * (a[1][1] - ((a[0][1] * a[1][0]) / a[0][0]));
       }
     }
 
-    tensorHom[1][1] += (tensorHom[1][0] * tensorHom[0][1])
-                       / tensorHom[0][0];
+    tensorHom[1][1] += (tensorHom[1][0] * tensorHom[0][1]) / tensorHom[0][0];
 
     DSC_LOG_DEBUG << "analytical: A_homogenized[0][0] = " << tensorHom[0][0] << std::endl
                   << "analytical: A_homogenized[0][1] = " << tensorHom[0][1] << std::endl
@@ -182,6 +155,6 @@ public:
 
     return tensorHom;
   } // end of method
-}; // end of class
+};  // end of class
 } // end namespace
 #endif // ifndef DUNE_ANALYTICALHOMOGENIZER_HH

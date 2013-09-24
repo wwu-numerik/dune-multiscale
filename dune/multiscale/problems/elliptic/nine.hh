@@ -24,12 +24,8 @@ namespace Problem {
 namespace Nine {
 
 //! model problem information
-struct ModelProblemData
-  : public IModelProblemData
-{
-  virtual bool hasExactSolution() const {
-    return true;
-  }
+struct ModelProblemData : public IModelProblemData {
+  virtual bool hasExactSolution() const { return true; }
 
   ModelProblemData();
 
@@ -49,23 +45,20 @@ struct ModelProblemData
 
 //! ----------------- Definition of ' f ' ------------------------
 
-class FirstSource
-  : public Dune::Multiscale::CommonTraits::FunctionBaseType
-
-{
+class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   static const int dimDomain = DomainType::dimension;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
@@ -78,9 +71,10 @@ public:
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 
-  virtual RangeType evaluate(const DomainType& x) const { return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x); }
+  virtual RangeType evaluate(const DomainType& x) const {
+    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
+  }
 };
-
 
 /** \brief default class for the second source term G.
  * Realization: set G(x) = 0: **/
@@ -88,18 +82,17 @@ MSNULLFUNCTION(SecondSource)
 
 //! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
 //! A^{\epsilon} : \Omega × R² -> R²
-class Diffusion : public DiffusionBase
-{
+class Diffusion : public DiffusionBase {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
@@ -109,18 +102,14 @@ public:
   //! A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
   //! (diffusive) flux = A^{\epsilon}( x , direction )
   //! (typically direction is some 'gradient_of_a_function')
-  void diffusiveFlux(const DomainType& x,
-                     const JacobianRangeType& direction,
-                     JacobianRangeType& flux) const;
+  void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const;
 
   //! the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
   //! "nabla w", i.e.
   //! jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
   //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  void jacobianDiffusiveFlux(const DomainType& x,
-                             const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const;
+  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
+                             const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
 // dummmy for a lower order term F( x , u(x) , grad u(x) ) in a PDE like
@@ -134,27 +123,25 @@ MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 
 //! ----------------- Definition of ' m ' ----------------------------
-MSCONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm, 0.0)
 
 //! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
-class ExactSolution
-  : public Dune::Multiscale::CommonTraits::FunctionBaseType
-{
+class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
@@ -172,32 +159,32 @@ public:
   // instantiated
   void evaluate(const DomainType& x, const TimeType&, RangeType& y) const;
 
-  virtual RangeType evaluate(const DomainType& x) const { return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x); }
+  virtual RangeType evaluate(const DomainType& x) const {
+    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
+  }
 };
 
 //! ----------------- Definition of Dirichlet Boundary Condition ------------------------
 
-class DirichletData
-        : public DirichletDataBase
-{
+class DirichletData : public DirichletDataBase {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   static const int dimDomain = DomainType::dimension;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
 public:
-  DirichletData( ) {}
+  DirichletData() {}
 
   void evaluate(const DomainType& x, RangeType& y) const;
 
@@ -211,42 +198,36 @@ public:
   virtual RangeType evaluate(const DomainType& x) const { return DirichletDataBase::evaluate(x); }
 };
 
-
 //! ----------------- Definition of Neumann Boundary Condition ------------------------
 
-class NeumannData
-        : public NeumannDataBase
-{
+class NeumannData : public NeumannDataBase {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   static const int dimDomain = DomainType::dimension;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
 public:
-  NeumannData( ) {}
+  NeumannData() {}
 
   void evaluate(const DomainType& x, RangeType& y) const;
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
-
-
 } //! @} namespace Nine {
 }
-} //namespace Multiscale {
-} //namespace Dune {
-
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE

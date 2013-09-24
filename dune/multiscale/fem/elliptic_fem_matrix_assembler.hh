@@ -19,12 +19,11 @@ namespace FEM {
 // used mith multiple type combinations, no real possibilty of splitting
 
 //! \TODO docme
-template<class DiscreteFunctionImp, class DiffusionImp>
+template <class DiscreteFunctionImp, class DiffusionImp>
 class DiscreteEllipticOperator
-    : public Operator< typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
-                     DiscreteFunctionImp, DiscreteFunctionImp >
-    , boost::noncopyable
-{
+    : public Operator<typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
+                      DiscreteFunctionImp, DiscreteFunctionImp>,
+      boost::noncopyable {
   typedef DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp> This;
 
 private:
@@ -32,43 +31,41 @@ private:
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
-  typedef typename DiscreteFunctionSpace::GridPartType   GridPart;
-  typedef typename GridPart::GridType                    Grid;
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef typename GridPart::GridType Grid;
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
 
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
-  typedef typename DiscreteFunctionSpace::RangeType  RangeType;
+  typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
   typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType                   BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType                  LagrangePointSet;
-  typedef typename LagrangePointSet::template Codim< 1 >::SubEntityIteratorType FaceDofIterator;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
+  typedef typename LagrangePointSet::template Codim<1>::SubEntityIteratorType FaceDofIterator;
 
   typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity                    Entity;
-  typedef typename Entity::Geometry                    Geometry;
+  typedef typename Iterator::Entity Entity;
+  typedef typename Entity::Geometry Geometry;
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
 
-  typedef Fem::CachingQuadrature< GridPart, 0 > Quadrature;
+  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
 public:
 
   /**
    * \param lower_order_term Operator assumes ownership of it
    **/
-  DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
-                           const DiffusionImp& diffusion_op,
+  DiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionImp& diffusion_op,
                            const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term = nullptr)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
-    , lower_order_term_(lower_order_term)
-  {}
+    , lower_order_term_(lower_order_term) {}
 
 private:
   /** dummy implementation of "operator()"
@@ -77,11 +74,11 @@ private:
   virtual void operator()(const DiscreteFunction& u, DiscreteFunction& w) const;
 
 public:
-  template< class MatrixType >
+  template <class MatrixType>
   void assemble_matrix(MatrixType& global_matrix, bool boundary_treatment = true) const;
 
   //! Matrix Assembler for local problems on a Subgrid of the Hostgrid:
-  template< class MatrixType, class HostDiscreteFunctionSpaceType >
+  template <class MatrixType, class HostDiscreteFunctionSpaceType>
   void assemble_matrix(MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace,
                        bool boundary_treatment = true) const;
 
@@ -91,12 +88,14 @@ public:
    * \int JA(\nabla disc_func) \nabla phi_i \nabla phi_j
    * (here, JA denotes the jacobian matrix of the diffusion operator A)
    **/
-  template< class MatrixType >
-  void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix, bool boundary_treatment = true) const;
+  template <class MatrixType>
+  void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix,
+                                bool boundary_treatment = true) const;
 
   // for inhomogeneous boundary condition
-  template< class MatrixType >
-  void assemble_jacobian_matrix(DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension, MatrixType& global_matrix, bool boundary_treatment = true) const;
+  template <class MatrixType>
+  void assemble_jacobian_matrix(DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension,
+                                MatrixType& global_matrix, bool boundary_treatment = true) const;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
@@ -104,9 +103,9 @@ private:
   const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term_;
 };
 
-} //namespace FEM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace FEM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #include "elliptic_fem_matrix_assembler.cc"
 

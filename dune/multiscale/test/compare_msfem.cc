@@ -20,42 +20,35 @@ using namespace Dune::Stuff::Common;
 void set_param();
 
 TEST(MSFEM, All) {
-    using namespace Dune::Multiscale;
-    using namespace Dune::Multiscale::MsFEM;
+  using namespace Dune::Multiscale;
+  using namespace Dune::Multiscale::MsFEM;
 
-    int coarse_grid_level_ = 3;
-    int number_of_layers_ = 4;
-    int total_refinement_level_ = 5;
-    const std::string macroGridName("compare_msfem.dgf") ;
-    set_param();
+  int coarse_grid_level_ = 3;
+  int number_of_layers_ = 4;
+  int total_refinement_level_ = 5;
+  const std::string macroGridName("compare_msfem.dgf");
+  set_param();
 
-    //! ---------------------- local error indicators --------------------------------
-    // ----- local error indicators (for each coarse grid element T) -------------
-    const int max_loop_number = 10;
-    ErrorContainer errors(max_loop_number);
-    unsigned int loop_number = 0;
-    while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_,
-                     number_of_layers_, errors.locals, errors.totals, errors.total_estimated_H1_error_))
-    {}
+  //! ---------------------- local error indicators --------------------------------
+  // ----- local error indicators (for each coarse grid element T) -------------
+  const int max_loop_number = 10;
+  ErrorContainer errors(max_loop_number);
+  unsigned int loop_number = 0;
+  while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_, number_of_layers_,
+                   errors.locals, errors.totals, errors.total_estimated_H1_error_)) {
+  }
 
-    for(const auto total : errors.totals)
-    {
-        for(auto error : *total)
-        {
-            // fails iff 1e-2 <= error
-            EXPECT_GT(double(1e-2),error);
-        }
+  for (const auto total : errors.totals) {
+    for (auto error : *total) {
+      // fails iff 1e-2 <= error
+      EXPECT_GT(double(1e-2), error);
     }
+  }
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   test_init(argc, argv);
   return RUN_ALL_TESTS();
 }
 
-
-void set_param()
-{
-
-}
+void set_param() {}

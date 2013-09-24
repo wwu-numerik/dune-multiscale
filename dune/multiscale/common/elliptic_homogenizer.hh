@@ -26,16 +26,12 @@ namespace Dune {
 namespace Multiscale {
 
 //! define output traits
-struct CellDataOutputParameters
-  : public Fem::DataOutputParameters
-{
+struct CellDataOutputParameters : public Fem::DataOutputParameters {
 public:
   std::string my_prefix_;
 
   // path where the data is stored
-  std::string path() const {
-    return "data_output_hmm";
-  }
+  std::string path() const { return "data_output_hmm"; }
 
   void set_prefix(std::string my_prefix) {
     my_prefix_ = my_prefix;
@@ -54,52 +50,47 @@ public:
   int outputformat() const {
     // return 0; // GRAPE (lossless format)
     return 1; // VTK
-    // return 2; // VTK vertex data
-    // return 3; // gnuplot
+              // return 2; // VTK vertex data
+              // return 3; // gnuplot
   }
 };
-
 
 NULLFUNCTION(ZeroFunction)
 
 //! \TODO docme
 // (to replace the more general lower order term)
-class MassWeight : public Problem::ZeroLowerOrder
-{
- public:
+class MassWeight : public Problem::ZeroLowerOrder {
+public:
 
-  MassWeight( double lambda ) : lambda_( lambda ) {}
-  
-  void evaluate(const DomainType& /*x*/, const RangeType& position, const JacobianRangeType& /*direction_gradient*/, RangeType& y) const
-  { y = lambda_ * position; }
+  MassWeight(double lambda) : lambda_(lambda) {}
 
-  virtual void evaluate(const DomainType& /*x*/, RangeType& /*ret*/) const
-  {
-    DUNE_THROW(Dune::NotImplemented, "");
+  void evaluate(const DomainType& /*x*/, const RangeType& position, const JacobianRangeType& /*direction_gradient*/,
+                RangeType& y) const {
+    y = lambda_ * position;
   }
+
+  virtual void evaluate(const DomainType& /*x*/, RangeType& /*ret*/) const { DUNE_THROW(Dune::NotImplemented, ""); }
 
   double lambda_;
 };
-
 
 /** since we need to evaluate A( x, \cdot ) to solve cellproblems (in comparison to A( \cdot, \frac{\cdot}{\epsilon} )
  * for the global problem), we must transform the orginal tensor to be able to use a standard FEM operator for solving
  * cell problems (otherwise: calling the method evaluate(i,j,x,y) within the matrixassembler would evaluate A^{\epsilon}
  * instead of A(x,\cdot) )
  **/
-template< class TensorImp >
-class TransformTensor : public Problem::DiffusionBase
-{
+template <class TensorImp>
+class TransformTensor : public Problem::DiffusionBase {
 private:
   typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
-  typedef TensorImp        TensorType;
+  typedef TensorImp TensorType;
 
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
@@ -109,60 +100,46 @@ private:
 
 public:
   // Constructor
-  inline explicit TransformTensor(const TensorType& tensor)
-    : tensor_(tensor)
-  {}
+  inline explicit TransformTensor(const TensorType& tensor) : tensor_(tensor) {}
 
-  void diffusiveFlux(const DomainType& y,
-                     const JacobianRangeType& direction,
-                     JacobianRangeType& flux) const {
+  void diffusiveFlux(const DomainType& y, const JacobianRangeType& direction, JacobianRangeType& flux) const {
     DomainType new_y = y;
     new_y *= DSC_CONFIG_GET("problem.epsilon", 1.0f);
     tensor_.diffusiveFlux(new_y, direction, flux);
   } // diffusiveFlux
 
-  inline void evaluate(const int /*i*/, const int /*j*/,
-                       const DomainType& /*x*/,
-                       const TimeType& /*time*/,
+  inline void evaluate(const int /*i*/, const int /*j*/, const DomainType& /*x*/, const TimeType& /*time*/,
                        RangeType& /*y*/) const {
     DUNE_THROW(Dune::NotImplemented, "");
   }
 
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& /*y*/) const {
+  inline void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const { DUNE_THROW(Dune::NotImplemented, ""); }
+
+  inline void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& /*y*/) const {
     DUNE_THROW(Dune::NotImplemented, "");
   }
 
-  inline void evaluate(const DomainType& /*x*/,
-                       const TimeType& /*time*/,
-                       RangeType& /*y*/) const {
-    DUNE_THROW(Dune::NotImplemented, "");
-  }
-
-  virtual void jacobianDiffusiveFlux(const DomainType& /*x*/,
-                             const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& /*direction_gradient*/,
-                            JacobianRangeType& /*flux*/) const {
+  virtual void jacobianDiffusiveFlux(const DomainType& /*x*/, const JacobianRangeType& /*position_gradient*/,
+                                     const JacobianRangeType& /*direction_gradient*/,
+                                     JacobianRangeType& /*flux*/) const {
     DUNE_THROW(Dune::NotImplemented, "");
   }
 };
 
 //! the following class is comparable to a SecondSource-Class (some kind of -div G )
-template< class TensorImp >
-class CellSource : CommonTraits::FunctionBaseType
-{
+template <class TensorImp>
+class CellSource : CommonTraits::FunctionBaseType {
 private:
   typedef TensorImp TensorType;
 
   typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
 
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
-
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   const FunctionSpaceType& functionSpace_;
   const TensorType& tensor_;
@@ -171,23 +148,18 @@ private:
 public:
   inline explicit CellSource(const FunctionSpaceType& functionSpace, const TensorType& tensor, const int& j)
     : functionSpace_(functionSpace)
-      , tensor_(tensor)
-      , j_(j) // we solve the j'th cell problem
+    , tensor_(tensor)
+    , j_(j) // we solve the j'th cell problem
   {}
 
-  inline void evaluate(const DomainType& /*x*/,
-                       RangeType& y) const {
-    y[0] = 0;
-  }
+  inline void evaluate(const DomainType& /*x*/, RangeType& y) const { y[0] = 0; }
 
-  inline void evaluate(const int i, const DomainType& y,
-                       RangeType& z) const {
+  inline void evaluate(const int i, const DomainType& y, RangeType& z) const {
     JacobianRangeType direction;
     JacobianRangeType flux;
 
-    for (int j = 0; j < DomainType::dimension; ++j)
-    {
-        direction[0][j] = int(j_ == j);
+    for (int j = 0; j < DomainType::dimension; ++j) {
+      direction[0][j] = int(j_ == j);
     }
 
     tensor_.diffusiveFlux(y, direction, flux);
@@ -197,29 +169,28 @@ public:
   } // evaluate
 };
 
-
 NULLFUNCTION(DefaultDummyAdvection)
 
-
 //! \TODO docme
-template< class TensorImp >
-class Homogenizer
-{
+template <class TensorImp>
+class Homogenizer {
 private:
-  typedef CommonTraits::GridType  GridType;
-  enum { dimension = GridType::dimension };
+  typedef CommonTraits::GridType GridType;
+  enum {
+    dimension = GridType::dimension
+  };
   typedef TensorImp TensorType;
-  typedef Fem::PeriodicLeafGridPart< GridType > PeriodicGridPartType;
+  typedef Fem::PeriodicLeafGridPart<GridType> PeriodicGridPartType;
   typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
 
-  typedef Fem::LagrangeDiscreteFunctionSpace< FunctionSpaceType, PeriodicGridPartType, 1 >
-    PeriodicDiscreteFunctionSpaceType;
+  typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, PeriodicGridPartType, 1>
+  PeriodicDiscreteFunctionSpaceType;
 
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionSpaceType DummySpaceType;
   // (sometimes PeriodicDiscreteFunctionSpaceType is only a dummy)
 
-  typedef Fem::AdaptiveDiscreteFunction< PeriodicDiscreteFunctionSpaceType > PeriodicDiscreteFunctionType;
+  typedef Fem::AdaptiveDiscreteFunction<PeriodicDiscreteFunctionSpaceType> PeriodicDiscreteFunctionType;
 
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionType DummyType;
@@ -227,69 +198,67 @@ private:
 
   typedef MassWeight MassWeightType;
 
-  typedef ZeroFunction< FunctionSpaceType > ZeroFunctionType;
+  typedef ZeroFunction<FunctionSpaceType> ZeroFunctionType;
 
-  typedef DefaultDummyAdvection< FunctionSpaceType > DefaultDummyAdvectionType;
+  typedef DefaultDummyAdvection<FunctionSpaceType> DefaultDummyAdvectionType;
 
-  typedef TransformTensor< TensorType > TransformTensorType;
+  typedef TransformTensor<TensorType> TransformTensorType;
 
-  typedef CellSource< TransformTensorType > CellSourceType;
+  typedef CellSource<TransformTensorType> CellSourceType;
 
-  typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType
-  PeriodicJacobianRangeType;
+  typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType PeriodicJacobianRangeType;
 
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
 
-  typedef Fem::CachingQuadrature< PeriodicGridPartType, 0 > QuadratureType;
+  typedef Fem::CachingQuadrature<PeriodicGridPartType, 0> QuadratureType;
 
-  typedef typename GridType::template Codim< 0 >::Geometry GeometryType;
+  typedef typename GridType::template Codim<0>::Geometry GeometryType;
 
   typedef typename PeriodicDiscreteFunctionSpaceType::IteratorType IteratorType;
 
-  typedef typename GridType::template Codim< 0 >::Entity EntityType;
+  typedef typename GridType::template Codim<0>::Entity EntityType;
 
-  struct MatrixTraits
-  {
-    typedef PeriodicDiscreteFunctionSpaceType                          RowSpaceType;
-    typedef PeriodicDiscreteFunctionSpaceType                          ColumnSpaceType;
-    typedef LagrangeMatrixSetup< false >                               StencilType;
-    typedef Fem::ParallelScalarProduct< PeriodicDiscreteFunctionSpaceType > ParallelScalarProductType;
+  struct MatrixTraits {
+    typedef PeriodicDiscreteFunctionSpaceType RowSpaceType;
+    typedef PeriodicDiscreteFunctionSpaceType ColumnSpaceType;
+    typedef LagrangeMatrixSetup<false> StencilType;
+    typedef Fem::ParallelScalarProduct<PeriodicDiscreteFunctionSpaceType> ParallelScalarProductType;
 
-    template< class M >
-    struct Adapter
-    {
-      typedef LagrangeParallelMatrixAdapter< M > MatrixAdapterType;
+    template <class M>
+    struct Adapter {
+      typedef LagrangeParallelMatrixAdapter<M> MatrixAdapterType;
     };
   };
 
-  typedef Fem::SparseRowMatrixOperator< PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, MatrixTraits > FEMMatrix;
+  typedef Fem::SparseRowMatrixOperator<PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, MatrixTraits>
+  FEMMatrix;
 
-  typedef Fem::OEMBICGSTABOp< PeriodicDiscreteFunctionType, FEMMatrix > InverseFEMMatrix;
+  typedef Fem::OEMBICGSTABOp<PeriodicDiscreteFunctionType, FEMMatrix> InverseFEMMatrix;
 
   // discrete elliptic operator (corresponds with FEM Matrix)
-  typedef Multiscale::FEM::DiscreteEllipticOperator< PeriodicDiscreteFunctionType, TransformTensorType> EllipticOperatorType;
+  typedef Multiscale::FEM::DiscreteEllipticOperator<PeriodicDiscreteFunctionType, TransformTensorType>
+  EllipticOperatorType;
 
   typedef typename FunctionSpaceType::DomainType DomainType;
 
   typedef typename FunctionSpaceType::RangeType RangeType;
 
-  enum { spacePolOrd = PeriodicDiscreteFunctionSpaceType::polynomialOrder };
+  enum {
+    spacePolOrd = PeriodicDiscreteFunctionSpaceType::polynomialOrder
+  };
 
   // dgf file that describes the perforated domain
   const std::string& filename_;
 
 public:
-  Homogenizer(const std::string& filename)
-    : filename_(filename)
-  {}
+  Homogenizer(const std::string& filename) : filename_(filename) {}
 
-  typedef FieldMatrix< RangeType, dimension, dimension > HomTensorType;
+  typedef FieldMatrix<RangeType, dimension, dimension> HomTensorType;
+
 private:
   double getEntry(const TransformTensorType& tensor,
                   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-                  const PeriodicDiscreteFunctionType& w_i,
-                  const PeriodicDiscreteFunctionType& w_j,
-                  const int& i,
+                  const PeriodicDiscreteFunctionType& w_i, const PeriodicDiscreteFunctionType& w_j, const int& i,
                   const int& j) const {
     double a_ij_hom = 0;
 
@@ -297,8 +266,7 @@ private:
 
     const IteratorType endit = periodicDiscreteFunctionSpace.end();
 
-    for (IteratorType it = periodicDiscreteFunctionSpace.begin(); it != endit; ++it)
-    {
+    for (IteratorType it = periodicDiscreteFunctionSpace.begin(); it != endit; ++it) {
       // entity
       const EntityType& entity = *it;
 
@@ -313,8 +281,7 @@ private:
 
       // integrate
       const int quadratureNop = quadrature.nop();
-      for (int localQuadPoint = 0; localQuadPoint < quadratureNop; ++localQuadPoint)
-      {
+      for (int localQuadPoint = 0; localQuadPoint < quadratureNop; ++localQuadPoint) {
         RangeType localIntegral = 0;
 
         PeriodicJacobianRangeType grad_w_i;
@@ -330,19 +297,19 @@ private:
         const DomainType global_point_in_Y = geometry.global(local_point);
 
         PeriodicJacobianRangeType direction_i;
-        for (int k = 0; k < dimension; ++k)
-        {
+        for (int k = 0; k < dimension; ++k) {
           direction_i[0][k] = grad_w_i[0][k];
-          if (k == i)
-          { direction_i[0][k] += 1.0; }
+          if (k == i) {
+            direction_i[0][k] += 1.0;
+          }
         }
 
         PeriodicJacobianRangeType direction_j;
-        for (int k = 0; k < dimension; ++k)
-        {
+        for (int k = 0; k < dimension; ++k) {
           direction_j[0][k] = 0.0;
-          if (k == j)
-          { direction_j[0][k] += 1.0; }
+          if (k == j) {
+            direction_j[0][k] += 1.0;
+          }
         }
 
         PeriodicJacobianRangeType flux_i;
@@ -350,8 +317,8 @@ private:
 
         localIntegral = (flux_i[0] * direction_j[0]);
 
-        const double entityVolume = quadrature.weight(localQuadPoint)
-                                    * geometry.integrationElement( quadrature.point(localQuadPoint) );
+        const double entityVolume =
+            quadrature.weight(localQuadPoint) * geometry.integrationElement(quadrature.point(localQuadPoint));
 
         a_ij_hom += entityVolume * localIntegral;
       }
@@ -365,7 +332,7 @@ public:
     HomTensorType a_hom;
 
     // to solve cell problems, we always need to use a perforated unit cube as domain:
-    GridPtr< GridType > periodicgridptr(filename_);
+    GridPtr<GridType> periodicgridptr(filename_);
 
     periodicgridptr->globalRefine(10);
 
@@ -399,8 +366,8 @@ public:
     const TransformTensorType tensor_transformed(tensor);
 
     // if we have some additional source term (-div G), define:
-    const CellSourceType G_0(periodicDiscreteFunctionSpace, tensor_transformed, 0);   // 0'th cell problem
-    const CellSourceType G_1(periodicDiscreteFunctionSpace, tensor_transformed, 1);   // 1'th cell problem
+    const CellSourceType G_0(periodicDiscreteFunctionSpace, tensor_transformed, 0); // 0'th cell problem
+    const CellSourceType G_1(periodicDiscreteFunctionSpace, tensor_transformed, 1); // 1'th cell problem
     // - div ( A \nabla u^{\epsilon} ) = f - div G
 
     // quite a dummy. It's always f = 0
@@ -409,9 +376,7 @@ public:
     //! build the left hand side (lhs) of the problem
     const std::unique_ptr<const Problem::LowerOrderBase> mass(new MassWeightType(lambda));
     // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
-    const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace,
-                                                         tensor_transformed,
-                                                         mass);
+    const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace, tensor_transformed, mass);
 
     FEMMatrix lhsMatrix("Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace, periodicDiscreteFunctionSpace);
     discrete_cell_elliptic_op.assemble_matrix(lhsMatrix, false /*no boundary treatment*/);
@@ -419,12 +384,12 @@ public:
     //! build the right hand side (rhs) of the problem
 
     // the same right hand side for HM and FEM methods:
-    typedef RightHandSideAssembler< PeriodicDiscreteFunctionType > RhsAssembler;
+    typedef RightHandSideAssembler<PeriodicDiscreteFunctionType> RhsAssembler;
 
     // Alternativly it is possible to call the RightHandSideAssembler with a second source Term '- div G':
     // RightHandSideAssembler< DiscreteFunctionType > rhsassembler( tensor , G );
-    RhsAssembler::template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_0, rhs_0);
-    RhsAssembler::template assemble< 2* PeriodicDiscreteFunctionSpaceType::polynomialOrder >(zero, G_1, rhs_1);
+    RhsAssembler::template assemble<2 * PeriodicDiscreteFunctionSpaceType::polynomialOrder>(zero, G_0, rhs_0);
+    RhsAssembler::template assemble<2 * PeriodicDiscreteFunctionSpaceType::polynomialOrder>(zero, G_1, rhs_1);
     // solve the linear systems (with Bi-CG):
 
     const InverseFEMMatrix fembiCG(lhsMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
@@ -437,14 +402,13 @@ public:
     a_hom[0][1] = getEntry(tensor_transformed, periodicDiscreteFunctionSpace, cellSolution_0, cellSolution_1, 0, 1);
     a_hom[1][0] = a_hom[0][1];
 
-    DSC_LOG_DEBUG << "A_homogenized[0][0] = " << a_hom[0][0] << std::endl
-                  << "A_homogenized[0][1] = " << a_hom[0][1] << std::endl
-                  << "A_homogenized[1][0] = " << a_hom[1][0] << std::endl
+    DSC_LOG_DEBUG << "A_homogenized[0][0] = " << a_hom[0][0] << std::endl << "A_homogenized[0][1] = " << a_hom[0][1]
+                  << std::endl << "A_homogenized[1][0] = " << a_hom[1][0] << std::endl
                   << "A_homogenized[1][1] = " << a_hom[1][1] << std::endl;
 
     return a_hom;
   } // getHomTensor
-}; // end of class
+};  // end of class
 
 } // namespace Multiscale {
 } // end namespace

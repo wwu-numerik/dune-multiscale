@@ -10,27 +10,24 @@
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 // #include <dune/stuff/fem/functions/checks.hh>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
-class LocalSolutionManager
-{
+class LocalSolutionManager {
 private:
-  typedef MsFEMTraits::SubGridListType                      SubGridListType;
+  typedef MsFEMTraits::SubGridListType SubGridListType;
   typedef typename CommonTraits::GridType::Traits::GlobalIdSet::IdType IdType;
-  typedef MsFEMTraits::CoarseEntityType                     CoarseEntityType;
+  typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
 public:
-  typedef typename SubGridListType::SubGridPartType         SubGridPartType;
+  typedef typename SubGridListType::SubGridPartType SubGridPartType;
   typedef typename SubGridListType::SubGridDiscreteFunctionType DiscreteFunctionType;
-  typedef MsFEMTraits::MacroMicroGridSpecifierType          MacroMicroGridSpecifierType;
-  typedef std::vector< std::unique_ptr< DiscreteFunctionType > > LocalSolutionVectorType;
+  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
+  typedef std::vector<std::unique_ptr<DiscreteFunctionType>> LocalSolutionVectorType;
   typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   LocalSolutionManager(const CoarseEntityType& coarseEntity, SubGridListType& subgridList,
                        const MacroMicroGridSpecifierType& gridSpecifier);
-
 
   LocalSolutionVectorType& getLocalSolutions();
 
@@ -47,16 +44,16 @@ public:
   std::size_t numBoundaryCorrectors() const;
 
 private:
-  SubGridListType&                   subgridList_;
+  SubGridListType& subgridList_;
   const MacroMicroGridSpecifierType& gridSpecifier_;
-  SubGridPartType                    subGridPart_;
-  DiscreteFunctionSpaceType          localDiscreteFunctionSpace_;
-  const IdType                       coarseId_;
-  bool                               loaded_;
-  const std::size_t                  numBoundaryCorrectors_;
-  const std::size_t                  numLocalProblems_;
-  LocalSolutionVectorType            localSolutions_;
-  const std::string                  localSolutionLocation_;
+  SubGridPartType subGridPart_;
+  DiscreteFunctionSpaceType localDiscreteFunctionSpace_;
+  const IdType coarseId_;
+  bool loaded_;
+  const std::size_t numBoundaryCorrectors_;
+  const std::size_t numLocalProblems_;
+  LocalSolutionVectorType localSolutions_;
+  const std::string localSolutionLocation_;
 };
 }
 }

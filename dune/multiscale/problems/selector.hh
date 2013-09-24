@@ -27,9 +27,9 @@ std::unique_ptr<const CommonTraits::ModelProblemDataType> getModelData();
 std::unique_ptr<const CommonTraits::DirichletDataType> getDirichletData();
 std::unique_ptr<const CommonTraits::NeumannDataType> getNeumannData();
 
-template< class GridImp, class IntersectionImp >
+template <class GridImp, class IntersectionImp>
 bool isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face);
-template< class GridImp, class IntersectionImp >
+template <class GridImp, class IntersectionImp>
 bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face);
 
 std::string name();

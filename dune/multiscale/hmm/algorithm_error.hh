@@ -18,17 +18,15 @@ namespace HMM {
 struct HMMResult;
 
 //! Error Estimation
-HMMResult estimate_error(
-        const typename CommonTraits::GridPartType& gridPart,
-        const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-        const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
-        const typename CommonTraits::DiffusionType& diffusion_op,
-        const CellProblemNumberingManager& cp_num_manager,
-        const typename CommonTraits::DiscreteFunctionType& hmm_solution
-         );
+HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
+                         const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
+                         const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
+                         const typename CommonTraits::DiffusionType& diffusion_op,
+                         const CellProblemNumberingManager& cp_num_manager,
+                         const typename CommonTraits::DiscreteFunctionType& hmm_solution);
 
-} //namespace HMM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // ALGORITHM_ERROR_HH

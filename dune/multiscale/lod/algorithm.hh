@@ -19,22 +19,19 @@ namespace MsFEM {
 void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                     Dune::Multiscale::OutputParameters& outputparam,
-                     int& total_refinement_level_,
+                     Dune::Multiscale::OutputParameters& outputparam, int& total_refinement_level_,
                      int& coarse_grid_level_);
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
-                 Dune::Multiscale::OutputParameters& outputparam );
+                 Dune::Multiscale::OutputParameters& outputparam);
 
 //! \TODO docme
-void algorithm(const std::string& macroGridName,
-               int& total_refinement_level_,
-               int& coarse_grid_level_,
-               int& number_of_layers_ );
+void algorithm(const std::string& macroGridName, int& total_refinement_level_, int& coarse_grid_level_,
+               int& number_of_layers_);
 
-} //namespace MsFEM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace MsFEM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // DUNE_MULTISCALE_LOD_ALGORITHM_HH

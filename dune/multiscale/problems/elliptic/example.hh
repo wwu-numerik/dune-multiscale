@@ -21,7 +21,8 @@
 
  * Here we have:
  * u(x) = exact solution of the problem
- * A(x,·) = diffusion operator (e.g. a scalar function, a matrix or an operator), e.g. with the structure A(x) = A(x, x/eps)
+ * A(x,·) = diffusion operator (e.g. a scalar function, a matrix or an operator), e.g. with the structure A(x) = A(x,
+ x/eps)
  * m(x) = a mass term (or reaction term), e.g. with the structure m(x) = m(x, x/eps )
  * f(x) = first source term with the structure f = f(x) (=> no micro-scale dependency)
  * G(x) = second source term with the structure G = G(x) (=> no micro-scale dependency).
@@ -94,9 +95,7 @@ namespace Problem {
 namespace Example {
 
 //! model problem information
-struct ModelProblemData
-  : public Dune::Multiscale::Problem::IModelProblemData
-{
+struct ModelProblemData : public Dune::Multiscale::Problem::IModelProblemData {
   //! is there an exact solution available? true/false
   //! (if 'true' it must be implemented below in the ExactSolution class)
   static const bool has_exact_solution = true;
@@ -114,39 +113,34 @@ struct ModelProblemData
   bool problemAllowsStochastics() const;
 };
 
-
 /**
  FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
  The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'.
- That means 'y := f(x)' and 'y' is returned. It is only important that 'FirstSource' knows the function space ('Dune::Multiscale::CommonTraits::FunctionSpaceType') that it
+ That means 'y := f(x)' and 'y' is returned. It is only important that 'FirstSource' knows the function space
+ ('Dune::Multiscale::CommonTraits::FunctionSpaceType') that it
  is part from. (f \in FunctionSpace)
 */
-class FirstSource
-  : public Dune::Multiscale::CommonTraits::FunctionBaseType
-
-{
+class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   static const int dimDomain = DomainType::dimension;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
 public:
   //! evaluate f, i.e. return y=f(x) for a given x
   //! the following method defines 'f':
-  void evaluate(const DomainType& x,
-                       RangeType& y) const; // end evaluate
-
+  void evaluate(const DomainType& x, RangeType& y) const; // end evaluate
 };
 
 /** \brief default class for the second source term G.
@@ -155,32 +149,29 @@ MSNULLFUNCTION(SecondSource)
 
 //! the (non-linear) diffusion operator A(x,\xi)
 //! A : \Omega × R² -> R²
-class Diffusion: public DiffusionBase
-{
+class Diffusion : public DiffusionBase {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
-  typedef typename FunctionSpaceType::DomainType        DomainType;
-  typedef typename FunctionSpaceType::RangeType         RangeType;
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef DomainFieldType TimeType;
 
 public:
-    Diffusion(){}
+  Diffusion() {}
 
   //! in the linear setting, we have the structure
   //! A(x,\xi) = ( A_1(x,\xi), A_2(x,\xi) ) with
   //!              A_i(x,\xi) ) = A_{i1}(x) \xi_1 + A_{i2}(x) \xi_2
   //! (diffusive) flux = A ( x , direction )
   //! (typically direction is some 'gradient_of_a_function')
-  void diffusiveFlux(const DomainType& /*x*/,
-                     const JacobianRangeType& direction,
-                     JacobianRangeType& flux) const;
+  void diffusiveFlux(const DomainType& /*x*/, const JacobianRangeType& direction, JacobianRangeType& flux) const;
 
   /**
       the jacobian matrix (JA) of the diffusion operator A with respect to the direction,
@@ -188,10 +179,8 @@ public:
       jacobian diffusiv flux = JA(x,\nabla v) nabla w:
       jacobianDiffusiveFlux = JA( x , position_gradient ) direction_gradient
     */
-  void jacobianDiffusiveFlux(const DomainType& /*x*/,
-                             const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const;
+  void jacobianDiffusiveFlux(const DomainType& /*x*/, const JacobianRangeType& /*position_gradient*/,
+                             const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
 // dummmy for a lower order term F( x , u(x) , grad u(x) ) in a PDE like
@@ -199,38 +188,35 @@ public:
 // NOTE: the operator describing the pde must be a monotone operator
 //! ------- Definition of the (possibly nonlinear) lower term F ---------
 class LowerOrderTerm
-//  : public Dune::Multiscale::CommonTraits::FunctionBaseType
-//
-{
+    //  : public Dune::Multiscale::CommonTraits::FunctionBaseType
+    //
+    {
 
 public:
 
-  LowerOrderTerm( /*double scaling_factor = 1.0*/ ){} // : scaling_factor_( scaling_factor ) {}
+  LowerOrderTerm(/*double scaling_factor = 1.0*/) {} // : scaling_factor_( scaling_factor ) {}
 
-  template< class DomainType , class RangeType >
-  void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const
-  {}
+  template <class DomainType, class RangeType>
+  void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const {}
 
-  template< class DomainType , class TimeType, class RangeType >
-  void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& /*y*/) const
-  {}
-  
-  template< class DomainType , class RangeType, class JacobianRangeType >
-  void evaluate(const DomainType& /*x*/, const RangeType& /*position*/, const JacobianRangeType& /*direction_gradient*/, RangeType& /*y*/) const
-  {}
+  template <class DomainType, class TimeType, class RangeType>
+  void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& /*y*/) const {}
 
-  template< class DomainType , class RangeType, class JacobianRangeType >
-  void position_derivative(const DomainType& /*x*/, const RangeType& /*position*/, const JacobianRangeType& /*direction_gradient*/, RangeType& /*y*/) const
-  {}
+  template <class DomainType, class RangeType, class JacobianRangeType>
+  void evaluate(const DomainType& /*x*/, const RangeType& /*position*/, const JacobianRangeType& /*direction_gradient*/,
+                RangeType& /*y*/) const {}
 
-  template< class DomainType , class RangeType, class JacobianRangeType >
-  void direction_derivative(const DomainType& /*x*/, const RangeType& /*position*/, const JacobianRangeType& /*direction_gradient*/, JacobianRangeType& /*y*/) const
-  {}
-  
+  template <class DomainType, class RangeType, class JacobianRangeType>
+  void position_derivative(const DomainType& /*x*/, const RangeType& /*position*/,
+                           const JacobianRangeType& /*direction_gradient*/, RangeType& /*y*/) const {}
+
+  template <class DomainType, class RangeType, class JacobianRangeType>
+  void direction_derivative(const DomainType& /*x*/, const RangeType& /*position*/,
+                            const JacobianRangeType& /*direction_gradient*/, JacobianRangeType& /*y*/) const {}
 };
 
 //! ----------------- Definition of ' m ' ----------------------------
-MSCONSTANTFUNCTION(MassTerm,  0.0)
+MSCONSTANTFUNCTION(MassTerm, 0.0)
 
 //! ------------ Definition of homogeneous boundary conditions ----------
 MSNULLFUNCTION(DirichletBoundaryCondition)
@@ -241,64 +227,63 @@ MSNULLFUNCTION(DefaultDummyFunction)
 
 //! ----------------- Definition of ' u ' ----------------------------
 //! Exact solution (typically it is unknown)
-class ExactSolution
-  : public Dune::Multiscale::CommonTraits::FunctionBaseType
-{
+class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType  RangeType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
   //! essentially: 'DomainFieldType' is the type of an entry of a domain-element.
   //! But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  //! This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also an
+  //! This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also
+  // an
   //! entry of a domain-element.
   typedef DomainFieldType TimeType;
 
 public:
-  ExactSolution(){}
+  ExactSolution() {}
 
   //! evaluate 'u(x)'
-  void evaluate(const DomainType& x,
-                       RangeType& y) const; // evaluate
+  void evaluate(const DomainType& x, RangeType& y) const; // evaluate
 
   //! evaluate '∇u(x)'
   void jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
-    grad_u[0][0] = 2.0* M_PI* cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
-    grad_u[0][1] = 2.0* M_PI* sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
+    grad_u[0][0] = 2.0 * M_PI * cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
+    grad_u[0][1] = 2.0 * M_PI * sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
   } // jacobian
 
   //! in case 'u' has a time-dependency use the following method:
   //! (some classes might require this as a default implementation)
-  void evaluate(const DomainType& x,
-                       const TimeType& /*timedummy*/,
-                       RangeType& y) const;
+  void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
 
-  virtual RangeType evaluate(const DomainType& x) const { return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x); }
+  virtual RangeType evaluate(const DomainType& x) const {
+    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
+  }
 };
 
 // seems completely unused
 ////! ------ Definition of an empty homogenized diffusion matrix -------
-//template< class Dune::Multiscale::CommonTraits::FunctionSpaceType, class FieldMatrixImp >
-//class HomDiffusion
-//  : public Dune::Multiscale::CommonTraits::FunctionBaseType HomDiffusion< Dune::Multiscale::CommonTraits::FunctionSpaceType, FieldMatrixImp > >
+// template< class Dune::Multiscale::CommonTraits::FunctionSpaceType, class FieldMatrixImp >
+// class HomDiffusion
+//  : public Dune::Multiscale::CommonTraits::FunctionBaseType HomDiffusion<
+// Dune::Multiscale::CommonTraits::FunctionSpaceType, FieldMatrixImp > >
 //{
-//public:
+// public:
 //  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
 //  typedef FieldMatrixImp   FieldMatrixType;
 
-//private:
+// private:
 //  typedef HomDiffusion< FunctionSpaceType, FieldMatrixType > ThisType;
 //  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
-//public:
+// public:
 //  typedef typename FunctionSpaceType::DomainType        DomainType;
 //  typedef typename FunctionSpaceType::RangeType         RangeType;
 //  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
@@ -308,10 +293,10 @@ public:
 
 //  typedef DomainFieldType TimeType;
 
-//public:
+// public:
 //  const FieldMatrixType& A_hom_;
 
-//public:
+// public:
 //  //! fill the matrix with given values
 //  inline explicit HomDiffusion(const FieldMatrixType& A_hom)
 //    : A_hom_(A_hom)
@@ -353,11 +338,10 @@ public:
 //  } // jacobianDiffusiveFlux
 //};
 
-
 } // namespace Example {
 }
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace Multiscale {
+} // namespace Dune {
 //! @} End of Doxygen Groups
 
 #endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EXAMPLE

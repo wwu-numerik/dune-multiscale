@@ -14,22 +14,22 @@ namespace HMM {
 struct HMMResult;
 
 //! \TODO docme
-bool adapt(const HMMResult& result,
-           const int loop_cycle,
-           const double error_tolerance_,
+bool adapt(const HMMResult& result, const int loop_cycle, const double error_tolerance_,
            const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-           typename CommonTraits::AdaptationManagerType& adaptationManager
-           );
+           typename CommonTraits::AdaptationManagerType& adaptationManager);
 
 //! the main hmm computation
-void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,   // grid pointer that belongs to the macro grid
-               typename CommonTraits::GridPointerType& fine_macro_grid_pointer,   // grid pointer that belongs to the fine macro grid (for
-                                                           // reference computations)
-               typename CommonTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic micro grid
-               const std::string filename);
+void
+algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid pointer that belongs to the macro grid
+          typename CommonTraits::GridPointerType& fine_macro_grid_pointer, // grid pointer that belongs to the fine
+                                                                           // macro grid (for
+                                                                           // reference computations)
+          typename CommonTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic
+                                                                           // micro grid
+          const std::string filename);
 
-} //namespace HMM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace HMM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif // DUNE_MS_HMM_ALGORITHM_HH

@@ -17,19 +17,15 @@
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/localproblems/clement_pattern.hh>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-
 class WeightedClementOperator
-: public Operator< typename SubGridList::SubGridDiscreteFunctionType::RangeFieldType,
-                   typename CommonTraits::DiscreteFunctionType::RangeFieldType,
-                   typename SubGridList::SubGridDiscreteFunctionType,
-                   typename CommonTraits::DiscreteFunctionType>,
-  public OEMSolver::PreconditionInterface
-{
+    : public Operator<typename SubGridList::SubGridDiscreteFunctionType::RangeFieldType,
+                      typename CommonTraits::DiscreteFunctionType::RangeFieldType,
+                      typename SubGridList::SubGridDiscreteFunctionType, typename CommonTraits::DiscreteFunctionType>,
+      public OEMSolver::PreconditionInterface {
 private:
   typedef std::vector<std::shared_ptr<CommonTraits::DiscreteFunctionType>> CoarseBasisFunctionList;
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
@@ -43,105 +39,101 @@ private:
   typedef WeightedClementOperator WeightedClementOpType;
 
   //! needs to be friend for conversion check
-  friend class Conversion<WeightedClementOpType,OEMSolver::PreconditionInterface>;
+  friend class Conversion<WeightedClementOpType, OEMSolver::PreconditionInterface>;
 
   typedef WeightedClementOpType ThisType;
 
   //! type of discrete function space
-  typedef typename DiscreteFunctionType :: DiscreteFunctionSpaceType
-    DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
-  typedef typename CoarseDiscreteFunction :: DiscreteFunctionSpaceType
-    CoarseDiscreteFunctionSpaceType;
+  typedef typename CoarseDiscreteFunction::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpaceType;
 
   //! field type of range
-  typedef typename DiscreteFunctionSpaceType :: RangeType
-    RangeType;
+  typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
 
-  typedef typename DiscreteFunctionSpaceType :: DomainType
-    DomainType;
+  typedef typename DiscreteFunctionSpaceType::DomainType DomainType;
 
   //! field type of range
-  typedef typename DiscreteFunctionSpaceType :: RangeFieldType
-    RangeFieldType;
+  typedef typename DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
   //! type of grid partition
-  typedef typename DiscreteFunctionSpaceType :: GridPartType GridPartType;
+  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   //! type of grid
-  typedef typename DiscreteFunctionSpaceType :: GridType GridType;
+  typedef typename DiscreteFunctionSpaceType::GridType GridType;
 
-  typedef typename CoarseDiscreteFunctionSpaceType :: GridPartType CoarseGridPartType;
+  typedef typename CoarseDiscreteFunctionSpaceType::GridPartType CoarseGridPartType;
 
   //! type of jacobian
-  typedef typename DiscreteFunctionSpaceType :: JacobianRangeType
-    JacobianRangeType;
+  typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
   //! type of the base function set
-  typedef typename DiscreteFunctionSpaceType :: BasisFunctionSetType
-    BasisFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
-  typedef typename CoarseDiscreteFunctionSpaceType :: BasisFunctionSetType
-    CoarseBasisFunctionSetType;
+  typedef typename CoarseDiscreteFunctionSpaceType::BasisFunctionSetType CoarseBasisFunctionSetType;
 
-  enum{dimRange = GridType::dimension};
+  enum {
+    dimRange = GridType::dimension
+  };
 
   //! polynomial order of base functions
-  enum { polynomialOrder = DiscreteFunctionSpaceType :: polynomialOrder };
+  enum {
+    polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder
+  };
 
   //! The grid's dimension
-  enum { dimension = GridType :: dimension };
+  enum {
+    dimension = GridType::dimension
+  };
 
   //! type of quadrature to be used
-  typedef Fem::CachingQuadrature< GridPartType, 0 > QuadratureType;
-  typedef Fem::CachingQuadrature< CoarseGridPartType, 0 > CoarseQuadratureType;
+  typedef Fem::CachingQuadrature<GridPartType, 0> QuadratureType;
+  typedef Fem::CachingQuadrature<CoarseGridPartType, 0> CoarseQuadratureType;
 
-  typedef Dune::Fem::SparseRowMatrixTraits < typename SubGridList::SubGridDiscreteFunctionSpaceType,
-                                       typename SubGridList::HostDiscreteFunctionSpaceType > WeightedClementMatrixObjectTraits;
+  typedef Dune::Fem::SparseRowMatrixTraits<typename SubGridList::SubGridDiscreteFunctionSpaceType,
+                                           typename SubGridList::HostDiscreteFunctionSpaceType>
+  WeightedClementMatrixObjectTraits;
 
-  typedef typename WeightedClementMatrixObjectTraits :: MatrixObjectType LinearOperatorType;
+  typedef typename WeightedClementMatrixObjectTraits::MatrixObjectType LinearOperatorType;
 
   //! get important types from the MatrixObject
-  typedef typename LinearOperatorType :: LocalMatrixType LocalMatrixType;
-  typedef typename LinearOperatorType :: PreconditionMatrixType PreconditionMatrixType;
-  typedef typename LinearOperatorType :: MatrixType MatrixType;
-  typedef typename DiscreteFunctionSpaceType :: MapperType MapperType;
+  typedef typename LinearOperatorType::LocalMatrixType LocalMatrixType;
+  typedef typename LinearOperatorType::PreconditionMatrixType PreconditionMatrixType;
+  typedef typename LinearOperatorType::MatrixType MatrixType;
+  typedef typename DiscreteFunctionSpaceType::MapperType MapperType;
   typedef std::vector<DomainType> CoarseNodeVectorType;
 
   // type of DofManager
-  typedef Fem::DofManager< GridType > DofManagerType;
-
+  typedef Fem::DofManager<GridType> DofManagerType;
 
 public:
   //! constructor
-  explicit WeightedClementOperator( const DiscreteFunctionSpaceType& space,
-                              const CoarseDiscreteFunctionSpaceType& coarse_space,
-                              const CoarseNodeVectorType& coarse_nodes,
-                              const CoarseBasisFunctionList& coarse_basis,
-                              const std::map<int,int>& global_id_to_internal_id,
-                              const MacroMicroGridSpecifier& specifier );
+  explicit WeightedClementOperator(const DiscreteFunctionSpaceType& space,
+                                   const CoarseDiscreteFunctionSpaceType& coarse_space,
+                                   const CoarseNodeVectorType& coarse_nodes,
+                                   const CoarseBasisFunctionList& coarse_basis,
+                                   const std::map<int, int>& global_id_to_internal_id,
+                                   const MacroMicroGridSpecifier& specifier);
 
 private:
   // prohibit copying
-  WeightedClementOperator ( const ThisType & ) = delete;
+  WeightedClementOperator(const ThisType&) = delete;
 
 public:
   //! apply the operator
-  virtual void operator() ( const DiscreteFunctionType &u,
-                            CoarseDiscreteFunctionType &w ) const;
+  virtual void operator()(const DiscreteFunctionType& u, CoarseDiscreteFunctionType& w) const;
 
   //! return reference to preconditioning matrix, used by OEM-Solver
-  const PreconditionMatrixType &preconditionMatrix () const;
+  const PreconditionMatrixType& preconditionMatrix() const;
 
-  virtual void applyTransposed ( const CoarseDiscreteFunctionType &u,
-                                 DiscreteFunctionType &w) const;
+  virtual void applyTransposed(const CoarseDiscreteFunctionType& u, DiscreteFunctionType& w) const;
 
   //! return true if preconditioning is enabled
-  bool hasPreconditionMatrix () const;
+  bool hasPreconditionMatrix() const;
 
   //! print the system matrix into a stream
-  void print ( std :: ostream & out = std :: cout ) const;
+  void print(std::ostream& out = std::cout) const;
 
   //! return reference to discreteFunctionSpace
-  const DiscreteFunctionSpaceType &discreteFunctionSpace () const;
+  const DiscreteFunctionSpaceType& discreteFunctionSpace() const;
 
   /*! \brief obtain a reference to the system matrix
    *
@@ -150,43 +142,44 @@ public:
    *
    *  \returns a reference to the system matrix
    */
-  const LinearOperatorType &systemMatrix () const;
+  const LinearOperatorType& systemMatrix() const;
 
   /** \brief perform a grid walkthrough and assemble the global matrix */
   // the coarse basis functions that belong to nodes on the boundary of the subgrid are included,
   // excluded are only basis functions that belong to nodes on the boundary of Omega
-  void assemble ()  const;
+  void assemble() const;
 
-  /** \attention This imp. differs from the one before the refactor in that it iterates over both domain and range entities
+  /** \attention This imp. differs from the one before the refactor in that it iterates over both domain and range
+   *entities
    *   in order to determine which local matrices to touch. I have no idea why this compiled before, since
    *   type(domain_entity) != type(range_entity) and therefore calling "localMatrix(entity, entity)"
    *   should never have been possible.
    **/
-  void boundaryTreatment () const;
+  void boundaryTreatment() const;
 
 protected:
   const DiscreteFunctionSpaceType& discreteFunctionSpace_;
   const CoarseDiscreteFunctionSpaceType& coarse_space_;
-  const DofManagerType &dofManager_;
+  const DofManagerType& dofManager_;
 
   const MacroMicroGridSpecifier& specifier_;
-  ClemementPattern<DiscreteFunctionSpaceType,CoarseDiscreteFunctionSpaceType> sparsity_pattern_;
+  ClemementPattern<DiscreteFunctionSpaceType, CoarseDiscreteFunctionSpaceType> sparsity_pattern_;
   mutable LinearOperatorType linearOperator_;
 
   const CoarseNodeVectorType& coarse_nodes_;
   const CoarseBasisFunctionList& coarse_basis_;
-  const std::map<int,int>& global_id_to_internal_id_;
+  const std::map<int, int>& global_id_to_internal_id_;
 
   //! flag indicating whether the system matrix has been assembled
   mutable int sequence_;
 
-  mutable Fem :: DynamicArray< JacobianRangeType > gradCache_;
-  mutable Fem :: DynamicArray< RangeType > values_;
+  mutable Fem::DynamicArray<JacobianRangeType> gradCache_;
+  mutable Fem::DynamicArray<RangeType> values_;
   mutable RangeFieldType weight_;
 };
 
-} //namespace MsFEM {
-} //namespace Multiscale {
-} //namespace Dune {
+} // namespace MsFEM {
+} // namespace Multiscale {
+} // namespace Dune {
 
 #endif
