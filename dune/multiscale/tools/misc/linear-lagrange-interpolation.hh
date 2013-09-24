@@ -11,6 +11,7 @@
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/memory.hh>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <dune/stuff/common/float_cmp.hh>
 #include <dune/fem/function/localfunction/temporary.hh>
 
 namespace Dune {

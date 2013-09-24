@@ -15,6 +15,8 @@
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
 
+#include <boost/assert.hpp>
+
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
@@ -386,11 +388,13 @@ void LocalProblemOperator
 void LocalProblemOperator
 ::assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
                 SubDiscreteFunctionVectorType& allLocalRHS) const {
-  assert(allLocalRHS.size()>0 && "You need to preallocate the necessary space outside this function!");
+  BOOST_ASSERT_MSG(allLocalRHS.size()>0, "You need to preallocate the necessary space outside this function!");
   //! @todo correct the error message below (+1 for simplecial, +2 for arbitrary)
-  assert((specifier.simplexCoarseGrid() && allLocalRHS.size()==GridType::dimension + 1) ||
-         (!(specifier.simplexCoarseGrid()) && allLocalRHS.size() == specifier.fineSpace().mapper().maxNumDofs()+2) &&
-          "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions" &&
+  BOOST_ASSERT_MSG((specifier.simplexCoarseGrid() && allLocalRHS.size()==GridType::dimension + 1)
+                   || (!(specifier.simplexCoarseGrid())
+                       && static_cast<long long>(allLocalRHS.size())
+                          == static_cast<long long>(specifier.fineSpace().mapper().maxNumDofs()+2)),
+          "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
           " and the dirichlet- and neuman corrector");
 
   // build unit vectors (needed for cases where rhs is assembled for unit vectors instead of coarse
@@ -999,8 +1003,8 @@ void LocalProblemOperator
 */
 void LocalProblemOperator::projectDirichletValues(HostDiscreteFunction& function) const {
 /*  // make sure, we are on a hexahedral element
-  assert(function.space().gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
-         function.space().gridPart().grid().leafIndexSet().geomTypes(0)[0].isCube() &&
+  BOOST_ASSERT_MSG(function.space().gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
+         function.space().gridPart().grid().leafIndexSet().geomTypes(0)[0].isCube(),
          "This method only works for hexahedral elements at the moment!");*/
 
   const auto& gridPart = function.space().gridPart();
