@@ -23,8 +23,7 @@ CellProblemNumberingManager::CellProblemNumberingManager(const DiscreteFunctionS
 
 std::size_t CellProblemNumberingManager::get_number_of_cell_problem(const EntityPointerType& ent,
                                                                     const std::size_t& numOfBaseFunction) const {
-  const typename CellNumMapType::key_type idPair(ent, numOfBaseFunction);
-  const auto it = cell_numbering_map_.find(idPair);
+  const auto it = cell_numbering_map_.find(std::make_pair(ent, numOfBaseFunction));
   if (it != cell_numbering_map_.end())
     return it->second;
   else

@@ -56,7 +56,7 @@ class Meanvalue {
 
   typedef typename EntityType::ctype coordType;
 
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
+  
 
   enum {
     dimension = GridType::dimension
@@ -80,7 +80,7 @@ class Meanvalue {
       const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
 
       // get geoemetry of entity
-      const EnGeometryType& geo = entity.geometry();
+      const auto& geo = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();
@@ -107,8 +107,8 @@ public:
     for (const auto& entity : space) {
       // create quadrature for given geometry type
       const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
-      const LocalFunctionType localfunc = discFunc.localFunction(entity);
-      const EnGeometryType& geo = entity.geometry();
+      const auto localfunc = discFunc.localFunction(entity);
+      const auto& geo = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.size();

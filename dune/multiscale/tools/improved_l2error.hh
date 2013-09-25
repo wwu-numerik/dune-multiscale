@@ -47,7 +47,7 @@ class ImprovedL2Error
   typedef typename EntityType::HierarchicIterator               HierarchicIteratorType;
   typedef typename GridType::template Codim< 0 >::LevelIterator LevelIteratorType;
 
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
+  
 
   enum { dim = GridType::dimension };
   enum { spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder };
@@ -79,8 +79,8 @@ public:
     IteratorType it_2 = dfsp_2.begin();
     for (IteratorType it = dfsp.begin(); it != eit; ++it, ++it_2)
     {
-      const EntityType& en = *it;
-      const EntityType& en_2 = *it_2;
+      const auto& en = *it;
+      const auto& en_2 = *it_2;
 
       const Fem::CachingQuadrature< GridPartType, 0 > quad(en, quadOrd);
       // get local functions on current element
@@ -88,7 +88,7 @@ public:
       const LocalFunctionType lf2 = f2.localFunction(en_2);
 
       // get geoemetry of entity
-      const EnGeometryType& geo = en.geometry();
+      const auto& geo = en.geometry();
 
       const int quadNop = quad.nop();
       for (int qp = 0; qp < quadNop; ++qp)
@@ -146,13 +146,13 @@ public:
       const Fem::CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
       // get local functions on current element
-      const LocalFunctionType local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
-      const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*fine_father_entity);
+      const auto local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
+      const auto local_coarse_disc_func = coarse_disc_func.localFunction(*fine_father_entity);
 
       // create at quadrature with 3 quadrature points:
       const Fem::CachingQuadrature< GridPartType, 0 > coarse_quad(*fine_father_entity, 2);       // 3 points for linear pol in 2D
       // get geoemetry of coarse entity
-      const EnGeometryType& coarse_geo = fine_father_entity->geometry();
+      const auto& coarse_geo = fine_father_entity->geometry();
 
       DomainType coarse_quad_point[3];
       RangeType local_value_coarse_func[3];
@@ -173,7 +173,7 @@ public:
                               local_value_coarse_func[2]);
 
       // get geoemetry of entity
-      const EnGeometryType& fine_geo = fine_it->geometry();
+      const auto& fine_geo = fine_it->geometry();
 
       const int fine_quadNop = fine_quad.nop();
       for (int qp = 0; qp < fine_quadNop; ++qp)
@@ -260,7 +260,7 @@ public:
     for (IteratorType fine_it = fine_discreteFunctionSpace.begin(); fine_it != fine_end; ++fine_it)
     {
       // get geoemetry of fine grid entity:
-      const EnGeometryType& fine_geo = fine_it->geometry();
+      const auto& fine_geo = fine_it->geometry();
 
       // das Zentrum des Fine-Grid Elements:
       const DomainType center_of_fine_it = fine_geo.global(center_of_reference_element);
@@ -280,9 +280,9 @@ public:
       for (IteratorType coarse_it = coarse_discreteFunctionSpace.begin(); coarse_it != coarse_entity_end; ++coarse_it)
       {
         // get geoemetry of coarse entity
-        const EnGeometryType& coarse_geo = coarse_it->geometry();
+        const auto& coarse_geo = coarse_it->geometry();
 
-        const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
+        const auto local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
 
         // beschreibe das Dreieck mit Hilfe seiner Eckpunkt-Koordinaten (Konvexkombination) und schaue ob das Zentrum
         // des Fine-Grid elements in dieser Konvexkombination liegt.
@@ -391,7 +391,7 @@ public:
       const Fem::CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
       // get local functions on current element
-      const LocalFunctionType local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
+      const auto local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
 
       const int fine_quadNop = fine_quad.nop();
       for (int qp = 0; qp < fine_quadNop; ++qp)
@@ -466,7 +466,7 @@ public:
       // T = coarse_it
 
       // get geoemetry of coarse grid entity:
-      const EnGeometryType& geometry_of_T = coarse_it->geometry();
+      const auto& geometry_of_T = coarse_it->geometry();
 
       // corner of the global element T:
       // ( map the reference corners to the global corners: )
@@ -510,7 +510,7 @@ public:
       if ( ( (F_inverse_of_x[0] >= 0.0) && (F_inverse_of_x[0] <= 1.0) )
            && ( (F_inverse_of_x[1] >= 0.0) && ( F_inverse_of_x[1] <= (1.0 - F_inverse_of_x[0]) ) ) )
       {
-        const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
+        const auto local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
 
         // beschreibe das Dreieck mit Hilfe seiner Eckpunkt-Koordinaten (Konvexkombination) und schaue ob das Zentrum
         // des Fine-Grid elements in dieser Konvexkombination liegt.
@@ -552,7 +552,7 @@ public:
 
         typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
         const BasisFunctionSetType& baseSet = coarse_discreteFunctionSpace.basisFunctionSet(*coarse_it);
-        const unsigned int numMacroBaseFunctions = baseSet.numBaseFunctions();
+        const auto numMacroBaseFunctions = baseSet.numBaseFunctions();
 
         int cell_problem_id[numMacroBaseFunctions];
         for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -587,7 +587,7 @@ public:
           // S = local_grid_it
 
           // get geoemetry of the local grid entity:
-          const EnGeometryType& geometry_of_S = local_grid_it->geometry();
+          const auto& geometry_of_S = local_grid_it->geometry();
 
           // corner of the local element S:
           // ( map the reference corners to the global corners: )
@@ -637,7 +637,7 @@ public:
                && ( (G_inverse_of_F_inverse_of_x[1] >= 0.0)
                     && ( G_inverse_of_F_inverse_of_x[1] <= (1.0 - G_inverse_of_F_inverse_of_x[0]) ) ) )
           {
-            LocalFunctionType local_corrector_disc_func = corrector_of_coarse_disc_func.localFunction(*local_grid_it);
+            auto local_corrector_disc_func = corrector_of_coarse_disc_func.localFunction(*local_grid_it);
 
             // create at quadrature with 3 quadrature points:
             Fem::CachingQuadrature< GridPartType, 0 > local_quad(*local_grid_it, 2);          // 3 points for linear pol in
@@ -727,7 +727,7 @@ public:
       // T = coarse_it
 
       // get geoemetry of coarse grid entity:
-      const EnGeometryType& geometry_of_T = coarse_it->geometry();
+      const auto& geometry_of_T = coarse_it->geometry();
 
       // corner of the global element T:
       // ( map the reference corners to the global corners: )
@@ -772,7 +772,7 @@ public:
            && ( (F_inverse_of_x[1] >= 0.0) && ( F_inverse_of_x[1] <= (1.0 - F_inverse_of_x[0]) ) ) )
       {
 
-        const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
+        const auto local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
 
         // beschreibe das Dreieck mit Hilfe seiner Eckpunkt-Koordinaten (Konvexkombination) und schaue ob das Zentrum
         // des Fine-Grid elements in dieser Konvexkombination liegt.
@@ -814,7 +814,7 @@ public:
 
         typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
         const BasisFunctionSetType& baseSet = coarse_discreteFunctionSpace.basisFunctionSet(*coarse_it);
-        const unsigned int numMacroBaseFunctions = baseSet.numBaseFunctions();
+        const auto numMacroBaseFunctions = baseSet.numBaseFunctions();
 
         int cell_problem_id[numMacroBaseFunctions];
         for (unsigned int i = 0; i < numMacroBaseFunctions; ++i)
@@ -853,7 +853,7 @@ public:
           // S = local_grid_it
 
           // get geoemetry of the local grid entity:
-          const EnGeometryType& geometry_of_S = local_grid_it->geometry();
+          const auto& geometry_of_S = local_grid_it->geometry();
 
           // corner of the local element S:
           // ( map the reference corners to the global corners: )
@@ -903,7 +903,7 @@ public:
                && ( (G_inverse_of_F_inverse_of_x[1] >= 0.0)
                     && ( G_inverse_of_F_inverse_of_x[1] <= (1.0 - G_inverse_of_F_inverse_of_x[0]) ) ) )
           {
-            LocalFunctionType local_corrector_disc_func = corrector_of_coarse_disc_func.localFunction(*local_grid_it);
+            auto local_corrector_disc_func = corrector_of_coarse_disc_func.localFunction(*local_grid_it);
 
             // create at quadrature with 3 quadrature points:
             Fem::CachingQuadrature< GridPartType, 0 > local_quad(*local_grid_it, 2);          // 3 points for linear pol in
@@ -977,14 +977,14 @@ public:
     const IteratorType fine_it_end = fine_space.end();
     for (IteratorType fine_it = fine_space.begin(); fine_it != fine_it_end; ++fine_it)
     {
-      const EntityType& fine_en = *fine_it;
+      const auto& fine_en = *fine_it;
 
       const Fem::CachingQuadrature< GridPartType, 0 > quad(fine_en, quadOrd);
       // get local functions on current element
-      const LocalFunctionType local_fine_discrete_function = fine_discrete_function.localFunction(fine_en);
+      const auto local_fine_discrete_function = fine_discrete_function.localFunction(fine_en);
 
       // get geoemetry of entity
-      const EnGeometryType& fine_geo = fine_en.geometry();
+      const auto& fine_geo = fine_en.geometry();
 
       const int quadNop = quad.nop();
       for (int qp = 0; qp < quadNop; ++qp)
@@ -1042,10 +1042,10 @@ public:
     for (IteratorType fine_it = fine_discreteFunctionSpace.begin(); fine_it != fine_end; ++fine_it)
     {
       // get geoemetry of fine grid entity:
-      const EnGeometryType& fine_geo = fine_it->geometry();
+      const auto& fine_geo = fine_it->geometry();
 
       // entity
-      const EntityType& fine_entity = *fine_it;
+      const auto& fine_entity = *fine_it;
       const Fem::CachingQuadrature< GridPartType, 0 > quadrature(fine_entity, polOrd);
       // integrate
       const int quadratureNop = quadrature.nop();
@@ -1107,12 +1107,12 @@ public:
     for (IteratorType coarse_it = coarse_discreteFunctionSpace.begin(); coarse_it != coarse_entity_end; ++coarse_it)
     {
       const int coarse_entity_level = coarse_it->level();
-      const LocalFunctionType local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
+      const auto local_coarse_disc_func = coarse_disc_func.localFunction(*coarse_it);
 
       // create at quadrature with 3 quadrature points:
       const Fem::CachingQuadrature< GridPartType, 0 > coarse_quad(*coarse_it, 2);    // 3 points for linear pol in 2D
       // get geoemetry of coarse entity
-      const EnGeometryType& coarse_geo = coarse_it->geometry();
+      const auto& coarse_geo = coarse_it->geometry();
       DomainType coarse_quad_point[3];
       RangeType local_value_coarse_func[3];
       for (int qp = 0; qp < 3; ++qp)
@@ -1153,10 +1153,10 @@ public:
           const Fem::CachingQuadrature< GridPartType, 0 > fine_quad(*fine_it, quadOrd);
 
           // get local functions on current element
-          const LocalFunctionType local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
+          const auto local_fine_disc_func = fine_disc_func.localFunction(*fine_it);
 
           // get geoemetry of entity
-          const EnGeometryType& fine_geo = fine_it->geometry();
+          const auto& fine_geo = fine_it->geometry();
 
           const int fine_quadNop = fine_quad.nop();
           for (int qp = 0; qp < fine_quadNop; ++qp)

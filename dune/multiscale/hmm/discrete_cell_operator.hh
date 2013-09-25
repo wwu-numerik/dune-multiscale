@@ -28,16 +28,12 @@ class DiscreteCellProblemOperator : public Operator<typename HMMTraits::Periodic
                                     boost::noncopyable {
   typedef typename HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionImp;
   typedef typename CommonTraits::DiffusionType DiffusionImp;
-
   typedef PeriodicDiscreteFunctionImp DiscreteFunction;
   typedef DiffusionImp DiffusionModel;
-
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
   typedef typename DiscreteFunctionSpace::GridType GridType;
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
-
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
@@ -45,19 +41,14 @@ class DiscreteCellProblemOperator : public Operator<typename HMMTraits::Periodic
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
-
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
   typedef typename LagrangePointSet::Codim<1>::SubEntityIteratorType FaceDofIterator;
-
   typedef typename DiscreteFunctionSpace::IteratorType Iterator;
   typedef typename Iterator::Entity Entity;
   typedef typename Entity::Geometry Geometry;
-
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
-
   typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
 public:
