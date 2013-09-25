@@ -120,7 +120,6 @@ struct CommonTraits {
   typedef Dune::Fem::PetscDiscreteFunction<DiscreteFunctionSpaceType> DiscreteFunctionType;
   typedef Dune::Fem::PetscLinearOperator<DiscreteFunctionType, DiscreteFunctionType> FEMMatrix;
 
-  typedef DiscreteFunctionType::LocalFunctionType LocalFunctionType;
   typedef DiscreteFunctionType::DofIteratorType DofIteratorType;
 
   //!------------------------- for adaptive grid refinement ---------------------------------

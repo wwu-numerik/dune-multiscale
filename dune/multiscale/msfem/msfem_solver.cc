@@ -39,7 +39,7 @@ void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteF
     const HostEntity& host_entity = *host_entity_pointer;
 
     const SubgridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
-    LocalFunction host_loc_value = host_func.localFunction(host_entity);
+    auto host_loc_value = host_func.localFunction(host_entity);
 
     const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
     for (unsigned int i = 0; i < numBaseFunctions; ++i) {
@@ -84,7 +84,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
     localSolManager.loadLocalSolutions();
     auto& localSolutions = localSolManager.getLocalSolutions();
 
-    LocalFunction coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
+    auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
 
     if ((specifier.getOversamplingStrategy() == 3) || specifier.simplexCoarseGrid()) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
@@ -155,7 +155,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
           const SubgridLocalFunction sub_loc_value = localSolutions[0]->localFunction(subgridEntity);
 
           assert(localSolutions.size() == coarseSolutionLF.numDofs() + localSolManager.numBoundaryCorrectors());
-          LocalFunction host_loc_value = fine_scale_part.localFunction(fine_host_entity);
+          auto host_loc_value = fine_scale_part.localFunction(fine_host_entity);
 
           auto number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();
 

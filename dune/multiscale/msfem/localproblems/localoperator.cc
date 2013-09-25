@@ -81,27 +81,27 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   // gradient of micro scale base function:
   std::vector<typename BasisFunctionSetType::JacobianRangeType> gradient_phi(
       subDiscreteFunctionSpace_.mapper().maxNumDofs());
-  typename LocalFunctionType::JacobianRangeType diffusion_in_gradient_phi;
+  typename BasisFunctionSetType::JacobianRangeType diffusion_in_gradient_phi;
 
   const EntityIteratorType end = subDiscreteFunctionSpace_.end();
   for (EntityIteratorType it = subDiscreteFunctionSpace_.begin(); it != end; ++it) {
-    const EntityType& sub_grid_entity = *it;
-    const GeometryType& sub_grid_geometry = sub_grid_entity.geometry();
+    const auto& sub_grid_entity = *it;
+    const auto& sub_grid_geometry = sub_grid_entity.geometry();
 
     DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrixType> local_matrix(global_matrix, sub_grid_entity,
                                                                                        sub_grid_entity);
 
-    const BasisFunctionSetType& baseSet = local_matrix.domainBasisFunctionSet();
+    const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
     const QuadratureType quadrature(sub_grid_entity, 2 * subDiscreteFunctionSpace_.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to local grid entity)
-      const typename QuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
-      const DomainType global_point = sub_grid_geometry.global(local_point);
+      const auto& local_point = quadrature.point(quadraturePoint);
+      const auto global_point = sub_grid_geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * sub_grid_geometry.integrationElement(local_point);
 
@@ -140,8 +140,8 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
 
   const EntityIteratorType end = subDiscreteFunctionSpace_.end();
   for (EntityIteratorType it = subDiscreteFunctionSpace_.begin(); it != end; ++it) {
-    const EntityType& sub_grid_entity = *it;
-    const GeometryType& sub_grid_geometry = sub_grid_entity.geometry();
+    const auto& sub_grid_entity = *it;
+    const auto& sub_grid_geometry = sub_grid_entity.geometry();
     assert(sub_grid_entity.partitionType() == InteriorEntity);
 
     std::vector<int> sub_grid_entity_corner_is_relevant;
@@ -167,11 +167,11 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
     const QuadratureType quadrature(sub_grid_entity, 2 * subDiscreteFunctionSpace_.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to local grid entity)
-      const typename QuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
-      const DomainType global_point = sub_grid_geometry.global(local_point);
+      const auto& local_point = quadrature.point(quadraturePoint);
+      const auto global_point = sub_grid_geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * sub_grid_geometry.integrationElement(local_point);
 
@@ -193,7 +193,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i) {
         // A( x, \nabla \phi(x) )
-        typename LocalFunctionType::JacobianRangeType diffusion_in_gradient_phi;
+        typename BasisFunctionSetType::JacobianRangeType diffusion_in_gradient_phi;
         diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
         for (unsigned int j = 0; j < numBaseFunctions; ++j) {
           // stiffness contribution
@@ -209,19 +209,14 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
 
 void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpaceType& host_space,
                                                            LocalProblemOperator::DiscreteFunction& rhs) const {
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
-
-  const GridType& subGrid = discreteFunctionSpace.grid();
-  const HostGridPart& hostGridPart = host_space.gridPart();
+  const auto& discreteFunctionSpace = rhs.space();
+  const auto& subGrid = discreteFunctionSpace.grid();
+  const auto& hostGridPart = host_space.gridPart();
 
   // set Dirichlet Boundary to zero
-  const EntityIteratorType endit = discreteFunctionSpace.end();
-  for (EntityIteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
-    const EntityType& subgrid_entity = *it;
-
-    HostEntityPointer host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
-    const HostEntity& host_entity = *host_entity_pointer;
+  for (const auto& subgrid_entity : discreteFunctionSpace) {
+    auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
+    const auto & host_entity = *host_entity_pointer;
 
     HostIntersectionIterator iit = hostGridPart.ibegin(host_entity);
     const HostIntersectionIterator endiit = hostGridPart.iend(host_entity);
@@ -229,8 +224,8 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
       if (iit->neighbor()) // if there is a neighbor entity
       {
         // check if the neighbor entity is in the subgrid
-        const HostEntityPointer neighborHostEntityPointer = iit->outside();
-        const HostEntity& neighborHostEntity = *neighborHostEntityPointer;
+        const auto neighborHostEntityPointer = iit->outside();
+        const auto& neighborHostEntity = *neighborHostEntityPointer;
 
         if (subGrid.contains<0>(neighborHostEntity)) {
           continue;
@@ -239,7 +234,7 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
         continue;
       }
 
-      const LagrangePointSet& lagrangePointSet = discreteFunctionSpace.lagrangePointSet(subgrid_entity);
+      const auto& lagrangePointSet = discreteFunctionSpace.lagrangePointSet(subgrid_entity);
 
       const int face = (*iit).indexInInside();
 
@@ -254,25 +249,15 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
 } // end method
 
 double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
-  double norm = 0.0;
-
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename DiscreteFunctionSpaceType::GridType GridType;
+  const auto& discreteFunctionSpace = rhs.space();
 
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
-
-  const EntityIteratorType endit = discreteFunctionSpace.end();
-  for (EntityIteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
-    // entity
-    const EntityType& entity = *it;
-
+  double norm = 0.0;
+  for (const auto& entity : discreteFunctionSpace) {
     // create quadrature for given geometry type
     const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
-
-    // get geoemetry of entity
-    const GeometryType& geo = entity.geometry();
-
-    const LocalFunctionType localRHS = rhs.localFunction(*it);
+    const auto& geo = entity.geometry();
+    const auto localRHS = rhs.localFunction(entity);
 
     // integrate
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
@@ -284,17 +269,15 @@ double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunctio
       norm += weight * value * value;
     }
   }
-
   return norm;
 } // end method
 
 void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e, // direction 'e'
                                               // rhs local msfem problem:
                                               LocalProblemOperator::DiscreteFunction& local_problem_RHS) const {
-
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BaseFunctionSet;
 
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = local_problem_RHS.space();
+  const auto& discreteFunctionSpace = local_problem_RHS.space();
 
   // set entries to zero:
   local_problem_RHS.clear();
@@ -302,25 +285,19 @@ void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e, // dir
   // gradient of micro scale base function:
   std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
 
-  const EntityIteratorType end = discreteFunctionSpace.end();
-  for (EntityIteratorType it = discreteFunctionSpace.begin(); it != end; ++it) {
-    const EntityType& local_grid_entity = *it;
-    const GeometryType& geometry = local_grid_entity.geometry();
-
-    LocalFunctionType elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
-
-    const BaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
+  for (const auto& local_grid_entity : discreteFunctionSpace) {
+    const auto& geometry = local_grid_entity.geometry();
+    auto elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
+    const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const QuadratureType quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename QuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
-
+      const auto& local_point = quadrature.point(quadraturePoint);
       // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
-
       // global point in the subgrid
-      const DomainType global_point = geometry.global(local_point);
+      const auto global_point = geometry.global(local_point);
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // A^eps(x) e
@@ -374,8 +351,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
   // get dirichlet and neumann data
   auto neumannDataPtr = Dune::Multiscale::Problem::getNeumannData();
   const auto& neumannData = *neumannDataPtr;
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = allLocalRHS[0]->space();
+  const auto& discreteFunctionSpace = allLocalRHS[0]->space();
 
   //! @todo we should use the dirichlet constraints here somehow
   SubDiscreteFunctionType dirichletExtension("dirichletExtension", discreteFunctionSpace);
@@ -402,24 +378,24 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
   for (auto& localGridCell : discreteFunctionSpace) {
-    const GeometryType& geometry = localGridCell.geometry();
+    const auto& geometry = localGridCell.geometry();
     const bool hasBoundaryIntersection = localGridCell.hasBoundaryIntersections();
-    LocalFunctionType dirichletLF = dirichletExtension.localFunction(localGridCell);
+    auto dirichletLF = dirichletExtension.localFunction(localGridCell);
     JacobianRangeType dirichletJac(0.0);
 
     for (std::size_t coarseBaseFunc = 0; coarseBaseFunc < allLocalRHS.size(); ++coarseBaseFunc) {
-      LocalFunctionType rhsLocalFunction = allLocalRHS[coarseBaseFunc]->localFunction(localGridCell);
+      auto rhsLocalFunction = allLocalRHS[coarseBaseFunc]->localFunction(localGridCell);
 
-      const BasisFunctionSetType& baseSet = rhsLocalFunction.basisFunctionSet();
+      const auto& baseSet = rhsLocalFunction.basisFunctionSet();
       const auto numBaseFunctions = baseSet.size();
 
       if (coarseBaseFunc < numInnerCorrectors || coarseBaseFunc == numInnerCorrectors + 1) {
         const QuadratureType quadrature(localGridCell, 2 * discreteFunctionSpace.order() + 2);
-        const size_t numQuadraturePoints = quadrature.nop();
+        const auto numQuadraturePoints = quadrature.nop();
         for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
           const auto& local_point = quadrature.point(quadraturePoint);
           // global point in the subgrid
-          const DomainType global_point = geometry.global(local_point);
+          const auto global_point = geometry.global(local_point);
 
           const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
@@ -449,12 +425,12 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
         for (auto iIt = discreteFunctionSpace.gridPart().ibegin(localGridCell); iIt != intEnd; ++iIt) {
           const auto& intersection = *iIt;
           if (Dune::Multiscale::Problem::isNeumannBoundary(intersection)) {
-            const int orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
-            const int quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
+            const auto orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
+            const auto quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
             FaceQuadratureType faceQuad(discreteFunctionSpace.gridPart(), intersection, quadOrder,
                                         FaceQuadratureType::INSIDE);
             RangeType neumannValue(0.0);
-            const size_t numQuadPoints = faceQuad.nop();
+            const auto numQuadPoints = faceQuad.nop();
             // loop over all quadrature points
             for (unsigned int iqP = 0; iqP < numQuadPoints; ++iqP) {
               // get local coordinate of quadrature point
@@ -469,7 +445,6 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
               auto insidePtr = intersection.inside();
               const auto& insideEntity = *insidePtr;
               const auto& xInInside = insideEntity.geometry().local(xGlobal);
-
               const double factor = faceGeometry.integrationElement(xLocal) * faceQuad.weight(iqP);
 
               neumannData.evaluate(xGlobal, neumannValue);
@@ -494,18 +469,14 @@ void LocalProblemOperator::assemble_local_RHS(
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const {
 
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = local_problem_RHS.space();
-
-  // set entries to zero:
+  const auto& discreteFunctionSpace = local_problem_RHS.space();
   local_problem_RHS.clear();
 
   // gradient of micro scale base function:
   std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
 
-  const EntityIteratorType end = discreteFunctionSpace.end();
-  for (EntityIteratorType it = discreteFunctionSpace.begin(); it != end; ++it) {
-    const EntityType& local_grid_entity = *it;
-    const GeometryType& geometry = local_grid_entity.geometry();
+  for (const auto& local_grid_entity : discreteFunctionSpace) {
+    const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
     // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
@@ -541,19 +512,19 @@ void LocalProblemOperator::assemble_local_RHS(
         }
       }
     }
-    LocalFunctionType elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
+    auto elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
-    const BasisFunctionSetType& baseSet = elementOfRHS.basisFunctionSet();
+    const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const QuadratureType quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename QuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const auto& local_point = quadrature.point(quadraturePoint);
 
       // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
       // global point in the subgrid
-      const DomainType global_point = geometry.global(local_point);
+      const auto global_point = geometry.global(local_point);
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // A^eps(x) e
@@ -591,32 +562,25 @@ void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(
     DiscreteFunction& local_problem_RHS) const {
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
-
   typedef typename DiscreteFunctionSpace::IteratorType Iterator;
   typedef typename Iterator::Entity Entity;
   typedef typename Entity::Geometry Geometry;
-
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
   typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
-  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
-  const GridType& subGrid = discreteFunctionSpace.grid();
-
-  // set entries to zero:
+  const auto& discreteFunctionSpace = local_problem_RHS.space();
+  const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();
 
   // gradient of micro scale base function:
   std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
 
-  const Iterator end = discreteFunctionSpace.end();
-  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it) {
-    const Entity& local_grid_entity = *it;
-    const Geometry& geometry = local_grid_entity.geometry();
+  for (const auto& local_grid_entity : discreteFunctionSpace) {
+    const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
-    HostEntityPointer host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
-    const HostEntity& host_entity = *host_entity_pointer;
+    auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    const auto& host_entity = *host_entity_pointer;
 
     // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
     if (oversampling_strategy == 3) {
@@ -651,20 +615,20 @@ void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(
         }
       }
     }
-    LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
-    const HostLocalFunction loc_dirichlet_extension = dirichlet_extension.localFunction(host_entity);
+    auto elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
+    const auto loc_dirichlet_extension = dirichlet_extension.localFunction(host_entity);
 
-    const BasisFunctionSetType& baseSet = elementOfRHS.basisFunctionSet();
+    const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const auto& local_point = quadrature.point(quadraturePoint);
 
       // remember, we are concerned with: - \int_T A( \nabla dirichlet_extension ) · ∇ \phi(x)
       // global point in the subgrid
-      const DomainType global_point = geometry.global(local_point);
+      const auto global_point = geometry.global(local_point);
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       JacobianRangeType gradient_dirichlet_extension;
@@ -707,32 +671,25 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
     DiscreteFunction& local_problem_RHS) const {
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
-
   typedef typename DiscreteFunctionSpace::IteratorType Iterator;
   typedef typename Iterator::Entity Entity;
   typedef typename Entity::Geometry Geometry;
-
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
   typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
-  const DiscreteFunctionSpace& discreteFunctionSpace = local_problem_RHS.space();
-  const GridType& subGrid = discreteFunctionSpace.grid();
-
-  // set entries to zero:
+  const auto& discreteFunctionSpace = local_problem_RHS.space();
+  const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();
 
   // gradient of micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace.mapper().maxNumDofs());
 
-  const Iterator end = discreteFunctionSpace.end();
-  for (Iterator it = discreteFunctionSpace.begin(); it != end; ++it) {
-    const Entity& local_grid_entity = *it;
-    const Geometry& geometry = local_grid_entity.geometry();
+  for (const auto& local_grid_entity : discreteFunctionSpace) {
+    const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
-    HostEntityPointer host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
-    const HostEntity& host_entity = *host_entity_pointer;
+    const auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    const auto& host_entity = *host_entity_pointer;
 
     // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
     if (oversampling_strategy == 3) {
@@ -766,8 +723,8 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
       }
     }
 
-    LocalFunction elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
-    const BasisFunctionSetType& baseSet = elementOfRHS.basisFunctionSet();
+    auto elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
+    const auto& baseSet = elementOfRHS.basisFunctionSet();
 
     const auto& lagrangePointSet = host_space.lagrangePointSet(host_entity);
 
@@ -827,36 +784,28 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems(const HostDiscreteFunc
                                                           double clement_weight,
                                                           DiscreteFunction& local_problem_RHS) const {
 
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = local_problem_RHS.space();
-
-  const GridType& subGrid = discreteFunctionSpace.grid();
-
-  // set entries to zero:
+  const auto& discreteFunctionSpace = local_problem_RHS.space();
+  const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();
 
   // gradient of micro scale base function:
   std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
-
-  const EntityIteratorType end = discreteFunctionSpace.end();
-  for (EntityIteratorType it = discreteFunctionSpace.begin(); it != end; ++it) {
-    const EntityType& local_grid_entity = *it;
-    const GeometryType& geometry = local_grid_entity.geometry();
+  for (const auto& local_grid_entity : discreteFunctionSpace) {
+    const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
+    auto elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
-    LocalFunctionType elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
-
-    const BasisFunctionSetType& baseSet = elementOfRHS.basisFunctionSet();
+    const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    HostEntityPointer host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
-    const HostEntity& host_entity = *host_entity_pointer;
-
-    HostLocalFunction local_coarse_basis_func = coarse_basis_func.localFunction(host_entity);
+    auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    const auto& host_entity = *host_entity_pointer;
+    auto local_coarse_basis_func = coarse_basis_func.localFunction(host_entity);
 
     const QuadratureType quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename QuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const auto& local_point = quadrature.point(quadraturePoint);
 
       const double weight =
           clement_weight * quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
@@ -880,26 +829,26 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
     std::vector<std::unique_ptr<LocalProblemOperator::DiscreteFunction>>& local_problem_RHS) const {
   const DiscreteFunctionSpaceType& discreteFunctionSpace = local_problem_RHS[0]->space();
 
-  const GridType& subGrid = discreteFunctionSpace.grid();
+  const auto& subGrid = discreteFunctionSpace.grid();
 
   for (auto& rhs : local_problem_RHS) {
     rhs->clear();
   }
 
-  for (const EntityType& local_grid_entity : discreteFunctionSpace) {
-    const GeometryType& geometry = local_grid_entity.geometry();
+  for (const auto& local_grid_entity : discreteFunctionSpace) {
+    const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
-    const BasisFunctionSetType& baseSet = (local_problem_RHS[0]->localFunction(local_grid_entity)).basisFunctionSet();
+    const auto& baseSet = local_problem_RHS[0]->localFunction(local_grid_entity).basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    HostEntityPointer host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
-    const HostEntity& host_entity = *host_entity_pointer;
+    auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    const auto& host_entity = *host_entity_pointer;
 
     const QuadratureType quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename QuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const auto& local_point = quadrature.point(quadraturePoint);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
@@ -911,7 +860,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
 
         HostLocalFunction local_coarse_basis_func =
             coarse_basis_func_list[interior_basis_func_id]->localFunction(host_entity);
-        LocalFunctionType elementOfRHS = local_problem_RHS[j]->localFunction(local_grid_entity);
+        auto elementOfRHS = local_problem_RHS[j]->localFunction(local_grid_entity);
 
         RangeType value_coarse_basis_func;
         local_coarse_basis_func.evaluate(quadrature[quadraturePoint], value_coarse_basis_func);
@@ -949,7 +898,7 @@ void LocalProblemOperator::projectDirichletValues(HostDiscreteFunction& function
           const auto faceNumber = intersection.indexInInside();
           for (auto lp : DSC::lagrangePointSetRange<1>(function.space(), localCell, faceNumber)) {
             auto lagrangePoint = lagrangePointSet.point(lp);
-            DomainType lagrangePointGlobal = localCell.geometry().global(lagrangePoint);
+            auto lagrangePointGlobal = localCell.geometry().global(lagrangePoint);
             RangeType dirichletVal(0.0);
             dirichletData.evaluate(lagrangePointGlobal, dirichletVal);
             funcLocal[lp] = dirichletVal;

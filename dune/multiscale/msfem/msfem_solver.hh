@@ -28,39 +28,22 @@ namespace MsFEM {
 class Elliptic_MsFEM_Solver {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-
   typedef typename DiscreteFunctionType::FunctionSpaceType FunctionSpace;
-
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunction;
-
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-
   typedef typename DiscreteFunctionSpace::GridType HostGrid;
-
   typedef typename HostGrid::Traits::LeafIndexSet HostGridLeafIndexSet;
-
   typedef typename HostGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
-
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
-
-  // typedef typename HostGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
-  // LevelEntityIteratorType;
-
   typedef typename DiscreteFunctionSpace::IteratorType HostgridIterator;
-
   typedef typename HostgridIterator::Entity HostEntity;
-
   typedef typename HostEntity::EntityPointer HostEntityPointer;
+  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   static const int faceCodim = 1;
-
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   // --------------------------- subgrid typedefs ------------------------------------
   typedef MsFEMTraits::SubGridListType SubGridListType;

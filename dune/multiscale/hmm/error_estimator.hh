@@ -8,6 +8,7 @@
 #include <config.h>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/ranges.hh>
 
 //!NOTE: 'ErrorEstimator' requires an access to the 'ModelProblemData' class (typically defined in
 // problem_specification.hh), which provides us with infomration about epsilon, delta, etc.
@@ -53,7 +54,7 @@ private:
 
   typedef DiscreteFunctionImp DiscreteFunctionType;
 
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
+
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionType::DofIteratorType DofIteratorType;
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
@@ -105,16 +106,14 @@ public:
   // the new method:
   //! method to get the local mesh size H_entity (of the macro mesh)
   // works only for our 2D examples!!!!
-  RangeType getH(const EntityType& entity) const {
+  RangeType getH(const auto& entity) const {
     // entity_H means H (the diameter of the entity)
     RangeType entity_H = 0.0;
 
     const GridPartType& gridPart = discreteFunctionSpace_.gridPart();
 
     // compute the size of the faces of the entities and selected the largest.
-    IntersectionIteratorType endnit = gridPart.iend(entity);
-
-    for (IntersectionIteratorType nit = gridPart.ibegin(entity); nit != endnit; ++nit) {
+    for (const auto& intersection : DSC::intersectionRange(entity)) {
       FaceQuadratureType innerFaceQuadrature(gridPart, *nit, 0, FaceQuadratureType::INSIDE);
 
       DomainType scaledOuterNormal = nit->integrationOuterNormal(innerFaceQuadrature.localPoint(0));
@@ -134,7 +133,7 @@ public:
 
   // return:  H_T^4 ||f||_{L^2(T)}^2
   template <class SourceType>
-  RangeType indicator_f(const SourceType& f, const EntityType& entity) const {
+  RangeType indicator_f(const SourceType& f, const auto& entity) const {
     // create quadrature for given geometry type
     Fem::CachingQuadrature<GridPartType, 0> entityQuadrature(entity, spacePolOrd);
 
@@ -163,7 +162,7 @@ public:
   } // indicator_f
 
   // \eta_T^{app}
-  RangeType indicator_app_1(const EntityType& entity, const DiscreteFunctionType& u_H,
+  RangeType indicator_app_1(const auto& entity, const DiscreteFunctionType& u_H,
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
@@ -230,7 +229,7 @@ public:
         }
       }
 
-      const size_t numQuadraturePoints = high_order_quadrature.nop();
+      const auto numQuadraturePoints = high_order_quadrature.nop();
       for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
         // local (barycentric) coordinates (with respect to entity)
         const typename PeriodicEntityQuadratureType::CoordinateType& y_barycentric =
@@ -264,7 +263,7 @@ public:
   } // end of method
 
   // \bar{\eta}_T^{app}
-  RangeType indicator_app_2(const EntityType& entity, const DiscreteFunctionType& u_H,
+  RangeType indicator_app_2(const auto& entity, const DiscreteFunctionType& u_H,
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
@@ -323,7 +322,7 @@ public:
       JacobianRangeType diffusive_flux_y_S;
       diffusion_.diffusiveFlux(globalPoint_center, direction_of_diffusion, diffusive_flux_y_S);
 
-      const size_t numQuadraturePoints = high_order_quadrature.nop();
+      const auto numQuadraturePoints = high_order_quadrature.nop();
       for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
         // local (barycentric) coordinates (with respect to entity)
         const typename PeriodicEntityQuadratureType::CoordinateType& y_barycentric =
@@ -368,8 +367,8 @@ public:
     EntityPointerType inner_it = intersection.inside();
     EntityPointerType outer_it = intersection.outside();
 
-    const EntityType& inner_entity = *inner_it;
-    const EntityType& outer_entity = *outer_it;
+    const auto& inner_entity = *inner_it;
+    const auto& outer_entity = *outer_it;
 
     FaceQuadratureType faceQuadrature(discreteFunctionSpace_.gridPart(), intersection, 0, FaceQuadratureType::INSIDE);
 
@@ -482,7 +481,7 @@ public:
   // the case described above!)
   // here, uniform also means that we have the same number of elements in every direction!)
   // \bar{\eta}_T^{res}
-  RangeType indicator_res_T(const EntityType& entity, const DiscreteFunctionType& u_H,
+  RangeType indicator_res_T(const auto& entity, const DiscreteFunctionType& u_H,
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
@@ -509,19 +508,11 @@ public:
 
     // edge length of a boundary face
     RangeType ref_edge_length = 1.0;
-
-    GridPartType auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
-
-    IteratorType micro_it = auxiliaryDiscreteFunctionSpace_.begin();
-
+    const auto& auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
     // we just need one element to determine all the properties (due to uniform refinement)!
-    const IntersectionIteratorType endnit = auxGridPart.iend(*micro_it);
-    for (IntersectionIteratorType nit = auxGridPart.ibegin(*micro_it); nit != endnit; ++nit) {
-      const FaceGeometryType& faceGeometry = nit->geometry();
-
-      if (ref_edge_length > faceGeometry.volume()) {
-        ref_edge_length = faceGeometry.volume();
-      }
+    for (const auto& intersection : DSC::intersectionRange(auxGridPart, *micro_it)) {
+      const auto& faceGeometry = intersection.geometry();
+      ref_edge_length = std::max(ref_edge_length, faceGeometry.volume());
     }
 
     // number of boundary faces per cube-edge:
@@ -556,7 +547,7 @@ public:
     for (IteratorType p_it = auxiliaryDiscreteFunctionSpace_.begin(); p_it != p_endit; ++p_it) {
       // --------- the 'inner entity' (micro grid) ------------
 
-      const EntityType& micro_entity = *p_it;
+      const auto& micro_entity = *p_it;
 
       // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
       const EntityQuadratureType one_point_quadrature(micro_entity, 0);
@@ -584,24 +575,21 @@ public:
 
       // ----------------------------------------------------
 
-      const IntersectionIteratorType p_endnit = auxGridPart.iend(micro_entity);
-      for (IntersectionIteratorType p_nit = auxGridPart.ibegin(micro_entity); p_nit != p_endnit; ++p_nit) {
+      for (const auto& intersection : DSC::intersectionRange(auxGridPart, entity)) {
         // Note: we are on the zero-centered unit cube! (That's why everything works!)
 
-        const FaceQuadratureType faceQuadrature(auxGridPart, *p_nit, 0, FaceQuadratureType::INSIDE);
-        const FaceGeometryType& faceGeometry = p_nit->geometry();
-
-        const RangeType edge_length = faceGeometry.volume();
-
-        const DomainType unitOuterNormal = p_nit->unitOuterNormal(faceQuadrature.localPoint(0));
+        const FaceQuadratureType faceQuadrature(auxGridPart, intersection, 0, FaceQuadratureType::INSIDE);
+        const auto& faceGeometry = intersection.geometry();
+        const auto edge_length = faceGeometry.volume();
+        const auto unitOuterNormal = p_nit->unitOuterNormal(faceQuadrature.localPoint(0));
 
         // if there is a neighbor entity (the normal gradient jumps)
         if (p_nit->neighbor()) {
           // --------- the 'outer entity' (micro grid) ------------
           // ( neighbor entity )
 
-          const EntityPointerType outer_p_it = p_nit->outside();
-          const EntityType& outer_micro_entity = *outer_p_it;
+          const EntityPointerType outer_p_it = intersection.outside();
+          const auto& outer_micro_entity = *outer_p_it;
 
           // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
           const EntityQuadratureType outer_one_point_quadrature(outer_micro_entity, 0);
@@ -703,7 +691,7 @@ public:
   // the case described above!)
   // here, uniform also means that we have the same number of elements in every direction!)
   // \eta_T^{tfr}
-  RangeType indicator_tfr_1(const EntityType& entity, const DiscreteFunctionType& u_H,
+  RangeType indicator_tfr_1(const auto& entity, const DiscreteFunctionType& u_H,
                             const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
@@ -733,20 +721,11 @@ public:
 
     // edge length of a boundary face
     RangeType ref_edge_length = 1.0;
-
-    GridPartType auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
-
-    IteratorType micro_it = auxiliaryDiscreteFunctionSpace_.begin();
-
+    const auto& auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
     // we just need one element to determine all the properties (due to uniform refinement)!
-    const IntersectionIteratorType endnit = auxGridPart.iend(*micro_it);
-    for (IntersectionIteratorType nit = auxGridPart.ibegin(*micro_it); nit != endnit; ++nit) {
-      FaceQuadratureType faceQuadrature(auxGridPart, *nit, 1, FaceQuadratureType::INSIDE);
-      const FaceGeometryType& faceGeometry = nit->geometry();
-
-      if (ref_edge_length > faceGeometry.volume()) {
-        ref_edge_length = faceGeometry.volume();
-      }
+    for (const auto& intersection : DSC::intersectionRange(auxGridPart, entity)) {
+      const FaceGeometryType& faceGeometry = intersection.geometry();
+      ref_edge_length = std::max(ref_edge_length, faceGeometry.volume());
     }
 
     // number of boundary faces per (\epsilon/\delta-scaled) cube edge:
@@ -774,17 +753,12 @@ public:
     // 4. the situation is identical for 'abs(x_E)=1/2'.
 
     // iterator over the elements of the periodic micro grid:
-    const IteratorType p_endit = auxiliaryDiscreteFunctionSpace_.end();
-    for (IteratorType p_it = auxiliaryDiscreteFunctionSpace_.begin(); p_it != p_endit; ++p_it) {
-      // --------- the 'inner entity' (micro grid) ------------
-
-      const EntityType& micro_entity = *p_it;
-
+    for (const auto& micro_entity : auxiliaryDiscreteFunctionSpace_) {
       // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
       const EntityQuadratureType one_point_quadrature(micro_entity, 0);
 
       // Q_h(u_H)(x_T,y) on the micro entity:
-      PeriodicLocalFunctionType loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
       JacobianRangeType gradient_Q_u_H_x_T(0.);
       loc_Q_u_H_x_T.jacobian(one_point_quadrature[0], gradient_Q_u_H_x_T);
 
@@ -806,20 +780,16 @@ public:
 
       if ((fabs(y_S[1]) <= ((0.5 * (epsilon_estimated / delta)))) &&
           (fabs(y_S[0]) <= ((0.5 * (epsilon_estimated / delta))))) {
-        // ----------------------------------------------------
 
-        const IntersectionIteratorType p_endnit = auxGridPart.iend(micro_entity);
-        for (IntersectionIteratorType p_nit = auxGridPart.ibegin(micro_entity); p_nit != p_endnit; ++p_nit) {
+        for (const auto& intersection : DSC::intersectionRange(auxGridPart, entity)) {
+
           // Note: we are on the zero-centered unit cube! (That's why everything works!)
 
-          const FaceQuadratureType faceQuadrature(auxGridPart, *p_nit, 0, FaceQuadratureType::INSIDE);
-          const FaceGeometryType& faceGeometry = p_nit->geometry();
-
-          const RangeType edge_length = faceGeometry.volume();
-
-          const DomainType unitOuterNormal = p_nit->unitOuterNormal(faceQuadrature.localPoint(0));
-
-          const DomainType& edge_center = geometry_S.global(faceQuadrature.point(0));
+          const FaceQuadratureType faceQuadrature(auxGridPart, intersection, 0, FaceQuadratureType::INSIDE);
+          const auto& faceGeometry = intersection.geometry();
+          const auto edge_length = faceGeometry.volume();
+          const auto unitOuterNormal = p_nit->unitOuterNormal(faceQuadrature.localPoint(0));
+          const auto& edge_center = geometry_S.global(faceQuadrature.point(0));
 
           if ((fabs(edge_center[0]) == ((0.5 * (epsilon_estimated / delta)))) ||
               (fabs(edge_center[1]) == ((0.5 * (epsilon_estimated / delta))))) {
@@ -877,21 +847,21 @@ public:
             // --------- the 'outer entity' (micro grid) ------------
             // ( neighbor entity )
 
-            const EntityPointerType outer_p_it = p_nit->outside();
-            const EntityType& outer_micro_entity = *outer_p_it;
+            const auto outer_p_it = p_nit->outside();
+            const auto& outer_micro_entity = *outer_p_it;
 
             // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
             const EntityQuadratureType outer_one_point_quadrature(outer_micro_entity, 0);
 
             // Q_h(u_H)(x_T,y) on the neighbor entity:
-            PeriodicLocalFunctionType outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(outer_micro_entity);
+            auto outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(outer_micro_entity);
             JacobianRangeType gradient_outer_Q_u_H_x_T(0.);
             outer_loc_Q_u_H_x_T.jacobian(outer_one_point_quadrature[0], gradient_outer_Q_u_H_x_T);
 
             // S denotes the micro grid element (i.e. 'micro_entity')
-            const EntityGeometryType& outer_geometry_S = outer_micro_entity.geometry();
+            const auto& outer_geometry_S = outer_micro_entity.geometry();
             // outer_y_S denotes the barycenter of the neighbor micro grid element of S:
-            const DomainType& outer_y_S = outer_geometry_S.global(outer_one_point_quadrature.point(0));
+            const auto& outer_y_S = outer_geometry_S.global(outer_one_point_quadrature.point(0));
 
             // to evaluate A^{\epsilon}_h (in center of current outer entity):
             DomainType outer_globalPoint;
@@ -939,7 +909,7 @@ public:
   // This indicator does not exist in theory. It is is additionally multiplied with h^3 to fit the other orders of
   // convergence. In this setting it is more suitable for a comparison to capture the effect of boundary jumps in the
   // case of a wrong boundary condition
-  RangeType indicator_effective_tfr(const EntityType& entity, const DiscreteFunctionType& u_H,
+  RangeType indicator_effective_tfr(const auto& entity, const DiscreteFunctionType& u_H,
                                     const PeriodicDiscreteFunctionType& corrector_u_H_on_entity) const {
     RangeType local_indicator(0.0);
 
@@ -949,8 +919,8 @@ public:
     const EntityQuadratureType entityQuadrature(entity, 0); // 0 = polynomial order
     // the global quadrature (quadrature on the macro element T)
 
-    const EntityGeometryType& globalEntityGeometry = entity.geometry();
-    const DomainType& x_T = globalEntityGeometry.global(entityQuadrature.point(0));
+    const auto& globalEntityGeometry = entity.geometry();
+    const auto& x_T = globalEntityGeometry.global(entityQuadrature.point(0));
     const RangeType entityVolume =
         entityQuadrature.weight(0) * globalEntityGeometry.integrationElement(entityQuadrature.point(0));
 
@@ -965,7 +935,7 @@ public:
 
     // edge length of a boundary face
     RangeType ref_edge_length = 1.0;
-    const GridPartType& auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
+    const auto& auxGridPart = auxiliaryDiscreteFunctionSpace_.gridPart();
     IteratorType micro_it = auxiliaryDiscreteFunctionSpace_.begin();
 
     // we just need one element to determine all the properties (due to uniform refinement)!
@@ -1013,7 +983,7 @@ public:
     for (IteratorType p_it = auxiliaryDiscreteFunctionSpace_.begin(); p_it != p_endit; ++p_it) {
       // --------- the 'inner entity' (micro grid) ------------
 
-      const EntityType& micro_entity = *p_it;
+      const auto& micro_entity = *p_it;
 
       // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
       const EntityQuadratureType one_point_quadrature(micro_entity, 0);
@@ -1113,7 +1083,7 @@ public:
             // ( neighbor entity )
 
             const EntityPointerType outer_p_it = p_nit->outside();
-            const EntityType& outer_micro_entity = *outer_p_it;
+            const auto& outer_micro_entity = *outer_p_it;
 
             // one point quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) )
             const EntityQuadratureType outer_one_point_quadrature(outer_micro_entity, 0);

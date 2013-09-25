@@ -126,7 +126,7 @@ void CellProblemSolver::solvecellproblem(
 
     const Dune::Fem::LPNorm<PeriodicDiscreteFunctionType::GridPartType> l2norm(cell_problem_residual.space().gridPart(),
                                                                                2);
-    RangeType relative_newton_error = std::numeric_limits<RangeType>::max();
+    auto relative_newton_error = std::numeric_limits<RangeType>::max();
 
     int iteration_step = 0;
 
@@ -208,35 +208,14 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType& discreteFunctionSpace,
     const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
     ) const {
-  typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-
+  typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-
-  typedef typename DiscreteFunctionSpaceType::GridType GridType;
-
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-
-  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
-
-  typedef typename GridType::Codim<0>::Entity EntityType;
-  typedef typename EntityType::Geometry EntityGeometryType;
-
   typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
 
-  enum {
-    dimension = GridType::dimension
-  };
-  enum {
-    maxnumOfBaseFct = 100
-  };
-
-  std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
+  static const int maxnumOfBaseFct = 100;
+  const  std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
   DiscreteFunctionWriter dfw(cell_solution_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_baseSet");
@@ -246,17 +225,15 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
   std::size_t number_of_cell_problem = 0;
 
-  IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
+  for (const auto& entity : discreteFunctionSpace) {
+    typedef std::remove_reference<decltype(entity)>::type EntityType;
     // gradients of the macroscopic base functions
     std::vector<JacobianRangeType> gradientPhi(maxnumOfBaseFct);
 
-    // entity
-    const EntityType& entity = *it;
-    const BasisFunctionSetType baseSet = discreteFunctionSpace.basisFunctionSet(entity);
-    const EntityGeometryType& geometry = entity.geometry();
+    const auto baseSet = discreteFunctionSpace.basisFunctionSet(entity);
+    const auto& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
-    const DomainType barycenter_of_entity = geometry.global(quadrature.point(0));
+    const auto barycenter_of_entity = geometry.global(quadrature.point(0));
 
     // number of base functions on entity
     const auto numBaseFunctions = baseSet.size();
@@ -279,7 +256,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
       dfw.append(correctorPhi_i);
 
       // check if we use a correct numeration of the cell problems:
-      typename EntityType::EntityPointer entity_pointer(*it);
+      typename EntityType::EntityPointer entity_pointer(entity);
       if (cp_num_manager.get_number_of_cell_problem(entity_pointer, i) != number_of_cell_problem) {
         DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
       }
@@ -301,32 +278,17 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 void
 CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctionType& macro_discrete_function) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
-
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
-
   typedef typename GridType::Codim<0>::Entity EntityType;
   typedef typename EntityType::Geometry EntityGeometryType;
 
   typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
 
-  enum {
-    dimension = GridType::dimension
-  };
-  enum {
-    maxnumOfBaseFct = 100
-  };
   std::string cell_solution_location = subdir_ + "/_cellSolutions_discFunc";
   DiscreteFunctionWriter dfw(cell_solution_location);
 
@@ -335,18 +297,15 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
   // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
   Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = macro_discrete_function.space();
+  const auto& discreteFunctionSpace = macro_discrete_function.space();
 
   int number_of_entity = 0;
-  const IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
-    // entity
-    const EntityType& entity = *it;
-    const EntityGeometryType& geometry = entity.geometry();
+  for (const auto& entity : discreteFunctionSpace) {
+    const auto& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
-    const DomainType barycenter_of_entity = geometry.global(quadrature.point(0));
+    const auto barycenter_of_entity = geometry.global(quadrature.point(0));
 
-    LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
+    auto local_macro_disc = macro_discrete_function.localFunction(entity);
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(quadrature[0], grad_macro_discrete_function);
 
@@ -382,33 +341,17 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
     ) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
-
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
-
   typedef typename GridType::Codim<0>::Entity EntityType;
   typedef typename EntityType::EntityPointer EntityPointerType;
   typedef typename EntityType::Geometry EntityGeometryType;
-
   typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
 
-  enum {
-    dimension = GridType::dimension
-  };
-  enum {
-    maxnumOfBaseFct = 100
-  };
   // where we save the solutions:
   const std::string cell_solution_location = subdir_ + "/_JacCorCellSolutions_baseSet_discFunc";
   DiscreteFunctionWriter dfw(cell_solution_location);
@@ -426,22 +369,18 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
   std::size_t number_of_cell_problem = 0;
 
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = macro_discrete_function.space();
+  const auto& discreteFunctionSpace = macro_discrete_function.space();
 
   int number_of_entity = 0;
-  const IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
+  for (const auto& entity : discreteFunctionSpace) {
+    const auto baseSet = discreteFunctionSpace.basisFunctionSet(entity);
     // gradients of the macroscopic base functions
-    std::vector<JacobianRangeType> gradientPhi(maxnumOfBaseFct);
-
-    // entity
-    const EntityType& entity = *it;
-    const BasisFunctionSetType baseSet = discreteFunctionSpace.basisFunctionSet(entity);
-    const EntityGeometryType& geometry = entity.geometry();
+    std::vector<JacobianRangeType> gradientPhi(baseSet.size());
+    const auto& geometry = entity.geometry();
     const EntityQuadratureType quadrature(entity, 0);
-    const DomainType barycenter_of_entity = geometry.global(quadrature.point(0));
+    const auto barycenter_of_entity = geometry.global(quadrature.point(0));
 
-    LocalFunctionType local_macro_disc = macro_discrete_function.localFunction(entity);
+    auto local_macro_disc = macro_discrete_function.localFunction(entity);
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(quadrature[0], grad_macro_discrete_function);
 
@@ -471,7 +410,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
       dfw.append(jac_corrector_Phi_i);
 
       // check if we use a correct numeration of the cell problems:
-      const EntityPointerType entity_pointer(*it);
+      const EntityPointerType entity_pointer(entity);
       if (cp_num_manager.get_number_of_cell_problem(entity_pointer, i) != number_of_cell_problem) {
         DUNE_THROW(Dune::InvalidStateException, "Numeration of cell problems incorrect.");
       }

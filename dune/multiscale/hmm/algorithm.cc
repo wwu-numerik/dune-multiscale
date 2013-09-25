@@ -235,7 +235,7 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
   // grid part for the global function space, required for the detailed fine-scale computation (very high resolution)
   typename CommonTraits::GridPartType gridPartFine(*fine_macro_grid_pointer);
 
-  typename CommonTraits::GridType& grid = gridPart.grid();
+  auto& grid = gridPart.grid();
   //! --------------------------------------------------------------------------------------
 
   //! ------------------------- discrete function spaces -----------------------------------

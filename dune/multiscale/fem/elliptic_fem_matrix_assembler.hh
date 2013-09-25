@@ -26,7 +26,6 @@ class DiscreteEllipticOperator
       boost::noncopyable {
   typedef DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp> This;
 
-private:
   typedef DiscreteFunctionImp DiscreteFunction;
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
@@ -40,8 +39,6 @@ private:
 
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
-
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;

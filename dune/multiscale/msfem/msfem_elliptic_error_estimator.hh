@@ -76,7 +76,6 @@ private:
   typedef DiscreteFunctionImp DiscreteFunctionType;
   typedef typename DiscreteFunctionType::FunctionSpaceType FunctionSpaceType;
 
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   typedef typename DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
@@ -177,7 +176,7 @@ private:
     for (IntersectionIteratorType nit = coarseGridPart.ibegin(entity); nit != endnit; ++nit) {
       FaceQuadratureType innerFaceQuadrature(coarseGridPart, *nit, 0, FaceQuadratureType::INSIDE);
 
-      DomainType scaledOuterNormal = nit->integrationOuterNormal(innerFaceQuadrature.localPoint(0));
+      auto scaledOuterNormal = nit->integrationOuterNormal(innerFaceQuadrature.localPoint(0));
 
       // get 'volume' of the visited face (this only works because we do not have curved faces):
       RangeType visitedFaceVolume(0.0);
@@ -199,9 +198,9 @@ private:
     const Fem::CachingQuadrature<GridPartType, 0> entityQuadrature(entity, 2 * spacePolOrd + 2);
 
     // get geoemetry of entity
-    const EntityGeometryType& geometry = entity.geometry();
+    const auto& geometry = entity.geometry();
 
-    const RangeType H_T = get_coarse_grid_H(entity);
+    const auto H_T = get_coarse_grid_H(entity);
 
     RangeType y(0);
     RangeType local_indicator(0);
@@ -224,9 +223,9 @@ private:
   // jump in conservative flux
   void getFluxes(const EntityType& coarse_entity, const DiscreteFunctionType& msfem_coarse_part,
                  RangeType& jump_conservative_flux, RangeType& jump_coarse_flux) const {
-    const DiscreteFunctionSpaceType& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
-    const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
-    const int index_coarse_entity = coarseGridLeafIndexSet.index(coarse_entity);
+    const auto& coarseDiscreteFunctionSpace = specifier_.coarseSpace();
+    const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
+    const auto index_coarse_entity = coarseGridLeafIndexSet.index(coarse_entity);
 
     //! ---- get sub grid that for coarse entity
     // the sub grid U(T) that belongs to the coarse_grid_entity T
@@ -314,23 +313,19 @@ private:
   void fine_contribution(const LeafIndexSetType& coarseGridLeafIndexSet, const DiscreteFunctionType& msfem_solution,
                          std::vector<RangeType>& loc_approximation_error, std::vector<RangeType>& loc_fine_grid_jumps,
                          ErrormapType& errors) const {
-    // fine-grid iterator:
-    const IteratorType fine_grid_end = fineDiscreteFunctionSpace_.end();
-    for (IteratorType fine_grid_it = fineDiscreteFunctionSpace_.begin(); fine_grid_it != fine_grid_end;
-         ++fine_grid_it) {
-      EntityType& entity = *fine_grid_it;
+    for (const auto& entity : fineDiscreteFunctionSpace_) {
 
       // identify coarse grid father entity
-      EntityPointerType coarse_father = Stuff::Grid::make_father(
-          coarseGridLeafIndexSet, EntityPointerType(*fine_grid_it), specifier_.getLevelDifference());
+      auto coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet, EntityPointerType(entity),
+                                                    specifier_.getLevelDifference());
       const int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
 
-      const EntityGeometryType& entityGeometry = entity.geometry();
+      const auto& entityGeometry = entity.geometry();
 
       const EntityQuadratureType entityQuadrature(entity, 0); // 0 = polynomial order
-      const DomainType& x = entityGeometry.global(entityQuadrature.point(0));
+      const auto& x = entityGeometry.global(entityQuadrature.point(0));
 
-      const LocalFunctionType local_msfem_sol = msfem_solution.localFunction(entity);
+      const auto local_msfem_sol = msfem_solution.localFunction(entity);
       JacobianRangeType gradient_msfem_sol(0.);
       local_msfem_sol.jacobian(entityQuadrature[0], gradient_msfem_sol);
 
@@ -343,7 +338,7 @@ private:
         const double weight = highOrder_entityQuadrature.weight(quadraturePoint) *
                               entityGeometry.integrationElement(highOrder_entityQuadrature.point(quadraturePoint));
 
-        DomainType point = entityGeometry.global(highOrder_entityQuadrature.point(quadraturePoint));
+        const auto point = entityGeometry.global(highOrder_entityQuadrature.point(quadraturePoint));
 
         JacobianRangeType diffusive_flux_high_order;
         diffusion_.diffusiveFlux(point, gradient_msfem_sol, diffusive_flux_high_order);
@@ -356,10 +351,10 @@ private:
         errors["total_approximation_error"] += weight * value;
       }
 
-      const GridPartType& fineGridPart = fineDiscreteFunctionSpace_.gridPart();
+      const auto& fineGridPart = fineDiscreteFunctionSpace_.gridPart();
 
-      IntersectionIteratorType endnit = fineGridPart.iend(*fine_grid_it);
-      for (IntersectionIteratorType nit = fineGridPart.ibegin(*fine_grid_it); nit != endnit; ++nit) {
+      IntersectionIteratorType endnit = fineGridPart.iend(entity);
+      for (IntersectionIteratorType nit = fineGridPart.ibegin(entity); nit != endnit; ++nit) {
         FaceQuadratureType innerFaceQuadrature(fineGridPart, *nit, 0, FaceQuadratureType::INSIDE);
         const FaceGeometryType& faceGeometry = nit->geometry();
 
@@ -367,23 +362,23 @@ private:
           continue;
         }
 
-        EntityPointerType outer_fine_grid_it = nit->outside();
-        EntityType& outer_entity = *outer_fine_grid_it;
+        auto outer_fine_grid_it = nit->outside();
+        auto& outer_entity = *outer_fine_grid_it;
 
         EntityQuadratureType outer_entityQuadrature(outer_entity, 0); // 0 = polynomial order
-        const EntityGeometryType& outer_entityGeometry = outer_entity.geometry();
-        const DomainType& outer_x = outer_entityGeometry.global(outer_entityQuadrature.point(0));
+        const auto& outer_entityGeometry = outer_entity.geometry();
+        const auto& outer_x = outer_entityGeometry.global(outer_entityQuadrature.point(0));
 
-        LocalFunctionType outer_local_msfem_sol = msfem_solution.localFunction(outer_entity);
+        auto outer_local_msfem_sol = msfem_solution.localFunction(outer_entity);
         JacobianRangeType outer_gradient_msfem_sol(0.);
         outer_local_msfem_sol.jacobian(outer_entityQuadrature[0], outer_gradient_msfem_sol);
 
         JacobianRangeType diffusive_flux_outside;
         diffusion_.diffusiveFlux(outer_x, outer_gradient_msfem_sol, diffusive_flux_outside);
 
-        DomainType unitOuterNormal = nit->unitOuterNormal(innerFaceQuadrature.localPoint(0));
+        auto unitOuterNormal = nit->unitOuterNormal(innerFaceQuadrature.localPoint(0));
 
-        const RangeType edge_length = faceGeometry.volume();
+        const auto edge_length = faceGeometry.volume();
 
         RangeType int_value = 0.0;
         for (int i = 0; i < dimension; ++i)
@@ -402,18 +397,16 @@ private:
                            std::vector<RangeType>& loc_conservative_flux_jumps,
                            std::vector<RangeType>& loc_coarse_residual, std::vector<RangeType>& loc_projection_error,
                            ErrormapType& errors) const {
-    const LeafIndexSetType& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
-    // Coarse Entity Iterator
-    const IteratorType coarse_grid_end = coarseDiscreteFunctionSpace.end();
-    for (IteratorType coarse_grid_it = coarseDiscreteFunctionSpace.begin(); coarse_grid_it != coarse_grid_end;
-         ++coarse_grid_it) {
-      int global_index_entity = coarseGridLeafIndexSet.index(*coarse_grid_it);
+    const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace.gridPart().grid().leafIndexSet();
 
-      loc_coarse_residual[global_index_entity] = indicator_f(*coarse_grid_it);
+    for (const auto& coarse_entity : coarseDiscreteFunctionSpace) {
+      const int global_index_entity = coarseGridLeafIndexSet.index(coarse_entity);
+
+      loc_coarse_residual[global_index_entity] = indicator_f(coarse_entity);
       specifier_.set_loc_coarse_residual(global_index_entity, loc_coarse_residual[global_index_entity]);
       errors["total_coarse_residual"] += std::pow(loc_coarse_residual[global_index_entity], 2.0);
 
-      getFluxes(*coarse_grid_it, msfem_coarse_part, loc_conservative_flux_jumps[global_index_entity],
+      getFluxes(coarse_entity, msfem_coarse_part, loc_conservative_flux_jumps[global_index_entity],
                 loc_coarse_grid_jumps[global_index_entity]);
 
       specifier_.set_loc_coarse_grid_jumps(global_index_entity, loc_coarse_grid_jumps[global_index_entity]);
@@ -440,7 +433,7 @@ private:
       // the file/place, where we saved the solutions of the cell problems
       const std::string local_solution_location =
           (boost::format("local_problems/_localProblemSolutions_%d") %
-           coarseDiscreteFunctionSpace.gridPart().grid().globalIdSet().id(*coarse_grid_it)).str();
+           coarseDiscreteFunctionSpace.gridPart().grid().globalIdSet().id(coarse_entity)).str();
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);
@@ -448,25 +441,22 @@ private:
       discrete_function_reader.read(1, local_problem_solution_e1);
 
       // iterator for the local micro grid ('the subgrid corresponding with U(T)')
-      const SubGridIteratorType local_grid_it_end = localDiscreteFunctionSpace.end();
-      for (SubGridIteratorType local_grid_it = localDiscreteFunctionSpace.begin(); local_grid_it != local_grid_it_end;
-           ++local_grid_it) {
-        const SubGridEntityType& local_grid_entity = *local_grid_it;
+      for (const auto& local_grid_entity : localDiscreteFunctionSpace) {
 
         // check if "local_grid_entity" (which is an entity of U(T)) is in T:
         // -------------------------------------------------------------------
-        const EntityPointerType host_local_grid_it =
+        const auto host_local_grid_it =
             localDiscreteFunctionSpace.grid().template getHostEntity<0>(local_grid_entity);
 
-        EntityPointerType father_of_loc_grid_it =
+        auto father_of_loc_grid_it =
             Stuff::Grid::make_father(coarseGridLeafIndexSet, host_local_grid_it, specifier_.getLevelDifference());
-        if (!Stuff::Grid::entities_identical(*coarse_grid_it, *father_of_loc_grid_it))
+        if (!Stuff::Grid::entities_identical(coarse_entity, *father_of_loc_grid_it))
           continue;
 
         // -------------------------------------------------------------------
         EntityQuadratureType host_grid_quadrature(*host_local_grid_it, 0);
-        LocalFunctionType localized_msfem_coarse_part = msfem_coarse_part.localFunction(*host_local_grid_it);
-        LocalFunctionType localized_msfem_fine_part = msfem_fine_part.localFunction(*host_local_grid_it);
+        auto localized_msfem_coarse_part = msfem_coarse_part.localFunction(*host_local_grid_it);
+        auto localized_msfem_fine_part = msfem_fine_part.localFunction(*host_local_grid_it);
 
         JacobianRangeType grad_msfem_coarse_part;
         localized_msfem_coarse_part.jacobian(host_grid_quadrature[0], grad_msfem_coarse_part);
@@ -482,22 +472,20 @@ private:
         // higher order quadrature, since A^{\epsilon} is highly variable
         LocalGridEntityQuadratureType local_grid_quadrature(local_grid_entity,
                                                             2 * localDiscreteFunctionSpace.order() + 2);
-        const size_t numQuadraturePoints = local_grid_quadrature.nop();
+        const auto numQuadraturePoints = local_grid_quadrature.nop();
 
         for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
           // local (barycentric) coordinates (with respect to entity)
-          const typename LocalGridEntityQuadratureType::CoordinateType& local_subgrid_point =
+          const auto& local_subgrid_point =
               local_grid_quadrature.point(localQuadraturePoint);
 
-          DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
+          auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
 
           const double weight_local_quadrature = local_grid_quadrature.weight(localQuadraturePoint) *
                                                  local_grid_geometry.integrationElement(local_subgrid_point);
 
-          SubGridLocalFunctionType localized_local_problem_solution_e0 =
-              local_problem_solution_e0.localFunction(local_grid_entity);
-          SubGridLocalFunctionType localized_local_problem_solution_e1 =
-              local_problem_solution_e1.localFunction(local_grid_entity);
+          auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(local_grid_entity);
+          auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(local_grid_entity);
 
           // grad corrector for e_0 and e_1
           JacobianRangeType grad_loc_sol_e0, grad_loc_sol_e1;

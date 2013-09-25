@@ -49,8 +49,6 @@ private:
   static const int dimension = GridPartType::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder;
 
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunctionType;
-
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
   typedef typename DiscreteFunctionSpaceType::LagrangePointSetType LagrangePointSet;
   typedef typename LagrangePointSet::Codim<1>::SubEntityIteratorType FaceDofIterator;

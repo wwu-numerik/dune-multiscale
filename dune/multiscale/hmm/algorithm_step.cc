@@ -347,10 +347,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
     const typename HMMTraits::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix, 1e-8, hmm_biCG_tolerance, 20000);
 
     hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
-
-    if (hmm_newton_residual.dofsValid()) {
-      hmm_solution_convenient = true;
-    }
+    hmm_solution_convenient = hmm_newton_residual.dofsValid();
 
     if (hmm_biCG_tolerance > 1e-4) {
       DSC_LOG_INFO << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'."
@@ -415,9 +412,6 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
 
-  // sequence stamp
-  std::stringstream outstring;
-
   // --------- data output hmm solution --------------
 
   // create and initialize output class
@@ -437,14 +431,13 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
     // --------- data output discrete exact solution --------------
 
     // create and initialize output class
-    auto u = Problem::getExactSolution();
+    const auto u = Problem::getExactSolution();
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", *u, gridPartFine);
     typename OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("exact_solution");
     typename OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPartFine.grid(), exact_solution_series,
                                                                    outputparam);
-
-    // write data
+    std::stringstream outstring;
     outstring << "exact-solution";
     exactsol_dataoutput.writeData(1.0 /*dummy*/, outstring.str());
     // clear the std::stringstream:

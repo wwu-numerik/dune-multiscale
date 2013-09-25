@@ -60,7 +60,7 @@ struct entity_compare {
     const Quadrature quadrature_right(*right_entity, 0);
 
     // local barycenter (with respect to entity)
-    const typename Quadrature::CoordinateType& local_point_right = quadrature_right.point(0);
+    const auto& local_point_right = quadrature_right.point(0);
     const DomainType barycenter_right_entity = geometry_right.global(local_point_right);
 
     // ------ left element
@@ -68,7 +68,7 @@ struct entity_compare {
     const Quadrature quadrature_left(*left_entity, 0);
 
     // local barycenter (with respect to entity)
-    const typename Quadrature::CoordinateType& local_point_left = quadrature_left.point(0);
+    const auto& local_point_left = quadrature_left.point(0);
     const DomainType barycenter_left_entity = geometry_left.global(local_point_left);
 
     int current_axis = GridPartType::GridType::dimension - 1;

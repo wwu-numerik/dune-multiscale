@@ -262,22 +262,15 @@ private:
                   const int& j) const {
     double a_ij_hom = 0;
 
-    DomainType dummy(0.0);
-
-    const IteratorType endit = periodicDiscreteFunctionSpace.end();
-
-    for (IteratorType it = periodicDiscreteFunctionSpace.begin(); it != endit; ++it) {
-      // entity
-      const EntityType& entity = *it;
-
-      PeriodicLocalFunctionType localW_i = w_i.localFunction(entity);
-      PeriodicLocalFunctionType localW_j = w_j.localFunction(entity);
+    for (const auto& entity : periodicDiscreteFunctionSpace) {
+      auto localW_i = w_i.localFunction(entity);
+      auto localW_j = w_j.localFunction(entity);
 
       // create quadrature for given geometry type
       const QuadratureType quadrature(entity, 2);
 
       // get geoemetry of entity
-      const GeometryType& geometry = entity.geometry();
+      const auto& geometry = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();
@@ -294,7 +287,7 @@ private:
         const auto& local_point = quadrature.point(localQuadPoint);
 
         // global point in the unit cell Y
-        const DomainType global_point_in_Y = geometry.global(local_point);
+        const auto global_point_in_Y = geometry.global(local_point);
 
         PeriodicJacobianRangeType direction_i;
         for (int k = 0; k < dimension; ++k) {

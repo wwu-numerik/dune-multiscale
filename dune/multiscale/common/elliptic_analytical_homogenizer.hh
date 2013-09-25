@@ -43,10 +43,6 @@ private:
 
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
 
-  typedef typename GridType::template Codim<0>::Entity EntityType;
-
-  typedef typename GridType::template Codim<0>::Geometry EnGeometryType;
-
   typedef typename EntityType::ctype coordType;
 
   enum {
@@ -79,11 +75,11 @@ public:
     FieldMatrix<RangeType, dimension, dimension> tensorHom(0.0);
 
     TensorMatrixType a;
-    for (const EntityType& entity : discreteFunctionSpace) {
+    for (const auto& entity : discreteFunctionSpace) {
       const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
 
       // get geoemetry of entity
-      const EnGeometryType& geometry = entity.geometry();
+      const auto& geometry = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();
@@ -99,11 +95,11 @@ public:
 
     tensorHom[0][0] = 1 / tensorHom[0][0];
 
-    for (const EntityType& entity : discreteFunctionSpace) {
+    for (const auto& entity : discreteFunctionSpace) {
       const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
 
       // get geoemetry of entity
-      const EnGeometryType& geometry = entity.geometry();
+      const auto& geometry = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();
@@ -122,11 +118,11 @@ public:
     tensorHom[0][1] *= tensorHom[0][0];
     tensorHom[1][0] = tensorHom[0][1];
 
-    for (const EntityType& entity : discreteFunctionSpace) {
+    for (const auto& entity : discreteFunctionSpace) {
       const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
 
       // get geoemetry of entity
-      const EnGeometryType& geometry = entity.geometry();
+      const auto& geometry = entity.geometry();
 
       // integrate
       const int quadratureNop = quadrature.nop();

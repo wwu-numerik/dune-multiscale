@@ -60,7 +60,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
       corrector_of_base_func.clear();
       const auto local_hmm_solution = hmm_solution.localFunction(entity);
       const auto& baseSet = discreteFunctionSpace.basisFunctionSet(entity);
-      const unsigned int numMacroBaseFunctions = baseSet.size();
+      const auto numMacroBaseFunctions = baseSet.size();
       std::vector<int> cell_problem_id(numMacroBaseFunctions);
       for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
         const typename CommonTraits::EntityType::EntityPointer p(entity);
@@ -76,18 +76,18 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
     }
 
     // contribution of the local source error
-    typename CommonTraits::RangeType local_source_indicator = error_estimator.indicator_f(*f, entity);
+    auto local_source_indicator = error_estimator.indicator_f(*f, entity);
     result.estimated_source_error += local_source_indicator;
 
     // contribution of the local approximation error
-    typename CommonTraits::RangeType local_approximation_indicator =
+    auto local_approximation_indicator =
         error_estimator.indicator_app_1(entity, hmm_solution, corrector_u_H_on_entity);
 
     local_approximation_indicator += error_estimator.indicator_app_2(entity, hmm_solution, corrector_u_H_on_entity);
     result.estimated_approximation_error += local_approximation_indicator;
 
     // contribution of the local residual error
-    typename CommonTraits::RangeType local_residual_indicator =
+    auto local_residual_indicator =
         error_estimator.indicator_res_T(entity, hmm_solution, corrector_u_H_on_entity);
     result.estimated_residual_error_micro_jumps += local_residual_indicator;
 
@@ -99,8 +99,8 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
             "Corrector of u_H", periodicDiscreteFunctionSpace);
         corrector_u_H_on_neighbor_entity.clear();
 
-        typename CommonTraits::EntityPointerType it_outside = intersection.outside();
-        const typename CommonTraits::EntityType& entity_outside = *it_outside;
+        auto it_outside = intersection.outside();
+        const auto& entity_outside = *it_outside;
 
         // in the linear case, we still need to compute the corrector of u_H:
         if (DSC_CONFIG_GET("problem.linear", true)) {
@@ -108,12 +108,12 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
               "Corrector of macro base function", periodicDiscreteFunctionSpace);
           corrector_of_base_func_neighbor.clear();
 
-          typename CommonTraits::DiscreteFunctionType::LocalFunctionType local_hmm_solution_neighbor =
+          auto local_hmm_solution_neighbor =
               hmm_solution.localFunction(entity_outside);
 
-          const typename CommonTraits::BasisFunctionSetType& baseSet_neighbor =
+          const auto& baseSet_neighbor =
               discreteFunctionSpace.basisFunctionSet(entity_outside);
-          const unsigned int numMacroBaseFunctions_neighbor = baseSet_neighbor.size();
+          const auto numMacroBaseFunctions_neighbor = baseSet_neighbor.size();
           std::vector<int> cell_problem_id_neighbor(numMacroBaseFunctions_neighbor);
           for (unsigned int i = 0; i < numMacroBaseFunctions_neighbor; ++i) {
             cell_problem_id_neighbor[i] = cp_num_manager.get_number_of_cell_problem(it_outside, i);
@@ -123,12 +123,12 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
             corrector_of_base_func_neighbor.clear();
           }
         } else {
-          int neighbor_element_number = cp_num_manager.get_number_of_cell_problem(it_outside);
+          auto neighbor_element_number = cp_num_manager.get_number_of_cell_problem(it_outside);
           // in the nonlinear case this corrector is already available
           discrete_function_reader_discFunc.read(neighbor_element_number, corrector_u_H_on_neighbor_entity);
         }
 
-        typename CommonTraits::RangeType val = error_estimator.indicator_res_E(
+        auto val = error_estimator.indicator_res_E(
             intersection, hmm_solution, corrector_u_H_on_entity, corrector_u_H_on_neighbor_entity);
         local_residual_indicator += val;
         result.estimated_residual_error_macro_jumps += val;

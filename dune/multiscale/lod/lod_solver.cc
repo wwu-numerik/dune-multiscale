@@ -48,7 +48,7 @@ void Elliptic_Rigorous_MsFEM_Solver::subgrid_to_hostrid_projection(const SubGrid
     const HostEntity& host_entity = *host_entity_pointer;
 
     const SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
-    LocalFunction host_loc_value = host_func.localFunction(host_entity);
+    auto host_loc_value = host_func.localFunction(host_entity);
 
     const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
     for (unsigned int i = 0; i < numBaseFunctions; ++i) {
@@ -566,7 +566,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     CoarseQuadrature quadrature(entity, 2 * DiscreteFunctionSpace::polynomialOrder + 2);
 
     // loop over all quadrature points
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const typename CoarseQuadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 

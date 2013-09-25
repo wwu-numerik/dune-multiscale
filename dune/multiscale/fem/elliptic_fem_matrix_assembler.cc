@@ -34,7 +34,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
   // micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
   for (const auto& entity : discreteFunctionSpace_) {
-    const Geometry& geometry = entity.geometry();
+    const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
     DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, entity, entity);
@@ -45,19 +45,18 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
     const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
-      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const auto& local_point = quadrature.point(quadraturePoint);
       const auto global_point = geometry.global(local_point);
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
-
+      typename BaseFunctionSet::JacobianRangeType diffusion_in_gradient_phi;
       for (unsigned int i = 0; i < numBaseFunctions; ++i) {
         // A( \nabla \phi ) // diffusion operator evaluated in (x,\nabla \phi)
-        typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
         diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
         for (unsigned int j = 0; j < numBaseFunctions; ++j) {
           local_matrix.add(j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]));
@@ -95,7 +94,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
   for (const Entity& entity : discreteFunctionSpace_) {
-    const Geometry& geometry = entity.geometry();
+    const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
     auto local_matrix = global_matrix.localMatrix(entity, entity);
@@ -109,10 +108,8 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
-      const typename Quadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
-
-      const DomainType global_point = geometry.global(local_point);
-
+      const auto& local_point = quadrature.point(quadraturePoint);
+      const auto global_point = geometry.global(local_point);
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // transposed of the the inverse jacobian
@@ -122,7 +119,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
 
       for (unsigned int i = 0; i < numBaseFunctions; ++i) {
         // A( \nabla \phi ) // diffusion operator evaluated in (x,\nabla \phi)
-        typename LocalFunction::JacobianRangeType diffusion_in_gradient_phi;
+        typename BaseFunctionSet::JacobianRangeType diffusion_in_gradient_phi;
         diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
         for (unsigned int j = 0; j < numBaseFunctions; ++j) {
           local_matrix.add(j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]));
@@ -144,6 +141,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
     for (const auto& entity : discreteFunctionSpace_) {
       const auto host_entity_pointer = subGrid.template getHostEntity<0>(entity);
       const auto& host_entity = *host_entity_pointer;
+
       auto local_matrix = global_matrix.localMatrix(entity, entity);
       const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
       const auto iend = hostGridPart.iend(host_entity);
@@ -181,7 +179,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
   for (const Entity& entity : discreteFunctionSpace_) {
-    const Geometry& geometry = entity.geometry();
+    const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
     auto local_matrix = global_matrix.localMatrix(entity, entity);
@@ -193,29 +191,29 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
     const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
       const auto& local_point = quadrature.point(quadraturePoint);
 
-      const DomainType global_point = geometry.global(local_point);
+      const auto global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi);
 
+      typename BaseFunctionSet::JacobianRangeType grad_local_disc_function;
       for (unsigned int i = 0; i < numBaseFunctions; ++i) {
         RangeType value_local_disc_function;
         local_disc_function.evaluate(quadrature[quadraturePoint], value_local_disc_function);
 
-        typename BaseFunctionSet::JacobianRangeType grad_local_disc_function;
         local_disc_function.jacobian(quadrature[quadraturePoint], grad_local_disc_function);
         // here: no multiplication with jacobian inverse transposed required!
 
         // JA( \nabla u_H ) \nabla phi_i // jacobian of diffusion operator evaluated in (x,grad_local_disc_function) in
         // direction of the gradient of the current base function
-        typename LocalFunction::JacobianRangeType jac_diffusion_flux;
+        typename BaseFunctionSet::JacobianRangeType jac_diffusion_flux;
         diffusion_operator_.jacobianDiffusiveFlux(global_point, grad_local_disc_function, gradient_phi[i],
                                                   jac_diffusion_flux);
 
@@ -224,7 +222,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 
           if (lower_order_term_) {
             RangeType F_position_derivative;
-            typename LocalFunction::JacobianRangeType F_direction_derivative;
+            typename BaseFunctionSet::JacobianRangeType F_direction_derivative;
             // lower_order_term_->evaluate( global_point, phi[i], gradient_phi[i], F_i );
             lower_order_term_->position_derivative(global_point, value_local_disc_function, grad_local_disc_function,
                                                    F_position_derivative);
@@ -246,8 +244,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
         continue;
 
       auto local_matrix = global_matrix.localMatrix(entity, entity);
-
-      const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+      const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 
       const IntersectionIterator iend = gridPart.iend(entity);
       for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit) {
@@ -283,7 +280,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
   for (const Entity& entity : discreteFunctionSpace_) {
-    const Geometry& geometry = entity.geometry();
+    const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
     auto local_matrix = global_matrix.localMatrix(entity, entity);
@@ -296,12 +293,12 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
     const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
       const auto& local_point = quadrature.point(quadraturePoint);
 
-      const DomainType global_point = geometry.global(local_point);
+      const auto global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
@@ -327,7 +324,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 
         // JA( \nabla u_H ) \nabla phi_i // jacobian of diffusion operator evaluated in (x,grad_local_disc_function) in
         // direction of the gradient of the current base function
-        typename LocalFunction::JacobianRangeType jac_diffusion_flux;
+        typename BaseFunctionSet::JacobianRangeType jac_diffusion_flux;
         diffusion_operator_.jacobianDiffusiveFlux(global_point, total_direction, gradient_phi[i], jac_diffusion_flux);
 
         for (unsigned int j = 0; j < numBaseFunctions; ++j) {
@@ -335,7 +332,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 
           if (lower_order_term_) {
             RangeType F_position_derivative;
-            typename LocalFunction::JacobianRangeType F_direction_derivative;
+            typename BaseFunctionSet::JacobianRangeType F_direction_derivative;
             // lower_order_term_->evaluate( global_point, phi[i], gradient_phi[i], F_i );
             lower_order_term_->position_derivative(global_point, total_value, total_direction, F_position_derivative);
             lower_order_term_->direction_derivative(global_point, total_value, total_direction, F_direction_derivative);

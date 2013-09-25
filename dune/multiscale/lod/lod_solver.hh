@@ -38,7 +38,7 @@ private:
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
+  
 
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
 

@@ -32,10 +32,10 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
         "", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
 
     if (msfem_solution_) {
-      CommonTraits::RangeType msfem_error = l2error.norm(timefunctionAdapted(u), *msfem_solution_);
+      auto msfem_error = l2error.norm(timefunctionAdapted(u), *msfem_solution_);
       out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
 
-      CommonTraits::RangeType h1_msfem_error = h1norm.distance(u_disc, *msfem_solution_);
+      auto h1_msfem_error = h1norm.distance(u_disc, *msfem_solution_);
       out << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
 
       csv["msfem_exact_L2"] = msfem_error;
@@ -43,10 +43,10 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
 
     if (fem_solution_) {
-      CommonTraits::RangeType fem_error = l2error.norm(timefunctionAdapted(u), *fem_solution_);
+      auto fem_error = l2error.norm(timefunctionAdapted(u), *fem_solution_);
       out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
 
-      CommonTraits::RangeType h1_fem_error = h1norm.distance(u_disc, *fem_solution_);
+      auto h1_fem_error = h1norm.distance(u_disc, *fem_solution_);
       out << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
 
       csv["fem_exact_L2"] = fem_error;
@@ -54,12 +54,12 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
   }
   if (msfem_solution_ && fem_solution_) {
-    CommonTraits::RangeType approx_msfem_error =
+    auto approx_msfem_error =
         l2error.norm2<2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2>(*fem_solution_,
                                                                                         *msfem_solution_);
     out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 
-    CommonTraits::RangeType h1_approx_msfem_error = h1norm.distance(*fem_solution_, *msfem_solution_);
+    auto h1_approx_msfem_error = h1norm.distance(*fem_solution_, *msfem_solution_);
     out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
 
     csv["msfem_fem_L2"] = approx_msfem_error;

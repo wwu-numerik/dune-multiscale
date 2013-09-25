@@ -105,21 +105,19 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
-    typedef typename DiscreteFunctionSpace::IteratorType EntityIterator;
-    EntityIterator endit = discreteFunctionSpace_.end();
-    for (EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it) {
-      IntersectionIterator iit = gridPart.ibegin(*it);
-      const IntersectionIterator endiit = gridPart.iend(*it);
+    for (const auto& entity : discreteFunctionSpace_) {
+      IntersectionIterator iit = gridPart.ibegin(entity);
+      const IntersectionIterator endiit = gridPart.iend(entity);
       for (; iit != endiit; ++iit) {
 
         if (iit->boundary() && (iit->boundaryId() != 1))
           continue;
 
         if (iit->boundary()) {
-          LocalFunction rhsLocal = fem_rhs.localFunction(*it);
-          const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
+          auto rhsLocal = fem_rhs.localFunction(entity);
+          const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 
-          const int face = iit->indexInInside();
+          const auto face = iit->indexInInside();
 
           auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
           const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
@@ -154,7 +152,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     DiscreteFunction system_rhs("fem newton rhs", discreteFunctionSpace_);
     system_rhs.clear();
 
-    const int fem_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
+    constexpr int fem_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
 
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
@@ -206,8 +204,8 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
             continue;
 
           if (iit->boundary()) {
-            LocalFunction rhsLocal = system_rhs.localFunction(*it);
-            const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
+            auto rhsLocal = system_rhs.localFunction(*it);
+            const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
 
             const int face = iit->indexInInside();
 
@@ -315,8 +313,8 @@ void Elliptic_FEM_Solver::solve(
           continue;
 
         if (iit->boundary()) {
-          LocalFunction rhsLocal = fem_rhs.localFunction(*it);
-          const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
+          auto rhsLocal = fem_rhs.localFunction(*it);
+          const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
 
           const int face = iit->indexInInside();
 
@@ -406,8 +404,8 @@ void Elliptic_FEM_Solver::solve(
             continue;
 
           if (iit->boundary()) {
-            LocalFunction rhsLocal = system_rhs.localFunction(*it);
-            const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
+            auto rhsLocal = system_rhs.localFunction(*it);
+            const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
 
             const int face = iit->indexInInside();
 

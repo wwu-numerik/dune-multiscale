@@ -34,7 +34,7 @@ class RightHandSideAssembler {
 private:
   typedef DiscreteFunctionImp DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
+
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
   typedef typename DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
@@ -69,8 +69,8 @@ private:
     // set rhsVector to zero:
     rhsVector.clear();
     for (const auto& entity : rhsVector.space()) {
-      const GeometryType& geometry = entity.geometry();                 // Referenz auf Geometrie
-      LocalFunctionType elementOfRHS = rhsVector.localFunction(entity); // entity zeigt auf ein bestimmtes Element der
+      const auto& geometry = entity.geometry();                 // Referenz auf Geometrie
+      auto elementOfRHS = rhsVector.localFunction(entity); // entity zeigt auf ein bestimmtes Element der
                                                                         // entity
       // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
       // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
@@ -93,7 +93,7 @@ private:
         std::vector<JacobianRangeType> gradientPhi(numDofs);
         // to save: A \nabla PHI_H * \nabla phi_h;
         RangeType res = 0;
-        const double det = geometry.integrationElement(quadrature.point(quadraturePoint));
+        const auto det = geometry.integrationElement(quadrature.point(quadraturePoint));
 
         f.evaluate(geometry.global(quadrature.point(quadraturePoint)), f_x);
         baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);
@@ -197,7 +197,7 @@ public:
       // gradient of base function and gradient of old_u_H
       std::vector<JacobianRangeType> grad_phi_x(numDofs);
 
-      const LocalFunctionType loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
+      const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
 
       const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
@@ -291,7 +291,7 @@ public:
     for (const auto& coarse_grid_entity : rhsVector.space()) {
       const auto coarseEntityIndex = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
-      const GeometryType& coarseGeometry = coarse_grid_entity.geometry();
+      const auto& coarseGeometry = coarse_grid_entity.geometry();
       auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
       const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
 
@@ -301,7 +301,7 @@ public:
       typedef typename SubGridListType::SubGridPartType SubGridPartType;
       typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType LocalDiscreteFunctionSpaceType;
       typedef typename SubGridListType::SubGridDiscreteFunctionType LocalDiscreteFunction;
-      typedef typename LocalDiscreteFunction::LocalFunctionType LocalFunctionType;
+
       typedef Fem::CachingQuadrature<SubGridPartType, 0> LocalGridQuadrature;
 
       // --------- add standard contribution of right hand side -------------------------
@@ -335,18 +335,21 @@ public:
         const auto enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
         auto dirichletExtensionLF = dirichletExtension.localFunction(*hostCell);
         if (enclosingCoarseCellIndex == coarseEntityIndex) {
-          const int order = LocalSolutionManagerType::DiscreteFunctionSpaceType::polynomialOrder;
+          constexpr int order = LocalSolutionManagerType::DiscreteFunctionSpaceType::polynomialOrder;
 
           // higher order quadrature, since A^{\epsilon} is highly variable
-          LocalGridQuadrature localQuadrature(localEntity, 2 * order + 2);
+          const LocalGridQuadrature localQuadrature(localEntity, 2 * order + 2);
 
           // evaluate all local solutions and their jacobians in all quadrature points
-          std::vector<std::vector<typename LocalFunctionType::RangeType>> allLocalSolutionEvaluations(
+          typedef typename decltype(localSolutions[0]->localFunction(localEntity)) ::RangeType LOR;
+          static_assert(std::is_same<LOR, RangeType>::value, "fail");
+
+          std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
               localSolutions.size(), std::vector<RangeType>(localQuadrature.nop(), 0.0));
-          std::vector<std::vector<typename LocalFunctionType::JacobianRangeType>> allLocalSolutionJacobians(
+          std::vector<std::vector<JacobianRangeType>> allLocalSolutionJacobians(
               localSolutions.size(), std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
           for (auto lsNum : DSC::valueRange(localSolutions.size())) {
-            LocalFunctionType localFunction = localSolutions[lsNum]->localFunction(localEntity);
+            auto localFunction = localSolutions[lsNum]->localFunction(localEntity);
             // this evaluates the local solutions in all quadrature points...
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
             // while this automatically evaluates their jacobians.
@@ -359,9 +362,9 @@ public:
                 const int quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
                 // get type of face quadrature. Is done in this scope because Patricks methods use another type.
                 typedef MsFEM::MsFEMTraits::SubGridListType::SubFaceQuadratureType MyFaceQuadType;
-                MyFaceQuadType faceQuad(subGridPart, intersection, quadOrder, MyFaceQuadType::INSIDE);
+                const MyFaceQuadType faceQuad(subGridPart, intersection, quadOrder, MyFaceQuadType::INSIDE);
                 RangeType neumannValue(0.0);
-                const size_t numQuadPoints = faceQuad.nop();
+                const auto numQuadPoints = faceQuad.nop();
                 // loop over all quadrature points
 
                 std::vector<RangeType> phi_x_vec(numLocalBaseFunctions);
@@ -377,7 +380,7 @@ public:
                   // const auto& insideGeometry    = intersection.geometryInInside();
                   // const typename FaceQuadratureType::CoordinateType& xInInside = insideGeometry.global(xLocal);
                   // therefore, we have to do stupid things:
-                  const typename FaceQuadratureType::CoordinateType& xGlobal = faceGeometry.global(xLocal);
+                  const auto& xGlobal = faceGeometry.global(xLocal);
                   const auto& xInCoarseLocal = coarse_grid_entity.geometry().local(xGlobal);
                   const double factor = faceGeometry.integrationElement(xLocal) * faceQuad.weight(iqP);
 
@@ -463,7 +466,7 @@ public:
       auto elementOfRHS = rhsVector.localFunction(entity);
       const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
-      const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
+      const auto old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
 
       const int numDofs = elementOfRHS.numDofs();
@@ -519,7 +522,7 @@ public:
       auto elementOfRHS = rhsVector.localFunction(entity);
       const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
-      const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
+      const auto old_u_H_loc = old_u_H.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
 
       const auto numDofs = elementOfRHS.numDofs();
@@ -591,8 +594,8 @@ public:
       // gradient of base function and gradient of old_u_H
       std::vector<JacobianRangeType> grad_phi_x(numDofs);
 
-      const LocalFunctionType old_u_H_loc = old_u_H.localFunction(entity);
-      const LocalFunctionType loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
+      const auto old_u_H_loc = old_u_H.localFunction(entity);
+      const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
       const Quadrature quadrature(entity, polOrd);
 
       const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
@@ -692,8 +695,6 @@ public:
                                  // for the cell problems)
                                  const CellProblemNumberingManagerType& cp_num_manager,
                                  const PeriodicDiscreteFunctionType& dummy_func, DiscreteFunctionType& rhsVector) {
-    typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
-
     typedef Multiscale::HMM::CellProblemSolver CellProblemSolverType;
     const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
     const std::string cell_solution_location_discFunc = "/cell_problems/_cellSolutions_discFunc";
@@ -720,8 +721,8 @@ public:
       const auto& macro_grid_geometry = (*macro_grid_it).geometry(); // Referenz auf Geometrie
       auto elementOfRHS = rhsVector.localFunction(*macro_grid_it);
 
-      const BasisFunctionSetType macro_grid_baseSet = discreteFunctionSpace.basisFunctionSet(*macro_grid_it);
-      const LocalFunctionType old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
+      const auto macro_grid_baseSet = discreteFunctionSpace.basisFunctionSet(*macro_grid_it);
+      const auto old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
       // for \int_{\Omega} f \Phi
       const Quadrature macro_quadrature(*macro_grid_it, polOrd);
       // for - \int_{\Omega} \in_Y A^{\epsilon}( gradient reconstruction ) \nabla \Phi
@@ -787,7 +788,7 @@ public:
 
         RangeType fine_scale_contribution = 0.0;
         for (const auto& micro_grid_entity : periodicDiscreteFunctionSpace) {
-          const GeometryType& micro_grid_geometry = micro_grid_entity.geometry();
+          const auto& micro_grid_geometry = micro_grid_entity.geometry();
           assert(micro_grid_entity.partitionType() == InteriorEntity);
 
           auto loc_corrector_old_u_H = corrector_old_u_H.localFunction(micro_grid_entity);
@@ -795,14 +796,14 @@ public:
 
           // higher order quadrature, since A^{\epsilon} is highly variable
           const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace.order() + 2);
-          const size_t numQuadraturePoints = micro_grid_quadrature.nop();
+          const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
             // local (barycentric) coordinates (with respect to entity)
-            const typename Quadrature::CoordinateType& local_micro_point =
+            const auto& local_micro_point =
                 micro_grid_quadrature.point(microQuadraturePoint);
 
-            const DomainType global_point_in_Y = micro_grid_geometry.global(local_micro_point);
+            const auto global_point_in_Y = micro_grid_geometry.global(local_micro_point);
 
             const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint) *
                                                    micro_grid_geometry.integrationElement(local_micro_point);

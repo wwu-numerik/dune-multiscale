@@ -11,14 +11,14 @@ namespace Multiscale {
 namespace HMM {
 
 void DiscreteEllipticHMMOperator::boundary_treatment(CommonTraits::FEMMatrix& global_matrix) const {
-  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-  for (const Entity& entity : discreteFunctionSpace_) {
+  const auto& gridPart = discreteFunctionSpace_.gridPart();
+  for (const auto& entity : discreteFunctionSpace_) {
     if (!entity.hasBoundaryIntersections())
       continue;
 
     auto local_matrix = global_matrix.localMatrix(entity, entity);
 
-    const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+    const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 
     const IntersectionIterator iend = gridPart.iend(entity);
     for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit) {
@@ -47,7 +47,6 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
 
   // place, where we saved the solutions of the cell problems
   const std::string cell_solution_location = filename_ + "/cell_problems/_cellSolutions_baseSet";
-  ;
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
@@ -60,21 +59,21 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
   std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
   for (const auto& macro_grid_entity : discreteFunctionSpace_) {
-    const Geometry& macro_grid_geometry = macro_grid_entity.geometry();
+    const auto& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
     DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
 
-    const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
-    const unsigned int numMacroBaseFunctions = macro_grid_baseSet.size();
+    const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
+    const auto numMacroBaseFunctions = macro_grid_baseSet.size();
 
     // 1 point quadrature!! That is how we compute and save the cell problems.
     // If you want to use a higher order quadrature, you also need to change the computation of the cell problems!
     const Quadrature one_point_quadrature(macro_grid_entity, 0);
 
     // the barycenter of the macro_grid_entity
-    const typename Quadrature::CoordinateType& local_macro_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
-    const DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
+    const auto& local_macro_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
+    const auto macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
 
     const double macro_entity_volume =
         one_point_quadrature.weight(0 /*=quadraturePoint*/) * macro_grid_geometry.integrationElement(local_macro_point);
@@ -106,7 +105,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
         // Abschneidefunktion!)
 
         for (const auto& micro_grid_entity : periodicDiscreteFunctionSpace_) {
-          const Geometry& micro_grid_geometry = micro_grid_entity.geometry();
+          const auto& micro_grid_geometry = micro_grid_entity.geometry();
           assert(micro_grid_entity.partitionType() == InteriorEntity);
 
           const auto localized_corrector_i = corrector_Phi[i]->localFunction(micro_grid_entity);
@@ -114,13 +113,13 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
 
           // higher order quadrature, since A^{\epsilon} is highly variable
           const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
-          const size_t numQuadraturePoints = micro_grid_quadrature.nop();
+          const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
             // local (barycentric) coordinates (with respect to entity)
             const auto& local_micro_point = micro_grid_quadrature.point(microQuadraturePoint);
 
-            const DomainType global_point_in_Y = micro_grid_geometry.global(local_micro_point);
+            const auto global_point_in_Y = micro_grid_geometry.global(local_micro_point);
 
             const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint) *
                                                    micro_grid_geometry.integrationElement(local_micro_point);
@@ -193,15 +192,8 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
 
   // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);
-
-  // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);
-
-  // reader for the cell problem data file:
   DiscreteFunctionReader discrete_function_reader_jac_cor(jac_cor_cell_solution_location_baseSet_discFunc);
-  //  const bool reader_is_open = discrete_function_reader_jac_cor.open();
-
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
 
   global_matrix.reserve();
   global_matrix.clear();
@@ -212,25 +204,23 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
 
   int number_of_macro_entity = 0;
 
-  const Iterator macro_grid_end = discreteFunctionSpace_.end();
-  for (Iterator macro_grid_it = discreteFunctionSpace_.begin(); macro_grid_it != macro_grid_end; ++macro_grid_it) {
-    const Entity& macro_grid_entity = *macro_grid_it;
-    const Geometry& macro_grid_geometry = macro_grid_entity.geometry();
+  for (const auto& macro_grid_entity : discreteFunctionSpace_) {
+    const auto& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
     DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
     LocalFunction local_old_u_H = old_u_H.localFunction(macro_grid_entity);
 
-    const BaseFunctionSet& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
-    const unsigned int numMacroBaseFunctions = macro_grid_baseSet.size();
+    const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
+    const auto numMacroBaseFunctions = macro_grid_baseSet.size();
 
     // 1 point quadrature!! That is how we compute and save the cell problems.
     // If you want to use a higher order quadrature, you also need to change the computation of the cell problems!
     const Quadrature one_point_quadrature(macro_grid_entity, 0);
 
     // the barycenter of the macro_grid_entity
-    const typename Quadrature::CoordinateType& local_macro_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
-    const DomainType macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
+    const auto& local_macro_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
+    const auto macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
 
     const double macro_entity_volume =
         one_point_quadrature.weight(0 /*=quadraturePoint*/) * macro_grid_geometry.integrationElement(local_macro_point);
@@ -281,26 +271,20 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
       for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
         RangeType fine_scale_average = 0.0;
 
-        const Iterator micro_grid_end = periodicDiscreteFunctionSpace_.end();
-        for (Iterator micro_grid_it = periodicDiscreteFunctionSpace_.begin(); micro_grid_it != micro_grid_end;
-             ++micro_grid_it) {
-          const Entity& micro_grid_entity = *micro_grid_it;
-          const Geometry& micro_grid_geometry = micro_grid_entity.geometry();
+        for (const Entity& micro_grid_entity : periodicDiscreteFunctionSpace_) {
+          const auto& micro_grid_geometry = micro_grid_entity.geometry();
           assert(micro_grid_entity.partitionType() == InteriorEntity);
-          auto loc_corrector_old_u_H = corrector_old_u_H.localFunction(micro_grid_entity);
-          auto loc_D_Q_old_u_H_Phi_i = jacobian_corrector_old_u_H_Phi_i.localFunction(micro_grid_entity);
+          const auto loc_corrector_old_u_H = corrector_old_u_H.localFunction(micro_grid_entity);
+          const auto loc_D_Q_old_u_H_Phi_i = jacobian_corrector_old_u_H_Phi_i.localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
           Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
-          const size_t numQuadraturePoints = micro_grid_quadrature.nop();
+          const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
             // local (barycentric) coordinates (with respect to entity)
-            const typename Quadrature::CoordinateType& local_micro_point =
-                micro_grid_quadrature.point(microQuadraturePoint);
-
-            DomainType global_point_in_Y = micro_grid_geometry.global(local_micro_point);
-
+            const auto& local_micro_point = micro_grid_quadrature.point(microQuadraturePoint);
+            auto global_point_in_Y = micro_grid_geometry.global(local_micro_point);
             const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint) *
                                                    micro_grid_geometry.integrationElement(local_micro_point);
 
@@ -329,7 +313,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
             for (int k = 0; k < dimension; ++k)
               direction_vector[0][k] = gradient_Phi[i][0][k] + grad_D_Q_old_u_H_Phi_i[0][k];
 
-            typename LocalFunction::JacobianRangeType jac_diffusion_flux;
+            JacobianRangeType jac_diffusion_flux;
             diffusion_operator_.jacobianDiffusiveFlux(current_point_in_macro_grid, position_vector, direction_vector,
                                                       jac_diffusion_flux);
 

@@ -117,7 +117,7 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
     CoarseQuadratureType quadrature(entity, 2 * polynomialOrder + 2);
 
     // loop over all quadrature points
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const typename CoarseQuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
@@ -196,7 +196,7 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
       const QuadratureType quadrature(entity, 2 * polynomialOrder + 2);
 
       // loop over all quadrature points
-      const size_t numQuadraturePoints = quadrature.nop();
+      const auto numQuadraturePoints = quadrature.nop();
       for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
         const auto& local_point = quadrature.point(quadraturePoint);
         DomainType global_point = geometry.global(quadrature.point(quadraturePoint));

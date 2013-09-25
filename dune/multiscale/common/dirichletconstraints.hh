@@ -214,7 +214,7 @@ protected:
   void dirichletDofTreatment(const EntityType& entity, const GridFunctionType& u, DiscreteFunctionType& w) const {
     typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteSpaceType;
     typedef typename GridFunctionType::LocalFunctionType GridLocalFunctionType;
-    typedef typename DiscreteFunctionType::LocalFunctionType LocalFunctionType;
+
 
     typedef typename DiscreteSpaceType::LagrangePointSetType LagrangePointSetType;
     typedef typename DiscreteSpaceType::GridPartType GridPartType;
@@ -224,7 +224,7 @@ protected:
     typedef typename LagrangePointSetType::template Codim<faceCodim>::SubEntityIteratorType FaceDofIteratorType;
 
     // get local functions of result
-    LocalFunctionType wLocal = w.localFunction(entity);
+    auto wLocal = w.localFunction(entity);
 
     // get local functions of argument
     GridLocalFunctionType uLocal = u.localFunction(entity);
@@ -295,29 +295,10 @@ protected:
   // detect all DoFs on the Dirichlet boundary of the given entity
   template <class EntityType>
   bool searchEntityDirichletDofs(const EntityType& entity, const BoundaryType& /*boundary*/) const {
-
-    typedef typename DomainSpaceType::LagrangePointSetType LagrangePointSetType;
-
-    typedef typename DomainSpaceType::GridPartType GridPartType;
-
     static const int faceCodim = 1;
-    typedef typename GridPartType::IntersectionIteratorType IntersectionIteratorType;
-
-    typedef typename LagrangePointSetType::template Codim<faceCodim>::SubEntityIteratorType FaceDofIteratorType;
-
-    typedef typename DomainSpaceType::DomainType DomainType;
-
-    const GridPartType& gridPart = domain_space_.gridPart();
-
-    // default is false
+    const auto& gridPart = domain_space_.gridPart();
     bool hasDirichletBoundary = false;
-
-    typedef typename EntityType::Geometry Geometry;
-
-    // get Lagrange pionts from space
-    const LagrangePointSetType& lagrangePointSet = domain_space_.lagrangePointSet(entity);
-
-    // get number of Lagrange Points
+    const auto& lagrangePointSet = domain_space_.lagrangePointSet(entity);
     const auto localBlocks = lagrangePointSet.size();
 
     // map local to global BlockDofs
@@ -325,12 +306,7 @@ protected:
     // domain_space_.blockMapper().mapEntityDofs(entity,globalBlockDofs);
     domain_space_.blockMapper().map(entity, globalBlockDofs);
 
-    IntersectionIteratorType it = gridPart.ibegin(entity);
-    const IntersectionIteratorType endit = gridPart.iend(entity);
-    for (; it != endit; ++it) {
-      typedef typename IntersectionIteratorType::Intersection IntersectionType;
-      const IntersectionType& intersection = *it;
-
+    for (const auto& intersection : DSC::intersectionRange(gridPart, entity)) {
       // if intersection is with boundary, adjust data
       if (intersection.boundary()) {
         // get face number of boundary intersection
@@ -338,8 +314,8 @@ protected:
 
         if (boundary_.dirichlet(intersection)) {
           // get dof iterators
-          FaceDofIteratorType faceIt = lagrangePointSet.template beginSubEntity<faceCodim>(face);
-          const FaceDofIteratorType faceEndIt = lagrangePointSet.template endSubEntity<faceCodim>(face);
+          auto faceIt = lagrangePointSet.template beginSubEntity<faceCodim>(face);
+          const auto faceEndIt = lagrangePointSet.template endSubEntity<faceCodim>(face);
           for (; faceIt != faceEndIt; ++faceIt) {
             // get local dof number (expensive operation, therefore cache
             // result)

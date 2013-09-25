@@ -79,7 +79,7 @@ private:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
-  typedef typename DiscreteFunction::LocalFunctionType LocalFunction;
+  
   typedef typename SubGridDiscreteFunction::LocalFunctionType SubGridLocalFunction;
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
@@ -221,7 +221,7 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
         }
       }
 
-      const size_t numQuadraturePoints = faceQuadrature.nop();
+      const auto numQuadraturePoints = faceQuadrature.nop();
 
       RangeType check_sum(0.0);
 
@@ -264,30 +264,12 @@ template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
 double ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
                                 MacroMicroGridSpecifierImp>::normRHS(SubGridDiscreteFunctionImp& rhs) const {
   double norm = 0.0;
-
-  typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-  typedef typename IteratorType::Entity EntityType;
-  typedef typename SubGridDiscreteFunctionImp::LocalFunctionType LocalFunctionType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename DiscreteFunctionSpaceType::GridType GridType;
-  typedef typename GridType::template Codim<0>::Geometry EnGeometryType;
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
-
-  const IteratorType endit = discreteFunctionSpace.end();
-  for (IteratorType it = discreteFunctionSpace.begin(); it != endit; ++it) {
-    // entity
-    const EntityType& entity = *it;
-
-    // create quadrature for given geometry type
-    Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
-
-    // get geoemetry of entity
-    const EnGeometryType& geo = entity.geometry();
-
-    LocalFunctionType localRHS = rhs.localFunction(*it);
-
+  const auto& discreteFunctionSpace = rhs.space();
+  typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType::GridPartType GridPartType;
+  for (const auto& entity : discreteFunctionSpace) {
+    const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto& geo = entity.geometry();
+    auto localRHS = rhs.localFunction(entity);
     // integrate
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       const double weight =
@@ -345,20 +327,20 @@ template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
     const SubGridGeometry& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
-    SubGridLocalFunction elementOfRHS = rhs_flux_problem.localFunction(local_grid_entity);
+    auto elementOfRHS = rhs_flux_problem.localFunction(local_grid_entity);
 
     const SubGridBaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     SubGridQuadrature quadrature(local_grid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
-    const size_t numQuadraturePoints = quadrature.nop();
+    const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const typename SubGridQuadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
 
       // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
 
       // global point in the subgrid
-      const DomainType global_point = geometry.global(local_point);
+      const auto global_point = geometry.global(local_point);
 
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
