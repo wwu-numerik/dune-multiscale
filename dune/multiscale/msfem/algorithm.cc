@@ -30,7 +30,7 @@
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
-#include <dune/multiscale/tools/improved_l2error.hh>
+
 #include <dune/multiscale/msfem/msfem_elliptic_error_estimator.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
