@@ -67,6 +67,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
     const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = macro_grid_baseSet.size();
     const auto macro_entity_barycenter = macro_grid_geometry.center();
+    const auto center_local = macro_grid_geometry.local(macro_entity_barycenter);
     const double macro_entity_volume = macro_grid_geometry.volume();
 
     std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
@@ -74,7 +75,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
     typedef std::unique_ptr<PeriodicDiscreteFunction> PeriodicDiscreteFunctionPointer;
     std::vector<PeriodicDiscreteFunctionPointer> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
-    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi);
+    macro_grid_baseSet.jacobianAll(center_local, gradient_Phi);
 
     //!TODO generator functions
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
@@ -103,15 +104,13 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
           const auto localized_corrector_j = corrector_Phi[j]->localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
-          const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
+          const auto micro_grid_quadrature = make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace_);
           const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
             // local (barycentric) coordinates (with respect to entity)
             const auto& local_micro_point = micro_grid_quadrature.point(microQuadraturePoint);
-
             const auto global_point_in_Y = micro_grid_geometry.global(local_micro_point);
-
             const double weight_micro_quadrature = micro_grid_quadrature.weight(microQuadraturePoint) *
                                                    micro_grid_geometry.integrationElement(local_micro_point);
 
@@ -200,27 +199,19 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
     DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
-    LocalFunction local_old_u_H = old_u_H.localFunction(macro_grid_entity);
+    auto local_old_u_H = old_u_H.localFunction(macro_grid_entity);
 
     const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = macro_grid_baseSet.size();
-
-    // 1 point quadrature!! That is how we compute and save the cell problems.
-    // If you want to use a higher order quadrature, you also need to change the computation of the cell problems!
-    const Quadrature one_point_quadrature(macro_grid_entity, 0);
-
-    // the barycenter of the macro_grid_entity
-    const auto& local_macro_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
-    const auto macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
-
-    const double macro_entity_volume =
-        one_point_quadrature.weight(0 /*=quadraturePoint*/) * macro_grid_geometry.integrationElement(local_macro_point);
+    const auto macro_entity_barycenter = macro_grid_geometry.center();
+    const auto center_local = macro_grid_geometry.local(macro_entity_barycenter);
+    const double macro_entity_volume = macro_grid_geometry.volume();
 
     std::vector<int> cell_problem_id(numMacroBaseFunctions, -1);
 
     // \nabla_x u_H^{(n-1})(x_T)
     typename BaseFunctionSet::JacobianRangeType grad_old_u_H;
-    local_old_u_H.jacobian(one_point_quadrature[0], grad_old_u_H);
+    local_old_u_H.jacobian(center_local, grad_old_u_H);
     // here: no multiplication with jacobian inverse transposed required!
 
     // Q_h(u_H^{(n-1}))(x_T,y):
@@ -230,13 +221,13 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
     discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
 
     std::vector<std::unique_ptr<PeriodicDiscreteFunction>> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
-    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi);
+    macro_grid_baseSet.jacobianAll(center_local, gradient_Phi);
 
     // gradients of macrocopic base functions:
     // TODO generator
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
       // get number of cell problem from entity and number of base function
-      typename Entity::EntityPointer macro_entity_pointer(*macro_grid_it);
+      typename Entity::EntityPointer macro_entity_pointer(macro_grid_entity);
       cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
 
       if (!DSC_CONFIG_GET("hmm.petrov_galerkin", true)) {
@@ -247,7 +238,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
       }
     }
     // the multiplication with jacobian inverse is delegated
-    macro_grid_baseSet.jacobianAll(one_point_quadrature[0], gradient_Phi_new);
+    macro_grid_baseSet.jacobianAll(center_local, gradient_Phi_new);
     assert(gradient_Phi == gradient_Phi_new);
 
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
@@ -269,7 +260,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
           const auto loc_D_Q_old_u_H_Phi_i = jacobian_corrector_old_u_H_Phi_i.localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
-          Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
+          const auto micro_grid_quadrature = make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace_);
           const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
