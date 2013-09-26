@@ -66,17 +66,8 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
 
     const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = macro_grid_baseSet.size();
-
-    // 1 point quadrature!! That is how we compute and save the cell problems.
-    // If you want to use a higher order quadrature, you also need to change the computation of the cell problems!
-    const Quadrature one_point_quadrature(macro_grid_entity, 0);
-
-    // the barycenter of the macro_grid_entity
-    const auto& local_macro_point = one_point_quadrature.point(0 /*=quadraturePoint*/);
-    const auto macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
-
-    const double macro_entity_volume =
-        one_point_quadrature.weight(0 /*=quadraturePoint*/) * macro_grid_geometry.integrationElement(local_macro_point);
+    const auto macro_entity_barycenter = macro_grid_geometry.center();
+    const double macro_entity_volume = macro_grid_geometry.volume();
 
     std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
 

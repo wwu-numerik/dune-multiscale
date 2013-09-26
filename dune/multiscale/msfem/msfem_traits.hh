@@ -31,8 +31,6 @@ struct MsFEMTraits {
   typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, SubGridPartType, 1> SubGridDiscreteFunctionSpaceType;
 
   typedef Fem::PetscDiscreteFunction<SubGridDiscreteFunctionSpaceType> SubGridDiscreteFunctionType;
-  typedef Fem::CachingQuadrature<SubGridPartType, 0> SubGridQuadratureType;
-  typedef Fem::CachingQuadrature<SubGridPartType, 1> SubFaceQuadratureType;
   typedef SubGridList SubGridListType;
 
   // ! -------------------------- MsFEM error estimator ----------------------------

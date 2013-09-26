@@ -72,7 +72,6 @@ private:
   typedef typename FineEntity::Geometry FineGeometry;
   typedef typename FineGridPart::IntersectionIteratorType FineIntersectionIterator;
   typedef typename FineIntersectionIterator::Intersection FineIntersection;
-  typedef Fem::CachingQuadrature<FineGridPart, 0> FineQuadratureType;
 
   typedef typename CoarseDiscreteFunctionSpace::GridPartType CoarseGridPart;
   typedef typename CoarseDiscreteFunctionSpace::GridType CoarseGrid;
@@ -87,10 +86,8 @@ private:
   typedef typename CoarseEntity::Geometry CoarseGeometry;
   typedef typename CoarseGridPart::IntersectionIteratorType CoarseIntersectionIterator;
   typedef typename CoarseIntersectionIterator::Intersection CoarseIntersection;
-  typedef Fem::CachingQuadrature<CoarseGridPart, 0> CoarseQuadrature;
 
   typedef MsFEMTraits::SubGridListType SubGridListType;
-  typedef typename SubGridListType::SubGridQuadratureType SubGridQuadratureType;
 
 public:
   DiscreteEllipticMsFEMOperator(MacroMicroGridSpecifierType& specifier,
@@ -128,8 +125,8 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
   const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
 
-  for (const CoarseEntity& coarse_grid_entity : coarseDiscreteFunctionSpace_) {
-    const CoarseGeometry& coarse_grid_geometry = coarse_grid_entity.geometry();
+  for (const auto& coarse_grid_entity : coarseDiscreteFunctionSpace_) {
+    const auto& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
     const auto global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
@@ -147,8 +144,6 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     assert(localSolutions.size() > 0);
     std::vector<typename CoarseBaseFunctionSet::JacobianRangeType> gradientPhi(numMacroBaseFunctions);
 
-    const int localQuadratureOrder = 2 * localSolutionManager.getLocalDiscreteFunctionSpace().order() + 2;
-
     // iterator for the micro grid ( grid for the reference element T_0 )
     for (const auto& localGridEntity : localSolutionManager.getLocalDiscreteFunctionSpace()) {
       // check if "localGridEntity" (which is an entity of U(T)) is in T:
@@ -161,7 +156,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
         const auto& local_grid_geometry = localGridEntity.geometry();
 
         // higher order quadrature, since A^{\epsilon} is highly variable
-        SubGridQuadratureType localQuadrature(localGridEntity, localQuadratureOrder);
+        const auto localQuadrature = make_quadrature(localGridEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
         const auto numQuadraturePoints = localQuadrature.nop();
 
         // number of local solutions without the boundary correctors. Those are only needed for the right hand side
@@ -176,15 +171,15 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
         for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
           // local (barycentric) coordinates (with respect to entity)
-          const typename FineQuadratureType::CoordinateType& local_subgrid_point =
+          const auto& local_subgrid_point =
               localQuadrature.point(localQuadraturePoint);
 
-          DomainType global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
+          auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
           const double weight_local_quadrature = localQuadrature.weight(localQuadraturePoint) *
                                                  local_grid_geometry.integrationElement(local_subgrid_point);
 
           // evaluate the jacobian of the coarse grid base set
-          const DomainType& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
+          const auto& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
           coarse_grid_baseSet.jacobianAll(local_coarse_point, gradientPhi);
 
           for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {

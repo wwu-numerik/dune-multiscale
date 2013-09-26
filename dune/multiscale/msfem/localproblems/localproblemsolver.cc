@@ -442,12 +442,9 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_ind
     auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
     const auto& host_entity = *host_entity_pointer;
 
-    typedef Fem::CachingQuadrature<SubGridPartType, 0> SubGridQuadrature;
-    typedef Fem::CachingQuadrature<HostGridPartType, 0> HostGridQuadrature;
-
     // exact for polynomials of degree 2:
-    const SubGridQuadrature sg_quadrature(subgrid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
-    const HostGridQuadrature quadrature(host_entity, 2 * hostDiscreteFunctionSpace_.order() + 2);
+    const auto sg_quadrature = make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     const auto& geometry = host_entity.geometry();
 
@@ -544,18 +541,15 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(
     auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
     const auto& host_entity = *host_entity_pointer;
 
-    typedef Fem::CachingQuadrature<SubGridPartType, 0> SubGridQuadrature;
-    typedef Fem::CachingQuadrature<HostGridPartType, 0> HostGridQuadrature;
-
     // exact for polynomials of degree 2:
-    const SubGridQuadrature sg_quadrature(subgrid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
-    const HostGridQuadrature quadrature(host_entity, 2 * hostDiscreteFunctionSpace_.order() + 2);
+    const auto sg_quadrature = make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 
     const auto numQuadraturePoints = sg_quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename SubGridQuadrature::CoordinateType& local_point = sg_quadrature.point(quadraturePoint);
+      const auto& local_point = sg_quadrature.point(quadraturePoint);
 
       const double quad_weight = sg_quadrature.weight(quadraturePoint) * sg_geometry.integrationElement(local_point);
 
@@ -694,18 +688,15 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
     auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
     const auto& host_entity = *host_entity_pointer;
 
-    typedef Fem::CachingQuadrature<SubGridPartType, 0> SubGridQuadrature;
-    typedef Fem::CachingQuadrature<HostGridPartType, 0> HostGridQuadrature;
-
     // exact for polynomials of degree 2:
-    const SubGridQuadrature sg_quadrature(subgrid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
-    const HostGridQuadrature quadrature(host_entity, 2 * hostDiscreteFunctionSpace_.order() + 2);
+    const auto sg_quadrature = make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 
     const auto numQuadraturePoints = sg_quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename SubGridQuadrature::CoordinateType& local_point = sg_quadrature.point(quadraturePoint);
+      const auto& local_point = sg_quadrature.point(quadraturePoint);
 
       const double quad_weight = sg_quadrature.weight(quadraturePoint) * sg_geometry.integrationElement(local_point);
 
@@ -843,12 +834,9 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
     const auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
     const auto& host_entity = *host_entity_pointer;
 
-    typedef Fem::CachingQuadrature<SubGridPartType, 0> SubGridQuadrature;
-    typedef Fem::CachingQuadrature<HostGridPartType, 0> HostGridQuadrature;
-
     // exact for polynomials of degree 2:
-    const SubGridQuadrature sg_quadrature(subgrid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
-    const HostGridQuadrature quadrature(host_entity, 2 * hostDiscreteFunctionSpace_.order() + 2);
+    const auto sg_quadrature = make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 

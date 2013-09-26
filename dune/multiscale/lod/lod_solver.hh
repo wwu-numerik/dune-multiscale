@@ -33,26 +33,13 @@ class Elliptic_Rigorous_MsFEM_Solver {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
   typedef DiscreteFunctionType DiscreteFunction;
-
   typedef typename DiscreteFunction::FunctionSpaceType FunctionSpace;
-
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
-  
-
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-
-  typedef Fem::CachingQuadrature<GridPart, 0> CoarseQuadrature;
-  typedef Fem::CachingQuadrature<GridPart, 1> HostFaceQuadrature;
-
   typedef typename DiscreteFunctionSpace::GridType HostGrid;
-
   typedef typename HostGrid::Traits::LeafIndexSet HostGridLeafIndexSet;
-
   typedef typename HostGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
-
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;

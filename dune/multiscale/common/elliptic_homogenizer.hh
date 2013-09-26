@@ -182,40 +182,26 @@ private:
   typedef TensorImp TensorType;
   typedef Fem::PeriodicLeafGridPart<GridType> PeriodicGridPartType;
   typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
-
   typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, PeriodicGridPartType, 1>
-  PeriodicDiscreteFunctionSpaceType;
+    PeriodicDiscreteFunctionSpaceType;
 
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionSpaceType DummySpaceType;
   // (sometimes PeriodicDiscreteFunctionSpaceType is only a dummy)
-
   typedef Fem::AdaptiveDiscreteFunction<PeriodicDiscreteFunctionSpaceType> PeriodicDiscreteFunctionType;
-
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionType DummyType;
   // (sometimes PeriodicDiscreteFunctionType is only a dummy)
-
   typedef MassWeight MassWeightType;
-
   typedef ZeroFunction<FunctionSpaceType> ZeroFunctionType;
-
   typedef DefaultDummyAdvection<FunctionSpaceType> DefaultDummyAdvectionType;
-
   typedef TransformTensor<TensorType> TransformTensorType;
-
   typedef CellSource<TransformTensorType> CellSourceType;
-
   typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType PeriodicJacobianRangeType;
-
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
-
   typedef Fem::CachingQuadrature<PeriodicGridPartType, 0> QuadratureType;
-
   typedef typename GridType::template Codim<0>::Geometry GeometryType;
-
   typedef typename PeriodicDiscreteFunctionSpaceType::IteratorType IteratorType;
-
   typedef typename GridType::template Codim<0>::Entity EntityType;
 
   struct MatrixTraits {
@@ -240,7 +226,6 @@ private:
   EllipticOperatorType;
 
   typedef typename FunctionSpaceType::DomainType DomainType;
-
   typedef typename FunctionSpaceType::RangeType RangeType;
 
   enum {
@@ -267,7 +252,8 @@ private:
       auto localW_j = w_j.localFunction(entity);
 
       // create quadrature for given geometry type
-      const QuadratureType quadrature(entity, 2);
+      //!\TODO soll das WIRLKLICH pold order 2 sein?
+      const auto quadrature = make_quadrature(entity, periodicDiscreteFunctionSpace, 2);
 
       // get geoemetry of entity
       const auto& geometry = entity.geometry();

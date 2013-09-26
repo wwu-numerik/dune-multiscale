@@ -114,29 +114,27 @@ struct EstimatorUtils {
           continue;
         }
 
-        auto outside_sub_it = face_it_U_T->outside();
+        const auto outside_sub_it = face_it_U_T->outside();
         assert(cflux_neighbor_ent_host.fluxes[relevant_face_index][0]);
         assert(cflux_neighbor_ent_host.fluxes[relevant_face_index][1]);
-        auto loc_cf_coarse_neighbor_ent_e0 =
+        const auto loc_cf_coarse_neighbor_ent_e0 =
             (*cflux_neighbor_ent_host.fluxes[relevant_face_index][0]).localFunction(host_entity);
-        auto loc_cf_coarse_neighbor_ent_e1 =
+        const auto loc_cf_coarse_neighbor_ent_e1 =
             (*cflux_neighbor_ent_host.fluxes[relevant_face_index][1]).localFunction(host_entity);
 
-        auto loc_msfem_coarse_part_neighbor = msfem_coarse_part.localFunction(*outside_sub_it);
+        const auto loc_msfem_coarse_part_neighbor = msfem_coarse_part.localFunction(*outside_sub_it);
 
         // evaluate the gradient of the MsfEM coarse part in the center of the coarse entity
-        const typename EstimatorType::EntityQuadratureType coarseEntQuadrature(host_entity, 0);
+        const auto local_center = host_entity.geometry().local(host_entity.geometry().center());
         typename EstimatorType::JacobianRangeType gradient_msfem_coarse_ent(0.);
-        loc_msfem_coarse_part.jacobian(coarseEntQuadrature[0], gradient_msfem_coarse_ent);
+        loc_msfem_coarse_part.jacobian(local_center, gradient_msfem_coarse_ent);
 
         // evaluate the gradient of the MsfEM coarse part in the center of the current neighbor of the coarse entity
-        const typename EstimatorType::EntityQuadratureType coarseEntQuadratureNeighbor(*outside_sub_it, 0);
+        const auto outside_local_center = outside_sub_it->geometry().local(outside_sub_it->geometry().center());
         typename EstimatorType::JacobianRangeType gradient_msfem_coarse_neighbor_ent(0.);
-        loc_msfem_coarse_part_neighbor.jacobian(coarseEntQuadratureNeighbor[0], gradient_msfem_coarse_neighbor_ent);
+        loc_msfem_coarse_part_neighbor.jacobian(outside_local_center, gradient_msfem_coarse_neighbor_ent);
 
-        const typename EstimatorType::FaceQuadratureType faceQuadrature(
-            fineDiscreteFunctionSpace.gridPart(), *face_it_U_T, 2 * fineDiscreteFunctionSpace.order() + 2,
-            EstimatorType::FaceQuadratureType::INSIDE);
+        const auto faceQuadrature = make_quadrature(*face_it_U_T, fineDiscreteFunctionSpace);
         // inside macht hier keinen Unterschied, da wir formal stetige Funktionen haben und nicht die Gradienten
         // auswerten
 

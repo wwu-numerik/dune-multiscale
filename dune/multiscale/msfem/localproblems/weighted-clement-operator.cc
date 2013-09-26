@@ -95,31 +95,28 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
   // \Phi_j)^{-1}
   std::vector<double> coff(coarse_space_.size(), 0.0);
 
-  CoarseIteratorType coarse_end = coarse_space_.end();
-  for (CoarseIteratorType it = coarse_space_.begin(); it != coarse_end; ++it) {
-    CoarseEntityType& entity = *it;
-
+  for (const auto& entity : coarse_space_) {
     std::vector<std::size_t> indices;
     coarse_space_.mapper().map(entity, indices);
 
     // cache geometry of entity
-    const CoarseGeometryType coarse_geometry = entity.geometry();
+    const auto coarse_geometry = entity.geometry();
 
     assert(entity.partitionType() == InteriorEntity);
 
     std::vector<RangeType> phi(coarse_space_.mapper().maxNumDofs());
 
     // get base function set
-    const CoarseBasisFunctionSetType& coarse_baseSet = coarse_space_.basisFunctionSet(entity);
+    const auto& coarse_baseSet = coarse_space_.basisFunctionSet(entity);
     const auto numBaseFunctions = coarse_baseSet.size();
 
     // create quadrature of appropriate order
-    CoarseQuadratureType quadrature(entity, 2 * polynomialOrder + 2);
+    const auto quadrature = make_quadrature(entity, coarse_space_);
 
     // loop over all quadrature points
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename CoarseQuadratureType::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const auto& local_point = quadrature.point(quadraturePoint);
 
       const double weight = quadrature.weight(quadraturePoint) * coarse_geometry.integrationElement(local_point);
 
@@ -142,10 +139,10 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
       const auto& coarse_entity = *coarse_entity_ptr;
       DSFe::LocalMatrixProxy<LinearOperatorType> localMatrix(linearOperator_, entity, coarse_entity, 1e-12);
 
-      const CoarseGeometryType coarse_geometry = coarse_entity.geometry();
+      const auto coarse_geometry = coarse_entity.geometry();
 
       // get base function set
-      const CoarseBasisFunctionSetType& coarse_baseSet = coarse_space_.basisFunctionSet(coarse_entity);
+      const auto& coarse_baseSet = coarse_space_.basisFunctionSet(coarse_entity);
       const auto coarse_numBaseFunctions = coarse_baseSet.size();
 
       const auto& coarse_lagrangepoint_set = specifier_.coarseSpace().lagrangePointSet(coarse_entity);
@@ -191,9 +188,7 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
       // get base function set
       const BasisFunctionSetType& baseSet = space.basisFunctionSet(entity);
       const auto numBaseFunctions = baseSet.size();
-
-      // create quadrature of appropriate order
-      const QuadratureType quadrature(entity, 2 * polynomialOrder + 2);
+      const auto quadrature = make_quadrature(entity, space);
 
       // loop over all quadrature points
       const auto numQuadraturePoints = quadrature.nop();

@@ -44,16 +44,7 @@ void load_reference(typename CommonTraits::DiscreteFunctionType& reference_solut
 //! \todo replace me with Stuff::something
 template <class DiscreteFunctionSpaceType>
 typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(DiscreteFunctionSpaceType& discreteFunctionSpace) {
-  typename DiscreteFunctionSpaceType::RangeType size_of_domain = 0.0;
-  for (const auto& en : discreteFunctionSpace) {
-    typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-    Dune::Fem::CachingQuadrature<GridPartType, 0> entityQuadrature(en, 0);
-    // get geoemetry of entity
-    const auto& geometry = en.geometry();
-    const double volumeEntity = entityQuadrature.weight(0) * geometry.integrationElement(entityQuadrature.point(0));
-    size_of_domain += volumeEntity;
-  }
-  return size_of_domain;
+  return DSG::dimensions(discreteFunctionSpace.gridPart().grid()).sum();
 } // get_size_of_domain
 
 //! outputs Problem info to output stream

@@ -41,36 +41,24 @@ private:
   typedef typename PeriodicDiscreteFunctionType::DomainType DomainType;
   typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType PeriodicJacobianRangeType;
   typedef typename PeriodicDiscreteFunctionSpaceType::IteratorType PeriodicIteratorType;
-
   typedef typename PeriodicGridPartType::IntersectionIteratorType PeriodicIntersectionIteratorType;
   typedef typename PeriodicGridType::template Codim<0>::Entity PeriodicEntityType;
   typedef typename PeriodicGridType::template Codim<0>::EntityPointer PeriodicEntityPointerType;
   typedef typename PeriodicGridType::template Codim<0>::Geometry PeriodicEntityGeometryType;
   typedef typename PeriodicGridType::template Codim<1>::Geometry PeriodicFaceGeometryType;
-
-  typedef Fem::CachingQuadrature<PeriodicGridPartType, 0> PeriodicEntityQuadratureType;
-  typedef Fem::CachingQuadrature<PeriodicGridPartType, 1> PeriodicFaceQuadratureType;
-  //! Necessary typedefs for the DiscreteFunctionImp:
-
   typedef DiscreteFunctionImp DiscreteFunctionType;
-
-
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionType::DofIteratorType DofIteratorType;
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-
   typedef typename GridPartType::IntersectionIteratorType IntersectionIteratorType;
   typedef typename GridType::template Codim<0>::Entity EntityType;
   typedef typename GridType::template Codim<0>::EntityPointer EntityPointerType;
   typedef typename GridType::template Codim<0>::Geometry EntityGeometryType;
   typedef typename GridType::template Codim<1>::Geometry FaceGeometryType;
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-
-  typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
-  typedef Fem::CachingQuadrature<GridPartType, 1> FaceQuadratureType;
 
   enum {
     dimension = PeriodicGridType::dimension
@@ -106,7 +94,7 @@ public:
   // the new method:
   //! method to get the local mesh size H_entity (of the macro mesh)
   // works only for our 2D examples!!!!
-  RangeType getH(const auto& entity) const {
+  RangeType getH(const EntityType& entity) const {
     // entity_H means H (the diameter of the entity)
     RangeType entity_H = 0.0;
 
@@ -133,9 +121,8 @@ public:
 
   // return:  H_T^4 ||f||_{L^2(T)}^2
   template <class SourceType>
-  RangeType indicator_f(const SourceType& f, const auto& entity) const {
-    // create quadrature for given geometry type
-    Fem::CachingQuadrature<GridPartType, 0> entityQuadrature(entity, spacePolOrd);
+  RangeType indicator_f(const SourceType& f, const EntityType& entity) const {
+    const auto entityQuadrature = make_quadrature(entity, periodicDiscreteFunctionSpace_);
 
     // get geoemetry of entity
     const EntityGeometryType& geometry = entity.geometry();
