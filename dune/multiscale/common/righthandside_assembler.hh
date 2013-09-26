@@ -298,11 +298,10 @@ public:
       typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType LocalDiscreteFunctionSpaceType;
       typedef typename SubGridListType::SubGridDiscreteFunctionType LocalDiscreteFunction;
 
-      typedef Fem::CachingQuadrature<SubGridPartType, 0> LocalGridQuadrature;
-
       // --------- add standard contribution of right hand side -------------------------
       {
-        const Fem::CachingQuadrature<GridPartType, 0> quadrature(coarse_grid_entity, polOrd + 5);
+        //!\TODO warum +5 ???
+        const auto quadrature = make_quadrature(coarse_grid_entity, rhsVector.space(), polOrd + 5);
         std::vector<RangeType> phi_x_vec(numLocalBaseFunctions);
         const auto numQuadraturePoints = quadrature.nop();
         for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
@@ -331,15 +330,10 @@ public:
         const auto enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
         auto dirichletExtensionLF = dirichletExtension.localFunction(*hostCell);
         if (enclosingCoarseCellIndex == coarseEntityIndex) {
-          constexpr int order = LocalSolutionManagerType::DiscreteFunctionSpaceType::polynomialOrder;
-
           // higher order quadrature, since A^{\epsilon} is highly variable
-          const LocalGridQuadrature localQuadrature(localEntity, 2 * order + 2);
+          const auto localQuadrature = make_quadrature(localEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
 
           // evaluate all local solutions and their jacobians in all quadrature points
-          typedef typename decltype(localSolutions[0]->localFunction(localEntity)) ::RangeType LOR;
-          static_assert(std::is_same<LOR, RangeType>::value, "fail");
-
           std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
               localSolutions.size(), std::vector<RangeType>(localQuadrature.nop(), 0.0));
           std::vector<std::vector<JacobianRangeType>> allLocalSolutionJacobians(
