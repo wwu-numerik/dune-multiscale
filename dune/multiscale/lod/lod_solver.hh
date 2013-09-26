@@ -204,7 +204,7 @@ private:
 
       const auto& geometry = (*it).geometry();
 
-      const Fem::CachingQuadrature<GridPart, 0> quadrature(*it, polOrder);
+      const auto quadrature = make_quadrature(*it, discreteFunctionSpace_,);
       const int numQuadraturePoints = quadrature.nop();
       for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
         DomainType global_point = geometry.global(quadrature.point(quadraturePoint));
@@ -292,16 +292,13 @@ private:
       rhs[col] = 0.0;
 
     for (size_t col = 0; col != rhs.N(); ++col) {
-
-      typedef typename HostEntity::template Codim<0>::EntityPointer HostEntityPointer;
-
       const int polOrder = 2 * DiscreteFunctionSpace::polynomialOrder + 2;
       for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[col][col].size(); ++it_id)
           //      for (const auto& entity : discreteFunctionSpace_)
       {
-        HostEntityPointer it =
+        auto it =
             discreteFunctionSpace_.grid().entityPointer(support_of_ms_basis_func_intersection[col][col][it_id]);
-        const HostEntity& entity = *it;
+        const auto& entity = *it;
 
         const auto& geometry = entity.geometry();
 
@@ -342,10 +339,10 @@ private:
         const auto glob_neumann_corrector_localized = global_neumann_corrector.localFunction(entity);
         const auto dirichlet_extension_localized = dirichlet_extension.localFunction(entity);
 
-        const Fem::CachingQuadrature<GridPart, 0> quadrature(entity, polOrder);
+        const auto quadrature = make_quadrature(entity, discreteFunctionSpace_,);
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-          DomainType global_point = geometry.global(quadrature.point(quadraturePoint));
+          const auto global_point = geometry.global(quadrature.point(quadraturePoint));
 
           const double weight =
               geometry.integrationElement(quadrature.point(quadraturePoint)) * quadrature.weight(quadraturePoint);

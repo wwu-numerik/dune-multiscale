@@ -284,8 +284,6 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
   typedef typename GridType::Codim<0>::Entity EntityType;
   typedef typename EntityType::Geometry EntityGeometryType;
 
-  typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
-
   std::string cell_solution_location = subdir_ + "/_cellSolutions_discFunc";
   DiscreteFunctionWriter dfw(cell_solution_location);
 
@@ -299,12 +297,12 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
   int number_of_entity = 0;
   for (const auto& entity : discreteFunctionSpace) {
     const auto& geometry = entity.geometry();
-    const EntityQuadratureType quadrature(entity, 0);
-    const auto barycenter_of_entity = geometry.global(quadrature.point(0));
+    const auto barycenter_of_entity = geometry.center();
+    const auto barycenter_local = geometry.local(geometry.center());
+    const auto local_macro_disc = macro_discrete_function.localFunction(entity);
 
-    auto local_macro_disc = macro_discrete_function.localFunction(entity);
     JacobianRangeType grad_macro_discrete_function;
-    local_macro_disc.jacobian(quadrature[0], grad_macro_discrete_function);
+    local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 
     PeriodicDiscreteFunctionType cell_solution_on_entity("corrector of macro discrete function",
                                                          periodicDiscreteFunctionSpace_);
@@ -347,7 +345,6 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
   typedef typename GridType::Codim<0>::Entity EntityType;
   typedef typename EntityType::EntityPointer EntityPointerType;
   typedef typename EntityType::Geometry EntityGeometryType;
-  typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
 
   // where we save the solutions:
   const std::string cell_solution_location = subdir_ + "/_JacCorCellSolutions_baseSet_discFunc";
@@ -374,12 +371,12 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     // gradients of the macroscopic base functions
     std::vector<JacobianRangeType> gradientPhi(baseSet.size());
     const auto& geometry = entity.geometry();
-    const EntityQuadratureType quadrature(entity, 0);
-    const auto barycenter_of_entity = geometry.global(quadrature.point(0));
+    const auto barycenter_of_entity = geometry.center();
+    const auto barycenter_local = geometry.local(barycenter_of_entity);
 
     auto local_macro_disc = macro_discrete_function.localFunction(entity);
     JacobianRangeType grad_macro_discrete_function;
-    local_macro_disc.jacobian(quadrature[0], grad_macro_discrete_function);
+    local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 
     PeriodicDiscreteFunctionType corrector_macro_discrete_function("corrector of macro discrete function",
                                                                    periodicDiscreteFunctionSpace_);
@@ -388,7 +385,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     // the solution that we want to save to the data file
     PeriodicDiscreteFunctionType jac_corrector_Phi_i("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
 
-    baseSet.jacobianAll(quadrature[0 /*=quadraturePoint*/], gradientPhi);
+    baseSet.jacobianAll(barycenter_local, gradientPhi);
 
     for (auto i : DSC::valueRange(baseSet.size())) {
       jac_corrector_Phi_i.clear();

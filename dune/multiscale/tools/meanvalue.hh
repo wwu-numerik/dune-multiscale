@@ -70,16 +70,11 @@ class Meanvalue {
   };
 
   RangeType getMeanvalue_common(const DiscreteFunctionSpaceType& space, const FunctorBase& function) const {
-    const int polOrd = (2 * spacePolOrd + 2);
-
-    RangeType y(0.0); // return value
+    RangeType y(0.0);
     RangeType theMeanValue(0.0);
 
     for (const auto& entity : space) {
-      // create quadrature for given geometry type
-      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
-
-      // get geoemetry of entity
+      const auto quadrature = make_quadrature(entity, space);
       const auto& geo = entity.geometry();
 
       // integrate
@@ -97,16 +92,13 @@ class Meanvalue {
 
 public:
   RangeType getMeanvalue(const DiscreteFunctionType& discFunc) const {
-    const int polOrd = (2 * spacePolOrd + 2);
-
-    // get function space
     const DiscreteFunctionSpaceType& space = discFunc.space();
     RangeType y(0.0); // return value
     RangeType theMeanValue(0.0);
 
     for (const auto& entity : space) {
       // create quadrature for given geometry type
-      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
+      const auto quadrature = make_quadrature(entity, space);
       const auto localfunc = discFunc.localFunction(entity);
       const auto& geo = entity.geometry();
 

@@ -199,7 +199,6 @@ private:
   typedef CellSource<TransformTensorType> CellSourceType;
   typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType PeriodicJacobianRangeType;
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
-  typedef Fem::CachingQuadrature<PeriodicGridPartType, 0> QuadratureType;
   typedef typename GridType::template Codim<0>::Geometry GeometryType;
   typedef typename PeriodicDiscreteFunctionSpaceType::IteratorType IteratorType;
   typedef typename GridType::template Codim<0>::Entity EntityType;
