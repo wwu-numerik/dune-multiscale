@@ -51,7 +51,7 @@ private:
 
     OrderedDomainType(DomainType point) : DomainType(point) {}
 
-    const bool operator<(OrderedDomainType point_2) const {
+    bool operator<(OrderedDomainType point_2) const {
 
       for (int i = 0; i < dimension; ++i) {
         if ((*this)[i] < point_2[i])
@@ -63,7 +63,7 @@ private:
       return false;
     }
 
-    const bool operator<=(OrderedDomainType point_2) const {
+    bool operator<=(OrderedDomainType point_2) const {
       for (int i = 0; i < dimension; ++i) {
         if ((*this)[i] < point_2[i])
           return true;
@@ -73,7 +73,7 @@ private:
       return true;
     }
 
-    const bool operator>(OrderedDomainType point_2) const {
+    bool operator>(OrderedDomainType point_2) const {
       for (int i = 0; i < dimension; ++i) {
         if ((*this)[i] > point_2[i])
           return true;
@@ -83,7 +83,7 @@ private:
       return false;
     }
 
-    const bool operator>=(OrderedDomainType point_2) const {
+    bool operator>=(OrderedDomainType point_2) const {
       for (int i = 0; i < dimension; ++i) {
         if ((*this)[i] > point_2[i])
           return true;
@@ -108,12 +108,8 @@ private:
   // LevelEntityIteratorType;
 
   typedef typename DiscreteFunctionSpace::IteratorType HostgridIterator;
-  typedef HostgridIterator CoarsegridIterator;
-
   typedef typename HostgridIterator::Entity HostEntity;
-
   typedef typename HostEntity::EntityPointer HostEntityPointer;
-
   typedef typename HostEntity::EntitySeed FineGridEntitySeed;
 
   // typedef typename HostGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
@@ -195,16 +191,15 @@ private:
                                    const SeedSupportStorage& support_of_ms_basis_func_intersection) const {
     RangeType value = 0.0;
 
-    const int polOrder = 2 * DiscreteFunctionSpace::polynomialOrder + 2;
     for (const auto& support : support_of_ms_basis_func_intersection) {
-      const auto it = discreteFunctionSpace_.grid().entityPointer(support);
+      const auto entity_pointer = discreteFunctionSpace_.grid().entityPointer(support);
 
-      LocalFunction loc_func_1 = func1.localFunction(*it);
-      LocalFunction loc_func_2 = func2.localFunction(*it);
+      auto loc_func_1 = func1.localFunction(*entity_pointer);
+      auto loc_func_2 = func2.localFunction(*entity_pointer);
 
-      const auto& geometry = (*it).geometry();
+      const auto& geometry = (*entity_pointer).geometry();
 
-      const auto quadrature = make_quadrature(*it, discreteFunctionSpace_,);
+      const auto quadrature = make_quadrature(*entity_pointer, discreteFunctionSpace_);
       const int numQuadraturePoints = quadrature.nop();
       for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
         DomainType global_point = geometry.global(quadrature.point(quadraturePoint));
@@ -292,16 +287,13 @@ private:
       rhs[col] = 0.0;
 
     for (size_t col = 0; col != rhs.N(); ++col) {
-      const int polOrder = 2 * DiscreteFunctionSpace::polynomialOrder + 2;
       for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[col][col].size(); ++it_id)
           //      for (const auto& entity : discreteFunctionSpace_)
       {
-        auto it =
+        const auto it =
             discreteFunctionSpace_.grid().entityPointer(support_of_ms_basis_func_intersection[col][col][it_id]);
         const auto& entity = *it;
-
         const auto& geometry = entity.geometry();
-
         const auto local_func = msfem_basis_function_list[col]->localFunction(entity);
 
         for (const auto& intersection :
@@ -312,9 +304,8 @@ private:
           if (intersection.boundary() && (intersection.boundaryId() != 2))
             continue;
 
-          const HostFaceQuadrature faceQuadrature(discreteFunctionSpace_.gridPart(), intersection, polOrder,
-                                                  HostFaceQuadrature::INSIDE);
-          const int numFaceQuadraturePoints = faceQuadrature.nop();
+          const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
+          const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
           static const int faceCodim = 1;
           for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint) {
@@ -339,7 +330,7 @@ private:
         const auto glob_neumann_corrector_localized = global_neumann_corrector.localFunction(entity);
         const auto dirichlet_extension_localized = dirichlet_extension.localFunction(entity);
 
-        const auto quadrature = make_quadrature(entity, discreteFunctionSpace_,);
+        const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
         const int numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
           const auto global_point = geometry.global(quadrature.point(quadraturePoint));
