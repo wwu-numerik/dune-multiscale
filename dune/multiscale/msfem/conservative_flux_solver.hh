@@ -79,17 +79,15 @@ private:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
-  
+
   typedef typename SubGridDiscreteFunction::LocalFunctionType SubGridLocalFunction;
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
   typedef typename LagrangePointSet::template Codim<1>::SubEntityIteratorType FaceDofIterator;
 
-  typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity Entity;
+  typedef typename GridPart::template Codim<0>::EntityType Entity;
   typedef typename Entity::EntityPointer EntityPointer;
-  typedef typename Entity::Geometry Geometry;
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
@@ -104,16 +102,7 @@ private:
   typedef typename SubGridEntity::Geometry SubGridGeometry;
 
   typedef typename SubGridPart::IntersectionIteratorType SubGridIntersectionIterator;
-  typedef typename SubGridIntersectionIterator::Intersection SubGridIntersection;
 
-  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
-
-  typedef QuadratureRule<double, 1> FaceQuadratureRule;
-  typedef Fem::CachingQuadrature<GridPart, 1> FaceQuadrature;
-
-  typedef Fem::CachingQuadrature<SubGridPart, 0> SubGridQuadrature;
-
-  typedef typename GridType::template Codim<1>::Geometry FaceGeometryType;
 
 public:
   ConservativeFluxOperator(const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace,
@@ -178,33 +167,28 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
   // local grid basis functions:
   std::vector<RangeType> phi(subDiscreteFunctionSpace_.mapper().maxNumDofs());
 
-  const SubGridIterator end = subDiscreteFunctionSpace_.end();
-  for (SubGridIterator it = subDiscreteFunctionSpace_.begin(); it != end; ++it) {
-    const SubGridEntity& sub_grid_entity = *it;
-
-    EntityPointer host_entity_pointer =
+  for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
+    auto host_entity_pointer =
         subDiscreteFunctionSpace_.gridPart().grid().template getHostEntity<0>(sub_grid_entity);
 
-    typedef typename GridType::Traits::LeafIndexSet CoarseGridLeafIndexSet;
-    const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
+    const auto& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
-    EntityPointer father_of_sub_grid_entity =
+    auto father_of_sub_grid_entity =
         Stuff::Grid::make_father(coarseGridLeafIndexSet, host_entity_pointer, specifier_.getLevelDifference());
     const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
     assert(sub_grid_entity.partitionType() == InteriorEntity);
 
     DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, sub_grid_entity, sub_grid_entity);
 
-    const SubGridBaseFunctionSet& baseSet = local_matrix.domainBasisFunctionSet();
+    const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     const IntersectionIterator iend = discreteFunctionSpace_.gridPart().iend(*host_entity_pointer);
     for (IntersectionIterator iit = discreteFunctionSpace_.gridPart().ibegin(*host_entity_pointer); iit != iend;
          ++iit) {
-      FaceQuadrature faceQuadrature(discreteFunctionSpace_.gridPart(), *iit, 2 * subDiscreteFunctionSpace_.order() + 1,
-                                    FaceQuadrature::INSIDE);
-
-      const FaceGeometryType& faceGeometry = iit->geometry();
+      const auto& intersection = *iit;
+      const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
+      const auto& faceGeometry = iit->geometry();
 
       bool set_zero = false;
       if (coarse_index != sub_grid_id) {
@@ -226,13 +210,9 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
       RangeType check_sum(0.0);
 
       for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-        // das liefert immer den gleichen 'local_point' egal fuer welchen Quadraturpunkt.
-        const LocalCoordinate local_point = faceGeometry.local(faceQuadrature.point(quadraturePoint));
-
-        // integration factors
+        // das liefert immer den gleichen 'local_point' egal fuer welchen Quadraturpunkt. // WTF ?!?!
+        const auto local_point = faceGeometry.local(faceQuadrature.point(quadraturePoint));
         const double integrationFactor = faceGeometry.integrationElement(local_point);
-
-        // weight
         const double quadratureWeight = faceQuadrature.weight(quadraturePoint);
 
         check_sum += integrationFactor * quadratureWeight;
@@ -267,9 +247,9 @@ double ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp,
   const auto& discreteFunctionSpace = rhs.space();
   typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType::GridPartType GridPartType;
   for (const auto& entity : discreteFunctionSpace) {
-    const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(entity, discreteFunctionSpace);
     const auto& geo = entity.geometry();
-    auto localRHS = rhs.localFunction(entity);
+    const auto localRHS = rhs.localFunction(entity);
     // integrate
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       const double weight =
@@ -306,17 +286,13 @@ template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
   // gradient of micro scale base function:
   std::vector<JacobianRangeType> gradient_phi(subDiscreteFunctionSpace.mapper().maxNumDofs());
 
-  const SubGridIterator end = subDiscreteFunctionSpace.end();
-  for (SubGridIterator it = subDiscreteFunctionSpace.begin(); it != end; ++it) {
-    const SubGridEntity& local_grid_entity = *it;
-
-    EntityPointer host_entity_pointer =
+  for (const auto& local_grid_entity : subDiscreteFunctionSpace) {
+    auto host_entity_pointer =
         subDiscreteFunctionSpace.gridPart().grid().template getHostEntity<0>(local_grid_entity);
 
-    typedef typename GridType::Traits::LeafIndexSet CoarseGridLeafIndexSet;
-    const CoarseGridLeafIndexSet& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
+    const auto& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
-    EntityPointer father_of_sub_grid_entity =
+    auto father_of_sub_grid_entity =
         Stuff::Grid::make_father(coarseGridLeafIndexSet, host_entity_pointer, specifier_.getLevelDifference());
     const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
 
@@ -324,24 +300,23 @@ template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
       continue;
     }
 
-    const SubGridGeometry& geometry = local_grid_entity.geometry();
+    const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
     auto elementOfRHS = rhs_flux_problem.localFunction(local_grid_entity);
 
-    const SubGridBaseFunctionSet& baseSet = elementOfRHS.basisFunctionSet();
+    const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    SubGridQuadrature quadrature(local_grid_entity, 2 * subDiscreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(local_grid_entity, subDiscreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      const typename SubGridQuadrature::CoordinateType& local_point = quadrature.point(quadraturePoint);
+      const auto& local_point = quadrature.point(quadraturePoint);
 
       // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
 
       // global point in the subgrid
       const auto global_point = geometry.global(local_point);
-
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
       // A^eps(x) ( e

@@ -89,8 +89,6 @@ public:
   typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
   //! type of subgrid discrete function
   typedef MsFEMTraits::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
-  typedef MsFEMTraits::SubGridQuadratureType SubGridQuadratureType;
-  typedef MsFEMTraits::SubFaceQuadratureType SubFaceQuadratureType;
 
   SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true);
   ~SubGridList();

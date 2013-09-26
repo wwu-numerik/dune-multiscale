@@ -977,7 +977,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
               }
             }
 
-            const Fem::CachingQuadrature<GridPart, 0> quadrature(*it, polOrder);
+            const auto quadrature = make_quadrature(*it, discreteFunctionSpace);
             const int numQuadraturePoints = quadrature.nop();
             for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
 
@@ -1164,7 +1164,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
               }
             }
 
-            const Fem::CachingQuadrature<GridPart, 0> quadrature(*it, polOrder);
+            const auto quadrature = make_quadrature(*it, discreteFunctionSpace);
             const int numQuadraturePoints = quadrature.nop();
             for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
 

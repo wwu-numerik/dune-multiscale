@@ -46,12 +46,10 @@ class DiscreteEllipticOperator
 
   typedef typename DiscreteFunctionSpace::IteratorType Iterator;
   typedef typename Iterator::Entity Entity;
-  typedef typename Entity::Geometry Geometry;
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
 
-  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
 public:
 

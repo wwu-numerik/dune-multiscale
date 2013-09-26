@@ -83,9 +83,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       subDiscreteFunctionSpace_.mapper().maxNumDofs());
   typename BasisFunctionSetType::JacobianRangeType diffusion_in_gradient_phi;
 
-  const EntityIteratorType end = subDiscreteFunctionSpace_.end();
-  for (EntityIteratorType it = subDiscreteFunctionSpace_.begin(); it != end; ++it) {
-    const auto& sub_grid_entity = *it;
+  for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();
 
     DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrixType> local_matrix(global_matrix, sub_grid_entity,
@@ -96,7 +94,8 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const QuadratureType quadrature(sub_grid_entity, 2 * subDiscreteFunctionSpace_.order() + 2);
+    const auto quadrature = make_quadrature(sub_grid_entity, subDiscreteFunctionSpace_);
+
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to local grid entity)
@@ -166,7 +165,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
     std::vector<RangeType> value_phi(numBaseFunctions);
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const QuadratureType quadrature(sub_grid_entity, 2 * subDiscreteFunctionSpace_.order() + 2);
+    const auto quadrature = make_quadrature(sub_grid_entity, subDiscreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to local grid entity)
@@ -255,7 +254,7 @@ double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunctio
   double norm = 0.0;
   for (const auto& entity : discreteFunctionSpace) {
     // create quadrature for given geometry type
-    const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(entity, discreteFunctionSpace);
     const auto& geo = entity.geometry();
     const auto localRHS = rhs.localFunction(entity);
 
@@ -291,7 +290,7 @@ void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e, // dir
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const QuadratureType quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(local_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);
@@ -390,7 +389,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
       const auto numBaseFunctions = baseSet.size();
 
       if (coarseBaseFunc < numInnerCorrectors || coarseBaseFunc == numInnerCorrectors + 1) {
-        const QuadratureType quadrature(localGridCell, 2 * discreteFunctionSpace.order() + 2);
+        const auto quadrature = make_quadrature(localGridCell, discreteFunctionSpace);
         const auto numQuadraturePoints = quadrature.nop();
         for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
           const auto& local_point = quadrature.point(quadraturePoint);
@@ -427,8 +426,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
           if (Dune::Multiscale::Problem::isNeumannBoundary(intersection)) {
             const auto orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
             const auto quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
-            FaceQuadratureType faceQuad(discreteFunctionSpace.gridPart(), intersection, quadOrder,
-                                        FaceQuadratureType::INSIDE);
+            const auto faceQuad = make_quadrature(intersection, discreteFunctionSpace, quadOrder);
             RangeType neumannValue(0.0);
             const auto numQuadPoints = faceQuad.nop();
             // loop over all quadrature points
@@ -517,7 +515,7 @@ void LocalProblemOperator::assemble_local_RHS(
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const QuadratureType quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(local_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);
@@ -566,7 +564,6 @@ void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(
   typedef typename Iterator::Entity Entity;
   typedef typename Entity::Geometry Geometry;
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
@@ -621,7 +618,7 @@ void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const Quadrature quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(local_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);
@@ -675,7 +672,6 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
   typedef typename Iterator::Entity Entity;
   typedef typename Entity::Geometry Geometry;
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
@@ -742,8 +738,7 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
 
       const auto face = intersection.indexInInside();
 
-      const HostFaceQuadrature faceQuadrature(host_space.gridPart(), intersection, 2 * host_space.order() + 2,
-                                              HostFaceQuadrature::INSIDE);
+      const auto faceQuadrature = make_quadrature(intersection, host_space);
       static const int faceCodim = 1;
       for (auto faceQuadraturePoint : DSC::valueRange(faceQuadrature.nop())) {
         baseSet.evaluateAll(faceQuadrature[faceQuadraturePoint], phi);
@@ -802,7 +797,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems(const HostDiscreteFunc
     const auto& host_entity = *host_entity_pointer;
     auto local_coarse_basis_func = coarse_basis_func.localFunction(host_entity);
 
-    const QuadratureType quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(local_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);
@@ -845,7 +840,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
     auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
     const auto& host_entity = *host_entity_pointer;
 
-    const QuadratureType quadrature(local_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(local_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);

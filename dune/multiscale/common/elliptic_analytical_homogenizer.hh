@@ -76,7 +76,7 @@ public:
 
     TensorMatrixType a;
     for (const auto& entity : discreteFunctionSpace) {
-      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
+      const auto quadrature = make_quadrature(entity, discreteFunctionSpace, polOrd);
 
       // get geoemetry of entity
       const auto& geometry = entity.geometry();
@@ -96,7 +96,7 @@ public:
     tensorHom[0][0] = 1 / tensorHom[0][0];
 
     for (const auto& entity : discreteFunctionSpace) {
-      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
+      const auto quadrature = make_quadrature(entity, discreteFunctionSpace, polOrd);
 
       // get geoemetry of entity
       const auto& geometry = entity.geometry();
@@ -119,7 +119,7 @@ public:
     tensorHom[1][0] = tensorHom[0][1];
 
     for (const auto& entity : discreteFunctionSpace) {
-      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd);
+      const auto quadrature = make_quadrature(entity, discreteFunctionSpace, polOrd);
 
       // get geoemetry of entity
       const auto& geometry = entity.geometry();

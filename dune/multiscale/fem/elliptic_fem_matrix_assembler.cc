@@ -44,7 +44,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
+    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
@@ -104,7 +104,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
+    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
     const size_t numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
@@ -190,7 +190,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
+    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
@@ -292,7 +292,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const Quadrature quadrature(entity, 2 * discreteFunctionSpace_.order() + 2);
+    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)

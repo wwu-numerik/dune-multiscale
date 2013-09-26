@@ -51,7 +51,7 @@ void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const Quadrature quadrature(cell_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
+    const auto quadrature = make_quadrature(cell_grid_entity, periodicDiscreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to cell grid entity)
@@ -117,7 +117,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(const DomainType& x_T
 
     // for constant diffusion "2*periodicDiscreteFunctionSpace_.order()" is sufficient, for the general case, it is
     // better to use a higher order quadrature:
-    const Quadrature quadrature(cell_grid_entity, 2 * periodicDiscreteFunctionSpace_.order() + 2);
+    const auto quadrature = make_quadrature(cell_grid_entity, periodicDiscreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
@@ -176,7 +176,7 @@ double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const {
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
   for (const auto& entity : discreteFunctionSpace) {
-    const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(entity, discreteFunctionSpace);
     const auto& geo = entity.geometry();
     const auto localRHS = rhs.localFunction(entity);
     // integrate
@@ -194,10 +194,6 @@ double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const {
 
 void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T, const JacobianRangeType& gradient_PHI_H,
                                                          DiscreteFunction& cell_problem_RHS) const {
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
-
   const auto& discreteFunctionSpace = cell_problem_RHS.space();
 
   // set entries to zero:
@@ -218,7 +214,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T, 
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(cell_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);
@@ -257,10 +253,6 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename Iterator::Entity Entity;
-  typedef typename Entity::Geometry Geometry;
-
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
   const DiscreteFunctionSpace& discreteFunctionSpace = cell_problem_RHS.space();
 
@@ -283,7 +275,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(cell_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);
@@ -336,10 +328,6 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS( // 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::IteratorType Iterator;
   typedef typename Iterator::Entity Entity;
-  typedef typename Entity::Geometry Geometry;
-  // this is a periodic grid partition:
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
   const auto& discreteFunctionSpace = corrector_of_old_coarse_function.space();
 
@@ -362,7 +350,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS( // 
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const Quadrature quadrature(cell_grid_entity, 2 * discreteFunctionSpace.order() + 2);
+    const auto quadrature = make_quadrature(cell_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);

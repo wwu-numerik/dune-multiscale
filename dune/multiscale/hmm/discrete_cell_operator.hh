@@ -49,7 +49,6 @@ class DiscreteCellProblemOperator : public Operator<typename HMMTraits::Periodic
   typedef typename Entity::Geometry Geometry;
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
-  typedef Fem::CachingQuadrature<GridPart, 0> Quadrature;
 
 public:
   DiscreteCellProblemOperator(const DiscreteFunctionSpace& periodicDiscreteFunctionSpace,

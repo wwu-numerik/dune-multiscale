@@ -45,8 +45,6 @@ private:
   typedef typename DiscreteFunctionSpaceType::DomainType DomainType;
   typedef typename GridType::template Codim<0>::Entity EntityType;
   typedef typename EntityType::Geometry GeometryType;
-  typedef Fem::CachingQuadrature<GridPartType, 0> Quadrature;
-  typedef Fem::CachingQuadrature<GridPartType, 1> FaceQuadratureType;
 
   typedef MsFEM::LocalSolutionManager LocalSolutionManagerType;
 
@@ -84,7 +82,7 @@ private:
                        // statt
                        // functionSpace
 
-      const Fem::CachingQuadrature<GridPartType, 0> quadrature(entity, polOrd); // 0 --> codim 0
+      const auto quadrature = make_quadrature(entity, rhsVector.space(), polOrd);
       const auto numDofs = elementOfRHS.numDofs();
       for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
         // the return values:
@@ -198,16 +196,14 @@ public:
       std::vector<JacobianRangeType> grad_phi_x(numDofs);
 
       const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
-      const Quadrature quadrature(entity, polOrd);
+      const auto quadrature = make_quadrature(entity, rhsVector.space(), polOrd);
 
       const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
 
       for (const auto& intersection : Dune::Stuff::Common::intersectionRange(rhsVector.space().gridPart(), entity)) {
         if (Problem::isNeumannBoundary(intersection)) {
           const auto face = intersection.indexInInside();
-
-          const FaceQuadratureType faceQuadrature(rhsVector.space().gridPart(), intersection, polOrd,
-                                                  FaceQuadratureType::INSIDE);
+          const auto faceQuadrature = make_quadrature(intersection, rhsVector.space(), polOrd);
           const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
           static const int faceCodim = 1;
@@ -361,8 +357,7 @@ public:
                 const int orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
                 const int quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
                 // get type of face quadrature. Is done in this scope because Patricks methods use another type.
-                typedef MsFEM::MsFEMTraits::SubGridListType::SubFaceQuadratureType MyFaceQuadType;
-                const MyFaceQuadType faceQuad(subGridPart, intersection, quadOrder, MyFaceQuadType::INSIDE);
+                const auto faceQuad = make_quadrature(intersection, localSolutions[lsNum]->space(), quadOrder);
                 RangeType neumannValue(0.0);
                 const auto numQuadPoints = faceQuad.nop();
                 // loop over all quadrature points
@@ -467,7 +462,7 @@ public:
       const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
       const auto old_u_H_loc = old_u_H.localFunction(entity);
-      const Quadrature quadrature(entity, polOrd);
+      const auto quadrature = make_quadrature(entity, rhsVector.space(), polOrd);
 
       const int numDofs = elementOfRHS.numDofs();
       const int numQuadraturePoints = quadrature.nop();
@@ -523,7 +518,7 @@ public:
       const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
       const auto old_u_H_loc = old_u_H.localFunction(entity);
-      const Quadrature quadrature(entity, polOrd);
+      const auto quadrature = make_quadrature(entity, rhsVector.space(), polOrd);
 
       const auto numDofs = elementOfRHS.numDofs();
       // the return values:
@@ -596,11 +591,11 @@ public:
 
       const auto old_u_H_loc = old_u_H.localFunction(entity);
       const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
-      const Quadrature quadrature(entity, polOrd);
+      const auto quadrature = make_quadrature(entity, rhsVector.space(), polOrd);
 
       const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
 
-      for (const auto& intersection : Dune::Stuff::Common::intersectionRange(rhsVector.space().gridPart(), entity)) {
+      for (const auto& intersection : DSC::intersectionRange(rhsVector.space().gridPart(), entity)) {
         if (!intersection.boundary())
           continue;
         // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
@@ -608,9 +603,7 @@ public:
           continue;
 
         const auto face = intersection.indexInInside();
-
-        const FaceQuadratureType faceQuadrature(rhsVector.space().gridPart(), intersection, polOrd,
-                                                FaceQuadratureType::INSIDE);
+        const auto faceQuadrature = make_quadrature(intersection, rhsVector.space(), polOrd);
         static const int faceCodim = 1;
         for (auto faceQuadraturePoint : DSC::valueRange(faceQuadrature.nop())) {
           baseSet.evaluateAll(faceQuadrature[faceQuadraturePoint], phi_x);
@@ -724,26 +717,20 @@ public:
       const auto macro_grid_baseSet = discreteFunctionSpace.basisFunctionSet(*macro_grid_it);
       const auto old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
       // for \int_{\Omega} f \Phi
-      const Quadrature macro_quadrature(*macro_grid_it, polOrd);
+      const auto macro_quadrature = make_quadrature(*macro_grid_it, discreteFunctionSpace, polOrd);
       // for - \int_{\Omega} \in_Y A^{\epsilon}( gradient reconstruction ) \nabla \Phi
-      const Quadrature one_point_macro_quadrature(*macro_grid_it, 0);
-      // the fine scale reconstructions are only available for the barycenter of the macro grid entity (=> only
-      // available for the canonical one point quadrature on this element)
-      const auto& local_macro_point = one_point_macro_quadrature.point(0 /*=quadraturePoint*/);
-      // barycenter of macro grid entity
-      const auto macro_entity_barycenter = macro_grid_geometry.global(local_macro_point);
-
-      const double macro_entity_volume = one_point_macro_quadrature.weight(0 /*=quadraturePoint*/) *
-                                         macro_grid_geometry.integrationElement(local_macro_point);
-
-      const int numDofs = elementOfRHS.numDofs(); // Dofs = Freiheitsgrade
+      // the fine scale reconstructions are only available for the barycenter of the macro grid entity
+      const auto macro_entity_barycenter = macro_grid_geometry.center();
+      const auto barycenter_local = macro_grid_geometry.local(macro_entity_barycenter);
+      const double macro_entity_volume =  macro_grid_geometry.volume();
+      const auto numDofs = elementOfRHS.numDofs();
       // gradient of base function and gradient of old_u_H
       std::vector<JacobianRangeType> grad_Phi_x_vec(numDofs);
       std::vector<RangeType> phi_x(numDofs);
       JacobianRangeType grad_old_u_H_x;
 
       // get gradient of old u_H:
-      old_u_H_loc.jacobian(one_point_macro_quadrature[0], grad_old_u_H_x);
+      old_u_H_loc.jacobian(barycenter_local, grad_old_u_H_x);
 
       // Q_h(u_H^{(n-1}))(x_T,y):
       PeriodicDiscreteFunctionType corrector_old_u_H("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace);
@@ -751,7 +738,7 @@ public:
 
       PeriodicDiscreteFunctionType corrector_Phi_i("Corrector of Phi_i", periodicDiscreteFunctionSpace);
       discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
-      macro_grid_baseSet.jacobianAll(one_point_macro_quadrature[0], grad_Phi_x_vec);
+      macro_grid_baseSet.jacobianAll(barycenter_local, grad_Phi_x_vec);
 
       for (int i = 0; i < numDofs; ++i) {
         const auto& grad_Phi_x = grad_Phi_x_vec[i];
@@ -795,7 +782,7 @@ public:
           auto loc_corrector_Phi_i = corrector_Phi_i.localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
-          const Quadrature micro_grid_quadrature(micro_grid_entity, 2 * periodicDiscreteFunctionSpace.order() + 2);
+          const auto micro_grid_quadrature = make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace, polOrd);
           const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {

@@ -84,9 +84,6 @@ private:
     dimension = GridType::dimension
   };
 
-  //! type of quadrature to be used
-  typedef Fem::CachingQuadrature<GridPartType, 0> QuadratureType;
-  typedef Fem::CachingQuadrature<CoarseGridPartType, 0> CoarseQuadratureType;
 
   typedef Dune::Fem::SparseRowMatrixTraits<typename SubGridList::SubGridDiscreteFunctionSpaceType,
                                            typename SubGridList::HostDiscreteFunctionSpaceType>

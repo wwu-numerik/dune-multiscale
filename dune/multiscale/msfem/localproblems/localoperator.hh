@@ -60,8 +60,6 @@ private:
   typedef typename GridPartType::IntersectionIteratorType IntersectionIterator;
   typedef typename IntersectionIterator::Intersection Intersection;
 
-  typedef Fem::CachingQuadrature<GridPartType, 0> QuadratureType;
-
   typedef typename SubGridList::HostDiscreteFunctionType HostDiscreteFunction;
   typedef typename HostDiscreteFunction::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
   typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPart;
@@ -77,12 +75,7 @@ private:
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
 
-  typedef Fem::CachingQuadrature<HostGridPart, 1> HostFaceQuadrature;
-
-  typedef typename MsFEMTraits::SubGridListType::SubFaceQuadratureType FaceQuadratureType;
-
 public:
-
   LocalProblemOperator(const DiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)

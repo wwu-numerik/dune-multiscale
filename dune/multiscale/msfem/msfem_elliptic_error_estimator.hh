@@ -101,9 +101,6 @@ private:
   typedef typename GridType::template Codim<1>::Geometry FaceGeometryType;
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
-  typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
-  typedef Fem::CachingQuadrature<GridPartType, 1> FaceQuadratureType;
-
   // --------------------------- subgrid typedefs ------------------------------------
 
   typedef typename SubGridListType::SubGridType SubGridType;
@@ -124,8 +121,6 @@ private:
   typedef typename LagrangePointSetType::template Codim<faceCodim>::SubEntityIteratorType FaceDofIteratorType;
 
   typedef typename SubGridType::template Codim<0>::Geometry SubGridEntityGeometryType;
-
-  typedef Fem::CachingQuadrature<SubGridPartType, 0> LocalGridEntityQuadratureType;
 
   typedef std::array<RangeType, 3> JumpArray;
   typedef std::array<const Intersection*, 3> IntersectionArray;
@@ -165,37 +160,14 @@ private:
   //! method to get the local mesh size H of a coarse grid entity 'T'
   // works only for our 2D examples!!!!
   RangeType get_coarse_grid_H(const EntityType& entity) const {
-    // entity_H means H (the diameter of the entity)
-    RangeType entity_H = 0.0;
-
-    const GridPartType& coarseGridPart = specifier_.coarseSpace().gridPart();
-
-    // compute the size of the faces of the entities and selected the largest.
-    IntersectionIteratorType endnit = coarseGridPart.iend(entity);
-
-    for (IntersectionIteratorType nit = coarseGridPart.ibegin(entity); nit != endnit; ++nit) {
-      FaceQuadratureType innerFaceQuadrature(coarseGridPart, *nit, 0, FaceQuadratureType::INSIDE);
-
-      auto scaledOuterNormal = nit->integrationOuterNormal(innerFaceQuadrature.localPoint(0));
-
-      // get 'volume' of the visited face (this only works because we do not have curved faces):
-      RangeType visitedFaceVolume(0.0);
-      for (int k = 0; k < dimension; ++k)
-        visitedFaceVolume += scaledOuterNormal[k] * scaledOuterNormal[k];
-      visitedFaceVolume = sqrt(visitedFaceVolume);
-
-      if (visitedFaceVolume > entity_H)
-        entity_H = visitedFaceVolume;
-    }
-
-    return entity_H;
+    return DSG::entityDiameter(entity);
   } // get_coarse_grid_H
 
   // for a coarse grid entity T:
   // return:  H_T ||f||_{L^2(T)}
   RangeType indicator_f(const EntityType& entity) const {
     // create quadrature for given geometry type
-    const Fem::CachingQuadrature<GridPartType, 0> entityQuadrature(entity, 2 * spacePolOrd + 2);
+    const auto entityQuadrature = make_quadrature(entity, fineDiscreteFunctionSpace_);
 
     // get geoemetry of entity
     const auto& geometry = entity.geometry();
@@ -322,17 +294,17 @@ private:
 
       const auto& entityGeometry = entity.geometry();
 
-      const EntityQuadratureType entityQuadrature(entity, 0); // 0 = polynomial order
-      const auto& x = entityGeometry.global(entityQuadrature.point(0));
+      const auto& x = entityGeometry.center();
+      const auto& x_local = entityGeometry.local(x);
 
       const auto local_msfem_sol = msfem_solution.localFunction(entity);
       JacobianRangeType gradient_msfem_sol(0.);
-      local_msfem_sol.jacobian(entityQuadrature[0], gradient_msfem_sol);
+      local_msfem_sol.jacobian(x_local, gradient_msfem_sol);
 
       JacobianRangeType diffusive_flux_x;
       diffusion_.diffusiveFlux(x, gradient_msfem_sol, diffusive_flux_x);
 
-      const EntityQuadratureType highOrder_entityQuadrature(entity, 2 * spacePolOrd + 2);
+      const auto highOrder_entityQuadrature = make_quadrature(entity, fineDiscreteFunctionSpace_);
 
       for (auto quadraturePoint : DSC::valueRange(highOrder_entityQuadrature.nop())) {
         const double weight = highOrder_entityQuadrature.weight(quadraturePoint) *
@@ -355,7 +327,6 @@ private:
 
       IntersectionIteratorType endnit = fineGridPart.iend(entity);
       for (IntersectionIteratorType nit = fineGridPart.ibegin(entity); nit != endnit; ++nit) {
-        FaceQuadratureType innerFaceQuadrature(fineGridPart, *nit, 0, FaceQuadratureType::INSIDE);
         const FaceGeometryType& faceGeometry = nit->geometry();
 
         if (!nit->neighbor()) {
@@ -364,19 +335,16 @@ private:
 
         auto outer_fine_grid_it = nit->outside();
         auto& outer_entity = *outer_fine_grid_it;
-
-        EntityQuadratureType outer_entityQuadrature(outer_entity, 0); // 0 = polynomial order
-        const auto& outer_entityGeometry = outer_entity.geometry();
-        const auto& outer_x = outer_entityGeometry.global(outer_entityQuadrature.point(0));
+        const auto& outer_x = outer_entity.geometry().center();
 
         auto outer_local_msfem_sol = msfem_solution.localFunction(outer_entity);
         JacobianRangeType outer_gradient_msfem_sol(0.);
-        outer_local_msfem_sol.jacobian(outer_entityQuadrature[0], outer_gradient_msfem_sol);
+        outer_local_msfem_sol.jacobian(outer_entity.geometry().local(outer_x), outer_gradient_msfem_sol);
 
         JacobianRangeType diffusive_flux_outside;
         diffusion_.diffusiveFlux(outer_x, outer_gradient_msfem_sol, diffusive_flux_outside);
 
-        auto unitOuterNormal = nit->unitOuterNormal(innerFaceQuadrature.localPoint(0));
+        auto unitOuterNormal = nit->centerUnitOuterNormal();
 
         const auto edge_length = faceGeometry.volume();
 
@@ -453,16 +421,15 @@ private:
         if (!Stuff::Grid::entities_identical(coarse_entity, *father_of_loc_grid_it))
           continue;
 
-        // -------------------------------------------------------------------
-        EntityQuadratureType host_grid_quadrature(*host_local_grid_it, 0);
+        const auto local_center = host_local_grid_it->geometry().local(host_local_grid_it->geometry().center());
         auto localized_msfem_coarse_part = msfem_coarse_part.localFunction(*host_local_grid_it);
         auto localized_msfem_fine_part = msfem_fine_part.localFunction(*host_local_grid_it);
 
         JacobianRangeType grad_msfem_coarse_part;
-        localized_msfem_coarse_part.jacobian(host_grid_quadrature[0], grad_msfem_coarse_part);
+        localized_msfem_coarse_part.jacobian(local_center, grad_msfem_coarse_part);
 
         JacobianRangeType grad_msfem_fine_part;
-        localized_msfem_fine_part.jacobian(host_grid_quadrature[0], grad_msfem_fine_part);
+        localized_msfem_fine_part.jacobian(local_center, grad_msfem_fine_part);
 
         const SubGridEntityGeometryType& local_grid_geometry = local_grid_entity.geometry();
         assert(local_grid_entity.partitionType() == InteriorEntity);
@@ -470,8 +437,7 @@ private:
         // quadrature formula on the sub grid entity
 
         // higher order quadrature, since A^{\epsilon} is highly variable
-        LocalGridEntityQuadratureType local_grid_quadrature(local_grid_entity,
-                                                            2 * localDiscreteFunctionSpace.order() + 2);
+        const auto local_grid_quadrature = make_quadrature(local_grid_entity, localDiscreteFunctionSpace);
         const auto numQuadraturePoints = local_grid_quadrature.nop();
 
         for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {

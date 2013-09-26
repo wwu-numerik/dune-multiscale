@@ -209,10 +209,8 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
     ) const {
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef Fem::CachingQuadrature<GridPartType, 0> EntityQuadratureType;
 
   static const int maxnumOfBaseFct = 100;
   const  std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
@@ -231,15 +229,14 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     std::vector<JacobianRangeType> gradientPhi(maxnumOfBaseFct);
 
     const auto baseSet = discreteFunctionSpace.basisFunctionSet(entity);
-    const auto& geometry = entity.geometry();
-    const EntityQuadratureType quadrature(entity, 0);
-    const auto barycenter_of_entity = geometry.global(quadrature.point(0));
+    const auto barycenter_of_entity = entity.geometry().center();
+    const auto barycenter_local = entity.geometry().local(barycenter_of_entity);
 
     // number of base functions on entity
     const auto numBaseFunctions = baseSet.size();
 
     // calc Jacobian inverse before volume is evaluated
-    baseSet.jacobianAll(quadrature[0], gradientPhi);
+    baseSet.jacobianAll(barycenter_local, gradientPhi);
 
     PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
     for (size_t i = 0; i < numBaseFunctions; ++i) {
