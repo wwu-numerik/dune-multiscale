@@ -6,7 +6,7 @@
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/hmm/result.hh>
-#include <dune/multiscale/tools/improved_l2error.hh>
+
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/hmm/elliptic_hmm_matrix_assembler.hh>
