@@ -204,8 +204,6 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, SubDiscret
   }
 
   //! boundary treatment:
-  typedef typename SGLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType FaceDofIteratorType;
-
   for (const auto& subgridEntity : subDiscreteFunctionSpace) {
     DSFe::LocalMatrixProxy<LocProbFEMMatrixType> localMatrix(locprob_system_matrix, subgridEntity, subgridEntity);
 
@@ -216,13 +214,12 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, SubDiscret
       // if there is a neighbor entity
       if (subgridIntersection.boundary()) {
         const int face = subgridIntersection.indexInInside();
-        const FaceDofIteratorType fdend = lagrangePointSet.endSubEntity<1>(face);
-        for (FaceDofIteratorType fdit = lagrangePointSet.beginSubEntity<1>(face); fdit != fdend; ++fdit) {
+        for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
           // zero boundary condition for 'cell problems':
           // set unit row in matrix for any boundary dof ...
-          localMatrix.unitRow(*fdit);
+          localMatrix.unitRow(lp);
           // ... and set respective rhs dof to zero
-          rhsLocal[*fdit] = 0;
+          rhsLocal[lp] = 0;
         }
       }
     }
@@ -351,9 +348,8 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_ind
       }
 
       const auto face = intersection.indexInInside();
-      const auto fdend = lagrangePointSet.endSubEntity<1>(face);
-      for (auto fdit = lagrangePointSet.beginSubEntity<1>(face); fdit != fdend; ++fdit)
-        local_matrix.unitRow(*fdit);
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+        local_matrix.unitRow(lp);
     }
   }
   // ----------------------------------------------------------------------------------------------------
@@ -407,11 +403,9 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_ind
       // SubLocalFunctionType rhsLocal = rhs_Chj[j]->localFunction(subgrid_entity);
       const auto& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);
       const auto face = (*iit).indexInInside();
-      auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-      const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-      for (; faceIterator != faceEndIterator; ++faceIterator)
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
         for (auto j : DSC::valueRange(number_of_relevant_coarse_nodes_for_subgrid))
-          ((rhs_Chj[j])->localFunction(subgrid_entity))[*faceIterator] = 0;
+          ((rhs_Chj[j])->localFunction(subgrid_entity))[lp] = 0;
     }
   }
 
@@ -993,7 +987,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-  Dune::Stuff::Common::MinMaxAvg<double> cell_time;
+  DSC::MinMaxAvg<double> cell_time;
 
   const auto& coarseSpace = specifier_.coarseSpace();
   const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
@@ -1067,7 +1061,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       bool dirichlet_boundary_corrector_assembled = false;
       bool neumann_boundary_corrector_assembled = false;
       // assemble Dirichlet and Neumann boundary correctors
-      for (const auto& intersection : Dune::Stuff::Common::intersectionRange(coarseSpace.gridPart(), coarseEntity)) {
+      for (const auto& intersection : DSC::intersectionRange(coarseSpace.gridPart(), coarseEntity)) {
         if ((!dirichlet_extension_) || (!neumann_bc_))
           continue;
 
@@ -1079,11 +1073,8 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
             const auto& lagrangePointSet = coarseSpace.lagrangePointSet(coarseEntity);
 
             const int face = intersection.indexInInside();
-            auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-            const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-
-            for (; faceIterator != faceEndIterator; ++faceIterator) {
-              if (specifier_.is_coarse_dirichlet_node(indices[*faceIterator])) {
+            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
+              if (specifier_.is_coarse_dirichlet_node(indices[lp])) {
                 solve_for_dirichlet_corrector = true;
               }
             }

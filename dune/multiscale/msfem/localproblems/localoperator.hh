@@ -50,27 +50,12 @@ private:
   static const int polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder;
 
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef typename DiscreteFunctionSpaceType::LagrangePointSetType LagrangePointSet;
-  typedef typename LagrangePointSet::Codim<1>::SubEntityIteratorType FaceDofIterator;
-
-  typedef typename DiscreteFunctionSpaceType::IteratorType EntityIteratorType;
-  typedef typename EntityIteratorType::Entity EntityType;
-  typedef typename EntityType::Geometry GeometryType;
-
-  typedef typename GridPartType::IntersectionIteratorType IntersectionIterator;
-  typedef typename IntersectionIterator::Intersection Intersection;
+  typedef typename DiscreteFunctionSpaceType::EntityType EntityType;
 
   typedef typename SubGridList::HostDiscreteFunctionType HostDiscreteFunction;
   typedef typename HostDiscreteFunction::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
-  typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPart;
-  typedef typename HostDiscreteFunctionSpaceType::IteratorType HostIterator;
-  typedef typename HostIterator::Entity HostEntity;
+  typedef typename HostDiscreteFunctionSpaceType::EntityType HostEntity;
   typedef typename HostEntity::EntityPointer HostEntityPointer;
-  typedef typename HostDiscreteFunction::LocalFunctionType HostLocalFunction;
-  typedef typename HostEntity::Geometry HostGeometry;
-  typedef typename HostGridPart::IntersectionIteratorType HostIntersectionIterator;
-  typedef typename HostDiscreteFunctionSpaceType::LagrangePointSetType HostLagrangePointSet;
-  typedef typename HostLagrangePointSet::Codim<faceCodim>::SubEntityIteratorType HostGridFaceDofIteratorType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;

@@ -391,7 +391,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
     // is a Dirichlet boundary corrector available for this coarse entity (i.e. for the corresponding subgrid)
     bool boundary_corrector_available = false;
     for (const auto& intersection :
-         Dune::Stuff::Common::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity)) {
+         DSC::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity)) {
 
       // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
       if (intersection.boundary() && (intersection.boundaryId() == 1)) {
@@ -400,11 +400,8 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
         const auto& lagrangePointSet = specifier.coarseSpace().lagrangePointSet(coarse_grid_entity);
 
         const auto face = intersection.indexInInside();
-        auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-        const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-
-        for (; faceIterator != faceEndIterator; ++faceIterator) {
-          if (specifier.is_coarse_dirichlet_node(indices[*faceIterator])) {
+        for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
+          if (specifier.is_coarse_dirichlet_node(indices[lp])) {
             boundary_corrector_available = true;
             continue;
           }
@@ -460,7 +457,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
     // is a neumann boundary corrector available for this coarse entity (i.e. for the corresponding subgrid)
     bool boundary_corrector_available = false;
     for (const auto& intersection :
-         Dune::Stuff::Common::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity)) {
+         DSC::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity)) {
 
       // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
       if (intersection.boundary() && (intersection.boundaryId() == 2))
@@ -646,7 +643,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       auto coarse_it = coarse_space.grid().entityPointer(subgrid_list.get_coarse_entity_seed(subgrid_id));
       auto& coarse_entity = *coarse_it;
       for (const auto& coarse_intersection :
-           Dune::Stuff::Common::intersectionRange(coarse_space.gridPart(), coarse_entity)) {
+           DSC::intersectionRange(coarse_space.gridPart(), coarse_entity)) {
 
         // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
         if (coarse_intersection.boundary() && (coarse_intersection.boundaryId() == 1))
@@ -919,7 +916,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
             if ((row == col) && (first_cycle == true)) {
               for (const auto& intersection :
-                   Dune::Stuff::Common::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
+                   DSC::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
                 if (!intersection.boundary())
                   continue;
                 // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
@@ -1102,7 +1099,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
             const auto& geometry = (*it).geometry();
 
             for (const auto& intersection :
-                 Dune::Stuff::Common::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
+                 DSC::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
               if (!intersection.boundary())
                 continue;
               // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;

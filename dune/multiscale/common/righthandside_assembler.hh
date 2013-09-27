@@ -200,7 +200,7 @@ public:
 
       const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
 
-      for (const auto& intersection : Dune::Stuff::Common::intersectionRange(rhsVector.space().gridPart(), entity)) {
+      for (const auto& intersection : DSC::intersectionRange(rhsVector.space().gridPart(), entity)) {
         if (Problem::isNeumannBoundary(intersection)) {
           const auto face = intersection.indexInInside();
           const auto faceQuadrature = make_quadrature(intersection, rhsVector.space(), polOrd);
@@ -221,11 +221,8 @@ public:
             const double face_weight = intersection.geometry().integrationElement(local_point_face) *
                                        faceQuadrature.weight(faceQuadraturePoint);
 
-            auto faceIterator = lagrangePointSet.template beginSubEntity<faceCodim>(face);
-            const auto faceEndIterator = lagrangePointSet.template endSubEntity<faceCodim>(face);
-
-            for (; faceIterator != faceEndIterator; ++faceIterator) {
-              elementOfRHS[*faceIterator] += neumann_value * face_weight * phi_x[*faceIterator];
+            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
+              elementOfRHS[lp] += neumann_value * face_weight * phi_x[lp];
             }
           }
         }
@@ -608,11 +605,8 @@ public:
           const double face_weight =
               intersection.geometry().integrationElement(local_point_face) * faceQuadrature.weight(faceQuadraturePoint);
 
-          auto faceIterator = lagrangePointSet.template beginSubEntity<faceCodim>(face);
-          const auto faceEndIterator = lagrangePointSet.template endSubEntity<faceCodim>(face);
-
-          for (; faceIterator != faceEndIterator; ++faceIterator) {
-            elementOfRHS[*faceIterator] += neumann_value * face_weight * phi_x[*faceIterator];
+          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
+            elementOfRHS[lp] += neumann_value * face_weight * phi_x[lp];
           }
         }
       }

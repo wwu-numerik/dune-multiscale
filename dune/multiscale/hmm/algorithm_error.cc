@@ -91,7 +91,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
         error_estimator.indicator_res_T(entity, hmm_solution, corrector_u_H_on_entity);
     result.estimated_residual_error_micro_jumps += local_residual_indicator;
 
-    for (const auto& intersection : Dune::Stuff::Common::intersectionRange(gridPart, entity)) {
+    for (const auto& intersection : DSC::intersectionRange(gridPart, entity)) {
       if (intersection.neighbor()) // if there is a neighbor entity
       {
         // corrector of u_H^(n-1) \approx u_H on the neighbor element

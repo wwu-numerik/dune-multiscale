@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
 
-    DSC_LOG_INFO_0 << "Error File for Elliptic Model Problem " << Dune::Stuff::Common::getTypename(info)
+    DSC_LOG_INFO_0 << "Error File for Elliptic Model Problem " << DSC::getTypename(info)
                    << " with epsilon = " << DSC_CONFIG_GET("problem.epsilon", 1.0f) << "." << std::endl << std::endl;
     if (DSC_CONFIG_GET("msfem.uniform", true)) {
       if (DSC_CONFIG_GET("msfem.petrov_galerkin", true))

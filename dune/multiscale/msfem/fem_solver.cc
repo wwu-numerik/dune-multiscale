@@ -118,11 +118,8 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
           const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 
           const auto face = iit->indexInInside();
-
-          auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-          const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-          for (; faceIterator != faceEndIterator; ++faceIterator)
-            rhsLocal[*faceIterator] = 0;
+          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+            rhsLocal[lp] = 0;
         }
       }
     }
@@ -208,11 +205,8 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
             const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
 
             const int face = iit->indexInInside();
-
-            auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-            const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-            for (; faceIterator != faceEndIterator; ++faceIterator)
-              rhsLocal[*faceIterator] = 0;
+            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+              rhsLocal[lp] = 0;
           }
         }
       }
@@ -317,11 +311,8 @@ void Elliptic_FEM_Solver::solve(
           const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
 
           const int face = iit->indexInInside();
-
-          auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-          const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-          for (; faceIterator != faceEndIterator; ++faceIterator)
-            rhsLocal[*faceIterator] = 0;
+          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+            rhsLocal[lp] = 0;
         }
       }
     }
@@ -408,11 +399,8 @@ void Elliptic_FEM_Solver::solve(
             const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
 
             const int face = iit->indexInInside();
-
-            auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-            const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-            for (; faceIterator != faceEndIterator; ++faceIterator)
-              rhsLocal[*faceIterator] = 0;
+            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+              rhsLocal[lp] = 0;
           }
         }
       }

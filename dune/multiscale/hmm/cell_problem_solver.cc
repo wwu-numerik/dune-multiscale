@@ -218,7 +218,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
   DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_baseSet");
 
   // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
-  Dune::Stuff::Common::MinMaxAvg<double> cell_time;
+  DSC::MinMaxAvg<double> cell_time;
 
   std::size_t number_of_cell_problem = 0;
 
@@ -283,7 +283,7 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
   DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_discFunc");
 
   // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
-  Dune::Stuff::Common::MinMaxAvg<double> cell_time;
+  DSC::MinMaxAvg<double> cell_time;
 
   const auto& discreteFunctionSpace = macro_discrete_function.space();
 
@@ -348,7 +348,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
   DSC_PROFILER.startTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc");
 
   // we want to determine minimum, average and maxiumum time for solving a cell problem in the current method
-  Dune::Stuff::Common::MinMaxAvg<double> cell_time;
+  DSC::MinMaxAvg<double> cell_time;
 
   std::size_t number_of_cell_problem = 0;
 

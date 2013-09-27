@@ -41,7 +41,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
   const auto& discreteFunctionSpace = rhs.space();
   static const unsigned int faceCodim = 1;
   for (const auto& entity : discreteFunctionSpace) {
-    for (const auto& intersection : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
+    for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
       if (!intersection.boundary())
         continue;
       if (intersection.boundary() && (intersection.boundaryId() != 1))
@@ -49,7 +49,7 @@ void boundaryTreatment(DiscreteFunctionType& rhs) {
 
       auto rhsLocal = rhs.localFunction(entity);
       const auto face = intersection.indexInInside();
-      for (auto loc_point : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
+      for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
         rhsLocal[loc_point] = 0;
     }
   }
@@ -62,11 +62,11 @@ void setDirichletValues(DirichletBC& dirichlet_func, DiscreteFunctionType& func)
   const auto& discreteFunctionSpace = func.space();
   static const unsigned int faceCodim = 1;
   for (const auto& entity : discreteFunctionSpace) {
-    for (const auto& intersection : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
+    for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
       if (Dune::Multiscale::Problem::isDirichletBoundary(intersection)) {
         auto funcLocal = func.localFunction(entity);
         const auto face = intersection.indexInInside();
-        for (auto loc_point : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
+        for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
           const auto& global_point =
               entity.geometry().global(discreteFunctionSpace.lagrangePointSet(entity).point(loc_point));
           CommonTraits::RangeType dirichlet_value(0.0);

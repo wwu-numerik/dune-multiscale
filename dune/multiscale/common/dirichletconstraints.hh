@@ -297,16 +297,10 @@ protected:
 
         if (boundary_.dirichlet(intersection)) {
           // get dof iterators
-          auto faceIt = lagrangePointSet.template beginSubEntity<faceCodim>(face);
-          const auto faceEndIt = lagrangePointSet.template endSubEntity<faceCodim>(face);
-          for (; faceIt != faceEndIt; ++faceIt) {
-            // get local dof number (expensive operation, therefore cache
-            // result)
-            const int localBlock = *faceIt;
-
+          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
             // mark global DoF number
-            assert(globalBlockDofs[localBlock] < dirichletBlocks_.size());
-            dirichletBlocks_[globalBlockDofs[localBlock]] = true;
+            assert(globalBlockDofs[lp] < dirichletBlocks_.size());
+            dirichletBlocks_[globalBlockDofs[lp]] = true;
           }
           hasDirichletBoundary = true;
         }
