@@ -41,15 +41,6 @@ class DiscreteEllipticOperator
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-  typedef typename LagrangePointSet::template Codim<1>::SubEntityIteratorType FaceDofIterator;
-
-  typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity Entity;
-
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
-  typedef typename IntersectionIterator::Intersection Intersection;
-
 
 public:
 

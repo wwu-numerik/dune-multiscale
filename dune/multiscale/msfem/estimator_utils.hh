@@ -94,7 +94,7 @@ struct EstimatorUtils {
       const auto& host_entity = *host_entity_pointer;
 
       auto father_of_sub_grid_entity =
-          Stuff::Grid::make_father(coarseGridLeafIndexSet, host_entity_pointer, level_difference);
+          DSG::make_father(coarseGridLeafIndexSet, host_entity_pointer, level_difference);
       const int coarse_sub_father_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
       if (coarse_sub_father_index != index_coarse_entity) {
         continue;

@@ -288,7 +288,7 @@ private:
     for (const auto& entity : fineDiscreteFunctionSpace_) {
 
       // identify coarse grid father entity
-      auto coarse_father = Stuff::Grid::make_father(coarseGridLeafIndexSet, EntityPointerType(entity),
+      auto coarse_father = DSG::make_father(coarseGridLeafIndexSet, EntityPointerType(entity),
                                                     specifier_.getLevelDifference());
       const int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
 
@@ -417,8 +417,8 @@ private:
             localDiscreteFunctionSpace.grid().template getHostEntity<0>(local_grid_entity);
 
         auto father_of_loc_grid_it =
-            Stuff::Grid::make_father(coarseGridLeafIndexSet, host_local_grid_it, specifier_.getLevelDifference());
-        if (!Stuff::Grid::entities_identical(coarse_entity, *father_of_loc_grid_it))
+            DSG::make_father(coarseGridLeafIndexSet, host_local_grid_it, specifier_.getLevelDifference());
+        if (!DSG::entities_identical(coarse_entity, *father_of_loc_grid_it))
           continue;
 
         const auto local_center = host_local_grid_it->geometry().local(host_local_grid_it->geometry().center());

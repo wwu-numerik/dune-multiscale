@@ -140,24 +140,20 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
       const auto& nodeToEntityMap = subgrid_list.getNodeEntityMap();
 
-      typedef typename SubgridDiscreteFunctionSpaceType::IteratorType SubgridIterator;
-      typedef typename SubgridIterator::Entity SubgridEntity;
-      typedef typename SubgridDiscreteFunctionType::LocalFunctionType SubgridLocalFunction;
-
       for (auto& subgridEntity : localSolManager.getLocalDiscreteFunctionSpace()) {
         //! MARK actual subgrid usage
-        const HostEntityPointer fine_host_entity_pointer =
+        const auto fine_host_entity_pointer =
             localSolManager.getSubGridPart().grid().getHostEntity<0>(subgridEntity);
-        const HostEntity& fine_host_entity = *fine_host_entity_pointer;
+        const auto& fine_host_entity = *fine_host_entity_pointer;
 
         const auto hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(fine_host_entity_pointer);
         if (hostFatherIndex == coarseCellIndex) {
-          const SubgridLocalFunction sub_loc_value = localSolutions[0]->localFunction(subgridEntity);
+          const auto sub_loc_value = localSolutions[0]->localFunction(subgridEntity);
 
           assert(localSolutions.size() == coarseSolutionLF.numDofs() + localSolManager.numBoundaryCorrectors());
           auto host_loc_value = fine_scale_part.localFunction(fine_host_entity);
 
-          auto number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();
+          const auto number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();
 
           for (auto i : DSC::valueRange(number_of_nodes_entity)) {
             const auto node = fine_host_entity.subEntity<HostGrid::dimension>(i);

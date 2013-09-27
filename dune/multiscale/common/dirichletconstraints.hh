@@ -53,9 +53,7 @@ public:
 
     // if Dirichlet Dofs have been found, treat them
     if (hasDirichletDofs_) {
-      typedef typename DiscreteFunctionType::ConstDofIteratorType ConstDofIteratorType;
-
-      ConstDofIteratorType uIt = u.dbegin();
+      auto uIt = u.dbegin();
       auto wIt = w.dbegin();
 
       constexpr auto localBlockSize = DiscreteFunctionType::DiscreteFunctionSpaceType::localBlockSize;
@@ -213,29 +211,14 @@ protected:
   template <class EntityType, class GridFunctionType, class DiscreteFunctionType>
   void dirichletDofTreatment(const EntityType& entity, const GridFunctionType& u, DiscreteFunctionType& w) const {
     typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteSpaceType;
-    typedef typename GridFunctionType::LocalFunctionType GridLocalFunctionType;
 
-
-    typedef typename DiscreteSpaceType::LagrangePointSetType LagrangePointSetType;
-    typedef typename DiscreteSpaceType::GridPartType GridPartType;
-
-    static const int faceCodim = 1;
-    typedef typename GridPartType::IntersectionIteratorType IntersectionIteratorType;
-    typedef typename LagrangePointSetType::template Codim<faceCodim>::SubEntityIteratorType FaceDofIteratorType;
-
-    // get local functions of result
     auto wLocal = w.localFunction(entity);
-
-    // get local functions of argument
-    GridLocalFunctionType uLocal = u.localFunction(entity);
-
-    const LagrangePointSetType& lagrangePointSet = domain_space_.lagrangePointSet(entity);
-
-    // get number of Lagrange Points
+    auto uLocal = u.localFunction(entity);
+    const auto& lagrangePointSet = domain_space_.lagrangePointSet(entity);
     const auto numBlocks = lagrangePointSet.size();
 
     int localDof = 0;
-    const int localBlockSize = DiscreteSpaceType::localBlockSize;
+    const auto localBlockSize = DiscreteSpaceType::localBlockSize;
 
     // map local to global BlockDofs
     std::vector<std::size_t> globalBlockDofs(numBlocks);

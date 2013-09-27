@@ -248,7 +248,6 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
 } // end method
 
 double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   const auto& discreteFunctionSpace = rhs.space();
 
   double norm = 0.0;
@@ -274,8 +273,6 @@ double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunctio
 void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e, // direction 'e'
                                               // rhs local msfem problem:
                                               LocalProblemOperator::DiscreteFunction& local_problem_RHS) const {
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BaseFunctionSet;
-
   const auto& discreteFunctionSpace = local_problem_RHS.space();
 
   // set entries to zero:
@@ -558,13 +555,6 @@ void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(
     const int& oversampling_strategy,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const {
-
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity Entity;
-  typedef typename Entity::Geometry Geometry;
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();
@@ -666,13 +656,6 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
     const int& oversampling_strategy,
     // rhs local msfem problem:
     DiscreteFunction& local_problem_RHS) const {
-
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity Entity;
-  typedef typename Entity::Geometry Geometry;
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();

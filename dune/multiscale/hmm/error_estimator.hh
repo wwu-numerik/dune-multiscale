@@ -35,41 +35,24 @@ private:
 
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
   typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpaceType;
-  typedef typename PeriodicDiscreteFunctionSpaceType::GridPartType PeriodicGridPartType;
-  typedef typename PeriodicDiscreteFunctionSpaceType::GridType PeriodicGridType;
   typedef typename PeriodicDiscreteFunctionType::RangeType RangeType;
   typedef typename PeriodicDiscreteFunctionType::RangeFieldType TimeType;
   typedef typename PeriodicDiscreteFunctionType::DomainType DomainType;
   typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType PeriodicJacobianRangeType;
-  typedef typename PeriodicDiscreteFunctionSpaceType::IteratorType PeriodicIteratorType;
-  typedef typename PeriodicGridPartType::IntersectionIteratorType PeriodicIntersectionIteratorType;
-  typedef typename PeriodicGridType::template Codim<0>::Entity PeriodicEntityType;
-  typedef typename PeriodicGridType::template Codim<0>::EntityPointer PeriodicEntityPointerType;
-  typedef typename PeriodicGridType::template Codim<0>::Geometry PeriodicEntityGeometryType;
-  typedef typename PeriodicGridType::template Codim<1>::Geometry PeriodicFaceGeometryType;
+
+  typedef typename PeriodicDiscreteFunctionType::GridType::template Codim<0>::Entity PeriodicEntityType;
+  typedef typename PeriodicDiscreteFunctionType::GridType::template Codim<0>::EntityPointer PeriodicEntityPointerType;
   typedef DiscreteFunctionImp DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionType::DofIteratorType DofIteratorType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename DiscreteFunctionSpaceType::GridType GridType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-  typedef typename GridPartType::IntersectionIteratorType IntersectionIteratorType;
-  typedef typename GridType::template Codim<0>::Entity EntityType;
-  typedef typename GridType::template Codim<0>::EntityPointer EntityPointerType;
-  typedef typename GridType::template Codim<0>::Geometry EntityGeometryType;
-  typedef typename GridType::template Codim<1>::Geometry FaceGeometryType;
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
-  enum {
-    dimension = PeriodicGridType::dimension
-  };
-  enum {
-    spacePolOrd = PeriodicDiscreteFunctionSpaceType::polynomialOrder
-  };
-  enum {
-    maxnumOfBaseFct = 100
-  };
+  typedef typename DiscreteFunctionSpaceType::GridType::template Codim<0>::Entity EntityType;
+  typedef typename DiscreteFunctionSpaceType::GridType::template Codim<0>::EntityPointer EntityPointerType;
+
+  static const int dimension = PeriodicDiscreteFunctionType::GridType::dimension;
+  static const int spacePolOrd = PeriodicDiscreteFunctionSpaceType::polynomialOrder;
+  static const int maxnumOfBaseFct = 100;
 
 private:
   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_;
@@ -250,7 +233,7 @@ public:
       loc_Q_u_H_x_T.jacobian(x_T_local, gradient_Q_u_H_x_T);
 
       // S denotes the micro grid element (i.e. 'micro_entity')
-      const PeriodicEntityGeometryType& geometry_S = micro_entity.geometry();
+      const auto& geometry_S = micro_entity.geometry();
       // y_S denotes the barycenter of the micro grid element S:
       const DomainType& y_S = geometry_S.center();
 
@@ -881,15 +864,13 @@ public:
 
       if ((fabs(y_S[1]) <= ((0.5 * (epsilon_estimated / delta)))) &&
           (fabs(y_S[0]) <= ((0.5 * (epsilon_estimated / delta))))) {
-        // ----------------------------------------------------
 
-        const IntersectionIteratorType p_endnit = auxGridPart.iend(micro_entity);
-        for (IntersectionIteratorType p_nit = auxGridPart.ibegin(micro_entity); p_nit != p_endnit; ++p_nit) {
+        for (const auto& intersection : DSC::intersectionRange(auxGridPart, micro_entity)) {
           // Note: we are on the zero-centered unit cube! (That's why everything works!)
 
-          const auto& faceGeometry = p_nit->geometry();
+          const auto& faceGeometry = intersection.geometry();
           const auto edge_length = faceGeometry.volume();
-          const auto unitOuterNormal = p_nit->centerUnitOuterNormal();
+          const auto unitOuterNormal = intersection.centerUnitOuterNormal();
           const auto& edge_center = geometry_S.center();
 
           if ((fabs(edge_center[0]) == ((0.5 * (epsilon_estimated / delta)))) ||
@@ -948,7 +929,7 @@ public:
             // --------- the 'outer entity' (micro grid) ------------
             // ( neighbor entity )
 
-            const auto outer_p_it = p_nit->outside();
+            const auto outer_p_it = intersection.outside();
             const auto& outer_micro_entity = *outer_p_it;
             // S denotes the micro grid element (i.e. 'micro_entity')
             const auto& outer_geometry_S = outer_micro_entity.geometry();

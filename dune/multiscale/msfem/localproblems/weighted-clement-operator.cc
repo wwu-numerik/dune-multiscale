@@ -71,7 +71,7 @@ Dune::Multiscale::MsFEM::WeightedClementOperator::systemMatrix() const {
 }
 
 void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
-  const DiscreteFunctionSpaceType& space = discreteFunctionSpace();
+  const auto& space = discreteFunctionSpace();
 
   // reserve memory for matrix
   linearOperator_.reserve(sparsity_pattern_);
@@ -81,15 +81,6 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
 
   // clear matrix
   linearOperator_.clear();
-
-  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-  typedef typename CoarseDiscreteFunctionSpaceType::IteratorType CoarseIteratorType;
-
-  typedef typename IteratorType::Entity EntityType;
-  typedef typename CoarseIteratorType::Entity CoarseEntityType;
-
-  typedef typename EntityType::Geometry GeometryType;
-  typedef typename CoarseEntityType::Geometry CoarseGeometryType;
 
   // coefficients in the matrix that describes the weighted Clement interpolation, i.e. coff[c] = (\int_{\Omega}
   // \Phi_j)^{-1}
@@ -181,12 +172,12 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
           coarse_phi_corner_2[2]);
 
       // cache geometry of entity
-      const GeometryType geometry = entity.geometry();
+      const auto geometry = entity.geometry();
 
       std::vector<RangeType> fine_phi(space.mapper().maxNumDofs());
 
       // get base function set
-      const BasisFunctionSetType& baseSet = space.basisFunctionSet(entity);
+      const auto& baseSet = space.basisFunctionSet(entity);
       const auto numBaseFunctions = baseSet.size();
       const auto quadrature = make_quadrature(entity, space);
 
@@ -194,7 +185,7 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
       const auto numQuadraturePoints = quadrature.nop();
       for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
         const auto& local_point = quadrature.point(quadraturePoint);
-        DomainType global_point = geometry.global(quadrature.point(quadraturePoint));
+        const auto global_point = geometry.global(quadrature.point(quadraturePoint));
 
         const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 

@@ -17,12 +17,9 @@ void DiscreteEllipticHMMOperator::boundary_treatment(CommonTraits::FEMMatrix& gl
       continue;
 
     auto local_matrix = global_matrix.localMatrix(entity, entity);
-
     const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 
-    const IntersectionIterator iend = gridPart.iend(entity);
-    for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit) {
-      const Intersection& intersection = *iit;
+    for (const auto& intersection : DSC::intersectionRange(gridPart, entity)) {
       if (!intersection.boundary())
         continue;
 
@@ -31,9 +28,8 @@ void DiscreteEllipticHMMOperator::boundary_treatment(CommonTraits::FEMMatrix& gl
         continue;
 
       const int face = intersection.indexInInside();
-      const auto fdend = lagrangePointSet.endSubEntity<1>(face);
-      for (auto fdit = lagrangePointSet.beginSubEntity<1>(face); fdit != fdend; ++fdit)
-        local_matrix.unitRow(*fdit);
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+        local_matrix.unitRow(lp);
     }
   }
 }

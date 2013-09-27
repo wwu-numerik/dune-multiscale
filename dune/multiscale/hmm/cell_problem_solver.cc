@@ -210,7 +210,6 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     ) const {
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
 
   static const int maxnumOfBaseFct = 100;
   const  std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
@@ -259,7 +258,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
       }
       number_of_cell_problem++;
     }
-  } // end: for-loop: IteratorType it
+  } // end: for-loop entity
 
   const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_baseSet") / 1000.f;
   DSC_LOG_INFO << std::endl;
@@ -276,13 +275,7 @@ void
 CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctionType& macro_discrete_function) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename DiscreteFunctionSpaceType::GridType GridType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-  typedef typename GridType::Codim<0>::Entity EntityType;
-  typedef typename EntityType::Geometry EntityGeometryType;
 
   std::string cell_solution_location = subdir_ + "/_cellSolutions_discFunc";
   DiscreteFunctionWriter dfw(cell_solution_location);
@@ -318,7 +311,7 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
 
     dfw.append(cell_solution_on_entity);
     number_of_entity += 1;
-  } // end: for-loop: IteratorType it
+  } // end: for-loop entity
 
   const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc");
   DSC_LOG_INFO << std::endl;
@@ -337,14 +330,10 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     ) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
   typedef typename GridType::Codim<0>::Entity EntityType;
   typedef typename EntityType::EntityPointer EntityPointerType;
-  typedef typename EntityType::Geometry EntityGeometryType;
 
   // where we save the solutions:
   const std::string cell_solution_location = subdir_ + "/_JacCorCellSolutions_baseSet_discFunc";
@@ -413,7 +402,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     }
 
     number_of_entity += 1;
-  } // end: for-loop: IteratorType it
+  } // end: for-loop entity
 
   const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc");
   DSC_LOG_INFO << std::endl;

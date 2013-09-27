@@ -293,11 +293,6 @@ public:
 
       const BasisFunctionSetType& coarse_grid_baseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
 
-      // the sub grid U(T) that belongs to the coarse_grid_entity T
-      typedef typename SubGridListType::SubGridPartType SubGridPartType;
-      typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType LocalDiscreteFunctionSpaceType;
-      typedef typename SubGridListType::SubGridDiscreteFunctionType LocalDiscreteFunction;
-
       // --------- add standard contribution of right hand side -------------------------
       {
         //!\TODO warum +5 ???
@@ -681,8 +676,7 @@ public:
                                  // to obtain some information about the periodic discrete function space (space
                                  // for the cell problems)
                                  const CellProblemNumberingManagerType& cp_num_manager,
-                                 const PeriodicDiscreteFunctionType& dummy_func, DiscreteFunctionType& rhsVector) {
-    typedef Multiscale::HMM::CellProblemSolver CellProblemSolverType;
+                                 const PeriodicDiscreteFunctionType& dummy_func, DiscreteFunctionType& rhsVector) {  
     const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
     const std::string cell_solution_location_discFunc = "/cell_problems/_cellSolutions_discFunc";
 
