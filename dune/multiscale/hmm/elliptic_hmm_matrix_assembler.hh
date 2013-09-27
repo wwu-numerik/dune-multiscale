@@ -33,26 +33,15 @@ private:
   typedef CommonTraits::DiffusionType DiffusionModel;
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename PeriodicDiscreteFunction::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpace;
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename DiscreteFunctionSpace::GridType GridType;
-  typedef typename PeriodicDiscreteFunctionSpace::GridPartType PeriodicGridPart;
-  typedef typename PeriodicDiscreteFunctionSpace::GridType PeriodicGridType;
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
-  typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
-
-  static const int dimension = GridPart::GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
-
-
+  typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;  
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-  typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity Entity;
-  typedef typename Entity::Geometry Geometry;
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
-  typedef typename IntersectionIterator::Intersection Intersection;
+  typedef typename DiscreteFunctionSpace::EntityType Entity;
+
+  static const int dimension = DiscreteFunctionSpace::GridType::dimension;
+  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
 public:
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,

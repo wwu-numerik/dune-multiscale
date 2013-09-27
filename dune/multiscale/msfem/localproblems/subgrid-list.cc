@@ -77,7 +77,7 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
 
           HostEntityPointerType& current_fine_entity = entities_sharing_same_node_[global_index_node][j];
           HostEntityPointerType coarse_father =
-              Stuff::Grid::make_father(coarseGridLeafIndexSet, current_fine_entity, level_difference);
+              DSG::make_father(coarseGridLeafIndexSet, current_fine_entity, level_difference);
           for (int c = 0; c < coarse_father->geometry().corners(); ++c) {
 
             // add the corners of the coarse_father to the 'extended_coarse_node_store_' if they are not yet contained
@@ -462,7 +462,7 @@ void SubGridList::createSubGrids() {
   // loop over all host entities and assign them to a macro cell
   for (const auto& host_entity : hostSpace_) {
     // get the coarse-grid-father of host_entity (which is a maxlevel entity)...
-    //    const HostEntityPointerType level_father_entity = Stuff::Grid::make_father(coarseGridLeafIndexSet_,
+    //    const HostEntityPointerType level_father_entity = DSG::make_father(coarseGridLeafIndexSet_,
     //            HostEntityPointerType(host_entity),
     //            specifier_.getLevelDifference());
     //// ... and its index

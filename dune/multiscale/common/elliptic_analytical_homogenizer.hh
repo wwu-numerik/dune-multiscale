@@ -26,24 +26,13 @@ template <class GridImp, class TensorImp>
 class AnalyticalHomogenizer {
 private:
   typedef GridImp GridType;
-
   typedef Fem::LeafGridPart<GridType> GridPartType;
-
   typedef Fem::FunctionSpace<double, double, 2, 1> FunctionSpaceType;
-
   typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, 1> DiscreteFunctionSpaceType;
-
   typedef Fem::AdaptiveDiscreteFunction<DiscreteFunctionSpaceType> DiscreteFunctionType;
-
   typedef typename FunctionSpaceType::DomainType DomainType;
-
   typedef typename FunctionSpaceType::RangeType RangeType;
-
   typedef TensorImp TensorType;
-
-  typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-
-  typedef typename EntityType::ctype coordType;
 
   enum {
     dimension = GridType::dimension

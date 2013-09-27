@@ -172,7 +172,6 @@ double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const {
   double norm = 0.0;
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
 
   const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
   for (const auto& entity : discreteFunctionSpace) {
@@ -248,24 +247,17 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
                                                             const JacobianRangeType& grad_coarse_function,
                                                             const DiscreteFunction& old_fine_function,
                                                             DiscreteFunction& cell_problem_RHS) const {
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
-
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
-  typedef typename Iterator::Entity Entity;
-
-  const DiscreteFunctionSpace& discreteFunctionSpace = cell_problem_RHS.space();
+  const auto& discreteFunctionSpace = cell_problem_RHS.space();
 
   // set entries to zero:
   cell_problem_RHS.clear();
-
   // get edge length of cell:
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   // gradient of micro scale base function:
   std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
 
-  for (const Entity& cell_grid_entity : discreteFunctionSpace) {
+  for (const auto& cell_grid_entity : discreteFunctionSpace) {
     const auto& geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
@@ -322,18 +314,10 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS( // 
     const JacobianRangeType& grad_coarse_base_function, // \nabla_x \Phi_H(x_T)
     // rhs cell problem:
     DiscreteFunction& jac_corrector_cell_problem_RHS) const {
-  // ! typedefs for the (discrete) periodic micro space:
-
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity Entity;
-
   const auto& discreteFunctionSpace = corrector_of_old_coarse_function.space();
 
   // set entries of right hand side to zero:
   jac_corrector_cell_problem_RHS.clear();
-
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   // gradient of micro scale base function:

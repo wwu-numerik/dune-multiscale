@@ -38,7 +38,7 @@ void MacroMicroGridSpecifier::setNoOfLayers(std::size_t i, std::size_t number_of
   * @return Returns the number of overlay layers for the given coarse element.
   */
 std::size_t MacroMicroGridSpecifier::getNoOfLayers(std::size_t i) const {
-  if (i < 0 || i >= number_of_level_host_entities_)
+  if (i >= number_of_level_host_entities_)
     DUNE_THROW(Dune::InvalidStateException, "Error. Assertion (i < number_of_level_host_entities_) not fulfilled.");
 
   return number_of_layers[i];

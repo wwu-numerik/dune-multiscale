@@ -17,8 +17,7 @@ namespace HMM {
 //! \todo DOCME
 template <class Stream, class DiscFunc>
 void oneLinePrint(Stream& stream, const DiscFunc& func) {
-  typedef typename DiscFunc::ConstDofIteratorType DofIteratorType;
-  DofIteratorType it = func.dbegin();
+  auto it = func.dbegin();
   stream << "\n" << func.name() << ": [ ";
   for (; it != func.dend(); ++it)
     stream << std::setw(5) << *it << "  ";

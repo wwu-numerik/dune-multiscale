@@ -93,7 +93,7 @@ private:
       return true;
     }
 
-    const bool operator==(OrderedDomainType point_2) const {
+    bool operator==(OrderedDomainType point_2) const {
       for (int i = 0; i < dimension; ++i) {
         if ((*this)[i] > point_2[i])
           return false;
@@ -307,7 +307,6 @@ private:
           const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
           const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
-          static const int faceCodim = 1;
           for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint) {
             RangeType func_in_x;
             local_func.evaluate(faceQuadrature[faceQuadraturePoint], func_in_x);

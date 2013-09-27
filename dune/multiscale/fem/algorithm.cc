@@ -258,7 +258,7 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
   const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);
   const int refinement_level_ = DSC_CONFIG_GET("fem.grid_level", 4);
-  out << "Log-File for Elliptic Model Problem " << Problem::name << "." << std::endl << std::endl;
+  out << "Log-File for Elliptic Model Problem " << Problem::name() << "." << std::endl << std::endl;
   if (DSC_CONFIG_GET("problem.linear", true))
     out << "Problem is declared as being LINEAR." << std::endl;
   else

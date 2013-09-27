@@ -8,9 +8,7 @@
 #include <config.h>
 #include <vector>
 
-#include <dune/common/fmatrix.hh>
-
-#include <dune/geometry/quadraturerules.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 #include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
@@ -66,10 +64,7 @@ private:
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename DiscreteFunctionSpace::GridType GridType;
-
   typedef typename SubGridDiscreteFunctionSpace::GridPartType SubGridPart;
-  typedef typename SubGridDiscreteFunctionSpace::GridType SubGridType;
 
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
@@ -79,30 +74,11 @@ private:
   static const int dimension = GridPart::GridType::dimension;
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
-
-  typedef typename SubGridDiscreteFunction::LocalFunctionType SubGridLocalFunction;
-
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-  typedef typename LagrangePointSet::template Codim<1>::SubEntityIteratorType FaceDofIterator;
-
   typedef typename GridPart::template Codim<0>::EntityType Entity;
   typedef typename Entity::EntityPointer EntityPointer;
-
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
-  typedef typename IntersectionIterator::Intersection Intersection;
-  typedef typename Intersection::LocalCoordinate LocalCoordinate;
-
   typedef typename SubGridDiscreteFunctionSpace::BasisFunctionSetType SubGridBaseFunctionSet;
-  typedef typename SubGridDiscreteFunctionSpace::LagrangePointSetType SubGridLagrangePointSet;
-  typedef typename SubGridLagrangePointSet::template Codim<1>::SubEntityIteratorType SubGridFaceDofIterator;
-
-  typedef typename SubGridDiscreteFunctionSpace::IteratorType SubGridIterator;
-  typedef typename SubGridIterator::Entity SubGridEntity;
-  typedef typename SubGridEntity::Geometry SubGridGeometry;
-
-  typedef typename SubGridPart::IntersectionIteratorType SubGridIntersectionIterator;
-
+  typedef typename SubGridDiscreteFunctionSpace::EntityType SubGridEntity;
 
 public:
   ConservativeFluxOperator(const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace,
@@ -159,8 +135,6 @@ template <class MatrixType>
 void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
                               MacroMicroGridSpecifierImp>::assemble_matrix(const int sub_grid_id,
                                                                            MatrixType& global_matrix) const {
-  typedef typename MatrixType::LocalMatrixType LocalMatrix;
-
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
@@ -174,7 +148,7 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
     const auto& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
     auto father_of_sub_grid_entity =
-        Stuff::Grid::make_father(coarseGridLeafIndexSet, host_entity_pointer, specifier_.getLevelDifference());
+        DSG::make_father(coarseGridLeafIndexSet, host_entity_pointer, specifier_.getLevelDifference());
     const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
     assert(sub_grid_entity.partitionType() == InteriorEntity);
 
@@ -183,24 +157,21 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const IntersectionIterator iend = discreteFunctionSpace_.gridPart().iend(*host_entity_pointer);
-    for (IntersectionIterator iit = discreteFunctionSpace_.gridPart().ibegin(*host_entity_pointer); iit != iend;
-         ++iit) {
-      const auto& intersection = *iit;
+    for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace_.gridPart(), *host_entity_pointer)) {
       const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
-      const auto& faceGeometry = iit->geometry();
+      const auto& faceGeometry = intersection.geometry();
 
       bool set_zero = false;
       if (coarse_index != sub_grid_id) {
         set_zero = true;
       }
 
-      if ((iit->neighbor()) && (!set_zero)) {
-        EntityPointer outside_it = iit->outside();
+      if ((intersection.neighbor()) && (!set_zero)) {
+        const auto outside_it = intersection.outside();
 
-        EntityPointer father_of_neighbor =
-            Stuff::Grid::make_father(coarseGridLeafIndexSet, outside_it, specifier_.getLevelDifference());
-        if (Stuff::Grid::entities_identical(*father_of_sub_grid_entity, *father_of_neighbor)) {
+        const auto father_of_neighbor =
+            DSG::make_father(coarseGridLeafIndexSet, outside_it, specifier_.getLevelDifference());
+        if (DSG::entities_identical(*father_of_sub_grid_entity, *father_of_neighbor)) {
           set_zero = true;
         }
       }
@@ -245,7 +216,7 @@ double ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp,
                                 MacroMicroGridSpecifierImp>::normRHS(SubGridDiscreteFunctionImp& rhs) const {
   double norm = 0.0;
   const auto& discreteFunctionSpace = rhs.space();
-  typedef typename SubGridDiscreteFunctionImp::DiscreteFunctionSpaceType::GridPartType GridPartType;
+
   for (const auto& entity : discreteFunctionSpace) {
     const auto quadrature = make_quadrature(entity, discreteFunctionSpace);
     const auto& geo = entity.geometry();
@@ -293,7 +264,7 @@ template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
     const auto& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
     auto father_of_sub_grid_entity =
-        Stuff::Grid::make_father(coarseGridLeafIndexSet, host_entity_pointer, specifier_.getLevelDifference());
+        DSG::make_father(coarseGridLeafIndexSet, host_entity_pointer, specifier_.getLevelDifference());
     const int coarse_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
 
     if (coarse_index != sub_grid_id) {
@@ -327,7 +298,7 @@ template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
       JacobianRangeType total_diffusive_flux;
 
       JacobianRangeType grad_corrector_e_i;
-      SubGridLocalFunction localized_corrector_e_i = local_corrector_e_i.localFunction(local_grid_entity);
+      const auto localized_corrector_e_i = local_corrector_e_i.localFunction(local_grid_entity);
       localized_corrector_e_i.jacobian(quadrature[quadraturePoint], grad_corrector_e_i);
       diffusion_operator_.diffusiveFlux(global_point, grad_corrector_e_i, total_diffusive_flux);
 
@@ -350,76 +321,29 @@ private:
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
 
   //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
-
-  //! type of discrete function space
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
-
-  //! type of (non-discrete )function space
   typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
-
-  //! type of grid partition
   typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
-
-  //! type of grid
   typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
-
-  typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
-
-  typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
-
-  typedef typename HostGridEntityIteratorType::Entity HostEntityType;
-
+  typedef typename HostDiscreteFunctionSpaceType::EntityType HostEntityType;
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
-
-  typedef typename HostGridType::template Codim<0>::Geometry HostGridEntityGeometry;
-
-  typedef typename HostDiscreteFunctionType::LocalFunctionType HostLocalFunctionType;
-
-  typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
-
-  typedef typename HostGridType::Traits::LeafIndexSet LeafIndexSetType;
 
   static const int dimension = HostGridType::dimension;
 
   //! ---------------- typedefs for the SubGridDiscreteFunctionSpace -----------------------
-  // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
-
-  //! type of discrete function space
   typedef typename SubGridDiscreteFunctionType::DiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
-
   typedef typename SubGridDiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
   typedef typename SubGridDiscreteFunctionSpaceType::DomainType DomainType;
   typedef typename SubGridDiscreteFunctionSpaceType::RangeType RangeType;
   typedef typename SubGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  //! type of grid partition
-  typedef typename SubGridDiscreteFunctionSpaceType::GridPartType SubGridPartType;
-
-  //! type of grid
-  typedef typename SubGridDiscreteFunctionSpaceType::GridType SubGridType;
-
-  typedef typename SubGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
-
-  typedef typename SubGridIteratorType::Entity SubGridEntityType;
-
+  typedef typename SubGridDiscreteFunctionSpaceType::EntityType SubGridEntityType;
   typedef typename SubGridEntityType::EntityPointer SubGridEntityPointerType;
-
-  typedef typename SubGridDiscreteFunctionType::LocalFunctionType SubGridLocalFunctionType;
-
-  typedef typename SubGridDiscreteFunctionSpaceType::LagrangePointSetType SubGridLagrangePointSetType;
-
   //!-----------------------------------------------------------------------------------------
 
   //! ------------------ Matrix Traits for the local Problems ---------------------
-
   static const int faceCodim = 1;
-  typedef typename SubGridLagrangePointSetType::template Codim<faceCodim>::SubEntityIteratorType
-  SubGridFaceDofIteratorType;
-
   //! polynomial order of base functions
-  enum {
-    polynomialOrder = SubGridDiscreteFunctionSpaceType::polynomialOrder
-  };
+  static const int polynomialOrder = SubGridDiscreteFunctionSpaceType::polynomialOrder;
 
   typedef Dune::Fem::PetscLinearOperator<SubGridDiscreteFunctionType, SubGridDiscreteFunctionType> FluxProbFEMMatrix;
   typedef Dune::Fem::PetscInverseOperator<SubGridDiscreteFunctionType, FluxProbFEMMatrix> InverseFluxProbFEMMatrix;
@@ -504,19 +428,15 @@ public:
   void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func,
                                    HostDiscreteFunctionType& host_func) const {
     host_func.clear();
+    const auto& subDiscreteFunctionSpace = sub_func.space();
+    const auto& subGrid = subDiscreteFunctionSpace.grid();
 
-    const SubGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
-    const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
+    for (const auto& sub_entity : subDiscreteFunctionSpace) {
+      const auto host_entity_pointer = subGrid.template getHostEntity<0>(sub_entity);
+      const auto& host_entity = *host_entity_pointer;
 
-    SubGridIteratorType sub_endit = subDiscreteFunctionSpace.end();
-    for (SubGridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it) {
-      const SubGridEntityType& sub_entity = *sub_it;
-
-      HostEntityPointerType host_entity_pointer = subGrid.template getHostEntity<0>(*sub_it);
-      const HostEntityType& host_entity = *host_entity_pointer;
-
-      SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
-      HostLocalFunctionType host_loc_value = host_func.localFunction(host_entity);
+      const auto sub_loc_value = sub_func.localFunction(sub_entity);
+      auto host_loc_value = host_func.localFunction(host_entity);
 
       const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
       for (unsigned int i = 0; i < numBaseFunctions; ++i) {
@@ -555,8 +475,7 @@ public:
     DiscreteFunctionWriter(locprob_solution_location).append(subgrid_disc_func);
   } // file_data_output
 
-  template <typename SubGridListType>
-  void solve_all(SubGridListType& subgrid_list) const {
+  void solve_all(MsFEMTraits::SubGridListType& subgrid_list) const {
     JacobianRangeType e[dimension];
 
     for (int i = 0; i < dimension; ++i) {
@@ -577,14 +496,11 @@ public:
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
     Dune::Stuff::Common::MinMaxAvg<double> cell_time;
 
-    const HostDiscreteFunctionSpaceType& coarseSpace = specifier_.coarseSpace();
-    const LeafIndexSetType& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+    const auto& coarseSpace = specifier_.coarseSpace();
+    const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
-    // Coarse Entity Iterator
-    const HostGridEntityIteratorType coarse_grid_end = coarseSpace.end();
-    for (HostGridEntityIteratorType coarse_grid_it = coarseSpace.begin(); coarse_grid_it != coarse_grid_end;
-         ++coarse_grid_it) {
-      int global_index_entity = coarseGridLeafIndexSet.index(*coarse_grid_it);
+    for (const auto& host_entity : coarseSpace) {
+      const auto global_index_entity = coarseGridLeafIndexSet.index(host_entity);
 
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       auto subGridPart = subgrid_list.gridPart(global_index_entity);
@@ -601,7 +517,7 @@ public:
       // the file/place, where we saved the solutions of the cell problems
       const std::string local_solution_location =
           (boost::format("local_problems/_localProblemSolutions_%d") %
-           coarseSpace.gridPart().grid().globalIdSet().id(*coarse_grid_it)).str();
+           coarseSpace.gridPart().grid().globalIdSet().id(host_entity)).str();
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);

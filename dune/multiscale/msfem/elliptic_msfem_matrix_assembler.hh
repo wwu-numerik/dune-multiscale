@@ -61,31 +61,12 @@ private:
   static const int dimension = FineGridPart::GridType::dimension;
   static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
 
-  typedef typename FineDiscreteFunction::LocalFunctionType FineLocalFunction;
-  typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType FineBaseFunctionSet;
-  typedef typename FineDiscreteFunctionSpace::LagrangePointSetType FineLagrangePointSet;
-  typedef typename FineLagrangePointSet::Codim<1>::SubEntityIteratorType FineFaceDofIterator;
-  typedef typename FineGrid::Traits::LeafIndexSet FineGridLeafIndexSet;
-  typedef typename FineDiscreteFunctionSpace::IteratorType FineIterator;
-  typedef typename FineIterator::Entity FineEntity;
+  typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType FineBaseFunctionSet; 
+  typedef typename FineDiscreteFunctionSpace::EntityType FineEntity;
   typedef typename FineEntity::EntityPointer FineEntityPointer;
-  typedef typename FineEntity::Geometry FineGeometry;
-  typedef typename FineGridPart::IntersectionIteratorType FineIntersectionIterator;
-  typedef typename FineIntersectionIterator::Intersection FineIntersection;
 
-  typedef typename CoarseDiscreteFunctionSpace::GridPartType CoarseGridPart;
-  typedef typename CoarseDiscreteFunctionSpace::GridType CoarseGrid;
-
-  typedef typename CoarseDiscreteFunction::LocalFunctionType CoarseLocalFunction;
   typedef typename CoarseDiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
-  typedef typename CoarseDiscreteFunctionSpace::LagrangePointSetType CoarseLagrangePointSet;
-  typedef typename CoarseLagrangePointSet::Codim<1>::SubEntityIteratorType CoarseFaceDofIterator;
-  typedef typename CoarseDiscreteFunctionSpace::IteratorType CoarseIterator;
-  typedef typename CoarseGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
-  typedef typename CoarseIterator::Entity CoarseEntity;
-  typedef typename CoarseEntity::Geometry CoarseGeometry;
-  typedef typename CoarseGridPart::IntersectionIteratorType CoarseIntersectionIterator;
-  typedef typename CoarseIntersectionIterator::Intersection CoarseIntersection;
+  typedef typename CommonTraits::EntityType CoarseEntity;
 
   typedef MsFEMTraits::SubGridListType SubGridListType;
 

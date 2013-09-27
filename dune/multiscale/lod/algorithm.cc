@@ -63,7 +63,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
 
     const auto& entity_ptr = coarseSpace.grid().entityPointer(entity.seed());
     const CommonTraits::EntityPointerType& coarse_father =
-        Stuff::Grid::make_father(coarseGridLeafIndexSet, entity_ptr, level_difference);
+        DSG::make_father(coarseGridLeafIndexSet, entity_ptr, level_difference);
     CommonTraits::EntityType& coarse_grid_entity = *coarse_father;
 
     const auto& lagrangePointSet = specifier.coarseSpace().lagrangePointSet(coarse_grid_entity);

@@ -93,7 +93,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
   // micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
-  for (const Entity& entity : discreteFunctionSpace_) {
+  for (const auto& entity : discreteFunctionSpace_) {
     const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
@@ -157,9 +157,8 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
         }
 
         const int face = (*iit).indexInInside();
-        const FaceDofIterator fdend = lagrangePointSet.template endSubEntity<1>(face);
-        for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity<1>(face); fdit != fdend; ++fdit)
-          local_matrix.unitRow(*fdit);
+        for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+          local_matrix.unitRow(lp);
       }
     }
   }
@@ -178,7 +177,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
   // micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
-  for (const Entity& entity : discreteFunctionSpace_) {
+  for (const auto& entity : discreteFunctionSpace_) {
     const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
@@ -238,17 +237,15 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 
   // boundary treatment
   if (boundary_treatment) {
-    const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-    for (const Entity& entity : discreteFunctionSpace_) {
+    const auto& gridPart = discreteFunctionSpace_.gridPart();
+    for (const auto& entity : discreteFunctionSpace_) {
       if (!entity.hasBoundaryIntersections())
         continue;
 
       auto local_matrix = global_matrix.localMatrix(entity, entity);
       const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
 
-      const IntersectionIterator iend = gridPart.iend(entity);
-      for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit) {
-        const Intersection& intersection = *iit;
+      for (const auto& intersection : DSC::intersectionRange(gridPart, entity)) {
         if (!intersection.boundary())
           continue;
 
@@ -257,9 +254,8 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
           continue;
 
         const int face = intersection.indexInInside();
-        const FaceDofIterator fdend = lagrangePointSet.template endSubEntity<1>(face);
-        for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity<1>(face); fdit != fdend; ++fdit)
-          local_matrix.unitRow(*fdit);
+        for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+          local_matrix.unitRow(lp);
       }
     }
   }
@@ -279,7 +275,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
   // micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
-  for (const Entity& entity : discreteFunctionSpace_) {
+  for (const auto& entity : discreteFunctionSpace_) {
     const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
@@ -344,35 +340,30 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
     }
   }
 
-  // boundary treatment
-  if (boundary_treatment) {
-    const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-    for (const Entity& entity : discreteFunctionSpace_) {
-      if (!entity.hasBoundaryIntersections())
+// boundary treatment
+if (boundary_treatment) {
+  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
+  for (const auto& entity : discreteFunctionSpace_) {
+    if (!entity.hasBoundaryIntersections())
+      continue;
+    auto local_matrix = global_matrix.localMatrix(entity, entity);
+    const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+
+    for (const auto& intersection : DSC::intersectionRange(gridPart, entity)) {
+      if (!intersection.boundary())
         continue;
 
-      auto local_matrix = global_matrix.localMatrix(entity, entity);
+      // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+      if (intersection.boundary() && (intersection.boundaryId() == 2))
+        continue;
 
-      const LagrangePointSet& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-
-      const IntersectionIterator iend = gridPart.iend(entity);
-      for (IntersectionIterator iit = gridPart.ibegin(entity); iit != iend; ++iit) {
-        const Intersection& intersection = *iit;
-        if (!intersection.boundary())
-          continue;
-
-        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
-        if (intersection.boundary() && (intersection.boundaryId() == 2))
-          continue;
-
-        const int face = intersection.indexInInside();
-        const FaceDofIterator fdend = lagrangePointSet.template endSubEntity<1>(face);
-        for (FaceDofIterator fdit = lagrangePointSet.template beginSubEntity<1>(face); fdit != fdend; ++fdit)
-          local_matrix.unitRow(*fdit);
-      }
+      const int face = intersection.indexInInside();
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+        local_matrix.unitRow(lp);
     }
   }
-  global_matrix.communicate();
+}
+global_matrix.communicate();
 } // assemble_jacobian_matrix
 
 } // namespace FEM {

@@ -199,8 +199,6 @@ private:
   typedef CellSource<TransformTensorType> CellSourceType;
   typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType PeriodicJacobianRangeType;
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
-  typedef typename GridType::template Codim<0>::Geometry GeometryType;
-  typedef typename PeriodicDiscreteFunctionSpaceType::IteratorType IteratorType;
   typedef typename GridType::template Codim<0>::Entity EntityType;
 
   struct MatrixTraits {
@@ -258,7 +256,7 @@ private:
       const auto& geometry = entity.geometry();
 
       // integrate
-      const int quadratureNop = quadrature.nop();
+      const auto quadratureNop = quadrature.nop();
       for (int localQuadPoint = 0; localQuadPoint < quadratureNop; ++localQuadPoint) {
         RangeType localIntegral = 0;
 

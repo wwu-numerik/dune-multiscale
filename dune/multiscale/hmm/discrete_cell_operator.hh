@@ -42,13 +42,7 @@ class DiscreteCellProblemOperator : public Operator<typename HMMTraits::Periodic
   static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-  typedef typename LagrangePointSet::Codim<1>::SubEntityIteratorType FaceDofIterator;
-  typedef typename DiscreteFunctionSpace::IteratorType Iterator;
-  typedef typename Iterator::Entity Entity;
-  typedef typename Entity::Geometry Geometry;
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
-  typedef typename IntersectionIterator::Intersection Intersection;
+  typedef typename DiscreteFunctionSpace::EntityType Entity;
 
 public:
   DiscreteCellProblemOperator(const DiscreteFunctionSpace& periodicDiscreteFunctionSpace,

@@ -120,8 +120,6 @@ struct CommonTraits {
   typedef Dune::Fem::PetscDiscreteFunction<DiscreteFunctionSpaceType> DiscreteFunctionType;
   typedef Dune::Fem::PetscLinearOperator<DiscreteFunctionType, DiscreteFunctionType> FEMMatrix;
 
-  typedef DiscreteFunctionType::DofIteratorType DofIteratorType;
-
   //!------------------------- for adaptive grid refinement ---------------------------------
   //! type of restrict-prolong operator
   typedef Dune::Fem::RestrictProlongDefault<DiscreteFunctionType> RestrictProlongOperatorType;
@@ -141,8 +139,7 @@ make_quadrature( const Dune::Entity< 0, 2, GridImp, EntityImp >& entity,
                  const Fem::DiscreteFunctionSpaceInterface<SpaceTraits>& space,
                  int order = -1)
 {
-  if(order == -1)
-    order = 2 * space.order() + 2;
+  order = order > -1 ? order : 2 * space.order() + 2;
   return Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 0>(entity, order);
 }
 
@@ -152,8 +149,7 @@ make_quadrature(const Dune::Intersection<const typename SpaceTraits::GridPartTyp
                  const Fem::DiscreteFunctionSpaceInterface<SpaceTraits>& space,
                  int order = -1, bool inside = true)
 {
-  if(order == -1)
-    order = 2 * space.order() + 2;
+  order = order > -1 ? order : 2 * space.order() + 2;
   typedef Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 1> Quad;
   //this const_cast cast is necessary because the gridPart() method in DiscreteFunctionSpaceInterface
   //has no const version

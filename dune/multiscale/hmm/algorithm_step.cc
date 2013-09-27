@@ -455,7 +455,6 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                       const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType>& rhsassembler,
                       typename CommonTraits::DiscreteFunctionType& hmm_solution,
                       const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle) {
-  typedef CommonTraits HMM;
   DSC_LOG_INFO << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
                << " unkowns and polynomial order " << CommonTraits::DiscreteFunctionSpaceType::polynomialOrder << "."
                << std::endl << std::endl;
