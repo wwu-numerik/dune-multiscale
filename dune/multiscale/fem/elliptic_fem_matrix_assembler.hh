@@ -93,6 +93,6 @@ private:
 } // namespace Multiscale {
 } // namespace Dune {
 
-#include "elliptic_fem_matrix_assembler.cc"
+#include "elliptic_fem_matrix_assembler.cxx"
 
 #endif // #ifndef DiscreteElliptic_HH
