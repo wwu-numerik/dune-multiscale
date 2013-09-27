@@ -58,6 +58,7 @@ set( COMMON_SOURCES
         dune/multiscale/common/dirichletconstraints.cc
         dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
+        dune/multiscale/fem/algorithm.cc
     )
 
 set( PROBLEM_SOURCES
@@ -96,19 +97,17 @@ set( MSFEM_SOURCES
 
 set( HOM_FEM_SOURCES
         src/elliptic_hom_fem.cc
-        dune/multiscale/fem/algorithm.cc
     )
-    
+
 set( FEM_SOURCES
         src/elliptic_fem.cc
-        dune/multiscale/fem/algorithm.cc
     )
-    
+
 set( LODM_SOURCES 
         dune/multiscale/lod/algorithm.cc
         dune/multiscale/lod/lod_solver.cc
     )
-    
+
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native" 
   "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias" )
@@ -187,5 +186,7 @@ foreach(_mod ${ALL_DEPENDENCIES})
 endforeach(_mod DEPENDENCIES)
   
 ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
+add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc )
+
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
 
