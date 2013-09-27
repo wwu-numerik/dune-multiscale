@@ -118,7 +118,7 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   }
 
   // set dirichlet dofs to zero
-  Stuff::GridboundaryAllDirichlet<SubGridType::LeafGridView> boundaryInfo;
+  Stuff::GridboundaryAllDirichlet<SubGridType::LeafGridView::Intersection> boundaryInfo;
   DirichletConstraints<SubDiscreteFunctionSpaceType> constraints(boundaryInfo, subDiscreteFunctionSpace);
   constraints.applyToOperator(locProbSysMatrix);
 

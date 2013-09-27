@@ -214,9 +214,9 @@ class IModelProblemData {
 protected:
   const Constants constants_;
   typedef CommonTraits::GridType::LeafGridView View;
-  typedef Dune::Stuff::GridboundaryInterface<View> BoundaryInfoType;
+  typedef Dune::Stuff::GridboundaryInterface<typename View::Intersection> BoundaryInfoType;
   typedef MsFEM::MsFEMTraits::SubGridType::LeafGridView SubView;
-  typedef Dune::Stuff::GridboundaryInterface<SubView> SubBoundaryInfoType;
+  typedef Dune::Stuff::GridboundaryInterface<typename SubView::Intersection> SubBoundaryInfoType;
 
 public:
 
@@ -245,10 +245,10 @@ public:
   virtual bool symmetricDiffusion() const { return true; }
 
   virtual std::unique_ptr<BoundaryInfoType> boundaryInfo() const {
-    return std::unique_ptr<BoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<View>());
+    return std::unique_ptr<BoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<typename View::Intersection>());
   }
   virtual std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const {
-    return std::unique_ptr<SubBoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<SubView>());
+    return std::unique_ptr<SubBoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>());
   }
 };
 

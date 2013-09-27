@@ -15,7 +15,7 @@ namespace Multiscale {
 template <class DomainSpace, class RangeSpace = DomainSpace>
 class DirichletConstraints {
 public:
-  typedef Dune::Stuff::GridboundaryInterface<typename DomainSpace::GridType::LeafGridView> BoundaryType;
+  typedef Dune::Stuff::GridboundaryInterface<typename DomainSpace::GridType::LeafGridView::Intersection> BoundaryType;
   typedef DomainSpace DomainSpaceType;
   typedef RangeSpace RangeSpaceType;
 
