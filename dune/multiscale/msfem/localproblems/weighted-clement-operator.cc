@@ -8,6 +8,7 @@
 
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/grid/entity.hh>
+#include <dune/stuff/common/ranges.hh>
 
 Dune::Multiscale::MsFEM::WeightedClementOperator::WeightedClementOperator(
     const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionSpaceType& space,
@@ -242,9 +243,8 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::boundaryTreatment() const
             continue;
 
           const int face = (*iit).indexInInside();
-          const auto fdend = lagrangePointSet.endSubEntity<1>(face);
-          for (auto fdit = lagrangePointSet.beginSubEntity<1>(face); fdit != fdend; ++fdit)
-            localMatrix.unitRow(*fdit);
+          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+            localMatrix.unitRow(lp);
         }
       }
     }

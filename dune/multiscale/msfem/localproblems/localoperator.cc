@@ -137,9 +137,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   std::vector<typename BasisFunctionSetType::JacobianRangeType> gradient_phi(
       subDiscreteFunctionSpace_.mapper().maxNumDofs());
 
-  const EntityIteratorType end = subDiscreteFunctionSpace_.end();
-  for (EntityIteratorType it = subDiscreteFunctionSpace_.begin(); it != end; ++it) {
-    const auto& sub_grid_entity = *it;
+  for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();
     assert(sub_grid_entity.partitionType() == InteriorEntity);
 
@@ -159,7 +157,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
     DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrixType> local_matrix(global_matrix, sub_grid_entity,
                                                                                        sub_grid_entity);
 
-    const BasisFunctionSetType& baseSet = local_matrix.domainBasisFunctionSet();
+    const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
     std::vector<RangeType> value_phi(numBaseFunctions);
@@ -217,8 +215,8 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
     auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
     const auto & host_entity = *host_entity_pointer;
 
-    HostIntersectionIterator iit = hostGridPart.ibegin(host_entity);
-    const HostIntersectionIterator endiit = hostGridPart.iend(host_entity);
+    auto iit = hostGridPart.ibegin(host_entity);
+    const auto endiit = hostGridPart.iend(host_entity);
     for (; iit != endiit; ++iit) {
       if (iit->neighbor()) // if there is a neighbor entity
       {
@@ -233,15 +231,13 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
         continue;
       }
 
+      auto rhs_local = rhs.localFunction(subgrid_entity);
       const auto& lagrangePointSet = discreteFunctionSpace.lagrangePointSet(subgrid_entity);
 
       const int face = (*iit).indexInInside();
-
-      FaceDofIterator faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-      const FaceDofIterator faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-
-      for (; faceIterator != faceEndIterator; ++faceIterator)
-        (rhs.localFunction(subgrid_entity))[*faceIterator] = 0;
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
+        rhs_local[lp] = 0;
+      }
     }
   }
 
@@ -712,7 +708,7 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
       baseSet.evaluateAll(geometry.local(geometry.corner(sub_grid_entity_corner_is_relevant[j])), phi_values[j]);
     }
 
-    for (const auto& intersection : Dune::Stuff::Common::intersectionRange(host_space.gridPart(), host_entity)) {
+    for (const auto& intersection : DSC::intersectionRange(host_space.gridPart(), host_entity)) {
       if (!intersection.boundary())
         continue;
       // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
@@ -836,7 +832,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
       for (std::size_t j = 0; j < local_problem_RHS.size(); ++j) {
         int interior_basis_func_id = ids_basis_functions_in_subgrid[j];
 
-        HostLocalFunction local_coarse_basis_func =
+        const auto local_coarse_basis_func =
             coarse_basis_func_list[interior_basis_func_id]->localFunction(host_entity);
         auto elementOfRHS = local_problem_RHS[j]->localFunction(local_grid_entity);
 

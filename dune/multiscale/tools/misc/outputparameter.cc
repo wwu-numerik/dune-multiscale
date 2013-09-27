@@ -14,12 +14,12 @@ namespace Multiscale {
 OutputParameters::OutputParameters(const std::string path_in)
   : my_prefix_("solutions")
   , my_path_(path_in) {
-  Dune::Stuff::Common::testCreateDirectory(my_path_);
+  DSC::testCreateDirectory(my_path_);
 }
 
 void OutputParameters::set_prefix(std::string my_prefix) {
   my_prefix_ = my_prefix;
-  Dune::Stuff::Common::testCreateDirectory(my_prefix_);
+  DSC::testCreateDirectory(my_prefix_);
   // std :: cout << "Set prefix. my_prefix_ = " << my_prefix_ << std :: endl;
 }
 

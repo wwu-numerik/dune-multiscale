@@ -86,7 +86,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
       }
 #if 0
      for (const auto& coarse_intersection
-         : Dune::Stuff::Common::intersectionRange(coarseSpace.gridPart(), coarse_grid_entity ))
+         : DSC::intersectionRange(coarseSpace.gridPart(), coarse_grid_entity ))
      {
         std::cout << "coarse_intersection.boundary() = " << coarse_intersection.boundary() << std::endl;
         std::cout << "coarse_intersection.boundaryId() = " << coarse_intersection.boundaryId() << std::endl;
@@ -124,11 +124,11 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
 
     if (intersects_dirichlet_boundary == true) {
       for (const auto& intersection :
-           Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
+           DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
 
         const auto face = intersection.indexInInside();
 
-        for (auto loc_point : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
+        for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
           const auto& global_point =
               entity.geometry().global(discreteFunctionSpace.lagrangePointSet(entity).point(loc_point));
           CommonTraits::RangeType dirichlet_value(0.0);
@@ -161,7 +161,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
 #endif
 #if 0
     for (const auto& intersection
-         : Dune::Stuff::Common::intersectionRange(discreteFunctionSpace.gridPart(), entity))
+         : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity))
     {
       if ( !intersection.boundary() )
         continue;
@@ -171,7 +171,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
       auto funcLocal = func.localFunction(entity);
       const auto face = intersection.indexInInside();
       for(auto loc_point
-          : Dune::Stuff::Common::lagrangePointSetRange<faceCodim>(func.space(), entity, face))
+          : DSC::lagrangePointSetRange<faceCodim>(func.space(), entity, face))
       {
         const auto& global_point = entity.geometry().global( discreteFunctionSpace.lagrangePointSet(entity).point( loc_point ) );
         CommonTraits::RangeType dirichlet_value(0.0);

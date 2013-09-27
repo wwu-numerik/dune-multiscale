@@ -17,9 +17,9 @@ struct Constants {
   const double epsilon;
   Constants(double def_epsilon) : epsilon(DSC_CONFIG_GET("problem.epsilon", def_epsilon)) {}
 
-  template <typename T, class Validator = Dune::Stuff::Common::ValidateAny<T>>
+  template <typename T, class Validator = DSC::ValidateAny<T>>
   T get(const std::string& key, const T& def,
-        Dune::Stuff::Common::ValidatorInterface<T, Validator> validator = Validator()) const {
+        DSC::ValidatorInterface<T, Validator> validator = Validator()) const {
     return DSC_CONFIG_GETV(std::string("problem.") + key, def, validator);
   }
 

@@ -494,7 +494,7 @@ public:
     DSC_PROFILER.startTiming("msfem.conservative_flux_solver.solve_all_subgrids");
 
     // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-    Dune::Stuff::Common::MinMaxAvg<double> cell_time;
+    DSC::MinMaxAvg<double> cell_time;
 
     const auto& coarseSpace = specifier_.coarseSpace();
     const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();

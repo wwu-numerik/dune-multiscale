@@ -1,5 +1,7 @@
 #include "msfem_grid_specifier.hh"
 
+#include <dune/stuff/common/ranges.hh>
+
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
@@ -205,11 +207,8 @@ void MacroMicroGridSpecifier::identify_coarse_boundary_nodes() {
       const auto& lagrangePointSet = coarse_scale_space_.lagrangePointSet(*it);
 
       const int face = (*intersection_it).indexInInside();
-      auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-      const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-
-      for (; faceIterator != faceEndIterator; ++faceIterator)
-        is_boundary_node_[indices[*faceIterator]] = true;
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+        is_boundary_node_[indices[lp]] = true;
     }
   }
 
@@ -245,11 +244,8 @@ void MacroMicroGridSpecifier::identify_coarse_dirichlet_nodes() {
       const auto& lagrangePointSet = coarse_scale_space_.lagrangePointSet(*it);
 
       const int face = (*intersection_it).indexInInside();
-      auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
-      const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
-
-      for (; faceIterator != faceEndIterator; ++faceIterator)
-        is_dirichlet_node_[indices[*faceIterator]] = true;
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+        is_dirichlet_node_[indices[lp]] = true;
     }
   }
 
