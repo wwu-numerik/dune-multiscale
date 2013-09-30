@@ -124,7 +124,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
       coarse_node_ids_in_subgrid[sg_id].push_back(global_coarse_node_id);
 
       // sort out the Dirichlet boundary nodes on Omega
-      if (specifier.is_coarse_dirichlet_node(global_coarse_node_id) == false) {
+      if (!specifier.is_coarse_dirichlet_node(global_coarse_node_id)) {
         ids_basis_function_in_subgrid[sg_id].push_back(global_id_to_internal_id[global_coarse_node_id]);
       }
     }
@@ -133,7 +133,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
 
       int global_coarse_node_id = coordinates_to_global_coarse_node_id[coarse_nodes_in_extended_subgrid[cn]];
       // sort out the Dirichlet boundary nodes on Omega
-      if (specifier.is_coarse_dirichlet_node(global_coarse_node_id) == false) {
+      if (!specifier.is_coarse_dirichlet_node(global_coarse_node_id)) {
         ids_basis_function_in_extended_subgrid[sg_id].push_back(global_id_to_internal_id[global_coarse_node_id]);
       }
     }
@@ -166,7 +166,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
             is_subgrid_boundary_face = false;
         }
 
-        if (is_subgrid_boundary_face == false)
+        if (!is_subgrid_boundary_face)
           continue;
 
         for (int c = 0; c < iit->geometry().corners(); ++c) {
@@ -678,10 +678,10 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       }
     }
 
-    if (add_to_support_dirichlet_corrector == true)
+    if (add_to_support_dirichlet_corrector)
       support_global_dirichlet_corrector.push_back((*it).seed());
 
-    if (add_to_support_neumann_corrector == true)
+    if (add_to_support_neumann_corrector)
       support_global_neumann_corrector.push_back((*it).seed());
   }
   // ------------------------------------------------------------------------------------------------------
@@ -914,7 +914,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
             const auto& geometry = (*it).geometry();
 
-            if ((row == col) && (first_cycle == true)) {
+            if ((row == col) && first_cycle) {
               for (const auto& intersection :
                    DSC::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
                 if (!intersection.boundary())
@@ -1005,7 +1005,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
               newton_system_matrix[row][col] += weight * value_derivative_1_F_x * value_func_1 * value_func_2;
               newton_system_matrix[row][col] += weight * (value_derivative_2_F_x[0] * grad_func_1[0]) * value_func_2;
 
-              if ((row == col) && (first_cycle == true)) {
+              if ((row == col) && first_cycle) {
 
                 RangeType f_x(0.0);
                 f.evaluate(global_point, f_x);
@@ -1046,7 +1046,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
       // assemble copys and check if the error is small and if damping is required
       double newton_error = 10000.0;
-      if (first_cycle == true) {
+      if (first_cycle) {
         newton_error = 0.0;
         for (size_t col = 0; col != newton_solution_vector.N(); ++col) {
           newton_error += (copy_newton_step_rhs[col] * copy_newton_step_rhs[col]);
@@ -1222,7 +1222,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       first_cycle = false;
       iteration += 1;
 
-    } // end while ( stop_newton_cycle == false )
+    } // end while ( !stop_newton_cycle)
 
     solution += global_dirichlet_corrector;
     solution -= global_neumann_corrector;
