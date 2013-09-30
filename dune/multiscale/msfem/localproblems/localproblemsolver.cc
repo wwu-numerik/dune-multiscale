@@ -1064,7 +1064,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
           continue;
 
         bool solve_for_dirichlet_corrector = false;
-        if (dirichlet_boundary_corrector_assembled == false) {
+        if (!dirichlet_boundary_corrector_assembled) {
           if (intersection.boundary() && (intersection.boundaryId() == 1)) {
             solve_for_dirichlet_corrector = true;
           } else {
@@ -1076,7 +1076,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
                 solve_for_dirichlet_corrector = true;
               }
             }
-            if ((solve_for_dirichlet_corrector == false) && (!intersection.boundary())) {
+            if ((!solve_for_dirichlet_corrector) && (!intersection.boundary())) {
               continue;
             }
           }
@@ -1085,7 +1085,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
         }
 
         // Dirichlet boundary corrector:
-        if (solve_for_dirichlet_corrector == true) {
+        if (solve_for_dirichlet_corrector) {
           const std::string name_dirichlet_corrector =
               (boost::format("Dirichlet Boundary Corrector %d") % coarseId).str();
           SubDiscreteFunctionType dirichlet_boundary_corrector(name_dirichlet_corrector, subDiscreteFunctionSpace);
@@ -1113,7 +1113,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
         // Neumann boundary corrector:
         if (intersection.boundary() && (intersection.boundaryId() == 2) &&
-            (neumann_boundary_corrector_assembled == false)) {
+            (!neumann_boundary_corrector_assembled)) {
           const std::string name_neumann_corrector = (boost::format("Neumann Boundary Corrector %d") % coarseId).str();
           SubDiscreteFunctionType neumann_boundary_corrector(name_neumann_corrector, subDiscreteFunctionSpace);
           neumann_boundary_corrector.clear();
