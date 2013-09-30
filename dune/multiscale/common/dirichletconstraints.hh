@@ -278,7 +278,6 @@ protected:
   // detect all DoFs on the Dirichlet boundary of the given entity
   template <class EntityType>
   bool searchEntityDirichletDofs(const EntityType& entity, const BoundaryType& /*boundary*/) const {
-    static const int faceCodim = 1;
     const auto& gridPart = domain_space_.gridPart();
     bool hasDirichletBoundary = false;
     const auto& lagrangePointSet = domain_space_.lagrangePointSet(entity);

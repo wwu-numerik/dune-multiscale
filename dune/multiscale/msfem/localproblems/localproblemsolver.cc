@@ -966,9 +966,7 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarseIndex, const
 }
 
 void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
-  enum {
-    dimension = CommonTraits::GridType::dimension
-  };
+  static const int dimension = CommonTraits::GridType::dimension;
 
   JacobianRangeType unitVectors[dimension];
   for (int i = 0; i < dimension; ++i)

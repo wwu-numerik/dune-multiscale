@@ -176,9 +176,7 @@ template <class TensorImp>
 class Homogenizer {
 private:
   typedef CommonTraits::GridType GridType;
-  enum {
-    dimension = GridType::dimension
-  };
+  static const int dimension = GridType::dimension;
   typedef TensorImp TensorType;
   typedef Fem::PeriodicLeafGridPart<GridType> PeriodicGridPartType;
   typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -256,8 +254,7 @@ private:
       const auto& geometry = entity.geometry();
 
       // integrate
-      const auto quadratureNop = quadrature.nop();
-      for (int localQuadPoint = 0; localQuadPoint < quadratureNop; ++localQuadPoint) {
+      for (const auto localQuadPoint : DSC::valueRange(quadrature.nop())) {
         RangeType localIntegral = 0;
 
         PeriodicJacobianRangeType grad_w_i;

@@ -34,12 +34,8 @@ private:
   typedef typename FunctionSpaceType::RangeType RangeType;
   typedef TensorImp TensorType;
 
-  enum {
-    dimension = GridType::dimension
-  };
-  enum {
-    spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder
-  };
+  static const int dimension = GridType::dimension;
+  static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
 
   typedef FieldMatrix<RangeType, dimension, dimension> TensorMatrixType;
 
