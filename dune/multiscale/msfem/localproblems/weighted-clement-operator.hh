@@ -70,19 +70,9 @@ private:
 
   typedef typename CoarseDiscreteFunctionSpaceType::BasisFunctionSetType CoarseBasisFunctionSetType;
 
-  enum {
-    dimRange = GridType::dimension
-  };
-
-  //! polynomial order of base functions
-  enum {
-    polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder
-  };
-
-  //! The grid's dimension
-  enum {
-    dimension = GridType::dimension
-  };
+  static const int dimRange = GridType::dimension;
+  static const int dimension = GridType::dimension;
+  static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
 
 
   typedef Dune::Fem::SparseRowMatrixTraits<typename SubGridList::SubGridDiscreteFunctionSpaceType,

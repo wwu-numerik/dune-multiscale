@@ -48,12 +48,8 @@ private:
 
   typedef MsFEM::LocalSolutionManager LocalSolutionManagerType;
 
-  enum {
-    dimension = GridType::dimension
-  };
-  enum {
-    polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder
-  };
+  static const int dimension = GridType::dimension;
+  static const int polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder;
 
   // need a virtual base to work around local classes not being allowed in templated scopes
   struct FunctorBase {
@@ -206,7 +202,6 @@ public:
           const auto faceQuadrature = make_quadrature(intersection, rhsVector.space(), polOrd);
           const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
-          static const int faceCodim = 1;
           for (auto faceQuadraturePoint : DSC::valueRange(numFaceQuadraturePoints)) {
             baseSet.evaluateAll(faceQuadrature[faceQuadraturePoint], phi_x);
             baseSet.jacobianAll(faceQuadrature[faceQuadraturePoint], grad_phi_x);
@@ -590,7 +585,6 @@ public:
 
         const auto face = intersection.indexInInside();
         const auto faceQuadrature = make_quadrature(intersection, rhsVector.space(), polOrd);
-        static const int faceCodim = 1;
         for (auto faceQuadraturePoint : DSC::valueRange(faceQuadrature.nop())) {
           baseSet.evaluateAll(faceQuadrature[faceQuadraturePoint], phi_x);
           baseSet.jacobianAll(faceQuadrature[faceQuadraturePoint], grad_phi_x);

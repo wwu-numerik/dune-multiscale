@@ -37,33 +37,19 @@ namespace Dune {
 template <class DiscreteFunctionType>
 class Meanvalue {
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-
   typedef typename DiscreteFunctionType::RangeType RangeType;
   typedef typename DiscreteFunctionType::DomainType DomainType;
-
   typedef typename DiscreteFunctionSpaceType::IteratorType IteratorType;
-
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
-
   typedef typename DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
   typedef DomainFieldType TimeType;
-
   typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-
   typedef typename GridType::template Codim<0>::Entity EntityType;
-
   typedef typename GridType::template Codim<0>::Geometry EnGeometryType;
-
   typedef typename EntityType::ctype coordType;
 
-  
-
-  enum {
-    dimension = GridType::dimension
-  };
-  enum {
-    spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder
-  };
+  static const int dimension = GridType::dimension;
+  static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
 
   struct FunctorBase {
     virtual void evaluate(const DomainType& global_point, RangeType& y) const = 0;
