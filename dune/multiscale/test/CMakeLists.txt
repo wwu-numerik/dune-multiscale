@@ -4,6 +4,8 @@
 BEGIN_TESTCASES()
 
 TARGET_LINK_LIBRARIES(test_compare_msfem multiscale_msfem ${COMMON_LIBS} )
+TARGET_LINK_LIBRARIES(test_compare_hmm multiscale_hmm ${COMMON_LIBS} )
+TARGET_LINK_LIBRARIES(test_compare_lodm multiscale_lodm ${COMMON_LIBS} )
 
 foreach( test ${testnames} )
     add_dune_mpi_flags(${test})

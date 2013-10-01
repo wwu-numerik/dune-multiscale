@@ -139,6 +139,7 @@ public:
         dirichletDofsCorrectOnEntity(linearOperator, entity);
       }
     }
+    linearOperator.communicate();
   }
 
 protected:
@@ -245,7 +246,6 @@ protected:
     }
   }
 
-protected:
   // detect all DoFs on the Dirichlet boundary
   void updateDirichletDofs() const {
     if (sequence_ != domain_space_.sequence()) {

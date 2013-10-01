@@ -44,4 +44,9 @@
 
 #endif  /* DUNE_MULTISCALE_CONFIG_H */
 
+#ifndef HAVE_DUNE_MULTISCALE_STATIC_DATA
+static const std::string st_testdata_directory = "${CMAKE_CURRENT_SOURCE_DIR}/dune/multiscale/test";
+#define HAVE_DUNE_MULTISCALE_STATIC_DATA
+#endif
+
 /* end dune-multiscale */
