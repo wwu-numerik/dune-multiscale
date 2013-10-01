@@ -240,12 +240,12 @@ Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGridSpec
 
     //! TODO switch loops for more efficiency
     for (size_t loc_basis_number = 0; loc_basis_number < numBaseFunctions; ++loc_basis_number) {
-      const int global_dof_number = indices[loc_basis_number];
+      const auto global_dof_number = indices[loc_basis_number];
       if (specifier.is_coarse_dirichlet_node(global_dof_number)) {
         continue;
       }
 
-      const int global_interior_dof_number = global_id_to_internal_id[global_dof_number];
+      const auto global_interior_dof_number = global_id_to_internal_id[global_dof_number];
 
       // only implemented for 3 Lagrange Points, i.e. piecewise linear functions
       assert(number_of_points == 3);

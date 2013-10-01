@@ -15,9 +15,18 @@
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
 
+#include <boost/filesystem.hpp>
+
 using namespace Dune::Stuff::Common;
 
 void set_param();
+
+std::string prepend_test_dir(std::string fn)
+{
+  boost::filesystem::path path(st_testdata_directory);
+  path /= fn;
+  return path.string();
+}
 
 TEST(MSFEM, All) {
   using namespace Dune::Multiscale;
@@ -26,7 +35,7 @@ TEST(MSFEM, All) {
   int coarse_grid_level_ = 3;
   int number_of_layers_ = 4;
   int total_refinement_level_ = 5;
-  const std::string macroGridName("compare_msfem.dgf");
+  const std::string macroGridName = prepend_test_dir("compare_msfem.dgf");
   set_param();
 
   //! ---------------------- local error indicators --------------------------------
