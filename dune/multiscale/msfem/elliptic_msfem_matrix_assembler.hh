@@ -61,7 +61,7 @@ private:
   static const int dimension = FineGridPart::GridType::dimension;
   static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
 
-  typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType FineBaseFunctionSet; 
+  typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType FineBaseFunctionSet;
   typedef typename FineDiscreteFunctionSpace::EntityType FineEntity;
   typedef typename FineEntity::EntityPointer FineEntityPointer;
 
@@ -137,7 +137,8 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
         const auto& local_grid_geometry = localGridEntity.geometry();
 
         // higher order quadrature, since A^{\epsilon} is highly variable
-        const auto localQuadrature = make_quadrature(localGridEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
+        const auto localQuadrature =
+            make_quadrature(localGridEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
         const auto numQuadraturePoints = localQuadrature.nop();
 
         // number of local solutions without the boundary correctors. Those are only needed for the right hand side
@@ -152,8 +153,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
         for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
           // local (barycentric) coordinates (with respect to entity)
-          const auto& local_subgrid_point =
-              localQuadrature.point(localQuadraturePoint);
+          const auto& local_subgrid_point = localQuadrature.point(localQuadraturePoint);
 
           auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
           const double weight_local_quadrature = localQuadrature.weight(localQuadraturePoint) *

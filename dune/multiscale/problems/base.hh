@@ -248,7 +248,8 @@ public:
     return std::unique_ptr<BoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<typename View::Intersection>());
   }
   virtual std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const {
-    return std::unique_ptr<SubBoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>());
+    return std::unique_ptr<SubBoundaryInfoType>(
+        new Dune::Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>());
   }
 };
 

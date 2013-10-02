@@ -41,8 +41,7 @@ struct BoundaryTreatment {
     const auto& discreteFunctionSpace = rhs.space();
     static const unsigned int faceCodim = 1;
     for (const auto& entity : discreteFunctionSpace) {
-      for (const auto& intersection :
-           DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
+      for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
         if (!intersection.boundary())
           continue;
         if (intersection.boundary() && (intersection.boundaryId() != 1))

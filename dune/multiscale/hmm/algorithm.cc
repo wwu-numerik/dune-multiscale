@@ -44,7 +44,8 @@ void load_reference(typename CommonTraits::DiscreteFunctionType& reference_solut
 
 //! \todo replace me with Stuff::something
 template <class DiscreteFunctionSpaceType>
-typename DiscreteFunctionSpaceType::RangeType get_size_of_domain(const DiscreteFunctionSpaceType& discreteFunctionSpace) {
+typename DiscreteFunctionSpaceType::RangeType
+get_size_of_domain(const DiscreteFunctionSpaceType& discreteFunctionSpace) {
   return DSG::dimensions(discreteFunctionSpace.gridPart().grid()).sum();
 } // get_size_of_domain
 

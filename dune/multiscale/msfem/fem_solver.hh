@@ -29,8 +29,6 @@ private:
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
-  
-
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;

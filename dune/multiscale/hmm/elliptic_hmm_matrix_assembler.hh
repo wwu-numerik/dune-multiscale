@@ -36,7 +36,7 @@ private:
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
-  typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;  
+  typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::EntityType Entity;
 

@@ -107,7 +107,6 @@ private:
   LocalFunctionType localFunc_;
 };
 
-
 //! DEPRECATED should be eventually replaced by the LinearLagrangeFunction2D implementation
 template <class FunctionSpaceImp>
 class LinearLagrangeInterpolation2D

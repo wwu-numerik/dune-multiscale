@@ -142,8 +142,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
       for (auto& subgridEntity : localSolManager.getLocalDiscreteFunctionSpace()) {
         //! MARK actual subgrid usage
-        const auto fine_host_entity_pointer =
-            localSolManager.getSubGridPart().grid().getHostEntity<0>(subgridEntity);
+        const auto fine_host_entity_pointer = localSolManager.getSubGridPart().grid().getHostEntity<0>(subgridEntity);
         const auto& fine_host_entity = *fine_host_entity_pointer;
 
         const auto hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(fine_host_entity_pointer);

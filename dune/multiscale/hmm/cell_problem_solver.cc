@@ -212,7 +212,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   static const int maxnumOfBaseFct = 100;
-  const  std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
+  const std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
   DiscreteFunctionWriter dfw(cell_solution_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_baseSet");

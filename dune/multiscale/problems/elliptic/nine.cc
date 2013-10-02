@@ -37,7 +37,8 @@ std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryIn
 
 std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
   auto defaultBoundaryIds = Dune::Stuff::GridboundaryIdBased<SubView>::defaultSettings();
-  return std::unique_ptr<SubBoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>());
+  return std::unique_ptr<SubBoundaryInfoType>(
+      new Dune::Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>());
 }
 
 FirstSource::FirstSource() {}

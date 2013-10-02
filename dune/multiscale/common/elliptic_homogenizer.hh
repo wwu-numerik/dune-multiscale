@@ -181,7 +181,7 @@ private:
   typedef Fem::PeriodicLeafGridPart<GridType> PeriodicGridPartType;
   typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
   typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, PeriodicGridPartType, 1>
-    PeriodicDiscreteFunctionSpaceType;
+  PeriodicDiscreteFunctionSpaceType;
 
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionSpaceType DummySpaceType;

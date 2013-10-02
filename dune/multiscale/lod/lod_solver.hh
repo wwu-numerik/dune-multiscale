@@ -296,8 +296,7 @@ private:
         const auto& geometry = entity.geometry();
         const auto local_func = msfem_basis_function_list[col]->localFunction(entity);
 
-        for (const auto& intersection :
-             DSC::intersectionRange(discreteFunctionSpace_.gridPart(), entity)) {
+        for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace_.gridPart(), entity)) {
           if (!intersection.boundary())
             continue;
           // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;

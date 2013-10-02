@@ -54,9 +54,8 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
   }
   if (msfem_solution_ && fem_solution_) {
-    auto approx_msfem_error =
-        l2error.norm2<2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2>(*fem_solution_,
-                                                                                        *msfem_solution_);
+    auto approx_msfem_error = l2error.norm2<2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2>(
+        *fem_solution_, *msfem_solution_);
     out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 
     auto h1_approx_msfem_error = h1norm.distance(*fem_solution_, *msfem_solution_);

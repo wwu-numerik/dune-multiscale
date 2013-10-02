@@ -133,26 +133,22 @@ struct CommonTraits {
   static const int assembler_order = 2 * DiscreteFunctionSpaceType::polynomialOrder + 2;
 };
 
-template <class SpaceTraits, class GridImp, template< int, int, class > class EntityImp>
+template <class SpaceTraits, class GridImp, template <int, int, class> class EntityImp>
 Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 0>
-make_quadrature( const Dune::Entity< 0, 2, GridImp, EntityImp >& entity,
-                 const Fem::DiscreteFunctionSpaceInterface<SpaceTraits>& space,
-                 int order = -1)
-{
+make_quadrature(const Dune::Entity<0, 2, GridImp, EntityImp>& entity,
+                const Fem::DiscreteFunctionSpaceInterface<SpaceTraits>& space, int order = -1) {
   order = order > -1 ? order : 2 * space.order() + 2;
   return Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 0>(entity, order);
 }
 
 template <class SpaceTraits, class IntersectionImp>
-Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 1>
-make_quadrature(const Dune::Intersection<const typename SpaceTraits::GridPartType::GridType, IntersectionImp>& intersection,
-                 const Fem::DiscreteFunctionSpaceInterface<SpaceTraits>& space,
-                 int order = -1, bool inside = true)
-{
+Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 1> make_quadrature(
+    const Dune::Intersection<const typename SpaceTraits::GridPartType::GridType, IntersectionImp>& intersection,
+    const Fem::DiscreteFunctionSpaceInterface<SpaceTraits>& space, int order = -1, bool inside = true) {
   order = order > -1 ? order : 2 * space.order() + 2;
   typedef Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 1> Quad;
-  //this const_cast cast is necessary because the gridPart() method in DiscreteFunctionSpaceInterface
-  //has no const version
+  // this const_cast cast is necessary because the gridPart() method in DiscreteFunctionSpaceInterface
+  // has no const version
   auto& fem_sucks = const_cast<Fem::DiscreteFunctionSpaceInterface<SpaceTraits>&>(space);
   return Quad(fem_sucks.gridPart(), intersection, order, inside ? Quad::INSIDE : Quad::OUTSIDE);
 }
