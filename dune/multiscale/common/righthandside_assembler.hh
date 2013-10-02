@@ -63,9 +63,9 @@ private:
     // set rhsVector to zero:
     rhsVector.clear();
     for (const auto& entity : rhsVector.space()) {
-      const auto& geometry = entity.geometry();                 // Referenz auf Geometrie
+      const auto& geometry = entity.geometry();            // Referenz auf Geometrie
       auto elementOfRHS = rhsVector.localFunction(entity); // entity zeigt auf ein bestimmtes Element der
-                                                                        // entity
+                                                           // entity
       // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
       // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
       // discreteFunction(aktuelleEntity)
@@ -318,7 +318,8 @@ public:
         auto dirichletExtensionLF = dirichletExtension.localFunction(*hostCell);
         if (enclosingCoarseCellIndex == coarseEntityIndex) {
           // higher order quadrature, since A^{\epsilon} is highly variable
-          const auto localQuadrature = make_quadrature(localEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
+          const auto localQuadrature =
+              make_quadrature(localEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
 
           // evaluate all local solutions and their jacobians in all quadrature points
           std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
@@ -664,7 +665,7 @@ public:
                                  // to obtain some information about the periodic discrete function space (space
                                  // for the cell problems)
                                  const CellProblemNumberingManagerType& cp_num_manager,
-                                 const PeriodicDiscreteFunctionType& dummy_func, DiscreteFunctionType& rhsVector) {  
+                                 const PeriodicDiscreteFunctionType& dummy_func, DiscreteFunctionType& rhsVector) {
     const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
     const std::string cell_solution_location_discFunc = "/cell_problems/_cellSolutions_discFunc";
 
@@ -698,7 +699,7 @@ public:
       // the fine scale reconstructions are only available for the barycenter of the macro grid entity
       const auto macro_entity_barycenter = macro_grid_geometry.center();
       const auto barycenter_local = macro_grid_geometry.local(macro_entity_barycenter);
-      const double macro_entity_volume =  macro_grid_geometry.volume();
+      const double macro_entity_volume = macro_grid_geometry.volume();
       const auto numDofs = elementOfRHS.numDofs();
       // gradient of base function and gradient of old_u_H
       std::vector<JacobianRangeType> grad_Phi_x_vec(numDofs);
@@ -763,8 +764,7 @@ public:
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
             // local (barycentric) coordinates (with respect to entity)
-            const auto& local_micro_point =
-                micro_grid_quadrature.point(microQuadraturePoint);
+            const auto& local_micro_point = micro_grid_quadrature.point(microQuadraturePoint);
 
             const auto global_point_in_Y = micro_grid_geometry.global(local_micro_point);
 

@@ -706,8 +706,7 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
 
         const auto interior_coarse_basis_id_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i];
 
-        auto local_coarse_basis_i =
-            (*coarse_basis_)[interior_coarse_basis_id_in_subgrid]->localFunction(host_entity);
+        auto local_coarse_basis_i = (*coarse_basis_)[interior_coarse_basis_id_in_subgrid]->localFunction(host_entity);
         local_coarse_basis_i.evaluate(quadrature[quadraturePoint], value_coarse_basis_func_i);
 
         double clement_weight = (*inverse_of_L1_norm_coarse_basis_funcs_)[interior_coarse_basis_id_in_subgrid];
@@ -1112,8 +1111,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
         }
 
         // Neumann boundary corrector:
-        if (intersection.boundary() && (intersection.boundaryId() == 2) &&
-            (!neumann_boundary_corrector_assembled)) {
+        if (intersection.boundary() && (intersection.boundaryId() == 2) && (!neumann_boundary_corrector_assembled)) {
           const std::string name_neumann_corrector = (boost::format("Neumann Boundary Corrector %d") % coarseId).str();
           SubDiscreteFunctionType neumann_boundary_corrector(name_neumann_corrector, subDiscreteFunctionSpace);
           neumann_boundary_corrector.clear();

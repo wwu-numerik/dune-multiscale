@@ -142,8 +142,7 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
   std::vector<RangeType> phi(subDiscreteFunctionSpace_.mapper().maxNumDofs());
 
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
-    auto host_entity_pointer =
-        subDiscreteFunctionSpace_.gridPart().grid().template getHostEntity<0>(sub_grid_entity);
+    auto host_entity_pointer = subDiscreteFunctionSpace_.gridPart().grid().template getHostEntity<0>(sub_grid_entity);
 
     const auto& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
@@ -242,13 +241,13 @@ double ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp,
 template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp>
 // template< class MatrixType >
-    void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
-                                  MacroMicroGridSpecifierImp>::assemble_RHS( // direction 'e'
-        JacobianRangeType& e_i,
-        // solution of the local corrector problem
-        const SubGridDiscreteFunction& local_corrector_e_i, const int sub_grid_id,
-        // rhs flux problem:
-        SubGridDiscreteFunction& rhs_flux_problem) const {
+void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
+                              MacroMicroGridSpecifierImp>::assemble_RHS( // direction 'e'
+    JacobianRangeType& e_i,
+    // solution of the local corrector problem
+    const SubGridDiscreteFunction& local_corrector_e_i, const int sub_grid_id,
+    // rhs flux problem:
+    SubGridDiscreteFunction& rhs_flux_problem) const {
   const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace = rhs_flux_problem.space();
 
   // set entries to zero:
@@ -258,8 +257,7 @@ template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class Dif
   std::vector<JacobianRangeType> gradient_phi(subDiscreteFunctionSpace.mapper().maxNumDofs());
 
   for (const auto& local_grid_entity : subDiscreteFunctionSpace) {
-    auto host_entity_pointer =
-        subDiscreteFunctionSpace.gridPart().grid().template getHostEntity<0>(local_grid_entity);
+    auto host_entity_pointer = subDiscreteFunctionSpace.gridPart().grid().template getHostEntity<0>(local_grid_entity);
 
     const auto& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
@@ -515,9 +513,8 @@ public:
 
       // --------- load local solutions -------
       // the file/place, where we saved the solutions of the cell problems
-      const std::string local_solution_location =
-          (boost::format("local_problems/_localProblemSolutions_%d") %
-           coarseSpace.gridPart().grid().globalIdSet().id(host_entity)).str();
+      const std::string local_solution_location = (boost::format("local_problems/_localProblemSolutions_%d") %
+                                                   coarseSpace.gridPart().grid().globalIdSet().id(host_entity)).str();
 
       // reader for the cell problem data file:
       DiscreteFunctionReader discrete_function_reader(local_solution_location);

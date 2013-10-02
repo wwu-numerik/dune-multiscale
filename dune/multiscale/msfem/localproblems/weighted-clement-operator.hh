@@ -74,7 +74,6 @@ private:
   static const int dimension = GridType::dimension;
   static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
 
-
   typedef Dune::Fem::SparseRowMatrixTraits<typename SubGridList::SubGridDiscreteFunctionSpaceType,
                                            typename SubGridList::HostDiscreteFunctionSpaceType>
   WeightedClementMatrixObjectTraits;

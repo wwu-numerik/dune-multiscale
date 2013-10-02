@@ -264,8 +264,7 @@ Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGridSpec
       LinearLagrangeInterpolation2D<DiscreteFunctionSpace> coarse_basis_interpolation(corners[0], phi_i[0], corners[1],
                                                                                       phi_i[1], corners[2], phi_i[2]);
 
-      auto loc_coarse_basis_function =
-          (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
+      auto loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
 
       const int number_of_nodes_in_fine_entity = it->count<HostGrid::dimension>();
       if (!(number_of_nodes_in_fine_entity == int(loc_coarse_basis_function.basisFunctionSet().size()))) {
@@ -390,8 +389,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
 
     // is a Dirichlet boundary corrector available for this coarse entity (i.e. for the corresponding subgrid)
     bool boundary_corrector_available = false;
-    for (const auto& intersection :
-         DSC::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity)) {
+    for (const auto& intersection : DSC::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity)) {
 
       // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
       if (intersection.boundary() && (intersection.boundaryId() == 1)) {
@@ -456,8 +454,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
 
     // is a neumann boundary corrector available for this coarse entity (i.e. for the corresponding subgrid)
     bool boundary_corrector_available = false;
-    for (const auto& intersection :
-         DSC::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity)) {
+    for (const auto& intersection : DSC::intersectionRange(specifier.coarseSpace().gridPart(), coarse_grid_entity)) {
 
       // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
       if (intersection.boundary() && (intersection.boundaryId() == 2))
@@ -642,8 +639,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
       auto coarse_it = coarse_space.grid().entityPointer(subgrid_list.get_coarse_entity_seed(subgrid_id));
       auto& coarse_entity = *coarse_it;
-      for (const auto& coarse_intersection :
-           DSC::intersectionRange(coarse_space.gridPart(), coarse_entity)) {
+      for (const auto& coarse_intersection : DSC::intersectionRange(coarse_space.gridPart(), coarse_entity)) {
 
         // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
         if (coarse_intersection.boundary() && (coarse_intersection.boundaryId() == 1))
@@ -915,8 +911,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
             const auto& geometry = (*it).geometry();
 
             if ((row == col) && first_cycle) {
-              for (const auto& intersection :
-                   DSC::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
+              for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
                 if (!intersection.boundary())
                   continue;
                 // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
@@ -1098,8 +1093,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
             const auto& geometry = (*it).geometry();
 
-            for (const auto& intersection :
-                 DSC::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
+            for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace_.gridPart(), (*it))) {
               if (!intersection.boundary())
                 continue;
               // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;

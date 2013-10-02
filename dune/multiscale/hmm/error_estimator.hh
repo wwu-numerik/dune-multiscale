@@ -75,9 +75,7 @@ public:
     , auxiliaryDiscreteFunctionSpace_(auxiliaryDiscreteFunctionSpace)
     , diffusion_(diffusion) {}
 
-  RangeType getH(const EntityType& entity) const {
-    return DSG::entityDiameter(entity);
-  } // getH
+  RangeType getH(const EntityType& entity) const { return DSG::entityDiameter(entity); } // getH
 
   // return:  H_T^4 ||f||_{L^2(T)}^2
   template <class SourceType>
@@ -224,8 +222,7 @@ public:
     // iterator over the elements of the periodic micro grid:
     for (const auto& micro_entity : periodicDiscreteFunctionSpace_) {
       // two quadrature formulas ( A_h^{\eps}(y)=A^{\eps}(y_s) vs. A^{\eps}(y) )
-      const auto high_order_quadrature = make_quadrature(micro_entity, periodicDiscreteFunctionSpace_ );
-
+      const auto high_order_quadrature = make_quadrature(micro_entity, periodicDiscreteFunctionSpace_);
 
       // Q_h(u_H)(x_T,y) on the micro entity:
       const auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
@@ -535,7 +532,7 @@ public:
           if (fabs(edge_center[0]) == 0.5) {
             // + 0.2 to avoid rounding errors!
             const auto id = int((num_boundary_faces_per_direction / 2) +
-                         ((edge_center[1] - (edge_length / 2.0)) / edge_length) + 0.2);
+                                ((edge_center[1] - (edge_length / 2.0)) / edge_length) + 0.2);
 
             // unit outer normal creates the correct sign!
             for (int k = 0; k < dimension; ++k)

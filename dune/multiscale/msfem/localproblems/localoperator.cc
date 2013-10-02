@@ -213,7 +213,7 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
   // set Dirichlet Boundary to zero
   for (const auto& subgrid_entity : discreteFunctionSpace) {
     auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
-    const auto & host_entity = *host_entity_pointer;
+    const auto& host_entity = *host_entity_pointer;
 
     auto iit = hostGridPart.ibegin(host_entity);
     const auto endiit = hostGridPart.iend(host_entity);
@@ -832,8 +832,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
       for (std::size_t j = 0; j < local_problem_RHS.size(); ++j) {
         int interior_basis_func_id = ids_basis_functions_in_subgrid[j];
 
-        const auto local_coarse_basis_func =
-            coarse_basis_func_list[interior_basis_func_id]->localFunction(host_entity);
+        const auto local_coarse_basis_func = coarse_basis_func_list[interior_basis_func_id]->localFunction(host_entity);
         auto elementOfRHS = local_problem_RHS[j]->localFunction(local_grid_entity);
 
         RangeType value_coarse_basis_func;

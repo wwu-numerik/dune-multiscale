@@ -288,8 +288,8 @@ private:
     for (const auto& entity : fineDiscreteFunctionSpace_) {
 
       // identify coarse grid father entity
-      auto coarse_father = DSG::make_father(coarseGridLeafIndexSet, EntityPointerType(entity),
-                                                    specifier_.getLevelDifference());
+      auto coarse_father =
+          DSG::make_father(coarseGridLeafIndexSet, EntityPointerType(entity), specifier_.getLevelDifference());
       const int coarse_father_index = coarseGridLeafIndexSet.index(*coarse_father);
 
       const auto& entityGeometry = entity.geometry();
@@ -413,8 +413,7 @@ private:
 
         // check if "local_grid_entity" (which is an entity of U(T)) is in T:
         // -------------------------------------------------------------------
-        const auto host_local_grid_it =
-            localDiscreteFunctionSpace.grid().template getHostEntity<0>(local_grid_entity);
+        const auto host_local_grid_it = localDiscreteFunctionSpace.grid().template getHostEntity<0>(local_grid_entity);
 
         auto father_of_loc_grid_it =
             DSG::make_father(coarseGridLeafIndexSet, host_local_grid_it, specifier_.getLevelDifference());
@@ -442,8 +441,7 @@ private:
 
         for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {
           // local (barycentric) coordinates (with respect to entity)
-          const auto& local_subgrid_point =
-              local_grid_quadrature.point(localQuadraturePoint);
+          const auto& local_subgrid_point = local_grid_quadrature.point(localQuadraturePoint);
 
           auto global_point_in_U_T = local_grid_geometry.global(local_subgrid_point);
 

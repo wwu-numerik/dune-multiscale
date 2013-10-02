@@ -57,9 +57,9 @@ public:
     for (const auto& domain_entity : domainSpace) {
       FineEntitySetType range_set(specifier.getLevelDifference() * 3,
                                   typename FineEntitySetType::hasher(rangeSpace.indexSet()));
-      const auto father_of_loc_grid_ent = DSG::make_father(
-          rangeSpace.gridPart().grid().leafIndexSet(), domainSpace.grid().template getHostEntity<0>(domain_entity),
-          specifier.getLevelDifference());
+      const auto father_of_loc_grid_ent =
+          DSG::make_father(rangeSpace.gridPart().grid().leafIndexSet(),
+                           domainSpace.grid().template getHostEntity<0>(domain_entity), specifier.getLevelDifference());
       for (const auto& range_entity : rangeSpace) {
         if (DSG::entities_identical(range_entity, *father_of_loc_grid_ent)) {
           range_set.insert(RangeEntityPointerType(range_entity));

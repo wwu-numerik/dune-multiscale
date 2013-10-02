@@ -80,15 +80,13 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
     result.estimated_source_error += local_source_indicator;
 
     // contribution of the local approximation error
-    auto local_approximation_indicator =
-        error_estimator.indicator_app_1(entity, hmm_solution, corrector_u_H_on_entity);
+    auto local_approximation_indicator = error_estimator.indicator_app_1(entity, hmm_solution, corrector_u_H_on_entity);
 
     local_approximation_indicator += error_estimator.indicator_app_2(entity, hmm_solution, corrector_u_H_on_entity);
     result.estimated_approximation_error += local_approximation_indicator;
 
     // contribution of the local residual error
-    auto local_residual_indicator =
-        error_estimator.indicator_res_T(entity, hmm_solution, corrector_u_H_on_entity);
+    auto local_residual_indicator = error_estimator.indicator_res_T(entity, hmm_solution, corrector_u_H_on_entity);
     result.estimated_residual_error_micro_jumps += local_residual_indicator;
 
     for (const auto& intersection : DSC::intersectionRange(gridPart, entity)) {
@@ -108,11 +106,9 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
               "Corrector of macro base function", periodicDiscreteFunctionSpace);
           corrector_of_base_func_neighbor.clear();
 
-          auto local_hmm_solution_neighbor =
-              hmm_solution.localFunction(entity_outside);
+          auto local_hmm_solution_neighbor = hmm_solution.localFunction(entity_outside);
 
-          const auto& baseSet_neighbor =
-              discreteFunctionSpace.basisFunctionSet(entity_outside);
+          const auto& baseSet_neighbor = discreteFunctionSpace.basisFunctionSet(entity_outside);
           const auto numMacroBaseFunctions_neighbor = baseSet_neighbor.size();
           std::vector<std::size_t> cell_problem_id_neighbor(numMacroBaseFunctions_neighbor);
           for (unsigned int i = 0; i < numMacroBaseFunctions_neighbor; ++i) {
@@ -128,8 +124,8 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
           discrete_function_reader_discFunc.read(neighbor_element_number, corrector_u_H_on_neighbor_entity);
         }
 
-        auto val = error_estimator.indicator_res_E(
-            intersection, hmm_solution, corrector_u_H_on_entity, corrector_u_H_on_neighbor_entity);
+        auto val = error_estimator.indicator_res_E(intersection, hmm_solution, corrector_u_H_on_entity,
+                                                   corrector_u_H_on_neighbor_entity);
         local_residual_indicator += val;
         result.estimated_residual_error_macro_jumps += val;
       }

@@ -123,8 +123,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
     // --------------------------------------------------------------------------------
 
     if (intersects_dirichlet_boundary == true) {
-      for (const auto& intersection :
-           DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
+      for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
 
         const auto face = intersection.indexInInside();
 
