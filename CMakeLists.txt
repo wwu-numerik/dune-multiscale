@@ -39,7 +39,7 @@ endforeach(_dep ${ALL_DEPENDENCIES})
 FILE( GLOB_RECURSE header "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh" )
 FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 
-set( COMMON_HEADER ${header} ${stokes} ${stuff} ${dune} ${DUNE_HEADERS} )
+set( COMMON_HEADER ${header} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
 #these should be split into all+hmm+msfem parts
@@ -186,8 +186,16 @@ foreach(_mod ${ALL_DEPENDENCIES})
       endif(${_mod}_INCLUDE_DIRS)
 endforeach(_mod DEPENDENCIES)
   
-ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc ${dune} ${header})
-add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc )
+ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc 
+             ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
+             ${dune} ${header})
+add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
+            ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} 
+            src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc )
+add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
+           ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} 
+           src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc
+           ${header} ${dune})
 
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
 
