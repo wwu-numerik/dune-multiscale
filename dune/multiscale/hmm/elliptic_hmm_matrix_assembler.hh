@@ -59,7 +59,8 @@ private:
 
 public:
   void assemble_matrix(CommonTraits::LinearOperatorType& global_matrix) const;
-  void assemble_jacobian_matrix(DiscreteFunction& old_macro_function, CommonTraits::LinearOperatorType& global_matrix) const;
+  void assemble_jacobian_matrix(DiscreteFunction& old_macro_function,
+                                CommonTraits::LinearOperatorType& global_matrix) const;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;

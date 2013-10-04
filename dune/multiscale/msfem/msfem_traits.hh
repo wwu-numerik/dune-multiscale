@@ -10,7 +10,6 @@
 #include <dune/subgrid/subgrid.hh>
 #include <dune/fem/space/lagrange.hh>
 
-
 namespace Dune {
 template <int D, class R>
 class Subgrid;

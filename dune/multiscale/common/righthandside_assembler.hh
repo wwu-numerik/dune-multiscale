@@ -724,7 +724,7 @@ public:
         // the return values:
         RangeType f_x;
 
-        const int numMacroQuadraturePoints = macro_quadrature.nop();
+        const auto numMacroQuadraturePoints = macro_quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numMacroQuadraturePoints; ++quadraturePoint) {
           // local (barycentric) coordinates (with respect to entity)
           const auto& local_point = macro_quadrature.point(quadraturePoint);

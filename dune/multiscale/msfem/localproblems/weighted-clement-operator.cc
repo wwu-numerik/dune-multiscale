@@ -15,7 +15,7 @@ Dune::Multiscale::MsFEM::WeightedClementOperator::WeightedClementOperator(
     const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionSpaceType& coarse_space,
     const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseNodeVectorType& coarse_nodes,
     const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseBasisFunctionList& coarse_basis,
-    const std::map<int, int>& global_id_to_internal_id,
+    const std::map<std::size_t, std::size_t>& global_id_to_internal_id,
     const Dune::Multiscale::MsFEM::MacroMicroGridSpecifier& specifier)
   : discreteFunctionSpace_(space)
   , coarse_space_(coarse_space)

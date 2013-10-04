@@ -88,15 +88,16 @@ void Elliptic_Rigorous_MsFEM_Solver::vtk_output(MsFEMBasisFunctionType& msfem_ba
 // subgrid
 // information stored in 'std::vector< std::vector< int > >'
 void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
-    MacroMicroGridSpecifier& specifier, SubGridListType& subgrid_list, std::map<int, int>& global_id_to_internal_id,
-    std::map<OrderedDomainType, int>& coordinates_to_global_coarse_node_id,
+    MacroMicroGridSpecifier& specifier, SubGridListType& subgrid_list,
+    std::map<std::size_t, std::size_t>& global_id_to_internal_id,
+    std::map<OrderedDomainType, std::size_t>& coordinates_to_global_coarse_node_id,
     // all coarse nodes, where the corresponding coarse (nodal) basis function has a support that intersects with the
     // subgrid
-    std::vector<std::vector<int>>& ids_basis_function_in_extended_subgrid,
+    std::vector<std::vector<std::size_t>>& ids_basis_function_in_extended_subgrid,
     // all coarse nodes that are in the subgrid including its boundary but excluding the Dirichlet boundary of Omega
-    std::vector<std::vector<int>>& ids_basis_function_in_subgrid,
+    std::vector<std::vector<std::size_t>>& ids_basis_function_in_subgrid,
     // all coarse nodes that are in the _interior_ of the subgrid
-    std::vector<std::vector<int>>& ids_basis_function_in_interior_subgrid) const {
+    std::vector<std::vector<std::size_t>>& ids_basis_function_in_interior_subgrid) const {
   // First: determine the index set (internal_coarse_nodes numbering) for the coarse nodes in the interior of U(T)
   // when assembling the local clement operator for a given subgrid U(T), we need to know the standard coarse
   // basis functions that belong to the interior(!) coarse nodes in U(T). Coarse nodes on the boundary of
@@ -131,7 +132,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
 
     for (unsigned int cn = 0; cn < coarse_nodes_in_extended_subgrid.size(); ++cn) {
 
-      int global_coarse_node_id = coordinates_to_global_coarse_node_id[coarse_nodes_in_extended_subgrid[cn]];
+      const auto global_coarse_node_id = coordinates_to_global_coarse_node_id[coarse_nodes_in_extended_subgrid[cn]];
       // sort out the Dirichlet boundary nodes on Omega
       if (!specifier.is_coarse_dirichlet_node(global_coarse_node_id)) {
         ids_basis_function_in_extended_subgrid[sg_id].push_back(global_id_to_internal_id[global_coarse_node_id]);
@@ -174,7 +175,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
           for (unsigned int cn = 0; cn < coarse_nodes_in_subgrid.size(); ++cn) {
             if (coarse_nodes_in_subgrid[cn] == fine_corner) {
               OrderedDomainType coarse_node_coordinates = fine_corner;
-              int global_coarse_node_id = coordinates_to_global_coarse_node_id[coarse_node_coordinates];
+              const auto global_coarse_node_id = coordinates_to_global_coarse_node_id[coarse_node_coordinates];
               if (std::find(coarse_boundary_node_ids_in_subgrid[sg_id].begin(),
                             coarse_boundary_node_ids_in_subgrid[sg_id].end(),
                             global_coarse_node_id) == coarse_boundary_node_ids_in_subgrid[sg_id].end()) {
@@ -210,10 +211,9 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
 
 //! create standard coarse grid basis functions as discrete functions defined on the fine grid
 // ------------------------------------------------------------------------------------
-void
-Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGridSpecifier& specifier,
-                                                              std::map<int, int>& global_id_to_internal_id,
-                                                              MsFEMBasisFunctionType& msfem_basis_function_list) const {
+void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(
+    MacroMicroGridSpecifier& specifier, std::map<std::size_t, std::size_t>& global_id_to_internal_id,
+    MsFEMBasisFunctionType& msfem_basis_function_list) const {
 
   DSC_LOG_INFO << "Create standard coarse grid basis functions as discrete functions on the fine grid... ";
 
@@ -292,8 +292,8 @@ Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(MacroMicroGridSpec
 
 //! add corrector part to MsFEM basis functions
 void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
-    MacroMicroGridSpecifier& specifier, std::map<int, int>& global_id_to_internal_id, SubGridListType& subgrid_list,
-    MsFEMBasisFunctionType& msfem_basis_function_list) const {
+    MacroMicroGridSpecifier& specifier, std::map<std::size_t, std::size_t>& global_id_to_internal_id,
+    SubGridListType& subgrid_list, MsFEMBasisFunctionType& msfem_basis_function_list) const {
 
   DSC_LOG_INFO << "Add global corrector to create MsFEM basis functions from standard FEM basis functions... ";
 
@@ -503,12 +503,12 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
   auto& coarse_space = specifier.coarseSpace();
   auto& fine_space = specifier.fineSpace();
 
-  const int number_of_relevant_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_dirichlet_nodes();
+  const auto number_of_relevant_coarse_nodes = coarse_space.size() - specifier.get_number_of_coarse_dirichlet_nodes();
 
   // mapper: global_id_of_node -> new_id_of_node
   // ('new' means that we only count the internal nodes and the non-Dirichlet boundary nodes,
   //  Dirichlet boundary nodes do not receive an id)
-  std::map<int, int> global_id_to_internal_id;
+  std::map<std::size_t, std::size_t> global_id_to_internal_id;
   for (int internal_id = 0, global_id = 0; global_id < coarse_space.size(); ++global_id) {
     if (!specifier.is_coarse_dirichlet_node(global_id)) {
       global_id_to_internal_id[global_id] = internal_id;
@@ -549,7 +549,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       std::vector<std::size_t> indices;
       coarse_space.mapper().map(entity, indices);
       for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-        const int global_dof_number = indices[i];
+        const auto global_dof_number = indices[i];
         if (!specifier.is_coarse_dirichlet_node(global_dof_number))
           coff[global_id_to_internal_id[global_dof_number]] += weight * phi[i];
       }
@@ -574,14 +574,14 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
   std::vector<FineGridEntitySeed> support_global_neumann_corrector;
 
   // relevant constellations of two ms basis functions (i.e. when they have a non-empty intersection of their supports)
-  std::vector<std::tuple<unsigned int, unsigned int>> relevant_constellations;
+  std::vector<std::tuple<std::size_t, std::size_t>> relevant_constellations;
   // we only store the tuples relevant_constellations[i][j] for 'j<=i' the rest is obtained by symmetry
   // the reason for storing only the values for 'j<=i' is that we can use (if given) the symmetry of the diffusion
   // matrix,
   // in the sense that we only compute the entries of the stiffness matrix for 'j<=i' and then symmetrize the matrix
 
   // map the coordinates of a coarse node to its global (coarse node) index
-  std::map<OrderedDomainType, int> coordinates_to_global_coarse_node_id;
+  std::map<OrderedDomainType, std::size_t> coordinates_to_global_coarse_node_id;
 
   support_of_ms_basis_func_intersection.resize(number_of_relevant_coarse_nodes);
   for (int k = 0; k < number_of_relevant_coarse_nodes; ++k)
@@ -589,7 +589,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
   // for each subgrid, determine all ms basis functions that were constructed using the corresponding subgrid corrector
   // for each subgrid id, we save the vector of the (internal) id's of the corresponding ms basis functions
-  std::vector<std::vector<int>> subgrid_id_to_ms_basis_func_ids;
+  std::vector<std::vector<std::size_t>> subgrid_id_to_ms_basis_func_ids;
   for (const auto& coarse_entity : coarse_space) {
     const auto& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
     const auto subgrid_id = coarseGridLeafIndexSet.index(coarse_entity);
@@ -608,7 +608,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       auto faceIterator = lagrangePointSet.beginSubEntity<faceCodim>(face);
       const auto faceEndIterator = lagrangePointSet.endSubEntity<faceCodim>(face);
       for (; faceIterator != faceEndIterator; ++faceIterator) {
-        const int global_id_node = indices[*faceIterator];
+        const auto global_id_node = indices[*faceIterator];
 
         // create map entry: ' global coord of node <--> global_id_node '
         const OrderedDomainType coord = coarse_entity.geometry().global(lagrangePointSet.point(*faceIterator));
@@ -617,7 +617,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
         if (specifier.is_coarse_dirichlet_node(global_id_node))
           continue;
 
-        const int internal_id_node = global_id_to_internal_id[global_id_node];
+        const auto internal_id_node = global_id_to_internal_id[global_id_node];
         subgrid_id_to_ms_basis_func_ids[subgrid_id].push_back(internal_id_node);
       }
     }
@@ -631,11 +631,11 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     bool add_to_support_neumann_corrector = false;
 
     // IDs of the ms basis functions that containt the fine grid entity 'it'
-    std::vector<int> ms_basis_funcs_that_contain_entity;
+    std::vector<std::size_t> ms_basis_funcs_that_contain_entity;
 
     // first iterate of the subgrids that contain the fine grid entity
     for (unsigned int m = 0; m < subgrid_list.getSubgridIDs_that_contain_entity(fine_entity_id).size(); ++m) {
-      int subgrid_id = subgrid_list.getSubgridIDs_that_contain_entity(fine_entity_id)[m];
+      const auto subgrid_id = subgrid_list.getSubgridIDs_that_contain_entity(fine_entity_id)[m];
 
       auto coarse_it = coarse_space.grid().entityPointer(subgrid_list.get_coarse_entity_seed(subgrid_id));
       auto& coarse_entity = *coarse_it;
@@ -651,7 +651,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       // now iterate over the ms basis functions that were assembled using a corrector that belongs to the current
       // subgrid
       for (unsigned int l = 0; l < subgrid_id_to_ms_basis_func_ids[subgrid_id].size(); ++l) {
-        int ms_basis_func_id = subgrid_id_to_ms_basis_func_ids[subgrid_id][l];
+        const auto ms_basis_func_id = subgrid_id_to_ms_basis_func_ids[subgrid_id][l];
         if (std::find(ms_basis_funcs_that_contain_entity.begin(), ms_basis_funcs_that_contain_entity.end(),
                       ms_basis_func_id) == ms_basis_funcs_that_contain_entity.end()) {
           ms_basis_funcs_that_contain_entity.push_back(ms_basis_func_id);
@@ -660,13 +660,13 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     }
 
     for (unsigned int mid1 = 0; mid1 < ms_basis_funcs_that_contain_entity.size(); ++mid1) {
-      int ms_basis_id_1 = ms_basis_funcs_that_contain_entity[mid1];
+      const auto ms_basis_id_1 = ms_basis_funcs_that_contain_entity[mid1];
       for (unsigned int mid2 = 0; mid2 < ms_basis_funcs_that_contain_entity.size(); ++mid2) {
-        int ms_basis_id_2 = ms_basis_funcs_that_contain_entity[mid2];
+        const auto ms_basis_id_2 = ms_basis_funcs_that_contain_entity[mid2];
         // check if the tuple was already added to the relevant_constellations-vector
         if ((support_of_ms_basis_func_intersection[ms_basis_id_1][ms_basis_id_2].size() == 0) &&
             (ms_basis_id_2 <= ms_basis_id_1)) {
-          std::tuple<unsigned int, unsigned int> tup = make_tuple(ms_basis_id_1, ms_basis_id_2);
+          std::tuple<std::size_t, std::size_t> tup = make_tuple(ms_basis_id_1, ms_basis_id_2);
           relevant_constellations.push_back(tup);
         }
         // add the seed to the support of the insection between ms basis ms_basis_id_1 and ms_basis_id_2
@@ -693,13 +693,13 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
   // for each subgrid, store the vector of basis functions ids that correspond to coarse grid nodes
   // in the subgrid WITHOUT Dirichlet boundary nodes of Omega
-  std::vector<std::vector<int>> ids_basis_functions_in_subgrid;
+  std::vector<std::vector<std::size_t>> ids_basis_functions_in_subgrid;
   // for each subgrid, store the vector of basis functions ids that correspond to interior coarse grid nodes in the
   // subgrid
-  std::vector<std::vector<int>> ids_basis_functions_in_interior_subgrid;
+  std::vector<std::vector<std::size_t>> ids_basis_functions_in_interior_subgrid;
   // for each subgrid, store the vector of basis functions ids where the support of the bassis function intersects with
   // the subgrid
-  std::vector<std::vector<int>> ids_basis_functions_in_extended_subgrid;
+  std::vector<std::vector<std::size_t>> ids_basis_functions_in_extended_subgrid;
   assemble_interior_basis_ids(specifier, subgrid_list, global_id_to_internal_id, coordinates_to_global_coarse_node_id,
                               ids_basis_functions_in_extended_subgrid, ids_basis_functions_in_subgrid,
                               ids_basis_functions_in_interior_subgrid);
@@ -888,8 +888,8 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       }
 
       for (unsigned int t = 0; t < relevant_constellations.size(); ++t) {
-        unsigned int row = get<0>(relevant_constellations[t]);
-        unsigned int col = get<1>(relevant_constellations[t]);
+        auto row = get<0>(relevant_constellations[t]);
+        auto col = get<1>(relevant_constellations[t]);
 
         int switch_row_col = -1;
         if (row == col) {
@@ -1016,7 +1016,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
             }
           }
 
-          unsigned int row_copy = row;
+          const auto row_copy = row;
           row = col;
           col = row_copy;
           switch_row_col += 1;
@@ -1075,8 +1075,8 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
         // evaluate G(solution) = newton_step_rhs
         for (unsigned int t = 0; t < relevant_constellations.size(); ++t) {
-          unsigned int row = get<0>(relevant_constellations[t]);
-          unsigned int col = get<1>(relevant_constellations[t]);
+          const auto row = get<0>(relevant_constellations[t]);
+          const auto col = get<1>(relevant_constellations[t]);
 
           if (row != col) {
             continue;
@@ -1122,7 +1122,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
             }
 
             const auto quadrature = make_quadrature(*it, discreteFunctionSpace_);
-            const int numQuadraturePoints = quadrature.nop();
+            const auto numQuadraturePoints = quadrature.nop();
             for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
               const auto global_point = geometry.global(quadrature.point(quadraturePoint));
 

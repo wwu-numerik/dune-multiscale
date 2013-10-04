@@ -86,8 +86,8 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinea
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();
 
-    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(global_matrix, sub_grid_entity,
-                                                                                       sub_grid_entity);
+    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(
+        global_matrix, sub_grid_entity, sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -154,8 +154,8 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinea
       }
     }
 
-    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(global_matrix, sub_grid_entity,
-                                                                                       sub_grid_entity);
+    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(
+        global_matrix, sub_grid_entity, sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -799,7 +799,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems(const HostDiscreteFunc
 
 void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
     const std::vector<std::shared_ptr<HostDiscreteFunction>>& coarse_basis_func_list,
-    std::vector<double>& clement_weights, std::vector<int>& ids_basis_functions_in_subgrid,
+    std::vector<double>& clement_weights, std::vector<std::size_t>& ids_basis_functions_in_subgrid,
     std::vector<std::unique_ptr<LocalProblemOperator::DiscreteFunction>>& local_problem_RHS) const {
   const DiscreteFunctionSpaceType& discreteFunctionSpace = local_problem_RHS[0]->space();
 

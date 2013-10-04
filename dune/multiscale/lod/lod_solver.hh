@@ -158,21 +158,23 @@ private:
   //! correspond to interior coarse grid nodes in the subgrid
   // information stored in 'std::vector< std::vector< int > >'
   void assemble_interior_basis_ids(MacroMicroGridSpecifier& specifier, SubGridListType& subgrid_list,
-                                   std::map<int, int>& global_id_to_internal_id,
-                                   std::map<OrderedDomainType, int>& coordinates_to_global_coarse_node_id,
-                                   std::vector<std::vector<int>>& ids_basis_function_in_extended_subgrid,
-                                   std::vector<std::vector<int>>& ids_basis_function_in_subgrid,
-                                   std::vector<std::vector<int>>& ids_basis_function_in_interior_subgrid) const;
+                                   std::map<std::size_t, std::size_t>& global_id_to_internal_id,
+                                   std::map<OrderedDomainType, std::size_t>& coordinates_to_global_coarse_node_id,
+                                   std::vector<std::vector<std::size_t>>& ids_basis_function_in_extended_subgrid,
+                                   std::vector<std::vector<std::size_t>>& ids_basis_function_in_subgrid,
+                                   std::vector<std::vector<std::size_t>>& ids_basis_function_in_interior_subgrid) const;
 
   void subgrid_to_hostrid_projection(const SubGridDiscreteFunctionType& sub_func, DiscreteFunction& host_func) const;
 
   //! create standard coarse grid basis functions as discrete functions defined on the fine grid
   // ------------------------------------------------------------------------------------
-  void add_coarse_basis_contribution(MacroMicroGridSpecifier& specifier, std::map<int, int>& global_id_to_internal_id,
+  void add_coarse_basis_contribution(MacroMicroGridSpecifier& specifier,
+                                     std::map<std::size_t, std::size_t>& global_id_to_internal_id,
                                      MsFEMBasisFunctionType& msfem_basis_function_list) const;
 
   //! add corrector part to MsFEM basis functions
-  void add_corrector_contribution(MacroMicroGridSpecifier& specifier, std::map<int, int>& global_id_to_internal_id,
+  void add_corrector_contribution(MacroMicroGridSpecifier& specifier,
+                                  std::map<std::size_t, std::size_t>& global_id_to_internal_id,
                                   SubGridListType& subgrid_list,
                                   MsFEMBasisFunctionType& msfem_basis_function_list) const;
 
@@ -236,8 +238,8 @@ private:
     if (Problem::getModelData()->symmetricDiffusion()) {
 
       for (unsigned int t = 0; t < relevant_constellations.size(); ++t) {
-        unsigned int row = get<0>(relevant_constellations[t]);
-        unsigned int col = get<1>(relevant_constellations[t]);
+        auto row = get<0>(relevant_constellations[t]);
+        auto col = get<1>(relevant_constellations[t]);
         system_matrix[row][col] = evaluate_bilinear_form(diffusion_op, *(msfem_basis_function_list_1[row]),
                                                          *(msfem_basis_function_list_2[col]),
                                                          support_of_ms_basis_func_intersection[row][col]);
@@ -257,8 +259,8 @@ private:
     } else {
 
       for (unsigned int t = 0; t < relevant_constellations.size(); ++t) {
-        unsigned int row = get<0>(relevant_constellations[t]);
-        unsigned int col = get<1>(relevant_constellations[t]);
+        auto row = get<0>(relevant_constellations[t]);
+        auto col = get<1>(relevant_constellations[t]);
         system_matrix[row][col] = evaluate_bilinear_form(diffusion_op, *(msfem_basis_function_list_1[row]),
                                                          *(msfem_basis_function_list_2[col]),
                                                          support_of_ms_basis_func_intersection[row][col]);
@@ -329,7 +331,7 @@ private:
         const auto dirichlet_extension_localized = dirichlet_extension.localFunction(entity);
 
         const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
-        const int numQuadraturePoints = quadrature.nop();
+        const auto numQuadraturePoints = quadrature.nop();
         for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
           const auto global_point = geometry.global(quadrature.point(quadraturePoint));
 
