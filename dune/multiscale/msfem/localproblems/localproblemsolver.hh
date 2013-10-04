@@ -116,9 +116,11 @@ public:
   typedef typename BackendChooser<SubDiscreteFunctionSpaceType>::LinearOperatorType LocProbLinearOperatorTypeType;
 
 private:
-  typedef typename BackendChooser<SubDiscreteFunctionSpaceType>::InverseOperatorType InverseLocProbLinearOperatorTypeType;
+  typedef typename BackendChooser<SubDiscreteFunctionSpaceType>::InverseOperatorType
+  InverseLocProbLinearOperatorTypeType;
 
-  static std::unique_ptr<InverseLocProbLinearOperatorTypeType> make_inverse_operator(const LocProbLinearOperatorTypeType& problem_matrix);
+  static std::unique_ptr<InverseLocProbLinearOperatorTypeType>
+  make_inverse_operator(LocProbLinearOperatorTypeType& problem_matrix);
 
   typedef WeightedClementOperator WeightedClementOperatorType;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
@@ -126,10 +128,10 @@ private:
   const MacroMicroGridSpecifierType& specifier_;
   SubGridList& subgrid_list_;
 
-  std::vector<std::vector<int>>* ids_relevant_basis_functions_for_subgrid_;
+  std::vector<std::vector<std::size_t>>* ids_relevant_basis_functions_for_subgrid_;
   std::vector<double>* inverse_of_L1_norm_coarse_basis_funcs_;
   const CoarseBasisFunctionListType* coarse_basis_;
-  const std::map<int, int>* global_id_to_internal_id_;
+  const std::map<std::size_t, std::size_t>* global_id_to_internal_id_;
 
   const NeumannBoundaryType* neumann_bc_;
   const HostDiscreteFunctionType* dirichlet_extension_;
@@ -144,10 +146,10 @@ public:
 
   MsFEMLocalProblemSolver(
       const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace, const MacroMicroGridSpecifierType& specifier,
-      SubGridList& subgrid_list, std::vector<std::vector<int>>& ids_basis_functions_in_subgrid,
+      SubGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
       std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
       const DiffusionOperatorType& diffusion_operator, const CoarseBasisFunctionListType& coarse_basis,
-      const std::map<int, int>& global_id_to_internal_id, const NeumannBoundaryType& neumann_bc,
+      const std::map<std::size_t, std::size_t>& global_id_to_internal_id, const NeumannBoundaryType& neumann_bc,
       const HostDiscreteFunctionType& dirichlet_extension);
 
   void solveAllLocalProblems(const CoarseEntityType& coarseCell,
@@ -169,13 +171,13 @@ public:
                                    const int coarse_index /*= -1*/) const;
 
   // solve Dirichlet boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
-  void solve_dirichlet_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix, MatrixType& lm_system_matrix,
-                                             SubDiscreteFunctionType& local_corrector,
+  void solve_dirichlet_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
+                                             MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
                                              const int coarse_index /*= -1*/) const;
 
   // solve Neumann boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
-  void solve_neumann_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix, MatrixType& lm_system_matrix,
-                                           SubDiscreteFunctionType& local_corrector,
+  void solve_neumann_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
+                                           MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
                                            const int coarse_index /*= -1*/) const;
 
   //! create a hostgrid function from a subgridfunction

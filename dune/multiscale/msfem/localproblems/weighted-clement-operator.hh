@@ -96,7 +96,7 @@ public:
                                    const CoarseDiscreteFunctionSpaceType& coarse_space,
                                    const CoarseNodeVectorType& coarse_nodes,
                                    const CoarseBasisFunctionList& coarse_basis,
-                                   const std::map<int, int>& global_id_to_internal_id,
+                                   const std::map<std::size_t, std::size_t>& global_id_to_internal_id,
                                    const MacroMicroGridSpecifier& specifier);
 
 private:
@@ -154,7 +154,7 @@ protected:
 
   const CoarseNodeVectorType& coarse_nodes_;
   const CoarseBasisFunctionList& coarse_basis_;
-  const std::map<int, int>& global_id_to_internal_id_;
+  const std::map<std::size_t, std::size_t>& global_id_to_internal_id_;
 
   //! flag indicating whether the system matrix has been assembled
   mutable int sequence_;

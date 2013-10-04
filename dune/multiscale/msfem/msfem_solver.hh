@@ -51,7 +51,6 @@ private:
   typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType MsLinearOperatorTypeType;
   typedef typename BackendChooser<DiscreteFunctionSpace>::InverseOperatorType InverseOperatorType;
 
-
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
 

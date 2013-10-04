@@ -58,7 +58,8 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::LinearOperatorTy
     const auto& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
-    DSFe::LocalMatrixProxy<CommonTraits::LinearOperatorType> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
+    DSFe::LocalMatrixProxy<CommonTraits::LinearOperatorType> local_matrix(global_matrix, macro_grid_entity,
+                                                                          macro_grid_entity);
 
     const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = macro_grid_baseSet.size();
@@ -194,7 +195,8 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
     const auto& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
-    DSFe::LocalMatrixProxy<CommonTraits::LinearOperatorType> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
+    DSFe::LocalMatrixProxy<CommonTraits::LinearOperatorType> local_matrix(global_matrix, macro_grid_entity,
+                                                                          macro_grid_entity);
     auto local_old_u_H = old_u_H.localFunction(macro_grid_entity);
 
     const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
