@@ -202,7 +202,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   // discrete elliptic operator (corresponds with FEM Matrix)
 
   //! (stiffness) matrix
-  MsFEMMatrixType msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
+  MsLinearOperatorTypeType msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
 
   //! right hand side vector
   // right hand side for the finite element method:

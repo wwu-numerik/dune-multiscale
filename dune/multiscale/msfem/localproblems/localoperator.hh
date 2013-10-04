@@ -64,10 +64,10 @@ public:
   LocalProblemOperator(const DiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)
-  void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix) const;
+  void assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const;
 
   //! assemble stiffness matrix for local problems (oversampling strategy 2 and 3)
-  void assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix,
+  void assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
                        const SubGridList::CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
 
   //! assemble the right hand side of a local problem (reconstruction problem on entity)

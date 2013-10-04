@@ -6,6 +6,7 @@
 #define DUNE_FEM_TYPES_HH
 
 #include <config.h>
+#include <dune/multiscale/common/la_backend.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/common/tuples.hh>
 
@@ -15,8 +16,6 @@
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/io/file/dataoutput.hh>
 
-#include <dune/fem/solver/petscsolver.hh>
-
 namespace Dune {
 namespace Multiscale {
 namespace FEM {
@@ -24,7 +23,7 @@ namespace FEM {
 //! Type constructions for the FEM problem
 struct FEMTraits {
 
-  typedef Dune::Fem::PetscInverseOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix>
+  typedef typename BackendChooser<typename CommonTraits::DiscreteFunctionSpaceType>::InverseOperatorType
   InverseOperatorType;
   /** \brief --------------- solver for the linear system of equations ----------------------------
      * use Bi CG Stab [OEMBICGSTABOp] or GMRES [OEMGMRESOp] for non-symmetric matrices and CG [CGInverseOp] for

@@ -32,13 +32,13 @@ namespace MsFEM {
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/") {}
 
-std::unique_ptr<MsFEMLocalProblemSolver::InverseLocProbFEMMatrixType>
-MsFEMLocalProblemSolver::make_inverse_operator(const MsFEMLocalProblemSolver::LocProbFEMMatrixType& problem_matrix) {
+std::unique_ptr<MsFEMLocalProblemSolver::InverseLocProbLinearOperatorTypeType>
+MsFEMLocalProblemSolver::make_inverse_operator(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& problem_matrix) {
   const auto solver =
       Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
-  return DSC::make_unique<InverseLocProbFEMMatrixType>(problem_matrix, 1e-8, 1e-8, 20000,
-                                                       DSC_CONFIG_GET("localproblemsolver_verbose", false), solver,
-                                                       DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
+  return DSC::make_unique<InverseLocProbLinearOperatorTypeType>(
+      problem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false), solver,
+      DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);
 }
 
 MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
@@ -96,7 +96,7 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LocProbFEMMatrixType locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace,
+  LocProbLinearOperatorTypeType locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace,
                                         subDiscreteFunctionSpace);
 
   //! define the discrete (elliptic) local MsFEM problem operator
@@ -166,7 +166,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, SubDiscret
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LocProbFEMMatrixType locprob_system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
+  LocProbLinearOperatorTypeType locprob_system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
                                              subDiscreteFunctionSpace);
 
   //! define the discrete (elliptic) local MsFEM problem operator
@@ -205,7 +205,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, SubDiscret
 
   //! boundary treatment:
   for (const auto& subgridEntity : subDiscreteFunctionSpace) {
-    DSFe::LocalMatrixProxy<LocProbFEMMatrixType> localMatrix(locprob_system_matrix, subgridEntity, subgridEntity);
+    DSFe::LocalMatrixProxy<LocProbLinearOperatorTypeType> localMatrix(locprob_system_matrix, subgridEntity, subgridEntity);
 
     const auto& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgridEntity);
     auto rhsLocal = local_problem_rhs.localFunction(subgridEntity);
@@ -266,7 +266,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, SubDiscret
     //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence).
 
     // saddle point problem solver:
-    typedef UzawaInverseOp<SubDiscreteFunctionType, HostDiscreteFunctionType, InverseLocProbFEMMatrixType,
+    typedef UzawaInverseOp<SubDiscreteFunctionType, HostDiscreteFunctionType, InverseLocProbLinearOperatorTypeType,
                            WeightedClementOperatorType> InverseUzawaOperatorType;
 
     HostDiscreteFunctionType lagrange_multiplier("lagrange multiplier", specifier_.coarseSpace());
@@ -292,7 +292,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, SubDiscret
 // assemble the two relevant system matrices: one for the corrector problem without contraints
 // and the second of the low dimensional lagrange multiplier (describing the inverse of the schur complement)
 void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_index,
-                                                            LocProbFEMMatrixType& locprob_system_matrix,
+                                                            LocProbLinearOperatorTypeType& locprob_system_matrix,
                                                             MatrixType& lm_system_matrix) const {
 
   auto subGridPart = subgrid_list_.gridPart(coarse_index);
@@ -331,7 +331,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_ind
     auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
     const auto& host_entity = *host_entity_pointer;
 
-    DSFe::LocalMatrixProxy<LocProbFEMMatrixType> local_matrix(locprob_system_matrix, subgrid_entity, subgrid_entity);
+    DSFe::LocalMatrixProxy<LocProbLinearOperatorTypeType> local_matrix(locprob_system_matrix, subgrid_entity, subgrid_entity);
 
     const auto& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(subgrid_entity);
     for (const auto& intersection : DSC::intersectionRange(hostGridPart, host_entity)) {
@@ -409,7 +409,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_ind
     }
   }
 
-  const InverseLocProbFEMMatrixType locprob_inverse_system_matrix(
+  const InverseLocProbLinearOperatorTypeType locprob_inverse_system_matrix(
       locprob_system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("lod.local_problem_solver_verbose", false),
       DSC_CONFIG_GET("lod.local_solver", "bcgs"), DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
   // solve the pre-processing problems:
@@ -480,7 +480,7 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(
     JacobianRangeType& e,
     // the matrix in our linear system of equations
     // in the non-linear case, it is the matrix for each iteration step
-    LocProbFEMMatrixType& locprob_system_matrix, MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+    LocProbLinearOperatorTypeType& locprob_system_matrix, MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
     const int coarse_index /*= -1*/) const {
 
   //! if we do not sort out the coarse boundaries (on rigorous_msfem_solver.cc, line 175), the results get better
@@ -628,7 +628,7 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(
 void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
     // the matrix in our linear system of equations
     // in the non-linear case, it is the matrix for each iteration step
-    LocProbFEMMatrixType& locprob_system_matrix, MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+    LocProbLinearOperatorTypeType& locprob_system_matrix, MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
     const int coarse_index /*= -1*/) const {
 
   // set solution equal to zero:
@@ -774,7 +774,7 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
 void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
     // the matrix in our linear system of equations
     // in the non-linear case, it is the matrix for each iteration step
-    LocProbFEMMatrixType& locprob_system_matrix, MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+    LocProbLinearOperatorTypeType& locprob_system_matrix, MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
     const int coarse_index /*= -1*/) const {
 
   // set solution equal to zero:
@@ -1014,7 +1014,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       // -----------------------------------------------------------------------------------------------------
       //! the matrix in our linear system of equations
       // in the non-linear case, it is the matrix for each iteration step
-      LocProbFEMMatrixType locprob_system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
+      LocProbLinearOperatorTypeType locprob_system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
                                                  subDiscreteFunctionSpace);
 
       const auto number_of_relevant_coarse_nodes_for_subgrid =

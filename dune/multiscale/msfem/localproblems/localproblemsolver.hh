@@ -17,8 +17,6 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
-#include <dune/fem/solver/petscsolver.hh>
-#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
@@ -115,12 +113,12 @@ private:
   typedef InverseOperatorResult InverseOperatorResultType;
 
 public:
-  typedef Dune::Fem::PetscLinearOperator<SubDiscreteFunctionType, SubDiscreteFunctionType> LocProbFEMMatrixType;
+  typedef typename BackendChooser<SubDiscreteFunctionSpaceType>::LinearOperatorType LocProbLinearOperatorTypeType;
 
 private:
-  typedef Dune::Fem::PetscInverseOperator<SubDiscreteFunctionType, LocProbFEMMatrixType> InverseLocProbFEMMatrixType;
+  typedef typename BackendChooser<SubDiscreteFunctionSpaceType>::InverseOperatorType InverseLocProbLinearOperatorTypeType;
 
-  static std::unique_ptr<InverseLocProbFEMMatrixType> make_inverse_operator(const LocProbFEMMatrixType& problem_matrix);
+  static std::unique_ptr<InverseLocProbLinearOperatorTypeType> make_inverse_operator(const LocProbLinearOperatorTypeType& problem_matrix);
 
   typedef WeightedClementOperator WeightedClementOperatorType;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
@@ -162,21 +160,21 @@ public:
   // Preprocessing step for the LOD:
   // assemble the two relevant system matrices: one for the corrector problem without contraints
   // and the second of the low dimensional lagrange multiplier (describing the inverse of the schur complement)
-  void preprocess_corrector_problems(const int coarse_index, LocProbFEMMatrixType& locprob_system_matrix,
+  void preprocess_corrector_problems(const int coarse_index, LocProbLinearOperatorTypeType& locprob_system_matrix,
                                      MatrixType& lm_system_matrix) const;
 
   // solve local problem for Local Orthogonal Decomposition Method (LOD)
-  void solve_corrector_problem_lod(JacobianRangeType& e, LocProbFEMMatrixType& locprob_system_matrix,
+  void solve_corrector_problem_lod(JacobianRangeType& e, LocProbLinearOperatorTypeType& locprob_system_matrix,
                                    MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
                                    const int coarse_index /*= -1*/) const;
 
   // solve Dirichlet boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
-  void solve_dirichlet_corrector_problem_lod(LocProbFEMMatrixType& locprob_system_matrix, MatrixType& lm_system_matrix,
+  void solve_dirichlet_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix, MatrixType& lm_system_matrix,
                                              SubDiscreteFunctionType& local_corrector,
                                              const int coarse_index /*= -1*/) const;
 
   // solve Neumann boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
-  void solve_neumann_corrector_problem_lod(LocProbFEMMatrixType& locprob_system_matrix, MatrixType& lm_system_matrix,
+  void solve_neumann_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix, MatrixType& lm_system_matrix,
                                            SubDiscreteFunctionType& local_corrector,
                                            const int coarse_index /*= -1*/) const;
 

@@ -69,7 +69,7 @@ bool LocalProblemOperator::point_is_in_element(const DomainType& corner_0, const
 
 //! stiffness matrix for a linear elliptic diffusion operator
 // for oversampling strategy 1 (no constraints)
-void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix) const
+void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const
     // x_T is the barycenter of the macro grid element T
 {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
@@ -86,7 +86,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();
 
-    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrixType> local_matrix(global_matrix, sub_grid_entity,
+    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(global_matrix, sub_grid_entity,
                                                                                        sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
@@ -123,7 +123,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
 } // assemble_matrix
 
 //! stiffness matrix for a linear elliptic diffusion operator
-void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMatrixType& global_matrix,
+void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
                                            const SubGridList::CoarseNodeVectorType& coarse_node_vector) const
     // x_T is the barycenter of the macro grid element T
 {
@@ -154,7 +154,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbFEMMa
       }
     }
 
-    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbFEMMatrixType> local_matrix(global_matrix, sub_grid_entity,
+    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(global_matrix, sub_grid_entity,
                                                                                        sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();

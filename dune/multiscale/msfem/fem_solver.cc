@@ -85,7 +85,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     //! (stiffness) matrix
-    CommonTraits::FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
+    CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
     //! right hand side vector
     // right hand side for the finite element method:
@@ -129,7 +129,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
         fem_matrix, 1e-8, 1e-8, 5000, DSC_CONFIG_GET("global.cgsolver_verbose", false),
         DSC_CONFIG_GET("fem.algebraic_solver", "bcgs"), DSC_CONFIG_GET("fem.precond", "asm"), 1);
     fem_rhs.communicate();
-    inverse_op(fem_rhs, solution);
+    inverse_op.apply(fem_rhs, solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
     DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
@@ -158,7 +158,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     RangeType rhs_L2_norm = 10000.0;
 
     //! (stiffness) matrix
-    CommonTraits::FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
+    CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
     int iteration_step = 1;
     // the Newton step for the FEM reference problem (solved with Newton Method):
@@ -214,7 +214,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
 
       const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(
           fem_matrix, 1e-8, 1e-8, 5000, true, "bcgs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
-      fem_newton_biCGStab(system_rhs, residual);
+      fem_newton_biCGStab.apply(system_rhs, residual);
 
       if (residual.dofsValid()) {
         solution += residual;
@@ -275,7 +275,7 @@ void Elliptic_FEM_Solver::solve(
     DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
     //! (stiffness) matrix
-    CommonTraits::FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
+    CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
     //! right hand side vector
     // right hand side for the finite element method:
@@ -322,7 +322,7 @@ void Elliptic_FEM_Solver::solve(
         fem_matrix, 1e-8, 1e-8, 5000, DSC_CONFIG_GET("global.cgsolver_verbose", false),
         DSC_CONFIG_GET("fem.algebraic_solver", "bcgs"), DSC_CONFIG_GET("fem.precond", "asm"), 1);
     fem_rhs.communicate();
-    inverse_op(fem_rhs, solution);
+    inverse_op.apply(fem_rhs, solution);
 
     DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
     DSC_LOG_INFO << "Standard FEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl
@@ -351,7 +351,7 @@ void Elliptic_FEM_Solver::solve(
     RangeType rhs_L2_norm = 10000.0;
 
     //! (stiffness) matrix
-    CommonTraits::FEMMatrix fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
+    CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
     int iteration_step = 1;
     // the Newton step for the FEM reference problem (solved with Newton Method):
@@ -408,7 +408,7 @@ void Elliptic_FEM_Solver::solve(
 
       const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(
           fem_matrix, 1e-8, 1e-8, 5000, true, "bcgs", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
-      fem_newton_biCGStab(system_rhs, residual);
+      fem_newton_biCGStab.apply(system_rhs, residual);
 
       if (residual.dofsValid()) {
         solution += residual;

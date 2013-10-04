@@ -12,11 +12,7 @@
 
 #include <dune/fem/solver/oemsolver/oemsolver.hh>
 #include <dune/fem/operator/discreteoperatorimp.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
-#include <dune/fem/solver/petscsolver.hh>
-#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
@@ -52,8 +48,9 @@ private:
   typedef MsFEMTraits::SubGridDiscreteFunctionType SubgridDiscreteFunctionType;
   //!-----------------------------------------------------------------------------------------
 
-  typedef Dune::Fem::PetscLinearOperator<DiscreteFunctionType, DiscreteFunctionType> MsFEMMatrixType;
-  typedef Dune::Fem::PetscInverseOperator<DiscreteFunctionType, MsFEMMatrixType> InverseOperatorType;
+  typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType MsLinearOperatorTypeType;
+  typedef typename BackendChooser<DiscreteFunctionSpace>::InverseOperatorType InverseOperatorType;
+
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;

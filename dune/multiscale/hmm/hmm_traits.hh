@@ -34,10 +34,11 @@ struct HMMTraits {
   typedef Dune::Fem::LagrangeDiscreteFunctionSpace<typename CommonTraits::FunctionSpaceType, PeriodicGridPartType,
                                                    1> // 1 =POLORDER
       PeriodicDiscreteFunctionSpaceType;
-  typedef Dune::Fem::AdaptiveDiscreteFunction<PeriodicDiscreteFunctionSpaceType> PeriodicDiscreteFunctionType;
 
-  typedef Dune::Fem::PetscInverseOperator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::FEMMatrix>
-  InverseFEMMatrix;
+  typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::DiscreteFunctionType PeriodicDiscreteFunctionType;
+
+  typedef typename BackendChooser<typename CommonTraits::DiscreteFunctionSpaceType>::InverseOperatorType
+  InverseOperatorType;
 
   //! --------------- the discrete operators (standard FEM and HMM) ------------------------
   //! discrete elliptic operator (corresponds with FEM Matrix)
