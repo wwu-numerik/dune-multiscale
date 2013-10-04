@@ -148,8 +148,8 @@ void solve_hmm_problem_nonlinear(
                                    : 1e-05;
 
   //! matrix
-  typename CommonTraits::FEMMatrix hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace,
-                                                     discreteFunctionSpace);
+  typename CommonTraits::LinearOperatorType hmm_newton_matrix("HMM Newton stiffness matrix", discreteFunctionSpace,
+                                                              discreteFunctionSpace);
   //! define the elliptic hmm operator that describes our 'homogenized' macro problem
   // ( effect of the elliptic hmm operator on a certain discrete function )
   const DiscreteEllipticHMMOperator discrete_elliptic_hmm_op(discreteFunctionSpace, periodicDiscreteFunctionSpace,
@@ -279,8 +279,8 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
   Dune::Timer hmmAssembleTimer;
 
   //! matrix
-  typename CommonTraits::FEMMatrix hmm_matrix("HMM Newton stiffness matrix", discreteFunctionSpace,
-                                              discreteFunctionSpace);
+  typename CommonTraits::LinearOperatorType hmm_matrix("HMM Newton stiffness matrix", discreteFunctionSpace,
+                                                       discreteFunctionSpace);
   const DiscreteEllipticHMMOperator discrete_elliptic_hmm_op(discreteFunctionSpace, periodicDiscreteFunctionSpace,
                                                              diffusion_op, cp_num_manager);
   // assemble the hmm stiffness matrix
@@ -318,8 +318,8 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
   // set Dirichlet Boundary to zero
   BoundaryTreatment::apply(hmm_rhs);
 
-  typename HMMTraits::InverseFEMMatrix hmm_biCGStab(hmm_matrix, 1e-8, 1e-8, 20000,
-                                                    DSC_CONFIG_GET("global.cgsolver_verbose", false));
+  typename HMMTraits::InverseOperatorType hmm_biCGStab(hmm_matrix, 1e-8, 1e-8, 20000,
+                                                       DSC_CONFIG_GET("global.cgsolver_verbose", false));
   hmm_biCGStab(hmm_rhs, hmm_solution);
   DSC_LOG_INFO << seperator_line << "Linear HMM problem solved in " << hmmAssembleTimer.elapsed() << "s." << std::endl
                << std::endl;
@@ -330,7 +330,7 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
 //! \TODO docme
 bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newton_error,
                                  typename CommonTraits::DiscreteFunctionType& hmm_solution,
-                                 const typename CommonTraits::FEMMatrix& hmm_newton_matrix,
+                                 typename CommonTraits::LinearOperatorType& hmm_newton_matrix,
                                  const typename CommonTraits::DiscreteFunctionType& hmm_newton_rhs,
                                  const int hmm_iteration_step, const int loop_cycle, const double hmm_tolerance) {
   //! residual vector
@@ -343,7 +343,8 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
   bool hmm_solution_convenient = false;
   while (!hmm_solution_convenient) {
     hmm_newton_residual.clear();
-    const typename HMMTraits::InverseFEMMatrix hmm_newton_biCGStab(hmm_newton_matrix, 1e-8, hmm_biCG_tolerance, 20000);
+    const typename HMMTraits::InverseOperatorType hmm_newton_biCGStab(hmm_newton_matrix, 1e-8, hmm_biCG_tolerance,
+                                                                      20000, false);
 
     hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
     hmm_solution_convenient = hmm_newton_residual.dofsValid();

@@ -10,7 +10,7 @@ namespace Dune {
 namespace Multiscale {
 namespace HMM {
 
-void DiscreteEllipticHMMOperator::boundary_treatment(CommonTraits::FEMMatrix& global_matrix) const {
+void DiscreteEllipticHMMOperator::boundary_treatment(CommonTraits::LinearOperatorType& global_matrix) const {
   const auto& gridPart = discreteFunctionSpace_.gridPart();
   for (const auto& entity : discreteFunctionSpace_) {
     if (!entity.hasBoundaryIntersections())
@@ -34,7 +34,7 @@ void DiscreteEllipticHMMOperator::boundary_treatment(CommonTraits::FEMMatrix& gl
   }
 }
 
-void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& global_matrix) const {
+void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::LinearOperatorType& global_matrix) const {
   // if test function reconstruction
   if (!DSC_CONFIG_GET("hmm.petrov_galerkin", true))
     DSC_LOG_INFO << "Assembling classical (non-Petrov-Galerkin) HMM Matrix." << std::endl;
@@ -58,7 +58,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
     const auto& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
-    DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
+    DSFe::LocalMatrixProxy<CommonTraits::LinearOperatorType> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
 
     const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = macro_grid_baseSet.size();
@@ -160,7 +160,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::FEMMatrix& globa
 
 //! assemble stiffness matrix for HMM with Newton Method
 void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old_u_H /*u_H^(n-1)*/,
-                                                           CommonTraits::FEMMatrix& global_matrix) const {
+                                                           CommonTraits::LinearOperatorType& global_matrix) const {
 
   // if test function reconstruction
   if (!DSC_CONFIG_GET("hmm.petrov_galerkin", true))
@@ -194,7 +194,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
     const auto& macro_grid_geometry = macro_grid_entity.geometry();
     assert(macro_grid_entity.partitionType() == InteriorEntity);
 
-    DSFe::LocalMatrixProxy<CommonTraits::FEMMatrix> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
+    DSFe::LocalMatrixProxy<CommonTraits::LinearOperatorType> local_matrix(global_matrix, macro_grid_entity, macro_grid_entity);
     auto local_old_u_H = old_u_H.localFunction(macro_grid_entity);
 
     const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();

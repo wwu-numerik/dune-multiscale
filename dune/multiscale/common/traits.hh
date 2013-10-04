@@ -6,6 +6,7 @@
 #define DUNE_MULTISCALE_COMMON_TRAITS_HH
 
 #include <config.h>
+#include <dune/multiscale/common/la_backend.hh>
 #include <dune/common/tuples.hh>
 #include <dune/fem/space/common/functionspace.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
@@ -14,31 +15,20 @@
 #include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/functions/constant.hh>
 
-#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
-#include <dune/fem/operator/linear/petscoperator.hh>
-
 namespace Dune {
 
 template <class T>
 struct GridPtr;
-template <bool T>
-class LagrangeMatrixSetup;
 
 namespace Fem {
 template <class T, class R>
 class GridFunctionAdapter;
-template <class T>
-class LagrangeParallelMatrixAdapter;
-template <class T>
-class ParallelScalarProduct;
 template <class T, class R>
 class DataOutput;
 template <class T, class R>
 class DataWriter;
 template <class T, class R>
 class AdaptationManager;
-template <class T, class R, class S>
-class SparseRowMatrixOperator;
 } // namespace Fem
 
 namespace Multiscale {
@@ -117,8 +107,8 @@ struct CommonTraits {
   typedef DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
   typedef DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef Dune::Fem::PetscDiscreteFunction<DiscreteFunctionSpaceType> DiscreteFunctionType;
-  typedef Dune::Fem::PetscLinearOperator<DiscreteFunctionType, DiscreteFunctionType> FEMMatrix;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
 
   //!------------------------- for adaptive grid refinement ---------------------------------
   //! type of restrict-prolong operator

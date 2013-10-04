@@ -142,7 +142,7 @@ public:
       p.clear();
       B.applyTransposed(d, p);
       // apply inverse laplace
-      inverseLaplace(p, h);
+      inverseLaplace.apply(p, h);
 
       const ARangeFieldType alpha = residuum / p.scalarProductDofs(h);
       lambda.axpy(alpha, d);

@@ -55,11 +55,11 @@ public:
 private:
   // dummy operator
   virtual void operator()(const DiscreteFunction& u, DiscreteFunction& w) const;
-  void boundary_treatment(CommonTraits::FEMMatrix& global_matrix) const;
+  void boundary_treatment(CommonTraits::LinearOperatorType& global_matrix) const;
 
 public:
-  void assemble_matrix(CommonTraits::FEMMatrix& global_matrix) const;
-  void assemble_jacobian_matrix(DiscreteFunction& old_macro_function, CommonTraits::FEMMatrix& global_matrix) const;
+  void assemble_matrix(CommonTraits::LinearOperatorType& global_matrix) const;
+  void assemble_jacobian_matrix(DiscreteFunction& old_macro_function, CommonTraits::LinearOperatorType& global_matrix) const;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;

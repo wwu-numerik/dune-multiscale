@@ -130,7 +130,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
   //! *************************** Assembling the problem ****************************
 
   //! (stiffness) matrix
-  typename CommonTraits::FEMMatrix system_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace,
+  typename CommonTraits::LinearOperatorType system_matrix("FEM Newton stiffness matrix", finerDiscreteFunctionSpace,
                                                  finerDiscreteFunctionSpace);
 
   //! right hand side vector
@@ -379,7 +379,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
 
   HomEllipticOperatorType hom_discrete_elliptic_op(discreteFunctionSpace, hom_diffusion_op);
 
-  typename CommonTraits::FEMMatrix hom_stiff_matrix("homogenized stiffness matrix", discreteFunctionSpace,
+  typename CommonTraits::LinearOperatorType hom_stiff_matrix("homogenized stiffness matrix", discreteFunctionSpace,
                                                     discreteFunctionSpace);
 
   typename CommonTraits::DiscreteFunctionType hom_rhs("homogenized rhs", discreteFunctionSpace);

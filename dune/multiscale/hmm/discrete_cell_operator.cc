@@ -26,7 +26,7 @@ void DiscreteCellProblemOperator::operator()(const DiscreteFunction& /* u*/, Dis
 
 //!// x_T is the barycenter of the macro grid element T
 void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
-                                                  CellProblemSolver::CellFEMMatrix& global_matrix) const {
+                                                  CellProblemSolver::CellLinearOperatorType& global_matrix) const {
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   global_matrix.reserve();
@@ -43,8 +43,8 @@ void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
     const auto& cell_grid_geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
-    DSFe::LocalMatrixProxy<CellProblemSolver::CellFEMMatrix> local_matrix(global_matrix, cell_grid_entity,
-                                                                          cell_grid_entity);
+    DSFe::LocalMatrixProxy<CellProblemSolver::CellLinearOperatorType> local_matrix(global_matrix, cell_grid_entity,
+                                                                                   cell_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -88,10 +88,9 @@ void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
   }
 } // assemble_matrix
 
-void DiscreteCellProblemOperator::assemble_jacobian_matrix(const DomainType& x_T,
-                                                           const JacobianRangeType& grad_coarse_function,
-                                                           const DiscreteFunction& old_fine_function,
-                                                           CellProblemSolver::CellFEMMatrix& global_matrix) const {
+void DiscreteCellProblemOperator::assemble_jacobian_matrix(
+    const DomainType& x_T, const JacobianRangeType& grad_coarse_function, const DiscreteFunction& old_fine_function,
+    CellProblemSolver::CellLinearOperatorType& global_matrix) const {
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   global_matrix.reserve();
@@ -108,8 +107,8 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(const DomainType& x_T
     const auto& cell_grid_geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
-    DSFe::LocalMatrixProxy<CellProblemSolver::CellFEMMatrix> local_matrix(global_matrix, cell_grid_entity,
-                                                                          cell_grid_entity);
+    DSFe::LocalMatrixProxy<CellProblemSolver::CellLinearOperatorType> local_matrix(global_matrix, cell_grid_entity,
+                                                                                   cell_grid_entity);
     auto local_fine_function = old_fine_function.localFunction(cell_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();

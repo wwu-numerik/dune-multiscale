@@ -199,22 +199,8 @@ private:
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
   typedef typename GridType::template Codim<0>::Entity EntityType;
 
-  struct MatrixTraits {
-    typedef PeriodicDiscreteFunctionSpaceType RowSpaceType;
-    typedef PeriodicDiscreteFunctionSpaceType ColumnSpaceType;
-    typedef LagrangeMatrixSetup<false> StencilType;
-    typedef Fem::ParallelScalarProduct<PeriodicDiscreteFunctionSpaceType> ParallelScalarProductType;
-
-    template <class M>
-    struct Adapter {
-      typedef LagrangeParallelMatrixAdapter<M> MatrixAdapterType;
-    };
-  };
-
-  typedef Fem::SparseRowMatrixOperator<PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, MatrixTraits>
-  FEMMatrix;
-
-  typedef Fem::OEMBICGSTABOp<PeriodicDiscreteFunctionType, FEMMatrix> InverseFEMMatrix;
+  typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
+  typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::InverseOperatorType InverseLinearOperatorType;
 
   // discrete elliptic operator (corresponds with FEM Matrix)
   typedef Multiscale::FEM::DiscreteEllipticOperator<PeriodicDiscreteFunctionType, TransformTensorType>
@@ -351,7 +337,8 @@ public:
     // define mass (just for cell problems \lambda w - \div A \nabla w = rhs)
     const EllipticOperatorType discrete_cell_elliptic_op(periodicDiscreteFunctionSpace, tensor_transformed, mass);
 
-    FEMMatrix lhsMatrix("Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace, periodicDiscreteFunctionSpace);
+    LinearOperatorType lhsMatrix("Cell Problem Stiffness Matrix", periodicDiscreteFunctionSpace,
+                                 periodicDiscreteFunctionSpace);
     discrete_cell_elliptic_op.assemble_matrix(lhsMatrix, false /*no boundary treatment*/);
 
     //! build the right hand side (rhs) of the problem
@@ -365,7 +352,8 @@ public:
     RhsAssembler::template assemble<2 * PeriodicDiscreteFunctionSpaceType::polynomialOrder>(zero, G_1, rhs_1);
     // solve the linear systems (with Bi-CG):
 
-    const InverseFEMMatrix fembiCG(lhsMatrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+    const InverseLinearOperatorType fembiCG(lhsMatrix, 1e-8, 1e-8, 20000,
+                                            DSC_CONFIG_GET("global.cgsolver_verbose", false));
 
     fembiCG(rhs_0, cellSolution_0);
     fembiCG(rhs_1, cellSolution_1);

@@ -23,8 +23,8 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
   // - int_Y DA^{\eps}( x_T + \delta y, \nabla_x u_H^{(n-1)})(x_T) + \nabla_y Q_h( u_H^{(n-1)})(y) ) \nablay_y
   // \phi_h_i(y) \nablay_y \phi_h_j(y) dy
   // ( \phi_h_i and \phi_h_j denote microscopic base functions.)
-  CellFEMMatrix jac_cor_cell_system_matrix("Jacobian Corrector Cell Problem System Matrix",
-                                           periodicDiscreteFunctionSpace_, periodicDiscreteFunctionSpace_);
+  CellLinearOperatorType jac_cor_cell_system_matrix("Jacobian Corrector Cell Problem System Matrix",
+                                                    periodicDiscreteFunctionSpace_, periodicDiscreteFunctionSpace_);
 
   //! define the discrete (elliptic) cell problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -65,8 +65,9 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
     // std :: cout << "Jacobian Corrector Cell Problem with solution zero." << std :: endl;
   } else {
     const bool CELLSOLVER_VERBOSE = DSC_CONFIG.get<bool>("problem.cellsolver_verbose", false);
-    InverseCellFEMMatrix jac_cor_cell_fem_biCGStab(jac_cor_cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
-    jac_cor_cell_fem_biCGStab(jac_cor_cell_problem_rhs, jac_cor_cell_problem_solution);
+    InverseCellLinearOperatorType jac_cor_cell_fem_biCGStab(jac_cor_cell_system_matrix, 1e-8, 1e-8, 20000,
+                                                            CELLSOLVER_VERBOSE);
+    jac_cor_cell_fem_biCGStab.apply(jac_cor_cell_problem_rhs, jac_cor_cell_problem_solution);
   }
 } // solve_jacobiancorrector_cellproblem
 
@@ -79,8 +80,8 @@ void CellProblemSolver::solvecellproblem(
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  CellFEMMatrix cell_system_matrix("Cell Problem System Matrix", periodicDiscreteFunctionSpace_,
-                                   periodicDiscreteFunctionSpace_);
+  CellLinearOperatorType cell_system_matrix("Cell Problem System Matrix", periodicDiscreteFunctionSpace_,
+                                            periodicDiscreteFunctionSpace_);
 
   //! define the discrete (elliptic) cell problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -111,8 +112,8 @@ void CellProblemSolver::solvecellproblem(
       cell_problem_solution.clear();
       // std :: cout << "Cell problem with solution zero." << std :: endl;
     } else {
-      const InverseCellFEMMatrix cell_fem_biCGStab(cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
-      cell_fem_biCGStab(cell_problem_rhs, cell_problem_solution);
+      const InverseCellLinearOperatorType cell_fem_biCGStab(cell_system_matrix, 1e-8, 1e-8, 20000, CELLSOLVER_VERBOSE);
+      cell_fem_biCGStab.apply(cell_problem_rhs, cell_problem_solution);
     }
   } else {
     // nonlinear case:
@@ -158,10 +159,10 @@ void CellProblemSolver::solvecellproblem(
       bool cell_solution_convenient = false;
       while (!cell_solution_convenient) {
         cell_problem_residual.clear();
-        const InverseCellFEMMatrix cell_fem_newton_biCGStab(cell_system_matrix, 1e-8, biCG_tolerance, 20000,
-                                                            CELLSOLVER_VERBOSE);
+        const InverseCellLinearOperatorType cell_fem_newton_biCGStab(cell_system_matrix, 1e-8, biCG_tolerance, 20000,
+                                                                     CELLSOLVER_VERBOSE);
 
-        cell_fem_newton_biCGStab(cell_problem_rhs, cell_problem_residual);
+        cell_fem_newton_biCGStab.apply(cell_problem_rhs, cell_problem_residual);
 
         if (cell_problem_residual.dofsValid()) {
           cell_solution_convenient = true;

@@ -54,27 +54,13 @@ private:
   //! type of the (possibly non-linear) diffusion operator
   typedef DiffusionImp DiffusionType;
 
-  struct CellMatrixTraits {
-    typedef PeriodicDiscreteFunctionSpaceType RowSpaceType;
-    typedef PeriodicDiscreteFunctionSpaceType ColumnSpaceType;
-    typedef LagrangeMatrixSetup<false> StencilType;
-    typedef Fem::ParallelScalarProduct<PeriodicDiscreteFunctionSpaceType> ParallelScalarProductType;
-
-    template <class M>
-    struct Adapter {
-      //!TODO this works only with ISTL present
-      typedef Dune::LagrangeParallelMatrixAdapter<M> MatrixAdapterType;
-    };
-  };
-
 public:
   //! HMM
-  typedef Fem::SparseRowMatrixOperator<PeriodicDiscreteFunctionType, PeriodicDiscreteFunctionType, CellMatrixTraits>
-  CellFEMMatrix;
+  typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::LinearOperatorType CellLinearOperatorType;
 
 private:
   //! OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
-  typedef Dune::Fem::OEMBICGSTABOp<PeriodicDiscreteFunctionType, CellFEMMatrix> InverseCellFEMMatrix;
+  typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::InverseOperatorType InverseCellLinearOperatorType;
 
 private:
   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace_; // Referenz &, wenn & verwendet, dann unten:

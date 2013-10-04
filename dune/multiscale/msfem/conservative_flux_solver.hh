@@ -343,8 +343,8 @@ private:
   //! polynomial order of base functions
   static const int polynomialOrder = SubGridDiscreteFunctionSpaceType::polynomialOrder;
 
-  typedef Dune::Fem::PetscLinearOperator<SubGridDiscreteFunctionType, SubGridDiscreteFunctionType> FluxProbFEMMatrix;
-  typedef Dune::Fem::PetscInverseOperator<SubGridDiscreteFunctionType, FluxProbFEMMatrix> InverseFluxProbFEMMatrix;
+  typedef typename BackendChooser<SubGridDiscreteFunctionSpaceType>::LinearOperatorType FluxProbLinearOperatorType;
+  typedef typename BackendChooser<SubGridDiscreteFunctionSpaceType>::InverseOperatorType InverseLinearOperatorType;
 
 private:
   const DiffusionOperatorType& diffusion_;
@@ -374,8 +374,8 @@ public:
     const SubGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace = local_corrector_e_i.space();
 
     //! the matrix in our linear system of equations
-    FluxProbFEMMatrix flux_prob_system_matrix("Conservative Flux Problem System Matrix", localDiscreteFunctionSpace,
-                                              localDiscreteFunctionSpace);
+    FluxProbLinearOperatorType flux_prob_system_matrix("Conservative Flux Problem System Matrix",
+                                                       localDiscreteFunctionSpace, localDiscreteFunctionSpace);
 
     //! define the discrete (elliptic) local MsFEM problem operator
     // ( effect of the discretized differential operator on a certain discrete function )
@@ -405,8 +405,8 @@ public:
       conservative_flux.clear();
       DSC_LOG_INFO << "Local Flux Problem with solution zero." << std::endl;
     } else {
-      InverseFluxProbFEMMatrix flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000, FLUX_SOLVER_VERBOSE, "cg",
-                                                  DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
+      InverseLinearOperatorType flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000, FLUX_SOLVER_VERBOSE,
+                                                   "cg", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
       flux_prob_biCGStab(rhs, conservative_flux);
     }
 

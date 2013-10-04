@@ -68,7 +68,7 @@ public:
    for the problem with periodic boundary condition.
    This is an alternative to the 'average zero' condition.)
   **/
-  void assemble_matrix(const DomainType& x_T, typename CellProblemSolver::CellFEMMatrix& global_matrix) const;
+  void assemble_matrix(const DomainType& x_T, typename CellProblemSolver::CellLinearOperatorType& global_matrix) const;
 
   /**
    *  ! stiffness matrix for a non linear elliptic diffusion operator
@@ -93,7 +93,7 @@ public:
    */
   void assemble_jacobian_matrix(const DomainType& x_T, const JacobianRangeType& grad_coarse_function,
                                 const DiscreteFunction& old_fine_function,
-                                typename CellProblemSolver::CellFEMMatrix& global_matrix) const;
+                                typename CellProblemSolver::CellLinearOperatorType& global_matrix) const;
 
   // begin group the "right hand side assembler methods"
   /**
