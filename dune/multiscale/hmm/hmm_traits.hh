@@ -12,7 +12,6 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/io/file/dataoutput.hh>
-#include <dune/fem/solver/petscsolver.hh>
 
 namespace Dune {
 namespace Multiscale {
