@@ -36,7 +36,7 @@ void iterate(std::string macroGridName, std::string function_name, int level, in
   FVSpace fv_space(gridPart);
   CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
 
-  std::vector<std::unique_ptr<FVFunc>> functions(threadnum);
+  std::vector<std::unique_ptr<FVFunc>> functions(threadnum+1);
 
   Dune::Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > iterators(gridPart);
   iterators.update();
@@ -45,6 +45,10 @@ void iterate(std::string macroGridName, std::string function_name, int level, in
     const auto fn = function_name + "_thread_" + DSC::toString(thread);
     functions[thread] = DSC::make_unique<FVFunc>(fn, fv_space);
   }
+  auto& combined = functions.back();
+  combined = DSC::make_unique<FVFunc>(function_name + "_combined", fv_space);
+  combined->clear();
+
   #ifdef _OPENMP
   #pragma omp parallel
   #endif
@@ -55,8 +59,11 @@ void iterate(std::string macroGridName, std::string function_name, int level, in
     for(const auto& entity : iterators)
     {
       auto local_function = function->localFunction(entity);
-      for (const auto idx : DSC::valueRange(local_function.size()))
+      auto local_combined = combined->localFunction(entity);
+      for (const auto idx : DSC::valueRange(local_function.size())) {
         local_function[idx] = thread+1;
+        local_combined[idx] = thread+1;
+      }
     }
   }
 
