@@ -17,6 +17,8 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
+#include <dune/fem/misc/threads/threadmanager.hh>
+#include <dune/fem/misc/threads/domainthreaditerator.hh>
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
@@ -133,6 +135,7 @@ private:
 
   const NeumannBoundaryType* neumann_bc_;
   const HostDiscreteFunctionType* dirichlet_extension_;
+  Dune::Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators_;
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)

@@ -54,7 +54,8 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(const HostDiscreteFunctionSpace
   , coarse_basis_(nullptr)
   , global_id_to_internal_id_(nullptr)
   , neumann_bc_(nullptr)
-  , dirichlet_extension_(nullptr) {}
+  , dirichlet_extension_(nullptr)
+  , threadIterators_(specifier_.coarseSpace().gridPart()) {}
 
 MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(
     const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace, const MacroMicroGridSpecifierType& specifier,
@@ -73,7 +74,8 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(
   , coarse_basis_(&coarse_basis)
   , global_id_to_internal_id_(&global_id_to_internal_id)
   , neumann_bc_(&neumann_bc)
-  , dirichlet_extension_(&dirichlet_extension) {}
+  , dirichlet_extension_(&dirichlet_extension)
+  , threadIterators_(specifier_.coarseSpace().gridPart()) {}
 
 //! ----------- method: solve the local MsFEM problem ------------------------------------------
 /** Solve all local MsFEM problems for one coarse entity at once.
@@ -597,7 +599,6 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(
 
   for (size_t i = 0; i != number_of_relevant_coarse_nodes_for_subgrid; ++i) // columns
   {
-
     const auto interior_coarse_basis_id_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i];
 
     HostDiscreteFunctionType aux_func("auxilliary func", hostDiscreteFunctionSpace_);
@@ -984,12 +985,16 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   DSC_LOG_INFO << "in method 'assemble_all': coarseGridSize = " << coarseGridSize << std::endl;
   DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
 
+  threadIterators_.update();
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> cell_time;
-
+  #ifdef _OPENMP
+  #pragma omp parallel
+  #endif
+  {
   const auto& coarseSpace = specifier_.coarseSpace();
   const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-  for (const auto& coarseEntity : coarseSpace) {
+  for (const auto& coarseEntity : threadIterators_) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
     const auto coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
 
@@ -1166,6 +1171,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     DSC_LOG_INFO << "Total time for solving and saving all local problems for the current subgrid: "
                  << assembleTimer.elapsed() << "s" << std::endl << std::endl;
   } // for
+  } // omp region
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all") / 1000.f;
