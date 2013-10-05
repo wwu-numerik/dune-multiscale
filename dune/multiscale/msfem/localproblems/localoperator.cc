@@ -830,7 +830,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
       baseSet.evaluateAll(quadrature[quadraturePoint], fine_phi_x);
 
       for (std::size_t j = 0; j < local_problem_RHS.size(); ++j) {
-        int interior_basis_func_id = ids_basis_functions_in_subgrid[j];
+        const auto interior_basis_func_id = ids_basis_functions_in_subgrid[j];
 
         const auto local_coarse_basis_func = coarse_basis_func_list[interior_basis_func_id]->localFunction(host_entity);
         auto elementOfRHS = local_problem_RHS[j]->localFunction(local_grid_entity);

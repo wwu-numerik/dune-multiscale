@@ -233,7 +233,7 @@ const SubGridList::EntityPointerCollectionType& SubGridList::getNodeEntityMap() 
 
 // given the id of a subgrid, return the entity seed for the 'base coarse entity'
 // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-const SubGridList::CoarseGridEntitySeed& SubGridList::get_coarse_entity_seed(int i) const {
+const SubGridList::CoarseGridEntitySeed& SubGridList::get_coarse_entity_seed(std::size_t i) const {
   // the following returns the mapped element for index i if present,
   // if not, an out-of-range exception is thrown
   return subgrid_id_to_base_coarse_entity_.at(i);

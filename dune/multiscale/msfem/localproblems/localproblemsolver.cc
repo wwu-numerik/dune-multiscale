@@ -598,7 +598,7 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(
   for (size_t i = 0; i != number_of_relevant_coarse_nodes_for_subgrid; ++i) // columns
   {
 
-    int interior_coarse_basis_id_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i];
+    const auto interior_coarse_basis_id_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i];
 
     HostDiscreteFunctionType aux_func("auxilliary func", hostDiscreteFunctionSpace_);
     aux_func.clear();
@@ -743,8 +743,7 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
 
   for (size_t i = 0; i != number_of_relevant_coarse_nodes_for_subgrid; ++i) // columns
   {
-
-    int interior_coarse_basis_id_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i];
+    const auto interior_coarse_basis_id_in_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index][i];
 
     HostDiscreteFunctionType aux_func("auxilliary func", hostDiscreteFunctionSpace_);
     aux_func.clear();
@@ -787,7 +786,7 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
 
   const auto& subDiscreteFunctionSpace = local_corrector.space();
 
-  auto number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index].size();
+  const auto number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index].size();
   const auto& subGrid = subDiscreteFunctionSpace.grid();
 
   //! define the discrete (elliptic) local MsFEM problem operator
