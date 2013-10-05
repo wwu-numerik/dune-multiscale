@@ -142,7 +142,7 @@ public:
 
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-  const CoarseGridEntitySeed& get_coarse_entity_seed(int i) const;
+  const CoarseGridEntitySeed& get_coarse_entity_seed(std::size_t i) const;
 
 private:
   typedef std::map<std::size_t, std::shared_ptr<SubGridType>> SubGridStorageType;

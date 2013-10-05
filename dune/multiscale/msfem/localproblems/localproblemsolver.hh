@@ -97,9 +97,7 @@ private:
   typedef typename SubgridLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType SubgridFaceDofIteratorType;
 
   //! polynomial order of base functions
-  enum {
-    polynomialOrder = SubDiscreteFunctionSpaceType::polynomialOrder
-  };
+  static const int polynomialOrder = SubDiscreteFunctionSpaceType::polynomialOrder;
 
   //! --------------------- istl matrix and vector types -------------------------------------
 
