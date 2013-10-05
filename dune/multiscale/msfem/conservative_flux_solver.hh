@@ -22,7 +22,6 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/linear/petscoperator.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
 #include <dune/fem/operator/common/stencil.hh>
 
