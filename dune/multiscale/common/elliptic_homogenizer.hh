@@ -293,7 +293,7 @@ public:
     // to solve cell problems, we always need to use a perforated unit cube as domain:
     GridPtr<GridType> periodicgridptr(filename_);
 
-    periodicgridptr->globalRefine(10);
+    Dune::Fem::GlobalRefine::apply(*periodicgridptr, 10);
 
     PeriodicGridPartType periodicGridPart(*periodicgridptr);
 

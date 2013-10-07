@@ -324,15 +324,14 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   // create a grid pointer for the DGF file belongig to the macro grid:
   CommonTraits::GridPointerType macro_grid_pointer(macroGridName);
   // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine(coarse_grid_level_);
+  Dune::Fem::GlobalRefine::apply(*macro_grid_pointer, coarse_grid_level_);
 
   CommonTraits::GridType& grid = *macro_grid_pointer;
   CommonTraits::GridPartType gridPart(grid);
   // coarse grid
   CommonTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
   CommonTraits::GridType& grid_coarse = *macro_grid_pointer_coarse;
-  grid_coarse.globalRefine(coarse_grid_level_);
-  grid_coarse.loadBalance();
+  Dune::Fem::GlobalRefine::apply(grid_coarse, coarse_grid_level_);
   CommonTraits::GridPartType gridPart_coarse(grid_coarse);
 
   // strategy for adaptivity:
@@ -340,7 +339,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     adapt(grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_, locals,
           totals, total_estimated_H1_error_);
 
-  grid.globalRefine(total_refinement_level_ - coarse_grid_level_);
+  Dune::Fem::GlobalRefine::apply(grid, total_refinement_level_ - coarse_grid_level_);
 
   //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:

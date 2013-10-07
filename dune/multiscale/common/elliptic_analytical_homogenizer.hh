@@ -52,7 +52,7 @@ public:
         << std::endl;
 
     GridPtr<GridType> gridptr(filename_);
-    gridptr->globalRefine(12);
+    Dune::Fem::GlobalRefine::apply(*gridptr, 12);
     GridPartType gridPart(*gridptr);
 
     DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);

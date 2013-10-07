@@ -45,11 +45,10 @@ void partition_vis_single(std::string macroGridName, std::string function_name, 
 
   CommonTraits::GridPointerType macro_grid_pointer(macroGridName);
   // refine the grid 'starting_refinement_level' times:
-  macro_grid_pointer->globalRefine(level);
+  Dune::Fem::GlobalRefine::apply(*macro_grid_pointer, level);
   CommonTraits::GridType& grid = *macro_grid_pointer;
   CommonTraits::GridPartType gridPart(grid);
   FVSpace fv_space(gridPart);
-  CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
 
   std::vector<std::unique_ptr<FVFunc>> functions(threadnum+1);
 

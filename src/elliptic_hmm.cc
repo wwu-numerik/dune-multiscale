@@ -63,13 +63,13 @@ int main(int argc, char** argv) {
     // create a grid pointer for the DGF file belongig to the macro grid:
     CommonTraits::GridPointerType macro_grid_pointer(macroGridName);
     // refine the grid 'starting_refinement_level' times:
-    macro_grid_pointer->globalRefine(refinement_level_macrogrid_);
+    Dune::Fem::GlobalRefine::apply(*macro_grid_pointer, refinement_level_macrogrid_);
 
     // create a finer GridPart for either the homogenized or the fine-scale problem.
     // this shall be used to compute an approximation of the exact solution.
     CommonTraits::GridPointerType fine_macro_grid_pointer(macroGridName);
     // refine the grid 'starting_refinement_level_reference' times:
-    fine_macro_grid_pointer->globalRefine(refinement_level_referenceprob_);
+    Dune::Fem::GlobalRefine::apply(*fine_macro_grid_pointer, refinement_level_referenceprob_);
 
     // after transformation, the cell problems are problems on the 0-centered unit cube [-½,½]²:
     // THIS GRID IS FIXED!
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
     // Here it is always the unit cube that needs to be used (after transformation, cell problems are always formulated
     // on such a grid )
     Dune::GridPtr<CommonTraits::GridType> periodic_grid_pointer(unitCubeName.string());
-    periodic_grid_pointer->globalRefine(refinement_level_cellgrid);
+    Dune::Fem::GlobalRefine::apply(*periodic_grid_pointer, refinement_level_cellgrid);
 
     algorithm(macro_grid_pointer, fine_macro_grid_pointer, periodic_grid_pointer, filename_);
     // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
