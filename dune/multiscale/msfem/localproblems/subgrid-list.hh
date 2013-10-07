@@ -101,7 +101,8 @@ public:
   const SubGridType& getSubGrid(const CoarseEntityType& entity) const;
   SubGridType& getSubGrid(const CoarseEntityType& entity);
 
-  std::size_t getNumberOfSubGrids() const;
+  std::size_t DUNE_DEPRECATED_MSG("use size() instead") getNumberOfSubGrids() const;
+  std::size_t size() const;
 
   SubGridPartType gridPart(std::size_t i);
 
