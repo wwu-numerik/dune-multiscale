@@ -278,6 +278,7 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getExtendedCoarseNodeVecto
 
 // get number of sub grids
 std::size_t SubGridList::getNumberOfSubGrids() const { return specifier_.getNumOfCoarseEntities(); }
+std::size_t SubGridList::size() const { return specifier_.getNumOfCoarseEntities(); }
 
 SubGridList::SubGridPartType SubGridList::gridPart(std::size_t i) { return SubGridPartType(getSubGrid(i)); }
 
