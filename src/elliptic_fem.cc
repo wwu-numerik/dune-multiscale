@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     CommonTraits::GridPointerType grid_pointer(gridName);
 
     // refine the grid 'starting_refinement_level' times:
-    grid_pointer->globalRefine(refinement_level);
+    Dune::Fem::GlobalRefine::apply(*grid_pointer, refinement_level);
 
     algorithm(grid_pointer, filename_);
 
