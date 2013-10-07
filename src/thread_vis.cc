@@ -22,9 +22,24 @@
 namespace Dune {
 namespace Multiscale {
 
-void iterate(std::string macroGridName, std::string function_name, int level, int threadnum = 8)
+template <class FunctionType>
+void output_all(std::vector<std::unique_ptr<FunctionType>>& functions, CommonTraits::GridPartType& gridpart, std::string name )
+{
+  Dune::Fem::VTKIO<CommonTraits::GridPartType> vtkio(gridpart);
+
+  for(auto& f : functions)
+  {
+    vtkio.addCellData(*f,f->name());
+  }
+  boost::filesystem::path out_filename(DSC_CONFIG_GET("global.datadir", "data"));
+  out_filename /= name;
+  vtkio.write(out_filename.string());
+}
+
+void partition_vis_single(std::string macroGridName, std::string function_name, int level, int threadnum = 8)
 {
   Dune::Fem::ThreadManager::setMaxNumberThreads(threadnum);
+  //Dune::Fem::Parameter::replace(std::string("fem.threads.partitioningmethod"), std::string("kway"));
   typedef Dune::Fem::FiniteVolumeSpace<CommonTraits::FunctionSpaceType, CommonTraits::GridPartType, 0> FVSpace;
   typedef Dune::Fem::AdaptiveDiscreteFunction<FVSpace> FVFunc;
 
@@ -67,47 +82,89 @@ void iterate(std::string macroGridName, std::string function_name, int level, in
     }
   }
 
-//  OutputParameters outputparam;
-
-//  outputparam.set_prefix(function_name);
-//  Dune::Fem::DataWriter<CommonTraits::GridType, decltype(functions)> output(gridPart.grid(), functions, outputparam);
-//  output.writeData(1.0 /*dummy*/, function_name);
-
-  Dune::Fem::VTKIO<CommonTraits::GridPartType> vtkio(gridPart);
-
-  for(auto& f : functions)
-  {
-    vtkio.addCellData(*f,f->name());
-  }
-  vtkio.write("all");
+  output_all(functions, gridPart, function_name+"all");
 }
 
-void algorithm(const std::string& macroGridName, int total_refinement_level_,
-               int coarse_grid_level_, int number_of_layers_ ) {
+void subgrid_vis(const std::string& macroGridName, int total_refinement_level_,
+                 int coarse_grid_level_, int number_of_layers_ )
+{
+  CommonTraits::GridPointerType macro_grid_pointer(macroGridName);
+  // refine the grid 'starting_refinement_level' times:
+  Dune::Fem::GlobalRefine::apply(*macro_grid_pointer, coarse_grid_level_);
 
-  DSC_LOG_INFO_0 << "loading dgf: " << macroGridName << std::endl;
+  CommonTraits::GridType& grid = *macro_grid_pointer;
+  CommonTraits::GridPartType gridPart(grid);
+  // coarse grid
+  CommonTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
+  CommonTraits::GridType& grid_coarse = *macro_grid_pointer_coarse;
+  Dune::Fem::GlobalRefine::apply(grid_coarse, coarse_grid_level_);
+  CommonTraits::GridPartType gridPart_coarse(grid_coarse);
 
-  iterate(macroGridName, "fine_grid", total_refinement_level_);
-  iterate(macroGridName, "fine_grid", coarse_grid_level_);
+  Dune::Fem::GlobalRefine::apply(grid, total_refinement_level_ - coarse_grid_level_);
+
+  //! ------------------------- discrete function spaces -----------------------------------
+  // the global-problem function space:
+  CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
+  const auto number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
+
+  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
+  MsFEM::MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
+  for (int i = 0; i < number_of_level_host_entities; ++i) {
+    specifier.setNoOfLayers(i, number_of_layers_);
+  }
+  specifier.setOversamplingStrategy(DSC_CONFIG_GET("msfem.oversampling_strategy", 1));
+  MsFEM::MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
+
+  typedef Dune::Fem::FiniteVolumeSpace<CommonTraits::FunctionSpaceType, CommonTraits::GridPartType, 0> FVSpace;
+  typedef Dune::Fem::AdaptiveDiscreteFunction<FVSpace> FVFunc;
+  FVSpace fv_space(gridPart);
+
+  std::vector<std::unique_ptr<FVFunc>> oversampled_functions(subgrid_list.size());
+  std::vector<std::unique_ptr<FVFunc>> functions(subgrid_list.size());
 
 
-//  const auto number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
+  auto oversampled_function_it = oversampled_functions.begin();
+  auto function_it = functions.begin();
+  // horrible, horrible complexity :)
+  for(const auto& coarse_entity : discreteFunctionSpace_coarse)
+  {
+    const auto& subgrid = subgrid_list.getSubGrid(coarse_entity);
+    const auto& id_set = discreteFunctionSpace_coarse.gridPart().grid().globalIdSet();
+    const auto coarse_id = id_set.id(coarse_entity);
+    auto& oversampled_function = (*oversampled_function_it++);
+    oversampled_function = DSC::make_unique<FVFunc>(DSC::toString(coarse_id) + "_subgrid", fv_space);
+    oversampled_function->clear();
+    auto& function = (*function_it++);
+    function = DSC::make_unique<FVFunc>(DSC::toString(coarse_id) + "_coarse_cell", fv_space);
+    function->clear();
 
-//  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-//  MsFEM::MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
-//  for (int i = 0; i < number_of_level_host_entities; ++i) {
-//    specifier.setNoOfLayers(i, number_of_layers_);
-//  }
-//  specifier.setOversamplingStrategy(DSC_CONFIG_GET("msfem.oversampling_strategy", 1));
+    for(const auto& fine_entity : discreteFunctionSpace)
+    {
+      if(subgrid.contains<0>(fine_entity)) {
+        auto oversampled_local_function = oversampled_function->localFunction(fine_entity);
+        for (const auto idx : DSC::valueRange(oversampled_local_function.size())) {
+          oversampled_local_function[idx] = coarse_id+1;
+        }
+        if (coarse_id == subgrid_list.getEnclosingMacroCellId(CommonTraits::EntityPointerType(fine_entity)))
+        {
+          auto local_function = function->localFunction(fine_entity);
+          for (const auto idx : DSC::valueRange(local_function.size())) {
+            local_function[idx] = coarse_id+1;
+          }
+        }
+      }
+    }
+  }
 
-//  //! create subgrids:
-//  { // this scopes subgridlist
-//    MsFEM::MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
+  output_all(oversampled_functions, gridPart, "subgrids");
+  output_all(functions, gridPart, "coarse_cells");
+}
 
-//  }
-
-
-
+void partition_vis(const std::string& macroGridName, int total_refinement_level_,
+               int coarse_grid_level_) {
+  partition_vis_single(macroGridName, "fine_grid", total_refinement_level_);
+  partition_vis_single(macroGridName, "coarse_grid", coarse_grid_level_);
 } // function algorithm
 
 
@@ -120,23 +177,13 @@ int main(int argc, char** argv) {
     using namespace Dune::Multiscale::MsFEM;
     init(argc, argv);
 
-    //!TODO include base in config
-    DSC_PROFILER.startTiming("msfem.all");
-
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output
     DSC::testCreateDirectory(datadir);
     DSC_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n") %
                           datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
-
-    // syntax: info_from_par_file / default  / validation of the value
-
-    // coarse_grid_level denotes the (starting) grid refinement level for the global coarse scale problem, i.e. it
-    // describes 'H'
     int coarse_grid_level_ = DSC_CONFIG_GETV("msfem.coarse_grid_level", 4, DSC::ValidateLess<int>(-1));
-
-    // syntax: info_from_par_file / default
     int number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
     switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
@@ -160,7 +207,8 @@ int main(int argc, char** argv) {
 
     // name of the grid file that describes the macro-grid:
     const std::string macroGridName = info.getMacroGridFile();
-    algorithm(macroGridName, total_refinement_level_, coarse_grid_level_, number_of_layers_);
+    partition_vis(macroGridName, total_refinement_level_, coarse_grid_level_);
+    subgrid_vis(macroGridName, total_refinement_level_, coarse_grid_level_, number_of_layers_);
     return 0;
   }
   catch (Dune::Exception& e) {
