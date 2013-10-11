@@ -12,8 +12,7 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/stuff/functions/interfaces.hh>
-#include <dune/stuff/functions/constant.hh>
+
 
 namespace Dune {
 
@@ -31,6 +30,12 @@ template <class T, class R>
 class AdaptationManager;
 } // namespace Fem
 
+namespace Stuff {
+template< class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim >
+class GlobalFunction;
+template< class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim >
+class GlobalConstantFunction;
+}
 namespace Multiscale {
 namespace Problem {
 
@@ -46,6 +51,7 @@ class IModelProblemData;
 struct CommonTraits {
   //! --------- typedefs for the macro grid and the corresponding discrete space -------------
   typedef Dune::GridSelector::GridType GridType;
+  typedef GridType::Codim<0>::Entity EntityType;
   // Dune::InteriorBorder_Partition or Dune::All_Partition >?
   // see:
   // http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
@@ -54,10 +60,10 @@ struct CommonTraits {
   typedef Dune::Fem::FunctionSpace<double, double, GridType::dimension, 1> FunctionSpaceType;
   //!-----------------------------------------------------------------------------------------
 
-  typedef Dune::Stuff::FunctionInterface<FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
-                                         FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange,
-                                         1> FunctionBaseType;
-  typedef Dune::Stuff::FunctionConstant<FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
+  typedef Dune::Stuff::GlobalFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
+                                         FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange> FunctionBaseType;
+
+  typedef Dune::Stuff::GlobalConstantFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
                                         FunctionSpaceType::RangeFieldType,
                                         FunctionSpaceType::dimRange> ConstantFunctionBaseType;
   //! --------- typedefs for the coefficient and data functions ------------------------------
@@ -98,7 +104,7 @@ struct CommonTraits {
       DiscreteFunctionSpaceType;
   typedef DiscreteFunctionSpaceType::DomainFieldType TimeType;
   typedef DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef GridType::Codim<0>::Entity EntityType;
+
   typedef GridPartType::IntersectionType FaceType;
   typedef GridType::Codim<0>::EntityPointer EntityPointerType;
   typedef GridType::Codim<0>::Geometry EntityGeometryType;

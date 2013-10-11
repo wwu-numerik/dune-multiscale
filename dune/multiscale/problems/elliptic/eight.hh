@@ -67,10 +67,6 @@ public:
   void evaluate(const DomainType& x, RangeType& y) const; // evaluate
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 /** \brief default class for the second source term G.
@@ -159,10 +155,6 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 
   void jacobian(const DomainType&, typename FunctionSpaceType::JacobianRangeType&) const;
 };

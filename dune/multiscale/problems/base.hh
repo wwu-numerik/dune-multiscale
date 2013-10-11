@@ -12,6 +12,7 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
 #include <dune/stuff/functions/interfaces.hh>
+#include <dune/stuff/functions/global.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
 #include <dune/stuff/common/memory.hh>
 
@@ -50,9 +51,7 @@ struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef double TimeType;
 
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
+
   virtual void evaluate(const DomainType& x, RangeType& ret) const { evaluate(x, TimeType(0), ret); }
   virtual void evaluate(const DomainType& x, const TimeType& time, RangeType& y) const = 0;
   virtual void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient,
@@ -94,9 +93,7 @@ public:
 
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
   virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
+
 };
 
 class ZeroDirichletData : public DirichletDataBase {
@@ -121,9 +118,7 @@ public:
 
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
   virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
+
 };
 
 class ZeroNeumannData : public NeumannDataBase {
