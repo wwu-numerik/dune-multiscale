@@ -4,6 +4,7 @@
 #include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
 #include <dune/stuff/common/filesystem.hh>
+#include <dune/stuff/functions/time.hh>
 #include <dune/multiscale/problems/selector.hh>
 
 #include <iostream>

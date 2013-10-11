@@ -103,7 +103,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
   // basis functions that belong to the interior(!) coarse nodes in U(T). Coarse nodes on the boundary of
   // are not relevant.
 
-  const auto number_of_subgrids = subgrid_list.getNumberOfSubGrids();
+  const auto number_of_subgrids = subgrid_list.size();
   const auto& fine_space = specifier.fineSpace();
 
   ids_basis_function_in_subgrid.resize(number_of_subgrids);

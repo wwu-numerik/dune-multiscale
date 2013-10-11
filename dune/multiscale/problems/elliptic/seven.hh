@@ -127,10 +127,6 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 // set zero dirichlet and neumann-values by default
