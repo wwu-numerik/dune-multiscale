@@ -262,10 +262,6 @@ public:
   //! in case 'u' has a time-dependency use the following method:
   //! (some classes might require this as a default implementation)
   void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 // seems completely unused

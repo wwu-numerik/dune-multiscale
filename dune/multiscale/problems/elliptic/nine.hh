@@ -70,10 +70,6 @@ public:
   void evaluate(const DomainType& x, RangeType& y) const;
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 /** \brief default class for the second source term G.
@@ -158,10 +154,6 @@ public:
   // unfortunately GRAPE requires both cases of the method 'evaluate' to be
   // instantiated
   void evaluate(const DomainType& x, const TimeType&, RangeType& y) const;
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 //! ----------------- Definition of Dirichlet Boundary Condition ------------------------
@@ -193,9 +185,6 @@ public:
   void jacobian(const DomainType& x, JacobianRangeType& y) const;
 
   void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const;
-
-  virtual JacobianRangeType jacobian(const DomainType& x) const { return DirichletDataBase::jacobian(x); }
-  virtual RangeType evaluate(const DomainType& x) const { return DirichletDataBase::evaluate(x); }
 };
 
 //! ----------------- Definition of Neumann Boundary Condition ------------------------
