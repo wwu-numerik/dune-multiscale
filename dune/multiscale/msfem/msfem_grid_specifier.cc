@@ -1,6 +1,7 @@
 #include "msfem_grid_specifier.hh"
 
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/aliases.hh>
 
 namespace Dune {
 namespace Multiscale {

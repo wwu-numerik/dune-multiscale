@@ -65,10 +65,6 @@ public:
   void evaluate(const DomainType& x, RangeType& y) const; // evaluate
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 //! ----------------- Definition of ' G ' ----------------------------
@@ -152,9 +148,6 @@ public:
   // instantiated
   void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
 
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 // set zero dirichlet and neumann-values by default

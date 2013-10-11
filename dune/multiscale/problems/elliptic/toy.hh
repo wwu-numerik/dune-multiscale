@@ -91,10 +91,6 @@ public:
   } // evaluate
 
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 //! ----------------- Definition of ' G ' ------------------------
@@ -176,10 +172,6 @@ public:
   void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
 
   void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
-
-  virtual RangeType evaluate(const DomainType& x) const {
-    return Dune::Multiscale::CommonTraits::FunctionBaseType::evaluate(x);
-  }
 };
 
 } //! @} namespace Toy {
