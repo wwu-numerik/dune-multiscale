@@ -59,7 +59,7 @@ NULLFUNCTION(ZeroFunction)
 
 //! \TODO docme
 // (to replace the more general lower order term)
-class MassWeight : public Problem::ZeroLowerOrder {
+class MassWeight : public Problem::LowerOrderBase {
 public:
 
   MassWeight(double lambda) : lambda_(lambda) {}
@@ -70,6 +70,15 @@ public:
   }
 
   virtual void evaluate(const DomainType& /*x*/, RangeType& /*ret*/) const { DUNE_THROW(Dune::NotImplemented, ""); }
+  virtual void evaluate(const DomainType&, const TimeType&, RangeType& y) const { DUNE_THROW(Dune::NotImplemented, ""); }
+
+  virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const {
+    y = RangeType(0);
+  }
+  virtual void direction_derivative(const DomainType&, const RangeType&, const JacobianRangeType&,
+                                    JacobianRangeType& y) const {
+    y = JacobianRangeType(0);
+  }
 
   double lambda_;
 };
