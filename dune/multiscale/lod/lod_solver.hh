@@ -202,7 +202,7 @@ private:
       const auto& geometry = (*entity_pointer).geometry();
 
       const auto quadrature = make_quadrature(*entity_pointer, discreteFunctionSpace_);
-      const int numQuadraturePoints = quadrature.nop();
+      const auto numQuadraturePoints = quadrature.nop();
       for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
         DomainType global_point = geometry.global(quadrature.point(quadraturePoint));
 
@@ -289,7 +289,7 @@ private:
       rhs[col] = 0.0;
 
     for (size_t col = 0; col != rhs.N(); ++col) {
-      for (int it_id = 0; it_id < support_of_ms_basis_func_intersection[col][col].size(); ++it_id)
+      for (size_t it_id = 0; it_id < support_of_ms_basis_func_intersection[col][col].size(); ++it_id)
           //      for (const auto& entity : discreteFunctionSpace_)
       {
         const auto it =
@@ -308,7 +308,7 @@ private:
           const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
           const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
-          for (int faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint) {
+          for (size_t faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint) {
             RangeType func_in_x;
             local_func.evaluate(faceQuadrature[faceQuadraturePoint], func_in_x);
 
@@ -332,7 +332,7 @@ private:
 
         const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
         const auto numQuadraturePoints = quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
+        for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
           const auto global_point = geometry.global(quadrature.point(quadraturePoint));
 
           const double weight =
