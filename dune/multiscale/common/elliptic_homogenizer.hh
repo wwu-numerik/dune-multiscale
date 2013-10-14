@@ -141,7 +141,7 @@ private:
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionSpaceType DummySpaceType;
   // (sometimes PeriodicDiscreteFunctionSpaceType is only a dummy)
-  typedef Fem::AdaptiveDiscreteFunction<PeriodicDiscreteFunctionSpaceType> PeriodicDiscreteFunctionType;
+  typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::DiscreteFunctionType PeriodicDiscreteFunctionType;
   // to avoid confusion:
   typedef PeriodicDiscreteFunctionType DummyType;
   // (sometimes PeriodicDiscreteFunctionType is only a dummy)
