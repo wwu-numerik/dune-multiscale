@@ -364,7 +364,7 @@ void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointe
   const std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
   // descretized homogenizer:
 
-  typedef Homogenizer<typename CommonTraits::DiffusionType> HomogenizerType;
+  typedef Homogenizer HomogenizerType;
 
   // to create an empty diffusion matrix that can be filled with constant values
   typedef Dune::Multiscale::ConstantDiffusionMatrix<typename HomogenizerType::HomTensorType> HomDiffusionType;

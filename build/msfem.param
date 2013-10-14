@@ -73,10 +73,10 @@ subgrid_silent = 1
 [msfem]
 
 # initial coarse grid level
-coarse_grid_level = 4
+coarse_grid_level = 3
 
 # initial fine grid level 
-fine_grid_level = 10
+fine_grid_level = 5
 
 # number of oversampling layers (layers of fine grid elements)
 oversampling_layers = 10

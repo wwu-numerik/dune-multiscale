@@ -69,16 +69,16 @@ struct ZeroLowerOrder : public LowerOrderBase {
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef double TimeType;
 
-  virtual void evaluate(const DomainType&, RangeType& y) const { y = RangeType(0); }
-  virtual void evaluate(const DomainType&, const TimeType&, RangeType& y) const { y = RangeType(0); }
-  virtual void evaluate(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const {
+  virtual void evaluate(const DomainType&, RangeType& y) const DS_FINAL { y = RangeType(0); }
+  virtual void evaluate(const DomainType&, const TimeType&, RangeType& y) const DS_FINAL{ y = RangeType(0); }
+  virtual void evaluate(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const DS_FINAL {
     y = RangeType(0);
   }
-  virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const {
+  virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const DS_FINAL {
     y = RangeType(0);
   }
   virtual void direction_derivative(const DomainType&, const RangeType&, const JacobianRangeType&,
-                                    JacobianRangeType& y) const {
+                                    JacobianRangeType& y) const DS_FINAL {
     y = JacobianRangeType(0);
   }
 };
@@ -104,8 +104,8 @@ public:
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef DomainFieldType TimeType;
 
-  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const { y = RangeType(0.0); }
-  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
 };
 
 class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
@@ -129,8 +129,8 @@ public:
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef DomainFieldType TimeType;
 
-  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const { y = RangeType(0.0); }
-  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
 };
 
 /**
