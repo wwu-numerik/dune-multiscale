@@ -67,7 +67,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::LinearOperatorTy
     const auto center_local = macro_grid_geometry.local(macro_entity_barycenter);
     const double macro_entity_volume = macro_grid_geometry.volume();
 
-    std::vector<int> cell_problem_id(numMacroBaseFunctions, 0);
+    std::vector<std::size_t> cell_problem_id(numMacroBaseFunctions, 0);
 
     typedef std::unique_ptr<PeriodicDiscreteFunction> PeriodicDiscreteFunctionPointer;
     std::vector<PeriodicDiscreteFunctionPointer> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());

@@ -509,7 +509,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
   // ('new' means that we only count the internal nodes and the non-Dirichlet boundary nodes,
   //  Dirichlet boundary nodes do not receive an id)
   std::map<std::size_t, std::size_t> global_id_to_internal_id;
-  for (int internal_id = 0, global_id = 0; global_id < coarse_space.size(); ++global_id) {
+  for (size_t internal_id = 0, global_id = 0; global_id < coarse_space.size(); ++global_id) {
     if (!specifier.is_coarse_dirichlet_node(global_id)) {
       global_id_to_internal_id[global_id] = internal_id;
       ++internal_id;
@@ -517,7 +517,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
   }
 
   MsFEMBasisFunctionType msfem_basis_function;
-  for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; ++internal_id) {
+  for (size_t internal_id = 0; internal_id < number_of_relevant_coarse_nodes; ++internal_id) {
     msfem_basis_function.emplace_back(new DiscreteFunction("MsFEM basis function", fine_space));
     msfem_basis_function[internal_id]->clear();
   }
@@ -584,7 +584,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
   std::map<OrderedDomainType, std::size_t> coordinates_to_global_coarse_node_id;
 
   support_of_ms_basis_func_intersection.resize(number_of_relevant_coarse_nodes);
-  for (int k = 0; k < number_of_relevant_coarse_nodes; ++k)
+  for (size_t k = 0; k < number_of_relevant_coarse_nodes; ++k)
     support_of_ms_basis_func_intersection[k].resize(number_of_relevant_coarse_nodes);
 
   // for each subgrid, determine all ms basis functions that were constructed using the corresponding subgrid corrector
@@ -683,7 +683,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
   // ------------------------------------------------------------------------------------------------------
 
   MsFEMBasisFunctionType standard_basis_function;
-  for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
+  for (size_t internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
     standard_basis_function.emplace_back(new DiscreteFunction("Standard basis function", fine_space));
     standard_basis_function[internal_id]->clear();
   }
@@ -725,7 +725,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
   // just for VTK output for the basis function correctors
   /*
   MsFEMBasisFunctionType corrector_basis_function;
-  for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
+  for (size_t internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1 )
    {
     corrector_basis_function.emplace_back(new DiscreteFunction("Corrector basis function", fine_space));
     corrector_basis_function[internal_id]->clear();
@@ -814,7 +814,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     }
 
     coarse_scale_part.clear();
-    for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
+    for (size_t internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
       DiscreteFunction aux("auxilliary function", fine_space);
       aux.clear();
       aux += *(standard_basis_function[internal_id]);
@@ -823,7 +823,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     }
 
     solution.clear();
-    for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
+    for (size_t internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
       DiscreteFunction aux("auxilliary function", fine_space);
       aux.clear();
       aux += *(msfem_basis_function[internal_id]);
@@ -1065,7 +1065,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
           newton_step_rhs[col] = 0.0;
         }
 
-        for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
+        for (size_t internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
           DiscreteFunction aux("auxilliary function", fine_space);
           aux.clear();
           aux += *(msfem_basis_function[internal_id]);
@@ -1123,7 +1123,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
             const auto quadrature = make_quadrature(*it, discreteFunctionSpace_);
             const auto numQuadraturePoints = quadrature.nop();
-            for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
+            for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
               const auto global_point = geometry.global(quadrature.point(quadraturePoint));
 
               // weight
@@ -1205,7 +1205,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
       // current solution:
       solution.clear();
-      for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
+      for (size_t internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
         DiscreteFunction aux("auxilliary function", fine_space);
         aux.clear();
         aux += *(msfem_basis_function[internal_id]);
@@ -1223,7 +1223,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
     fine_scale_part.clear();
     coarse_scale_part.clear();
-    for (int internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
+    for (size_t internal_id = 0; internal_id < number_of_relevant_coarse_nodes; internal_id += 1) {
       DiscreteFunction aux("auxilliary function", fine_space);
       aux.clear();
       aux += *(standard_basis_function[internal_id]);

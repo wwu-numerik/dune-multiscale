@@ -91,7 +91,7 @@ public:
     RangeType local_indicator(0);
 
     const auto quadratureNop = entityQuadrature.nop();
-    for (int quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint) {
+    for (size_t quadraturePoint = 0; quadraturePoint < quadratureNop; ++quadraturePoint) {
       const double weight = entityQuadrature.weight(quadraturePoint) *
                             geometry.integrationElement(entityQuadrature.point(quadraturePoint));
 

@@ -134,7 +134,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
 
           if (intersection.boundary() && (intersection.boundaryId() == 2)) {
             bool point_is_dirichlet_point_on_neumann_boundary_piece = false;
-            for (int c = 0; c < dirichlet_corners.size(); c++) {
+            for (size_t c = 0; c < dirichlet_corners.size(); c++) {
               if (global_point == dirichlet_corners[c]) {
                 point_is_dirichlet_point_on_neumann_boundary_piece = true;
               }

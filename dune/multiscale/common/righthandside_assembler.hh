@@ -725,7 +725,7 @@ public:
         RangeType f_x;
 
         const auto numMacroQuadraturePoints = macro_quadrature.nop();
-        for (int quadraturePoint = 0; quadraturePoint < numMacroQuadraturePoints; ++quadraturePoint) {
+        for (size_t quadraturePoint = 0; quadraturePoint < numMacroQuadraturePoints; ++quadraturePoint) {
           // local (barycentric) coordinates (with respect to entity)
           const auto& local_point = macro_quadrature.point(quadraturePoint);
           const auto global_point = macro_grid_geometry.global(local_point);
