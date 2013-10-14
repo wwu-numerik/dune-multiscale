@@ -57,6 +57,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
         dune/multiscale/fem/algorithm.cc
+        dune/multiscale/common/elliptic_homogenizer.cc
     )
 
 set( PROBLEM_SOURCES
