@@ -6,9 +6,11 @@
 #define DiscreteElliptic_HH
 
 #include <config.h>
+#include <memory>
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
+#include <dune/multiscale/common/traits.hh>
 
 #include <boost/noncopyable.hpp>
 
