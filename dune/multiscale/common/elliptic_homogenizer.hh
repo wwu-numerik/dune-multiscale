@@ -55,7 +55,6 @@ public:
   }
 };
 
-NULLFUNCTION(ZeroFunction)
 
 //! \TODO docme
 // (to replace the more general lower order term)
@@ -112,74 +111,20 @@ public:
   // Constructor
   inline explicit TransformTensor(const TensorType& tensor) : tensor_(tensor) {}
 
-  void diffusiveFlux(const DomainType& y, const JacobianRangeType& direction, JacobianRangeType& flux) const {
-    DomainType new_y = y;
-    new_y *= DSC_CONFIG_GET("problem.epsilon", 1.0f);
-    tensor_.diffusiveFlux(new_y, direction, flux);
-  } // diffusiveFlux
+  void diffusiveFlux(const DomainType& y, const JacobianRangeType& direction, JacobianRangeType& flux) const;
 
   inline void evaluate(const int /*i*/, const int /*j*/, const DomainType& /*x*/, const TimeType& /*time*/,
-                       RangeType& /*y*/) const {
-    DUNE_THROW(Dune::NotImplemented, "");
-  }
+                       RangeType& /*y*/) const;
 
   inline void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const { DUNE_THROW(Dune::NotImplemented, ""); }
 
-  inline void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& /*y*/) const {
-    DUNE_THROW(Dune::NotImplemented, "");
-  }
+  inline void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& /*y*/) const;
 
   virtual void jacobianDiffusiveFlux(const DomainType& /*x*/, const JacobianRangeType& /*position_gradient*/,
                                      const JacobianRangeType& /*direction_gradient*/,
-                                     JacobianRangeType& /*flux*/) const {
-    DUNE_THROW(Dune::NotImplemented, "");
-  }
+                                     JacobianRangeType& /*flux*/) const;
 };
 
-//! the following class is comparable to a SecondSource-Class (some kind of -div G )
-
-class CellSource : CommonTraits::FunctionBaseType {
-private:
-  typedef typename CommonTraits::DiffusionType TensorType;
-
-  typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  const FunctionSpaceType& functionSpace_;
-  const TensorType& tensor_;
-  const int& j_;
-
-public:
-  inline explicit CellSource(const FunctionSpaceType& functionSpace, const TensorType& tensor, const int& j)
-    : functionSpace_(functionSpace)
-    , tensor_(tensor)
-    , j_(j) // we solve the j'th cell problem
-  {}
-
-  inline void evaluate(const DomainType& /*x*/, RangeType& y) const { y[0] = 0; }
-
-  inline void evaluate(const int i, const DomainType& y, RangeType& z) const {
-    JacobianRangeType direction;
-    JacobianRangeType flux;
-
-    for (int j = 0; j < DomainType::dimension; ++j) {
-      direction[0][j] = int(j_ == j);
-    }
-
-    tensor_.diffusiveFlux(y, direction, flux);
-
-    // tensor_.evaluate( i, j_, y, z);
-    z = -flux[0][i];
-  } // evaluate
-};
-
-NULLFUNCTION(DefaultDummyAdvection)
 
 //! \TODO docme
 
@@ -201,10 +146,6 @@ private:
   typedef PeriodicDiscreteFunctionType DummyType;
   // (sometimes PeriodicDiscreteFunctionType is only a dummy)
   typedef MassWeight MassWeightType;
-  typedef ZeroFunction<FunctionSpaceType> ZeroFunctionType;
-  typedef DefaultDummyAdvection<FunctionSpaceType> DefaultDummyAdvectionType;
-  typedef TransformTensor TransformTensorType;
-  typedef CellSource CellSourceType;
   typedef typename PeriodicDiscreteFunctionSpaceType::JacobianRangeType PeriodicJacobianRangeType;
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
   typedef typename GridType::Codim<0>::Entity EntityType;
@@ -213,7 +154,7 @@ private:
   typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::InverseOperatorType InverseLinearOperatorType;
 
   // discrete elliptic operator (corresponds with FEM Matrix)
-  typedef Multiscale::FEM::DiscreteEllipticOperator<PeriodicDiscreteFunctionType, TransformTensorType>
+  typedef Multiscale::FEM::DiscreteEllipticOperator<PeriodicDiscreteFunctionType, TransformTensor>
   EllipticOperatorType;
 
   typedef typename FunctionSpaceType::DomainType DomainType;
@@ -230,7 +171,7 @@ public:
   typedef FieldMatrix<RangeType, dimension, dimension> HomTensorType;
 
 private:
-  double getEntry(const TransformTensorType& tensor,
+  double getEntry(const TransformTensor& tensor,
                   const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                   const PeriodicDiscreteFunctionType& w_i, const PeriodicDiscreteFunctionType& w_j, const int& i,
                   const int& j) const; // end of method

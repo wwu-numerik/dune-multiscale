@@ -3,9 +3,53 @@
 namespace Dune {
 namespace Multiscale {
 
+NULLFUNCTION(ZeroFunction)
+
+//! the following class is comparable to a SecondSource-Class (some kind of -div G )
+class CellSource : CommonTraits::FunctionBaseType {
+private:
+  typedef typename CommonTraits::DiffusionType TensorType;
+
+  typedef CommonTraits::FunctionSpaceType FunctionSpaceType;
+
+  typedef typename FunctionSpaceType::DomainType DomainType;
+  typedef typename FunctionSpaceType::RangeType RangeType;
+  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+
+  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
+
+  const TensorType& tensor_;
+  const int& j_;
+
+public:
+  inline explicit CellSource(const FunctionSpaceType& /*functionSpace*/, const TensorType& tensor, const int& j)
+    : tensor_(tensor)
+    , j_(j) // we solve the j'th cell problem
+  {}
+
+  inline void evaluate(const DomainType& /*x*/, RangeType& y) const { y[0] = 0; }
+
+  inline void evaluate(const int i, const DomainType& y, RangeType& z) const {
+    JacobianRangeType direction;
+    JacobianRangeType flux;
+
+    for (int j = 0; j < DomainType::dimension; ++j) {
+      direction[0][j] = int(j_ == j);
+    }
+
+    tensor_.diffusiveFlux(y, direction, flux);
+
+    // tensor_.evaluate( i, j_, y, z);
+    z = -flux[0][i];
+  } // evaluate
+};
+
+NULLFUNCTION(DefaultDummyAdvection)
+
 Homogenizer::Homogenizer(const std::string &filename) : filename_(filename) {}
 
-double Homogenizer::getEntry(const Homogenizer::TransformTensorType &tensor, const Homogenizer::PeriodicDiscreteFunctionSpaceType &periodicDiscreteFunctionSpace, const Homogenizer::PeriodicDiscreteFunctionType &w_i, const Homogenizer::PeriodicDiscreteFunctionType &w_j, const int &i, const int &j) const {
+double Homogenizer::getEntry(const TransformTensor &tensor, const Homogenizer::PeriodicDiscreteFunctionSpaceType &periodicDiscreteFunctionSpace, const Homogenizer::PeriodicDiscreteFunctionType &w_i, const Homogenizer::PeriodicDiscreteFunctionType &w_j, const int &i, const int &j) const {
   double a_ij_hom = 0;
 
   for (const auto& entity : periodicDiscreteFunctionSpace) {
@@ -101,15 +145,15 @@ Homogenizer::HomTensorType Homogenizer::getHomTensor(const Homogenizer::TensorTy
   // additional condition. Therefor we solve
   // \lambda w - \div A \nabla w = rhs        instead of      - \div A \nabla w = rhs
 
-  const TransformTensorType tensor_transformed(tensor);
+  const TransformTensor tensor_transformed(tensor);
 
   // if we have some additional source term (-div G), define:
-  const CellSourceType G_0(periodicDiscreteFunctionSpace, tensor_transformed, 0); // 0'th cell problem
-  const CellSourceType G_1(periodicDiscreteFunctionSpace, tensor_transformed, 1); // 1'th cell problem
+  const CellSource G_0(periodicDiscreteFunctionSpace, tensor_transformed, 0); // 0'th cell problem
+  const CellSource G_1(periodicDiscreteFunctionSpace, tensor_transformed, 1); // 1'th cell problem
   // - div ( A \nabla u^{\epsilon} ) = f - div G
 
   // quite a dummy. It's always f = 0
-  const ZeroFunctionType zero;
+  const ZeroFunction<FunctionSpaceType> zero;
 
   //! build the left hand side (lhs) of the problem
   const std::unique_ptr<const Problem::LowerOrderBase> mass(new MassWeightType(lambda));
@@ -147,6 +191,24 @@ Homogenizer::HomTensorType Homogenizer::getHomTensor(const Homogenizer::TensorTy
                                                               << "A_homogenized[1][1] = " << a_hom[1][1] << std::endl;
 
   return a_hom;
+}
+
+void TransformTensor::diffusiveFlux(const TransformTensor::DomainType &y, const TransformTensor::JacobianRangeType &direction, TransformTensor::JacobianRangeType &flux) const {
+  DomainType new_y = y;
+  new_y *= DSC_CONFIG_GET("problem.epsilon", 1.0f);
+  tensor_.diffusiveFlux(new_y, direction, flux);
+}
+
+void TransformTensor::jacobianDiffusiveFlux(const TransformTensor::DomainType &, const TransformTensor::JacobianRangeType &, const TransformTensor::JacobianRangeType &, TransformTensor::JacobianRangeType &) const {
+  DUNE_THROW(Dune::NotImplemented, "");
+}
+
+void TransformTensor::evaluate(const TransformTensor::DomainType &, const TransformTensor::TimeType &, TransformTensor::RangeType &) const {
+  DUNE_THROW(Dune::NotImplemented, "");
+}
+
+void TransformTensor::evaluate(const int, const int, const TransformTensor::DomainType &, const TransformTensor::TimeType &, TransformTensor::RangeType &) const {
+  DUNE_THROW(Dune::NotImplemented, "");
 }
 
 } // namespace Multiscale {
