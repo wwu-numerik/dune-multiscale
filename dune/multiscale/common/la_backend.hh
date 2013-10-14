@@ -7,6 +7,7 @@
 #ifdef USE_PETSC_BACKEND
 #include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
 #include <dune/fem/operator/linear/petscoperator.hh>
+#include <dune/fem/solver/petscsolver.hh>
 #endif
 #include <dune/fem/solver/oemsolver.hh>
 
