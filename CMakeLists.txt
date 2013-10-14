@@ -21,8 +21,6 @@ include(DuneMacros)
 dune_project()
 include(DuneUtils)
 
-CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h )
-
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 #	INCLUDE_SYS_DIR( opt/local/include )
 #	INCLUDE_SYS_DIR( opt/local/include/openmpi )
