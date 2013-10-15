@@ -12,9 +12,6 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-//! write discrete function to a file + VTK Output
-void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discrete_solution);
-
 //! \TODO docme
 void solve(typename CommonTraits::DiscreteFunctionType& solution,
            const typename CommonTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
@@ -23,9 +20,6 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
 
 //! the main FEM computation
 void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const std::string filename);
-
-//! \TODO docme
-void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointer, const std::string filename);
 
 } // namespace FEM {
 } // namespace Multiscale {

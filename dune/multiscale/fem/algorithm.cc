@@ -6,11 +6,11 @@
 
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/common/elliptic_homogenizer.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/output_traits.hh>
 #include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/fem/constantdiffusionmatrix.hh>
+#include <dune/multiscale/fem/print_info.hh>
 #include <dune/multiscale/problems/selector.hh>
 
 #include <dune/stuff/common/ranges.hh>
@@ -34,88 +34,6 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-//! set the dirichlet points to zero
-template <class DiscreteFunctionType>
-void boundaryTreatment(DiscreteFunctionType& rhs) {
-  using namespace Dune::Stuff;
-  const auto& discreteFunctionSpace = rhs.space();
-  static const unsigned int faceCodim = 1;
-  for (const auto& entity : discreteFunctionSpace) {
-    for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
-      if (!intersection.boundary())
-        continue;
-      if (intersection.boundary() && (intersection.boundaryId() != 1))
-        continue;
-
-      auto rhsLocal = rhs.localFunction(entity);
-      const auto face = intersection.indexInInside();
-      for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
-        rhsLocal[loc_point] = 0;
-    }
-  }
-} // boundaryTreatment
-
-//! set the dirichlet points to the Dirichlet BC
-template <class DirichletBC, class DiscreteFunctionType>
-void setDirichletValues(DirichletBC& dirichlet_func, DiscreteFunctionType& func) {
-  using namespace Dune::Stuff;
-  const auto& discreteFunctionSpace = func.space();
-  static const unsigned int faceCodim = 1;
-  for (const auto& entity : discreteFunctionSpace) {
-    for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
-      if (Dune::Multiscale::Problem::isDirichletBoundary(intersection)) {
-        auto funcLocal = func.localFunction(entity);
-        const auto face = intersection.indexInInside();
-        for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
-          const auto& global_point =
-              entity.geometry().global(discreteFunctionSpace.lagrangePointSet(entity).point(loc_point));
-          CommonTraits::RangeType dirichlet_value(0.0);
-          dirichlet_func.evaluate(global_point, dirichlet_value);
-          funcLocal[loc_point] = dirichlet_value;
-        }
-      }
-    }
-  }
-} // setDirichletValues
-
-//! write discrete function to a file + VTK Output
-void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discrete_solution) {
-  // write the final (discrete) solution to a file
-  std::string solution_file = (boost::format("fem_solution_refLevel_%d") % DSC_CONFIG_GET("fem.grid_level", 4)).str();
-  DiscreteFunctionWriter(solution_file).append(discrete_solution);
-
-  // writing paraview data output
-  // general output parameters
-  Dune::Multiscale::OutputParameters outputparam;
-
-  // create and initialize output class
-  typename OutputTraits::IOTupleType fem_solution_series(&discrete_solution);
-  outputparam.set_prefix((boost::format("fem_solution")).str());
-  typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
-                                                          fem_solution_series, outputparam);
-  // write data
-  if (DSC_CONFIG_GET("problem.linear", true))
-    femsol_dataoutput.writeData(1.0 /*dummy*/, "fem-solution");
-  else
-    femsol_dataoutput.writeData(1.0 /*dummy*/, "fem-newton-solution");
-
-  //! -------------------------- writing data output Exact Solution ------------------------
-  if (Problem::getModelData()->hasExactSolution()) {
-    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
-    const auto& u = *u_ptr;
-    const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u,
-                                                                          discrete_solution.space().gridPart());
-    // create and initialize output class
-    OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
-    outputparam.set_prefix("exact_solution");
-    OutputTraits::ExSolDataOutputType exactsol_dataoutput(discrete_solution.space().gridPart().grid(),
-                                                          exact_solution_series, outputparam);
-    // write data
-    exactsol_dataoutput.writeData(1.0 /*dummy*/, "exact-solution");
-    // -------------------------------------------------------
-  }
-  //! --------------------------------------------------------------------------------------
-}
 
 //! \TODO docme
 void solve(typename CommonTraits::DiscreteFunctionType& solution,
@@ -252,28 +170,6 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
   //! ********************** End of assembling the reference problem ***************************
 }
 
-//! outputs Problem info to output stream
-void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out) {
-  // epsilon is specified in the parameter file
-  // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
-  const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);
-  const int refinement_level_ = DSC_CONFIG_GET("fem.grid_level", 4);
-  out << "Log-File for Elliptic Model Problem " << Problem::name() << "." << std::endl << std::endl;
-  if (DSC_CONFIG_GET("problem.linear", true))
-    out << "Problem is declared as being LINEAR." << std::endl;
-  else
-    out << "Problem is declared as being NONLINEAR." << std::endl;
-
-  if (info.hasExactSolution()) {
-    out << "Exact solution is available." << std::endl << std::endl;
-  } else {
-    out << "Exact solution is not available." << std::endl << std::endl;
-  }
-  out << "Computations were made for:" << std::endl << std::endl;
-  out << "Refinement Level for Grid = " << refinement_level_ << std::endl << std::endl;
-
-  out << "Epsilon = " << epsilon_ << std::endl << std::endl;
-}
 
 //! the main FEM computation
 void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const std::string filename) {
@@ -327,103 +223,11 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const
   discrete_solution += dirichlet_extension;
 
   // write FEM solution to a file and produce a VTK output
-  write_discrete_function(discrete_solution);
+  write_discrete_function(discrete_solution, "fem");
 
   ErrorCalculator(nullptr, &discrete_solution).print(DSC_LOG_INFO_0);
 }
 
-//! \TODO docme
-void algorithm_hom_fem(typename CommonTraits::GridPointerType& macro_grid_pointer, const std::string filename) {
-  using namespace Dune;
-
-  const auto problem_data = Problem::getModelData();
-  print_info(*problem_data, DSC_LOG_INFO);
-
-  //! ---------------------------- grid parts ----------------------------------------------
-  // grid part for the global function space, required for the finite element problem
-  typename CommonTraits::GridPartType gridPart(*macro_grid_pointer);
-  //! --------------------------------------------------------------------------------------
-
-  //! ------------------------- discrete function spaces -----------------------------------
-  // the global-problem function space:
-  typename CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
-  //! --------------------------------------------------------------------------------------
-
-  // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const auto diffusion_op = Problem::getDiffusion();
-  //! define the right hand side assembler tool
-  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType> rhsassembler;
-  const auto f = Problem::getFirstSource(); // standard source f
-
-  //! define the discrete (elliptic) operator that describes our problem
-  // ( effect of the discretized differential operator on a certain discrete function )
-  const typename FEMTraits::EllipticOperatorType discrete_elliptic_op(discreteFunctionSpace, *diffusion_op);
-
-  // unit cube grid for the computations of cell problems
-  const std::string unit_cell_location = "../dune/multiscale/grids/cell_grids/unit_cube.dgf";
-  // descretized homogenizer:
-
-  typedef Homogenizer HomogenizerType;
-
-  // to create an empty diffusion matrix that can be filled with constant values
-  typedef Dune::Multiscale::ConstantDiffusionMatrix<typename HomogenizerType::HomTensorType> HomDiffusionType;
-
-  const HomogenizerType disc_homogenizer(unit_cell_location);
-  const typename HomogenizerType::HomTensorType A_hom = disc_homogenizer.getHomTensor(*diffusion_op);
-  const HomDiffusionType hom_diffusion_op(A_hom);
-
-  //!TODO check: hatte nur 2 tmp parameter, Masse/CommonTraits::LowerOrderTermType hinzugefUGT
-  typedef DiscreteEllipticOperator<typename CommonTraits::DiscreteFunctionType, HomDiffusionType>
-  HomEllipticOperatorType;
-
-  HomEllipticOperatorType hom_discrete_elliptic_op(discreteFunctionSpace, hom_diffusion_op);
-
-  typename CommonTraits::LinearOperatorType hom_stiff_matrix("homogenized stiffness matrix", discreteFunctionSpace,
-                                                             discreteFunctionSpace);
-
-  typename CommonTraits::DiscreteFunctionType hom_rhs("homogenized rhs", discreteFunctionSpace);
-  hom_rhs.clear();
-
-  //! solution vector
-  // - By solution, we denote the (discrete) homogenized solution determined with FEM on the coarse scale and FEM for
-  // the cell problems
-  typename CommonTraits::DiscreteFunctionType homogenized_solution(filename + " Homogenized Solution",
-                                                                   discreteFunctionSpace);
-  homogenized_solution.clear();
-  hom_discrete_elliptic_op.assemble_matrix(hom_stiff_matrix);
-
-  constexpr int hmm_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
-  rhsassembler.assemble<hmm_polorder>(*f, hom_rhs);
-
-  // set Dirichlet Boundary to zero
-  boundaryTreatment(hom_rhs);
-
-  const typename FEMTraits::InverseOperatorType hom_biCGStab(hom_stiff_matrix, 1e-8, 1e-8, 20000,
-                                                             DSC_CONFIG_GET("global.cgsolver_verbose", false));
-  hom_biCGStab(hom_rhs, homogenized_solution);
-
-  // write FEM solution to a file and produce a VTK output
-  // ---------------------------------------------------------------------------------
-
-  // write the final (discrete) solution to a file
-  std::string solution_file =
-      (boost::format("homogenized_solution_macro_refLevel_%d") % DSC_CONFIG_GET("fem.grid_level", 4)).str();
-  DiscreteFunctionWriter(solution_file).append(homogenized_solution);
-
-  // writing paraview data output
-  // general output parameters
-  Dune::Multiscale::OutputParameters outputparam;
-
-  // create and initialize output class
-  typename OutputTraits::IOTupleType hom_fem_solution_series(&homogenized_solution);
-  outputparam.set_prefix((boost::format("homogenized_solution")).str());
-  typename OutputTraits::DataOutputType homfemsol_dataoutput(homogenized_solution.space().gridPart().grid(),
-                                                             hom_fem_solution_series, outputparam);
-  homfemsol_dataoutput.writeData(1.0 /*dummy*/, "homogenized-solution");
-
-  // ---------------------------------------------------------------------------------
-}
 
 } // namespace FEM {
 } // namespace Multiscale {

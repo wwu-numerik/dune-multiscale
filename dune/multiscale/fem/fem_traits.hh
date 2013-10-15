@@ -39,6 +39,7 @@ struct FEMTraits {
 
 }; // struct  FEMTraits
 
+
 } // namespace FEM {
 } // namespace Multiscale {
 } // namespace Dune {
