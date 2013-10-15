@@ -4,7 +4,7 @@
 
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
-#include <dune/multiscale/fem/algorithm.hh>
+#include <dune/multiscale/fem/hom_algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
 
 int main(int argc, char** argv) {

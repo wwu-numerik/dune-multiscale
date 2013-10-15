@@ -236,6 +236,7 @@ const SubGridList::EntityPointerCollectionType& SubGridList::getNodeEntityMap() 
 const SubGridList::CoarseGridEntitySeed& SubGridList::get_coarse_entity_seed(std::size_t i) const {
   // the following returns the mapped element for index i if present,
   // if not, an out-of-range exception is thrown
+  assert(false);//need to eliminate narrowing conversion
   return subgrid_id_to_base_coarse_entity_.at(i);
 }
 

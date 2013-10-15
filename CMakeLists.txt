@@ -53,11 +53,10 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc
+        dune/multiscale/fem/print_info.cc
         dune/multiscale/common/dirichletconstraints.cc
         dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
-        dune/multiscale/fem/algorithm.cc
-        dune/multiscale/common/elliptic_homogenizer.cc
     )
 
 set( PROBLEM_SOURCES
@@ -95,10 +94,13 @@ set( MSFEM_SOURCES
     )
 
 set( HOM_FEM_SOURCES
+        dune/multiscale/fem/hom_algorithm.cc
+        dune/multiscale/common/elliptic_homogenizer.cc
         src/elliptic_hom_fem.cc
     )
 
 set( FEM_SOURCES
+        dune/multiscale/fem/algorithm.cc
         src/elliptic_fem.cc
     )
 
