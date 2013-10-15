@@ -30,12 +30,10 @@ namespace Multiscale {
 
 //! tiny struct to ensure i/o type don't diverge
 struct IOTraits {
-#if HAVE_SIONLIB&& HAVE_MPI
+#if HAVE_SIONLIB && HAVE_MPI
+#define MULTISCALE_USE_SION
   typedef Dune::Fem::SIONlibOutStream OutstreamType;
   typedef Dune::Fem::SIONlibInStream InstreamType;
-#else
-  typedef Dune::Fem::BinaryFileOutStream OutstreamType;
-  typedef Dune::Fem::BinaryFileInStream InstreamType;
 #endif
 };
 
@@ -71,8 +69,12 @@ public:
   void append(const Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>& df) {
     const std::string fn = (dir_ / DSC::toString(size_++)).string();
     DSC::testCreateDirectory(fn);
+#ifdef MULTISCALE_USE_SION
     IOTraits::OutstreamType stream(fn);
     df.write(stream);
+#else
+    df.write_xdr(fn);
+#endif
   } // append
 
   template <class DiscreteFunctionTraits>
@@ -108,8 +110,12 @@ public:
   template <class DiscreteFunctionTraits>
   void read(const unsigned long index, Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>& df) {
     const std::string fn = (dir_ / DSC::toString(index)).string();
+#ifdef MULTISCALE_USE_SION
     IOTraits::InstreamType stream(fn);
     df.read(stream);
+#else
+    df.read_xdr(fn);
+#endif
   } // read
 
 private:
