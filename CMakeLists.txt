@@ -171,7 +171,7 @@ add_dune_alugrid_flags(elliptic_lodm)
 add_dune_alugrid_flags(msfem-1d)
 # ENDIF( Gridtype matches ALUGRID )
 
-HEADERCHECK( ${header} ${dune} )
+# HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
 
 add_subdirectory(doc)
