@@ -859,7 +859,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       newton_step_rhs[col] = 0.0;
     }
 
-    double previous_newton_error = 10000.0;
+    double previous_newton_error = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
     bool first_cycle = true;
 
@@ -1040,7 +1040,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
         newton_step_rhs[col] = copy_newton_step_rhs[col];
 
       // assemble copys and check if the error is small and if damping is required
-      double newton_error = 10000.0;
+      double newton_error = std::numeric_limits<typename CommonTraits::RangeType>::max();
       if (first_cycle) {
         newton_error = 0.0;
         for (size_t col = 0; col != newton_solution_vector.N(); ++col) {

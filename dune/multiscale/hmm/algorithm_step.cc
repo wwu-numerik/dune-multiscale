@@ -118,8 +118,8 @@ void solve_hmm_problem_nonlinear(
                                                                        periodicDiscreteFunctionSpace);
   dummy_periodic_func.clear();
 
-  typename CommonTraits::RangeType relative_newton_error = 10000.0;
-  typename CommonTraits::RangeType hmm_rhs_L2_norm = 10000.0;
+  typename CommonTraits::RangeType relative_newton_error = std::numeric_limits<typename CommonTraits::RangeType>::max();
+  typename CommonTraits::RangeType hmm_rhs_L2_norm = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
   // number of HMM Newton step (1 = first step)
   // HMM_NEWTON_ITERATION_STEP' Netwon steps have been already performed,
