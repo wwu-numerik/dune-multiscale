@@ -11,7 +11,7 @@
 #include <sys/resource.h>
 
 int main(int argc, char** argv) {
-  chdir("/home/r_milk01/projekte/uni/dune/cmake_multiscale/dune-multiscale/build-clang-debug");
+
   try {
     using namespace Dune::Multiscale;
     using namespace Dune::Multiscale::MsFEM;
