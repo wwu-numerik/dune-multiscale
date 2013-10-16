@@ -100,8 +100,8 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
     typename CommonTraits::DiscreteFunctionType residual(filename + "FEM Newton Residual", finerDiscreteFunctionSpace);
     residual.clear();
 
-    typename CommonTraits::RangeType relative_newton_error_finescale = 10000.0;
-    typename CommonTraits::RangeType rhs_L2_norm = 10000.0;
+    typename CommonTraits::RangeType relative_newton_error_finescale = std::numeric_limits<typename CommonTraits::RangeType>::max();
+    typename CommonTraits::RangeType rhs_L2_norm = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
     int iteration_step = 1;
     // the Newton step for the FEM reference problem (solved with Newton Method):

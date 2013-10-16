@@ -155,8 +155,8 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
-    RangeType relative_newton_error_finescale = 10000.0;
-    RangeType rhs_L2_norm = 10000.0;
+    RangeType relative_newton_error_finescale = std::numeric_limits<typename CommonTraits::RangeType>::max();
+    RangeType rhs_L2_norm = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
     //! (stiffness) matrix
     CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
@@ -346,8 +346,8 @@ void Elliptic_FEM_Solver::solve(
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
-    RangeType relative_newton_error_finescale = 10000.0;
-    RangeType rhs_L2_norm = 10000.0;
+    RangeType relative_newton_error_finescale = std::numeric_limits<typename CommonTraits::RangeType>::max();
+    RangeType rhs_L2_norm = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
     //! (stiffness) matrix
     CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
