@@ -54,6 +54,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc
+        dune/multiscale/common/righthandside_assembler.cc
         dune/multiscale/fem/print_info.cc
         dune/multiscale/common/dirichletconstraints.cc
         dune/multiscale/msfem/localproblems/weighted-clement-operator.cc

@@ -313,9 +313,8 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
   // right hand side for the hm finite element method with Newton solver:
   typename CommonTraits::DiscreteFunctionType hmm_rhs("hmm rhs", discreteFunctionSpace);
   hmm_rhs.clear();
-  const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType> rhsassembler = {};
-  rhsassembler.assemble<2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2>(
-      *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
+  const RightHandSideAssembler rhsassembler = {};
+  rhsassembler.assemble( *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
 
   // set Dirichlet Boundary to zero
   BoundaryTreatment::apply(hmm_rhs);

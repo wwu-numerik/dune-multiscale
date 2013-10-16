@@ -192,7 +192,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  typedef RightHandSideAssembler<DiscreteFunctionType> RhsAssembler;
+  typedef RightHandSideAssembler RhsAssembler;
 
   //! define the discrete (elliptic) operator that describes our problem
   // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
@@ -224,10 +224,9 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   // assemble right hand side
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1)) {
-    RhsAssembler::assemble<2 * DiscreteFunctionSpace::polynomialOrder + 2>(f, msfem_rhs);
+    RhsAssembler::assemble(f, msfem_rhs);
   } else {
-    RhsAssembler::assemble_for_MsFEM_symmetric<2 * DiscreteFunctionSpace::polynomialOrder + 2>(f, specifier,
-                                                                                               subgrid_list, msfem_rhs);
+    RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
   }
   msfem_rhs.communicate();
   BOOST_ASSERT_MSG(msfem_rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");

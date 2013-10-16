@@ -71,7 +71,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  const RightHandSideAssembler<DiscreteFunctionType> rhsassembler = {};
+  const RightHandSideAssembler rhsassembler = {};
   const NewtonRightHandSide newton_rhs = {};
 
   //! define the discrete (elliptic) operator that describes our problem
@@ -104,7 +104,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.assemble<2 * DiscreteFunctionSpace::polynomialOrder + 2>(f, fem_rhs);
+    rhsassembler.assemble(f, fem_rhs);
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
@@ -261,7 +261,7 @@ void Elliptic_FEM_Solver::solve(
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  const RightHandSideAssembler<DiscreteFunctionType> rhsassembler = {};
+  const RightHandSideAssembler rhsassembler = {};
   const NewtonRightHandSide newton_rhs = {};
 
   //! define the discrete (elliptic) operator that describes our problem
@@ -293,8 +293,7 @@ void Elliptic_FEM_Solver::solve(
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.assemble<2 * DiscreteFunctionSpace::polynomialOrder + 2>(f, diffusion_op, dirichlet_extension,
-                                                                          neumann_bc, fem_rhs);
+    rhsassembler.assemble(f, diffusion_op, dirichlet_extension, neumann_bc, fem_rhs);
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
