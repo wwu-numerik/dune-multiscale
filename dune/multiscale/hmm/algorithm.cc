@@ -243,14 +243,6 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const auto diffusion_op = Problem::getDiffusion();
 
-  //! define the right hand side assembler tool
-  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType> rhsassembler;
-
-  //! define the discrete (elliptic) operator that describes our problem
-  // ( effect of the discretized differential operator on a certain discrete function )
-  const typename HMMTraits::EllipticOperatorType discrete_elliptic_op(finerDiscreteFunctionSpace, *diffusion_op);
-
   //! solution vector
   // - By reference_solution, we denote an (possibly accurate) approximation of the exact solution (used for comparison)
   // - if the elliptic problem is linear, the reference solution can be either determined with a fine scale FEM
@@ -286,7 +278,7 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
     typename CommonTraits::RestrictProlongOperatorType rp(hmm_solution);
     typename CommonTraits::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                                    *diffusion_op, rhsassembler, hmm_solution, reference_solution, loop_cycle);
+                                    *diffusion_op, hmm_solution, reference_solution, loop_cycle);
     // call of 'single_step': 'reference_solution' only required for error computation
 
     if (!DSC_CONFIG_GET("hmm.adaptivity", false))

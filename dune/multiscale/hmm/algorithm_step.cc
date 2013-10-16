@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/hmm/result.hh>
 
@@ -87,8 +88,7 @@ void solve_hmm_problem_nonlinear(
     const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
     const typename CommonTraits::DiffusionType& diffusion_op, typename CommonTraits::DiscreteFunctionType& hmm_solution,
     const CellProblemNumberingManager& cp_num_manager,
-    const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-    const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType>& rhsassembler, const int loop_cycle) {
+    const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace, const int loop_cycle) {
   // the nonlinear case
   // solve cell problems in a preprocess
   //! -------------- solve and save the cell problems for the macroscopic base function set
@@ -181,7 +181,9 @@ void solve_hmm_problem_nonlinear(
     hmm_newton_rhs.clear();
 
     const auto f = Problem::getFirstSource();
-    rhsassembler.assemble_for_HMM_Newton_method<CommonTraits::assembler_order>(
+
+    const NewtonRightHandSide newton_rhs = {};
+    newton_rhs.assemble_for_HMM_Newton_method(
         *f, diffusion_op, hmm_solution, cp_num_manager, dummy_periodic_func, hmm_newton_rhs);
     DSC_LOG_INFO << "Right hand side assembled!" << std::endl;
 
@@ -258,8 +260,7 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
                          const typename CommonTraits::DiffusionType& diffusion_op,
                          typename CommonTraits::DiscreteFunctionType& hmm_solution,
                          const CellProblemNumberingManager& cp_num_manager,
-                         const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-                         const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType>& rhsassembler) {
+                         const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace) {
   {
     //! -------------- solve and save the cell problems for the base function set --------------------------------------
     const CellProblemSolver cell_problem_solver(periodicDiscreteFunctionSpace, diffusion_op);
@@ -312,6 +313,7 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
   // right hand side for the hm finite element method with Newton solver:
   typename CommonTraits::DiscreteFunctionType hmm_rhs("hmm rhs", discreteFunctionSpace);
   hmm_rhs.clear();
+  const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType> rhsassembler = {};
   rhsassembler.assemble<2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2>(
       *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
 
@@ -452,7 +454,6 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                       typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
                       typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                       const typename CommonTraits::DiffusionType& diffusion_op,
-                      const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType>& rhsassembler,
                       typename CommonTraits::DiscreteFunctionType& hmm_solution,
                       const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle) {
   DSC_LOG_INFO << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
@@ -466,10 +467,10 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
 
   if (DSC_CONFIG_GET("problem.linear", true))
     solve_hmm_problem_linear(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution, cp_num_manager,
-                             discreteFunctionSpace, rhsassembler);
+                             discreteFunctionSpace);
   else // for a given loop cycle of the Newton scheme:
     solve_hmm_problem_nonlinear(periodicDiscreteFunctionSpace, diffusion_op, hmm_solution, cp_num_manager,
-                                discreteFunctionSpace, rhsassembler, loop_cycle);
+                                discreteFunctionSpace, loop_cycle);
 
   const auto errors = estimate_error(gridPart, discreteFunctionSpace, periodicDiscreteFunctionSpace, diffusion_op,
                                      cp_num_manager, hmm_solution);

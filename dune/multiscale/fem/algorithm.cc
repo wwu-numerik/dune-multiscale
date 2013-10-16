@@ -7,6 +7,7 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/common/output_traits.hh>
 #include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/fem/constantdiffusionmatrix.hh>
@@ -41,8 +42,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
            const typename CommonTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
            const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
            const typename CommonTraits::LowerOrderTermType& lower_order_term, // lower order term F(x, u(x), grad u(x) )
-           const std::string& filename,
-           const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType>& rhsassembler) {
+           const std::string& filename) {
   static const int fem_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
 
   //! *************************** Assembling the problem ****************************
@@ -77,7 +77,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
 
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
-    // assemble right hand side
+    const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType> rhsassembler = {};
     rhsassembler.assemble<fem_polorder>(*f, *diffusion_op, dirichlet_extension, *neumann_bc, system_rhs);
 
     // set Dirichlet Boundary to zero
@@ -110,6 +110,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
     // the Newton step for the FEM reference problem (solved with Newton Method):
     // L2-Norm of residual < tolerance ?
     double tolerance = 1e-06;
+    const NewtonRightHandSide newton_rhs = {};
     while (relative_newton_error_finescale > tolerance) {
       // (here: solution = solution from the last iteration step)
       DSC_LOG_INFO << "Newton iteration " << iteration_step << ":" << std::endl;
@@ -120,7 +121,7 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
       DSC_LOG_INFO << "Time to assemble FEM Newton stiffness matrix for current iteration: "
                    << stepAssembleTimer.elapsed() << "s" << std::endl;
 
-      rhsassembler.assemble_for_Newton_method<fem_polorder>(*f, *diffusion_op, lower_order_term, solution,
+      newton_rhs.assemble_for_Newton_method(*f, *diffusion_op, lower_order_term, solution,
                                                             dirichlet_extension, *neumann_bc, system_rhs);
 
       const Dune::Fem::L2Norm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(system_rhs.gridPart());
@@ -200,10 +201,6 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const
   dirichlet_extension.clear();
   setDirichletValues(*dirichlet_bc, dirichlet_extension);
 
-  //! define the right hand side assembler tool
-  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType> rhsassembler;
-
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
   const typename FEMTraits::EllipticOperatorType discrete_elliptic_op(discreteFunctionSpace, *diffusion_op,
@@ -219,7 +216,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const
   discrete_solution.clear();
 
   solve(discrete_solution, dirichlet_extension, discreteFunctionSpace, discrete_elliptic_op, *lower_order_term,
-        filename, rhsassembler);
+        filename);
   discrete_solution += dirichlet_extension;
 
   // write FEM solution to a file and produce a VTK output
