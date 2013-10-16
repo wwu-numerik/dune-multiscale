@@ -94,12 +94,6 @@ set( MSFEM_SOURCES
         dune/multiscale/msfem/msfem_solver.cc
     )
 
-set( HOM_FEM_SOURCES
-        dune/multiscale/fem/hom_algorithm.cc
-        dune/multiscale/common/elliptic_homogenizer.cc
-        src/elliptic_hom_fem.cc
-    )
-
 set( FEM_SOURCES
         dune/multiscale/fem/algorithm.cc
         src/elliptic_fem.cc
@@ -141,10 +135,6 @@ ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_msfem)
 
-ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
-add_dune_mpi_flags(elliptic_hom_fem)
-
 ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_fem)
@@ -166,7 +156,6 @@ add_dune_alugrid_flags(OBJECT multiscale_msfem)
 add_dune_alugrid_flags(OBJECT multiscale_hmm)
 add_dune_alugrid_flags(elliptic_hmm)
 add_dune_alugrid_flags(elliptic_msfem)
-add_dune_alugrid_flags(elliptic_hom_fem)
 add_dune_alugrid_flags(elliptic_fem)
 add_dune_alugrid_flags(elliptic_lodm)
 add_dune_alugrid_flags(msfem-1d)
