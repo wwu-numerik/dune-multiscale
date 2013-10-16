@@ -10,10 +10,6 @@
 
 namespace Dune {
 namespace Multiscale {
-
-template <class R>
-class RightHandSideAssembler;
-
 namespace HMM {
 
 struct HMMResult;

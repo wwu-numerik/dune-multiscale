@@ -42,8 +42,6 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
            const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
            const typename CommonTraits::LowerOrderTermType& lower_order_term, // lower order term F(x, u(x), grad u(x) )
            const std::string& filename) {
-  static const int fem_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
-
   //! *************************** Assembling the problem ****************************
 
   //! (stiffness) matrix
@@ -76,8 +74,8 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
 
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
-    const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType> rhsassembler = {};
-    rhsassembler.assemble<fem_polorder>(*f, *diffusion_op, dirichlet_extension, *neumann_bc, system_rhs);
+    const RightHandSideAssembler rhsassembler = {};
+    rhsassembler.assemble(*f, *diffusion_op, dirichlet_extension, *neumann_bc, system_rhs);
 
     // set Dirichlet Boundary to zero
     boundaryTreatment(system_rhs);
