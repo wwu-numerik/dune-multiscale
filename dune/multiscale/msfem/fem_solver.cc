@@ -7,8 +7,10 @@
 
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/function/common/function.hh>
 
 #include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
@@ -69,7 +71,8 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler<DiscreteFunctionType> rhsassembler;
+  const RightHandSideAssembler<DiscreteFunctionType> rhsassembler = {};
+  const NewtonRightHandSide newton_rhs = {};
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -149,8 +152,6 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     DiscreteFunction system_rhs("fem newton rhs", discreteFunctionSpace_);
     system_rhs.clear();
 
-    constexpr int fem_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
-
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
@@ -177,7 +178,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
 
       // assemble right hand side
       system_rhs.clear();
-      rhsassembler.assemble_for_Newton_method<fem_polorder>(f, diffusion_op, *lower_order_term, solution, system_rhs);
+      newton_rhs.assemble_for_Newton_method(f, diffusion_op, *lower_order_term, solution, system_rhs);
 
       const Dune::Fem::L2Norm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);
@@ -260,7 +261,8 @@ void Elliptic_FEM_Solver::solve(
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler<DiscreteFunctionType> rhsassembler;
+  const RightHandSideAssembler<DiscreteFunctionType> rhsassembler = {};
+  const NewtonRightHandSide newton_rhs = {};
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -342,8 +344,6 @@ void Elliptic_FEM_Solver::solve(
     DiscreteFunction system_rhs("fem newton rhs", discreteFunctionSpace_);
     system_rhs.clear();
 
-    const int fem_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
-
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
@@ -370,7 +370,7 @@ void Elliptic_FEM_Solver::solve(
 
       // assemble right hand side
       system_rhs.clear();
-      rhsassembler.assemble_for_Newton_method<fem_polorder>(f, diffusion_op, *lower_order_term, solution,
+      newton_rhs.assemble_for_Newton_method(f, diffusion_op, *lower_order_term, solution,
                                                             dirichlet_extension, neumann_bc, system_rhs);
 
       const Dune::Fem::L2Norm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(system_rhs.gridPart());

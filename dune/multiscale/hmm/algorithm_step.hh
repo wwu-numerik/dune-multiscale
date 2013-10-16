@@ -32,7 +32,6 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                       typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
                       typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                       const typename CommonTraits::DiffusionType& diffusion_op,
-                      const RightHandSideAssembler<typename CommonTraits::DiscreteFunctionType>& rhsassembler,
                       typename CommonTraits::DiscreteFunctionType& hmm_solution,
                       const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle);
 
