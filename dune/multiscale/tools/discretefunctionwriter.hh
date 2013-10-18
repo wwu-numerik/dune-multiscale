@@ -10,7 +10,7 @@
 #ifndef DISCRETEFUNCTIONWRITER_HEADERGUARD
 #define DISCRETEFUNCTIONWRITER_HEADERGUARD
 
-#include <config.h>
+
 #include <fstream>
 #include <vector>
 #include <cassert>

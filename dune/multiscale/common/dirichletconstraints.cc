@@ -1,3 +1,4 @@
+#include <config.h>
 #include "dirichletconstraints.hh"
 
 namespace Dune {

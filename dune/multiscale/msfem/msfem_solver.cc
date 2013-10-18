@@ -1,3 +1,4 @@
+#include <config.h>
 #include "msfem_solver.hh"
 
 #include <unordered_set>

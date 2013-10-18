@@ -5,7 +5,7 @@
 #ifndef DUNE_MULTISCALE_SRC_COMMON_HH
 #define DUNE_MULTISCALE_SRC_COMMON_HH
 
-#include <config.h>
+
 
 #include <dune/common/mpihelper.hh>  // An initializer of MPI
 #include <dune/common/exceptions.hh> // We use exceptions

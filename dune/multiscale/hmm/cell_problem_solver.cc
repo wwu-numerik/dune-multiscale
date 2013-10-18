@@ -1,3 +1,4 @@
+#include <config.h>
 #include "cell_problem_solver.hh"
 
 #include <dune/multiscale/hmm/discrete_cell_operator.hh>

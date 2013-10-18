@@ -5,7 +5,7 @@
 #ifndef DiscreteEllipticMsFEMLocalProblem_HH
 #define DiscreteEllipticMsFEMLocalProblem_HH
 
-#include <config.h>
+
 #include <vector>
 #include <memory>
 

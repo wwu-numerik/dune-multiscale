@@ -1,3 +1,4 @@
+#include <config.h>
 #include "six.hh"
 
 namespace Dune {

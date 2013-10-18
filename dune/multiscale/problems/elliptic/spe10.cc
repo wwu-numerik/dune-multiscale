@@ -1,3 +1,4 @@
+#include <config.h>
 #include "spe10.hh"
 
 #include <boost/assert.hpp>

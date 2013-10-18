@@ -5,7 +5,7 @@
 #ifndef DUNE_DIVERGENCE_HH
 #define DUNE_DIVERGENCE_HH
 
-#include <config.h>
+
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/quadrature.hh>
 #include <dune/fem/operator/common/operator.hh>

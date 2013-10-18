@@ -1,3 +1,4 @@
+#include <config.h>
 #include "elliptic_msfem_matrix_assembler.hh"
 
 namespace Dune {

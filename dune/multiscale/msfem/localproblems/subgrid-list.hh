@@ -5,7 +5,7 @@
 #ifndef SUBGRIDLIST_HH
 #define SUBGRIDLIST_HH
 
-#include <config.h>
+
 #include <boost/noncopyable.hpp>
 #include <boost/multi_array.hpp>
 

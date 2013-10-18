@@ -5,7 +5,7 @@
 #ifndef LOCALOPERATOR_HH
 #define LOCALOPERATOR_HH
 
-#include <config.h>
+
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>

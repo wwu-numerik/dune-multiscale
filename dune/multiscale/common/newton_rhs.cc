@@ -1,3 +1,4 @@
+#include <config.h>
 #include "newton_rhs.hh"
 
 #include <dune/multiscale/tools/misc.hh>

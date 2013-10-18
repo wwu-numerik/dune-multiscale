@@ -1,3 +1,4 @@
+#include <config.h>
 #include "print_info.hh"
 
 #include <dune/multiscale/tools/misc/outputparameter.hh>

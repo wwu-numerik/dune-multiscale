@@ -5,7 +5,7 @@
 #ifndef MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
 #define MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
 
-#include <config.h>
+
 #include <type_traits>
 
 #include <dune/common/fmatrix.hh>
