@@ -1,6 +1,8 @@
 #ifndef DUNE_MULTISCALE_COMMON_NEWTON_RHS_HH
 #define DUNE_MULTISCALE_COMMON_NEWTON_RHS_HH
 
+#include <config.h>
+
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
 
