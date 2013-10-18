@@ -1,11 +1,23 @@
 #include <config.h>
-#include "cell_problem_solver.hh"
-
+#include <boost/concept/usage.hpp>
+#include <dune/common/exceptions.hh>
 #include <dune/multiscale/hmm/discrete_cell_operator.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/math.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/profiler.hh>
+#include <limits>
+#include <sstream>
+
+#include "cell_problem_solver.hh"
+#include "dune/multiscale/common/traits.hh"
+#include "dune/multiscale/tools/discretefunctionwriter.hh"
 
 namespace Dune {
 namespace Multiscale {
 namespace HMM {
+
+class CellProblemNumberingManager;
 
 const std::string CellProblemSolver::subdir_ = "cell_problems";
 

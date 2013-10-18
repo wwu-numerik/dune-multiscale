@@ -1,16 +1,16 @@
 #include <config.h>
-#include "righthandside_assembler.hh"
-
-#include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/hmm/cell_problem_solver.hh>
-#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
-#include <dune/multiscale/common/dirichletconstraints.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <assert.h>
+#include <dune/common/exceptions.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/stuff/fem/functions/checks.hh>
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/functions/interfaces.hh>
+#include <dune/stuff/common/ranges.hh>
+#include <memory>
+
+#include "dune/multiscale/common/traits.hh"
+#include "dune/multiscale/common/dirichletconstraints.hh"
+#include "dune/multiscale/msfem/msfem_grid_specifier.hh"
+#include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
+#include "dune/multiscale/msfem/localproblems/localsolutionmanager.hh"
+#include "righthandside_assembler.hh"
 
 
 void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::CommonTraits::FirstSourceType &f, Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {

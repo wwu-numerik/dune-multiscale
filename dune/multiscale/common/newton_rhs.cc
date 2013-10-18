@@ -1,16 +1,10 @@
 #include <config.h>
+#include <config.h>
+#include <dune/stuff/functions/global.hh>
+#include <dune/stuff/common/ranges.hh>
+#include <dune/multiscale/problems/base.hh>
+#include "dune/multiscale/common/traits.hh"
 #include "newton_rhs.hh"
-
-#include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/hmm/cell_problem_solver.hh>
-#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
-#include <dune/multiscale/common/dirichletconstraints.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/problems/selector.hh>
-#include <dune/stuff/fem/functions/checks.hh>
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/functions/interfaces.hh>
 
 void Dune::Multiscale::NewtonRightHandSide::assemble_for_Newton_method(const Dune::Multiscale::CommonTraits::FirstSourceType &f, const Dune::Multiscale::CommonTraits::DiffusionType &A, const Dune::Multiscale::NewtonRightHandSide::DiscreteFunctionType &old_u_H, Dune::Multiscale::NewtonRightHandSide::DiscreteFunctionType &rhsVector) {
   rhsVector.clear();

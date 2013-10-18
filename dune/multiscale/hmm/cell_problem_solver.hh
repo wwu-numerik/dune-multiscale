@@ -5,24 +5,28 @@
 #ifndef DUNEMS_HMM_CELL_SOLVER_HH
 #define DUNEMS_HMM_CELL_SOLVER_HH
 
-#include <dune/multiscale/hmm/hmm_traits.hh>
-#include <dune/multiscale/common/traits.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/math.hh>
-
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/solver/oemsolver.hh>
+#include <dune/common/typetraits.hh>
 #include <dune/fem/misc/lpnorm.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/solver/oemsolver.hh>
+#include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
+#include <dune/multiscale/hmm/hmm_traits.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/stuff/common/math.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/profiler.hh>
+#include <string>
+
+#include "dune/multiscale/common/la_backend.hh"
 
 //! --------------------- the essential cell problem solver class ----------------------------------
 namespace Dune {
 namespace Multiscale {
 namespace HMM {
+
+class CellProblemNumberingManager;
 
 class CellProblemSolver {
 private:

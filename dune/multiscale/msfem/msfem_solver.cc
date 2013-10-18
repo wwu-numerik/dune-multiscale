@@ -1,20 +1,21 @@
 #include <config.h>
-#include "msfem_solver.hh"
-
-#include <unordered_set>
-
-#include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
-#include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
-#include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
-#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
-#include <dune/multiscale/fem/fem_traits.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/stuff/common/profiler.hh>
-
+#include <assert.h>
 #include <boost/assert.hpp>
+#include <dune/common/exceptions.hh>
+#include <dune/common/timer.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <sstream>
+
+#include "dune/multiscale/common/dirichletconstraints.hh"
+#include "dune/multiscale/common/traits.hh"
+#include "dune/multiscale/msfem/msfem_traits.hh"
+#include "msfem_solver.hh"
 
 namespace Dune {
 namespace Multiscale {

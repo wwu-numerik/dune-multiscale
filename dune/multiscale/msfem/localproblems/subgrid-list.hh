@@ -6,26 +6,29 @@
 #define SUBGRIDLIST_HH
 
 
-#include <boost/noncopyable.hpp>
 #include <boost/multi_array.hpp>
-
+#include <boost/noncopyable.hpp>
+#include <dune/common/deprecated.hh>
+#include <dune/common/exceptions.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/common/exceptions.hh>
-#include <dune/stuff/grid/entity.hh>
-
-#include <dune/multiscale/tools/subgrid_io.hh>
-#include <dune/subgrid/subgrid.hh>
-
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-#include <dune/fem/space/lagrange.hh>
 //#include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-
-#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/fem/space/lagrange.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/tools/subgrid_io.hh>
+#include <dune/stuff/grid/entity.hh>
+#include <dune/subgrid/subgrid.hh>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <vector>
+
+#include "dune/multiscale/common/traits.hh"
 
 namespace Dune {
 namespace Multiscale {

@@ -1,4 +1,5 @@
 #include <config.h>
+#include <config.h>
 #include "elliptic_hmm_matrix_assembler.hh"
 
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>

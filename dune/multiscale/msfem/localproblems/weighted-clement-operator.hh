@@ -7,19 +7,32 @@
 
 
 #include <dune/common/fmatrix.hh>
-#include <dune/fem/quadrature/quadrature.hh>
+#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-
+#include <dune/fem/quadrature/quadrature.hh>
+#include <dune/fem/solver/oemsolver/preconditioning.hh>
+#include <dune/fem/space/common/dofmanager.hh>
+#include <dune/fem/storage/array.hh>
+#include <dune/grid/alugrid/3d/datahandle.hh>
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/localproblems/clement_pattern.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <vector>
+
+namespace Dune {
+template <class From, class To> class Conversion;
+}  // namespace Dune
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
+class MacroMicroGridSpecifier;
 
 class WeightedClementOperator
     : public Operator<typename SubGridList::SubGridDiscreteFunctionType::RangeFieldType,

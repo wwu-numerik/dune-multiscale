@@ -1,9 +1,17 @@
 #include <config.h>
-#include "print_info.hh"
-
-#include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <boost/format.hpp>
+#include <boost/optional/optional.hpp>
 #include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <memory>
+#include <sstream>
+
+#include "dune/multiscale/common/traits.hh"
+#include "dune/multiscale/problems/base.hh"
+#include "dune/multiscale/problems/selector.hh"
+#include "print_info.hh"
 
 namespace Dune {
 namespace Multiscale {

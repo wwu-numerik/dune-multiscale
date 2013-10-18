@@ -1,21 +1,21 @@
 #include <config.h>
-#include "fem_solver.hh"
-
-#include <dune/common/fmatrix.hh>
-
-#include <dune/fem/solver/oemsolver/oemsolver.hh>
-#include <dune/fem/operator/discreteoperatorimp.hh>
-
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/timer.hh>
+#include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
 #include <dune/fem/function/common/function.hh>
-
-#include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/newton_rhs.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
-#include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/fem/fem_traits.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <limits>
+#include <sstream>
+#include <string>
+
+#include "dune/multiscale/common/dirichletconstraints.hh"
+#include "fem_solver.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -68,7 +68,6 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term, // lower order term F(x, u(x), grad
                                                                                      // u(x) )
     const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution) const {
-  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
@@ -222,7 +221,6 @@ void Elliptic_FEM_Solver::solve(
                                                                                      // u(x) )
     const CommonTraits::FirstSourceType& f, const CommonTraits::DiscreteFunctionType& dirichlet_extension,
     const CommonTraits::NeumannBCType& neumann_bc, Elliptic_FEM_Solver::DiscreteFunction& solution) const {
-  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )

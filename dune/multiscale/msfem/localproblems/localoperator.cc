@@ -5,18 +5,17 @@
 
 
 
-#include "localoperator.hh"
-
-#include <dune/stuff/common/ranges.hh>
+#include <assert.h>
+#include <boost/assert.hpp>
+#include <dune/common/exceptions.hh>
+#include <dune/multiscale/problems/selector.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/fem/matrix_object.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/stuff/fem/matrix_object.hh>
 
-#include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/problems/base.hh>
-#include <dune/multiscale/problems/selector.hh>
-
-#include <boost/assert.hpp>
+#include "dune/multiscale/msfem/localproblems/localproblemsolver.hh"
+#include "localoperator.hh"
 
 namespace Dune {
 namespace Multiscale {

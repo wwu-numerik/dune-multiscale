@@ -1,8 +1,12 @@
 #include <config.h>
-#include "msfem_grid_specifier.hh"
-
+#include <assert.h>
+#include <dune/common/exceptions.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
+#include <ext/new_allocator.h>
+#include <algorithm>
+
+#include "msfem_grid_specifier.hh"
 
 namespace Dune {
 namespace Multiscale {

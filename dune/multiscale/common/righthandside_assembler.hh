@@ -5,8 +5,8 @@
 #ifndef DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
 #define DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
 
-#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -14,6 +14,11 @@ namespace Multiscale {
 //! Assembler for right rand side
 //! We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
 //! we call f the first Source and G the second Source
+namespace MsFEM {
+class MacroMicroGridSpecifier;
+class SubGridList;
+}  // namespace MsFEM
+
 class RightHandSideAssembler {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;

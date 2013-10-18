@@ -6,6 +6,8 @@
 #define MSFEM_GRID_SPECIFIER_HH
 
 #include <dune/multiscale/common/traits.hh>
+#include <cstddef>
+#include <vector>
 
 namespace Dune {
 namespace Multiscale {

@@ -4,6 +4,7 @@
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/la/container/pattern.hh>
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/fem/operator/common/stencil.hh>
 
 #include <unordered_map>
