@@ -46,6 +46,7 @@
 
 #ifndef HAVE_DUNE_MULTISCALE_STATIC_DATA
 static const std::string st_testdata_directory = "${CMAKE_CURRENT_SOURCE_DIR}/dune/multiscale/test";
+static constexpr unsigned int st_lagrangespace_order = 1;
 #define HAVE_DUNE_MULTISCALE_STATIC_DATA
 #endif
 

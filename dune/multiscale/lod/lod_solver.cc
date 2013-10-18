@@ -12,6 +12,8 @@
 #include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/function/common/function.hh>
 
+#include <dune/istl/matrix.hh>
+
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
@@ -20,9 +22,10 @@
 #include <dune/multiscale/common/output_traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
-#include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
+#include <dune/stuff/common/profiler.hh>
 
 namespace Dune {
 namespace Multiscale {

@@ -33,6 +33,9 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
+
 
 namespace Dune {
 namespace Multiscale {

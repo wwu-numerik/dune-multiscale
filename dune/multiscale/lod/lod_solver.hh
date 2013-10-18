@@ -25,6 +25,8 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 
+#include <dune/stuff/common/ranges.hh>
+
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
@@ -203,7 +205,7 @@ private:
 
       const auto quadrature = make_quadrature(*entity_pointer, discreteFunctionSpace_);
       const auto numQuadraturePoints = quadrature.nop();
-      for (int quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
+      for (auto quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
         DomainType global_point = geometry.global(quadrature.point(quadraturePoint));
 
         // weight

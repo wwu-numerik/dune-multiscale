@@ -31,7 +31,7 @@ struct HMMTraits {
   //! --------- typedefs for the periodic micro grid and the corresponding discrete space ----
   typedef Dune::Fem::PeriodicLeafGridPart<typename CommonTraits::GridType> PeriodicGridPartType;
   typedef Dune::Fem::LagrangeDiscreteFunctionSpace<typename CommonTraits::FunctionSpaceType, PeriodicGridPartType,
-                                                   1> // 1 =POLORDER
+                                                   st_lagrangespace_order>
       PeriodicDiscreteFunctionSpaceType;
 
   typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::DiscreteFunctionType PeriodicDiscreteFunctionType;
