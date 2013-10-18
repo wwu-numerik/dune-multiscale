@@ -1,3 +1,4 @@
+#include <config.h>
 #include "weighted-clement-operator.hh"
 
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>

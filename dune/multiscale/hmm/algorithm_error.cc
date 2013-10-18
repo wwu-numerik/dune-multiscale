@@ -1,3 +1,4 @@
+#include <config.h>
 #include <dune/multiscale/hmm/algorithm_error.hh>
 
 #include <string>

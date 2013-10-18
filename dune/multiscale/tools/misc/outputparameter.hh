@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include <config.h>
+
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 

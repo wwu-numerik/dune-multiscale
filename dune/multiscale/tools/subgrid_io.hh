@@ -8,7 +8,7 @@
 /** this file contains specializations of write/read functions targetd for dune-subgrid
  **/
 
-#include <config.h>
+
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/utility/grapedataioformattypes.hh>
 #include <dune/grid/yaspgrid.hh>

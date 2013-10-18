@@ -1,3 +1,4 @@
+#include <config.h>
 #include "fem_solver.hh"
 
 #include <dune/common/fmatrix.hh>

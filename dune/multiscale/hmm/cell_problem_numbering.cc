@@ -1,3 +1,4 @@
+#include <config.h>
 #include "cell_problem_numbering.hh"
 
 #include <dune/stuff/common/ranges.hh>

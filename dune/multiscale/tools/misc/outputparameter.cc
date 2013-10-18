@@ -1,6 +1,7 @@
+#include <config.h>
 #include "outputparameter.hh"
 
-#include <config.h>
+
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>

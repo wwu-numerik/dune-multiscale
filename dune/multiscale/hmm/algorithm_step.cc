@@ -1,3 +1,4 @@
+#include <config.h>
 #include "algorithm_step.hh"
 
 #include <string>

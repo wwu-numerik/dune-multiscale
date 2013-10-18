@@ -5,7 +5,7 @@
 #ifndef DUNE_MS_PROBLEMS_BASE_HH
 #define DUNE_MS_PROBLEMS_BASE_HH
 
-#include <config.h>
+
 #include <string>
 #include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/common/traits.hh>

@@ -5,7 +5,7 @@
 #ifndef DUNE_MS_PROBLEMS_SELECTOR_HH
 #define DUNE_MS_PROBLEMS_SELECTOR_HH
 
-#include <config.h>
+
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 

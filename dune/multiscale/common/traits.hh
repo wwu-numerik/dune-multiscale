@@ -5,7 +5,7 @@
 #ifndef DUNE_MULTISCALE_COMMON_TRAITS_HH
 #define DUNE_MULTISCALE_COMMON_TRAITS_HH
 
-#include <config.h>
+
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/common/tuples.hh>
 #include <dune/fem/space/common/functionspace.hh>

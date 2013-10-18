@@ -1,3 +1,4 @@
+#include <config.h>
 #include "error_calc.hh"
 
 #include <dune/fem/misc/h1norm.hh>

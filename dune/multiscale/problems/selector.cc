@@ -1,3 +1,4 @@
+#include <config.h>
 #include "selector.hh"
 
 // for i in $(ls *hh) ; do echo \#include \"${i}\" ; done

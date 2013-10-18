@@ -1,3 +1,4 @@
+#include <config.h>
 #include "msfem_grid_specifier.hh"
 
 #include <dune/stuff/common/ranges.hh>

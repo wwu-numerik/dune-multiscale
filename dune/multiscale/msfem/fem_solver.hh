@@ -5,7 +5,7 @@
 #ifndef MS_Elliptic_FEM_Solver_HH
 #define MS_Elliptic_FEM_Solver_HH
 
-#include <config.h>
+
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
 

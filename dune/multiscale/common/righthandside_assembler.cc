@@ -1,3 +1,4 @@
+#include <config.h>
 #include "righthandside_assembler.hh"
 
 #include <dune/multiscale/tools/misc.hh>

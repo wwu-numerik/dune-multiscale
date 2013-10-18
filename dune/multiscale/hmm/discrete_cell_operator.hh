@@ -5,7 +5,7 @@
 #ifndef DiscreteEllipticCellProblem_HH
 #define DiscreteEllipticCellProblem_HH
 
-#include <config.h>
+
 #include <dune/common/fmatrix.hh>
 #include <boost/noncopyable.hpp>
 

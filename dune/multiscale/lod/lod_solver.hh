@@ -5,7 +5,7 @@
 #ifndef Elliptic_LOD_Solver_HH
 #define Elliptic_LOD_Solver_HH
 
-#include <config.h>
+
 #include <dune/common/fmatrix.hh>
 
 #include <dune/fem/solver/oemsolver/oemsolver.hh>
