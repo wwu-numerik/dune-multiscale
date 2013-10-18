@@ -1,13 +1,14 @@
 #ifndef DUNE_MULTISCALE_LA_BACKEND_HH
 #define DUNE_MULTISCALE_LA_BACKEND_HH
 
-#include <dune/fem/function/adaptivefunction.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/operator/linear/spoperator.hh>
 #ifdef USE_PETSC_BACKEND
-#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
-#include <dune/fem/operator/linear/petscoperator.hh>
-#include <dune/fem/solver/petscsolver.hh>
+# include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
+# include <dune/fem/operator/linear/petscoperator.hh>
+# include <dune/fem/solver/petscsolver.hh>
+#else
+# include <dune/fem/function/adaptivefunction.hh>
+# include <dune/fem/operator/matrix/spmatrix.hh>
+# include <dune/fem/operator/linear/spoperator.hh>
 #endif
 #include <dune/fem/solver/oemsolver.hh>
 

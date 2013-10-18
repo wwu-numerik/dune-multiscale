@@ -1,39 +1,34 @@
 #include "righthandside_assembler.hh"
 
-
+#include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
+#include <dune/multiscale/hmm/cell_problem_solver.hh>
+#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
+#include <dune/multiscale/common/dirichletconstraints.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/problems/selector.hh>
+#include <dune/stuff/fem/functions/checks.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/functions/interfaces.hh>
 
 
 void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::CommonTraits::FirstSourceType &f, Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
   rhsVector.clear();
   for (const auto& entity : rhsVector.space()) {
-    const auto& geometry = entity.geometry();            // Referenz auf Geometrie
-    auto elementOfRHS = rhsVector.localFunction(entity); // entity zeigt auf ein bestimmtes Element der
-    // entity
-    // hier wird sozusagen ein Pointer von localFunction auf discreteFunction erzeugt. Befinden wir uns auf einer
-    // bestimmten entity, so berechnet localFunction alle noetigen Werte und speichert sie (da Pointer) in
-    // discreteFunction(aktuelleEntity)
-
-    const BasisFunctionSetType baseSet // BaseFunctions leben immer auf Refernzelement!!!
-        = rhsVector.space().basisFunctionSet(
-            entity); // entity Referenz auf eine bestimmtes Element der entity. In der
-    // ersten Klasse war das Element fest, deshalb konnte man sich
-    // dort Pointer sparen. //loeschen: discreteFunctionSpace
-    // statt
-    // functionSpace
-
+    const auto& geometry = entity.geometry();
+    auto elementOfRHS = rhsVector.localFunction(entity);
+    const auto baseSet = rhsVector.space().basisFunctionSet(entity);
     const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
     const auto numDofs = elementOfRHS.numDofs();
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       // the return values:
       RangeType f_x;
       std::vector<RangeType> phi_x(numDofs);
-      std::vector<JacobianRangeType> gradientPhi(numDofs);
       // to save: A \nabla PHI_H * \nabla phi_h;
       const auto det = geometry.integrationElement(quadrature.point(quadraturePoint));
 
       f.evaluate(geometry.global(quadrature.point(quadraturePoint)), f_x);
       baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);
-      baseSet.jacobianAll(quadrature[quadraturePoint], gradientPhi);
 
       for (int i = 0; i < numDofs; ++i) {
         elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x[i]);
@@ -143,8 +138,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
     const auto& coarseGeometry = coarse_grid_entity.geometry();
     auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
     const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
-
-    const BasisFunctionSetType& coarse_grid_baseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
+    const auto& coarse_grid_baseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
 
     // --------- add standard contribution of right hand side -------------------------
     {
@@ -166,9 +160,9 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
 
     // --------- add corrector contribution of right hand side --------------------------
     // Load local solutions
-    LocalSolutionManagerType localSolutionManager(coarse_grid_entity, subgrid_list, specifier);
+    MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list, specifier);
     localSolutionManager.loadLocalSolutions();
-    LocalSolutionManagerType::LocalSolutionVectorType& localSolutions = localSolutionManager.getLocalSolutions();
+    auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
 
     // iterator for the micro grid ( grid for the reference element T_0 )

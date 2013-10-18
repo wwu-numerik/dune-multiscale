@@ -6,6 +6,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/hmm/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/fem/space/common/adaptmanager.hh>
 
 void check_config();
 

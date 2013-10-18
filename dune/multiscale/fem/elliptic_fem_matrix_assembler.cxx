@@ -8,7 +8,9 @@
 #include <dune/stuff/fem/matrix_object.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/common/dirichletconstraints.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 namespace Dune {
 namespace Multiscale {

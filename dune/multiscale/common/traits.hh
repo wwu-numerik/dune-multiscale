@@ -100,7 +100,7 @@ struct CommonTraits {
   typedef FunctionSpaceType::RangeType RangeType;
   //! defines the function space to which the numerical solution belongs to
   //! see dune/fem/lagrangebase.hh
-  typedef Dune::Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, 1> // 1=POLORDER
+  typedef Dune::Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, st_lagrangespace_order>
       DiscreteFunctionSpaceType;
   typedef DiscreteFunctionSpaceType::DomainFieldType TimeType;
   typedef DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;

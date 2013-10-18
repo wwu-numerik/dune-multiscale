@@ -7,50 +7,18 @@
 
 #include <config.h>
 
-// polynomial order of discrete space
-#ifndef POLORDER
-#define POLORDER 1
-#endif
-
-#ifndef USE_GRAPE
-#define USE_GRAPE HAVE_GRAPE
-#endif
-
-#define USE_TWISTFREE_MAPPER
-
-#include <iostream>
-#include <sstream>
-
-#include <stdio.h>
-#include <stdlib.h>
-// -----------------------------
-
 #include <dune/common/mpihelper.hh>  // An initializer of MPI
 #include <dune/common/exceptions.hh> // We use exceptions
-#include <dune/common/unused.hh>
 
 #if HAVE_DUNE_SPGRID
 #include <dune/grid/spgrid/capabilities.hh>
 #endif
 
-#include <dune/fem/io/file/dataoutput.hh>
-#include <dune/fem/io/parameter.hh>
-#include <dune/fem/io/file/datawriter.hh>
-#include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/gridpart/periodicgridpart/periodicgridpart.hh>
-#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-#include <dune/fem/space/lagrange.hh>
-#include <dune/fem/function/adaptivefunction.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/misc/mpimanager.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
-#include <dune/stuff/common/debug.hh>
-#include <dune/stuff/common/misc.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/aliases.hh>
 
 #include <dune/multiscale/common/traits.hh>
 

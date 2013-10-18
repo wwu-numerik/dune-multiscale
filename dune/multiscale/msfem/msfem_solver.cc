@@ -8,9 +8,11 @@
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/stuff/common/profiler.hh>
+
 #include <boost/assert.hpp>
 
 namespace Dune {
