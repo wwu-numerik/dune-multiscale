@@ -143,8 +143,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
 
     // --------- add standard contribution of right hand side -------------------------
     {
-      //!\TODO warum +5 ???
-      const auto quadrature = make_quadrature(coarse_grid_entity, rhsVector.space(), quadratureOrder + 5);
+      const auto quadrature = make_quadrature(coarse_grid_entity, rhsVector.space(), quadratureOrder);
       std::vector<RangeType> phi_x_vec(numLocalBaseFunctions);
       const auto numQuadraturePoints = quadrature.nop();
       for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
