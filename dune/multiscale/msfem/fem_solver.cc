@@ -109,7 +109,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in right hand side of the fem problem)
-    Dune::Multiscale::getConstraintsCoarse(discreteFunctionSpace_).setValue(0.0, fem_rhs);
+    Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, fem_rhs);
     // --- end boundary treatment ---
 
     const FEM::FEMTraits::InverseOperatorType inverse_op(
@@ -175,7 +175,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
       // set Dirichlet Boundary to zero
       // --- boundary treatment ---
       // set the dirichlet points to zero (in righ hand side of the fem problem)
-      Dune::Multiscale::getConstraintsCoarse(discreteFunctionSpace_).setValue(0.0, system_rhs);
+      Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, system_rhs);
       // --- end boundary treatment ---
 
       const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(
@@ -262,7 +262,7 @@ void Elliptic_FEM_Solver::solve(
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
-    Dune::Multiscale::getConstraintsCoarse(discreteFunctionSpace_).setValue(0.0, fem_rhs);
+    Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, fem_rhs);
     // --- end boundary treatment ---
 
     const FEM::FEMTraits::InverseOperatorType inverse_op(
@@ -329,7 +329,7 @@ void Elliptic_FEM_Solver::solve(
       // set Dirichlet Boundary to zero
       // --- boundary treatment ---
       // set the dirichlet points to zero (in righ hand side of the fem problem)
-      Dune::Multiscale::getConstraintsCoarse(discreteFunctionSpace_).setValue(0.0, system_rhs);
+      Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, system_rhs);
       // --- end boundary treatment ---
 
       const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(
