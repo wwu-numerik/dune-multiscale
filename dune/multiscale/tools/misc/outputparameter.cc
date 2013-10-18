@@ -1,11 +1,10 @@
 #include <config.h>
-#include "outputparameter.hh"
-
-
-
-#include <dune/stuff/common/parameter/configcontainer.hh>
-#include <dune/stuff/common/filesystem.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/stuff/common/filesystem.hh>
+#include <memory>
+
+#include "dune/multiscale/problems/base.hh"
+#include "outputparameter.hh"
 
 namespace Dune {
 namespace Multiscale {

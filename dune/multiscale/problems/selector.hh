@@ -6,8 +6,16 @@
 #define DUNE_MS_PROBLEMS_SELECTOR_HH
 
 
-#include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/problems/base.hh>
+#include <memory>
+#include <string>
+
+#include "dune/multiscale/common/traits.hh"
+
+namespace Dune {
+template <class GridImp, class IntersectionImp> class Intersection;
+}  // namespace Dune
 
 namespace Dune {
 namespace Multiscale {

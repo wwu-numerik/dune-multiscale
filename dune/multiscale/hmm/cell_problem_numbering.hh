@@ -5,12 +5,12 @@
 #ifndef DUNEMS_HMM_CELL_NUMBERING_HH
 #define DUNEMS_HMM_CELL_NUMBERING_HH
 
-#include <utility>
-#include <map>
-
+#include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/hmm/entity_compare.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
+#include <cstddef>
+#include <map>
+#include <utility>
 
 namespace Dune {
 namespace Multiscale {

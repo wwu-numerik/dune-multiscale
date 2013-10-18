@@ -6,13 +6,13 @@
 #define MS_Elliptic_FEM_Solver_HH
 
 
-#include <dune/multiscale/fem/fem_traits.hh>
-#include <dune/multiscale/common/traits.hh>
-
-#include <dune/fem/misc/l2norm.hh>
-#include <dune/fem/misc/l2error.hh>
 #include <dune/fem/misc/h1norm.hh>
+#include <dune/fem/misc/l2error.hh>
+#include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/fem/fem_traits.hh>
+#include <memory>
 
 namespace Dune {
 namespace Multiscale {

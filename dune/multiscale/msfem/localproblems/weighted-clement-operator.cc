@@ -1,15 +1,20 @@
 #include <config.h>
+#include <assert.h>
+#include <dune/common/timer.hh>
+#include <dune/fem/io/parameter.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/aliases.hh>
+#include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include "weighted-clement-operator.hh"
 
-#include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
-
-#include <dune/common/timer.hh>
-#include <dune/fem/solver/oemsolver.hh>
-
-#include <dune/stuff/fem/localmatrix_proxy.hh>
-#include <dune/stuff/grid/entity.hh>
-#include <dune/stuff/common/ranges.hh>
+namespace Dune {
+namespace Multiscale {
+namespace MsFEM {
+class MacroMicroGridSpecifier;
+}  // namespace MsFEM
+}  // namespace Multiscale
+}  // namespace Dune
 
 Dune::Multiscale::MsFEM::WeightedClementOperator::WeightedClementOperator(
     const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionSpaceType& space,

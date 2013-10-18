@@ -1,7 +1,13 @@
 #include <config.h>
-#include "spe10.hh"
+#include <assert.h>
+#include <dune/common/exceptions.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/parameter/validation.hh>
+#include <sstream>
 
-#include <boost/assert.hpp>
+#include "dune/multiscale/problems/base.hh"
+#include "dune/multiscale/problems/constants.hh"
+#include "spe10.hh"
 
 namespace Dune {
 namespace Multiscale {

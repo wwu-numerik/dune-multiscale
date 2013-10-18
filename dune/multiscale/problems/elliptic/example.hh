@@ -6,9 +6,11 @@
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_EXAMPLE
 
 #include <dune/fem/function/common/function.hh>
-#include <dune/multiscale/problems/constants.hh>
-#include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/constants.hh>
+#include <math.h>
+#include <string>
 
 /**
  * \addtogroup Problem

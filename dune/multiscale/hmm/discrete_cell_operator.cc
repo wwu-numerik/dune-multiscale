@@ -3,13 +3,17 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#include "discrete_cell_operator.hh"
-
+#include <assert.h>
+#include <dune/common/exceptions.hh>
+#include <dune/grid/alugrid/3d/datahandle.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/multiscale/problems/base.hh>
-#include <dune/stuff/common/ranges.hh>
+#include <iostream>
+#include <sstream>
+#include <vector>
+
+#include "discrete_cell_operator.hh"
+#include "dune/multiscale/hmm/cell_problem_solver.hh"
 
 // artificical mass coefficient to guarantee uniqueness and existence of the cell problem solution
 // (should be as small as possible)

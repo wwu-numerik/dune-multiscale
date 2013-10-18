@@ -1,4 +1,5 @@
 #include <config.h>
+#include <config.h>
 #include "constants.hh"
 
 namespace Problem {

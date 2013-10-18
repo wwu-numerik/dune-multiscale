@@ -6,15 +6,18 @@
 #define DUNE_MS_PROBLEMS_BASE_HH
 
 
-#include <string>
-#include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/stuff/fem/functions/analytical.hh>
-#include <dune/stuff/functions/interfaces.hh>
-#include <dune/stuff/functions/global.hh>
-#include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/multiscale/problems/constants.hh>
 #include <dune/stuff/common/memory.hh>
+#include <dune/stuff/fem/functions/analytical.hh>
+#include <dune/stuff/functions/global.hh>
+#include <dune/stuff/functions/interfaces.hh>
+#include <dune/stuff/grid/boundaryinfo.hh>
+#include <memory>
+#include <string>
+
+#include "config.h"
 
 namespace Dune {
 namespace Multiscale {

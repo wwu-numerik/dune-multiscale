@@ -1,30 +1,36 @@
 #include <config.h>
-
-
-#include "localproblemsolver.hh"
-
-#include <dune/subgrid/subgrid.hh>
-#include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/fem/functions/checks.hh>
-#include <dune/stuff/fem/matrix_object.hh>
-#include <dune/stuff/fem/localmatrix_proxy.hh>
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/memory.hh>
-
-#include <dune/multiscale/tools/subgrid_io.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/problems/selector.hh>
+#include <assert.h>
+#include <boost/concept/usage.hpp>
+#include <boost/format.hpp>
+#include <dune/common/exceptions.hh>
+#include <dune/fem/io/file/dataoutput.hh>
+#include <dune/fem/io/parameter.hh>
+#include <dune/istl/scalarproducts.hh>
+#include <dune/istl/solvers.hh>
+#include <dune/multiscale/common/dirichletconstraints.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
-#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
-
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/common/dirichletconstraints.hh>
-
+#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/math.hh>
+#include <dune/stuff/common/memory.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <ext/alloc_traits.h>
+#include <iterator>
 #include <memory>
+#include <sstream>
+#include <string>
+#include <tuple>
 #include <vector>
+
+#include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
+#include "dune/multiscale/tools/misc/outputparameter.hh"
+#include "localproblemsolver.hh"
 
 namespace Dune {
 namespace Multiscale {

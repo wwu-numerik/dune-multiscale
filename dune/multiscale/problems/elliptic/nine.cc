@@ -1,4 +1,12 @@
 #include <config.h>
+#include <dune/common/exceptions.hh>
+#include <dune/stuff/common/parameter/validation.hh>
+#include <dune/stuff/grid/boundaryinfo.hh>
+#include <math.h>
+#include <sstream>
+
+#include "dune/multiscale/problems/base.hh"
+#include "dune/multiscale/problems/constants.hh"
 #include "nine.hh"
 
 namespace Dune {

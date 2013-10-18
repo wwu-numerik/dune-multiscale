@@ -1,19 +1,21 @@
 #include <config.h>
-
-
-#include "subgrid-list.hh"
-
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/aliases.hh>
+#include <assert.h>
+#include <boost/assert.hpp>
+#include <boost/multi_array/multi_array_ref.hpp>
+#include <dune/common/exceptions.hh>
+#include <dune/fem/misc/mpimanager.hh>
 #include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/float_cmp.hh>
-
+#include <ext/new_allocator.h>
+#include <algorithm>
+#include <iterator>
+#include <ostream>
+#include <utility>
 #include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/tools/subgrid_io.hh>
 
-#include <boost/assert.hpp>
+#include "subgrid-list.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -438,7 +440,7 @@ void SubGridList::identifySubGrids() {
     // make sure we did not create a subgrid for the current coarse entity so far
     assert(subGridList_.find(coarse_index) == subGridList_.end());
     subgrid_id_to_base_coarse_entity_.insert(std::make_pair(coarse_index, std::move(coarse_entity.seed())));
-    subGridList_[coarse_index] = make_shared<SubGridType>(hostGrid);
+    subGridList_[coarse_index] = std::make_shared<SubGridType>(hostGrid);
     subGridList_[coarse_index]->createBegin();
 
     if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {

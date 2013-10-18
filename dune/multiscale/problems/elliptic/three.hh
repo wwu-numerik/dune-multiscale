@@ -6,8 +6,11 @@
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_THREE
 
 #include <dune/fem/function/common/function.hh>
-#include <dune/multiscale/problems/constants.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/constants.hh>
+#include <string>
+
+#include "dune/multiscale/common/traits.hh"
 
 namespace Dune {
 namespace Multiscale {

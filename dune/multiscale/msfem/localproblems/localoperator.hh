@@ -7,18 +7,24 @@
 
 
 #include <dune/common/fmatrix.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/subgrid/subgrid.hh>
+#include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
+#include <dune/subgrid/subgrid.hh>
+#include <cstddef>
+#include <memory>
+#include <vector>
 
-#include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
+#include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
+#include "dune/multiscale/msfem/msfem_grid_specifier.hh"
+#include "dune/multiscale/problems/base.hh"
 
 namespace Dune {
 namespace Multiscale {

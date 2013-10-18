@@ -1,4 +1,5 @@
 #include <config.h>
+#include <config.h>
 #include <dune/multiscale/hmm/algorithm.hh>
 
 #include <dune/multiscale/hmm/algorithm_step.hh>

@@ -5,6 +5,8 @@
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <iosfwd>
+#include <string>
 
 
 namespace Dune {
