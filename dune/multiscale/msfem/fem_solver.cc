@@ -107,25 +107,8 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     rhsassembler.assemble(f, fem_rhs);
 
     // --- boundary treatment ---
-    // set the dirichlet points to zero (in righ hand side of the fem problem)
-    for (const auto& entity : discreteFunctionSpace_) {
-      IntersectionIterator iit = gridPart.ibegin(entity);
-      const IntersectionIterator endiit = gridPart.iend(entity);
-      for (; iit != endiit; ++iit) {
-
-        if (iit->boundary() && (iit->boundaryId() != 1))
-          continue;
-
-        if (iit->boundary()) {
-          auto rhsLocal = fem_rhs.localFunction(entity);
-          const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-
-          const auto face = iit->indexInInside();
-          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-            rhsLocal[lp] = 0;
-        }
-      }
-    }
+    // set the dirichlet points to zero (in right hand side of the fem problem)
+    Dune::Multiscale::getConstraintsCoarse(discreteFunctionSpace_).setValue(0.0, fem_rhs);
     // --- end boundary treatment ---
 
     const FEM::FEMTraits::InverseOperatorType inverse_op(
@@ -191,26 +174,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
       // set Dirichlet Boundary to zero
       // --- boundary treatment ---
       // set the dirichlet points to zero (in righ hand side of the fem problem)
-      typedef typename DiscreteFunctionSpace::IteratorType EntityIterator;
-      EntityIterator endit = discreteFunctionSpace_.end();
-      for (EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it) {
-        IntersectionIterator iit = gridPart.ibegin(*it);
-        const IntersectionIterator endiit = gridPart.iend(*it);
-        for (; iit != endiit; ++iit) {
-
-          if (iit->boundary() && (iit->boundaryId() != 1))
-            continue;
-
-          if (iit->boundary()) {
-            auto rhsLocal = system_rhs.localFunction(*it);
-            const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
-
-            const int face = iit->indexInInside();
-            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-              rhsLocal[lp] = 0;
-          }
-        }
-      }
+      Dune::Multiscale::getConstraintsCoarse(discreteFunctionSpace_).setValue(0.0, system_rhs);
       // --- end boundary treatment ---
 
       const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(
@@ -297,26 +261,7 @@ void Elliptic_FEM_Solver::solve(
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
-    typedef typename DiscreteFunctionSpace::IteratorType EntityIterator;
-    EntityIterator endit = discreteFunctionSpace_.end();
-    for (EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it) {
-      IntersectionIterator iit = gridPart.ibegin(*it);
-      const IntersectionIterator endiit = gridPart.iend(*it);
-      for (; iit != endiit; ++iit) {
-
-        if (iit->boundary() && (iit->boundaryId() != 1))
-          continue;
-
-        if (iit->boundary()) {
-          auto rhsLocal = fem_rhs.localFunction(*it);
-          const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
-
-          const int face = iit->indexInInside();
-          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-            rhsLocal[lp] = 0;
-        }
-      }
-    }
+    Dune::Multiscale::getConstraintsCoarse(discreteFunctionSpace_).setValue(0.0, fem_rhs);
     // --- end boundary treatment ---
 
     const FEM::FEMTraits::InverseOperatorType inverse_op(
@@ -383,26 +328,7 @@ void Elliptic_FEM_Solver::solve(
       // set Dirichlet Boundary to zero
       // --- boundary treatment ---
       // set the dirichlet points to zero (in righ hand side of the fem problem)
-      typedef typename DiscreteFunctionSpace::IteratorType EntityIterator;
-      EntityIterator endit = discreteFunctionSpace_.end();
-      for (EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it) {
-        IntersectionIterator iit = gridPart.ibegin(*it);
-        const IntersectionIterator endiit = gridPart.iend(*it);
-        for (; iit != endiit; ++iit) {
-
-          if (iit->boundary() && (iit->boundaryId() != 1))
-            continue;
-
-          if (iit->boundary()) {
-            auto rhsLocal = system_rhs.localFunction(*it);
-            const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
-
-            const int face = iit->indexInInside();
-            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-              rhsLocal[lp] = 0;
-          }
-        }
-      }
+      Dune::Multiscale::getConstraintsCoarse(discreteFunctionSpace_).setValue(0.0, system_rhs);
       // --- end boundary treatment ---
 
       const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(
