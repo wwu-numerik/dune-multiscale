@@ -1,7 +1,7 @@
 #ifndef DUNE_MULTISCALE_LA_BACKEND_HH
 #define DUNE_MULTISCALE_LA_BACKEND_HH
 
-#ifdef USE_PETSC_BACKEND
+#ifdef ENABLE_PETSC
 # include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
 # include <dune/fem/operator/linear/petscoperator.hh>
 # include <dune/fem/solver/petscsolver.hh>
@@ -73,7 +73,7 @@ private:
 template <class DiscreteFunctionSpaceType>
 struct BackendChooser {
 
-#ifdef USE_PETSC_BACKEND
+#ifdef ENABLE_PETSC
   typedef Dune::Fem::PetscDiscreteFunction<DiscreteFunctionSpaceType> DiscreteFunctionType;
   typedef Dune::Fem::PetscLinearOperator<DiscreteFunctionType, DiscreteFunctionType> LinearOperatorType;
   typedef Dune::Fem::PetscInverseOperator<DiscreteFunctionType, LinearOperatorType> InverseOperatorType;

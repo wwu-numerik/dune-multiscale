@@ -23,6 +23,7 @@
 #define ALBERTA_DIM WORLDDIM
 #define ALBERTA_DEBUG 1
 #cmakedefine @ENABLE_ALUGRID@ 
+#cmakedefine @ENABLE_PETSC@ 
 #cmakedefine @ENABLE_ABERTA@
 
 #define DUNE_COMMON_FIELDVECTOR_SIZE_IS_METHOD 1
@@ -50,4 +51,7 @@ static constexpr unsigned int st_lagrangespace_order = 1;
 #define HAVE_DUNE_MULTISCALE_STATIC_DATA
 #endif
 
+#if defined(ENABLE_PETSC) && not HAVE_MPI
+# error "you'll get weird errors in dune-fem with petsc enabled, but no mpi"
+#endif
 /* end dune-multiscale */
