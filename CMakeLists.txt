@@ -31,12 +31,6 @@ include(DuneMacros)
 dune_project()
 include(DuneUtils)
 
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-#	INCLUDE_SYS_DIR( opt/local/include )
-#	INCLUDE_SYS_DIR( opt/local/include/openmpi )
-  LINK_DIRECTORIES( /opt/local/lib/ )
-ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
-
 include(DuneMPI)
 
 foreach(_dep ${ALL_DEPENDENCIES})
