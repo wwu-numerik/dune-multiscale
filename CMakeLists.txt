@@ -8,6 +8,16 @@ PROJECT(dune-multiscale CXX)
 #set minimum cmake version
 cmake_minimum_required(VERSION 2.8.6)
 
+# mac-specific settings
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  # Xcode-specific settings
+  IF(CMAKE_GENERATOR MATCHES "Xcode")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")  
+  ENDIF(CMAKE_GENERATOR MATCHES "Xcode")
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+
+
 #find dune-common and set the module path
 find_package(dune-common)
 list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
