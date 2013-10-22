@@ -269,7 +269,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
               // add dirichlet-corrector
               directionOfFlux += allLocalSolutionJacobians[numLocalBaseFunctions + 1][qP];
               // subtract neumann-corrector
-              // directionOfFlux -= allLocalSolutionJacobians[numLocalBaseFunctions][qP];
+              directionOfFlux -= allLocalSolutionJacobians[numLocalBaseFunctions][qP];
 
               diffusion.diffusiveFlux(quadPointGlobal, directionOfFlux, diffusive_flux);
               reconstructionGradPhi += allLocalSolutionJacobians[coarseBF][qP];
