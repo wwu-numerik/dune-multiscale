@@ -14,7 +14,6 @@
 #include <dune/fem/solver/oemsolver/preconditioning.hh>
 #include <dune/fem/space/common/dofmanager.hh>
 #include <dune/fem/storage/array.hh>
-#include <dune/grid/alugrid/3d/datahandle.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/clement_pattern.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
