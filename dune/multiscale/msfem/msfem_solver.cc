@@ -246,7 +246,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   // get the dirichlet values
   solution.clear();
-  Dune::Multiscale::projectDirichletValues(coarse_space, solution);
+  Dune::Multiscale::copyDirichletValues(coarse_space, solution);
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
   projectCoarseToFineScale(specifier, coarse_msfem_solution, coarse_scale_part);

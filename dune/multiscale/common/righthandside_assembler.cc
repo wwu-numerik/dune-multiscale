@@ -133,7 +133,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
 
   DiscreteFunctionType dirichletExtension("Dirichlet Extension", specifier.fineSpace());
   dirichletExtension.clear();
-  Dune::Multiscale::projectDirichletValues(rhsVector.space(), dirichletExtension);
+  Dune::Multiscale::copyDirichletValues(rhsVector.space(), dirichletExtension);
 
   // set rhsVector to zero:
   rhsVector.clear();
