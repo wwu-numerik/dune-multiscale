@@ -39,6 +39,81 @@ bool ModelProblemData::problemAllowsStochastics() const {
                 // by 'constants.hh' - see model problems 4 to 7 for examples )
 }
 
+std::unique_ptr<ModelProblemData::BoundaryInfoType>
+ModelProblemData::boundaryInfo() const {
+  Dune::ParameterTree boundarySettings;
+  if (DSC_CONFIG.hasSub("problem.boundaryInfo")) {
+    boundarySettings = DSC_CONFIG.sub("problem.boundaryInfo");
+  } else {
+    boundarySettings["default"] = "neumann";
+    boundarySettings["compare_tolerance"] = "1e-10";
+    switch (View::dimension /*View is defined in IModelProblemData*/) {
+    case 1:
+      DUNE_THROW(NotImplemented, "Boundary values are not implemented for SPE10 in 1D!");
+      break;
+    case 2:
+      boundarySettings["dirichlet.0"] = "[-1.0; 0.0]";
+      boundarySettings["dirichlet.1"] = "[1.0; 0.0]";
+      break;
+    case 3:
+      boundarySettings["dirichlet.0"] = "[-1.0; 0.0; 0.0]";
+      boundarySettings["dirichlet.1"] = "[1.0; 0.0; 0.0]";
+    }
+  }
+  return std::unique_ptr<BoundaryInfoType>(
+        Dune::Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundarySettings));
+}
+
+std::unique_ptr<ModelProblemData::SubBoundaryInfoType>
+ModelProblemData::subBoundaryInfo() const {
+  Dune::ParameterTree boundarySettings;
+  if (DSC_CONFIG.hasSub("problem.boundaryInfo")) {
+    boundarySettings = DSC_CONFIG.sub("problem.boundaryInfo");
+  } else {
+    boundarySettings["default"] = "neumann";
+    boundarySettings["compare_tolerance"] = "1e-10";
+    switch (View::dimension /*View is defined in IModelProblemData*/) {
+    case 1:
+      DUNE_THROW(NotImplemented, "Boundary values are not implemented for SPE10 in 1D!");
+      break;
+    case 2:
+      boundarySettings["dirichlet.0"] = "[-1.0; 0.0]";
+      boundarySettings["dirichlet.1"] = "[1.0; 0.0]";
+      break;
+    case 3:
+      boundarySettings["dirichlet.0"] = "[-1.0; 0.0; 0.0]";
+      boundarySettings["dirichlet.1"] = "[1.0; 0.0; 0.0]";
+    }
+  }
+  return std::unique_ptr<SubBoundaryInfoType>(
+      Dune::Stuff::GridboundaryNormalBased<typename SubView::Intersection>::create(boundarySettings));
+}
+
+// evaluate Dirichlet Boundary Function
+void DirichletData::evaluate(const DomainType& x,
+                             RangeType& y) const {
+  // use pressure gradient in x-direction in 1D and 2D and in y-direction in 3D
+//  if (x[std::max(dimDomain-2,0)]<1e-6)
+//    y = 1.0;
+//  else
+//    y = 0.0;
+  y = x[0];
+} // evaluate
+
+void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
+  evaluate(x, y);
+}
+
+// evaluate Neumann Boundary Function
+void NeumannData::evaluate(const DomainType& x,
+                           RangeType& y) const {
+  y = 0.0;
+} // evaluate
+
+void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
+  evaluate(x, y);
+}
+
 FirstSource::FirstSource() {}
 
 // evaluate f, i.e. return y=f(x) for a given x
