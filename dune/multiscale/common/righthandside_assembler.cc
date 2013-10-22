@@ -178,6 +178,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
           // while this automatically evaluates their jacobians.
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionJacobians[lsNum]);
 
+          // assemble intersection-part
           const auto& subGridPart = localSolutionManager.getSubGridPart();
           for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafView(), localEntity)) {
             if (Problem::isNeumannBoundary(intersection)) {
@@ -217,6 +218,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
           }
         }
 
+        // assemble element-part
         const auto& localGeometry = localEntity.geometry();
         for (size_t qP = 0; qP < localQuadrature.nop(); ++qP) {
           // local (barycentric) coordinates (with respect to entity)
