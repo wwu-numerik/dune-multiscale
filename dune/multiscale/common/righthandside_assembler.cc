@@ -241,8 +241,11 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
             RangeType reconstructionPhi(coarseBaseEvals[coarseBF]);
 
             if (specifier.simplexCoarseGrid()) {
-              assert(localSolutions.size() == GridSelector::dimgrid + localSolutionManager.numBoundaryCorrectors());
-              DUNE_THROW(NotImplemented, "Boundary values are not implemented for simplex grids yet!");
+              assert(localSolutions.size() == dimension + localSolutionManager.numBoundaryCorrectors());
+              for (const auto& i : DSC::valueRange(dimension))
+                reconstructionPhi +=
+                    coarseBaseJacs[coarseBF][0][i] * allLocalSolutionEvaluations[i][qP];
+              //! @todo add the dirichlet and neumann-correctors!
             } else {
               assert(localSolutions.size() == numLocalBaseFunctions + localSolutionManager.numBoundaryCorrectors());
               // local corrector for coarse base func
