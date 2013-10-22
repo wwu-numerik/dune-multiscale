@@ -168,7 +168,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
     // iterator for the micro grid ( grid for the reference element T_0 )
     const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
     for (const auto& localEntity : DSC::viewRange(subGrid.leafView())) {
-      const auto& hostCell = subGrid.template getHostEntity<0>(localEntity);
+      const auto& hostCell = subGrid.getHostEntity<0>(localEntity);
       const auto enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
       auto dirichletExtensionLF = dirichletExtension.localFunction(*hostCell);
       if (enclosingCoarseCellIndex == coarseEntityIndex) {
