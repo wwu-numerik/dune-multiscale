@@ -8,11 +8,11 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/float_cmp.hh>
-#include <ext/new_allocator.h>
 #include <algorithm>
 #include <iterator>
 #include <ostream>
 #include <utility>
+#include <memory>
 #include <dune/multiscale/tools/misc.hh>
 
 #include "subgrid-list.hh"

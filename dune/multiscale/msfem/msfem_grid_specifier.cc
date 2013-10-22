@@ -3,7 +3,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
-#include <ext/new_allocator.h>
+#include <memory>
 #include <algorithm>
 
 #include "msfem_grid_specifier.hh"

@@ -22,8 +22,6 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
-#include <ext/alloc_traits.h>
-#include <ext/new_allocator.h>
 #include <cmath>
 #include <iterator>
 #include <memory>
