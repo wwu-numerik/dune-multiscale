@@ -39,7 +39,13 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::
 }
 
 
-void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::CommonTraits::FirstSourceType &f, const Dune::Multiscale::CommonTraits::DiffusionType &A, const Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &dirichlet_extension, const Dune::Multiscale::CommonTraits::NeumannBCType &neumann_bc, Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
+void Dune::Multiscale::RightHandSideAssembler::assemble(
+    const Dune::Multiscale::CommonTraits::FirstSourceType &f,
+    const Dune::Multiscale::CommonTraits::DiffusionType &A,
+    const Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &
+        dirichlet_extension,
+    const Dune::Multiscale::CommonTraits::NeumannBCType &neumann_bc,
+    Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
   rhsVector.clear();
 
   for (const auto& entity : rhsVector.space()) {
