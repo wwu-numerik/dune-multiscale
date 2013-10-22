@@ -350,6 +350,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
   dirichletExtension.clear();
   HostDiscreteFunction dirichletExtensionCoarse("Dirichlet Extension Coarse", specifier.coarseSpace());
   dirichletExtensionCoarse.clear();
+  //! @todo is this needed or could it be replaced by a method from dirichletconstraints.hh?
   this->projectDirichletValues(dirichletExtensionCoarse);
   Dune::Stuff::HeterogenousProjection<> projection;
   projection.project(dirichletExtensionCoarse, dirichletExtension);
@@ -381,6 +382,9 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
       const auto& baseSet = rhsLocalFunction.basisFunctionSet();
       const auto numBaseFunctions = baseSet.size();
 
+      // correctors with index < numInnerCorrectors are for the basis functions, corrector at
+      // position numInnerCorrectors is for the neumann values, corrector at position numInnerCorrectors+1
+      // for the dirichlet values.
       if (coarseBaseFunc < numInnerCorrectors || coarseBaseFunc == numInnerCorrectors + 1) {
         const auto quadrature = make_quadrature(localGridCell, discreteFunctionSpace);
         const auto numQuadraturePoints = quadrature.nop();
