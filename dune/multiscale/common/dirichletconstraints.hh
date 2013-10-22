@@ -362,7 +362,7 @@ getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space);
 DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
 getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space);
 
-void projectDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
+void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
                             CommonTraits::DiscreteFunctionType& function);
 
 } // end namespace Multiscale
