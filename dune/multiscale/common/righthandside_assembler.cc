@@ -145,24 +145,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
     const auto& coarseGeometry = coarse_grid_entity.geometry();
     auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
     const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
-    const auto& coarse_grid_baseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
+    const auto& coarseBaseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
 
-    // --------- add standard contribution of right hand side -------------------------
-    {
-      const auto quadrature = make_quadrature(coarse_grid_entity, rhsVector.space(), quadratureOrder);
-      std::vector<RangeType> phi_x_vec(numLocalBaseFunctions);
-      const auto numQuadraturePoints = quadrature.nop();
-      for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-        const double det = coarseGeometry.integrationElement(quadrature.point(quadraturePoint));
-        // evaluate the Right Hand Side Function f at the current quadrature point and save its value in 'f_y':
-        f.evaluate(coarseGeometry.global(quadrature.point(quadraturePoint)), f_x);
-        coarse_grid_baseSet.evaluateAll(quadrature[quadraturePoint], phi_x_vec);
-        for (int i = 0; i < numLocalBaseFunctions; ++i) {
-          rhsLocalFunction[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x_vec[i]);
-        }
-      }
-    }
-    // ----------------------------------------------------------------------------------
 
     // --------- add corrector contribution of right hand side --------------------------
     // Load local solutions
@@ -199,7 +183,6 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
             if (Problem::isNeumannBoundary(intersection)) {
               const int orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
               const int quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
-              // get type of face quadrature. Is done in this scope because Patricks methods use another type.
               const auto faceQuad = make_quadrature(intersection, localSolutions[lsNum]->space(), quadOrder);
               RangeType neumannValue(0.0);
               const auto numQuadPoints = faceQuad.nop();
@@ -223,7 +206,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
                 const double factor = faceGeometry.integrationElement(xLocal) * faceQuad.weight(iqP);
 
                 neumannData.evaluate(xGlobal, neumannValue);
-                coarse_grid_baseSet.evaluateAll(xInCoarseLocal, phi_x_vec);
+                coarseBaseSet.evaluateAll(xInCoarseLocal, phi_x_vec);
                 for (auto i : DSC::valueRange(numLocalBaseFunctions)) {
                   assert((long long)i < (long long)phi_x_vec.size());
                   assert(iqP < localSolutionOnFace.size());
@@ -235,7 +218,6 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
         }
 
         const auto& localGeometry = localEntity.geometry();
-        RangeType corrector_phi_x;
         for (size_t qP = 0; qP < localQuadrature.nop(); ++qP) {
           // local (barycentric) coordinates (with respect to entity)
           const auto& quadPoint = localQuadrature.point(qP);
@@ -245,13 +227,16 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
 
           // evaluate gradient of basis function
           const auto quadPointLocalInCoarse = coarseGeometry.local(quadPointGlobal);
-          std::vector<JacobianRangeType> gradient_Phi_vec(numLocalBaseFunctions);
-          coarse_grid_baseSet.jacobianAll(quadPointLocalInCoarse, gradient_Phi_vec);
+          std::vector<RangeType> coarseBaseEvals(numLocalBaseFunctions);
+          std::vector<JacobianRangeType> coarseBaseJacs(numLocalBaseFunctions);
+          coarseBaseSet.evaluateAll(quadPointLocalInCoarse, coarseBaseEvals);
+          coarseBaseSet.jacobianAll(quadPointLocalInCoarse, coarseBaseJacs);
 
           for (int coarseBF = 0; coarseBF < numLocalBaseFunctions; ++coarseBF) {
             JacobianRangeType diffusive_flux(0.0);
 
-            JacobianRangeType reconstructionGradPhi(gradient_Phi_vec[coarseBF]);
+            JacobianRangeType reconstructionGradPhi(coarseBaseJacs[coarseBF]);
+            RangeType reconstructionPhi(coarseBaseEvals[coarseBF]);
 
             if (specifier.simplexCoarseGrid()) {
               assert(localSolutions.size() == GridSelector::dimgrid + localSolutionManager.numBoundaryCorrectors());
@@ -259,7 +244,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
             } else {
               assert(localSolutions.size() == numLocalBaseFunctions + localSolutionManager.numBoundaryCorrectors());
               // local corrector for coarse base func
-              corrector_phi_x = allLocalSolutionEvaluations[coarseBF][qP];
+              reconstructionPhi += allLocalSolutionEvaluations[coarseBF][qP];
               // element part of boundary conditions
               JacobianRangeType directionOfFlux(0.0);
               //! @attention At this point we assume, that the quadrature points on the subgrid and hostgrid
@@ -275,10 +260,9 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
               reconstructionGradPhi += allLocalSolutionJacobians[coarseBF][qP];
             }
             f.evaluate(quadPointGlobal, f_x);
-            double val = quadWeight * (f_x * corrector_phi_x);
-            rhsLocalFunction[coarseBF] += val;
-            val = quadWeight * (diffusive_flux[0] * reconstructionGradPhi[0]);
-            rhsLocalFunction[coarseBF] -= val;
+
+            rhsLocalFunction[coarseBF] += quadWeight * (f_x * reconstructionPhi);
+            rhsLocalFunction[coarseBF] -= quadWeight * (diffusive_flux[0] * reconstructionGradPhi[0]);
           }
         }
       }
