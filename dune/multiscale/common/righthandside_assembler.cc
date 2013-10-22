@@ -243,13 +243,13 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
 
           const double quadWeight = localQuadrature.weight(qP) * localGeometry.integrationElement(quadPoint);
 
+          // evaluate gradient of basis function
+          const auto quadPointLocalInCoarse = coarseGeometry.local(quadPointGlobal);
+          std::vector<JacobianRangeType> gradient_Phi_vec(numLocalBaseFunctions);
+          coarse_grid_baseSet.jacobianAll(quadPointLocalInCoarse, gradient_Phi_vec);
+
           for (int coarseBF = 0; coarseBF < numLocalBaseFunctions; ++coarseBF) {
             JacobianRangeType diffusive_flux(0.0);
-
-            // evaluate gradient of basis function
-            const auto quadPointLocalInCoarse = coarseGeometry.local(quadPointGlobal);
-            std::vector<JacobianRangeType> gradient_Phi_vec(numLocalBaseFunctions);
-            coarse_grid_baseSet.jacobianAll(quadPointLocalInCoarse, gradient_Phi_vec);
 
             JacobianRangeType reconstructionGradPhi(gradient_Phi_vec[coarseBF]);
 
