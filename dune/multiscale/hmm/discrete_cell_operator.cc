@@ -5,7 +5,6 @@
 
 #include <assert.h>
 #include <dune/common/exceptions.hh>
-#include <dune/grid/alugrid/3d/datahandle.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <iostream>
