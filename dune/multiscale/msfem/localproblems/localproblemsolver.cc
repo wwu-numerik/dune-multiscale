@@ -146,6 +146,7 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
       continue;
     }
 
+    // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
       allLocalRHS[i]->clear();
       DSC_LOG_INFO << "Zero-Boundary corrector." << std::endl;
