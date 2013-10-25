@@ -205,7 +205,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   // ---------------------- write discrete msfem solution to file ---------
   const std::string location =
       (boost::format("msfem_solution_discFunc_refLevel_%d_%d") % total_refinement_level_ % coarse_grid_level_).str();
-  DiscreteFunctionWriter(location).append(msfem_solution);
+  DiscreteFunctionIO::writer(location).append(msfem_solution);
 
   DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(), Dune::Fem::MPIManager::helper(),
                                  outputparam.path());

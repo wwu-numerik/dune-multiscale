@@ -243,7 +243,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
   // ---------------------- write discrete lod solution to file ---------
   const std::string location =
       (boost::format("msfem_solution_discFunc_refLevel_%d_%d") % total_refinement_level_ % coarse_grid_level_).str();
-  DiscreteFunctionWriter(location).append(lod_solution);
+  DiscreteFunctionIO::writer(location).append(lod_solution);
   //! --------------------------------------------------------------------
 }
 

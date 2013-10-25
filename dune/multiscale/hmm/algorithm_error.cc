@@ -40,8 +40,8 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
   // location of the solutions of the cell problems for the discrete function u_H:
   const std::string cell_solution_location_discFunc = "/cell_problems/_cellSolutions_discFunc";
 
-  DiscreteFunctionReader discrete_function_reader_baseSet(cell_solution_location_baseSet);
-  DiscreteFunctionReader discrete_function_reader_discFunc(cell_solution_location_discFunc);
+  auto discrete_function_reader = DiscreteFunctionIO::reader_baseSet(cell_solution_location_baseSet);
+  auto discrete_function_reader = DiscreteFunctionIO::reader_discFunc(cell_solution_location_discFunc);
 
   const typename HMMTraits::ErrorEstimatorType error_estimator(periodicDiscreteFunctionSpace, discreteFunctionSpace,
                                                                auxiliaryDiscreteFunctionSpace, diffusion_op);
