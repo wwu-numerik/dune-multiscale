@@ -188,7 +188,7 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
 } // setDirichletValues
 
 //! \TODO docme
-void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
+void solution_output(const CommonTraits::DiscreteFunction_ptr& lod_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_lod_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_lod_solution,
                      const CommonTraits::DiscreteFunctionType& dirichlet_extension,
@@ -198,8 +198,8 @@ void solution_output(const CommonTraits::DiscreteFunctionType& lod_solution,
   //! ----------------- writing data output LOD Solution -----------------
   // --------- VTK data output for LOD solution --------------------------
   // create and initialize output class
-  OutputTraits::IOTupleType lod_solution_series(&lod_solution);
-  const auto& gridPart = lod_solution.space().gridPart();
+  OutputTraits::IOTupleType lod_solution_series(lod_solution.get());
+  const auto& gridPart = lod_solution->space().gridPart();
   std::string outstring;
   outputparam.set_prefix("lod_solution");
   outstring = "lod_solution";
@@ -346,8 +346,8 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
   //! ---------------------- solve LOD problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  CommonTraits::DiscreteFunctionType msfem_solution("LOD Solution", discreteFunctionSpace);
-  msfem_solution.clear();
+  auto msfem_solution = std::make_shared<CommonTraits::DiscreteFunctionType>("LOD Solution", discreteFunctionSpace);
+  msfem_solution->clear();
 
   CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part LOD Solution", discreteFunctionSpace);
   coarse_part_msfem_solution.clear();
@@ -380,10 +380,10 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
     // just for Dirichlet zero-boundary condition
     Elliptic_Rigorous_MsFEM_Solver lod_solver(discreteFunctionSpace);
     lod_solver.solve(diffusion_op, f, dirichlet_extension, neumann_bc, specifier, subgrid_list,
-                     coarse_part_msfem_solution, fine_part_msfem_solution, msfem_solution);
+                     coarse_part_msfem_solution, fine_part_msfem_solution, *msfem_solution);
 
     coarse_part_msfem_solution += dirichlet_extension;
-    msfem_solution += dirichlet_extension;
+    *msfem_solution += dirichlet_extension;
 
     DSC_LOG_INFO << "Solution output for MsFEM Solution." << std::endl;
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, dirichlet_extension,
@@ -418,7 +418,7 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
     // -------------------------------------------------------------
   }
 
-  ErrorCalculator(&msfem_solution, &fem_solution).print(DSC_LOG_INFO_0);
+  ErrorCalculator(msfem_solution.get(), &fem_solution).print(DSC_LOG_INFO_0);
 
 } // function algorithm
 
