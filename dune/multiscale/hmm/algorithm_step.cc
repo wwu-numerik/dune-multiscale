@@ -136,7 +136,7 @@ void solve_hmm_problem_nonlinear(
          DSC_CONFIG_GET("HMM_NEWTON_ITERATION_STEP", 0)).str();
 
     // reader for the cell problem data file:
-    auto discrete_function_reader_hmm_newton_ref = DiscreteFunctionIO::reader(location_hmm_newton_step_solution);
+    auto discrete_function_reader_hmm_newton_ref = DiscreteFunctionIO::instance(location_hmm_newton_step_solution);
     discrete_function_reader_hmm_newton_ref.read(0, hmm_solution);
   }
 
@@ -369,7 +369,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
   if (DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("WRITE_HMM_SOL_TO_FILE", true)) {
     std::string fname = (boost::format("hmm_solution_discFunc_refLevel_%d_NewtonStep_%d") %
                          refinement_level_macrogrid_ % hmm_iteration_step).str();
-    DiscreteFunctionIO::writer(fname).append(hmm_solution);
+    DiscreteFunctionIO::instance(fname).append(hmm_solution);
 
     // writing paraview data output
     // general output parameters
@@ -477,7 +477,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
   // for adaptive computations, the saved solution is not suitable for a later usage
   if (!DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("hmm.write_to_file", false)) {
-    DiscreteFunctionIO::writer((boost::format("hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str())
+    DiscreteFunctionIO::instance((boost::format("hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str())
         .append(hmm_solution);
   }
 
@@ -563,9 +563,9 @@ void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType &f, cons
   const std::string cell_solution_location_discFunc = "/cell_problems/_cellSolutions_discFunc";
 
   // reader for the cell problem data file:
-  auto discrete_function_reader_baseSet = DiscreteFunctionIO::reader(cell_solution_location_baseSet);
+  auto discrete_function_reader_baseSet = DiscreteFunctionIO::instance(cell_solution_location_baseSet);
   // reader for the cell problem data file:
-  auto discrete_function_reader_discFunc = DiscreteFunctionIO::reader(cell_solution_location_discFunc);
+  auto discrete_function_reader_discFunc = DiscreteFunctionIO::instance(cell_solution_location_discFunc);
 
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
