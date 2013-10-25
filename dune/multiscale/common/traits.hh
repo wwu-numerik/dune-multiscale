@@ -114,6 +114,7 @@ struct CommonTraits {
   typedef DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
+  typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
   typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
 
   //!------------------------- for adaptive grid refinement ---------------------------------

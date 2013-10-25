@@ -30,7 +30,7 @@ public:
   typedef typename SubGridListType::SubGridPartType SubGridPartType;
   typedef typename SubGridListType::SubGridDiscreteFunctionType DiscreteFunctionType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
-  typedef std::vector<std::unique_ptr<DiscreteFunctionType>> LocalSolutionVectorType;
+  typedef std::vector<std::shared_ptr<DiscreteFunctionType>> LocalSolutionVectorType;
   typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   LocalSolutionManager(const CoarseEntityType& coarseEntity, SubGridListType& subgridList,

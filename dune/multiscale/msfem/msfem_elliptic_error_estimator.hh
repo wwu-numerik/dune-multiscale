@@ -204,13 +204,13 @@ private:
     auto subGridPart = subgrid_list_.gridPart(index_coarse_entity);
 
     SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
-    std::array<SubGridDiscreteFunctionType, 2> conservative_flux_coarse_ent = {
-        {SubGridDiscreteFunctionType("Conservative Flux on coarse entity for e_0", localDiscreteFunctionSpace),
-         SubGridDiscreteFunctionType("Conservative Flux on coarse entity for e_1", localDiscreteFunctionSpace)}};
+    std::array<std::shared_ptr<SubGridDiscreteFunctionType>, 2> conservative_flux_coarse_ent = {
+        {std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux on coarse entity for e_0", localDiscreteFunctionSpace),
+         std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux on coarse entity for e_1", localDiscreteFunctionSpace)}};
     // --------- load local solutions -------
     boost::format flux_location("cf_problems/_conservativeFlux_e_%d_sg_%d");
     for (int i : {0, 1}) {
-      conservative_flux_coarse_ent[i].clear();
+      conservative_flux_coarse_ent[i]->clear();
       const std::string cf_solution_location = (flux_location % i % index_coarse_entity).str();
       DiscreteFunctionIO::reader(cf_solution_location).read(0, conservative_flux_coarse_ent[i]);
     }
@@ -243,16 +243,16 @@ private:
         auto subGridPart_neighbor = subgrid_list_.gridPart(index_coarse_neighbor_entity);
         SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_neighbor(subGridPart_neighbor);
 
-        std::array<SubGridDiscreteFunctionType, 2> conservative_flux_coarse_ent_neighbor = {
-            {SubGridDiscreteFunctionType("Conservative Flux on neighbor coarse entity for e_0",
+        std::array<std::shared_ptr<SubGridDiscreteFunctionType>, 2> conservative_flux_coarse_ent_neighbor = {
+            {std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux on neighbor coarse entity for e_0",
                                          localDiscreteFunctionSpace_neighbor),
-             SubGridDiscreteFunctionType("Conservative Flux on neighbor coarse entity for e_1",
+             std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux on neighbor coarse entity for e_1",
                                          localDiscreteFunctionSpace_neighbor)}};
 
         // --------- load local solutions -------
         // the file/place, where we saved the solutions conservative flux problems problems
         for (int i : {0, 1}) {
-          conservative_flux_coarse_ent_neighbor[i].clear();
+          conservative_flux_coarse_ent_neighbor[i]->clear();
           const std::string cf_solution_location_neighbor = (flux_location % i % index_coarse_neighbor_entity).str();
           // reader for data file:
           DiscreteFunctionIO::reader(cf_solution_location_neighbor).read(0, conservative_flux_coarse_ent_neighbor[i]);
@@ -391,11 +391,11 @@ private:
 
       SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      SubGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
-      local_problem_solution_e0.clear();
+      auto local_problem_solution_e0 = std::make_shared<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
+      local_problem_solution_e0->clear();
 
-      SubGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
-      local_problem_solution_e1.clear();
+      auto local_problem_solution_e1 = std::make_shared<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
+      local_problem_solution_e1->clear();
 
       // --------- load local solutions -------
       // the file/place, where we saved the solutions of the cell problems
@@ -448,8 +448,8 @@ private:
           const double weight_local_quadrature = local_grid_quadrature.weight(localQuadraturePoint) *
                                                  local_grid_geometry.integrationElement(local_subgrid_point);
 
-          auto localized_local_problem_solution_e0 = local_problem_solution_e0.localFunction(local_grid_entity);
-          auto localized_local_problem_solution_e1 = local_problem_solution_e1.localFunction(local_grid_entity);
+          auto localized_local_problem_solution_e0 = local_problem_solution_e0->localFunction(local_grid_entity);
+          auto localized_local_problem_solution_e1 = local_problem_solution_e1->localFunction(local_grid_entity);
 
           // grad corrector for e_0 and e_1
           JacobianRangeType grad_loc_sol_e0, grad_loc_sol_e1;

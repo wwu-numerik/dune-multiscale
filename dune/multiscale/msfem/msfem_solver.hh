@@ -91,8 +91,8 @@ public:
                             // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                             // n(T)-layers.
                             MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
-                            DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
-                            DiscreteFunctionType& solution) const;
+                            CommonTraits::DiscreteFunction_ptr &coarse_scale_part, CommonTraits::DiscreteFunction_ptr &fine_scale_part,
+                            CommonTraits::DiscreteFunction_ptr &solution) const;
 };
 
 } // namespace MsFEM {

@@ -95,7 +95,7 @@ private:
 public:
   //! type of subgrid discrete function
   typedef typename SubGridList::SubGridDiscreteFunctionType SubDiscreteFunctionType;
-  typedef std::vector<std::unique_ptr<SubDiscreteFunctionType>> SubDiscreteFunctionVectorType;
+  typedef std::vector<std::shared_ptr<SubDiscreteFunctionType>> SubDiscreteFunctionVectorType;
 
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;

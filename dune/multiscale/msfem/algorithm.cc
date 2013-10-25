@@ -146,17 +146,17 @@ void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, co
 }
 
 //! \TODO docme
-void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
-                     const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
-                     const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
+void solution_output(const CommonTraits::DiscreteFunction_ptr& msfem_solution,
+                     const CommonTraits::DiscreteFunction_ptr& coarse_part_msfem_solution,
+                     const CommonTraits::DiscreteFunction_ptr& fine_part_msfem_solution,
                      Dune::Multiscale::OutputParameters& outputparam, const int loop_number,
                      int& total_refinement_level_, int& coarse_grid_level_) {
   using namespace Dune;
   //! ----------------- writing data output MsFEM Solution -----------------
   // --------- VTK data output for MsFEM solution --------------------------
   // create and initialize output class
-  OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
-  const auto& gridPart = msfem_solution.space().gridPart();
+  OutputTraits::IOTupleType msfem_solution_series(msfem_solution.get());
+  const auto& gridPart = msfem_solution->space().gridPart();
   std::string outstring;
   if (DSC_CONFIG_GET("adaptive", false)) {
     const std::string msfem_fname_s = (boost::format("msfem_solution_%d_") % loop_number).str();
@@ -171,7 +171,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
 
   // create and initialize output class
-  OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
+  OutputTraits::IOTupleType coarse_msfem_solution_series(coarse_part_msfem_solution.get());
 
   if (DSC_CONFIG_GET("adaptive", false)) {
     const std::string coarse_msfem_fname_s = (boost::format("coarse_part_msfem_solution_%d_") % loop_number).str();
@@ -186,7 +186,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   coarse_msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
 
   // create and initialize output class
-  OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
+  OutputTraits::IOTupleType fine_msfem_solution_series(fine_part_msfem_solution.get());
 
   if (DSC_CONFIG_GET("adaptive", false)) {
     const std::string fine_msfem_fname_s = (boost::format("fine_part_msfem_solution_%d_") % loop_number).str();
@@ -207,7 +207,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
       (boost::format("msfem_solution_discFunc_refLevel_%d_%d") % total_refinement_level_ % coarse_grid_level_).str();
   DiscreteFunctionIO::writer(location).append(msfem_solution);
 
-  DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(), Dune::Fem::MPIManager::helper(),
+  DSG::ElementVisualization::all(fine_part_msfem_solution->gridPart().grid(), Dune::Fem::MPIManager::helper(),
                                  outputparam.path());
 }
 
@@ -352,14 +352,14 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   //! ---------------------- solve MsFEM problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", discreteFunctionSpace);
-  msfem_solution.clear();
+  auto msfem_solution = std::make_shared<CommonTraits::DiscreteFunctionType>("MsFEM Solution", discreteFunctionSpace);
+  msfem_solution->clear();
 
-  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution", discreteFunctionSpace);
-  coarse_part_msfem_solution.clear();
+  auto coarse_part_msfem_solution = std::make_shared<CommonTraits::DiscreteFunctionType>("Coarse Part MsFEM Solution", discreteFunctionSpace);
+  coarse_part_msfem_solution->clear();
 
-  CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", discreteFunctionSpace);
-  fine_part_msfem_solution.clear();
+  auto fine_part_msfem_solution = std::make_shared<CommonTraits::DiscreteFunctionType>("Fine Part MsFEM Solution", discreteFunctionSpace);
+  fine_part_msfem_solution->clear();
 
   const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
 
@@ -389,7 +389,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     // error estimation
     if (DSC_CONFIG_GET("msfem.error_estimation", 0)) {
       MsFEMTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
-      error_estimation(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, estimator, specifier,
+      error_estimation(*msfem_solution, *coarse_part_msfem_solution, *fine_part_msfem_solution, estimator, specifier,
                        loop_number, locals, totals, total_estimated_H1_error_);
       local_indicators_available_ = true;
     }
@@ -421,7 +421,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     // -------------------------------------------------------------
   }
 
-  ErrorCalculator(&msfem_solution, &fem_solution).print(DSC_LOG_INFO_0);
+  ErrorCalculator(msfem_solution.get(), &fem_solution).print(DSC_LOG_INFO_0);
 
   //! -------------------------------------------------------
   if (DSC_CONFIG_GET("adaptive", false)) {
