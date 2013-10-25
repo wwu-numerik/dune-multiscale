@@ -35,7 +35,7 @@ const LocalSolutionManager::SubGridPartType& LocalSolutionManager::getSubGridPar
 
 void LocalSolutionManager::loadLocalSolutions() {
   // reader for the cell problem data file:
-  auto reader = DiscreteFunctionIO::reader(localSolutionLocation_);
+  auto& reader = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::reader(localSolutionLocation_);
 
   for (unsigned int i = 0; i < numLocalProblems_; ++i) {
     localSolutions_[i]->clear();
@@ -47,7 +47,7 @@ void LocalSolutionManager::loadLocalSolutions() {
 
 void LocalSolutionManager::saveLocalSolutions() const {
   // reader for the cell problem data file:
-  auto writer = DiscreteFunctionIO::writer(localSolutionLocation_);
+  auto& writer = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::writer(localSolutionLocation_);
 
   for (auto& it : localSolutions_)
     writer.append(it);
