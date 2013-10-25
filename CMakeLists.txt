@@ -30,8 +30,12 @@ include(DuneMacros)
 # start a dune project with information from dune.module
 dune_project()
 include(DuneUtils)
-
 include(DuneMPI)
+
+find_package(METIS)
+find_package(ParMETIS)
+include(cmake/modules/AddMETISFlags.cmake)
+include(AddParMETISFlags)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
@@ -115,7 +119,6 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
-set(ENABLE_ALUGRID 0 CACHE BOOLEAN "")
 
 add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
@@ -130,10 +133,10 @@ add_dune_mpi_flags(OBJECT multiscale_lodm)
 add_dune_mpi_flags(OBJECT multiscale_msfem)
 add_dune_mpi_flags(OBJECT multiscale_hmm)
 
-if( ENABLE_ALUGRID )
-    set(alusupport parmetis metis)
-endif( ENABLE_ALUGRID )
-set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS} ${alusupport})
+add_dune_metis_flags(multiscale_common)
+add_dune_parmetis_flags(multiscale_common)
+
+set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
 
 include_directories( ${PETSC_INCLUDES} )
 set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
