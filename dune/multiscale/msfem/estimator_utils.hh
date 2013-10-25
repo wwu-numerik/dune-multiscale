@@ -19,17 +19,17 @@ struct EstimatorUtils {
   //! create N hostgrid functions from N subgridfunctions
   template <std::array<int, 1>::size_type N>
   static void
-  subgrid_to_hostrid_function(const std::array<typename EstimatorType::SubGridDiscreteFunctionType, N>& sub_funcs,
+  subgrid_to_hostrid_function(const std::array<std::shared_ptr<typename EstimatorType::SubGridDiscreteFunctionType>, N>& sub_funcs,
                               std::array<typename EstimatorType::DiscreteFunctionPointer, N>& host_funcs) {
     for (auto& host_func : host_funcs)
       host_func->clear();
 
-    const auto& subGrid = sub_funcs[0].space().grid();
-    for (const auto& sub_entity : sub_funcs[0].space()) {
+    const auto& subGrid = sub_funcs[0]->space().grid();
+    for (const auto& sub_entity : sub_funcs[0]->space()) {
       const auto host_entity_pointer = subGrid.template getHostEntity<0>(sub_entity);
       const auto& host_entity = *host_entity_pointer;
       for (std::array<int, 1>::size_type j = 0; j < N; ++j) {
-        const auto sub_loc_value = sub_funcs[j].localFunction(sub_entity);
+        const auto sub_loc_value = sub_funcs[j]->localFunction(sub_entity);
         auto host_loc_value = host_funcs[j]->localFunction(host_entity);
         const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
         for (unsigned int i = 0; i < numBaseFunctions; ++i) {

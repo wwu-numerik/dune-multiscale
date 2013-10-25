@@ -182,11 +182,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
 void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
     const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
-    // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
-    // n(T)-layers.
     MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
-    DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
-    DiscreteFunctionType& solution) const {
+    CommonTraits::DiscreteFunction_ptr& coarse_scale_part, CommonTraits::DiscreteFunction_ptr& fine_scale_part,
+    CommonTraits::DiscreteFunction_ptr& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero");
 
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
@@ -245,25 +243,25 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
 
   // get the dirichlet values
-  solution.clear();
-  Dune::Multiscale::copyDirichletValues(coarse_space, solution);
+  solution->clear();
+  Dune::Multiscale::copyDirichletValues(coarse_space, *solution);
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
-  projectCoarseToFineScale(specifier, coarse_msfem_solution, coarse_scale_part);
+  projectCoarseToFineScale(specifier, coarse_msfem_solution, *coarse_scale_part);
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  identify_fine_scale_part(specifier, subgrid_list, coarse_msfem_solution, fine_scale_part);
+  identify_fine_scale_part(specifier, subgrid_list, coarse_msfem_solution, *fine_scale_part);
   {
     DSC::Profiler::ScopedTiming commFSTimer("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero.comm_fine_scale_part");
-    fine_scale_part.communicate();
+    fine_scale_part->communicate();
   }
 
-  BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
-  BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
+  BOOST_ASSERT_MSG(coarse_scale_part->dofsValid(), "Coarse scale part DOFs need to be valid!");
+  BOOST_ASSERT_MSG(fine_scale_part->dofsValid(), "Fine scale part DOFs need to be valid!");
 
   // add coarse and fine scale part to solution
-  solution += coarse_scale_part;
-  solution += fine_scale_part;
+  *solution += *coarse_scale_part;
+  *solution += *fine_scale_part;
 
 } // solve_dirichlet_zero
 

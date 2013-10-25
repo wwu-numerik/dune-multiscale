@@ -1037,21 +1037,21 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       std::cout << "Preprocessing done." << std::endl;
       // -----------------------------------------------------------------------------------------------------
 
-      SubDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
-      local_problem_solution_0.clear();
+      auto local_problem_solution_0 = std::make_shared<SubDiscreteFunctionType>(name_local_solution, subDiscreteFunctionSpace);
+      local_problem_solution_0->clear();
 
-      SubDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
-      local_problem_solution_1.clear();
+      auto local_problem_solution_1 = std::make_shared<SubDiscreteFunctionType>(name_local_solution, subDiscreteFunctionSpace);
+      local_problem_solution_1->clear();
 
       // 'solve' methods requires the pre-processing step (that is the same for both directions e_0 and e_1)
       // (this at least halfes the computational complexity)
       solve_corrector_problem_lod(unitVectors[0], locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                  local_problem_solution_0, coarse_index);
+                                  *local_problem_solution_0, coarse_index);
       solve_corrector_problem_lod(unitVectors[1], locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                  local_problem_solution_1, coarse_index);
+                                  *local_problem_solution_1, coarse_index);
 
-      assert(local_problem_solution_0.dofsValid());
-      assert(local_problem_solution_1.dofsValid());
+      assert(local_problem_solution_0->dofsValid());
+      assert(local_problem_solution_1->dofsValid());
 
       const std::string locprob_solution_location =
           (boost::format("local_problems/_localProblemSolutions_%d") % coarseId).str();
@@ -1095,15 +1095,15 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
         if (solve_for_dirichlet_corrector) {
           const std::string name_dirichlet_corrector =
               (boost::format("Dirichlet Boundary Corrector %d") % coarseId).str();
-          SubDiscreteFunctionType dirichlet_boundary_corrector(name_dirichlet_corrector, subDiscreteFunctionSpace);
-          dirichlet_boundary_corrector.clear();
+          auto dirichlet_boundary_corrector = std::make_shared<SubDiscreteFunctionType>(name_dirichlet_corrector, subDiscreteFunctionSpace);
+          dirichlet_boundary_corrector->clear();
 
           // also requires the pre-processing step:
           std::cout << "Solve Dirichlet boundary corrector problem for subgrid " << coarse_index << std::endl;
           solve_dirichlet_corrector_problem_lod(locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                                dirichlet_boundary_corrector, coarse_index);
+                                                *dirichlet_boundary_corrector, coarse_index);
 
-          assert(dirichlet_boundary_corrector.dofsValid());
+          assert(dirichlet_boundary_corrector->dofsValid());
 
           const std::string dirichlet_corrector_location =
               (boost::format("local_problems/_dirichletBoundaryCorrector_%d") % coarseId).str();
@@ -1113,7 +1113,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
           if (DSC_CONFIG_GET("lod.localproblem_vtkoutput", true)) {
             HostDiscreteFunctionType aux_host_local_solution(name_dirichlet_corrector, hostDiscreteFunctionSpace_);
-            subgrid_to_hostrid_function(dirichlet_boundary_corrector, aux_host_local_solution);
+            subgrid_to_hostrid_function(*dirichlet_boundary_corrector, aux_host_local_solution);
             output_local_solution(coarse_index, 2, aux_host_local_solution); // 2 stands for Dirichlet
           }
         }
@@ -1121,15 +1121,15 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
         // Neumann boundary corrector:
         if (intersection.boundary() && (intersection.boundaryId() == 2) && (!neumann_boundary_corrector_assembled)) {
           const std::string name_neumann_corrector = (boost::format("Neumann Boundary Corrector %d") % coarseId).str();
-          SubDiscreteFunctionType neumann_boundary_corrector(name_neumann_corrector, subDiscreteFunctionSpace);
-          neumann_boundary_corrector.clear();
+          auto neumann_boundary_corrector = std::make_shared<SubDiscreteFunctionType>(name_neumann_corrector, subDiscreteFunctionSpace);
+          neumann_boundary_corrector->clear();
           std::cout << "Solve Neumann boundary corrector problem for subgrid " << coarse_index << std::endl;
 
           // also requires the pre-processing step:
           solve_neumann_corrector_problem_lod(locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                              neumann_boundary_corrector, coarse_index);
+                                              *neumann_boundary_corrector, coarse_index);
 
-          assert(neumann_boundary_corrector.dofsValid());
+          assert(neumann_boundary_corrector->dofsValid());
 
           const std::string neumann_corrector_location =
               (boost::format("local_problems/_neumannBoundaryCorrector_%d") % coarseId).str();
@@ -1139,7 +1139,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
           if (DSC_CONFIG_GET("lod.localproblem_vtkoutput", true)) {
             HostDiscreteFunctionType aux_host_local_solution(name_neumann_corrector, hostDiscreteFunctionSpace_);
-            subgrid_to_hostrid_function(neumann_boundary_corrector, aux_host_local_solution);
+            subgrid_to_hostrid_function(*neumann_boundary_corrector, aux_host_local_solution);
             output_local_solution(coarse_index, 3, aux_host_local_solution); // 3 stands for Neumann
           }
         }
@@ -1147,10 +1147,10 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
       if (DSC_CONFIG_GET("lod.localproblem_vtkoutput", true)) {
         HostDiscreteFunctionType host_local_solution(name_local_solution, hostDiscreteFunctionSpace_);
-        subgrid_to_hostrid_function(local_problem_solution_0, host_local_solution);
+        subgrid_to_hostrid_function(*local_problem_solution_0, host_local_solution);
         output_local_solution(coarse_index, 0, host_local_solution);
 
-        subgrid_to_hostrid_function(local_problem_solution_1, host_local_solution);
+        subgrid_to_hostrid_function(*local_problem_solution_1, host_local_solution);
         output_local_solution(coarse_index, 1, host_local_solution);
       }
     } else if (uzawa && !(specifier_.simplexCoarseGrid())) {

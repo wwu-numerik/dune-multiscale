@@ -23,6 +23,7 @@
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
+#include <dune/stuff/common/memory.hh>
 
 #include <boost/filesystem/path.hpp>
 
@@ -40,6 +41,9 @@ struct IOTraits {
 
 
 class DiscreteFunctionIO {
+
+  typedef std::vector<std::unique_ptr<CommonTraits::DiscreteFunctionType>> Vector;
+
   /**
    * \brief simple discrete function to disk writer
    * this class isn't type safe in the sense that different appends may append
@@ -68,15 +72,16 @@ class DiscreteFunctionIO {
       DSC::testCreateDirectory(dir_.string());
     }
 
-    template <class DiscreteFunctionTraits>
-    void append(const Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>& df) {
+    template <class DiscreteFunction>
+    void append(const std::shared_ptr<DiscreteFunction>& df) {
+//      static_assert(std::is_base_of<DiscreteFunction, Dune::Fem::DiscreteFunctionInterface<typename DiscreteFunction::Traits>>::value, "");
       const std::string fn = (dir_ / DSC::toString(size_++)).string();
       DSC::testCreateDirectory(fn);
   #ifdef MULTISCALE_USE_SION
       IOTraits::OutstreamType stream(fn);
-      df.write(stream);
+      df->write(stream);
   #else
-      df.write_xdr(fn);
+      df->write_xdr(fn);
   #endif
     } // append
 
@@ -102,14 +107,14 @@ class DiscreteFunctionIO {
 
 
 
-    template <class DiscreteFunctionTraits>
-    void read(const unsigned long index, Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>& df) {
+    template <class DiscreteFunction>
+    void read(const unsigned long index, const std::shared_ptr<DiscreteFunction>& df) {
       const std::string fn = (dir_ / DSC::toString(index)).string();
   #ifdef MULTISCALE_USE_SION
       IOTraits::InstreamType stream(fn);
-      df.read(stream);
+      df->read(stream);
   #else
-      df.read_xdr(fn);
+      df->read_xdr(fn);
   #endif
     } // read
 
@@ -126,6 +131,9 @@ public:
   static DiscreteFunctionWriter writer(const std::string filename) {
     return DiscreteFunctionWriter(filename);
   }
+
+private:
+  std::map<std::string, Vector> map_;
 
 };//class DiscreteFunctionIO
 

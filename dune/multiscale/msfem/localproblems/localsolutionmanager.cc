@@ -39,7 +39,7 @@ void LocalSolutionManager::loadLocalSolutions() {
 
   for (unsigned int i = 0; i < numLocalProblems_; ++i) {
     localSolutions_[i]->clear();
-    reader.read(i, *(localSolutions_[i]));
+    reader.read(i, localSolutions_[i]);
   }
   loaded_ = true;
   return;
@@ -50,7 +50,7 @@ void LocalSolutionManager::saveLocalSolutions() const {
   auto writer = DiscreteFunctionIO::writer(localSolutionLocation_);
 
   for (auto& it : localSolutions_)
-    writer.append(*it);
+    writer.append(it);
 } // saveLocalSolutions
 
 bool LocalSolutionManager::solutionsWereLoaded() const { return loaded_; }

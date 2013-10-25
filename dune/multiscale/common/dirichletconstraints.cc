@@ -39,7 +39,7 @@ getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space) {
  * @param[in, out] function The function to which the values will be projected.
  */
 void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType &coarseSpace,
-                         CommonTraits::DiscreteFunctionType &function) {
+                         CommonTraits::DiscreteFunctionType& function) {
   static bool initialized = false;
   static CommonTraits::DiscreteFunctionType dirichletExtension(
       "Dirichlet Extension", function.space());
