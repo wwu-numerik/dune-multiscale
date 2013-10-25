@@ -336,7 +336,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
         (boost::format("local_problems/_localProblemSolutions_%d") %
          specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
     // reader for the cell problem data file:
-    auto& discrete_function_reader = DiscreteFunctionIO::reader(local_solution_location);
+    auto& discrete_function_reader = DiscreteFunctionIO::instance(local_solution_location);
     // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 0 << std::endl;
     discrete_function_reader.read(0, local_problem_solution_e0);
     // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 1 << std::endl;
@@ -428,7 +428,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
            specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
 
       // reader for the cell problem data file:
-      auto& discrete_function_reader = DiscreteFunctionIO::reader(local_solution_location);
+      auto& discrete_function_reader = DiscreteFunctionIO::instance(local_solution_location);
       discrete_function_reader.read(0, local_dirichlet_corrector);
 
       DiscreteFunction local_dirichlet_corrector_aux("local_dirichlet_corrector_aux", discreteFunctionSpace_);
@@ -481,7 +481,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
            specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
 
       // reader for the cell problem data file:
-      auto& discrete_function_reader = DiscreteFunctionIO::reader(local_solution_location);
+      auto& discrete_function_reader = DiscreteFunctionIO::instance(local_solution_location);
       discrete_function_reader.read(0, local_neumann_corrector);
 
       DiscreteFunction local_neumann_corrector_aux("local_neumann_corrector_aux", discreteFunctionSpace_);

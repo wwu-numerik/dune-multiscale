@@ -45,14 +45,21 @@ class DiscreteFunctionIO {
   static_assert(std::is_base_of<Dune::Fem::IsDiscreteFunction, DiscreteFunctionType>::value, "");
 
   typedef DiscreteFunctionIO<DiscreteFunctionType> ThisType;
-  typedef std::vector<std::shared_ptr<DiscreteFunctionType>> Vector;
+  typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
+  typedef std::vector<DiscreteFunction_ptr> Vector;
 
   /**
    * \brief simple discrete function to disk writer
    * this class isn't type safe in the sense that different appends may append
    * non-convertible discrete function implementations
    */
-  class DiscreteFunctionWriter{
+  class DiscreteFunctionRW{
+
+    void load_disk_functions()
+    {
+      DSC::testCreateDirectory(dir_.string());
+      // if functions present, load em
+    }
 
   public:
     /**
@@ -61,23 +68,41 @@ class DiscreteFunctionIO {
      *  filename may include additional path components
      * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
      */
-    DiscreteFunctionWriter(const std::string filename = "nonsense_default_for_map")
-      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-      , size_(0) {
-      DSC::testCreateDirectory(dir_.string());
+    DiscreteFunctionRW(const std::string filename = "nonsense_default_for_map")
+      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename) {
+      load_disk_functions();
     }
 
     /**
      * \copydoc DiscreteFunctionReader()
      */
-    DiscreteFunctionWriter(const boost::filesystem::path& path)
-      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path)
-      , size_(0) {
-      DSC::testCreateDirectory(dir_.string());
+    DiscreteFunctionRW(const boost::filesystem::path& path)
+      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path) {
+      load_disk_functions();
     }
 
-    void append(const std::shared_ptr<DiscreteFunctionType>& df) {
-      const std::string fn = (dir_ / DSC::toString(size_++)).string();
+    ~DiscreteFunctionRW()
+    {
+      //dump remaining
+      unsigned long id = 0;
+      for(auto& df : functions_)
+      {
+        to_disk(id++, df);
+      }
+    }
+
+    void append(const DiscreteFunction_ptr& df) {
+      functions_.push_back(df);
+    }
+
+    void read(const unsigned long index, DiscreteFunction_ptr& df) {
+      df = functions_.at(index);
+      functions_.erase(functions_.begin()+index);
+    }
+
+    void to_disk(const unsigned long index, const DiscreteFunction_ptr& df)
+    {
+      const std::string fn = (dir_ / DSC::toString(index)).string();
       DSC::testCreateDirectory(fn);
   #ifdef MULTISCALE_USE_SION
       IOTraits::OutstreamType stream(fn);
@@ -85,29 +110,9 @@ class DiscreteFunctionIO {
   #else
       df->write_xdr(fn);
   #endif
-    } // append
+    }
 
-  private:
-    const boost::filesystem::path dir_;
-    unsigned int size_;
-  };
-
-  /**
-   * \brief simple discrete function from disk reader
-   * this class isn't type safe in the sense that different appends may append
-   * non-convertible discrete function implementations
-   * \todo base on discrete's functions write_xdr functionality
-   */
-  class DiscreteFunctionReader{
-
-  public:
-    DiscreteFunctionReader(const std::string filename = "nonsense_default_for_map")
-      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename) {}
-
-    DiscreteFunctionReader(const boost::filesystem::path path)
-      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path) {}
-
-    void read(const unsigned long index, const std::shared_ptr<DiscreteFunctionType>& df) {
+    void from_disk(const unsigned long index, const DiscreteFunction_ptr& df) {
       const std::string fn = (dir_ / DSC::toString(index)).string();
   #ifdef MULTISCALE_USE_SION
       IOTraits::InstreamType stream(fn);
@@ -119,6 +124,7 @@ class DiscreteFunctionIO {
 
   private:
     const boost::filesystem::path dir_;
+    Vector functions_;
   };
 
   static ThisType& instance() {
@@ -137,25 +143,16 @@ class DiscreteFunctionIO {
     return ret.first->second;
   }
 
-  DiscreteFunctionReader& get_reader(const std::string filename) {
-    return get(readers_, filename);
-  }
-
-  DiscreteFunctionWriter& get_writer(const std::string filename) {
-    return get(writers_, filename);
+  DiscreteFunctionRW& get_rw(const std::string filename) {
+    return get(rws_, filename);
   }
 public:
-  static DiscreteFunctionReader& reader(const std::string filename) {
-    return instance().get_reader(filename);
-  }
-
-  static DiscreteFunctionWriter& writer(const std::string filename) {
-    return instance().get_writer(filename);
+  static DiscreteFunctionRW& instance(const std::string filename) {
+    return instance().get_rw(filename);
   }
 
 private:
-  std::unordered_map<std::string, DiscreteFunctionReader> readers_;
-  std::unordered_map<std::string, DiscreteFunctionWriter> writers_;
+  std::unordered_map<std::string, DiscreteFunctionRW> rws_;
 
 };//class DiscreteFunctionIO
 
