@@ -30,6 +30,7 @@ struct MsFEMTraits {
   typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, SubGridPartType, st_lagrangespace_order> SubGridDiscreteFunctionSpaceType;
 
   typedef typename BackendChooser<SubGridDiscreteFunctionSpaceType>::DiscreteFunctionType SubGridDiscreteFunctionType;
+  typedef std::shared_ptr<SubGridDiscreteFunctionType> SubGridDiscreteFunction_ptr;
   typedef SubGridList SubGridListType;
 
   // ! -------------------------- MsFEM error estimator ----------------------------

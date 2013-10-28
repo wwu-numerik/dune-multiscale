@@ -352,13 +352,13 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   //! ---------------------- solve MsFEM problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  auto msfem_solution = std::make_shared<CommonTraits::DiscreteFunctionType>("MsFEM Solution", discreteFunctionSpace);
+  auto msfem_solution = make_df_ptr<CommonTraits::DiscreteFunctionType>("MsFEM Solution", discreteFunctionSpace);
   msfem_solution->clear();
 
-  auto coarse_part_msfem_solution = std::make_shared<CommonTraits::DiscreteFunctionType>("Coarse Part MsFEM Solution", discreteFunctionSpace);
+  auto coarse_part_msfem_solution = make_df_ptr<CommonTraits::DiscreteFunctionType>("Coarse Part MsFEM Solution", discreteFunctionSpace);
   coarse_part_msfem_solution->clear();
 
-  auto fine_part_msfem_solution = std::make_shared<CommonTraits::DiscreteFunctionType>("Fine Part MsFEM Solution", discreteFunctionSpace);
+  auto fine_part_msfem_solution = make_df_ptr<CommonTraits::DiscreteFunctionType>("Fine Part MsFEM Solution", discreteFunctionSpace);
   fine_part_msfem_solution->clear();
 
   const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);

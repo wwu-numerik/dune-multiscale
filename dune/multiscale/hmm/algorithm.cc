@@ -255,7 +255,7 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
   //   where we used the Newton method to solve the non-linear system of equations
   // - in general 'reference_solution' will be an accurate approximation of the exact solution, that is why we it also
   // called reference solution
-  auto reference_solution = std::make_shared<typename CommonTraits::DiscreteFunctionType>(filename + " Reference Solution",
+  auto reference_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(filename + " Reference Solution",
                                                                  finerDiscreteFunctionSpace);
   reference_solution->clear();
 
@@ -274,7 +274,7 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
     //! solution vector
     // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the
     // non-linear system of equations
-    auto hmm_solution = std::make_shared<typename CommonTraits::DiscreteFunctionType>(" HMM (+Newton) Solution", discreteFunctionSpace);
+    auto hmm_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(" HMM (+Newton) Solution", discreteFunctionSpace);
     hmm_solution->clear();
 
     typename CommonTraits::RestrictProlongOperatorType rp(*hmm_solution);

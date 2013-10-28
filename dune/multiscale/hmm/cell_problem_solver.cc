@@ -251,7 +251,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     // calc Jacobian inverse before volume is evaluated
     baseSet.jacobianAll(barycenter_local, gradientPhi);
 
-    auto correctorPhi_i = std::make_shared<PeriodicDiscreteFunctionType>("corrector Phi_i", periodicDiscreteFunctionSpace_);
+    auto correctorPhi_i = make_df_ptr<PeriodicDiscreteFunctionType>("corrector Phi_i", periodicDiscreteFunctionSpace_);
     for (size_t i = 0; i < numBaseFunctions; ++i) {
       correctorPhi_i->clear();
 
@@ -311,7 +311,7 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 
-    auto cell_solution_on_entity = std::make_shared<PeriodicDiscreteFunctionImp>("corrector of macro discrete function",
+    auto cell_solution_on_entity = make_df_ptr<PeriodicDiscreteFunctionImp>("corrector of macro discrete function",
                                                          periodicDiscreteFunctionSpace_);
 
     // take time
@@ -381,12 +381,12 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 
-    auto corrector_macro_discrete_function = std::make_shared<PeriodicDiscreteFunctionType>("corrector of macro discrete function",
+    auto corrector_macro_discrete_function = make_df_ptr<PeriodicDiscreteFunctionType>("corrector of macro discrete function",
                                                                    periodicDiscreteFunctionSpace_);
     discrete_function_reader.read(number_of_entity, corrector_macro_discrete_function);
 
     // the solution that we want to save to the data file
-    auto jac_corrector_Phi_i = std::make_shared<PeriodicDiscreteFunctionType>("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
+    auto jac_corrector_Phi_i = make_df_ptr<PeriodicDiscreteFunctionType>("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
 
     baseSet.jacobianAll(barycenter_local, gradientPhi);
 

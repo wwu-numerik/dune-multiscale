@@ -366,7 +366,7 @@ public:
 
   void solve(JacobianRangeType& e_i, // direction 'e_i'
              const SubGridDiscreteFunctionType& local_corrector_e_i, const int sub_grid_id, const int direction_index,
-             std::shared_ptr<SubGridDiscreteFunctionType>& conservative_flux) const {
+             const MsFEMTraits::SubGridDiscreteFunction_ptr& conservative_flux) const {
     // set solution equal to zero:
     conservative_flux->clear();
 
@@ -465,7 +465,7 @@ public:
     cf_dataoutput.writeData(1.0 /*dummy*/, "conservative-flux");
   } // vtk_output
 
-  void file_data_output(const std::shared_ptr<SubGridDiscreteFunctionType>& subgrid_disc_func, const int sub_grid_index,
+  void file_data_output(const MsFEMTraits::SubGridDiscreteFunction_ptr& subgrid_disc_func, const int sub_grid_index,
                         const int direction_index) const {
     const std::string locprob_solution_location =
         std::string("cf_problems/") + (filename_template_ % direction_index % sub_grid_index).str();
@@ -504,10 +504,10 @@ public:
 
       SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      auto local_problem_solution_e0 = std::make_shared<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
+      auto local_problem_solution_e0 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
       local_problem_solution_e0->clear();
 
-      auto local_problem_solution_e1 = std::make_shared<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
+      auto local_problem_solution_e1 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
       local_problem_solution_e1->clear();
 
       // --------- load local solutions -------
@@ -520,8 +520,8 @@ public:
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
 
-      auto conservative_flux_e0 = std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux for e_0", localDiscreteFunctionSpace);
-      auto conservative_flux_e1 = std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux for e_1", localDiscreteFunctionSpace);
+      auto conservative_flux_e0 = make_df_ptr<SubGridDiscreteFunctionType>("Conservative Flux for e_0", localDiscreteFunctionSpace);
+      auto conservative_flux_e1 = make_df_ptr<SubGridDiscreteFunctionType>("Conservative Flux for e_1", localDiscreteFunctionSpace);
 
       DSC_LOG_INFO << "Number of the 'conservative flux problem': " << dimension* global_index_entity << " (of "
                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;

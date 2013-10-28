@@ -324,10 +324,10 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
 
     const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-    auto local_problem_solution_e0 = std::make_shared<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
+    auto local_problem_solution_e0 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
     local_problem_solution_e0->clear();
 
-    auto local_problem_solution_e1 = std::make_shared<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
+    auto local_problem_solution_e1 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
     local_problem_solution_e1->clear();
 
     // --------- load local solutions -------
@@ -418,7 +418,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
       auto subGridPart = subgrid_list.gridPart(global_index_entity);
       const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      auto local_dirichlet_corrector = std::make_shared<SubGridDiscreteFunctionType>("Local Dirichlet corrector", localDiscreteFunctionSpace);
+      auto local_dirichlet_corrector = make_df_ptr<SubGridDiscreteFunctionType>("Local Dirichlet corrector", localDiscreteFunctionSpace);
       local_dirichlet_corrector->clear();
 
       // --------- load local Dirichlet corrector -------
@@ -471,7 +471,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
       auto subGridPart = subgrid_list.gridPart(global_index_entity);
       const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      auto local_neumann_corrector = std::make_shared<SubGridDiscreteFunctionType>("Local Neumann corrector", localDiscreteFunctionSpace);
+      auto local_neumann_corrector = make_df_ptr<SubGridDiscreteFunctionType>("Local Neumann corrector", localDiscreteFunctionSpace);
       local_neumann_corrector->clear();
 
       // --------- load local neumann corrector -------

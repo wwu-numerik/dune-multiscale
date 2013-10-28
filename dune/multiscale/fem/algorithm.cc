@@ -210,7 +210,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const
   // case)
   //    ( if the elliptic problem is linear, the 'solution' is determined without the Newton method )
   // - solution of the finite element method, where we use the Newton method to solve the non-linear system of equations
-  auto discrete_solution = std::make_shared<typename CommonTraits::DiscreteFunctionType>(filename + " FEM(-Newton) Solution",
+  auto discrete_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(filename + " FEM(-Newton) Solution",
                                                                 discreteFunctionSpace);
   discrete_solution->clear();
 
