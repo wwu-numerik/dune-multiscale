@@ -83,7 +83,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::LinearOperatorTy
       cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
 
       corrector_Phi[i] =
-          std::make_shared<PeriodicDiscreteFunction>("Corrector Function of Phi", periodicDiscreteFunctionSpace_);
+          make_df_ptr<PeriodicDiscreteFunction>("Corrector Function of Phi", periodicDiscreteFunctionSpace_);
       corrector_Phi[i]->clear();
       discrete_function_reader.read(cell_problem_id[i], corrector_Phi[i]);
     }
@@ -215,7 +215,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
     // here: no multiplication with jacobian inverse transposed required!
 
     // Q_h(u_H^{(n-1}))(x_T,y):
-    auto corrector_old_u_H = std::make_shared<PeriodicDiscreteFunction>("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace_);
+    auto corrector_old_u_H = make_df_ptr<PeriodicDiscreteFunction>("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace_);
     corrector_old_u_H->clear();
 
     discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
@@ -231,7 +231,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
       cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
 
       if (!DSC_CONFIG_GET("hmm.petrov_galerkin", true)) {
-        corrector_Phi[i] = std::make_shared<PeriodicDiscreteFunction>("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_);
+        corrector_Phi[i] = make_df_ptr<PeriodicDiscreteFunction>("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_);
         corrector_Phi[i]->clear();
         discrete_function_reader_baseSet.read(cell_problem_id[i], corrector_Phi[i]);
       }
@@ -243,7 +243,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
       // D_Q(\Phi_i,u_H^{n-1})
       // the jacobian of the corrector operator applied to u_H^{(n-1)} in direction of gradient \Phi_i
-      auto jacobian_corrector_old_u_H_Phi_i = std::make_shared<PeriodicDiscreteFunction>("Jacobian Corrector Function of u_H^(n-1) and Phi_i",
+      auto jacobian_corrector_old_u_H_Phi_i = make_df_ptr<PeriodicDiscreteFunction>("Jacobian Corrector Function of u_H^(n-1) and Phi_i",
                                                                 periodicDiscreteFunctionSpace_);
       jacobian_corrector_old_u_H_Phi_i->clear();
 

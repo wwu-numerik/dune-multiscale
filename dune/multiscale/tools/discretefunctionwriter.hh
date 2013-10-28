@@ -96,11 +96,16 @@ class DiscreteFunctionIO {
     }
 
     void read(const unsigned long index, DiscreteFunction_ptr& df) {
-      df = functions_.at(index);
-      functions_.erase(functions_.begin()+index);
+      if(index<functions_.size()) {
+        df = functions_.at(index);
+        functions_.erase(functions_.begin()+index);
+      } else {
+        from_disk(index, df);
+      }
+      assert(df!=nullptr);
     }
 
-    void to_disk(const unsigned long index, const DiscreteFunction_ptr& df)
+    void to_disk(const unsigned long index, const DiscreteFunction_ptr& df) const
     {
       const std::string fn = (dir_ / DSC::toString(index)).string();
       DSC::testCreateDirectory(fn);
@@ -112,7 +117,7 @@ class DiscreteFunctionIO {
   #endif
     }
 
-    void from_disk(const unsigned long index, const DiscreteFunction_ptr& df) {
+    void from_disk(const unsigned long index, const DiscreteFunction_ptr& df) const {
       const std::string fn = (dir_ / DSC::toString(index)).string();
   #ifdef MULTISCALE_USE_SION
       IOTraits::InstreamType stream(fn);

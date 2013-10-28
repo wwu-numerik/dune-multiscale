@@ -19,7 +19,7 @@ struct EstimatorUtils {
   //! create N hostgrid functions from N subgridfunctions
   template <std::array<int, 1>::size_type N>
   static void
-  subgrid_to_hostrid_function(const std::array<std::shared_ptr<typename EstimatorType::SubGridDiscreteFunctionType>, N>& sub_funcs,
+  subgrid_to_hostrid_function(const std::array<MsFEMTraits::SubGridDiscreteFunction_ptr, N>& sub_funcs,
                               std::array<typename EstimatorType::DiscreteFunctionPointer, N>& host_funcs) {
     for (auto& host_func : host_funcs)
       host_func->clear();

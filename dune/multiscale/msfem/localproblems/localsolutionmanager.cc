@@ -8,6 +8,7 @@
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
 LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity, SubGridListType& subgridList,
                                            const MacroMicroGridSpecifierType& gridSpecifier)
   : subgridList_(subgridList)
@@ -25,6 +26,7 @@ LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity,
     it = DSC::make_unique<DiscreteFunctionType>("Local problem Solution", localDiscreteFunctionSpace_);
 }
 
+const LocalSolutionManager::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() const { return localSolutions_; }
 LocalSolutionManager::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
 
 const LocalSolutionManager::DiscreteFunctionSpaceType& LocalSolutionManager::getLocalDiscreteFunctionSpace() const {
@@ -56,6 +58,7 @@ void LocalSolutionManager::saveLocalSolutions() const {
 bool LocalSolutionManager::solutionsWereLoaded() const { return loaded_; }
 
 std::size_t LocalSolutionManager::numBoundaryCorrectors() const { return numBoundaryCorrectors_; }
-}
-}
-}
+
+} // namespace MsFEM
+} // namespace Multiscale
+} // namespace Dune

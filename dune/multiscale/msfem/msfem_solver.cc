@@ -86,7 +86,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
     LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
     localSolManager.loadLocalSolutions();
-    auto& localSolutions = localSolManager.getLocalSolutions();
+    const auto& localSolutions = localSolManager.getLocalSolutions();
 
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
 
@@ -119,7 +119,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
       // add dirichlet corrector
       DiscreteFunctionType boundaryCorrector("Boundary Corrector", discreteFunctionSpace_);
       boundaryCorrector.clear();
-      subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs() + 1], boundaryCorrector);
+      const auto& re = *localSolutions[coarseSolutionLF.numDofs() + 1];
+      subgrid_to_hostrid_projection(re, boundaryCorrector);
       fine_scale_part += boundaryCorrector;
 
       // substract neumann corrector

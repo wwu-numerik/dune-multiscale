@@ -51,13 +51,13 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
   int element_number = 0;
   for (const auto& entity : discreteFunctionSpace) {
     // corrector of u_H^(n-1) \approx u_H on the macro element T
-    auto corrector_u_H_on_entity = std::make_shared<typename HMMTraits::PeriodicDiscreteFunctionType>("Corrector of u_H",
+    auto corrector_u_H_on_entity = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>("Corrector of u_H",
                                                                              periodicDiscreteFunctionSpace);
     corrector_u_H_on_entity->clear();
 
     // in the linear case, we still need to compute the corrector of u_H:
     if (DSC_CONFIG_GET("problem.linear", true)) {
-      auto corrector_of_base_func = std::make_shared<typename HMMTraits::PeriodicDiscreteFunctionType>("Corrector of macro base function",
+      auto corrector_of_base_func = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>("Corrector of macro base function",
                                                                               periodicDiscreteFunctionSpace);
       corrector_of_base_func->clear();
       const auto local_hmm_solution = hmm_solution->localFunction(entity);
@@ -94,7 +94,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
       if (intersection.neighbor()) // if there is a neighbor entity
       {
         // corrector of u_H^(n-1) \approx u_H on the neighbor element
-        auto corrector_u_H_on_neighbor_entity = std::make_shared<typename HMMTraits::PeriodicDiscreteFunctionType>(
+        auto corrector_u_H_on_neighbor_entity = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>(
             "Corrector of u_H", periodicDiscreteFunctionSpace);
         corrector_u_H_on_neighbor_entity->clear();
 
@@ -103,7 +103,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
 
         // in the linear case, we still need to compute the corrector of u_H:
         if (DSC_CONFIG_GET("problem.linear", true)) {
-          auto corrector_of_base_func_neighbor = std::make_shared<typename HMMTraits::PeriodicDiscreteFunctionType>(
+          auto corrector_of_base_func_neighbor = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>(
               "Corrector of macro base function", periodicDiscreteFunctionSpace);
           corrector_of_base_func_neighbor->clear();
 

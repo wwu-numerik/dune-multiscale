@@ -801,11 +801,10 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems(const HostDiscreteFunc
 
 } // assemble_local_RHS_pre_processing
 
-void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
-    const std::vector<std::shared_ptr<HostDiscreteFunction>>& coarse_basis_func_list,
+void LocalProblemOperator::assemble_local_RHS_lg_problems_all(const std::vector<CommonTraits::DiscreteFunction_ptr> &coarse_basis_func_list,
     std::vector<double>& clement_weights, std::vector<std::size_t>& ids_basis_functions_in_subgrid,
-    std::vector<std::unique_ptr<LocalProblemOperator::DiscreteFunction>>& local_problem_RHS) const {
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = local_problem_RHS[0]->space();
+    std::vector<MsFEMTraits::SubGridDiscreteFunction_ptr> &local_problem_RHS) const {
+  const auto& discreteFunctionSpace = local_problem_RHS[0]->space();
 
   const auto& subGrid = discreteFunctionSpace.grid();
 
@@ -820,7 +819,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
     const auto& baseSet = local_problem_RHS[0]->localFunction(local_grid_entity).basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    const auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
     const auto& host_entity = *host_entity_pointer;
 
     const auto quadrature = make_quadrature(local_grid_entity, discreteFunctionSpace);

@@ -607,10 +607,10 @@ void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType &f, cons
     old_u_H_loc.jacobian(barycenter_local, grad_old_u_H_x);
 
     // Q_h(u_H^{(n-1}))(x_T,y):
-    auto corrector_old_u_H = std::make_shared<HMM::HMMTraits::PeriodicDiscreteFunctionType>("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace);
+    auto corrector_old_u_H = make_df_ptr<HMM::HMMTraits::PeriodicDiscreteFunctionType>("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace);
     corrector_old_u_H->clear();
 
-    auto corrector_Phi_i = std::make_shared<HMM::HMMTraits::PeriodicDiscreteFunctionType>("Corrector of Phi_i", periodicDiscreteFunctionSpace);
+    auto corrector_Phi_i = make_df_ptr<HMM::HMMTraits::PeriodicDiscreteFunctionType>("Corrector of Phi_i", periodicDiscreteFunctionSpace);
     discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
     macro_grid_baseSet.jacobianAll(barycenter_local, grad_Phi_x_vec);
 

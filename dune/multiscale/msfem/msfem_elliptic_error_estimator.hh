@@ -204,9 +204,9 @@ private:
     auto subGridPart = subgrid_list_.gridPart(index_coarse_entity);
 
     SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
-    std::array<std::shared_ptr<SubGridDiscreteFunctionType>, 2> conservative_flux_coarse_ent = {
-        {std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux on coarse entity for e_0", localDiscreteFunctionSpace),
-         std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux on coarse entity for e_1", localDiscreteFunctionSpace)}};
+    std::array<MsFEMTraits::SubGridDiscreteFunction_ptr, 2> conservative_flux_coarse_ent = {
+        {make_df_ptr<SubGridDiscreteFunctionType>("Conservative Flux on coarse entity for e_0", localDiscreteFunctionSpace),
+         make_df_ptr<SubGridDiscreteFunctionType>("Conservative Flux on coarse entity for e_1", localDiscreteFunctionSpace)}};
     // --------- load local solutions -------
     boost::format flux_location("cf_problems/_conservativeFlux_e_%d_sg_%d");
     for (int i : {0, 1}) {
@@ -243,10 +243,10 @@ private:
         auto subGridPart_neighbor = subgrid_list_.gridPart(index_coarse_neighbor_entity);
         SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_neighbor(subGridPart_neighbor);
 
-        std::array<std::shared_ptr<SubGridDiscreteFunctionType>, 2> conservative_flux_coarse_ent_neighbor = {
-            {std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux on neighbor coarse entity for e_0",
+        std::array<MsFEMTraits::SubGridDiscreteFunction_ptr, 2> conservative_flux_coarse_ent_neighbor = {
+            {make_df_ptr<SubGridDiscreteFunctionType>("Conservative Flux on neighbor coarse entity for e_0",
                                          localDiscreteFunctionSpace_neighbor),
-             std::make_shared<SubGridDiscreteFunctionType>("Conservative Flux on neighbor coarse entity for e_1",
+             make_df_ptr<SubGridDiscreteFunctionType>("Conservative Flux on neighbor coarse entity for e_1",
                                          localDiscreteFunctionSpace_neighbor)}};
 
         // --------- load local solutions -------
@@ -391,10 +391,10 @@ private:
 
       SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      auto local_problem_solution_e0 = std::make_shared<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
+      auto local_problem_solution_e0 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
       local_problem_solution_e0->clear();
 
-      auto local_problem_solution_e1 = std::make_shared<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
+      auto local_problem_solution_e1 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
       local_problem_solution_e1->clear();
 
       // --------- load local solutions -------

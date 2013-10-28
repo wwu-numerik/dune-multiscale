@@ -87,7 +87,7 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(
 *
 */
 void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCell,
-                                                    SubDiscreteFunctionVectorType& allLocalSolutions) const {
+                                                    SubDiscreteFunctionVectorType &allLocalSolutions) const {
   assert(allLocalSolutions.size() > 0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
@@ -371,11 +371,11 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_ind
   auto number_of_relevant_coarse_nodes_for_subgrid = (*ids_relevant_basis_functions_for_subgrid_)[coarse_index].size();
 
   assert(number_of_relevant_coarse_nodes_for_subgrid);
-  std::vector<std::unique_ptr<SubDiscreteFunctionType>> b_h(number_of_relevant_coarse_nodes_for_subgrid);
-  std::vector<std::unique_ptr<SubDiscreteFunctionType>> rhs_Chj(number_of_relevant_coarse_nodes_for_subgrid);
+  std::vector<MsFEMTraits::SubGridDiscreteFunction_ptr> b_h(number_of_relevant_coarse_nodes_for_subgrid);
+  std::vector<MsFEMTraits::SubGridDiscreteFunction_ptr> rhs_Chj(number_of_relevant_coarse_nodes_for_subgrid);
   for (auto j : DSC::valueRange(number_of_relevant_coarse_nodes_for_subgrid)) {
-    b_h[j] = DSC::make_unique<SubDiscreteFunctionType>("q_h", subDiscreteFunctionSpace);
-    rhs_Chj[j] = DSC::make_unique<SubDiscreteFunctionType>("rhs_Chj_h", subDiscreteFunctionSpace);
+    b_h[j] = make_df_ptr<SubDiscreteFunctionType>("q_h", subDiscreteFunctionSpace);
+    rhs_Chj[j] = make_df_ptr<SubDiscreteFunctionType>("rhs_Chj_h", subDiscreteFunctionSpace);
     b_h[j]->clear();
     rhs_Chj[j]->clear();
   }
@@ -1037,10 +1037,10 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       std::cout << "Preprocessing done." << std::endl;
       // -----------------------------------------------------------------------------------------------------
 
-      auto local_problem_solution_0 = std::make_shared<SubDiscreteFunctionType>(name_local_solution, subDiscreteFunctionSpace);
+      auto local_problem_solution_0 = make_df_ptr<SubDiscreteFunctionType>(name_local_solution, subDiscreteFunctionSpace);
       local_problem_solution_0->clear();
 
-      auto local_problem_solution_1 = std::make_shared<SubDiscreteFunctionType>(name_local_solution, subDiscreteFunctionSpace);
+      auto local_problem_solution_1 = make_df_ptr<SubDiscreteFunctionType>(name_local_solution, subDiscreteFunctionSpace);
       local_problem_solution_1->clear();
 
       // 'solve' methods requires the pre-processing step (that is the same for both directions e_0 and e_1)
@@ -1095,7 +1095,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
         if (solve_for_dirichlet_corrector) {
           const std::string name_dirichlet_corrector =
               (boost::format("Dirichlet Boundary Corrector %d") % coarseId).str();
-          auto dirichlet_boundary_corrector = std::make_shared<SubDiscreteFunctionType>(name_dirichlet_corrector, subDiscreteFunctionSpace);
+          auto dirichlet_boundary_corrector = make_df_ptr<SubDiscreteFunctionType>(name_dirichlet_corrector, subDiscreteFunctionSpace);
           dirichlet_boundary_corrector->clear();
 
           // also requires the pre-processing step:
@@ -1121,7 +1121,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
         // Neumann boundary corrector:
         if (intersection.boundary() && (intersection.boundaryId() == 2) && (!neumann_boundary_corrector_assembled)) {
           const std::string name_neumann_corrector = (boost::format("Neumann Boundary Corrector %d") % coarseId).str();
-          auto neumann_boundary_corrector = std::make_shared<SubDiscreteFunctionType>(name_neumann_corrector, subDiscreteFunctionSpace);
+          auto neumann_boundary_corrector = make_df_ptr<SubDiscreteFunctionType>(name_neumann_corrector, subDiscreteFunctionSpace);
           neumann_boundary_corrector->clear();
           std::cout << "Solve Neumann boundary corrector problem for subgrid " << coarse_index << std::endl;
 

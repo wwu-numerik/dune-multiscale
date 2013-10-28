@@ -346,7 +346,7 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
   //! ---------------------- solve LOD problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  auto msfem_solution = std::make_shared<CommonTraits::DiscreteFunctionType>("LOD Solution", discreteFunctionSpace);
+  auto msfem_solution = make_df_ptr<CommonTraits::DiscreteFunctionType>("LOD Solution", discreteFunctionSpace);
   msfem_solution->clear();
 
   CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part LOD Solution", discreteFunctionSpace);
