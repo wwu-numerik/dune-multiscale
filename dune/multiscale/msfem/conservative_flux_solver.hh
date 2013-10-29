@@ -469,7 +469,7 @@ public:
                         const int direction_index) const {
     const std::string locprob_solution_location =
         std::string("cf_problems/") + (filename_template_ % direction_index % sub_grid_index).str();
-    DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::instance(locprob_solution_location).append(subgrid_disc_func);
+    DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk(locprob_solution_location).append(subgrid_disc_func);
   } // file_data_output
 
   void solve_all(MsFEMTraits::SubGridListType& subgrid_list) const {
@@ -516,7 +516,7 @@ public:
                                                    coarseSpace.gridPart().grid().globalIdSet().id(host_entity)).str();
 
       // reader for the cell problem data file:
-      auto& discrete_function_reader = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::instance (local_solution_location);
+      auto& discrete_function_reader = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk (local_solution_location);
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
 

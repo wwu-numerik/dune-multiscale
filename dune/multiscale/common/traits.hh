@@ -153,7 +153,6 @@ Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 1> make_quadrature(
 template< class T = CommonTraits::DiscreteFunctionType>
 std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::DiscreteFunctionSpaceType& space)
 {
-  return Stuff::Common::make_unique<T>(name, space);
   return std::make_shared<T>(name, space);
 }
 

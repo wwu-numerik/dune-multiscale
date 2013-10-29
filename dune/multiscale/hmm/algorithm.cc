@@ -40,7 +40,7 @@ void load_reference(typename CommonTraits::DiscreteFunction_ptr& reference_solut
   boost::filesystem::path ref_sol_file(location_reference_solution);
 
   // reader for the cell problem data file:
-  DiscreteFunctionIO::instance(ref_sol_file.string()).read(0, reference_solution);
+  DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(ref_sol_file.string()).read(0, reference_solution);
   DSC_LOG_INFO << "Reference solution successfully read from file." << std::endl;
 }
 

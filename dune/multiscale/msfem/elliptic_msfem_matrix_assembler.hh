@@ -150,8 +150,9 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
             numLocalSolutions, std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
         for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
           auto& sll = localSolutions[lsNum];
-          assert(sll);
+          assert(sll.get());
           assert(sll->dofsValid());
+          auto ct = local_grid_geometry.center();
           auto localFunction = sll->localFunction(localGridEntity);
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
         }

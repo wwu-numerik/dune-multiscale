@@ -1005,7 +1005,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
     const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarseId).str();
     auto subGridPart = subgrid_list_.gridPart(coarse_index);
 
-    const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
+
     Dune::Timer assembleTimer;
 
     const bool uzawa = DSC_CONFIG_GET("rigorous_msfem.uzawa_solver", false);
@@ -1022,6 +1022,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
       // -----------------------------------------------------------------------------------------------------
       //! the matrix in our linear system of equations
       // in the non-linear case, it is the matrix for each iteration step
+      const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
       LocProbLinearOperatorTypeType locprob_system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
                                                           subDiscreteFunctionSpace);
 
@@ -1055,7 +1056,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
       const std::string locprob_solution_location =
           (boost::format("local_problems/_localProblemSolutions_%d") % coarseId).str();
-      auto& dfw = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::instance(locprob_solution_location);
+      auto& dfw = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk(locprob_solution_location);
       dfw.append(local_problem_solution_0);
       dfw.append(local_problem_solution_1);
 
@@ -1107,7 +1108,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
           const std::string dirichlet_corrector_location =
               (boost::format("local_problems/_dirichletBoundaryCorrector_%d") % coarseId).str();
-          auto& dfw_dirichlet = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::instance(dirichlet_corrector_location);
+          auto& dfw_dirichlet = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk(dirichlet_corrector_location);
           dfw_dirichlet.append(dirichlet_boundary_corrector);
           dirichlet_boundary_corrector_assembled = true;
 
@@ -1133,7 +1134,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
 
           const std::string neumann_corrector_location =
               (boost::format("local_problems/_neumannBoundaryCorrector_%d") % coarseId).str();
-          auto& dfw_neumann = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::instance(neumann_corrector_location);
+          auto& dfw_neumann = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk(neumann_corrector_location);
           dfw_neumann.append(neumann_boundary_corrector);
           neumann_boundary_corrector_assembled = true;
 

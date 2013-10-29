@@ -212,7 +212,7 @@ private:
     for (int i : {0, 1}) {
       conservative_flux_coarse_ent[i]->clear();
       const std::string cf_solution_location = (flux_location % i % index_coarse_entity).str();
-      DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::instance(cf_solution_location).read(0, conservative_flux_coarse_ent[i]);
+      DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk(cf_solution_location).read(0, conservative_flux_coarse_ent[i]);
     }
 
     DiscreteFunctionPointerPair cflux_coarse_ent_host = {
@@ -255,7 +255,7 @@ private:
           conservative_flux_coarse_ent_neighbor[i]->clear();
           const std::string cf_solution_location_neighbor = (flux_location % i % index_coarse_neighbor_entity).str();
           // reader for data file:
-          DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::instance(cf_solution_location_neighbor).read(0, conservative_flux_coarse_ent_neighbor[i]);
+          DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk(cf_solution_location_neighbor).read(0, conservative_flux_coarse_ent_neighbor[i]);
           cflux_neighbor_ent_host.fluxes[local_face_index][i] = DSC::make_unique<DiscreteFunctionType>(
               "Conservative Flux on neighbor coarse entity for e_" + Stuff::Common::toString(i),
               fineDiscreteFunctionSpace_);
@@ -404,7 +404,7 @@ private:
            coarseDiscreteFunctionSpace.gridPart().grid().globalIdSet().id(coarse_entity)).str();
 
       // reader for the cell problem data file:
-      auto& discrete_function_reader = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::instance(local_solution_location);
+      auto& discrete_function_reader = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk(local_solution_location);
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
 

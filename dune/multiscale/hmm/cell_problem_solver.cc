@@ -227,7 +227,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
   static const int maxnumOfBaseFct = 100;
   const std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
-  auto& dfw = DiscreteFunctionIO::instance(cell_solution_location);
+  auto& dfw = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_baseSet");
 
@@ -292,7 +292,7 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   std::string cell_solution_location = subdir_ + "/_cellSolutions_discFunc";
-  auto& dfw = DiscreteFunctionIO::instance(cell_solution_location);
+  auto& dfw = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_discFunc");
 
@@ -351,13 +351,13 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
   // where we save the solutions:
   const std::string cell_solution_location = subdir_ + "/_JacCorCellSolutions_baseSet_discFunc";
-  auto& dfw = DiscreteFunctionIO::instance(cell_solution_location);
+  auto& dfw = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_location);
   // where we saved the solutions for the discrete function
   // NOTE: they already need to be assembled, i.e. we already applied the method saveSolutions_discFunc!
   const std::string cell_solution_discFunc_location = subdir_ + "/_cellSolutions_discFunc";
 
   // reader for the cell problem data file (discrete functions):
-  auto& discrete_function_reader = DiscreteFunctionIO::instance(cell_solution_discFunc_location);
+  auto& discrete_function_reader = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_discFunc_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc");
 
