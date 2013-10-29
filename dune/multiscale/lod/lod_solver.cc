@@ -1,4 +1,6 @@
 #include <config.h>
+#include <config.h>
+
 
 #include "lod_solver.hh"
 
@@ -12,6 +14,8 @@
 #include <dune/fem/function/adaptivefunction.hh>
 #include <dune/fem/function/common/function.hh>
 
+#include <dune/istl/matrix.hh>
+
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
@@ -20,9 +24,10 @@
 #include <dune/multiscale/common/output_traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
-#include <dune/istl/matrix.hh>
 #include <dune/stuff/fem/functions/checks.hh>
+#include <dune/stuff/common/profiler.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -859,7 +864,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
       newton_step_rhs[col] = 0.0;
     }
 
-    double previous_newton_error = 10000.0;
+    double previous_newton_error = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
     bool first_cycle = true;
 
@@ -1040,7 +1045,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
         newton_step_rhs[col] = copy_newton_step_rhs[col];
 
       // assemble copys and check if the error is small and if damping is required
-      double newton_error = 10000.0;
+      double newton_error = std::numeric_limits<typename CommonTraits::RangeType>::max();
       if (first_cycle) {
         newton_error = 0.0;
         for (size_t col = 0; col != newton_solution_vector.N(); ++col) {

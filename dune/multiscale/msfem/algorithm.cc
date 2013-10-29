@@ -1,45 +1,34 @@
+#include <config.h>
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#include "algorithm.hh"
-
-#include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-#include <dune/fem/space/lagrange.hh>
-//#include <dune/fem/function/adaptivefunction.hh>
-#include <dune/fem/misc/h1norm.hh>
-#include <dune/fem/misc/l2norm.hh>
-#include <dune/grid/common/gridinfo.hh>
-
-// to display data with ParaView:
-#include <dune/grid/io/file/vtk/vtkwriter.hh>
-
-#include <dune/fem/io/file/dataoutput.hh>
-#include <dune/fem/io/parameter.hh>
-#include <dune/fem/io/file/datawriter.hh>
+#include <assert.h>
+#include <boost/format.hpp>
 #include <dune/fem/space/common/adaptmanager.hh>
-
-#include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/grid/output/entity_visualization.hh>
-//! local (dune-multiscale) includes
-#include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/msfem/fem_solver.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/msfem_solver.hh>
-#include <dune/multiscale/msfem/fem_solver.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/tools/meanvalue.hh>
-
-#include <dune/multiscale/msfem/msfem_elliptic_error_estimator.hh>
-#include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
-#include <dune/multiscale/problems/selector.hh>
-
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/common/traits.hh>
+#include <dune/grid/io/file/dgfparser/gridptr.hh>
 #include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/fem_solver.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/msfem_elliptic_error_estimator.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/msfem/msfem_solver.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/grid/output/entity_visualization.hh>
+#include <cmath>
+#include <iterator>
+#include <memory>
+#include <sstream>
+
+#include "algorithm.hh"
+#include "dune/multiscale/problems/base.hh"
 
 namespace Dune {
 namespace Multiscale {

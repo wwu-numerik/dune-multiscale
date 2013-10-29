@@ -5,7 +5,7 @@
 #ifndef DUNE_FEM_UZAWAINVERSEOPERATORS_HH
 #define DUNE_FEM_UZAWAINVERSEOPERATORS_HH
 
-#include <config.h>
+
 #include <dune/common/static_assert.hh>
 
 #include <dune/fem/function/common/discretefunction.hh>

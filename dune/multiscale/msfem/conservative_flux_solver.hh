@@ -5,7 +5,7 @@
 #ifndef DiscreteEllipticMsFEMConservativeFluxSolver_HH
 #define DiscreteEllipticMsFEMConservativeFluxSolver_HH
 
-#include <config.h>
+
 #include <vector>
 
 #include <dune/multiscale/msfem/msfem_traits.hh>

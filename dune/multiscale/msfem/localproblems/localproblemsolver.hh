@@ -5,27 +5,39 @@
 #ifndef DiscreteEllipticMsFEMLocalProblem_HH
 #define DiscreteEllipticMsFEMLocalProblem_HH
 
-#include <config.h>
-#include <vector>
-#include <memory>
 
 #include <dune/common/fmatrix.hh>
+#include <dune/common/typetraits.hh>
+#include <dune/fem/gridpart/common/gridpart.hh>
+#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
-#include <dune/fem/misc/threads/threadmanager.hh>
-#include <dune/fem/misc/threads/domainthreaditerator.hh>
-
+#include <dune/istl/bvector.hh>
+#include <dune/istl/matrix.hh>
+#include <dune/istl/operators.hh>
+#include <dune/istl/preconditioners.hh>
+#include <dune/istl/solver.hh>
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/localproblems/weighted-clement-operator.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <vector>
 
-#include <dune/istl/matrix.hh>
+#include "dune/multiscale/common/la_backend.hh"
+#include "dune/multiscale/msfem/msfem_grid_specifier.hh"
+#include "dune/multiscale/msfem/msfem_traits.hh"
+#include "dune/multiscale/problems/base.hh"
+
+namespace Dune {
+template <class K, int SIZE> class FieldVector;
+}  // namespace Dune
+
 
 namespace Dune {
 namespace Multiscale {
@@ -135,7 +147,7 @@ private:
 
   const NeumannBoundaryType* neumann_bc_;
   const HostDiscreteFunctionType* dirichlet_extension_;
-  Dune::Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators_;
+  Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators_;
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)

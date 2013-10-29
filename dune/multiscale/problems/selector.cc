@@ -1,9 +1,14 @@
-#include "selector.hh"
+#include <config.h>
+#include <dune/common/exceptions.hh>
+#include <dune/stuff/common/memory.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <functional>
+#include <map>
 
+#include "dune/multiscale/problems/base.hh"
 // for i in $(ls *hh) ; do echo \#include \"${i}\" ; done
 #include "elliptic/eight.hh"
 #include "elliptic/eleven.hh"
-#include "elliptic/example.hh"
 #include "elliptic/five.hh"
 #include "elliptic/four.hh"
 #include "elliptic/fourteen.hh"
@@ -15,13 +20,13 @@
 #include "elliptic/ten.hh"
 #include "elliptic/thirteen.hh"
 #include "elliptic/three.hh"
-#include "elliptic/toy.hh"
 #include "elliptic/twelve.hh"
 #include "elliptic/two.hh"
+#include "selector.hh"
 
-#include <dune/stuff/common/parameter/configcontainer.hh>
-#include <unordered_map>
-#include <functional>
+namespace Dune {
+template <class GridImp, class IntersectionImp> class Intersection;
+}  // namespace Dune
 
 #define PROBLEM_NAME Nine
 

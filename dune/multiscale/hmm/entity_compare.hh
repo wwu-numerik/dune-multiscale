@@ -1,7 +1,7 @@
 #ifndef DUNEMS_ENTITY_COMPARE_HH
 #define DUNEMS_ENTITY_COMPARE_HH
 
-#include <config.h>
+
 #include <utility>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 

@@ -1,3 +1,5 @@
+#include <config.h>
+#include <config.h>
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
@@ -6,6 +8,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/hmm/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/fem/space/common/adaptmanager.hh>
 
 void check_config();
 

@@ -1,18 +1,21 @@
-#include "fem_solver.hh"
-
-#include <dune/common/fmatrix.hh>
-
-#include <dune/fem/solver/oemsolver/oemsolver.hh>
-#include <dune/fem/operator/discreteoperatorimp.hh>
-
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-
+#include <config.h>
+#include <dune/common/exceptions.hh>
+#include <dune/common/timer.hh>
+#include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
+#include <dune/fem/function/common/function.hh>
+#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
-#include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/fem/fem_traits.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <limits>
+#include <sstream>
+#include <string>
+
+#include "dune/multiscale/common/dirichletconstraints.hh"
+#include "fem_solver.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -65,11 +68,11 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term, // lower order term F(x, u(x), grad
                                                                                      // u(x) )
     const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution) const {
-  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler<DiscreteFunctionType> rhsassembler;
+  const RightHandSideAssembler rhsassembler = {};
+  const NewtonRightHandSide newton_rhs = {};
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -101,28 +104,11 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.assemble<2 * DiscreteFunctionSpace::polynomialOrder + 2>(f, fem_rhs);
+    rhsassembler.assemble(f, fem_rhs);
 
     // --- boundary treatment ---
-    // set the dirichlet points to zero (in righ hand side of the fem problem)
-    for (const auto& entity : discreteFunctionSpace_) {
-      IntersectionIterator iit = gridPart.ibegin(entity);
-      const IntersectionIterator endiit = gridPart.iend(entity);
-      for (; iit != endiit; ++iit) {
-
-        if (iit->boundary() && (iit->boundaryId() != 1))
-          continue;
-
-        if (iit->boundary()) {
-          auto rhsLocal = fem_rhs.localFunction(entity);
-          const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-
-          const auto face = iit->indexInInside();
-          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-            rhsLocal[lp] = 0;
-        }
-      }
-    }
+    // set the dirichlet points to zero (in right hand side of the fem problem)
+    Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, fem_rhs);
     // --- end boundary treatment ---
 
     const FEM::FEMTraits::InverseOperatorType inverse_op(
@@ -149,13 +135,11 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
     DiscreteFunction system_rhs("fem newton rhs", discreteFunctionSpace_);
     system_rhs.clear();
 
-    constexpr int fem_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
-
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
-    RangeType relative_newton_error_finescale = 10000.0;
-    RangeType rhs_L2_norm = 10000.0;
+    RangeType relative_newton_error_finescale = std::numeric_limits<typename CommonTraits::RangeType>::max();
+    RangeType rhs_L2_norm = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
     //! (stiffness) matrix
     CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
@@ -177,7 +161,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
 
       // assemble right hand side
       system_rhs.clear();
-      rhsassembler.assemble_for_Newton_method<fem_polorder>(f, diffusion_op, *lower_order_term, solution, system_rhs);
+      newton_rhs.assemble_for_Newton_method(f, diffusion_op, *lower_order_term, solution, system_rhs);
 
       const Dune::Fem::L2Norm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(system_rhs.gridPart());
       rhs_L2_norm = l2norm.norm(system_rhs);
@@ -190,26 +174,7 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
       // set Dirichlet Boundary to zero
       // --- boundary treatment ---
       // set the dirichlet points to zero (in righ hand side of the fem problem)
-      typedef typename DiscreteFunctionSpace::IteratorType EntityIterator;
-      EntityIterator endit = discreteFunctionSpace_.end();
-      for (EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it) {
-        IntersectionIterator iit = gridPart.ibegin(*it);
-        const IntersectionIterator endiit = gridPart.iend(*it);
-        for (; iit != endiit; ++iit) {
-
-          if (iit->boundary() && (iit->boundaryId() != 1))
-            continue;
-
-          if (iit->boundary()) {
-            auto rhsLocal = system_rhs.localFunction(*it);
-            const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
-
-            const int face = iit->indexInInside();
-            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-              rhsLocal[lp] = 0;
-          }
-        }
-      }
+      Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, system_rhs);
       // --- end boundary treatment ---
 
       const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(
@@ -256,11 +221,11 @@ void Elliptic_FEM_Solver::solve(
                                                                                      // u(x) )
     const CommonTraits::FirstSourceType& f, const CommonTraits::DiscreteFunctionType& dirichlet_extension,
     const CommonTraits::NeumannBCType& neumann_bc, Elliptic_FEM_Solver::DiscreteFunction& solution) const {
-  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  RightHandSideAssembler<DiscreteFunctionType> rhsassembler;
+  const RightHandSideAssembler rhsassembler = {};
+  const NewtonRightHandSide newton_rhs = {};
 
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
@@ -291,31 +256,11 @@ void Elliptic_FEM_Solver::solve(
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.assemble<2 * DiscreteFunctionSpace::polynomialOrder + 2>(f, diffusion_op, dirichlet_extension,
-                                                                          neumann_bc, fem_rhs);
+    rhsassembler.assemble(f, diffusion_op, dirichlet_extension, neumann_bc, fem_rhs);
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
-    typedef typename DiscreteFunctionSpace::IteratorType EntityIterator;
-    EntityIterator endit = discreteFunctionSpace_.end();
-    for (EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it) {
-      IntersectionIterator iit = gridPart.ibegin(*it);
-      const IntersectionIterator endiit = gridPart.iend(*it);
-      for (; iit != endiit; ++iit) {
-
-        if (iit->boundary() && (iit->boundaryId() != 1))
-          continue;
-
-        if (iit->boundary()) {
-          auto rhsLocal = fem_rhs.localFunction(*it);
-          const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
-
-          const int face = iit->indexInInside();
-          for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-            rhsLocal[lp] = 0;
-        }
-      }
-    }
+    Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, fem_rhs);
     // --- end boundary treatment ---
 
     const FEM::FEMTraits::InverseOperatorType inverse_op(
@@ -342,13 +287,11 @@ void Elliptic_FEM_Solver::solve(
     DiscreteFunction system_rhs("fem newton rhs", discreteFunctionSpace_);
     system_rhs.clear();
 
-    const int fem_polorder = 2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
-
     typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
     typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
-    RangeType relative_newton_error_finescale = 10000.0;
-    RangeType rhs_L2_norm = 10000.0;
+    RangeType relative_newton_error_finescale = std::numeric_limits<typename CommonTraits::RangeType>::max();
+    RangeType rhs_L2_norm = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
     //! (stiffness) matrix
     CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
@@ -370,7 +313,7 @@ void Elliptic_FEM_Solver::solve(
 
       // assemble right hand side
       system_rhs.clear();
-      rhsassembler.assemble_for_Newton_method<fem_polorder>(f, diffusion_op, *lower_order_term, solution,
+      newton_rhs.assemble_for_Newton_method(f, diffusion_op, *lower_order_term, solution,
                                                             dirichlet_extension, neumann_bc, system_rhs);
 
       const Dune::Fem::L2Norm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(system_rhs.gridPart());
@@ -384,26 +327,7 @@ void Elliptic_FEM_Solver::solve(
       // set Dirichlet Boundary to zero
       // --- boundary treatment ---
       // set the dirichlet points to zero (in righ hand side of the fem problem)
-      typedef typename DiscreteFunctionSpace::IteratorType EntityIterator;
-      EntityIterator endit = discreteFunctionSpace_.end();
-      for (EntityIterator it = discreteFunctionSpace_.begin(); it != endit; ++it) {
-        IntersectionIterator iit = gridPart.ibegin(*it);
-        const IntersectionIterator endiit = gridPart.iend(*it);
-        for (; iit != endiit; ++iit) {
-
-          if (iit->boundary() && (iit->boundaryId() != 1))
-            continue;
-
-          if (iit->boundary()) {
-            auto rhsLocal = system_rhs.localFunction(*it);
-            const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(*it);
-
-            const int face = iit->indexInInside();
-            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-              rhsLocal[lp] = 0;
-          }
-        }
-      }
+      Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, system_rhs);
       // --- end boundary treatment ---
 
       const FEM::FEMTraits::InverseOperatorType fem_newton_biCGStab(

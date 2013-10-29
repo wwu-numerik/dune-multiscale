@@ -5,7 +5,7 @@
 #ifndef DUNE_LINEARLAGRANGEINTERPOLATION_HH
 #define DUNE_LINEARLAGRANGEINTERPOLATION_HH
 
-#include <config.h>
+
 #include <dune/fem/function/common/function.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/aliases.hh>

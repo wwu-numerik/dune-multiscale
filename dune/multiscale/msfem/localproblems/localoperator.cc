@@ -1,21 +1,21 @@
+#include <config.h>
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#include <config.h>
 
-#include "localoperator.hh"
 
-#include <dune/stuff/common/ranges.hh>
+#include <assert.h>
+#include <boost/assert.hpp>
+#include <dune/common/exceptions.hh>
+#include <dune/multiscale/problems/selector.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/fem/matrix_object.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/stuff/fem/matrix_object.hh>
 
-#include <dune/multiscale/tools/misc/uzawa.hh>
-#include <dune/multiscale/problems/base.hh>
-#include <dune/multiscale/problems/selector.hh>
-
-#include <boost/assert.hpp>
+#include "dune/multiscale/msfem/localproblems/localproblemsolver.hh"
+#include "localoperator.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -350,6 +350,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
   dirichletExtension.clear();
   HostDiscreteFunction dirichletExtensionCoarse("Dirichlet Extension Coarse", specifier.coarseSpace());
   dirichletExtensionCoarse.clear();
+  //! @todo is this needed or could it be replaced by a method from dirichletconstraints.hh?
   this->projectDirichletValues(dirichletExtensionCoarse);
   Dune::Stuff::HeterogenousProjection<> projection;
   projection.project(dirichletExtensionCoarse, dirichletExtension);
@@ -381,6 +382,9 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
       const auto& baseSet = rhsLocalFunction.basisFunctionSet();
       const auto numBaseFunctions = baseSet.size();
 
+      // correctors with index < numInnerCorrectors are for the basis functions, corrector at
+      // position numInnerCorrectors is for the neumann values, corrector at position numInnerCorrectors+1
+      // for the dirichlet values.
       if (coarseBaseFunc < numInnerCorrectors || coarseBaseFunc == numInnerCorrectors + 1) {
         const auto quadrature = make_quadrature(localGridCell, discreteFunctionSpace);
         const auto numQuadraturePoints = quadrature.nop();

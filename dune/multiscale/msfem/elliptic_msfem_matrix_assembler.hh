@@ -5,29 +5,32 @@
 #ifndef MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
 #define MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
 
-#include <config.h>
-#include <type_traits>
 
+#include <assert.h>
+#include <boost/noncopyable.hpp>
 #include <dune/common/fmatrix.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-
+#include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/common/dirichletconstraints.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
-
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/tools/misc.hh>
+#include <dune/stuff/common/logging.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/fem/matrix_object.hh>
+#include <ostream>
+#include <type_traits>
+
+#include "dune/multiscale/common/traits.hh"
 
 namespace Dune {
 namespace Multiscale {

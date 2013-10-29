@@ -8,7 +8,7 @@
 /** this file contains specializations of write/read functions targetd for dune-subgrid
  **/
 
-#include <config.h>
+
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/utility/grapedataioformattypes.hh>
 #include <dune/grid/yaspgrid.hh>
@@ -72,13 +72,13 @@ bool readHostgridCommon(HostgridType& grid, const std::string filename) {
 HOSTGRID_IO_FUNCTION_PAIR(AlbertaGrid, 2)
 #elif defined(USED_YASPGRID_GRIDTYPE)
 template <>
-bool writeHostGrid(typename GridSelector::GridType& hostgrid,
-                   std::string filename) {/*YASPGrid can't be written to disk*/
+bool writeHostGrid(typename GridSelector::GridType& /*hostgrid*/,
+                   std::string /*filename*/) {/*YASPGrid can't be written to disk*/
   return false;
 }
 
 template <>
-bool readHostGrid(typename GridSelector::GridType& hostgrid, std::string filename) {/*YASPGrid can't be read from disk*/
+bool readHostGrid(typename GridSelector::GridType& /*hostgrid*/, std::string /*filename*/) {/*YASPGrid can't be read from disk*/
   return false;
 }
 #elif defined(USED_ALUGRID_SIMPLEX_GRIDTYPE)

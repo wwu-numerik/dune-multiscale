@@ -27,7 +27,7 @@ struct HMMResult {
   typename CommonTraits::RangeType estimated_error;
   double max_variation;
   double min_variation;
-  HMMResult(std::size_t codim0_count)
+  HMMResult(const std::size_t codim0_count)
     : estimated_source_error(0.0)
     , estimated_approximation_error(0.0)
     , estimated_residual_error(0.0)
@@ -35,7 +35,7 @@ struct HMMResult {
     , estimated_residual_error_macro_jumps(0.0)
     , estimated_tfr_error(0.0)
     , local_error_indicator(codim0_count, 0.0)
-    , minimal_loc_indicator(10000.0)
+    , minimal_loc_indicator(std::numeric_limits<typename CommonTraits::RangeType>::max())
     , maximal_loc_indicator(0.0)
     , average_loc_indicator(0.0)
     , estimated_error(0.0)

@@ -8,6 +8,13 @@
 // - Dune includes
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "dune/multiscale/msfem/msfem_grid_specifier.hh"
+#include "dune/multiscale/msfem/msfem_traits.hh"
 // #include <dune/stuff/fem/functions/checks.hh>
 
 namespace Dune {

@@ -1,13 +1,22 @@
-#include "error_calc.hh"
-
+#include <config.h>
+#include <assert.h>
+#include <boost/filesystem/fstream.hpp>
+#include <dune/fem/function/common/gridfunctionadapter.hh>
 #include <dune/fem/misc/h1norm.hh>
-#include <dune/fem/misc/l2norm.hh>
 #include <dune/fem/misc/l2error.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/functions/time.hh>
-#include <dune/multiscale/problems/selector.hh>
-
+#include <dune/stuff/common/parameter/configcontainer.hh>
 #include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "dune/multiscale/common/traits.hh"
+#include "dune/multiscale/problems/base.hh"
+#include "error_calc.hh"
 
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType* msfem_solution,
                                                    const CommonTraits::DiscreteFunctionType* fem_solution)

@@ -5,7 +5,7 @@
 #ifndef DUNE_ERRORESTIMATER_HH
 #define DUNE_ERRORESTIMATER_HH
 
-#include <config.h>
+
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/ranges.hh>

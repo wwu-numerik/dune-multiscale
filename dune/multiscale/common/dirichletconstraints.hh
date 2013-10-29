@@ -1,13 +1,17 @@
 #ifndef DUNE_DIRICHLETCONSTRAINTS_HH
 #define DUNE_DIRICHLETCONSTRAINTS_HH
 
-#include <dune/stuff/grid/boundaryinfo.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
-
+#include <assert.h>
 #include <dune/fem/function/common/scalarproducts.hh>
+#include <dune/fem/storage/singletonlist.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/stuff/grid/boundaryinfo.hh>
+#include <cstddef>
+#include <vector>
 
 namespace Dune {
 namespace Multiscale {
@@ -358,7 +362,7 @@ getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space);
 DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
 getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space);
 
-void projectDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
+void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
                             CommonTraits::DiscreteFunctionType& function);
 
 } // end namespace Multiscale

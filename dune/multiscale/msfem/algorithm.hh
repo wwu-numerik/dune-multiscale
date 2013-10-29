@@ -7,6 +7,8 @@
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <string>
+#include <vector>
 
 namespace Dune {
 namespace Multiscale {
