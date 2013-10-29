@@ -46,20 +46,63 @@ class DiscreteFunctionIO {
 
   typedef DiscreteFunctionIO<DiscreteFunctionType> ThisType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef std::vector<DiscreteFunction_ptr> Vector;
+  typedef typename DiscreteFunctionType::GridPartType GridPartType;
+
+  DiscreteFunctionIO() = default;
+
+  class DiskBackend{
+
+      void load_disk_functions()
+      {
+        DSC::testCreateDirectory(dir_.string());
+        // if functions present, load em
+      }
+
+    public:
+      /**
+       * \brief DiscreteFunctionWriter
+       * \param filename will open fstream at config["global.datadir"]/filename
+       *  filename may include additional path components
+       * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
+       */
+      DiskBackend(const std::string filename = "nonsense_default_for_map")
+        : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
+        , index_(0) {}
+
+      void append(const DiscreteFunction_ptr& df) {
+        const std::string fn = (dir_ / DSC::toString(index_++)).string();
+        DSC::testCreateDirectory(fn);
+    #ifdef MULTISCALE_USE_SION
+        IOTraits::OutstreamType stream(fn);
+        df->write(stream);
+    #else
+        df->write_xdr(fn);
+    #endif
+      }
+
+      void read(const unsigned long index, DiscreteFunction_ptr& df) {
+        const std::string fn = (dir_ / DSC::toString(index)).string();
+    #ifdef MULTISCALE_USE_SION
+        IOTraits::InstreamType stream(fn);
+        df->read(stream);
+    #else
+        df->read_xdr(fn);
+    #endif
+      }
+
+    private:
+      const boost::filesystem::path dir_;
+      unsigned int index_;
+    };
 
   /**
    * \brief simple discrete function to disk writer
    * this class isn't type safe in the sense that different appends may append
    * non-convertible discrete function implementations
    */
-  class DiscreteFunctionRW{
-
-    void load_disk_functions()
-    {
-      DSC::testCreateDirectory(dir_.string());
-      // if functions present, load em
-    }
+  class MemoryBackend{
 
   public:
     /**
@@ -68,28 +111,11 @@ class DiscreteFunctionIO {
      *  filename may include additional path components
      * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
      */
-    DiscreteFunctionRW(const std::string filename = "nonsense_default_for_map")
-      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename) {
-      load_disk_functions();
-    }
-
-    /**
-     * \copydoc DiscreteFunctionReader()
-     */
-    DiscreteFunctionRW(const boost::filesystem::path& path)
-      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path) {
-      load_disk_functions();
-    }
-
-    ~DiscreteFunctionRW()
-    {
-      //dump remaining
-      unsigned long id = 0;
-      for(auto& df : functions_)
-      {
-        to_disk(id++, df);
-      }
-    }
+    MemoryBackend(typename GridPartType::GridType& grid, const std::string filename = "nonsense_default_for_map")
+      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
+      , grid_part_(grid)
+      , space_(grid_part_)
+    {}
 
     void append(const DiscreteFunction_ptr& df) {
       functions_.push_back(df);
@@ -98,37 +124,18 @@ class DiscreteFunctionIO {
     void read(const unsigned long index, DiscreteFunction_ptr& df) {
       if(index<functions_.size()) {
         df = functions_.at(index);
-        functions_.erase(functions_.begin()+index);
-      } else {
-        from_disk(index, df);
       }
+      else DUNE_THROW(InvalidStateException, "requesting function at oob index");
       assert(df!=nullptr);
     }
 
-    void to_disk(const unsigned long index, const DiscreteFunction_ptr& df) const
-    {
-      const std::string fn = (dir_ / DSC::toString(index)).string();
-      DSC::testCreateDirectory(fn);
-  #ifdef MULTISCALE_USE_SION
-      IOTraits::OutstreamType stream(fn);
-      df->write(stream);
-  #else
-      df->write_xdr(fn);
-  #endif
-    }
-
-    void from_disk(const unsigned long index, const DiscreteFunction_ptr& df) const {
-      const std::string fn = (dir_ / DSC::toString(index)).string();
-  #ifdef MULTISCALE_USE_SION
-      IOTraits::InstreamType stream(fn);
-      df->read(stream);
-  #else
-      df->read_xdr(fn);
-  #endif
-    } // read
+    GridPartType& grid_part() { return grid_part_; }
+    DiscreteFunctionSpaceType& space() { return space_; }
 
   private:
     const boost::filesystem::path dir_;
+    GridPartType grid_part_;
+    DiscreteFunctionSpaceType space_;
     Vector functions_;
   };
 
@@ -137,27 +144,39 @@ class DiscreteFunctionIO {
     return s_this;
   }
 
-  template <class IOMapType>
-  typename IOMapType::mapped_type& get(IOMapType& map, std::string filename)
+  template <class IOMapType, class ...Args>
+  typename IOMapType::mapped_type& get(IOMapType& map, std::string filename, Args&& ...ctor_args)
   {
     auto it = map.find(filename);
     if(it != map.end())
       return it->second;
-    auto ret = map.emplace(filename,filename);
+    auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
+    auto ret = map.emplace(filename, ptr);
     assert(ret.second);
     return ret.first->second;
   }
 
-  DiscreteFunctionRW& get_rw(const std::string filename) {
-    return get(rws_, filename);
+  DiskBackend& get_disk(const std::string filename) {
+    return *get(disk_, filename, filename);
   }
+
+  MemoryBackend& get_memory(const std::string filename, typename GridPartType::GridType& grid) {
+    return *get(memory_, filename, grid, filename);
+  }
+
 public:
-  static DiscreteFunctionRW& instance(const std::string filename) {
-    return instance().get_rw(filename);
+  static MemoryBackend& memory(const std::string filename, typename GridPartType::GridType& grid) {
+    return instance().get_memory(filename, grid);
+  }
+
+  static DiskBackend& disk(const std::string filename) {
+    return instance().get_disk(filename);
   }
 
 private:
-  std::unordered_map<std::string, DiscreteFunctionRW> rws_;
+  std::unordered_map<std::string, std::shared_ptr<MemoryBackend>> memory_;
+  std::unordered_map<std::string, std::shared_ptr<DiskBackend>> disk_;
+
 
 };//class DiscreteFunctionIO
 

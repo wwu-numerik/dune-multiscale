@@ -105,7 +105,7 @@ void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, Rang
 }
 
 // evaluate Neumann Boundary Function
-void NeumannData::evaluate(const DomainType& x,
+void NeumannData::evaluate(const DomainType& /*x*/,
                            RangeType& y) const {
   y = 0.0;
 } // evaluate

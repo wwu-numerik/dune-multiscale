@@ -49,7 +49,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::LinearOperatorTy
   const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
   // reader for the cell problem data file:
-  auto& discrete_function_reader = DiscreteFunctionIO::instance(cell_solution_location);
+  auto& discrete_function_reader = DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(cell_solution_location);
 
   global_matrix.reserve();
   global_matrix.clear();
@@ -180,9 +180,9 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
   const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
   // reader for the cell problem data file:
-  auto discrete_function_reader_baseSet = DiscreteFunctionIO::instance(cell_solution_location_baseSet);
-  auto discrete_function_reader_discFunc = DiscreteFunctionIO::instance(cell_solution_location_discFunc);
-  auto discrete_function_reader_jac_cor = DiscreteFunctionIO::instance(jac_cor_cell_solution_location_baseSet_discFunc);
+  auto discrete_function_reader_baseSet = DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(cell_solution_location_baseSet);
+  auto discrete_function_reader_discFunc = DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(cell_solution_location_discFunc);
+  auto discrete_function_reader_jac_cor = DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(jac_cor_cell_solution_location_baseSet_discFunc);
 
   global_matrix.reserve();
   global_matrix.clear();

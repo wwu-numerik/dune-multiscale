@@ -52,10 +52,8 @@ public:
   std::size_t numBoundaryCorrectors() const;
 
 private:
-  SubGridListType& subgridList_;
+  SubGridListType::SubGridType& subgrid_;
   const MacroMicroGridSpecifierType& gridSpecifier_;
-  SubGridPartType subGridPart_;
-  DiscreteFunctionSpaceType localDiscreteFunctionSpace_;
   const IdType coarseId_;
   bool loaded_;
   const std::size_t numBoundaryCorrectors_;
