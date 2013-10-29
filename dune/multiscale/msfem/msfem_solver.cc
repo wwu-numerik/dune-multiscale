@@ -1,17 +1,21 @@
-#include "msfem_solver.hh"
-
-#include <unordered_set>
-
-#include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
-#include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
-#include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
-#include <dune/multiscale/fem/fem_traits.hh>
+#include <config.h>
+#include <assert.h>
 #include <boost/assert.hpp>
+#include <dune/common/exceptions.hh>
+#include <dune/common/timer.hh>
+#include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/msfem/elliptic_msfem_matrix_assembler.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <sstream>
+
+#include "dune/multiscale/common/dirichletconstraints.hh"
+#include "dune/multiscale/common/traits.hh"
+#include "dune/multiscale/msfem/msfem_traits.hh"
+#include "msfem_solver.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -192,7 +196,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   //! define the right hand side assembler tool
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  typedef RightHandSideAssembler<DiscreteFunctionType> RhsAssembler;
+  typedef RightHandSideAssembler RhsAssembler;
 
   //! define the discrete (elliptic) operator that describes our problem
   // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
@@ -224,10 +228,9 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   // assemble right hand side
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1)) {
-    RhsAssembler::assemble<2 * DiscreteFunctionSpace::polynomialOrder + 2>(f, msfem_rhs);
+    RhsAssembler::assemble(f, msfem_rhs);
   } else {
-    RhsAssembler::assemble_for_MsFEM_symmetric<2 * DiscreteFunctionSpace::polynomialOrder + 2>(f, specifier,
-                                                                                               subgrid_list, msfem_rhs);
+    RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
   }
   msfem_rhs.communicate();
   BOOST_ASSERT_MSG(msfem_rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
@@ -243,7 +246,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   // get the dirichlet values
   solution.clear();
-  Dune::Multiscale::projectDirichletValues(coarse_space, solution);
+  Dune::Multiscale::copyDirichletValues(coarse_space, solution);
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
   projectCoarseToFineScale(specifier, coarse_msfem_solution, coarse_scale_part);

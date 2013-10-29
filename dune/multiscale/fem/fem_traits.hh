@@ -5,7 +5,7 @@
 #ifndef DUNE_FEM_TYPES_HH
 #define DUNE_FEM_TYPES_HH
 
-#include <config.h>
+
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/common/tuples.hh>
@@ -38,6 +38,7 @@ struct FEMTraits {
   //! ----------------------------------------------------------------------------------------
 
 }; // struct  FEMTraits
+
 
 } // namespace FEM {
 } // namespace Multiscale {

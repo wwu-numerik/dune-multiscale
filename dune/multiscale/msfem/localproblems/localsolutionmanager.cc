@@ -1,10 +1,7 @@
 #include <config.h>
-
-// - Dune includes
-#include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <boost/format.hpp>
 #include <dune/stuff/common/memory.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 #include "localsolutionmanager.hh"
 

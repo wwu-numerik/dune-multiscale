@@ -5,7 +5,7 @@
 #ifndef DUNE_MULTISCALE_COMMON_TRAITS_HH
 #define DUNE_MULTISCALE_COMMON_TRAITS_HH
 
-#include <config.h>
+
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/common/tuples.hh>
 #include <dune/fem/space/common/functionspace.hh>
@@ -100,7 +100,7 @@ struct CommonTraits {
   typedef FunctionSpaceType::RangeType RangeType;
   //! defines the function space to which the numerical solution belongs to
   //! see dune/fem/lagrangebase.hh
-  typedef Dune::Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, 1> // 1=POLORDER
+  typedef Dune::Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, st_lagrangespace_order>
       DiscreteFunctionSpaceType;
   typedef DiscreteFunctionSpaceType::DomainFieldType TimeType;
   typedef DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
@@ -131,7 +131,7 @@ struct CommonTraits {
 
 template <class SpaceTraits, class GridImp, template <int, int, class> class EntityImp>
 Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 0>
-make_quadrature(const Dune::Entity<0, 2, GridImp, EntityImp>& entity,
+make_quadrature(const Dune::Entity<0, GridImp::dimension, GridImp, EntityImp>& entity,
                 const Fem::DiscreteFunctionSpaceInterface<SpaceTraits>& space, int order = -1) {
   order = order > -1 ? order : 2 * space.order() + 2;
   return Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 0>(entity, order);

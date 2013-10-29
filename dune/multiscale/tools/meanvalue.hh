@@ -5,7 +5,7 @@
 #ifndef DUNE_MS_MEANVALUE_HH
 #define DUNE_MS_MEANVALUE_HH
 
-#include <config.h>
+
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/misc/l2error.hh>
 

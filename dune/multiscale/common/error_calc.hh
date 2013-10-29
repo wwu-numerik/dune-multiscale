@@ -2,6 +2,7 @@
 #define ERROR_CALC_HH
 
 #include <dune/multiscale/common/traits.hh>
+#include <iosfwd>
 
 namespace Dune {
 namespace Multiscale {

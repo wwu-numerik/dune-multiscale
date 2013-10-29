@@ -8,6 +8,17 @@ PROJECT(dune-multiscale CXX)
 #set minimum cmake version
 cmake_minimum_required(VERSION 2.8.6)
 
+# mac-specific settings
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  # Xcode-specific settings
+  IF(CMAKE_GENERATOR MATCHES "Xcode")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")  
+  ENDIF(CMAKE_GENERATOR MATCHES "Xcode")
+  LINK_DIRECTORIES( /opt/local/lib/ )
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+
+
 #find dune-common and set the module path
 find_package(dune-common)
 list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
@@ -20,14 +31,12 @@ include(DuneMacros)
 # start a dune project with information from dune.module
 dune_project()
 include(DuneUtils)
-
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-#	INCLUDE_SYS_DIR( opt/local/include )
-#	INCLUDE_SYS_DIR( opt/local/include/openmpi )
-  LINK_DIRECTORIES( /opt/local/lib/ )
-ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
-
 include(DuneMPI)
+
+find_package(METIS)
+find_package(ParMETIS)
+include(cmake/modules/AddMETISFlags.cmake)
+include(AddParMETISFlags)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
@@ -47,17 +56,18 @@ set( COMMON_SOURCES
         dune/multiscale/hmm/cell_problem_solver.cc
         dune/multiscale/hmm/discrete_cell_operator.cc
         dune/multiscale/msfem/fem_solver.cc
+        dune/multiscale/common/newton_rhs.cc
         dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
         dune/multiscale/msfem/localproblems/subgrid-list.cc
         dune/multiscale/msfem/msfem_grid_specifier.cc
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc
+        dune/multiscale/common/righthandside_assembler.cc
+        dune/multiscale/fem/print_info.cc
         dune/multiscale/common/dirichletconstraints.cc
         dune/multiscale/msfem/localproblems/weighted-clement-operator.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
-        dune/multiscale/fem/algorithm.cc
-        dune/multiscale/common/elliptic_homogenizer.cc
     )
 
 set( PROBLEM_SOURCES
@@ -94,11 +104,8 @@ set( MSFEM_SOURCES
         dune/multiscale/msfem/msfem_solver.cc
     )
 
-set( HOM_FEM_SOURCES
-        src/elliptic_hom_fem.cc
-    )
-
 set( FEM_SOURCES
+        dune/multiscale/fem/algorithm.cc
         src/elliptic_fem.cc
     )
 
@@ -112,8 +119,9 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias" )
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
+set(ENABLE_PETSC 0 CACHE BOOLEAN "")
 
-add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DENABLE_PETSC=1 -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 -DENABLE_ALUGRID=1)
+add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_lodm STATIC ${LODM_SOURCES})
@@ -126,7 +134,11 @@ add_dune_mpi_flags(OBJECT multiscale_lodm)
 add_dune_mpi_flags(OBJECT multiscale_msfem)
 add_dune_mpi_flags(OBJECT multiscale_hmm)
 
+add_dune_metis_flags(multiscale_common)
+add_dune_parmetis_flags(multiscale_common)
+
 set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
+
 include_directories( ${PETSC_INCLUDES} )
 set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
@@ -137,10 +149,6 @@ add_dune_mpi_flags(elliptic_hmm)
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_msfem)
-
-ADD_EXECUTABLE(elliptic_hom_fem ${HOM_FEM_SOURCES} ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_hom_fem ${COMMON_LIBS} )
-add_dune_mpi_flags(elliptic_hom_fem)
 
 ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
@@ -154,9 +162,6 @@ ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 add_dune_mpi_flags(msfem-1d)
 
-ADD_EXECUTABLE(thread_vis src/thread_vis.cc ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
-add_dune_mpi_flags(thread_vis)
 # IF( Gridtype matches ALUGRID )
 
 add_dune_alugrid_flags(OBJECT multiscale_common)
@@ -166,14 +171,12 @@ add_dune_alugrid_flags(OBJECT multiscale_msfem)
 add_dune_alugrid_flags(OBJECT multiscale_hmm)
 add_dune_alugrid_flags(elliptic_hmm)
 add_dune_alugrid_flags(elliptic_msfem)
-add_dune_alugrid_flags(elliptic_hom_fem)
 add_dune_alugrid_flags(elliptic_fem)
 add_dune_alugrid_flags(elliptic_lodm)
 add_dune_alugrid_flags(msfem-1d)
-add_dune_alugrid_flags(thread_vis)
 # ENDIF( Gridtype matches ALUGRID )
 
-HEADERCHECK( ${header} ${dune} )
+# HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
 
 add_subdirectory(doc)
@@ -194,10 +197,10 @@ ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc
              ${dune} ${header})
 add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
             ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} 
-            src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc src/thread_vis.cc)
+            src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc )
 add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
            ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} 
-           src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc src/thread_vis.cc
+           src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc
            ${header} ${dune})
 
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)

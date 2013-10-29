@@ -5,7 +5,7 @@
 #ifndef DiscreteElliptic_HH
 #define DiscreteElliptic_HH
 
-#include <config.h>
+
 #include <memory>
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>

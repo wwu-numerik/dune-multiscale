@@ -5,21 +5,24 @@
 #ifndef Elliptic_MSEM_Solver_HH
 #define Elliptic_MSEM_Solver_HH
 
+#include <dune/common/fmatrix.hh>
+#include <dune/common/typetraits.hh>
+#include <dune/fem/operator/discreteoperatorimp.hh>
+#include <dune/fem/solver/oemsolver/oemsolver.hh>
+#include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-
-#include <dune/common/fmatrix.hh>
-
-#include <dune/fem/solver/oemsolver/oemsolver.hh>
-#include <dune/fem/operator/discreteoperatorimp.hh>
-#include <dune/fem/space/common/adaptmanager.hh>
-
-#include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/stuff/fem/functions/checks.hh>
+
+#include "dune/multiscale/common/la_backend.hh"
+#include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
+class MacroMicroGridSpecifier;
 
 class Elliptic_MsFEM_Solver {
 private:

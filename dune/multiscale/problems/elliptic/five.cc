@@ -1,3 +1,11 @@
+#include <config.h>
+#include <assert.h>
+#include <dune/common/exceptions.hh>
+#include <dune/stuff/common/parameter/validation.hh>
+#include <sstream>
+
+#include "dune/multiscale/problems/base.hh"
+#include "dune/multiscale/problems/constants.hh"
 #include "five.hh"
 
 namespace Dune {
