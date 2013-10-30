@@ -25,9 +25,9 @@ void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, co
            const CommonTraits::RangeVector& total_estimated_H1_error_);
 
 //! \TODO docme
-void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
-                     const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
-                     const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
+void solution_output(const CommonTraits::DiscreteFunction_ptr &msfem_solution,
+                     const CommonTraits::DiscreteFunction_ptr &coarse_part_msfem_solution,
+                     const CommonTraits::DiscreteFunction_ptr &fine_part_msfem_solution,
                      Dune::Multiscale::OutputParameters& outputparam, const int loop_number,
                      int& total_refinement_level_, int& coarse_grid_level_);
 

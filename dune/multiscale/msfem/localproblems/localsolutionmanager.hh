@@ -30,12 +30,13 @@ public:
   typedef typename SubGridListType::SubGridPartType SubGridPartType;
   typedef typename SubGridListType::SubGridDiscreteFunctionType DiscreteFunctionType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
-  typedef std::vector<std::unique_ptr<DiscreteFunctionType>> LocalSolutionVectorType;
+  typedef std::vector<MsFEMTraits::SubGridDiscreteFunction_ptr> LocalSolutionVectorType;
   typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   LocalSolutionManager(const CoarseEntityType& coarseEntity, SubGridListType& subgridList,
                        const MacroMicroGridSpecifierType& gridSpecifier);
 
+  const LocalSolutionVectorType& getLocalSolutions() const;
   LocalSolutionVectorType& getLocalSolutions();
 
   const DiscreteFunctionSpaceType& getLocalDiscreteFunctionSpace() const;
@@ -51,10 +52,8 @@ public:
   std::size_t numBoundaryCorrectors() const;
 
 private:
-  SubGridListType& subgridList_;
+  SubGridListType::SubGridType& subgrid_;
   const MacroMicroGridSpecifierType& gridSpecifier_;
-  SubGridPartType subGridPart_;
-  DiscreteFunctionSpaceType localDiscreteFunctionSpace_;
   const IdType coarseId_;
   bool loaded_;
   const std::size_t numBoundaryCorrectors_;

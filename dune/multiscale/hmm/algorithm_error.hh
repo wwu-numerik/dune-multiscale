@@ -23,7 +23,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
                          const typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                          const typename CommonTraits::DiffusionType& diffusion_op,
                          const CellProblemNumberingManager& cp_num_manager,
-                         const typename CommonTraits::DiscreteFunctionType& hmm_solution);
+                         const CommonTraits::DiscreteFunction_ptr &hmm_solution);
 
 } // namespace HMM {
 } // namespace Multiscale {

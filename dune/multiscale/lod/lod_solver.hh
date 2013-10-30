@@ -142,7 +142,7 @@ private:
   // typedef BiCGSTABSolver< VectorType > SolverType;
   typedef InverseOperatorResult InverseOperatorResultType;
 
-  typedef std::vector<shared_ptr<DiscreteFunction>> MsFEMBasisFunctionType;
+  typedef std::vector<CommonTraits::DiscreteFunction_ptr> MsFEMBasisFunctionType;
   //! ----------------------------------------------------------------------------------------
 
   const DiscreteFunctionSpace& discreteFunctionSpace_;

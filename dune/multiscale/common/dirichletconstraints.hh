@@ -363,7 +363,7 @@ DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
 getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space);
 
 void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
-                            CommonTraits::DiscreteFunctionType& function);
+                            CommonTraits::DiscreteFunctionType &function);
 
 } // end namespace Multiscale
 } // end namespace Dune
