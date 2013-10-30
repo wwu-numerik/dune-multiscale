@@ -162,7 +162,9 @@ ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 add_dune_mpi_flags(msfem-1d)
 
-# IF( Gridtype matches ALUGRID )
+ADD_EXECUTABLE(thread_vis src/thread_vis.cc ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
+add_dune_mpi_flags(thread_vis)
 
 add_dune_alugrid_flags(OBJECT multiscale_common)
 add_dune_alugrid_flags(OBJECT multiscale_problem)
@@ -174,7 +176,7 @@ add_dune_alugrid_flags(elliptic_msfem)
 add_dune_alugrid_flags(elliptic_fem)
 add_dune_alugrid_flags(elliptic_lodm)
 add_dune_alugrid_flags(msfem-1d)
-# ENDIF( Gridtype matches ALUGRID )
+add_dune_alugrid_flags(thread_vis)
 
 # HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
@@ -197,10 +199,10 @@ ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc
              ${dune} ${header})
 add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
             ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} 
-            src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc )
+            src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc src/thread_vis.cc)
 add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
            ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} 
-           src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc
+           src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc src/thread_vis.cc
            ${header} ${dune})
 
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
