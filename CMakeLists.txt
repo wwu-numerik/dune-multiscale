@@ -112,6 +112,7 @@ set( FEM_SOURCES
 set( LODM_SOURCES 
         dune/multiscale/lod/algorithm.cc
         dune/multiscale/lod/lod_solver.cc
+        dune/multiscale/lod/localproblems.cc
     )
 
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")

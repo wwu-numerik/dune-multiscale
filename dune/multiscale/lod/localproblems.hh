@@ -1,10 +1,9 @@
+#ifndef MULTISCALE_LOD_LOCALPROBLEMS_HH
+#define MULTISCALE_LOD_LOCALPROBLEMS_HH
+
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
-
-#ifndef DiscreteEllipticMsFEMLocalProblem_HH
-#define DiscreteEllipticMsFEMLocalProblem_HH
-
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
@@ -46,13 +45,13 @@ namespace MsFEM {
 /** \brief define output parameters for local problems
  *  appends "local_problems" for path
  **/
-struct LocalProblemDataOutputParameters : public OutputParameters {
+struct LodLocalProblemDataOutputParameters : public OutputParameters {
 public:
-  explicit LocalProblemDataOutputParameters();
+  explicit LodLocalProblemDataOutputParameters();
 };
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
-class MsFEMLocalProblemSolver {
+class LodLocalProblemSolver {
 private:
   typedef CommonTraits::DiscreteFunctionType HostDiscreteFunctionType;
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
@@ -153,11 +152,11 @@ public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
-  MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
+  LodLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                           const MacroMicroGridSpecifierType& specifier, SubGridList& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator);
 
-  MsFEMLocalProblemSolver(
+  LodLocalProblemSolver(
       const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace, const MacroMicroGridSpecifierType& specifier,
       SubGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
       std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
@@ -172,6 +171,27 @@ public:
   void solvelocalproblem(JacobianRangeType& e, SubDiscreteFunctionType& local_problem_solution,
                          const int coarse_index = -1) const;
 
+  // Preprocessing step for the LOD:
+  // assemble the two relevant system matrices: one for the corrector problem without contraints
+  // and the second of the low dimensional lagrange multiplier (describing the inverse of the schur complement)
+  void preprocess_corrector_problems(const int coarse_index, LocProbLinearOperatorTypeType& locprob_system_matrix,
+                                     MatrixType& lm_system_matrix) const;
+
+  // solve local problem for Local Orthogonal Decomposition Method (LOD)
+  void solve_corrector_problem_lod(JacobianRangeType& e, LocProbLinearOperatorTypeType& locprob_system_matrix,
+                                   MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+                                   const int coarse_index /*= -1*/) const;
+
+  // solve Dirichlet boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
+  void solve_dirichlet_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
+                                             MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+                                             const int coarse_index /*= -1*/) const;
+
+  // solve Neumann boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
+  void solve_neumann_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
+                                           MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+                                           const int coarse_index /*= -1*/) const;
+
   //! create a hostgrid function from a subgridfunction
   void subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func, HostDiscreteFunctionType& host_func) const;
 
@@ -184,12 +204,11 @@ public:
   //! for the whole set of macro-entities and for every unit vector e_i
   //! ---- method: solve and save the whole set of local msfem problems -----
   //! Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
-  void assemble_all(bool /*silent*/ = true /* state information on subgrids */);
-
+  void assemble_all_clement_lod();
 }; // end class
 
 } // namespace MsFEM {
 } // namespace Multiscale {
 } // namespace Dune {
 
-#endif // #ifndef DiscreteEllipticMsFEMLocalProblem_HH
+#endif // MULTISCALE_LOD_LOCALPROBLEMS_HH
