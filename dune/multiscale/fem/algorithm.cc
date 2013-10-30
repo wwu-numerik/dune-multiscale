@@ -209,18 +209,18 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const
   // case)
   //    ( if the elliptic problem is linear, the 'solution' is determined without the Newton method )
   // - solution of the finite element method, where we use the Newton method to solve the non-linear system of equations
-  typename CommonTraits::DiscreteFunctionType discrete_solution(filename + " FEM(-Newton) Solution",
+  auto discrete_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(filename + " FEM(-Newton) Solution",
                                                                 discreteFunctionSpace);
-  discrete_solution.clear();
+  discrete_solution->clear();
 
-  solve(discrete_solution, dirichlet_extension, discreteFunctionSpace, discrete_elliptic_op, *lower_order_term,
+  solve(*discrete_solution, dirichlet_extension, discreteFunctionSpace, discrete_elliptic_op, *lower_order_term,
         filename);
-  discrete_solution += dirichlet_extension;
+  *discrete_solution += dirichlet_extension;
 
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(discrete_solution, "fem");
 
-  ErrorCalculator(nullptr, &discrete_solution).print(DSC_LOG_INFO_0);
+  ErrorCalculator(nullptr, discrete_solution.get()).print(DSC_LOG_INFO_0);
 }
 
 

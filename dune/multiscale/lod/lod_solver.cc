@@ -324,11 +324,11 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
 
     const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-    SubGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
-    local_problem_solution_e0.clear();
+    auto local_problem_solution_e0 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
+    local_problem_solution_e0->clear();
 
-    SubGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
-    local_problem_solution_e1.clear();
+    auto local_problem_solution_e1 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
+    local_problem_solution_e1->clear();
 
     // --------- load local solutions -------
     // the file/place, where we saved the solutions of the cell problems
@@ -336,7 +336,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
         (boost::format("local_problems/_localProblemSolutions_%d") %
          specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
     // reader for the cell problem data file:
-    DiscreteFunctionReader discrete_function_reader(local_solution_location);
+    auto& discrete_function_reader = DiscreteFunctionIO<SubGridDiscreteFunctionType>::disk(local_solution_location);
     // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 0 << std::endl;
     discrete_function_reader.read(0, local_problem_solution_e0);
     // std::cout<< "... reading local problem solution " << global_index_entity << "/" << 1 << std::endl;
@@ -359,12 +359,12 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
       DiscreteFunction correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
 
       correction_on_U_T.clear();
-      subgrid_to_hostrid_projection(local_problem_solution_e0, correction_on_U_T);
+      subgrid_to_hostrid_projection(*local_problem_solution_e0, correction_on_U_T);
       correction_on_U_T *= gradient_Phi[i][0][0];
       (*(msfem_basis_function_list[global_interior_dof_number])) += correction_on_U_T;
 
       correction_on_U_T.clear();
-      subgrid_to_hostrid_projection(local_problem_solution_e1, correction_on_U_T);
+      subgrid_to_hostrid_projection(*local_problem_solution_e1, correction_on_U_T);
       correction_on_U_T *= gradient_Phi[i][0][1];
       (*(msfem_basis_function_list[global_interior_dof_number])) += correction_on_U_T;
     }
@@ -418,8 +418,8 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
       auto subGridPart = subgrid_list.gridPart(global_index_entity);
       const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      SubGridDiscreteFunctionType local_dirichlet_corrector("Local Dirichlet corrector", localDiscreteFunctionSpace);
-      local_dirichlet_corrector.clear();
+      auto local_dirichlet_corrector = make_df_ptr<SubGridDiscreteFunctionType>("Local Dirichlet corrector", localDiscreteFunctionSpace);
+      local_dirichlet_corrector->clear();
 
       // --------- load local Dirichlet corrector -------
       // the file/place, where we saved the corrector
@@ -428,12 +428,12 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
            specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
 
       // reader for the cell problem data file:
-      DiscreteFunctionReader discrete_function_reader(local_solution_location);
+      auto& discrete_function_reader = DiscreteFunctionIO<SubGridDiscreteFunctionType>::disk(local_solution_location);
       discrete_function_reader.read(0, local_dirichlet_corrector);
 
       DiscreteFunction local_dirichlet_corrector_aux("local_dirichlet_corrector_aux", discreteFunctionSpace_);
       local_dirichlet_corrector_aux.clear();
-      subgrid_to_hostrid_projection(local_dirichlet_corrector, local_dirichlet_corrector_aux);
+      subgrid_to_hostrid_projection(*local_dirichlet_corrector, local_dirichlet_corrector_aux);
       global_dirichlet_corrector += local_dirichlet_corrector_aux;
     }
   }
@@ -471,8 +471,8 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
       auto subGridPart = subgrid_list.gridPart(global_index_entity);
       const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      SubGridDiscreteFunctionType local_neumann_corrector("Local Neumann corrector", localDiscreteFunctionSpace);
-      local_neumann_corrector.clear();
+      auto local_neumann_corrector = make_df_ptr<SubGridDiscreteFunctionType>("Local Neumann corrector", localDiscreteFunctionSpace);
+      local_neumann_corrector->clear();
 
       // --------- load local neumann corrector -------
       // the file/place, where we saved the corrector
@@ -481,12 +481,12 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
            specifier.coarseSpace().gridPart().grid().globalIdSet().id(coarse_grid_entity)).str();
 
       // reader for the cell problem data file:
-      DiscreteFunctionReader discrete_function_reader(local_solution_location);
+      auto& discrete_function_reader = DiscreteFunctionIO<SubGridDiscreteFunctionType>::disk(local_solution_location);
       discrete_function_reader.read(0, local_neumann_corrector);
 
       DiscreteFunction local_neumann_corrector_aux("local_neumann_corrector_aux", discreteFunctionSpace_);
       local_neumann_corrector_aux.clear();
-      subgrid_to_hostrid_projection(local_neumann_corrector, local_neumann_corrector_aux);
+      subgrid_to_hostrid_projection(*local_neumann_corrector, local_neumann_corrector_aux);
       global_neumann_corrector += local_neumann_corrector_aux;
     }
   }

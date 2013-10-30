@@ -60,7 +60,7 @@ private:
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
   //! @todo HostDiscreteFunctionType should be replaced by some kind of coarse function type
-  typedef std::vector<std::shared_ptr<HostDiscreteFunctionType>> CoarseBasisFunctionListType;
+  typedef std::vector<CommonTraits::DiscreteFunction_ptr> CoarseBasisFunctionListType;
 
   //! type of discrete function space
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
@@ -96,7 +96,7 @@ private:
 public:
   //! type of subgrid discrete function
   typedef typename SubGridList::SubGridDiscreteFunctionType SubDiscreteFunctionType;
-  typedef std::vector<std::unique_ptr<SubDiscreteFunctionType>> SubDiscreteFunctionVectorType;
+  typedef std::vector<MsFEMTraits::SubGridDiscreteFunction_ptr> SubDiscreteFunctionVectorType;
 
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
@@ -166,7 +166,7 @@ public:
       const HostDiscreteFunctionType& dirichlet_extension);
 
   void solveAllLocalProblems(const CoarseEntityType& coarseCell,
-                             SubDiscreteFunctionVectorType& allLocalSolutions) const;
+                             SubDiscreteFunctionVectorType &allLocalSolutions) const;
 
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
   void solvelocalproblem(JacobianRangeType& e, SubDiscreteFunctionType& local_problem_solution,

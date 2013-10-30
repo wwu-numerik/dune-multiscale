@@ -120,10 +120,10 @@ public:
                                       double weight, DiscreteFunction& local_problem_RHS) const;
 
   void
-  assemble_local_RHS_lg_problems_all(const std::vector<std::shared_ptr<HostDiscreteFunction>>& coarse_basis_func_list,
+  assemble_local_RHS_lg_problems_all(const std::vector<CommonTraits::DiscreteFunction_ptr>& coarse_basis_func_list,
                                      std::vector<double>& weights,
                                      std::vector<std::size_t>& ids_basis_functions_in_subgrid,
-                                     std::vector<std::unique_ptr<DiscreteFunction>>& local_problem_RHS) const;
+                                     std::vector<MsFEMTraits::SubGridDiscreteFunction_ptr>& local_problem_RHS) const;
 
   // given a discrete function (representing a right hands side of a local problem,
   // defined on a subgrid) set the boundary dofs to zero

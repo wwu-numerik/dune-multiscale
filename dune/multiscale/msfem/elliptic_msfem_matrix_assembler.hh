@@ -123,8 +123,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     // Load local solutions
     Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list_, specifier_);
     localSolutionManager.loadLocalSolutions();
-    Multiscale::MsFEM::LocalSolutionManager::LocalSolutionVectorType& localSolutions =
-        localSolutionManager.getLocalSolutions();
+    const auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
     std::vector<typename CoarseBaseFunctionSet::JacobianRangeType> gradientPhi(numMacroBaseFunctions);
 
@@ -150,7 +149,11 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
         std::vector<std::vector<JacobianRangeType>> allLocalSolutionEvaluations(
             numLocalSolutions, std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
         for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
-          auto localFunction = localSolutions[lsNum]->localFunction(localGridEntity);
+          auto& sll = localSolutions[lsNum];
+          assert(sll.get());
+          assert(sll->dofsValid());
+          auto ct = local_grid_geometry.center();
+          auto localFunction = sll->localFunction(localGridEntity);
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
         }
 

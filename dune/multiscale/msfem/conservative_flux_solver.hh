@@ -366,9 +366,9 @@ public:
 
   void solve(JacobianRangeType& e_i, // direction 'e_i'
              const SubGridDiscreteFunctionType& local_corrector_e_i, const int sub_grid_id, const int direction_index,
-             SubGridDiscreteFunctionType& conservative_flux) const {
+             const MsFEMTraits::SubGridDiscreteFunction_ptr& conservative_flux) const {
     // set solution equal to zero:
-    conservative_flux.clear();
+    conservative_flux->clear();
 
     const SubGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace = local_corrector_e_i.space();
 
@@ -401,15 +401,15 @@ public:
     }
 
     if (norm_rhs < /*1e-06*/ 1e-30) {
-      conservative_flux.clear();
+      conservative_flux->clear();
       DSC_LOG_INFO << "Local Flux Problem with solution zero." << std::endl;
     } else {
       InverseLinearOperatorType flux_prob_biCGStab(flux_prob_system_matrix, 1e-8, 1e-8, 20000, FLUX_SOLVER_VERBOSE,
                                                    "cg", DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
-      flux_prob_biCGStab(rhs, conservative_flux);
+      flux_prob_biCGStab(rhs, *conservative_flux);
     }
 
-    if (!(conservative_flux.dofsValid())) {
+    if (!(conservative_flux->dofsValid())) {
       DUNE_THROW(Dune::InvalidStateException, "Solution of the Local Flux Problem is invalid!");
     }
 
@@ -465,11 +465,11 @@ public:
     cf_dataoutput.writeData(1.0 /*dummy*/, "conservative-flux");
   } // vtk_output
 
-  void file_data_output(const SubGridDiscreteFunctionType& subgrid_disc_func, const int sub_grid_index,
+  void file_data_output(const MsFEMTraits::SubGridDiscreteFunction_ptr& subgrid_disc_func, const int sub_grid_index,
                         const int direction_index) const {
     const std::string locprob_solution_location =
         std::string("cf_problems/") + (filename_template_ % direction_index % sub_grid_index).str();
-    DiscreteFunctionWriter(locprob_solution_location).append(subgrid_disc_func);
+    DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk(locprob_solution_location).append(subgrid_disc_func);
   } // file_data_output
 
   void solve_all(MsFEMTraits::SubGridListType& subgrid_list) const {
@@ -504,11 +504,11 @@ public:
 
       SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      SubGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
-      local_problem_solution_e0.clear();
+      auto local_problem_solution_e0 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_0", localDiscreteFunctionSpace);
+      local_problem_solution_e0->clear();
 
-      SubGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
-      local_problem_solution_e1.clear();
+      auto local_problem_solution_e1 = make_df_ptr<SubGridDiscreteFunctionType>("Local problem Solution e_1", localDiscreteFunctionSpace);
+      local_problem_solution_e1->clear();
 
       // --------- load local solutions -------
       // the file/place, where we saved the solutions of the cell problems
@@ -516,12 +516,12 @@ public:
                                                    coarseSpace.gridPart().grid().globalIdSet().id(host_entity)).str();
 
       // reader for the cell problem data file:
-      DiscreteFunctionReader discrete_function_reader(local_solution_location);
+      auto& discrete_function_reader = DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::disk (local_solution_location);
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
 
-      SubGridDiscreteFunctionType conservative_flux_e0("Conservative Flux for e_0", localDiscreteFunctionSpace);
-      SubGridDiscreteFunctionType conservative_flux_e1("Conservative Flux for e_1", localDiscreteFunctionSpace);
+      auto conservative_flux_e0 = make_df_ptr<SubGridDiscreteFunctionType>("Conservative Flux for e_0", localDiscreteFunctionSpace);
+      auto conservative_flux_e1 = make_df_ptr<SubGridDiscreteFunctionType>("Conservative Flux for e_1", localDiscreteFunctionSpace);
 
       DSC_LOG_INFO << "Number of the 'conservative flux problem': " << dimension* global_index_entity << " (of "
                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
@@ -529,7 +529,7 @@ public:
       // take time
       DSC_PROFILER.startTiming("none.local_problem_solution");
 
-      this->solve(e[0], local_problem_solution_e0, global_index_entity, 0, conservative_flux_e0);
+      this->solve(e[0], *local_problem_solution_e0, global_index_entity, 0, conservative_flux_e0);
 
       DSC_LOG_INFO << "Number of the 'conservative flux problem': " << (dimension * global_index_entity) + 1 << " (of "
                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
@@ -538,7 +538,7 @@ public:
       DSC_PROFILER.resetTiming("none.local_problem_solution");
       DSC_PROFILER.startTiming("none.local_problem_solution");
 
-      this->solve(e[1], local_problem_solution_e1, global_index_entity, 1, conservative_flux_e1);
+      this->solve(e[1], *local_problem_solution_e1, global_index_entity, 1, conservative_flux_e1);
 
       cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
       DSC_PROFILER.resetTiming("none.local_problem_solution");

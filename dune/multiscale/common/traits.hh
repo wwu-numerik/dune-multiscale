@@ -12,7 +12,7 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-
+#include <dune/stuff/common/memory.hh>
 
 namespace Dune {
 
@@ -114,6 +114,7 @@ struct CommonTraits {
   typedef DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
   typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
+  typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
   typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
 
   //!------------------------- for adaptive grid refinement ---------------------------------
@@ -147,6 +148,12 @@ Fem::CachingQuadrature<typename SpaceTraits::GridPartType, 1> make_quadrature(
   // has no const version
   auto& fem_sucks = const_cast<Fem::DiscreteFunctionSpaceInterface<SpaceTraits>&>(space);
   return Quad(fem_sucks.gridPart(), intersection, order, inside ? Quad::INSIDE : Quad::OUTSIDE);
+}
+
+template< class T = CommonTraits::DiscreteFunctionType>
+std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::DiscreteFunctionSpaceType& space)
+{
+  return std::make_shared<T>(name, space);
 }
 
 } // namespace Multiscale

@@ -227,7 +227,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
   static const int maxnumOfBaseFct = 100;
   const std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
-  DiscreteFunctionWriter dfw(cell_solution_location);
+  auto& dfw = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_baseSet");
 
@@ -251,14 +251,14 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     // calc Jacobian inverse before volume is evaluated
     baseSet.jacobianAll(barycenter_local, gradientPhi);
 
-    PeriodicDiscreteFunctionType correctorPhi_i("corrector Phi_i", periodicDiscreteFunctionSpace_);
+    auto correctorPhi_i = make_df_ptr<PeriodicDiscreteFunctionType>("corrector Phi_i", periodicDiscreteFunctionSpace_);
     for (size_t i = 0; i < numBaseFunctions; ++i) {
-      correctorPhi_i.clear();
+      correctorPhi_i->clear();
 
       // take time
       DSC_PROFILER.startTiming("none.solvecellproblem");
 
-      solvecellproblem(gradientPhi[i], barycenter_of_entity, correctorPhi_i);
+      solvecellproblem(gradientPhi[i], barycenter_of_entity, *correctorPhi_i);
 
       cell_time(DSC_PROFILER.stopTiming("none.solvecellproblem"));
       DSC_PROFILER.resetTiming("none.solvecellproblem");
@@ -292,7 +292,7 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   std::string cell_solution_location = subdir_ + "/_cellSolutions_discFunc";
-  DiscreteFunctionWriter dfw(cell_solution_location);
+  auto& dfw = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_discFunc");
 
@@ -311,13 +311,13 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 
-    PeriodicDiscreteFunctionType cell_solution_on_entity("corrector of macro discrete function",
+    auto cell_solution_on_entity = make_df_ptr<PeriodicDiscreteFunctionImp>("corrector of macro discrete function",
                                                          periodicDiscreteFunctionSpace_);
 
     // take time
     DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_discFunc.solvecellproblem");
 
-    solvecellproblem(grad_macro_discrete_function, barycenter_of_entity, cell_solution_on_entity);
+    solvecellproblem(grad_macro_discrete_function, barycenter_of_entity, *cell_solution_on_entity);
 
     // min/max time
     cell_time(DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc.solvecellproblem"));
@@ -351,13 +351,13 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
   // where we save the solutions:
   const std::string cell_solution_location = subdir_ + "/_JacCorCellSolutions_baseSet_discFunc";
-  DiscreteFunctionWriter dfw(cell_solution_location);
+  auto& dfw = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_location);
   // where we saved the solutions for the discrete function
   // NOTE: they already need to be assembled, i.e. we already applied the method saveSolutions_discFunc!
   const std::string cell_solution_discFunc_location = subdir_ + "/_cellSolutions_discFunc";
 
   // reader for the cell problem data file (discrete functions):
-  DiscreteFunctionReader discrete_function_reader(cell_solution_discFunc_location);
+  auto& discrete_function_reader = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_discFunc_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc");
 
@@ -381,24 +381,24 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 
-    PeriodicDiscreteFunctionType corrector_macro_discrete_function("corrector of macro discrete function",
+    auto corrector_macro_discrete_function = make_df_ptr<PeriodicDiscreteFunctionType>("corrector of macro discrete function",
                                                                    periodicDiscreteFunctionSpace_);
     discrete_function_reader.read(number_of_entity, corrector_macro_discrete_function);
 
     // the solution that we want to save to the data file
-    PeriodicDiscreteFunctionType jac_corrector_Phi_i("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
+    auto jac_corrector_Phi_i = make_df_ptr<PeriodicDiscreteFunctionType>("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
 
     baseSet.jacobianAll(barycenter_local, gradientPhi);
 
     for (auto i : DSC::valueRange(baseSet.size())) {
-      jac_corrector_Phi_i.clear();
+      jac_corrector_Phi_i->clear();
 
       // take time
       DSC_PROFILER.startTiming(
           "hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem");
 
       solve_jacobiancorrector_cellproblem(gradientPhi[i], grad_macro_discrete_function,
-                                          corrector_macro_discrete_function, barycenter_of_entity, jac_corrector_Phi_i);
+                                          *corrector_macro_discrete_function, barycenter_of_entity, *jac_corrector_Phi_i);
 
       // min/max time
       cell_time(DSC_PROFILER.stopTiming(

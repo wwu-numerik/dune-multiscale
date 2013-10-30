@@ -52,9 +52,6 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 #these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
-        dune/multiscale/hmm/cell_problem_numbering.cc
-        dune/multiscale/hmm/cell_problem_solver.cc
-        dune/multiscale/hmm/discrete_cell_operator.cc
         dune/multiscale/msfem/fem_solver.cc
         dune/multiscale/common/newton_rhs.cc
         dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
@@ -97,6 +94,9 @@ set( HMM_SOURCES
         dune/multiscale/hmm/algorithm_error.cc
         dune/multiscale/hmm/algorithm_step.cc
         dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc
+        dune/multiscale/hmm/cell_problem_solver.cc
+        dune/multiscale/hmm/cell_problem_numbering.cc
+        dune/multiscale/hmm/discrete_cell_operator.cc
     )
 
 set( MSFEM_SOURCES
