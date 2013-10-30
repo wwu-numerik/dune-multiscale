@@ -348,7 +348,7 @@ std::size_t SubGridList::getEnclosingMacroCellIndex(const HostEntityPointerType&
 
 SubGridList::IdType SubGridList::getEnclosingMacroCellId(const HostEntityPointerType& hostEntityPointer) {
   // first check, whether we looked for this host entity already
-  IdType hostEntityId = coarseSpace_.gridPart().grid().globalIdSet().id(*hostEntityPointer);
+  IdType hostEntityId = hostSpace_.gridPart().grid().globalIdSet().id(*hostEntityPointer);
   auto itFound = fineToCoarseMapID_.find(hostEntityId);
   if (itFound != fineToCoarseMapID_.end()) {
     // if so, return the index that was found last time
