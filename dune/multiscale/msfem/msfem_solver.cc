@@ -160,7 +160,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
           for (auto i : DSC::valueRange(number_of_nodes_entity)) {
             const auto node = fine_host_entity.subEntity<HostGrid::dimension>(i);
-            const auto global_index_node = gridPart.grid().leafIndexSet().index(*node);
+            const auto global_index_node = gridPart.indexSet().index(*node);
 
             // count the number of different coarse-grid-entities that share the above node
             std::unordered_set<SubGridListType::IdType> coarse_entities;
