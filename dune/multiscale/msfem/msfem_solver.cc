@@ -123,9 +123,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
       fine_scale_part += boundaryCorrector;
 
       // substract neumann corrector
-      // boundaryCorrector.clear();
-      // subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs()], boundaryCorrector);
-      // fine_scale_part -= boundaryCorrector;
+      boundaryCorrector.clear();
+      subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs()], boundaryCorrector);
+      fine_scale_part -= boundaryCorrector;
     }
 
     // oversampling strategy 3: just sum up the local correctors:
