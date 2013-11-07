@@ -31,14 +31,10 @@ public:
   // types for boundary treatment
   // ----------------------------
   typedef typename DomainSpaceType::MapperType MapperType;
-  typedef Fem::SlaveDofs<DomainSpaceType, MapperType> SlaveDofsType;
-  typedef typename SlaveDofsType::SingletonKey SlaveDofsKeyType;
-  typedef Fem::SingletonList<SlaveDofsKeyType, SlaveDofsType> SlaveDofsProviderType;
 
   DirichletConstraints(const BoundaryType& boundary, const DomainSpaceType& domain_space)
     : boundary_(boundary)
     , domain_space_(domain_space)
-    , slaveDofs_(getSlaveDofs(domain_space_))
     , dirichletBlocks_()
     // mark DoFs on the Dirichlet boundary
     , hasDirichletDofs_(false)
@@ -168,9 +164,6 @@ protected:
    */
   template <class LinearOperator, class EntityType>
   void dirichletDofsCorrectOnEntity(LinearOperator& linearOperator, const EntityType& entity) const {
-    // get slave dof structure (for parallel runs)   /*@LST0S@*/
-    auto& slave_dofs = this->slaveDofs();
-    const auto numSlaveDofs = slave_dofs.size();
     const auto& lagrangePointSet = domain_space_.lagrangePointSet(entity);
     auto localMatrix = linearOperator.localMatrix(entity, entity);
 
@@ -197,13 +190,6 @@ protected:
 
           // set diagonal to 1
           localMatrix.set(localDof, localDof, 1);
-
-          // cancel all slave dofs (for parallel runs)
-          for (int i = 0; i < numSlaveDofs; ++i) {
-            // slave dofs are canceled
-            if ((int)globalDofs[l] == slave_dofs[i])
-              localMatrix.set(localDof, localDof, 0);
-          }
         }
       } else {
         // increase localDof anyway
@@ -313,25 +299,12 @@ protected:
     return hasDirichletBoundary;
   }
 
-  //! pointer to slave dofs
   const BoundaryType& boundary_;
   const DomainSpaceType& domain_space_;
-  SlaveDofsType* const slaveDofs_;
   mutable std::vector<bool> dirichletBlocks_;
   mutable bool hasDirichletDofs_;
   mutable int sequence_;
 
-  // return slave dofs
-  static SlaveDofsType* getSlaveDofs(const DomainSpaceType& space) {
-    SlaveDofsKeyType key(space, space.mapper());
-    return &(SlaveDofsProviderType::getObject(key));
-  }
-
-  // return reference to slave dofs
-  SlaveDofsType& slaveDofs() const {
-    slaveDofs_->rebuild();
-    return *slaveDofs_;
-  }
 };
 
 /** Get the constraints for a given discrete function space.
