@@ -88,7 +88,7 @@ MsFEMLocalProblemSolver::MsFEMLocalProblemSolver(
 *
 *
 */
-void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCell,
+void MsFEMLocalProblemSolver::solve_on_entity(const CoarseEntityType& coarseCell,
                                                     SubDiscreteFunctionVectorType &allLocalSolutions) const {
   assert(allLocalSolutions.size() > 0);
 
@@ -116,14 +116,11 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   for (auto& it : allLocalRHS)
     it = DSC::make_unique<SubDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
 
-  switch (specifier_.getOversamplingStrategy()) {
-    case 1:
-      localProblemOperator.assemble_matrix(locProbSysMatrix);
-      localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
-      break;
-    default:
-      DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
-  }
+  if(specifier_.getOversamplingStrategy() != 1)
+    DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
+
+  localProblemOperator.assemble_matrix(locProbSysMatrix);
+  localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
 
   // set dirichlet dofs to zero
   Stuff::GridboundaryAllDirichlet<SubGridType::LeafGridView::Intersection> boundaryInfo;
@@ -348,7 +345,7 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarseIndex, const
   output_local_solution(coarseIndex, which, hostSolution);
 }
 
-void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
+void MsFEMLocalProblemSolver::solve_all(bool /*silent*/) {
   const bool uzawa = DSC_CONFIG_GET("rigorous_msfem.uzawa_solver", false);
   const bool clement = (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement");
   if ((!uzawa) && (specifier_.getOversamplingStrategy() == 3) && clement) {
@@ -357,8 +354,6 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   if (uzawa && !(specifier_.simplexCoarseGrid())) {
     DUNE_THROW(NotImplemented, "Uzawa-solver and non-simplex grid have not been tested together, yet!");
   }
-
-  static const int dimension = CommonTraits::GridType::dimension;
 
   // number of coarse grid entities (of codim 0).
   const auto coarseGridSize = specifier_.getNumOfCoarseEntities();
@@ -369,28 +364,29 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   threadIterators_.update();
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> cell_time;
+
+  // stupid way to pre-init the discretefunctions spaces in the df_io backend inside a serial section
+  const auto& coarseSpace = specifier_.coarseSpace();
+  for (const auto& coarseEntity : coarseSpace) {
+    LocalSolutionManager(coarseEntity, subgrid_list_, specifier_).solutionsWereLoaded();
+  }
+
   #ifdef _OPENMP
   #pragma omp parallel
   #endif
   {
-  const auto& coarseSpace = specifier_.coarseSpace();
   const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
   for (const auto& coarseEntity : threadIterators_) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
 
     DSC_LOG_INFO << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
-
-    // take time
     DSC_PROFILER.startTiming("none.local_problem_solution");
     LocalSolutionManager localSolutionManager(coarseEntity, subgrid_list_, specifier_);
-
     // solve the problems
-    solveAllLocalProblems(coarseEntity, localSolutionManager.getLocalSolutions());
-    // min/max time
+    solve_on_entity(coarseEntity, localSolutionManager.getLocalSolutions());
+
     cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
     DSC_PROFILER.resetTiming("none.local_problem_solution");
-
-    // save the local solutions to disk
     localSolutionManager.saveLocalSolutions();
   } // for
   } // omp region
@@ -400,7 +396,7 @@ void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
   DSC_LOG_INFO << "MsFEM problems solved for " << coarseGridSize << " coarse grid entities." << std::endl;
-  DSC_LOG_INFO << dimension* coarseGridSize << " local MsFEM problems solved in total." << std::endl;
+  DSC_LOG_INFO << CommonTraits::GridType::dimension * coarseGridSize << " local MsFEM problems solved in total." << std::endl;
   DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s." << std::endl;
   DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s." << std::endl;
   DSC_LOG_INFO << "Average time for solving a localproblem = " << cell_time.average() << "s." << std::endl;

@@ -144,13 +144,13 @@ void subgrid_vis(const std::string& macroGridName, int total_refinement_level_,
       if(subgrid.contains<0>(fine_entity)) {
         auto oversampled_local_function = oversampled_function->localFunction(fine_entity);
         for (const auto idx : DSC::valueRange(oversampled_local_function.size())) {
-          oversampled_local_function[idx] = coarse_id+1;
+//          oversampled_local_function[idx] = static_cast<unsigned long>(coarse_id+1);
         }
         if (coarse_id == subgrid_list.getEnclosingMacroCellId(CommonTraits::EntityPointerType(fine_entity)))
         {
           auto local_function = function->localFunction(fine_entity);
           for (const auto idx : DSC::valueRange(local_function.size())) {
-            local_function[idx] = coarse_id+1;
+//            local_function[idx] = coarse_id+1;
           }
         }
       }
