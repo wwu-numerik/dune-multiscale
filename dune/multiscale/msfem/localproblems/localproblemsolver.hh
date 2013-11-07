@@ -113,17 +113,6 @@ private:
   //! polynomial order of base functions
   static const int polynomialOrder = SubDiscreteFunctionSpaceType::polynomialOrder;
 
-  //! --------------------- istl matrix and vector types -------------------------------------
-
-  //! \TODO diese definitionen machen keinen sinn
-  typedef BlockVector<FieldVector<double, 1>> VectorType;
-  typedef Matrix<FieldMatrix<double, 1, 1>> MatrixType;
-  typedef MatrixAdapter<MatrixType, VectorType, VectorType> MatrixOperatorType;
-  // typedef SeqGS< MatrixType, VectorType, VectorType > PreconditionerType;
-  typedef SeqSOR<MatrixType, VectorType, VectorType> PreconditionerType;
-  // typedef BiCGSTABSolver< VectorType > SolverType;
-  typedef InverseOperatorResult InverseOperatorResultType;
-
 public:
   typedef typename BackendChooser<SubDiscreteFunctionSpaceType>::LinearOperatorType LocProbLinearOperatorTypeType;
 
@@ -165,7 +154,8 @@ public:
       const std::map<std::size_t, std::size_t>& global_id_to_internal_id, const NeumannBoundaryType& neumann_bc,
       const HostDiscreteFunctionType& dirichlet_extension);
 
-  void solveAllLocalProblems(const CoarseEntityType& coarseCell,
+private:
+  void solve_on_entity(const CoarseEntityType& coarseCell,
                              SubDiscreteFunctionVectorType &allLocalSolutions) const;
 
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
@@ -180,11 +170,12 @@ public:
 
   void output_local_solution(const int coarseIndex, const int which, const SubDiscreteFunctionType& solution) const;
 
+public:
   //! method for solving and saving the solutions of the local msfem problems
   //! for the whole set of macro-entities and for every unit vector e_i
   //! ---- method: solve and save the whole set of local msfem problems -----
   //! Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
-  void assemble_all(bool /*silent*/ = true /* state information on subgrids */);
+  void solve_all(bool /*silent*/ = true /* state information on subgrids */);
 
 }; // end class
 

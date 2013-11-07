@@ -19,13 +19,9 @@ DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)
   , petrovGalerkin_(DSC_CONFIG_GET("msfem.petrov_galerkin", true)) {
-
-  bool silence = false;
   // coarseDiscreteFunctionSpace_ = specifier_.coarseSpace();
   // fineDiscreteFunctionSpace_ = specifier_.fineSpace();
-  MsFEMLocalProblemSolverType loc_prob_solver(specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_);
-
-  loc_prob_solver.assemble_all(silence);
+  MsFEMLocalProblemSolverType(specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_).solve_all();
 }
 
 } // namespace MsFEM {
