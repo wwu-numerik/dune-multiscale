@@ -63,12 +63,11 @@ private:
 
 public:
   template <class MatrixType>
-  void assemble_matrix(MatrixType& global_matrix, bool boundary_treatment = true) const;
+  void assemble_matrix(MatrixType& global_matrix) const;
 
   //! Matrix Assembler for local problems on a Subgrid of the Hostgrid:
   template <class MatrixType, class HostDiscreteFunctionSpaceType>
-  void assemble_matrix(MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace,
-                       bool boundary_treatment = true) const;
+  void assemble_matrix(MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace) const;
 
   /** assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain
    * discrete function (in case of the Newton method, it is the preceeding iterate u_H^{(n-1)} )
@@ -77,13 +76,12 @@ public:
    * (here, JA denotes the jacobian matrix of the diffusion operator A)
    **/
   template <class MatrixType>
-  void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix,
-                                bool boundary_treatment = true) const;
+  void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix) const;
 
   // for inhomogeneous boundary condition
   template <class MatrixType>
   void assemble_jacobian_matrix(DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension,
-                                MatrixType& global_matrix, bool boundary_treatment = true) const;
+                                MatrixType& global_matrix) const;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
