@@ -226,8 +226,10 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   msfem_rhs.communicate();
   BOOST_ASSERT_MSG(msfem_rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
 
-  const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true, "bcgs",
-                                           DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
+  const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8,
+                                           DSC_CONFIG_GET("msfem.solver.iterations", msfem_rhs.size()),
+                                           DSC_CONFIG_GET("msfem.solver.verbose", false), "bcgs",
+                                           DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
   DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl << std::endl;
 
