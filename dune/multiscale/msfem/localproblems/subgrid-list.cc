@@ -473,43 +473,37 @@ void SubGridList::createSubGrids() {
     //// ... and its index
 
     const auto macroCellIndex = getEnclosingMacroCellIndex(host_entity);
-    // if macroCellIndex is smaller than zero, the enclosing coarse cell was
-    // not found. This may be the case if the host cell does not belong to the
-    // grid part for the current process.
-    if (macroCellIndex < 0)
-      DUNE_THROW(InvalidStateException, "macro cell not found!");
-    if (macroCellIndex >= 0) {
-      // add host_entity to the subgrid with the index 'macroCellIndex'
-      subGridList_[macroCellIndex]->insertPartial(host_entity);
-      // add the id of the subgrid to the vecor at position 'index of host grid element'
-      fine_id_to_subgrid_ids_[hostGridLeafIndexSet.index(host_entity)].push_back(macroCellIndex);
+    // add host_entity to the subgrid with the index 'macroCellIndex'
+    subGridList_[macroCellIndex]->insertPartial(host_entity);
+    // add the id of the subgrid to the vecor at position 'index of host grid element'
+    fine_id_to_subgrid_ids_[hostGridLeafIndexSet.index(host_entity)].push_back(macroCellIndex);
 
-      // check the neighbor entities and look if they belong to the same father
-      // if yes, continue
-      // if not, enrichment with 'n(T)' layers
-      bool all_neighbors_have_same_father = true;
-      const HostIntersectionIterator iend = hostGridPart_.iend(host_entity);
-      for (HostIntersectionIterator iit = hostGridPart_.ibegin(host_entity);
-           (iit != iend) && all_neighbors_have_same_father; ++iit) {
-        if (iit->neighbor()) {
-          // if there is a neighbor entity
-          // check if the neighbor entity is in the subgrid
-          if (getEnclosingMacroCellIndex(iit->outside()) != macroCellIndex)
-            all_neighbors_have_same_father = false;
-        } else {
+    // check the neighbor entities and look if they belong to the same father
+    // if yes, continue
+    // if not, enrichment with 'n(T)' layers
+    bool all_neighbors_have_same_father = true;
+    const HostIntersectionIterator iend = hostGridPart_.iend(host_entity);
+    for (HostIntersectionIterator iit = hostGridPart_.ibegin(host_entity);
+         (iit != iend) && all_neighbors_have_same_father; ++iit) {
+      if (iit->neighbor()) {
+        // if there is a neighbor entity
+        // check if the neighbor entity is in the subgrid
+        if (getEnclosingMacroCellIndex(iit->outside()) != macroCellIndex)
           all_neighbors_have_same_father = false;
-        }
-      }
-
-      if (!all_neighbors_have_same_father) {
-        auto layers = specifier_.getNoOfLayers(macroCellIndex);
-        if (layers > 0) {
-          DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
-          const HostEntityPointerType hep(host_entity);
-          enrichment(hep, macroCellIndex, subGridList_[macroCellIndex], layers);
-        }
+      } else {
+        all_neighbors_have_same_father = false;
       }
     }
+
+    if (!all_neighbors_have_same_father) {
+      auto layers = specifier_.getNoOfLayers(macroCellIndex);
+      if (layers > 0) {
+        DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
+        const HostEntityPointerType hep(host_entity);
+        enrichment(hep, macroCellIndex, subGridList_[macroCellIndex], layers);
+      }
+    }
+
   }
   DSC_PROFILER.stopTiming("msfem.subgrid_list.create");
 
