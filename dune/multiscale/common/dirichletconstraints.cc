@@ -13,7 +13,6 @@ namespace Multiscale {
 
 DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
 getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space) {
-  // set dirichlet dofs to zero
   static const auto boundary = Problem::getModelData()->boundaryInfo();
   static DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, space);
   return constraints;
@@ -21,7 +20,6 @@ getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space) {
 
 DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
 getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space) {
-  // set dirichlet dofs to zero
   static const auto boundary = Problem::getModelData()->boundaryInfo();
   static DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, space);
   return constraints;
@@ -46,17 +44,12 @@ void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType &coarseSp
   if (!initialized) {
     initialized = true;
 
-    auto dirichletDataPtr = Problem::getDirichletData();
-    const auto &dirichletData = *dirichletDataPtr;
+    const auto dirichletDataPtr = Problem::getDirichletData();
 
-    Dune::Fem::GridFunctionAdapter<
-        CommonTraits::DirichletDataType,
-        CommonTraits::DiscreteFunctionSpaceType::GridPartType> gf(
-        "Dirichlet Data", dirichletData, coarseSpace.gridPart());
     CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(
         "Dirichlet Extension Coarse", coarseSpace);
     dirichletExtensionCoarse.clear();
-    getConstraintsCoarse(coarseSpace)(gf, dirichletExtensionCoarse);
+    getConstraintsCoarse(coarseSpace)(*dirichletDataPtr, dirichletExtensionCoarse);
 
     static Dune::Stuff::HeterogenousProjection<> projection;
     projection.project(dirichletExtensionCoarse, dirichletExtension);

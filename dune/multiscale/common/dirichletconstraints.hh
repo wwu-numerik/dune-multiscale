@@ -116,9 +116,16 @@ public:
    *   \param[in]  u   discrete function providing the constraints
    *   \param[out] w   discrete function the constraints are applied to
    */
-  template <class GridFunctionType, class DiscreteFunctionType>
-  void operator()(const GridFunctionType& u, DiscreteFunctionType& w) const {
-    apply(u, w);
+//  template <class GridFunctionType, class DiscreteFunctionType>
+//  void operator()(const GridFunctionType& u, DiscreteFunctionType& w) const {
+//    apply(u, w);
+//  }
+
+  template <class  DiscreteFunctionType>
+  void operator()(const CommonTraits::FunctionBaseType& u, DiscreteFunctionType& w) const {
+    Fem::GridFunctionAdapter<CommonTraits::FunctionBaseType, typename DiscreteFunctionType::GridPartType>
+        gf("dirichlet", u, w.space().gridPart());
+    apply(gf, w);
   }
 
   /*! treatment of Dirichlet-DoFs for solution and right-hand-side

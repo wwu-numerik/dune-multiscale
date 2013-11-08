@@ -62,30 +62,19 @@ void Elliptic_FEM_Solver::solve_linear(
                << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
   DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
 
-  const RightHandSideAssembler rhsassembler = {};
-  //! (stiffness) matrix
-  CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
-
-  DiscreteFunction fem_rhs("fem rhs", discreteFunctionSpace_);
-  fem_rhs.clear();
-
   // to assemble the computational time
   Dune::Timer assembleTimer;
 
+  CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
   Multiscale::FEM::DiscreteEllipticOperator<DiscreteFunction, CommonTraits::DiffusionType> discrete_elliptic_op(
         discreteFunctionSpace_, diffusion_op, lower_order_term);
-
   discrete_elliptic_op.assemble_matrix(fem_matrix);
 
   DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
-  // assemble right hand side
-  rhsassembler.assemble(f, fem_rhs);
-
-  // --- boundary treatment ---
-  // set the dirichlet points to zero (in right hand side of the fem problem)
-  Dune::Multiscale::getConstraintsFine(discreteFunctionSpace_).setValue(0.0, fem_rhs);
-  // --- end boundary treatment ---
+  DiscreteFunction fem_rhs("fem rhs", discreteFunctionSpace_);
+  fem_rhs.clear();
+  RightHandSideAssembler().assemble(f, fem_rhs);
 
   const FEM::FEMTraits::InverseOperatorType inverse_op(
       fem_matrix, 1e-8, 1e-8, 5000, DSC_CONFIG_GET("global.cgsolver_verbose", false),
