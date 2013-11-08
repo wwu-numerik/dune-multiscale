@@ -209,11 +209,6 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   DiscreteFunctionType msfem_rhs("MsFEM right hand side", coarse_space);
   msfem_rhs.clear();
 
-  DSC_LOG_INFO << std::endl << "Solving MsFEM problem." << std::endl
-               << "Solving linear problem with MsFEM and maximum coarse grid level "
-               << coarse_space.gridPart().grid().maxLevel() << "." << std::endl
-               << "------------------------------------------------------------------------------" << std::endl;
-
   // to assemble the computational time
   Dune::Timer assembleTimer;
 
@@ -234,7 +229,6 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8, 2000, true, "bcgs",
                                            DSC_CONFIG_GET("preconditioner_type", std::string("sor")));
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
-  DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
   DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl << std::endl;
 
   if (!coarse_msfem_solution.dofsValid())
@@ -260,6 +254,9 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   // add coarse and fine scale part to solution
   solution += coarse_scale_part;
   solution += fine_scale_part;
+
+  // seperate the msfem output from other output
+  std::cout << std::endl << std::endl;
 
 } // solve_dirichlet_zero
 
