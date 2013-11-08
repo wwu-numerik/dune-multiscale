@@ -13,7 +13,8 @@
 #include "righthandside_assembler.hh"
 
 
-void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::CommonTraits::FirstSourceType &f, Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
+void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
+                                                        Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
   rhsVector.clear();
   for (const auto& entity : rhsVector.space()) {
     const auto& geometry = entity.geometry();
@@ -36,6 +37,11 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::
       }
     }
   }
+  const auto boundary = Problem::getModelData()->boundaryInfo();
+  const auto dirichlet_data = Problem::getDirichletData();
+  //! \TODO use the static thingies
+  DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, rhsVector.space());
+  constraints(*dirichlet_data, rhsVector);
 }
 
 
@@ -59,9 +65,6 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(
     std::vector<RangeType> phi_x(numDofs);
     // gradient of base function and gradient of old_u_H
     std::vector<JacobianRangeType> grad_phi_x(numDofs);
-
-    const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
-    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
 
     const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
 
@@ -97,6 +100,9 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(
 
     JacobianRangeType gradient_dirichlet_extension;
     JacobianRangeType diffusive_flux_in_gradient_dirichlet_extension;
+
+    const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
+    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
 
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       // local (barycentric) coordinates (with respect to entity)
