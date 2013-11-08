@@ -972,7 +972,7 @@ void MsFEMLocalProblemSolver::output_local_solution(const int coarseIndex, const
   output_local_solution(coarseIndex, which, hostSolution);
 }
 
-void MsFEMLocalProblemSolver::assemble_all(bool /*silent*/) {
+void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
   static const int dimension = CommonTraits::GridType::dimension;
 
   JacobianRangeType unitVectors[dimension];

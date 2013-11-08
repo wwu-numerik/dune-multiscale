@@ -25,7 +25,7 @@ DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(
   // fineDiscreteFunctionSpace_ = specifier_.fineSpace();
   MsFEMLocalProblemSolverType loc_prob_solver(specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_);
 
-  loc_prob_solver.assemble_all(silence);
+  loc_prob_solver.assembleAndSolveAll(silence);
 }
 
 } // namespace MsFEM {

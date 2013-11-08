@@ -203,7 +203,7 @@ public:
   //! for the whole set of macro-entities and for every unit vector e_i
   //! ---- method: solve and save the whole set of local msfem problems -----
   //! Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
-  void assemble_all(bool /*silent*/ = true /* state information on subgrids */);
+  void assembleAndSolveAll(bool /*verbose*/ = false /* state information on subgrids */);
 
 }; // end class
 
