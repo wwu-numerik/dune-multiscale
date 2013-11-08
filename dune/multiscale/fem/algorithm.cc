@@ -65,8 +65,10 @@ void solve(typename CommonTraits::DiscreteFunctionType& solution,
   const RightHandSideAssembler rhsassembler = {};
   rhsassembler.assemble(*f, *diffusion_op, dirichlet_extension, *neumann_bc, system_rhs);
 
-  // set Dirichlet Boundary to zero
-  boundaryTreatment(system_rhs);
+  const auto boundaryInfo = Problem::getModelData()->boundaryInfo();
+  DirichletConstraints<typename CommonTraits::DiscreteFunctionSpaceType> constraints(*boundaryInfo, finerDiscreteFunctionSpace);
+  constraints.applyToOperator(system_matrix);
+  constraints(dirichlet_extension, system_rhs);
 
   const typename FEMTraits::InverseOperatorType fem_biCGStab(
       system_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("global.cgsolver_verbose", false),
