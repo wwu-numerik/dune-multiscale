@@ -82,7 +82,6 @@ void Elliptic_FEM_Solver::solve_dirichlet_zero(
 
   //!TODO Split branch into functions
   if (DSC_CONFIG_GET("problem.linear", true)) {
-    DSC_LOG_INFO << "Solving linear problem." << std::endl;
     DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
                  << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
     DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
