@@ -25,8 +25,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::operator()(con
 
 template <class DiscreteFunctionImp, class DiffusionImp>
 template <class MatrixType>
-void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matrix(MatrixType& global_matrix,
-                                                                                  bool boundary_treatment) const {
+void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matrix(MatrixType& global_matrix) const {
   //!TODO diagonal stencil would be enough
   DSFe::reserve_matrix(global_matrix);
   global_matrix.clear();
@@ -73,20 +72,18 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
     }
   }
 
-  // boundary treatment
-  if (boundary_treatment) {
-    // set unit rows for dirichlet dofs
-    const auto boundary = Problem::getModelData()->boundaryInfo();
-    DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
-    constraints.applyToOperator(global_matrix);
-  }
+  // set unit rows for dirichlet dofs
+  const auto boundary = Problem::getModelData()->boundaryInfo();
+  DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
+  constraints.applyToOperator(global_matrix);
+
   global_matrix.communicate();
 } // assemble_matrix
 
 template <class DiscreteFunctionImp, class DiffusionImp>
 template <class MatrixType, class HostDiscreteFunctionSpaceType>
 void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matrix(
-    MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace, bool boundary_treatment) const {
+    MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace) const {
   global_matrix.reserve();
   global_matrix.clear();
 
@@ -136,41 +133,39 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
     }
   }
 
-  // boundary treatment
-  if (boundary_treatment) {
-    const auto& hostGridPart = hostSpace.gridPart();
-    const auto& subGrid = discreteFunctionSpace_.grid();
-    for (const auto& entity : discreteFunctionSpace_) {
-      const auto host_entity_pointer = subGrid.template getHostEntity<0>(entity);
-      const auto& host_entity = *host_entity_pointer;
+  const auto& hostGridPart = hostSpace.gridPart();
+  const auto& subGrid = discreteFunctionSpace_.grid();
+  for (const auto& entity : discreteFunctionSpace_) {
+    const auto host_entity_pointer = subGrid.template getHostEntity<0>(entity);
+    const auto& host_entity = *host_entity_pointer;
 
-      auto local_matrix = global_matrix.localMatrix(entity, entity);
-      const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-      const auto iend = hostGridPart.iend(host_entity);
-      for (auto iit = hostGridPart.ibegin(host_entity); iit != iend; ++iit) {
-        if (iit->neighbor()) // if there is a neighbor entity
-        {
-          // check if the neighbor entity is in the subgrid
-          const auto neighborHostEntityPointer = iit->outside();
-          const auto& neighborHostEntity = *neighborHostEntityPointer;
-          if (subGrid.template contains<0>(neighborHostEntity)) {
-            continue;
-          }
+    auto local_matrix = global_matrix.localMatrix(entity, entity);
+    const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+    const auto iend = hostGridPart.iend(host_entity);
+    for (auto iit = hostGridPart.ibegin(host_entity); iit != iend; ++iit) {
+      if (iit->neighbor()) // if there is a neighbor entity
+      {
+        // check if the neighbor entity is in the subgrid
+        const auto neighborHostEntityPointer = iit->outside();
+        const auto& neighborHostEntity = *neighborHostEntityPointer;
+        if (subGrid.template contains<0>(neighborHostEntity)) {
+          continue;
         }
-
-        const int face = (*iit).indexInInside();
-        for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-          local_matrix.unitRow(lp);
       }
+
+      const int face = (*iit).indexInInside();
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+        local_matrix.unitRow(lp);
     }
   }
+
   global_matrix.communicate();
 } // assemble_matrix
 
 template <class DiscreteFunctionImp, class DiffusionImp>
 template <class MatrixType>
 void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacobian_matrix(
-    DiscreteFunction& disc_func, MatrixType& global_matrix, bool boundary_treatment) const {
+    DiscreteFunction& disc_func, MatrixType& global_matrix) const {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
@@ -237,38 +232,35 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
     }
   }
 
-  // boundary treatment
-  if (boundary_treatment) {
-    const auto& gridPart = discreteFunctionSpace_.gridPart();
-    for (const auto& entity : discreteFunctionSpace_) {
-      if (!entity.hasBoundaryIntersections())
+  const auto& gridPart = discreteFunctionSpace_.gridPart();
+  for (const auto& entity : discreteFunctionSpace_) {
+    if (!entity.hasBoundaryIntersections())
+      continue;
+
+    auto local_matrix = global_matrix.localMatrix(entity, entity);
+    const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+
+    for (const auto& intersection : DSC::intersectionRange(gridPart, entity)) {
+      if (!intersection.boundary())
         continue;
 
-      auto local_matrix = global_matrix.localMatrix(entity, entity);
-      const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
+      // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
+      if (intersection.boundary() && (intersection.boundaryId() == 2))
+        continue;
 
-      for (const auto& intersection : DSC::intersectionRange(gridPart, entity)) {
-        if (!intersection.boundary())
-          continue;
-
-        // boundaryId 1 = Dirichlet face; boundaryId 2 = Neumann face;
-        if (intersection.boundary() && (intersection.boundaryId() == 2))
-          continue;
-
-        const int face = intersection.indexInInside();
-        for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-          local_matrix.unitRow(lp);
-      }
+      const int face = intersection.indexInInside();
+      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
+        local_matrix.unitRow(lp);
     }
   }
+
   global_matrix.communicate();
 } // assemble_jacobian_matrix
 
 template <class DiscreteFunctionImp, class DiffusionImp>
 template <class MatrixType>
 void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacobian_matrix(
-    DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension, MatrixType& global_matrix,
-    bool boundary_treatment) const {
+    DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension, MatrixType& global_matrix) const {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
@@ -342,8 +334,6 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
     }
   }
 
-// boundary treatment
-if (boundary_treatment) {
   const GridPart& gridPart = discreteFunctionSpace_.gridPart();
   for (const auto& entity : discreteFunctionSpace_) {
     if (!entity.hasBoundaryIntersections())
@@ -364,7 +354,6 @@ if (boundary_treatment) {
         local_matrix.unitRow(lp);
     }
   }
-}
 global_matrix.communicate();
 } // assemble_jacobian_matrix
 
