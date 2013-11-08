@@ -46,7 +46,7 @@ rs_grid_level = 16
 [global]
 
 # directory to save the data output
-datadir = data/MsFEM/Model_Problem_9/Coarse_4_Fine_10_Layers_10
+datadir = data
 
 
 # VTK output for the solutions of the local problems

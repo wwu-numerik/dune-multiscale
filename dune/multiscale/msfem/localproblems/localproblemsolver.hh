@@ -38,7 +38,6 @@ namespace Dune {
 template <class K, int SIZE> class FieldVector;
 }  // namespace Dune
 
-
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
@@ -96,7 +95,7 @@ private:
 public:
   //! type of subgrid discrete function
   typedef typename SubGridList::SubGridDiscreteFunctionType SubDiscreteFunctionType;
-  typedef std::vector<MsFEMTraits::SubGridDiscreteFunction_ptr> SubDiscreteFunctionVectorType;
+  typedef std::vector<std::unique_ptr<SubDiscreteFunctionType>> SubDiscreteFunctionVectorType;
 
 private:
   typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
@@ -154,9 +153,8 @@ public:
       const std::map<std::size_t, std::size_t>& global_id_to_internal_id, const NeumannBoundaryType& neumann_bc,
       const HostDiscreteFunctionType& dirichlet_extension);
 
-private:
-  void solve_on_entity(const CoarseEntityType& coarseCell,
-                             SubDiscreteFunctionVectorType &allLocalSolutions) const;
+  void solveAllLocalProblems(const CoarseEntityType& coarseCell,
+                             SubDiscreteFunctionVectorType& allLocalSolutions) const;
 
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
   void solvelocalproblem(JacobianRangeType& e, SubDiscreteFunctionType& local_problem_solution,
@@ -170,12 +168,11 @@ private:
 
   void output_local_solution(const int coarseIndex, const int which, const SubDiscreteFunctionType& solution) const;
 
-public:
   //! method for solving and saving the solutions of the local msfem problems
   //! for the whole set of macro-entities and for every unit vector e_i
   //! ---- method: solve and save the whole set of local msfem problems -----
   //! Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
-  void solve_all(bool /*silent*/ = true /* state information on subgrids */);
+  void assembleAndSolveAll(bool /*verbose*/ = false /* state information on subgrids */);
 
 }; // end class
 
