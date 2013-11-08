@@ -993,6 +993,7 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> cell_time;
+  DSC::MinMaxAvg<double> saveTime;
 
   const auto& coarseSpace = specifier_.coarseSpace();
   const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
@@ -1167,7 +1168,10 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
       DSC_PROFILER.resetTiming("none.local_problem_solution");
 
       // save the local solutions to disk
+      DSC_PROFILER.startTiming("none.saveLocalProblemSolution");
       localSolutionManager.saveLocalSolutions();
+      saveTime(DSC_PROFILER.stopTiming("none.saveLocalProblemSolution") / 1000.f);
+      DSC_PROFILER.resetTiming("none.saveLocalProblemSolution");
     }
 
     DSC_LOG_INFO << "Total time for solving and saving all local problems for the current subgrid: "
@@ -1181,6 +1185,9 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
   DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s." << std::endl;
   DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s." << std::endl;
   DSC_LOG_INFO << "Average time for solving a localproblem = " << cell_time.average() << "s." << std::endl;
+  DSC_LOG_INFO << "Minimum time for saving a local problem = " << saveTime.min() << "s." << std::endl;
+  DSC_LOG_INFO << "Maximum time for saving a localproblem = " << saveTime.max() << "s." << std::endl;
+  DSC_LOG_INFO << "Average time for saving a localproblem = " << saveTime.average() << "s." << std::endl;
   DSC_LOG_INFO << "Total time for computing and saving the localproblems = " << total_time << "s," << std::endl
                << std::endl;
 } // assemble_all
