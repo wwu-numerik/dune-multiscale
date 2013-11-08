@@ -210,28 +210,33 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   msfem_rhs.clear();
 
   // to assemble the computational time
-  Dune::Timer assembleTimer;
-
+  DSC_PROFILER.startTiming("msfem.assembleMatrix");
   // assemble the MsFEM stiffness matrix
   elliptic_msfem_op.assemble_matrix(msfem_matrix);
-
-  DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
+  DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << DSC_PROFILER.stopTiming("msfem.assembleMatrix")
+               << "ms" << std::endl;
 
   // assemble right hand side
+  DSC_PROFILER.startTiming("msfem.assembleRHS");
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1)) {
     RhsAssembler::assemble(f, msfem_rhs);
   } else {
     RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
   }
   msfem_rhs.communicate();
+  DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS")
+               << "ms" << std::endl;
+
   BOOST_ASSERT_MSG(msfem_rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
 
+  DSC_PROFILER.startTiming("msfem.solveCoarse");
   const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8,
                                            DSC_CONFIG_GET("msfem.solver.iterations", msfem_rhs.size()),
                                            DSC_CONFIG_GET("msfem.solver.verbose", false), "bcgs",
                                            DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));
   msfem_biCGStab(msfem_rhs, coarse_msfem_solution);
-  DSC_LOG_INFO << "MsFEM problem solved in " << assembleTimer.elapsed() << "s." << std::endl << std::endl << std::endl;
+  DSC_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.stopTiming("msfem.solveCoarse")
+               << "ms." << std::endl;
 
   if (!coarse_msfem_solution.dofsValid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
