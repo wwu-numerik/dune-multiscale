@@ -338,10 +338,10 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   //! --------------------------- coefficient functions ------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
+  const auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
   const auto& diffusion_op = *diffusion_op_ptr;
   // define (first) source term:
-  auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
+  const auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
   const auto& f = *f_ptr;
 
   //! ---------------------------- general output parameters ------------------------------
@@ -406,7 +406,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     // just for Dirichlet zero-boundary condition
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-    fem_solver.solve_dirichlet_zero(diffusion_op, l_ptr, f, fem_solution);
+    fem_solver.solve(diffusion_op, l_ptr, f, fem_solution);
     if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
       //! ----------------------------------------------------------------------
       DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;

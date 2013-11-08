@@ -397,7 +397,6 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
   fem_solution.clear();
 
   if (DSC_CONFIG_GET("rigorous_msfem.fem_comparison", false)) {
-
     // just for Dirichlet zero-boundary condition
     const Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
     fem_solver.solve(diffusion_op, F_ptr, f, dirichlet_extension, neumann_bc, fem_solution);
@@ -405,10 +404,7 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
     fem_solution.communicate();
     //! ----------------------------------------------------------------------
     DSC_LOG_INFO << "Data output for FEM Solution." << std::endl;
-    //! -------------------------- writing data output FEM Solution ----------
 
-    // ------------- VTK data output for FEM solution --------------
-    // create and initialize output class
     OutputTraits::IOTupleType fem_solution_series(&fem_solution);
     outputparam.set_prefix("fem_solution");
     OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
