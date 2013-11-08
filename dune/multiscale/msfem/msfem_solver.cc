@@ -192,12 +192,14 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
   typedef RightHandSideAssembler RhsAssembler;
 
+  // Assemble and solve the local problems. Timing is done in assembleAndSolveAll-method
+  MsFEMLocalProblemSolver localProblemSolver(specifier.fineSpace(), specifier, subgrid_list, diffusion_op);
+  localProblemSolver.assembleAndSolveAll();
+
   //! define the discrete (elliptic) operator that describes our problem
   // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
   // ( effect of the discretized differential operator on a certain discrete function )
-  // This will assemble and solve the local problems
   const DiscreteEllipticMsFEMOperator elliptic_msfem_op(specifier, coarse_space, subgrid_list, diffusion_op);
-  // discrete elliptic operator (corresponds with FEM Matrix)
 
   //! (stiffness) matrix
   MsLinearOperatorTypeType msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
