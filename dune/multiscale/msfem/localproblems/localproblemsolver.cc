@@ -1177,9 +1177,7 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all") / 1000.f;
   DSC_LOG_INFO << std::endl;
-  DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
-  DSC_LOG_INFO << "MsFEM problems solved for " << coarseGridSize << " coarse grid entities." << std::endl;
-  DSC_LOG_INFO << dimension* coarseGridSize << " local MsFEM problems solved in total." << std::endl;
+  DSC_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities." << std::endl;
   DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s." << std::endl;
   DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s." << std::endl;
   DSC_LOG_INFO << "Average time for solving a localproblem = " << cell_time.average() << "s." << std::endl;
