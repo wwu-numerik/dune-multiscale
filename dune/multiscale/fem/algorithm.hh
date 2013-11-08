@@ -12,20 +12,6 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-//! \TODO docme
-void solve(typename CommonTraits::DiscreteFunctionType& solution,
-           const typename CommonTraits::DiscreteFunctionType& dirichlet_extension,
-           const typename CommonTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
-           const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op);
-
-//! \TODO docme
-void solve_nonlinear(typename CommonTraits::DiscreteFunctionType& solution,
-                     const typename CommonTraits::DiscreteFunctionType& dirichlet_extension,
-                     const typename CommonTraits::DiscreteFunctionSpaceType& finerDiscreteFunctionSpace,
-                     const typename FEMTraits::EllipticOperatorType& discrete_elliptic_op,
-                     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                     const std::string& filename);
-
 //! the main FEM computation
 void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const std::string filename);
 
