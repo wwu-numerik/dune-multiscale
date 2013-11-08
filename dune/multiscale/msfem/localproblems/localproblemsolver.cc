@@ -1007,7 +1007,7 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
     auto subGridPart = subgrid_list_.gridPart(coarse_index);
 
     const SubDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
-    Dune::Timer assembleTimer;
+    DSC_PROFILER.startTiming("none.saveLocalProblemsOnCell");
 
     const bool uzawa = DSC_CONFIG_GET("rigorous_msfem.uzawa_solver", false);
     const bool clement = (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement");
@@ -1175,7 +1175,9 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
     }
 
     DSC_LOG_INFO << "Total time for solving and saving all local problems for the current subgrid: "
-                 << assembleTimer.elapsed() << "s" << std::endl << std::endl;
+                 << DSC_PROFILER.stopTiming("none.saveLocalProblemsOnCell") / 1000.f << "s"
+                 << std::endl << std::endl;
+    DSC_PROFILER.resetTiming("none.saveLocalProblemsOnCell");
   } // for
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
