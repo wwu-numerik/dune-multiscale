@@ -18,11 +18,7 @@ DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(
   , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)
-  , petrovGalerkin_(DSC_CONFIG_GET("msfem.petrov_galerkin", true)) {
-  // coarseDiscreteFunctionSpace_ = specifier_.coarseSpace();
-  // fineDiscreteFunctionSpace_ = specifier_.fineSpace();
-  MsFEMLocalProblemSolverType(specifier_.fineSpace(), specifier_, subgrid_list_, diffusion_operator_).solve_all();
-}
+  , petrovGalerkin_(DSC_CONFIG_GET("msfem.petrov_galerkin", true)) {}
 
 } // namespace MsFEM {
 } // namespace Multiscale {

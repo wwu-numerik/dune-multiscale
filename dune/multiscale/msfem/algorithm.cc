@@ -347,7 +347,8 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   //! ---------------------------- general output parameters ------------------------------
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
-  data_output(gridPart, discreteFunctionSpace_coarse, outputparam, loop_number);
+  if (DSC_CONFIG_GET("msfem.vtkOutput", false)) 
+    data_output(gridPart, discreteFunctionSpace_coarse, outputparam, loop_number);
 
   //! ---------------------- solve MsFEM problem ---------------------------
   //! solution vector
@@ -381,11 +382,11 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     Elliptic_MsFEM_Solver msfem_solver(discreteFunctionSpace);
     msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
                                       fine_part_msfem_solution, msfem_solution);
-
-    DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-    solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, outputparam, loop_number,
-                    total_refinement_level_, coarse_grid_level_);
-
+    if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
+      DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
+      solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, outputparam, loop_number,
+                      total_refinement_level_, coarse_grid_level_);
+    }
     // error estimation
     if (DSC_CONFIG_GET("msfem.error_estimation", 0)) {
       MsFEMTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
@@ -406,19 +407,21 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
     fem_solver.solve_dirichlet_zero(diffusion_op, l_ptr, f, fem_solution);
-    //! ----------------------------------------------------------------------
-    DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
-    //! -------------------------- writing data output FEM Solution ----------
-
-    // ------------- VTK data output for FEM solution --------------
-    // create and initialize output class
-    OutputTraits::IOTupleType fem_solution_series(&fem_solution);
-    outputparam.set_prefix("fem_solution");
-    OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
-
-    // write data
-    fem_dataoutput.writeData(1.0 /*dummy*/, "fem_solution");
-    // -------------------------------------------------------------
+    if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
+      //! ----------------------------------------------------------------------
+      DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
+      //! -------------------------- writing data output FEM Solution ----------
+      
+      // ------------- VTK data output for FEM solution --------------
+      // create and initialize output class
+      OutputTraits::IOTupleType fem_solution_series(&fem_solution);
+      outputparam.set_prefix("fem_solution");
+      OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
+      
+      // write data
+      fem_dataoutput.writeData(1.0 /*dummy*/, "fem_solution");
+      // -------------------------------------------------------------
+    }
   }
 
   ErrorCalculator(msfem_solution.get(), &fem_solution).print(DSC_LOG_INFO_0);

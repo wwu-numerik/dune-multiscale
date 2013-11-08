@@ -716,7 +716,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
                                           ids_basis_functions_in_extended_subgrid, coff, diffusion_op,
                                           standard_basis_function, global_id_to_internal_id, neumann_bc,
                                           dirichlet_extension);
-  loc_prob_solver.assemble_all(/*silence=*/false);
+  loc_prob_solver.assembleAndSolveAll(/*silence=*/false);
 
   // define the discrete (elliptic) operator that describes our problem
   add_corrector_contribution(specifier, global_id_to_internal_id, subgrid_list, msfem_basis_function);
