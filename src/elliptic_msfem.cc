@@ -7,6 +7,7 @@
 #include <dune/multiscale/common/error_container.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 // for rusage
 #include <sys/resource.h>
@@ -139,6 +140,8 @@ int main(int argc, char** argv) {
       *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                       << "," << meanPeakMemConsumption << std::endl;
     }
+    DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::clear();
+    DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
 
     return 0;
   }

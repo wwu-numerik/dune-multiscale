@@ -174,6 +174,13 @@ public:
     return instance().get_disk(filename);
   }
 
+  //! this needs to be called before global de-init or else dune fem fails
+  static void clear() {
+    auto& th = instance();
+    th.memory_.clear();
+    th.disk_.clear();
+  }
+
 private:
   std::unordered_map<std::string, std::shared_ptr<MemoryBackend>> memory_;
   std::unordered_map<std::string, std::shared_ptr<DiskBackend>> disk_;
