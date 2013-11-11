@@ -18,7 +18,7 @@ DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(
   , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)
-  , petrovGalerkin_(DSC_CONFIG_GET("msfem.petrov_galerkin", true)) {}
+  , petrovGalerkin_(false) {}
 
 } // namespace MsFEM {
 } // namespace Multiscale {

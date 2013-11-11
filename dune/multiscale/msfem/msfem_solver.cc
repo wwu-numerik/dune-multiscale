@@ -218,11 +218,11 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   // assemble right hand side
   DSC_PROFILER.startTiming("msfem.assembleRHS");
-  if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1)) {
-    RhsAssembler::assemble(f, msfem_rhs);
-  } else {
-    RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
-  }
+  if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))
+    DSC_LOG_ERROR << "MsFEM does not work with Petrov-Galerkin at the moment!\n";
+
+  RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
+
   msfem_rhs.communicate();
   DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS")
                << "ms" << std::endl;
