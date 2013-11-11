@@ -56,7 +56,7 @@ void LocalSolutionManager::saveLocalSolutions() const {
   // reader for the cell problem data file:
   auto& writer = IOType::memory(localSolutionLocation_, subgrid_);
 
-  for (auto& it : localSolutions_)
+  for (const auto& it : localSolutions_)
     writer.append(it);
 } // saveLocalSolutions
 

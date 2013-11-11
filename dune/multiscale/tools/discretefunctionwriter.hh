@@ -41,7 +41,7 @@ struct IOTraits {
 };
 
 template <class DiscreteFunctionType>
-class DiscreteFunctionIO {
+class DiscreteFunctionIO : public boost::noncopyable {
   static_assert(std::is_base_of<Dune::Fem::IsDiscreteFunction, DiscreteFunctionType>::value, "");
 
   typedef DiscreteFunctionIO<DiscreteFunctionType> ThisType;
@@ -52,7 +52,7 @@ class DiscreteFunctionIO {
 
   DiscreteFunctionIO() = default;
 
-  class DiskBackend{
+  class DiskBackend : public boost::noncopyable {
 
       void load_disk_functions()
       {
@@ -102,7 +102,7 @@ class DiscreteFunctionIO {
    * this class isn't type safe in the sense that different appends may append
    * non-convertible discrete function implementations
    */
-  class MemoryBackend{
+  class MemoryBackend : public boost::noncopyable {
 
   public:
     /**
@@ -151,8 +151,8 @@ class DiscreteFunctionIO {
     if(it != map.end())
       return it->second;
     std::lock_guard<std::mutex> lock(mutex_);
-    auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
-    auto ret = map.emplace(filename, ptr);
+    auto ptr = DSC::make_unique<typename IOMapType::mapped_type::element_type>(ctor_args...);
+    auto ret = map.emplace(filename, std::move(ptr));
     assert(ret.second);
     return ret.first->second;
   }
@@ -182,8 +182,8 @@ public:
   }
 
 private:
-  std::unordered_map<std::string, std::shared_ptr<MemoryBackend>> memory_;
-  std::unordered_map<std::string, std::shared_ptr<DiskBackend>> disk_;
+  std::unordered_map<std::string, std::unique_ptr<MemoryBackend>> memory_;
+  std::unordered_map<std::string, std::unique_ptr<DiskBackend>> disk_;
   std::mutex mutex_;
 
 
