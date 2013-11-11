@@ -152,7 +152,6 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
           auto& sll = localSolutions[lsNum];
           assert(sll.get());
           assert(sll->dofsValid());
-          auto ct = local_grid_geometry.center();
           auto localFunction = sll->localFunction(localGridEntity);
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
         }

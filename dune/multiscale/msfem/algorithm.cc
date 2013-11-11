@@ -431,6 +431,8 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     DSC_LOG_INFO_0 << std::endl << std::endl;
     DSC_LOG_INFO_0 << "---------------------------------------------" << std::endl;
   }
+  DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::clear();
+  DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
   return repeat_algorithm;
 } // function algorithm
 

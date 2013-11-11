@@ -14,6 +14,7 @@
 #include <dune/multiscale/fem/print_info.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
@@ -58,6 +59,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(discrete_solution, "fem");
   ErrorCalculator(nullptr, discrete_solution.get()).print(DSC_LOG_INFO_0);
+  DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
 }
 
 
