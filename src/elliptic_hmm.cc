@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     // macro problem
 
     const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
-    DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
+    DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
     return 0;
   }
   catch (Dune::Exception& e) {
