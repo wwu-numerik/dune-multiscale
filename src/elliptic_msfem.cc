@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
 
     auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
     auto max_cpu_time = Dune::Fem::MPIManager::comm().max(cpu_time);
-    DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
+    DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "m" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
 
     // Compute the peak memory consumption of each processes
