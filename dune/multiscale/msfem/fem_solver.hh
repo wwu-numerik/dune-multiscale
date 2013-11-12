@@ -45,7 +45,7 @@ private:
 
   void solve_linear(const CommonTraits::DiffusionType& diffusion_op,
                     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                    const CommonTraits::FirstSourceType& f, DiscreteFunction& solution) const;
+                    const CommonTraits::FirstSourceType& f, DiscreteFunction& solution, const bool use_smp) const;
   void solve_nonlinear(const CommonTraits::DiffusionType& diffusion_op,
                         const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
                         const CommonTraits::FirstSourceType& f, DiscreteFunction& solution) const;
@@ -60,14 +60,15 @@ public:
   //! f --> 'first' source term, scalar ('SourceTermType')
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   //! this is called from LOD code and therefore mostly copypasta
-  void solve(const CommonTraits::DiffusionType& diffusion_op,
+  void solve_lod(const CommonTraits::DiffusionType& diffusion_op,
              const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
              const CommonTraits::FirstSourceType& f, const CommonTraits::DiscreteFunctionType& dirichlet_extension,
              const CommonTraits::NeumannBCType& neumann_bc, DiscreteFunction& solution) const;
 
   void solve(const CommonTraits::DiffusionType& diffusion_op,
-                            const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                            const CommonTraits::FirstSourceType& f, DiscreteFunction& solution) const;
+             const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+             const CommonTraits::FirstSourceType& f, DiscreteFunction& solution,
+             const bool use_smp = false) const;
 };
 
 } // namespace Multiscale

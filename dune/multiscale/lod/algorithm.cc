@@ -399,7 +399,7 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
   if (DSC_CONFIG_GET("rigorous_msfem.fem_comparison", false)) {
     // just for Dirichlet zero-boundary condition
     const Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
-    fem_solver.solve(diffusion_op, F_ptr, f, dirichlet_extension, neumann_bc, fem_solution);
+    fem_solver.solve_lod(diffusion_op, F_ptr, f, dirichlet_extension, neumann_bc, fem_solution);
     fem_solution += dirichlet_extension;
     fem_solution.communicate();
     //! ----------------------------------------------------------------------

@@ -54,10 +54,9 @@ public:
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const Elliptic_FEM_Solver::DiscreteFunctionSpace& discreteFunctionSpace)
   : discreteFunctionSpace_(discreteFunctionSpace) {}
 
-void Elliptic_FEM_Solver::solve_linear(
-    const CommonTraits::DiffusionType& diffusion_op,
+void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-    const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution) const {
+    const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution, const bool use_smp) const {
   DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
                << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
   DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
@@ -66,9 +65,13 @@ void Elliptic_FEM_Solver::solve_linear(
   Dune::Timer assembleTimer;
 
   CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
-  Multiscale::FEM::DiscreteEllipticOperator<DiscreteFunction, CommonTraits::DiffusionType> discrete_elliptic_op(
-        discreteFunctionSpace_, diffusion_op, lower_order_term);
-  discrete_elliptic_op.assemble_matrix(fem_matrix);
+  if(use_smp) {
+    Multiscale::FEM::SMPDiscreteEllipticOperator<DiscreteFunction, CommonTraits::DiffusionType> (
+        discreteFunctionSpace_, diffusion_op).assemble_matrix(fem_matrix);
+  } else {
+    Multiscale::FEM::DiscreteEllipticOperator<DiscreteFunction, CommonTraits::DiffusionType> (
+        discreteFunctionSpace_, diffusion_op, lower_order_term).assemble_matrix(fem_matrix);
+  }
 
   DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
@@ -188,13 +191,12 @@ void Elliptic_FEM_Solver::solve_nonlinear(
 //  c --> reaction part (former 'ReactionTermType')
 //! f --> 'first' source term, scalar ('SourceTermType')
 //! G --> 'second' source term, vector valued ('SecondSourceTermType')
-void Elliptic_FEM_Solver::solve(
-    const CommonTraits::DiffusionType& diffusion_op,
+void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-    const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution) const {
+    const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution, const bool use_smp) const {
 
   if (DSC_CONFIG_GET("problem.linear", true))
-    solve_linear(diffusion_op, lower_order_term, f, solution);
+    solve_linear(diffusion_op, lower_order_term, f, solution, use_smp);
   else
     solve_nonlinear(diffusion_op, lower_order_term, f, solution);
 }
@@ -208,7 +210,7 @@ void Elliptic_FEM_Solver::solve(
 //  c --> reaction part (former 'ReactionTermType')
 //! f --> 'first' source term, scalar ('SourceTermType')
 //! G --> 'second' source term, vector valued ('SecondSourceTermType')
-void Elliptic_FEM_Solver::solve(
+void Elliptic_FEM_Solver::solve_lod(
     const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term, // lower order term F(x, u(x), grad
                                                                                      // u(x) )
