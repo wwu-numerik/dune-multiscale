@@ -80,87 +80,6 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
   global_matrix.communicate();
 } // assemble_matrix
 
-template <class DiscreteFunctionImp, class DiffusionImp>
-template <class MatrixType, class HostDiscreteFunctionSpaceType>
-void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matrix(
-    MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace) const {
-  global_matrix.reserve();
-  global_matrix.clear();
-
-  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.mapper().maxNumDofs());
-
-  // micro scale base function:
-  std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
-
-  for (const auto& entity : discreteFunctionSpace_) {
-    const auto& geometry = entity.geometry();
-    assert(entity.partitionType() == InteriorEntity);
-
-    auto local_matrix = global_matrix.localMatrix(entity, entity);
-
-    const auto& baseSet = local_matrix.domainBaseFunctionSet();
-    const auto numBaseFunctions = baseSet.numBaseFunctions();
-
-    // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
-    // use a higher order quadrature:
-    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
-    const size_t numQuadraturePoints = quadrature.nop();
-    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      // local (barycentric) coordinates (with respect to entity)
-      const auto& local_point = quadrature.point(quadraturePoint);
-      const auto global_point = geometry.global(local_point);
-      const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
-
-      // transposed of the the inverse jacobian
-      const auto& inverse_jac = geometry.jacobianInverseTransposed(local_point);
-      baseSet.jacobianAll(quadrature[quadraturePoint], inverse_jac, gradient_phi);
-      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
-
-      for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-        // A( \nabla \phi ) // diffusion operator evaluated in (x,\nabla \phi)
-        typename BaseFunctionSet::JacobianRangeType diffusion_in_gradient_phi;
-        diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
-        for (unsigned int j = 0; j < numBaseFunctions; ++j) {
-          local_matrix.add(j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]));
-
-          if (lower_order_term_) {
-            RangeType F_i;
-            lower_order_term_->evaluate(global_point, phi[i], gradient_phi[i], F_i);
-            local_matrix.add(j, i, weight * F_i * phi[j][0]);
-          }
-        }
-      }
-    }
-  }
-
-  const auto& hostGridPart = hostSpace.gridPart();
-  const auto& subGrid = discreteFunctionSpace_.grid();
-  for (const auto& entity : discreteFunctionSpace_) {
-    const auto host_entity_pointer = subGrid.template getHostEntity<0>(entity);
-    const auto& host_entity = *host_entity_pointer;
-
-    auto local_matrix = global_matrix.localMatrix(entity, entity);
-    const auto& lagrangePointSet = discreteFunctionSpace_.lagrangePointSet(entity);
-    const auto iend = hostGridPart.iend(host_entity);
-    for (auto iit = hostGridPart.ibegin(host_entity); iit != iend; ++iit) {
-      if (iit->neighbor()) // if there is a neighbor entity
-      {
-        // check if the neighbor entity is in the subgrid
-        const auto neighborHostEntityPointer = iit->outside();
-        const auto& neighborHostEntity = *neighborHostEntityPointer;
-        if (subGrid.template contains<0>(neighborHostEntity)) {
-          continue;
-        }
-      }
-
-      const int face = (*iit).indexInInside();
-      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-        local_matrix.unitRow(lp);
-    }
-  }
-
-  global_matrix.communicate();
-} // assemble_matrix
 
 template <class DiscreteFunctionImp, class DiffusionImp>
 template <class MatrixType>
@@ -356,6 +275,65 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
   }
 global_matrix.communicate();
 } // assemble_jacobian_matrix
+
+
+template <class DiscreteFunctionImp, class DiffusionImp>
+template <class MatrixType>
+void SMPDiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matrix(MatrixType& global_matrix) const {
+  //!TODO diagonal stencil would be enough
+  DSFe::reserve_matrix(global_matrix);
+  global_matrix.clear();
+
+  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.mapper().maxNumDofs());
+
+  // micro scale base function:
+  std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  threadIterators_.update();
+
+  #ifdef _OPENMP
+  #pragma omp parallel
+  #endif
+  {
+  for (const auto& entity : threadIterators_) {
+    const auto& geometry = entity.geometry();
+    assert(entity.partitionType() == InteriorEntity);
+
+    DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, entity, entity);
+
+    const auto& baseSet = local_matrix.domainBasisFunctionSet();
+    const auto numBaseFunctions = baseSet.size();
+
+    // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
+    // use a higher order quadrature:
+    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
+    const auto numQuadraturePoints = quadrature.nop();
+    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
+      // local (barycentric) coordinates (with respect to entity)
+      const auto& local_point = quadrature.point(quadraturePoint);
+      const auto global_point = geometry.global(local_point);
+      const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+
+      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
+      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
+      typename BaseFunctionSet::JacobianRangeType diffusion_in_gradient_phi;
+      for (unsigned int i = 0; i < numBaseFunctions; ++i) {
+        // A( \nabla \phi ) // diffusion operator evaluated in (x,\nabla \phi)
+        diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
+        for (unsigned int j = 0; j < numBaseFunctions; ++j) {
+          local_matrix.add(j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]));
+        }
+      }
+    }
+  } // for
+  } // omp region
+
+  // set unit rows for dirichlet dofs
+  const auto boundary = Problem::getModelData()->boundaryInfo();
+  DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
+  constraints.applyToOperator(global_matrix);
+
+  global_matrix.communicate();
+} // assemble_matrix
 
 } // namespace FEM {
 } // namespace Multiscale {
