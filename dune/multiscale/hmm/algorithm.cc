@@ -293,7 +293,9 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
                  << std::endl << std::endl << std::endl;
     loop_cycle += 1;
   } // end while (repeat) of repeat loop (for the adaptive cicles)
-    //! ******************** End of assembling and solving the HMM problem ***************************
+
+  DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
+  DiscreteFunctionIO<HMMTraits::PeriodicDiscreteFunctionType>::clear();
 }
 
 } // namespace HMM {
