@@ -415,7 +415,8 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
   }
 
   ErrorCalculator(msfem_solution.get(), &fem_solution).print(DSC_LOG_INFO_0);
-
+  DiscreteFunctionIO<MsFEMTraits::SubGridDiscreteFunctionType>::clear();
+  DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
 } // function algorithm
 
 } // namespace MsFEM {
