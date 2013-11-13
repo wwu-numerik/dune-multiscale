@@ -1,5 +1,5 @@
 #include <config.h>
-#include <config.h>
+
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
