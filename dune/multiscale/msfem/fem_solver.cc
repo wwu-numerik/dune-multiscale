@@ -77,7 +77,7 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 
   DiscreteFunction fem_rhs("fem rhs", discreteFunctionSpace_);
   fem_rhs.clear();
-  RightHandSideAssembler().assemble(f, fem_rhs);
+  RightHandSideAssembler::assemble(f, fem_rhs);
 
   const FEM::FEMTraits::InverseOperatorType inverse_op(
       fem_matrix, 1e-8, 1e-8, 5000, DSC_CONFIG_GET("global.cgsolver_verbose", false),
@@ -217,11 +217,6 @@ void Elliptic_FEM_Solver::solve_lod(
     const CommonTraits::FirstSourceType& f, const CommonTraits::DiscreteFunctionType& dirichlet_extension,
     const CommonTraits::NeumannBCType& neumann_bc, Elliptic_FEM_Solver::DiscreteFunction& solution) const {
 
-  //! define the right hand side assembler tool
-  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  const RightHandSideAssembler rhsassembler = {};
-  const NewtonRightHandSide newton_rhs = {};
-
   //! define the discrete (elliptic) operator that describes our problem
   // ( effect of the discretized differential operator on a certain discrete function )
   Multiscale::FEM::DiscreteEllipticOperator<DiscreteFunction, CommonTraits::DiffusionType> discrete_elliptic_op(
@@ -251,7 +246,7 @@ void Elliptic_FEM_Solver::solve_lod(
     DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
     // assemble right hand side
-    rhsassembler.assemble(f, diffusion_op, dirichlet_extension, neumann_bc, fem_rhs);
+    RightHandSideAssembler::assemble_hmm_lod(f, diffusion_op, dirichlet_extension, neumann_bc, fem_rhs);
 
     // --- boundary treatment ---
     // set the dirichlet points to zero (in righ hand side of the fem problem)
@@ -308,7 +303,7 @@ void Elliptic_FEM_Solver::solve_lod(
 
       // assemble right hand side
       system_rhs.clear();
-      newton_rhs.assemble_for_Newton_method(f, diffusion_op, *lower_order_term, solution,
+      NewtonRightHandSide::assemble_for_Newton_method(f, diffusion_op, *lower_order_term, solution,
                                                             dirichlet_extension, neumann_bc, system_rhs);
 
       const Dune::Fem::L2Norm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(system_rhs.gridPart());
