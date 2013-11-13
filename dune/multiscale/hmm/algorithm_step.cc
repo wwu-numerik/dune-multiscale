@@ -293,8 +293,6 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
 
   // assemble right hand side
   //! right hand side vector
-  // if we have some additional source term (-div G), define:
-  const auto G = Problem::getSecondSource();
   const auto f = Problem::getFirstSource(); // standard source f
                                             // lower order term F(x, u(x), grad u(x) ):
 
@@ -314,8 +312,7 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
   // right hand side for the hm finite element method with Newton solver:
   typename CommonTraits::DiscreteFunctionType hmm_rhs("hmm rhs", discreteFunctionSpace);
   hmm_rhs.clear();
-  const RightHandSideAssembler rhsassembler = {};
-  rhsassembler.assemble( *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
+  RightHandSideAssembler::assemble( *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
 
   // set Dirichlet Boundary to zero
   BoundaryTreatment::apply(hmm_rhs);

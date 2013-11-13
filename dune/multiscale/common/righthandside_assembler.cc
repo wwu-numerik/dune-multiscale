@@ -45,7 +45,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::
 }
 
 
-void Dune::Multiscale::RightHandSideAssembler::assemble(
+void Dune::Multiscale::RightHandSideAssembler::assemble_hmm_lod(
     const Dune::Multiscale::CommonTraits::FirstSourceType &f,
     const Dune::Multiscale::CommonTraits::DiffusionType &A,
     const Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &

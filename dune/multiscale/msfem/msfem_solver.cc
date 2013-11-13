@@ -187,10 +187,6 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   DiscreteFunctionType coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
   coarse_msfem_solution.clear();
 
-  //! define the right hand side assembler tool
-  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  typedef RightHandSideAssembler RhsAssembler;
-
   // Assemble and solve the local problems. Timing is done in assembleAndSolveAll-method
   MsFEMLocalProblemSolver localProblemSolver(specifier.fineSpace(), specifier, subgrid_list, diffusion_op);
   localProblemSolver.assembleAndSolveAll();
@@ -218,9 +214,9 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   // assemble right hand side
   DSC_PROFILER.startTiming("msfem.assembleRHS");
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1)) {
-    RhsAssembler::assemble(f, msfem_rhs);
+    RightHandSideAssembler::assemble(f, msfem_rhs);
   } else {
-    RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
+    RightHandSideAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
   }
   msfem_rhs.communicate();
   DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS")

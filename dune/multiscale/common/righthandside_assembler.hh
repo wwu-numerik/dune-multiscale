@@ -48,7 +48,7 @@ public:
    * with non-homogeneous Dirichlet and Neumann boundary conditions:
    **/
   static void
-  assemble(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
+  assemble_hmm_lod(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
            const DiscreteFunctionType& dirichlet_extension,
            const CommonTraits::NeumannBCType& neumann_bc, DiscreteFunctionType& rhsVector);
 
