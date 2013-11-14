@@ -121,17 +121,25 @@ void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
        (cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin(2.0 * M_PI * (x[0] / constants().epsilon)));
 } // evaluate
 
-void ExactSolution::jacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const {
-  grad_u[0][0] = 2.0 * M_PI * cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
-  grad_u[0][1] = 2.0 * M_PI * sin(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]);
+void __attribute__((hot)) ExactSolution::jacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const {
+  const double eps = constants().epsilon;
+  static const double M_TWOPI = M_PI * 2.0;
+  const double x0_eps = (x[0] / eps);
+  const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
+  const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
+  const double sin_2_pi_x0 = sin(M_TWOPI * x[0]);
+  const double cos_2_pi_x0 = cos(M_TWOPI * x[0]);
+  const double sin_2_pi_x1 = sin(M_TWOPI * x[1]);
+  const double cos_2_pi_x1 = cos(M_TWOPI * x[1]);
 
-  grad_u[0][0] += (-1.0) * constants().epsilon * M_PI *
-                  (sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin(2.0 * M_PI * (x[0] / constants().epsilon)));
-  grad_u[0][0] +=
-      M_PI * (cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * cos(2.0 * M_PI * (x[0] / constants().epsilon)));
+  grad_u[0][1] = (M_TWOPI * sin_2_pi_x0 * cos_2_pi_x1)
+               + (eps * M_PI * cos_2_pi_x0 * cos_2_pi_x1 * sin_2_pi_x0_eps);
 
-  grad_u[0][1] += constants().epsilon * M_PI *
-                  (cos(2.0 * M_PI * x[0]) * cos(2.0 * M_PI * x[1]) * sin(2.0 * M_PI * (x[0] / constants().epsilon)));
+  grad_u[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1)
+               - (eps * M_PI * sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+               + (      M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
+
+
 } // jacobian
 
 void ExactSolution::evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const { evaluate(x, y); }
