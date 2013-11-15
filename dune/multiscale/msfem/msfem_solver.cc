@@ -86,7 +86,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
     LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
     localSolManager.loadLocalSolutions();
-    const auto& localSolutions = localSolManager.getLocalSolutions();
+    auto& localSolutions = localSolManager.getLocalSolutions();
 
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
 
@@ -119,8 +119,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
       // add dirichlet corrector
       DiscreteFunctionType boundaryCorrector("Boundary Corrector", discreteFunctionSpace_);
       boundaryCorrector.clear();
-      const auto& re = *localSolutions[coarseSolutionLF.numDofs() + 1];
-      subgrid_to_hostrid_projection(re, boundaryCorrector);
+      subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs() + 1], boundaryCorrector);
       fine_scale_part += boundaryCorrector;
 
       // substract neumann corrector
@@ -177,15 +176,21 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
 void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
     const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
+    // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
+    // n(T)-layers.
     MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
-    CommonTraits::DiscreteFunction_ptr& coarse_scale_part, CommonTraits::DiscreteFunction_ptr& fine_scale_part,
-    CommonTraits::DiscreteFunction_ptr& solution) const {
+    DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
+    DiscreteFunctionType& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero");
 
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
 
   DiscreteFunctionType coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
   coarse_msfem_solution.clear();
+
+  //! define the right hand side assembler tool
+  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
+  typedef RightHandSideAssembler RhsAssembler;
 
   // Assemble and solve the local problems. Timing is done in assembleAndSolveAll-method
   MsFEMLocalProblemSolver localProblemSolver(specifier.fineSpace(), specifier, subgrid_list, diffusion_op);
@@ -213,11 +218,11 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   // assemble right hand side
   DSC_PROFILER.startTiming("msfem.assembleRHS");
-  if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1)) {
-    RightHandSideAssembler::assemble(f, msfem_rhs);
-  } else {
-    RightHandSideAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
-  }
+  if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))
+    DSC_LOG_ERROR << "MsFEM does not work with Petrov-Galerkin at the moment!\n";
+
+  RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
+
   msfem_rhs.communicate();
   DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS")
                << "ms" << std::endl;
@@ -237,25 +242,25 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
 
   // get the dirichlet values
-  solution->clear();
-  Dune::Multiscale::copyDirichletValues(coarse_space, *solution);
+  solution.clear();
+  Dune::Multiscale::copyDirichletValues(coarse_space, solution);
 
   //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
-  projectCoarseToFineScale(specifier, coarse_msfem_solution, *coarse_scale_part);
+  projectCoarseToFineScale(specifier, coarse_msfem_solution, coarse_scale_part);
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  identify_fine_scale_part(specifier, subgrid_list, coarse_msfem_solution, *fine_scale_part);
+  identify_fine_scale_part(specifier, subgrid_list, coarse_msfem_solution, fine_scale_part);
   {
     DSC::Profiler::ScopedTiming commFSTimer("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero.comm_fine_scale_part");
-    fine_scale_part->communicate();
+    fine_scale_part.communicate();
   }
 
-  BOOST_ASSERT_MSG(coarse_scale_part->dofsValid(), "Coarse scale part DOFs need to be valid!");
-  BOOST_ASSERT_MSG(fine_scale_part->dofsValid(), "Fine scale part DOFs need to be valid!");
+  BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
+  BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
 
   // add coarse and fine scale part to solution
-  *solution += *coarse_scale_part;
-  *solution += *fine_scale_part;
+  solution += coarse_scale_part;
+  solution += fine_scale_part;
 
   // seperate the msfem output from other output
   std::cout << std::endl << std::endl;

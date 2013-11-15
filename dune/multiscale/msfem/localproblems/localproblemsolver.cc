@@ -360,8 +360,14 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*silent*/) {
 
   // number of coarse grid entities (of codim 0).
   const auto coarseGridSize = specifier_.getNumOfCoarseEntities();
-
-  DSC_LOG_INFO << "in method 'assemble_all': coarseGridSize = " << coarseGridSize << std::endl;
+  if (Dune::Fem::MPIManager::size()>0)
+    DSC_LOG_INFO << "Rank " << Dune::Fem::MPIManager::rank()
+                 << " will solve local problems for " << coarseGridSize
+                 << " coarse entities!" << std::endl;
+    else {
+    DSC_LOG_INFO << "Will solve local problems for " << coarseGridSize
+                 << " coarse entities!" << std::endl;
+  }
   DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
 
   threadIterators_.update();

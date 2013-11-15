@@ -420,7 +420,6 @@ void SubGridList::identifySubGrids() {
   // the number of coarse grid entities (of codim 0).
   const auto number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
   const auto oversampling_strategy = specifier_.getOversamplingStrategy();
-  DSC_LOG_INFO << "number_of_coarse_grid_entities = " << number_of_coarse_grid_entities << std::endl;
 
   if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
     coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());

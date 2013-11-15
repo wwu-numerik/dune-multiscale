@@ -1,4 +1,5 @@
 #include <config.h>
+#include <config.h>
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
@@ -7,7 +8,6 @@
 #include <dune/multiscale/common/error_container.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 // for rusage
 #include <sys/resource.h>
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
 
     auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
     auto max_cpu_time = Dune::Fem::MPIManager::comm().max(cpu_time);
-    DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "m" << std::endl;
+    DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
 
     // Compute the peak memory consumption of each processes
@@ -140,6 +140,7 @@ int main(int argc, char** argv) {
       *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                       << "," << meanPeakMemConsumption << std::endl;
     }
+
     return 0;
   }
   catch (Dune::Exception& e) {
