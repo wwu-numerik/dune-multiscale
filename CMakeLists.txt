@@ -33,10 +33,6 @@ dune_project()
 include(DuneUtils)
 include(DuneMPI)
 
-find_package(METIS)
-find_package(ParMETIS)
-include(cmake/modules/AddMETISFlags.cmake)
-include(AddParMETISFlags)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
@@ -141,7 +137,7 @@ add_dune_parmetis_flags(multiscale_common)
 set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
 
 include_directories( ${PETSC_INCLUDES} )
-set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
+# set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm multiscale_hmm ${COMMON_LIBS} )
