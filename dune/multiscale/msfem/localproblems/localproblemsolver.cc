@@ -143,14 +143,14 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
     // the result.
     if (localProblemOperator.normRHS(*allLocalRHS[i]) < 1e-30) {
       allLocalRHS[i]->clear();
-      DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
+      DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
       continue;
     }
 
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
       allLocalRHS[i]->clear();
-      DSC_LOG_INFO << "Zero-Boundary corrector." << std::endl;
+      DSC_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
       continue;
     }
 
@@ -246,7 +246,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, SubDiscret
   // the result.
   if (local_problem_op.normRHS(local_problem_rhs) < /*1e-06*/ 1e-30) {
     local_problem_solution.clear();
-    DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
+    DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
     return;
   }
 
@@ -388,20 +388,22 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*silent*/) {
   for (const auto& coarseEntity : threadIterators_) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
     
-    DSC_LOG_INFO << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
+    DSC_LOG_DEBUG << "-------------------------" << "\n" << "Coarse index " << coarse_index << std::endl;
     DSC_PROFILER.startTiming("none.local_problem_solution");
     LocalSolutionManager localSolutionManager(coarseEntity, subgrid_list_, specifier_);
     // solve the problems
     solveAllLocalProblems(coarseEntity, localSolutionManager.getLocalSolutions());
 
-    cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
+    cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution",
+                                      DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f);
     DSC_PROFILER.resetTiming("none.local_problem_solution");
     localSolutionManager.saveLocalSolutions();
   } // for
   } // omp region
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
-  const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all") / 1000.f;
+  const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all",
+                                                  DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
   DSC_LOG_INFO << "MsFEM problems solved for " << coarseGridSize << " coarse grid entities." << std::endl;

@@ -453,7 +453,8 @@ void SubGridList::identifySubGrids() {
   }
   //  // -----------------------------------------------------------
 
-  DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
+  DSC_PROFILER.stopTiming("msfem.subgrid_list.identify",
+                          DSC_CONFIG_GET("global.output_walltime", false));
 
   return;
 }
@@ -504,7 +505,8 @@ void SubGridList::createSubGrids() {
     }
 
   }
-  DSC_PROFILER.stopTiming("msfem.subgrid_list.create");
+  DSC_PROFILER.stopTiming("msfem.subgrid_list.create",
+                          DSC_CONFIG_GET("global.output_walltime", false));
 
   return;
 }
@@ -539,7 +541,8 @@ void SubGridList::finalizeSubGrids() {
     }
     i += 1;
   }
-  DSC_PROFILER.stopTiming("msfem.subgrid_list.create.finalize");
+  DSC_PROFILER.stopTiming("msfem.subgrid_list.create.finalize",
+                          DSC_CONFIG_GET("global.output_walltime", false));
 
   return;
 }

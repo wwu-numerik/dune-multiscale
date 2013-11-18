@@ -82,7 +82,8 @@ int main(int argc, char** argv) {
     // normal
     // macro problem
 
-    const auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
+    const auto cpu_time = DSC_PROFILER.stopTiming("msfem.all",
+                                                  DSC_CONFIG_GET("global.output_walltime", false));
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
     return 0;

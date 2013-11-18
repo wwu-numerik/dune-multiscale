@@ -211,7 +211,8 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   DSC_PROFILER.startTiming("msfem.assembleMatrix");
   // assemble the MsFEM stiffness matrix
   elliptic_msfem_op.assemble_matrix(msfem_matrix);
-  DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << DSC_PROFILER.stopTiming("msfem.assembleMatrix")
+  DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: "
+               << DSC_PROFILER.stopTiming("msfem.assembleMatrix", DSC_CONFIG_GET("global.output_walltime", false))
                << "ms" << std::endl;
 
   // assemble right hand side
@@ -222,7 +223,8 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
 
   msfem_rhs.communicate();
-  DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS")
+  DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: "
+               << DSC_PROFILER.stopTiming("msfem.assembleRHS", DSC_CONFIG_GET("global.output_walltime", false))
                << "ms" << std::endl;
 
   BOOST_ASSERT_MSG(msfem_rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");

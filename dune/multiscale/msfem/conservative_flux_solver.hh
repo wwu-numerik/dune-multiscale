@@ -534,16 +534,19 @@ public:
       DSC_LOG_INFO << "Number of the 'conservative flux problem': " << (dimension * global_index_entity) + 1 << " (of "
                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;
 
-      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
+      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution",
+                                        DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f);
       DSC_PROFILER.resetTiming("none.local_problem_solution");
       DSC_PROFILER.startTiming("none.local_problem_solution");
 
       this->solve(e[1], *local_problem_solution_e1, global_index_entity, 1, conservative_flux_e1);
 
-      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
+      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution",
+                                        DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f);
       DSC_PROFILER.resetTiming("none.local_problem_solution");
     }
-    const auto total_time = DSC_PROFILER.stopTiming("msfem.conservative_flux_solver.solve_all_subgrids") / 1000.f;
+    const auto total_time = DSC_PROFILER.stopTiming("msfem.conservative_flux_solver.solve_all_subgrids",
+                                                    DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
     DSC_LOG_INFO << std::endl;
     DSC_LOG_INFO << "In: 'assemble all conservatice fluxes'." << std::endl << std::endl;
     DSC_LOG_INFO << "Conservative Flux determined for " << number_of_coarse_grid_entities << " coarse grid entities."

@@ -260,7 +260,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
       solvecellproblem(gradientPhi[i], barycenter_of_entity, *correctorPhi_i);
 
-      cell_time(DSC_PROFILER.stopTiming("none.solvecellproblem"));
+      cell_time(DSC_PROFILER.stopTiming("none.solvecellproblem", DSC_CONFIG_GET("global.output_walltime", false)));
       DSC_PROFILER.resetTiming("none.solvecellproblem");
 
       dfw.append(correctorPhi_i);
@@ -274,7 +274,8 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     }
   } // end: for-loop entity
 
-  const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_baseSet") / 1000.f;
+  const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_baseSet",
+                                                  DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: saveTheSolutions_baseSet." << std::endl << std::endl;
   DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std::endl;
@@ -320,14 +321,16 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
     solvecellproblem(grad_macro_discrete_function, barycenter_of_entity, *cell_solution_on_entity);
 
     // min/max time
-    cell_time(DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc.solvecellproblem"));
+    cell_time(DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc.solvecellproblem",
+                                      DSC_CONFIG_GET("global.output_walltime", false)));
     DSC_PROFILER.resetTiming("hmm.solver.saveTheSolutions_discFunc.solvecellproblem");
 
     dfw.append(cell_solution_on_entity);
     number_of_entity += 1;
   } // end: for-loop entity
 
-  const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc");
+  const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc",
+                                                  DSC_CONFIG_GET("global.output_walltime", false));
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: saveTheSolutions_discFunc." << std::endl << std::endl;
   DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std::endl;
@@ -402,7 +405,8 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
 
       // min/max time
       cell_time(DSC_PROFILER.stopTiming(
-          "hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem"));
+          "hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem",
+                  DSC_CONFIG_GET("global.output_walltime", false)));
 
       dfw.append(jac_corrector_Phi_i);
 
@@ -418,7 +422,8 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     number_of_entity += 1;
   } // end: for-loop entity
 
-  const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc");
+  const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc",
+                                                  DSC_CONFIG_GET("global.output_walltime", false));
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: saveTheJacCorSolutions_baseSet_discFunc." << std::endl << std::endl;
   DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std::endl;
