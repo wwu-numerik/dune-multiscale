@@ -1152,7 +1152,8 @@ void LodLocalProblemSolver::assemble_all_clement_lod()
     }
   }
   //! @todo The following debug-output is wrong (number of local problems may be different)
-  const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all") / 1000.f;
+  const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all",
+                                                  DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: assemble_all." << std::endl << std::endl;
   DSC_LOG_INFO << "MsFEM problems solved for " << coarseGridSize << " coarse grid entities." << std::endl;

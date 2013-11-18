@@ -223,7 +223,8 @@ void solve_hmm_problem_nonlinear(
     }
 
     if (relative_newton_error > hmm_tolerance) {
-      auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", hmm_iteration_step) / 1000.f;
+      auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step",
+                                                      hmm_iteration_step, DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
       DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s." << std::endl
                    << std::endl;
 
@@ -244,14 +245,14 @@ void solve_hmm_problem_nonlinear(
 
   } // while( relative_newton_error > hmm_tolerance )
 
-  const auto elapsed = DSC_PROFILER.stopTiming("hmm.assemble");
+  const auto elapsed = DSC_PROFILER.stopTiming("hmm.assemble", DSC_CONFIG_GET("global.output_walltime", false));
   DSC_LOG_INFO << seperator_line << "HMM problem with Newton method solved in " << elapsed / 1000.f << "s." << std::endl
                << std::endl;
 
   if (DSC_CONFIG_GET("hmm.adaptivity", false)) {
     //! TODO which section the local time needs to be added to
     // or if it's necessary at all
-    // total_hmm_time += DSC_PROFILER.stopTiming("hmmAssemble");
+    // total_hmm_time += DSC_PROFILER.stopTiming("hmmAssemble", DSC_CONFIG_GET("global.output_walltime", false));
   }
 } // solve_cell_problems_nonlinear
 
@@ -393,7 +394,8 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
 
   // residual solution almost identical to zero: break
   if (relative_newton_error <= hmm_tolerance) {
-    const auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", hmm_iteration_step);
+    const auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", hmm_iteration_step,
+                                                          DSC_CONFIG_GET("global.output_walltime", false));
     DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "ms." << std::endl
                  << std::endl;
     DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
@@ -505,7 +507,8 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
       hmm_solution,
       reference_solution);
 
-    const auto timeadapt = DSC_PROFILER.stopTiming("hmm.timeadapt") / 1000.f;
+    const auto timeadapt = DSC_PROFILER.stopTiming("hmm.timeadapt,
+DSC_CONFIG_GET("global.output_walltime", false)") / 1000.f;
     // if it took longer then 1 minute to compute the error:
     if (timeadapt > 60)
     {
