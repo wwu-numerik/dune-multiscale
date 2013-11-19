@@ -22,6 +22,8 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/stuff/grid/entity.hh>
+#include <dune/fem/misc/threads/domainthreaditerator.hh>
+
 #include <dune/subgrid/subgrid.hh>
 #include <cstddef>
 #include <map>
@@ -185,6 +187,7 @@ private:
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
   std::map<EntityIndexType, CoarseGridEntitySeed> subgrid_id_to_base_coarse_entity_;
+  Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators_;
 };
 
 } // namespace MsFEM {
