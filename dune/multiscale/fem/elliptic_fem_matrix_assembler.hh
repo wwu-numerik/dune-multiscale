@@ -11,7 +11,6 @@
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/multiscale/common/traits.hh>
-#include <dune/fem/misc/threads/domainthreaditerator.hh>
 
 #include <boost/noncopyable.hpp>
 
@@ -115,7 +114,7 @@ public:
   SMPDiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionImp& diffusion_op)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
-    , threadIterators_(discreteFunctionSpace.gridPart()){}
+    {}
 
 public:
   template <class MatrixType>
@@ -124,7 +123,6 @@ public:
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionImp& diffusion_operator_;
-  mutable Fem::DomainDecomposedIteratorStorage< GridPart > threadIterators_;
 };
 
 } // namespace FEM {

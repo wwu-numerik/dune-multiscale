@@ -3,6 +3,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <dune/fem/misc/threads/domainthreaditerator.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
 
 #include <memory>
@@ -147,7 +148,14 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
   rhsVector.clear();
   const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
   RangeType f_x;
-  for (const auto& coarse_grid_entity : rhsVector.space()) {
+  Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators(rhsVector.space().gridPart());
+  threadIterators.update();
+
+  #ifdef _OPENMP
+  #pragma omp parallel
+  #endif
+  {
+  for (const auto& coarse_grid_entity : threadIterators) {
     const auto coarseEntityIndex = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
     const auto& coarseGeometry = coarse_grid_entity.geometry();
@@ -281,7 +289,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
         }
       }
     }
-  }
+  } // for
+  } // omp region
 
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);

@@ -3,6 +3,7 @@
 #include <dune/fem/operator/discreteoperatorimp.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/misc/threads/domainthreaditerator.hh>
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/matrix_object.hh>
@@ -289,13 +290,14 @@ void SMPDiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_ma
 
   // micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
-  threadIterators_.update();
 
+  Fem::DomainDecomposedIteratorStorage< GridPart > threadIterators(discreteFunctionSpace_.gridPart());
+  threadIterators.update();
   #ifdef _OPENMP
   #pragma omp parallel
   #endif
   {
-  for (const auto& entity : threadIterators_) {
+  for (const auto& entity : threadIterators) {
     const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
 
