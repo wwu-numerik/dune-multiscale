@@ -136,7 +136,7 @@ void __attribute__((hot)) ExactSolution::jacobian(const DomainType& x, typename 
                + (eps * M_PI * cos_2_pi_x0 * cos_2_pi_x1 * sin_2_pi_x0_eps);
 
   grad_u[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1)
-               - (eps * M_PI * sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+               - (eps * M_PI * sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)
                + (      M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
 
