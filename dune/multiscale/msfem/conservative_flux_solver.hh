@@ -24,6 +24,7 @@
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/solver/cginverseoperator.hh>
 #include <dune/fem/operator/common/stencil.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
@@ -156,7 +157,7 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
     const auto numBaseFunctions = baseSet.size();
 
     for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace_.gridPart(), *host_entity_pointer)) {
-      const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
+      const auto faceQuadrature = DSFe::make_quadrature(intersection, discreteFunctionSpace_);
       const auto& faceGeometry = intersection.geometry();
 
       bool set_zero = false;
@@ -216,7 +217,7 @@ double ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp,
   const auto& discreteFunctionSpace = rhs.space();
 
   for (const auto& entity : discreteFunctionSpace) {
-    const auto quadrature = make_quadrature(entity, discreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace);
     const auto& geo = entity.geometry();
     const auto localRHS = rhs.localFunction(entity);
     // integrate
@@ -276,7 +277,7 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const auto quadrature = make_quadrature(local_grid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(local_grid_entity, subDiscreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);

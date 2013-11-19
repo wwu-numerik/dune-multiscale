@@ -7,6 +7,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/matrix_object.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/dirichletconstraints.hh>
 #include <dune/multiscale/problems/base.hh>
@@ -45,7 +46,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
+    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
@@ -105,7 +106,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
+    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
@@ -201,7 +202,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
+    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)
@@ -305,7 +306,7 @@ void SMPDiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_ma
 
     // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
     // use a higher order quadrature:
-    const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
+    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace_);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       // local (barycentric) coordinates (with respect to entity)

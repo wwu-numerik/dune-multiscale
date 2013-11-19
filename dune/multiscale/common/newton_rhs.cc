@@ -2,6 +2,7 @@
 #include <config.h>
 #include <dune/stuff/functions/global.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/multiscale/problems/base.hh>
 #include "dune/multiscale/common/traits.hh"
 #include "newton_rhs.hh"
@@ -15,7 +16,7 @@ void Dune::Multiscale::NewtonRightHandSide::assemble_for_Newton_method(const Dun
     const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
     const auto old_u_H_loc = old_u_H.localFunction(entity);
-    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
+    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space(), quadratureOrder);
 
     const auto numDofs = elementOfRHS.numDofs();
     const auto numQuadraturePoints = quadrature.nop();
@@ -64,7 +65,7 @@ void Dune::Multiscale::NewtonRightHandSide::assemble_for_Newton_method(const Dun
     const auto baseSet = rhsVector.space().basisFunctionSet(entity);
 
     const auto old_u_H_loc = old_u_H.localFunction(entity);
-    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
+    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space(), quadratureOrder);
 
     const auto numDofs = elementOfRHS.numDofs();
     // the return values:
@@ -126,7 +127,7 @@ void Dune::Multiscale::NewtonRightHandSide::assemble_for_Newton_method(const Dun
 
     const auto old_u_H_loc = old_u_H.localFunction(entity);
     const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
-    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
+    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space(), quadratureOrder);
 
     const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
 
@@ -138,7 +139,7 @@ void Dune::Multiscale::NewtonRightHandSide::assemble_for_Newton_method(const Dun
         continue;
 
       const auto face = intersection.indexInInside();
-      const auto faceQuadrature = make_quadrature(intersection, rhsVector.space(), quadratureOrder);
+      const auto faceQuadrature = DSFe::make_quadrature(intersection, rhsVector.space(), quadratureOrder);
       for (auto faceQuadraturePoint : DSC::valueRange(faceQuadrature.nop())) {
         baseSet.evaluateAll(faceQuadrature[faceQuadraturePoint], phi_x);
         baseSet.jacobianAll(faceQuadrature[faceQuadraturePoint], grad_phi_x);
