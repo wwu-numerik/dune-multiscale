@@ -1,5 +1,6 @@
 #include <config.h>
 #include <assert.h>
+#include <parallel/algorithm>
 #include <boost/assert.hpp>
 #include <boost/multi_array/multi_array_ref.hpp>
 #include <dune/common/exceptions.hh>
@@ -166,9 +167,12 @@ SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*=
   , entities_sharing_same_node_(hostGridPart_.grid().size(HostGridPartType::dimension))
   , enriched_(boost::extents[specifier.getNumOfCoarseEntities()][hostGridPart_.grid().size(0)]
                             [specifier.maxNumberOverlayLayers() + 1])
-  , fineToCoarseMap_(Fem::MPIManager::size()) {
+  , fineToCoarseMap_(Fem::MPIManager::size())
+  , threadIterators_(coarseSpace_.gridPart())
+{
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
 
+  threadIterators_.update();
   fine_id_to_subgrid_ids_.resize(hostGridPart_.grid().size(0));
 
   //! @todo temp!
@@ -397,8 +401,6 @@ void SubGridList::identifySubGrids() {
   // the fine grid part
   const HostGridPartType& hostGridPart = hostSpace_.gridPart();
 
-  // the fine grid (subgrid needs non-const ref)
-  HostGridType& hostGrid = hostSpace_.gridPart().grid();
 
   // -------- identify the entities that share a certain node -------
 
@@ -431,15 +433,31 @@ void SubGridList::identifySubGrids() {
   std::fill(enriched_.data(), enriched_.data() + enriched_.num_elements(), false);
   // loop to initialize subgrids (and to initialize the coarse node vector):
   // -----------------------------------------------------------
+
+  // the fine grid (subgrid needs non-const ref)
+  HostGridType& hostGrid = hostSpace_.gridPart().grid();
+
+  //! creating SubGirds in parallel sections fail
   for (const auto& coarse_entity : coarseSpace_) {
+    const auto coarse_index = coarseGridLeafIndexSet_.index(coarse_entity);
+    // make sure we did not create a subgrid for the current coarse entity so far
+    assert(subGridList_.find(coarse_index) == subGridList_.end());
+    subGridList_[coarse_index] = std::make_shared<SubGridType>(hostGrid);
+  }
+
+  #ifdef _OPENMP
+  #pragma omp parallel
+  #endif
+  {
+  for (const auto& coarse_entity : threadIterators_) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
     assert(coarse_entity.partitionType() == Dune::InteriorEntity);
     const auto coarse_index = coarseGridLeafIndexSet_.index(coarse_entity);
-    // make sure we did not create a subgrid for the current coarse entity so far
-    assert(subGridList_.find(coarse_index) == subGridList_.end());
+
     subgrid_id_to_base_coarse_entity_.insert(std::make_pair(coarse_index, std::move(coarse_entity.seed())));
-    subGridList_[coarse_index] = std::make_shared<SubGridType>(hostGrid);
+
+    assert(subGridList_[coarse_index]);
     subGridList_[coarse_index]->createBegin();
 
     if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
@@ -450,7 +468,9 @@ void SubGridList::identifySubGrids() {
         extended_coarse_node_store_[coarse_index].emplace_back(coarse_entity.geometry().corner(c));
       }
     }
-  }
+  } // for
+  } // omp region
+
   //  // -----------------------------------------------------------
 
   DSC_PROFILER.stopTiming("msfem.subgrid_list.identify",
@@ -463,9 +483,15 @@ void SubGridList::createSubGrids() {
   DSC_PROFILER.startTiming("msfem.subgrid_list.create");
 
   const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
+  Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > hostSpaceIterators(hostSpace_.gridPart());
+  hostSpaceIterators.update();
 
   // loop over all host entities and assign them to a macro cell
-  for (const auto& host_entity : hostSpace_) {
+  #ifdef _OPENMP
+  #pragma omp parallel
+  #endif
+  {
+  for (const auto& host_entity : hostSpaceIterators) {
     // get the coarse-grid-father of host_entity (which is a maxlevel entity)...
     //    const HostEntityPointerType level_father_entity = DSG::make_father(coarseGridLeafIndexSet_,
     //            HostEntityPointerType(host_entity),
@@ -504,43 +530,56 @@ void SubGridList::createSubGrids() {
       }
     }
 
-  }
+  } // for
+  } // omp region
+
   DSC_PROFILER.stopTiming("msfem.subgrid_list.create",
                           DSC_CONFIG_GET("global.output_walltime", false));
 
   return;
 }
 
+template < class A, class B, class C>
+void finalizeSubGrid(A& it, const B& coarseSpace_, const C& coarseGridLeafIndexSet_)
+{
+  auto& subGridIt = *it;
+  subGridIt.second->createEnd();
+
+  // report some infos about the subgrids if desired
+  if (!false) {
+    DSC_LOG_INFO << "Subgrid " << subGridIt.first << ":" << std::endl;
+    subGridIt.second->report();
+  }
+
+  // error handling
+  if (subGridIt.second->size(2) == 0) {
+    DSC_LOG_ERROR << "Error." << std::endl << "Error. Created Subgrid with 0 nodes." << std::endl;
+
+    for (const auto& coarse_it : coarseSpace_) {
+      const auto index = coarseGridLeafIndexSet_.index(coarse_it);
+      if (subGridIt.first == index) {
+        DSC_LOG_ERROR << "We have a problem with the following coarse-grid element:" << std::endl
+                      << "coarse element corner(0) = " << coarse_it.geometry().corner(0) << std::endl
+                      << "coarse element corner(1) = " << coarse_it.geometry().corner(1) << std::endl
+                      << "coarse element corner(2) = " << coarse_it.geometry().corner(2) << std::endl << std::endl;
+      }
+    }
+    DUNE_THROW(Dune::InvalidStateException, "Created Subgrid with 0 nodes");
+  }
+}
+
 void SubGridList::finalizeSubGrids() {
   DSC_PROFILER.startTiming("msfem.subgrid_list.create.finalize");
-  int i = 0;
-  for (auto subGridIt : subGridList_) {
-    // finish the creation of each subgrid
-    subGridIt.second->createEnd();
 
-    // report some infos about the subgrids if desired
-    if (!silent_) {
-      DSC_LOG_INFO << "Subgrid " << i << ":" << std::endl;
-      subGridIt.second->report();
-    }
+//#ifndef GNU
+//#error bajh
+//#else
 
-    // error handling
-    if (subGridIt.second->size(2) == 0) {
-      DSC_LOG_ERROR << "Error." << std::endl << "Error. Created Subgrid with 0 nodes." << std::endl;
+//  auto func = std::bind(finalizeSubGrid, std::placeholders::_1, coarseSpace_, coarseGridLeafIndexSet_);
+  auto func = [](SubGridStorageType::value_type& it){it.second->createEnd();};
+//  func(*subGridList_.begin());
+  __gnu_parallel::for_each(subGridList_.begin(),  subGridList_.end(), func);
 
-      for (const auto& coarse_it : coarseSpace_) {
-        const auto index = coarseGridLeafIndexSet_.index(coarse_it);
-        if (subGridIt.first == index) {
-          DSC_LOG_ERROR << "We have a problem with the following coarse-grid element:" << std::endl
-                        << "coarse element corner(0) = " << coarse_it.geometry().corner(0) << std::endl
-                        << "coarse element corner(1) = " << coarse_it.geometry().corner(1) << std::endl
-                        << "coarse element corner(2) = " << coarse_it.geometry().corner(2) << std::endl << std::endl;
-        }
-      }
-      DUNE_THROW(Dune::InvalidStateException, "Created Subgrid with 0 nodes");
-    }
-    i += 1;
-  }
   DSC_PROFILER.stopTiming("msfem.subgrid_list.create.finalize",
                           DSC_CONFIG_GET("global.output_walltime", false));
 
