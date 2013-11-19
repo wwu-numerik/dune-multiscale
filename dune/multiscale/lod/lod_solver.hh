@@ -203,7 +203,7 @@ private:
 
       const auto& geometry = (*entity_pointer).geometry();
 
-      const auto quadrature = make_quadrature(*entity_pointer, discreteFunctionSpace_);
+      const auto quadrature = DSFe::make_quadrature(*entity_pointer, discreteFunctionSpace_);
       const auto numQuadraturePoints = quadrature.nop();
       for (auto quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
         DomainType global_point = geometry.global(quadrature.point(quadraturePoint));
@@ -307,7 +307,7 @@ private:
           if (intersection.boundary() && (intersection.boundaryId() != 2))
             continue;
 
-          const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
+          const auto faceQuadrature = DSFe::make_quadrature(intersection, discreteFunctionSpace_);
           const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
           for (size_t faceQuadraturePoint = 0; faceQuadraturePoint < numFaceQuadraturePoints; ++faceQuadraturePoint) {
@@ -332,7 +332,7 @@ private:
         const auto glob_neumann_corrector_localized = global_neumann_corrector.localFunction(entity);
         const auto dirichlet_extension_localized = dirichlet_extension.localFunction(entity);
 
-        const auto quadrature = make_quadrature(entity, discreteFunctionSpace_);
+        const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace_);
         const auto numQuadraturePoints = quadrature.nop();
         for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
           const auto global_point = geometry.global(quadrature.point(quadraturePoint));

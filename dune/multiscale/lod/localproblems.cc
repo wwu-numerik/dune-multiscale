@@ -449,8 +449,8 @@ void LodLocalProblemSolver::preprocess_corrector_problems(const int coarse_index
     const auto& host_entity = *host_entity_pointer;
 
     // exact for polynomials of degree 2:
-    const auto sg_quadrature = make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
-    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
+    const auto sg_quadrature = DSFe::make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     const auto& geometry = host_entity.geometry();
 
@@ -548,8 +548,8 @@ void LodLocalProblemSolver::solve_corrector_problem_lod(
     const auto& host_entity = *host_entity_pointer;
 
     // exact for polynomials of degree 2:
-    const auto sg_quadrature = make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
-    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
+    const auto sg_quadrature = DSFe::make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 
@@ -694,8 +694,8 @@ void LodLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
     const auto& host_entity = *host_entity_pointer;
 
     // exact for polynomials of degree 2:
-    const auto sg_quadrature = make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
-    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
+    const auto sg_quadrature = DSFe::make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 
@@ -838,8 +838,8 @@ void LodLocalProblemSolver::solve_neumann_corrector_problem_lod(
     const auto& host_entity = *host_entity_pointer;
 
     // exact for polynomials of degree 2:
-    const auto sg_quadrature = make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
-    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
+    const auto sg_quadrature = DSFe::make_quadrature(subgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 

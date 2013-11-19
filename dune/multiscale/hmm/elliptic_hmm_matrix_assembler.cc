@@ -103,7 +103,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::LinearOperatorTy
           const auto localized_corrector_j = corrector_Phi[j]->localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
-          const auto micro_grid_quadrature = make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace_);
+          const auto micro_grid_quadrature = DSFe::make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace_);
           const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {
@@ -259,7 +259,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
           const auto loc_D_Q_old_u_H_Phi_i = jacobian_corrector_old_u_H_Phi_i->localFunction(micro_grid_entity);
 
           // higher order quadrature, since A^{\epsilon} is highly variable
-          const auto micro_grid_quadrature = make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace_);
+          const auto micro_grid_quadrature = DSFe::make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace_);
           const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
           for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {

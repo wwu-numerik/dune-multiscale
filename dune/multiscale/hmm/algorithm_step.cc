@@ -588,7 +588,7 @@ void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType &f, cons
     const auto macro_grid_baseSet = discreteFunctionSpace.basisFunctionSet(*macro_grid_it);
     const auto old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
     // for \int_{\Omega} f \Phi
-    const auto macro_quadrature = make_quadrature(*macro_grid_it, discreteFunctionSpace);
+    const auto macro_quadrature = DSFe::make_quadrature(*macro_grid_it, discreteFunctionSpace);
     // for - \int_{\Omega} \in_Y A^{\epsilon}( gradient reconstruction ) \nabla \Phi
     // the fine scale reconstructions are only available for the barycenter of the macro grid entity
     const auto macro_entity_barycenter = macro_grid_geometry.center();
@@ -657,7 +657,7 @@ void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType &f, cons
         auto loc_corrector_Phi_i = corrector_Phi_i->localFunction(micro_grid_entity);
 
         // higher order quadrature, since A^{\epsilon} is highly variable
-        const auto micro_grid_quadrature = make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace);
+        const auto micro_grid_quadrature = DSFe::make_quadrature(micro_grid_entity, periodicDiscreteFunctionSpace);
         const auto numQuadraturePoints = micro_grid_quadrature.nop();
 
         for (size_t microQuadraturePoint = 0; microQuadraturePoint < numQuadraturePoints; ++microQuadraturePoint) {

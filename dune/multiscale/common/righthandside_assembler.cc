@@ -3,6 +3,8 @@
 #include <dune/common/exceptions.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
+
 #include <memory>
 
 #include "dune/multiscale/common/traits.hh"
@@ -20,7 +22,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::
     const auto& geometry = entity.geometry();
     auto elementOfRHS = rhsVector.localFunction(entity);
     const auto baseSet = rhsVector.space().basisFunctionSet(entity);
-    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
+    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space(), quadratureOrder);
     const auto numDofs = elementOfRHS.numDofs();
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       // the return values:
@@ -71,7 +73,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_hmm_lod(
     for (const auto& intersection : DSC::intersectionRange(rhsVector.space().gridPart(), entity)) {
       if (Problem::isNeumannBoundary(intersection)) {
         const auto face = intersection.indexInInside();
-        const auto faceQuadrature = make_quadrature(intersection, rhsVector.space(), quadratureOrder);
+        const auto faceQuadrature = DSFe::make_quadrature(intersection, rhsVector.space(), quadratureOrder);
         const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
         for (auto faceQuadraturePoint : DSC::valueRange(numFaceQuadraturePoints)) {
@@ -102,7 +104,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_hmm_lod(
     JacobianRangeType diffusive_flux_in_gradient_dirichlet_extension;
 
     const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
-    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
+    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space(), quadratureOrder);
 
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       // local (barycentric) coordinates (with respect to entity)
@@ -171,7 +173,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
       if (enclosingCoarseCellIndex == coarseEntityIndex) {
         // higher order quadrature, since A^{\epsilon} is highly variable
         const auto localQuadrature =
-            make_quadrature(localEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
+            DSFe::make_quadrature(localEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
 
         // evaluate all local solutions and their jacobians in all quadrature points
         std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
@@ -191,7 +193,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
             if (Problem::isNeumannBoundary(intersection)) {
               const int orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
               const int quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
-              const auto faceQuad = make_quadrature(intersection, localSolutions[lsNum]->space(), quadOrder);
+              const auto faceQuad = DSFe::make_quadrature(intersection, localSolutions[lsNum]->space(), quadOrder);
               RangeType neumannValue(0.0);
               const auto numQuadPoints = faceQuad.nop();
               // loop over all quadrature points
