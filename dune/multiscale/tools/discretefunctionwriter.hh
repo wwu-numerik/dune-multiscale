@@ -151,7 +151,7 @@ class DiscreteFunctionIO : public boost::noncopyable {
     if(it != map.end())
       return it->second;
     std::lock_guard<std::mutex> lock(mutex_);
-    auto ptr = DSC::make_unique<typename IOMapType::mapped_type::element_type>(ctor_args...);
+    auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
     auto ret = map.emplace(filename, std::move(ptr));
     assert(ret.second);
     return ret.first->second;
@@ -182,8 +182,8 @@ public:
   }
 
 private:
-  std::unordered_map<std::string, std::unique_ptr<MemoryBackend>> memory_;
-  std::unordered_map<std::string, std::unique_ptr<DiskBackend>> disk_;
+  std::unordered_map<std::string, std::shared_ptr<MemoryBackend>> memory_;
+  std::unordered_map<std::string, std::shared_ptr<DiskBackend>> disk_;
   std::mutex mutex_;
 
 
