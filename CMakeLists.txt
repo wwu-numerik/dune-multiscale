@@ -32,7 +32,8 @@ include(DuneMacros)
 dune_project()
 include(DuneUtils)
 include(DuneMPI)
-
+include(FindTBB)
+find_package(TBB REQUIRED)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
@@ -134,9 +135,9 @@ add_dune_mpi_flags(OBJECT multiscale_hmm)
 add_dune_metis_flags(multiscale_common)
 add_dune_parmetis_flags(multiscale_common)
 
-set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
+set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES} blas)
 
-include_directories( ${PETSC_INCLUDES} )
+include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
 # set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
