@@ -15,6 +15,8 @@
 #include <memory>
 #include <dune/multiscale/tools/misc.hh>
 
+#include <Eigen/Core>
+
 #include "subgrid-list.hh"
 
 namespace Dune {
@@ -459,59 +461,152 @@ void SubGridList::identifySubGrids() {
 }
 
 void SubGridList::createSubGrids() {
-  DSC_PROFILER.startTiming("msfem.subgrid_list.create");
 
-  const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
-
-  // loop over all host entities and assign them to a macro cell
-  for (const auto& host_entity : hostSpace_) {
-    // get the coarse-grid-father of host_entity (which is a maxlevel entity)...
-    //    const HostEntityPointerType level_father_entity = DSG::make_father(coarseGridLeafIndexSet_,
-    //            HostEntityPointerType(host_entity),
-    //            specifier_.getLevelDifference());
-    //// ... and its index
-
-    const auto macroCellIndex = getEnclosingMacroCellIndex(host_entity);
-    // if macroCellIndex is smaller than zero, the enclosing coarse cell was
-    // not found. This may be the case if the host cell does not belong to the
-    // grid part for the current process.
-    if (macroCellIndex < 0)
-      DUNE_THROW(InvalidStateException, "macro cell not found!");
-    if (macroCellIndex >= 0) {
-      // add host_entity to the subgrid with the index 'macroCellIndex'
-      subGridList_[macroCellIndex]->insertPartial(host_entity);
-      // add the id of the subgrid to the vecor at position 'index of host grid element'
-      fine_id_to_subgrid_ids_[hostGridLeafIndexSet.index(host_entity)].push_back(macroCellIndex);
-
-      // check the neighbor entities and look if they belong to the same father
-      // if yes, continue
-      // if not, enrichment with 'n(T)' layers
-      bool all_neighbors_have_same_father = true;
-      const HostIntersectionIterator iend = hostGridPart_.iend(host_entity);
-      for (HostIntersectionIterator iit = hostGridPart_.ibegin(host_entity);
-           (iit != iend) && all_neighbors_have_same_father; ++iit) {
-        if (iit->neighbor()) {
-          // if there is a neighbor entity
-          // check if the neighbor entity is in the subgrid
-          if (getEnclosingMacroCellIndex(iit->outside()) != macroCellIndex)
-            all_neighbors_have_same_father = false;
-        } else {
-          all_neighbors_have_same_father = false;
-        }
+  if (DSC_CONFIG_GET("msfem.useNewOversampling", false)) {
+    DSC_PROFILER.startTiming("msfem.subgrid_list.createNew");
+    // build coarse grid neighboring information
+    const auto& coarseGrid = coarseSpace_.gridPart().grid();
+    //! @todo use number computed from element type and grid dimension
+    const int numberOfNeighbors = 4;
+    Eigen::Matrix<long int, Eigen::Dynamic, Eigen::Dynamic>
+        coarseNeighborInfo(coarseGrid.size(0), numberOfNeighbors);
+    const auto& coarseGridLeafIndexSet_ = coarseGrid.leafIndexSet();
+    for (const auto& coarseEn : coarseSpace_) {
+      const auto index = coarseGridLeafIndexSet_.index(coarseEn);
+      int i=0;
+      const auto& leafView = coarseGrid.leafView();
+      for (const auto& intersection : DSC::intersectionRange(leafView, coarseEn)) {
+        if (intersection.neighbor()) {
+          auto outsidePtr = intersection.outside();
+          const auto& outsideEn = *outsidePtr;
+          coarseNeighborInfo(index, i) = coarseGridLeafIndexSet_.index(outsideEn);
+        } else
+          coarseNeighborInfo(index, i) = -1;
+        ++i;
       }
+    }
 
-      if (!all_neighbors_have_same_father) {
-        auto layers = specifier_.getNoOfLayers(macroCellIndex);
-        if (layers > 0) {
-          DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
-          const HostEntityPointerType hep(host_entity);
-          enrichment(hep, macroCellIndex, subGridList_[macroCellIndex], layers);
+    std::map<EntityIndexType, std::vector<EntityIndexType> > subgrids;
+    // iterate over coarse grid and build oversampling
+    for (const auto& coarseEn : coarseSpace_) {
+      auto index = coarseGridLeafIndexSet_.index(coarseEn);
+      // add current cell to last neighbors
+      std::vector<long int> lastExtension = {index};
+      subgrids[index].push_back(index);
+      int noLayers = DSC_CONFIG_GET("msfem.newOversamplingLayers", 0);
+      for (const auto& m : DSC::valueRange(noLayers)) {
+        // add all neighbors of the last extension layer
+        std::vector<long int> lastExtensionNew;
+        for (const auto j : lastExtension) {
+          std::map<long int, int> counter;
+          for (const auto& k : DSC::valueRange(numberOfNeighbors)) {
+            // do nothing for boundary elements
+            auto neighborOfLastExten = coarseNeighborInfo(j, k);
+            if (neighborOfLastExten>=0 &&
+                std::find(subgrids[index].begin(),
+                          subgrids[index].end(),
+                          neighborOfLastExten) == subgrids[index].end()) {
+              subgrids[index].push_back(neighborOfLastExten);
+              lastExtensionNew.push_back(neighborOfLastExten);
+              // iterate over neighbors of neighbors
+              for (const auto& nn : DSC::valueRange(numberOfNeighbors))
+                ++counter[coarseNeighborInfo(neighborOfLastExten, nn)];
+            }
+          }
+          // additionally add all elements, that are neighbors of at least 2 elements of the current extension
+          for (const auto& mapEl : counter) {
+            if (mapEl.second>1) {
+              if (mapEl.first>=0 &&
+                  std::find(subgrids[index].begin(), subgrids[index].end(), mapEl.first) == subgrids[index].end()) {
+                assert(mapEl.second==2);
+                subgrids[index].push_back(mapEl.first);
+                lastExtensionNew.push_back(mapEl.first);
+              }
+            }
+          }
+        }
+        lastExtension = lastExtensionNew;
+      }
+    }
+
+    // now that the mappings for the oversampling are built up, create the actual subgrids
+
+    for (const auto& coarseEntity : specifier_.coarseSpace()) {
+      auto coarseIndex = coarseGridLeafIndexSet_.index(coarseEntity);
+      auto& subgrid = *subGridList_[coarseIndex];
+      const auto& oversampledCoarsePatch = subgrids[coarseIndex];
+      for (const auto& fineEntity : hostSpace_) {
+        auto enclosingCoarseIndex = getEnclosingMacroCellIndex(fineEntity);
+        if (std::find(oversampledCoarsePatch.begin(),
+                      oversampledCoarsePatch.end(),
+                      enclosingCoarseIndex)
+            !=oversampledCoarsePatch.end()) {
+          subgrid.insertPartial(fineEntity);
+          fine_id_to_subgrid_ids_[hostGridLeafIndexSet_.index(fineEntity)].push_back(coarseIndex);
         }
       }
     }
-  }
-  DSC_PROFILER.stopTiming("msfem.subgrid_list.create");
 
+
+
+    std::cout << "new creation of subgrid took: " << DSC_PROFILER.stopTiming("msfem.subgrid_list.createNew")
+              << std::endl;
+  } else {
+    DSC_PROFILER.startTiming("msfem.subgrid_list.create");
+
+    const HostGridLeafIndexSet& hostGridLeafIndexSet = hostSpace_.gridPart().grid().leafIndexSet();
+
+    // loop over all host entities and assign them to a macro cell
+    for (const auto& host_entity : hostSpace_) {
+      // get the coarse-grid-father of host_entity (which is a maxlevel entity)...
+      //    const HostEntityPointerType level_father_entity = DSG::make_father(coarseGridLeafIndexSet_,
+      //            HostEntityPointerType(host_entity),
+      //            specifier_.getLevelDifference());
+      //// ... and its index
+
+      const auto macroCellIndex = getEnclosingMacroCellIndex(host_entity);
+      // if macroCellIndex is smaller than zero, the enclosing coarse cell was
+      // not found. This may be the case if the host cell does not belong to the
+      // grid part for the current process.
+      if (macroCellIndex < 0)
+        DUNE_THROW(InvalidStateException, "macro cell not found!");
+      if (macroCellIndex >= 0) {
+        // add host_entity to the subgrid with the index 'macroCellIndex'
+        subGridList_[macroCellIndex]->insertPartial(host_entity);
+        // add the id of the subgrid to the vecor at position 'index of host grid element'
+        fine_id_to_subgrid_ids_[hostGridLeafIndexSet.index(host_entity)].push_back(macroCellIndex);
+
+        // check the neighbor entities and look if they belong to the same father
+        // if yes, continue
+        // if not, enrichment with 'n(T)' layers
+        bool all_neighbors_have_same_father = true;
+        const HostIntersectionIterator iend = hostGridPart_.iend(host_entity);
+        for (HostIntersectionIterator iit = hostGridPart_.ibegin(host_entity);
+             (iit != iend) && all_neighbors_have_same_father; ++iit) {
+          if (iit->neighbor()) {
+            // if there is a neighbor entity
+            // check if the neighbor entity is in the subgrid
+            if (getEnclosingMacroCellIndex(iit->outside()) != macroCellIndex)
+              all_neighbors_have_same_father = false;
+          } else {
+            all_neighbors_have_same_father = false;
+          }
+        }
+
+        if (!all_neighbors_have_same_father) {
+          auto layers = specifier_.getNoOfLayers(macroCellIndex);
+          if (layers > 0) {
+            DSC::Profiler::ScopedTiming enrichment_st("msfem.subgrid_list.enrichment");
+            const HostEntityPointerType hep(host_entity);
+            enrichment(hep, macroCellIndex, subGridList_[macroCellIndex], layers);
+          }
+        }
+      }
+    }
+    std::cout << "old creation of subgrid took: " << DSC_PROFILER.stopTiming("msfem.subgrid_list.create")
+              << std::endl;
+
+  }
   return;
 }
 
