@@ -39,7 +39,6 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(MatrixType& global_matrix) c
   const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
 
   Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators(coarseDiscreteFunctionSpace_.gridPart());
-  threadIterators.update();
 
   #ifdef _OPENMP
   #pragma omp parallel
