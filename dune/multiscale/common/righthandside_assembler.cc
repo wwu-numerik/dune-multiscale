@@ -149,7 +149,6 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
   const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
   RangeType f_x;
   Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators(rhsVector.space().gridPart());
-  threadIterators.update();
 
   #ifdef _OPENMP
   #pragma omp parallel

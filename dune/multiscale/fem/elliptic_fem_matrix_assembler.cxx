@@ -292,7 +292,7 @@ void SMPDiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_ma
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
   Fem::DomainDecomposedIteratorStorage< GridPart > threadIterators(discreteFunctionSpace_.gridPart());
-  threadIterators.update();
+
   #ifdef _OPENMP
   #pragma omp parallel
   #endif
