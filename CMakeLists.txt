@@ -72,28 +72,38 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
 
-set( PROBLEM_SOURCES
-	dune/multiscale/problems/elliptic/eight.cc
-	dune/multiscale/problems/elliptic/example.cc
-	dune/multiscale/problems/elliptic/eleven.cc
-	dune/multiscale/problems/elliptic/five.cc
-	dune/multiscale/problems/elliptic/four.cc
-	dune/multiscale/problems/elliptic/fourteen.cc
-	dune/multiscale/problems/elliptic/nine.cc
-	dune/multiscale/problems/elliptic/one.cc
-	dune/multiscale/problems/elliptic/seven.cc
-	dune/multiscale/problems/elliptic/six.cc
-	dune/multiscale/problems/elliptic/ten.cc
-	dune/multiscale/problems/elliptic/thirteen.cc
-	dune/multiscale/problems/elliptic/three.cc
-	dune/multiscale/problems/elliptic/toy.cc
-	dune/multiscale/problems/elliptic/twelve.cc
-	dune/multiscale/problems/elliptic/two.cc
-	dune/multiscale/problems/elliptic/spe10.cc
-	dune/multiscale/problems/selector.cc
-	dune/multiscale/problems/base.cc
+set( PROBLEM_NINE_ONLY 1 CACHE BOOL "wheter to compile all problesm into the binaries")
+
+if( PROBLEM_NINE_ONLY )
+    set( PROBLEM_SOURCES
+        dune/multiscale/problems/elliptic/nine.cc
+        dune/multiscale/problems/selector.cc
+        dune/multiscale/problems/base.cc
     )
-    
+else()
+    set( PROBLEM_SOURCES
+        dune/multiscale/problems/elliptic/nine.cc
+        dune/multiscale/problems/elliptic/eight.cc
+        dune/multiscale/problems/elliptic/example.cc
+        dune/multiscale/problems/elliptic/eleven.cc
+        dune/multiscale/problems/elliptic/five.cc
+        dune/multiscale/problems/elliptic/four.cc
+        dune/multiscale/problems/elliptic/fourteen.cc
+        dune/multiscale/problems/elliptic/one.cc
+        dune/multiscale/problems/elliptic/seven.cc
+        dune/multiscale/problems/elliptic/six.cc
+        dune/multiscale/problems/elliptic/ten.cc
+        dune/multiscale/problems/elliptic/thirteen.cc
+        dune/multiscale/problems/elliptic/three.cc
+        dune/multiscale/problems/elliptic/toy.cc
+        dune/multiscale/problems/elliptic/twelve.cc
+        dune/multiscale/problems/elliptic/two.cc
+        dune/multiscale/problems/elliptic/spe10.cc
+        dune/multiscale/problems/selector.cc
+        dune/multiscale/problems/base.cc
+    )
+endif( PROBLEM_NINE_ONLY )
+
 set( HMM_SOURCES  
         dune/multiscale/hmm/algorithm.cc
         dune/multiscale/hmm/algorithm_error.cc
