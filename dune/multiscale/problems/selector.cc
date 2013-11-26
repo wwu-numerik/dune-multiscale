@@ -39,17 +39,23 @@ using namespace Dune::Multiscale;
     #ProblemName, []() { return static_cast<ReturnType>(DSC::make_unique<Problem::ProblemName::FunctionName>()); }     \
   }
 
-#define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
-  std::map<std::string, std::function<ReturnType()>>(                                                                  \
-      {MAP_ITEM(One, ReturnType, FunctionName),      MAP_ITEM(Two, ReturnType, FunctionName),                          \
-       MAP_ITEM(Three, ReturnType, FunctionName),    MAP_ITEM(Four, ReturnType, FunctionName),                         \
-       MAP_ITEM(Fourteen, ReturnType, FunctionName), MAP_ITEM(Five, ReturnType, FunctionName),                         \
-       MAP_ITEM(Six, ReturnType, FunctionName),      MAP_ITEM(Seven, ReturnType, FunctionName),                        \
-       MAP_ITEM(SPE10, ReturnType, FunctionName),    MAP_ITEM(Eight, ReturnType, FunctionName),                        \
-       MAP_ITEM(Nine, ReturnType, FunctionName),     MAP_ITEM(Ten, ReturnType, FunctionName),                          \
-       MAP_ITEM(Eleven, ReturnType, FunctionName),   MAP_ITEM(Twelve, ReturnType, FunctionName),                       \
-       MAP_ITEM(Thirteen, ReturnType, FunctionName), MAP_ITEM(Fourteen, ReturnType, FunctionName),                     \
-       MAP_ITEM(Toy, ReturnType, FunctionName),})
+#if PROBLEM_NINE_ONLY
+# define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
+    std::map<std::string, std::function<ReturnType()>>(                                                               \
+         {MAP_ITEM(Nine, ReturnType, FunctionName), })
+#else
+# define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
+    std::map<std::string, std::function<ReturnType()>>(                                                                \
+        {MAP_ITEM(One, ReturnType, FunctionName),      MAP_ITEM(Two, ReturnType, FunctionName),                        \
+         MAP_ITEM(Three, ReturnType, FunctionName),    MAP_ITEM(Four, ReturnType, FunctionName),                       \
+         MAP_ITEM(Fourteen, ReturnType, FunctionName), MAP_ITEM(Five, ReturnType, FunctionName),                       \
+         MAP_ITEM(Six, ReturnType, FunctionName),      MAP_ITEM(Seven, ReturnType, FunctionName),                      \
+         MAP_ITEM(SPE10, ReturnType, FunctionName),    MAP_ITEM(Eight, ReturnType, FunctionName),                      \
+         MAP_ITEM(Nine, ReturnType, FunctionName),     MAP_ITEM(Ten, ReturnType, FunctionName),                        \
+         MAP_ITEM(Eleven, ReturnType, FunctionName),   MAP_ITEM(Twelve, ReturnType, FunctionName),                     \
+         MAP_ITEM(Thirteen, ReturnType, FunctionName), MAP_ITEM(Fourteen, ReturnType, FunctionName),
+         MAP_ITEM(Toy, ReturnType, FunctionName),})
+#endif
 
 /* to add a new problem a line like this above
  * MAP_ITEM(NewProblemName, ReturnType, FunctionName), \
@@ -62,7 +68,7 @@ template <class FunctionType>
 typename FunctionType::result_type find_and_call_item(const std::map<std::string, FunctionType>& rets) {
   auto it = rets.find(Dune::Multiscale::Problem::name());
   if (it == rets.end())
-    DUNE_THROW(Dune::InvalidStateException, "no data for Problem");
+    DUNE_THROW(Dune::InvalidStateException, "no data for Problem. (toggle PROBLEM_NINE_ONLY?)");
   return it->second.operator()();
 }
 
