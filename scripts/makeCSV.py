@@ -8,8 +8,8 @@ MIN_POW = 0
 MAX_POW = 12
 
 DATADIR = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
-
-HEADER_FN = os.path.join(DATADIR, 'header.csv')
+CSV_NAME = 'profiler.csv'
+HEADER_FN = [os.path.join(root, CSV_NAME) for root, _, files in os.walk(DATADIR) if CSV_NAME in files][0]
 IN_DELIMTER = ','
 OUT_DELIMITER = ','
 
