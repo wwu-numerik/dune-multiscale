@@ -157,7 +157,7 @@ void SubGridList::enrichment(const HostEntityPointerType& hit,
   }
 } // enrichment
 
-SubGridList::SubGridList(MacroMicroGridSpecifierType& specifier, bool silent /*= true*/)
+SubGridList::SubGridList(MsFEMTraits::MacroMicroGridSpecifierType& specifier, bool silent /*= true*/)
   : hostSpace_(specifier.fineSpace())
   , coarseSpace_(specifier.coarseSpace())
   , specifier_(specifier)
@@ -195,7 +195,7 @@ SubGridList::~SubGridList() {}
 * @param[in] coarseCellIndex The index of a coarse cell.
 * @return Returns the subgrid belonging to the coarse cell with the given index.
 */
-SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex) {
+MsFEMTraits::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex) {
   auto found = subGridList_.find(coarseCellIndex);
   BOOST_ASSERT_MSG(found != subGridList_.end(), "There is no subgrid for the index you provided!");
   assert(found->second);
@@ -207,7 +207,7 @@ SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex) {
 * @param[in] coarseCellIndex The index of a coarse cell.
 * @return Returns the subgrid belonging to the coarse cell with the given index.
 */
-const SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex) const {
+const MsFEMTraits::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIndex) const {
   auto found = subGridList_.find(coarseCellIndex);
   BOOST_ASSERT_MSG(found != subGridList_.end(), "There is no subgrid for the index you provided!");
   assert(found->second);
@@ -219,7 +219,7 @@ const SubGridList::SubGridType& SubGridList::getSubGrid(std::size_t coarseCellIn
 * @param[in] coarseCell The coarse cell.
 * @return Returns the subgrid belonging to the given coarse cell.
 */
-const SubGridList::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& entity) const {
+const MsFEMTraits::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& entity) const {
   const int index = coarseGridLeafIndexSet_.index(entity);
   return getSubGrid(index);
 } // getSubGrid
@@ -229,7 +229,7 @@ const SubGridList::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& 
 * @param[in] coarseCell The coarse cell.
 * @return Returns the subgrid belonging to the given coarse cell.
 */
-SubGridList::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& entity) {
+MsFEMTraits::SubGridType& SubGridList::getSubGrid(const CoarseEntityType& entity) {
   const int index = coarseGridLeafIndexSet_.index(entity);
   return getSubGrid(index);
 } // getSubGrid
@@ -286,7 +286,7 @@ const SubGridList::CoarseNodeVectorType& SubGridList::getExtendedCoarseNodeVecto
 std::size_t SubGridList::getNumberOfSubGrids() const { return specifier_.getNumOfCoarseEntities(); }
 std::size_t SubGridList::size() const { return specifier_.getNumOfCoarseEntities(); }
 
-SubGridList::SubGridPartType SubGridList::gridPart(std::size_t i) { return SubGridPartType(getSubGrid(i)); }
+MsFEMTraits::SubGridPartType SubGridList::gridPart(std::size_t i) { return SubGridPartType(getSubGrid(i)); }
 
 /** Get the index of the coarse cell enclosing the barycentre of a given fine cell.
 *

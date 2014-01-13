@@ -34,16 +34,16 @@ namespace MsFEM {
 class MacroMicroGridSpecifier;
 
 class WeightedClementOperator
-    : public Operator<typename SubGridList::SubGridDiscreteFunctionType::RangeFieldType,
+    : public Operator<typename MsFEMTraits::SubGridDiscreteFunctionType::RangeFieldType,
                       typename CommonTraits::DiscreteFunctionType::RangeFieldType,
-                      typename SubGridList::SubGridDiscreteFunctionType, typename CommonTraits::DiscreteFunctionType>,
+                      typename MsFEMTraits::SubGridDiscreteFunctionType, typename CommonTraits::DiscreteFunctionType>,
       public OEMSolver::PreconditionInterface {
 private:
   typedef std::vector<std::shared_ptr<CommonTraits::DiscreteFunctionType>> CoarseBasisFunctionList;
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
 
   //! type of discrete functions
-  typedef SubGridList::SubGridDiscreteFunctionType DiscreteFunctionType;
+  typedef MsFEMTraits::SubGridDiscreteFunctionType DiscreteFunctionType;
 
   typedef CoarseDiscreteFunction CoarseDiscreteFunctionType;
 
@@ -86,8 +86,8 @@ private:
   static const int dimension = GridType::dimension;
   static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
 
-  typedef Dune::Fem::SparseRowMatrixTraits<typename SubGridList::SubGridDiscreteFunctionSpaceType,
-                                           typename SubGridList::HostDiscreteFunctionSpaceType>
+  typedef Dune::Fem::SparseRowMatrixTraits<typename MsFEMTraits::SubGridDiscreteFunctionSpaceType,
+                                           typename CommonTraits::DiscreteFunctionSpaceType>
   WeightedClementMatrixObjectTraits;
 
   typedef typename WeightedClementMatrixObjectTraits::MatrixObjectType LinearOperatorType;

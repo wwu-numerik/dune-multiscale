@@ -86,15 +86,15 @@ private:
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
   //! type of grid
-  typedef typename SubGridList::SubGridType SubGridType;
+  typedef typename MsFEMTraits::SubGridType SubGridType;
   //! type of grid part
-  typedef typename SubGridList::SubGridPartType SubGridPartType;
+  typedef typename MsFEMTraits::SubGridPartType SubGridPartType;
   //! type of subgrid discrete function space
-  typedef typename SubGridList::SubGridDiscreteFunctionSpaceType SubDiscreteFunctionSpaceType;
+  typedef typename MsFEMTraits::SubGridDiscreteFunctionSpaceType SubDiscreteFunctionSpaceType;
 
 public:
   //! type of subgrid discrete function
-  typedef typename SubGridList::SubGridDiscreteFunctionType SubDiscreteFunctionType;
+  typedef typename MsFEMTraits::SubGridDiscreteFunctionType SubDiscreteFunctionType;
   typedef std::vector<std::unique_ptr<SubDiscreteFunctionType>> SubDiscreteFunctionVectorType;
 
 private:

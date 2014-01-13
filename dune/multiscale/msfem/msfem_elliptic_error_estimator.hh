@@ -103,10 +103,10 @@ private:
 
   // --------------------------- subgrid typedefs ------------------------------------
 
-  typedef typename SubGridListType::SubGridType SubGridType;
-  typedef typename SubGridListType::SubGridPartType SubGridPartType;
-  typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
-  typedef typename SubGridListType::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
+  typedef typename MsFEMTraits::SubGridType SubGridType;
+  typedef typename MsFEMTraits::SubGridPartType SubGridPartType;
+  typedef typename MsFEMTraits::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
+  typedef typename MsFEMTraits::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
 
   typedef typename SubGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
   typedef typename SubGridIteratorType::Entity SubGridEntityType;

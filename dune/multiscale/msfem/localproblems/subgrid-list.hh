@@ -36,21 +36,10 @@ namespace MsFEM {
 
 //! container for cell problem subgrids
 class SubGridList : public boost::noncopyable {
-  typedef typename CommonTraits::DiscreteFunctionType HostDiscreteFunctionImp;
-
-public:
-  //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
-
-  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
-  typedef HostDiscreteFunctionImp HostDiscreteFunctionType;
-  //! type of discrete function space
+  typedef typename CommonTraits::DiscreteFunctionType HostDiscreteFunctionType;
   typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
-  //! type of grid partition
-  typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
-
-  //! type of grid
-private:
   typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
+  typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
   typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
   typedef typename HostGridLeafIndexSet::IndexType EntityIndexType;
   typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
@@ -58,7 +47,7 @@ private:
   typedef typename HostEntityType::EntityPointer HostEntityPointerType;
   typedef typename HostEntityType::EntitySeed CoarseGridEntitySeed;
   typedef typename HostEntityType::Codim<HostGridType::dimension>::EntityPointer HostNodePointer;
-  typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
+  typedef typename HostDiscreteFunctionSpaceType::GridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   typedef typename MsFEMTraits::CoarseEntityType CoarseEntityType;
 
@@ -76,12 +65,12 @@ private:
   typedef std::vector<CoarseNodeVectorType> CoarseGridNodeStorageType;
   typedef boost::multi_array<bool, 3> EnrichmentMatrixType;
   //! @todo this should eventually be changed to the type of the coarse space
-  typedef typename HostGridPartType::Codim<0>::EntityType::Geometry::LocalCoordinate LocalCoordinateType;
+  typedef typename HostDiscreteFunctionSpaceType::GridPartType::Codim<0>::EntityType::Geometry::LocalCoordinate LocalCoordinateType;
   typedef ReferenceElements<typename LocalCoordinateType::value_type, LocalCoordinateType::dimension>
   CoarseRefElementType;
   typedef std::vector<std::vector<HostEntityPointerType>> EntityPointerCollectionType;
 
-public:
+private:
   //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
   //! type of grid
@@ -93,7 +82,8 @@ public:
   //! type of subgrid discrete function
   typedef MsFEMTraits::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
 
-  SubGridList(MacroMicroGridSpecifierType& specifier, bool silent = true);
+public:
+  SubGridList(MsFEMTraits::MacroMicroGridSpecifierType& specifier, bool silent = true);
   ~SubGridList();
 
 private:
@@ -167,7 +157,7 @@ private:
 
   const HostDiscreteFunctionSpaceType& hostSpace_;
   const HostDiscreteFunctionSpaceType& coarseSpace_;
-  MacroMicroGridSpecifierType& specifier_;
+  MsFEMTraits::MacroMicroGridSpecifierType& specifier_;
   bool silent_;
   SubGridStorageType subGridList_;
   CoarseGridNodeStorageType coarse_node_store_;
