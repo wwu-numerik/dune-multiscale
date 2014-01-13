@@ -75,7 +75,7 @@ struct EstimatorUtils {
 
   static std::pair<typename EstimatorType::JumpArray, typename EstimatorType::JumpArray>
   flux_contributions(const typename EstimatorType::SubGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace,
-                     const typename SubGridList::SubGridPartType& sub_gridPart,
+                     const typename MsFEMTraits::SubGridPartType& sub_gridPart,
                      const typename EstimatorType::LeafIndexSetType& coarseGridLeafIndexSet,
                      const typename EstimatorType::DiscreteFunctionPointerPair& cflux_coarse_ent_host,
                      const typename EstimatorType::DiscreteFunctionType& msfem_coarse_part,

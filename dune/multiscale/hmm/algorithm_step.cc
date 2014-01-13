@@ -159,7 +159,7 @@ void solve_hmm_problem_nonlinear(
 
   while (relative_newton_error > hmm_tolerance) {
     // (here: hmm_solution = solution from the last iteration step)
-    DSC_PROFILER.startTiming("hmm.newton_step", hmm_iteration_step);
+    DSC_PROFILER.startTiming("hmm.newton_step");
     DSC_LOG_INFO << "HMM Newton iteration " << hmm_iteration_step << ":" << std::endl;
 
     // solve cell problems for the solution of the last iteration step

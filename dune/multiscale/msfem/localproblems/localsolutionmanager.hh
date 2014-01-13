@@ -26,12 +26,13 @@ private:
   typedef typename CommonTraits::GridType::Traits::GlobalIdSet::IdType IdType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
-public:
-  typedef typename SubGridListType::SubGridPartType SubGridPartType;
-  typedef typename SubGridListType::SubGridDiscreteFunctionType DiscreteFunctionType;
+
+  typedef MsFEMTraits::SubGridPartType SubGridPartType;
+  typedef MsFEMTraits::SubGridDiscreteFunctionType DiscreteFunctionType;
+  typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
+public:
   typedef std::vector<std::unique_ptr<DiscreteFunctionType>> LocalSolutionVectorType;
-  typedef typename SubGridListType::SubGridDiscreteFunctionSpaceType DiscreteFunctionSpaceType;
 
   LocalSolutionManager(const CoarseEntityType& coarseEntity, SubGridListType& subgridList,
                        const MacroMicroGridSpecifierType& gridSpecifier);

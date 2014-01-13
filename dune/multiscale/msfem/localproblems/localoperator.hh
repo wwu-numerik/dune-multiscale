@@ -58,7 +58,7 @@ private:
   typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
   typedef typename DiscreteFunctionSpaceType::EntityType EntityType;
 
-  typedef typename SubGridList::HostDiscreteFunctionType HostDiscreteFunction;
+  typedef typename CommonTraits::DiscreteFunctionType HostDiscreteFunction;
   typedef typename HostDiscreteFunction::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
   typedef typename HostDiscreteFunctionSpaceType::EntityType HostEntity;
   typedef typename HostEntity::EntityPointer HostEntityPointer;
