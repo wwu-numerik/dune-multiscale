@@ -27,29 +27,7 @@ Elliptic_MsFEM_Solver::Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discre
 void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func,
                                                           DiscreteFunctionType& host_func) const {
   host_func.clear();
-
-  const SubgridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
-  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
-
-  typedef typename SubgridDiscreteFunctionSpaceType::IteratorType SubgridIterator;
-  typedef typename SubgridIterator::Entity SubgridEntity;
-  typedef typename SubgridDiscreteFunctionType::LocalFunctionType SubgridLocalFunction;
-
-  const SubgridIterator sub_endit = subDiscreteFunctionSpace.end();
-  for (SubgridIterator sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it) {
-    const SubgridEntity& sub_entity = *sub_it;
-
-    const HostEntityPointer host_entity_pointer = subGrid.getHostEntity<0>(*sub_it);
-    const HostEntity& host_entity = *host_entity_pointer;
-
-    const SubgridLocalFunction sub_loc_value = sub_func.localFunction(sub_entity);
-    auto host_loc_value = host_func.localFunction(host_entity);
-
-    const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
-    for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-      host_loc_value[i] = sub_loc_value[i];
-    }
-  }
+  Stuff::HeterogenousProjection<>::project(sub_func, host_func);
 } // subgrid_to_hostrid_projection
 
 void Elliptic_MsFEM_Solver::projectCoarseToFineScale(MacroMicroGridSpecifier& /*specifier*/,
@@ -65,19 +43,19 @@ void Elliptic_MsFEM_Solver::projectCoarseToFineScale(MacroMicroGridSpecifier& /*
 }
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& specifier,
-                                                     MsFEMTraits::SubGridListType& subgrid_list,
+                                                     MsFEMTraits::LocalGridListType& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
   fine_scale_part.clear();
 
   const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-  const HostGrid& grid = gridPart.grid();
+  const LocalGrid& grid = gridPart.grid();
 
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
-  const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
+  const LocalGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
 
   const int number_of_nodes = grid.size(2 /*codim*/);
-  std::vector<std::vector<HostEntityPointer>> entities_sharing_same_node(number_of_nodes);
+  std::vector<std::vector<LocalEntityPointer>> entities_sharing_same_node(number_of_nodes);
 
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
   // traverse coarse space
@@ -142,24 +120,22 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
                            discreteFunctionSpace_.gridPart().grid().maxLevel(),
                        "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid.");
 
+      DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local solution. restriction also no longer works");
+#if 0
       const auto& nodeToEntityMap = subgrid_list.getNodeEntityMap();
 
-      for (auto& subgridEntity : localSolManager.getLocalDiscreteFunctionSpace()) {
-        //! MARK actual subgrid usage
-        const auto fine_host_entity_pointer = localSolManager.getSubGridPart().grid().getHostEntity<0>(subgridEntity);
-        const auto& fine_host_entity = *fine_host_entity_pointer;
-
-        const auto hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(fine_host_entity_pointer);
+      for (auto& local_entity : localSolManager.getLocalDiscreteFunctionSpace()) {
+        const auto hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(local_entity);
         if (hostFatherIndex == coarseCellIndex) {
-          const auto sub_loc_value = localSolutions[0]->localFunction(subgridEntity);
+          const auto sub_loc_value = localSolutions[0]->localFunction(local_entity);
 
           assert(localSolutions.size() == coarseSolutionLF.numDofs() + localSolManager.numBoundaryCorrectors());
-          auto host_loc_value = fine_scale_part.localFunction(fine_host_entity);
+          auto host_loc_value = fine_scale_part.localFunction(local_entity);
 
-          const auto number_of_nodes_entity = subgridEntity.count<HostGrid::dimension>();
+          const auto number_of_nodes_entity = local_entity.count<LocalGrid::dimension>();
 
           for (auto i : DSC::valueRange(number_of_nodes_entity)) {
-            const auto node = fine_host_entity.subEntity<HostGrid::dimension>(i);
+            const auto node = local_entity.subEntity<LocalGrid::dimension>(i);
             const auto global_index_node = gridPart.indexSet().index(*node);
 
             // devide the value by the number of fine elements sharing the node (will be
@@ -169,6 +145,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
           }
         }
       }
+#endif //0
     }
   }
   DSC_LOG_INFO << " done." << std::endl;
@@ -178,7 +155,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
     const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
     // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
     // n(T)-layers.
-    MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+    MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
     DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
     DiscreteFunctionType& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero");
@@ -193,7 +170,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   typedef RightHandSideAssembler RhsAssembler;
 
   // Assemble and solve the local problems. Timing is done in assembleAndSolveAll-method
-  MsFEMLocalProblemSolver localProblemSolver(specifier.fineSpace(), specifier, subgrid_list, diffusion_op);
+  MsFEMLocalProblemSolver localProblemSolver(specifier, subgrid_list, diffusion_op);
   localProblemSolver.assembleAndSolveAll();
 
   //! define the discrete (elliptic) operator that describes our problem

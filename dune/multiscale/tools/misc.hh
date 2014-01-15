@@ -8,6 +8,9 @@
 #include <dune/stuff/common/string.hh>
 #include <dune/grid/common/entitypointer.hh>
 #include <dune/grid/common/indexidset.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
+
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Stuff {
@@ -54,6 +57,27 @@ bool entities_identical(const Entity<cd, dim, GridImp, EntityImp>& entity,
     }
   }
   return true;
+}
+
+//! create N hostgrid functions from N subgridfunctions
+template <std::array<int, 1>::size_type N>
+static void
+subgrid_to_hostrid_function(const std::array<DMM::MsFEMTraits::LocalGridDiscreteFunctionType, N>& sub_funcs,
+                            std::array<Multiscale::CommonTraits::DiscreteFunctionType, N>& host_funcs) {
+  for (auto& host_func : host_funcs)
+    host_func->clear();
+
+  for(const auto i : Common::valueRange(N))
+    HeterogenousProjection<>::project(sub_funcs[i], host_funcs[i]);
+} // subgrid_to_hostrid_function
+
+
+static void
+subgrid_to_hostrid_function(const DMM::MsFEMTraits::MsFEMTraits::LocalGridDiscreteFunctionType& sub_func,
+                            Multiscale::CommonTraits::DiscreteFunctionType& host_func)
+{
+  host_func.clear();
+  HeterogenousProjection<>::project(sub_func, host_func);
 }
 
 } // namespace Grid

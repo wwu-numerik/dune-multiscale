@@ -52,65 +52,56 @@ public:
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
 class MsFEMLocalProblemSolver {
+public:
+  typedef typename MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
+
 private:
-  typedef CommonTraits::DiscreteFunctionType HostDiscreteFunctionType;
+  typedef typename MsFEMTraits::LocalGridType LocalGridType;
+  typedef typename MsFEMTraits::LocalGridPartType LocalGridPartType;
+  typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
-  //! @todo HostDiscreteFunctionType should be replaced by some kind of coarse function type
-  typedef std::vector<std::shared_ptr<HostDiscreteFunctionType>> CoarseBasisFunctionListType;
+  //! @todo LocalGridDiscreteFunctionType should be replaced by some kind of coarse function type
+  typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> CoarseBasisFunctionListType;
 
-  //! type of discrete function space
-  typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
-  //! type of (non-discrete )function space
-  typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
-  typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
-  typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
-  typedef typename HostDiscreteFunctionSpaceType::RangeType RangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
   //! type of value of a gradient of a function
-  typedef typename HostDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename HostDiscreteFunctionSpaceType::DomainType DomainType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
 
-  typedef typename HostGridType::Traits::LeafIndexSet HostGridLeafIndexSet;
-  typedef typename HostGridType::Traits::GlobalIdSet::IdType IdType;
-  typedef typename HostDiscreteFunctionSpaceType::IteratorType HostGridEntityIteratorType;
-  typedef typename HostGridEntityIteratorType::Entity HostEntityType;
-  typedef typename HostEntityType::EntityPointer HostEntityPointerType;
-  typedef typename HostGridType::Codim<0>::Geometry HostGridEntityGeometry;
-  typedef typename HostDiscreteFunctionType::LocalFunctionType HostLocalFunctionType;
-  typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
+  typedef typename LocalGridType::Traits::LeafIndexSet LocalGridLeafIndexSet;
+  typedef typename LocalGridType::Traits::GlobalIdSet::IdType IdType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType LocalGridEntityIteratorType;
+  typedef typename LocalGridEntityIteratorType::Entity LocalEntityType;
+  typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
+  typedef typename LocalGridType::Codim<0>::Geometry LocalGridEntityGeometry;
+  typedef typename LocalGridDiscreteFunctionType::LocalFunctionType HostLocalFunctionType;
+  typedef typename LocalGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-  //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
-  // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
-
-  //! type of grid
-  typedef typename MsFEMTraits::SubGridType SubGridType;
-  //! type of grid part
-  typedef typename MsFEMTraits::SubGridPartType SubGridPartType;
-  //! type of subgrid discrete function space
-  typedef typename MsFEMTraits::SubGridDiscreteFunctionSpaceType SubDiscreteFunctionSpaceType;
 
 public:
   //! type of subgrid discrete function
-  typedef typename MsFEMTraits::SubGridDiscreteFunctionType SubDiscreteFunctionType;
-  typedef std::vector<std::unique_ptr<SubDiscreteFunctionType>> SubDiscreteFunctionVectorType;
+  typedef std::vector<std::unique_ptr<LocalGridDiscreteFunctionType>> LocalGridDiscreteFunctionVectorType;
 
 private:
-  typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
   typedef typename SubgridIteratorType::Entity SubgridEntityType;
   typedef typename SubgridEntityType::EntityPointer SubgridEntityPointerType;
-  typedef typename SubDiscreteFunctionType::LocalFunctionType SubLocalFunctionType;
-  typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SGLagrangePointSetType;
-  typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
-  typedef typename SubGridType::Codim<0>::Geometry SubGridEntityGeometry;
+  typedef typename LocalGridDiscreteFunctionType::LocalFunctionType SubLocalFunctionType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::LagrangePointSetType SGLagrangePointSetType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
+  typedef typename LocalGridType::Codim<0>::Geometry SubGridEntityGeometry;
 
   static const int faceCodim = 1;
   typedef typename SubgridLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType SubgridFaceDofIteratorType;
 
   //! polynomial order of base functions
-  static const int polynomialOrder = SubDiscreteFunctionSpaceType::polynomialOrder;
+  static const int polynomialOrder = LocalGridDiscreteFunctionSpaceType::polynomialOrder;
 
   //! --------------------- istl matrix and vector types -------------------------------------
 
@@ -124,52 +115,51 @@ private:
   typedef InverseOperatorResult InverseOperatorResultType;
 
 public:
-  typedef typename BackendChooser<SubDiscreteFunctionSpaceType>::LinearOperatorType LocProbLinearOperatorTypeType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LocProbLinearOperatorTypeType;
 
 private:
-  typedef typename BackendChooser<SubDiscreteFunctionSpaceType>::InverseOperatorType
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType
   InverseLocProbLinearOperatorTypeType;
 
   static std::unique_ptr<InverseLocProbLinearOperatorTypeType>
   make_inverse_operator(LocProbLinearOperatorTypeType& problem_matrix);
 
   typedef WeightedClementOperator WeightedClementOperatorType;
-  const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
   const MacroMicroGridSpecifierType& specifier_;
-  SubGridList& subgrid_list_;
+  LocalGridList& subgrid_list_;
 
+#if 0 // LOD only
   std::vector<std::vector<std::size_t>>* ids_relevant_basis_functions_for_subgrid_;
   std::vector<double>* inverse_of_L1_norm_coarse_basis_funcs_;
   const CoarseBasisFunctionListType* coarse_basis_;
   const std::map<std::size_t, std::size_t>* global_id_to_internal_id_;
 
   const NeumannBoundaryType* neumann_bc_;
-  const HostDiscreteFunctionType* dirichlet_extension_;
+  const LocalGridDiscreteFunctionType* dirichlet_extension_;
+#endif //0 // LOD only
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
-  MsFEMLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
-                          const MacroMicroGridSpecifierType& specifier, SubGridList& subgrid_list,
+  MsFEMLocalProblemSolver(const MacroMicroGridSpecifierType& specifier, LocalGridList& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator);
 
-  MsFEMLocalProblemSolver(
-      const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace, const MacroMicroGridSpecifierType& specifier,
-      SubGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
+  MsFEMLocalProblemSolver(const MacroMicroGridSpecifierType& specifier,
+      LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
       std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
       const DiffusionOperatorType& diffusion_operator, const CoarseBasisFunctionListType& coarse_basis,
       const std::map<std::size_t, std::size_t>& global_id_to_internal_id, const NeumannBoundaryType& neumann_bc,
-      const HostDiscreteFunctionType& dirichlet_extension);
+      const LocalGridDiscreteFunctionType& dirichlet_extension);
 
   void solveAllLocalProblems(const CoarseEntityType& coarseCell,
-                             SubDiscreteFunctionVectorType& allLocalSolutions) const;
+                             LocalGridDiscreteFunctionVectorType& allLocalSolutions) const;
 
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
-  void solvelocalproblem(JacobianRangeType& e, SubDiscreteFunctionType& local_problem_solution,
+  void solvelocalproblem(JacobianRangeType& e, LocalGridDiscreteFunctionType& local_problem_solution,
                          const int coarse_index = -1) const;
-
+#if 0 // LOD only code
   // Preprocessing step for the LOD:
   // assemble the two relevant system matrices: one for the corrector problem without contraints
   // and the second of the low dimensional lagrange multiplier (describing the inverse of the schur complement)
@@ -178,26 +168,21 @@ public:
 
   // solve local problem for Local Orthogonal Decomposition Method (LOD)
   void solve_corrector_problem_lod(JacobianRangeType& e, LocProbLinearOperatorTypeType& locprob_system_matrix,
-                                   MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+                                   MatrixType& lm_system_matrix, LocalGridDiscreteFunctionType& local_corrector,
                                    const int coarse_index /*= -1*/) const;
 
   // solve Dirichlet boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
   void solve_dirichlet_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
-                                             MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+                                             MatrixType& lm_system_matrix, LocalGridDiscreteFunctionType& local_corrector,
                                              const int coarse_index /*= -1*/) const;
 
   // solve Neumann boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
   void solve_neumann_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
-                                           MatrixType& lm_system_matrix, SubDiscreteFunctionType& local_corrector,
+                                           MatrixType& lm_system_matrix, LocalGridDiscreteFunctionType& local_corrector,
                                            const int coarse_index /*= -1*/) const;
-
-  //! create a hostgrid function from a subgridfunction
-  void subgrid_to_hostrid_function(const SubDiscreteFunctionType& sub_func, HostDiscreteFunctionType& host_func) const;
-
+#endif // 0 // LOD only code
   void output_local_solution(const int coarse_index, const int which,
-                             const HostDiscreteFunctionType& host_local_solution) const;
-
-  void output_local_solution(const int coarseIndex, const int which, const SubDiscreteFunctionType& solution) const;
+                             const LocalGridDiscreteFunctionType& host_local_solution) const;
 
   //! method for solving and saving the solutions of the local msfem problems
   //! for the whole set of macro-entities and for every unit vector e_i

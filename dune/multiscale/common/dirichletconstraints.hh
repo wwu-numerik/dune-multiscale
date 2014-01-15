@@ -335,8 +335,40 @@ getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space);
 DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType>&
 getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space);
 
+/** Copy the dirichlet values to a given discrete function on the fine mesh.
+ *
+ *  This method projects the dirichlet values to a function on the coarse mesh.
+ *  In a second step, that function is projected to a given function on the fine mesh.
+ *
+ * @attention The given function will be cleared!
+ * @note suboptimal since local_grid change
+ *
+ * @param[in] coarseSpace the discrete function space on the coarse grid, needed
+ *                        to perfom the correct projection.
+ * @param[in, out] function The function to which the values will be projected.
+ */
+template < class LocalGridOrCoarseDiscreteFunctionSpaceImp >
 void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
-                            CommonTraits::DiscreteFunctionType& function);
+                            Fem::DiscreteFunctionInterface<LocalGridOrCoarseDiscreteFunctionSpaceImp>& function) {
+  static bool initialized = false;
+  CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(
+      "Dirichlet Extension Coarse", coarseSpace);
+  if (!initialized) {
+    initialized = true;
+
+    auto dirichletDataPtr = Problem::getDirichletData();
+    const auto &dirichletData = *dirichletDataPtr;
+
+    Dune::Fem::GridFunctionAdapter<
+        CommonTraits::DirichletDataType,
+        CommonTraits::DiscreteFunctionSpaceType::GridPartType> gf(
+        "Dirichlet Data", dirichletData, coarseSpace.gridPart());
+
+    dirichletExtensionCoarse.clear();
+    getConstraintsCoarse(coarseSpace)(gf, dirichletExtensionCoarse);
+  }
+  Dune::Stuff::HeterogenousProjection<>::project(dirichletExtensionCoarse, function);
+}
 
 } // end namespace Multiscale
 } // end namespace Dune

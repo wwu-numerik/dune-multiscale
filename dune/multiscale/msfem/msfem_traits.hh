@@ -7,17 +7,15 @@
 
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/multiscale/common/traits.hh>
-#include <dune/subgrid/subgrid.hh>
+#include <dune/grid/sgrid.hh>
 #include <dune/fem/space/lagrange.hh>
 
 namespace Dune {
-template <int D, class R>
-class Subgrid;
 
 namespace Multiscale {
 namespace MsFEM {
 class MacroMicroGridSpecifier;
-class SubGridList;
+class LocalGridList;
 template <class T, class R, class S, class G, class H>
 class MsFEMErrorEstimator;
 
@@ -25,25 +23,28 @@ class MsFEMErrorEstimator;
 struct MsFEMTraits {
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
-  typedef Dune::SubGrid<CommonTraits::GridType::dimension, typename CommonTraits::GridType> SubGridType;
-  typedef Fem::AdaptiveLeafGridPart<SubGridType> SubGridPartType;
-  typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, SubGridPartType, st_lagrangespace_order> SubGridDiscreteFunctionSpaceType;
+  typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
+  typedef Fem::AdaptiveLeafGridPart<LocalGridType> LocalGridPartType;
+  typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, LocalGridPartType, st_lagrangespace_order> LocalGridDiscreteFunctionSpaceType;
 
-  typedef typename BackendChooser<SubGridDiscreteFunctionSpaceType>::DiscreteFunctionType SubGridDiscreteFunctionType;
-  typedef SubGridList SubGridListType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef LocalGridList LocalGridListType;
 
   // ! -------------------------- MsFEM error estimator ----------------------------
   typedef MsFEMErrorEstimator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType,
                               typename CommonTraits::FirstSourceType, MacroMicroGridSpecifierType,
-                              SubGridListType> MsFEMErrorEstimatorType;
+                              LocalGridListType> MsFEMErrorEstimatorType;
   // ! -----------------------------------------------------------------------------
 
   // the following two may change if we intend to use different meshes on coarse and fine level
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
   typedef typename CommonTraits::DiscreteFunctionSpaceType::BasisFunctionSetType CoarseBaseFunctionSetType;
 };
+
 } // namespace MsFEM {
 } // namespace Multiscale {
 } // namespace Dune {}
+
+namespace DMM = Dune::Multiscale::MsFEM;
 
 #endif // DUNE_MSFEM_TRAITS_HH

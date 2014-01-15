@@ -21,7 +21,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-LocalProblemOperator::LocalProblemOperator(const DiscreteFunctionSpaceType& subDiscreteFunctionSpace,
+LocalProblemOperator::LocalProblemOperator(const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
                                            const DiffusionModel& diffusion_op)
   : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
   , diffusion_operator_(diffusion_op) {}
@@ -124,7 +124,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinea
 
 //! stiffness matrix for a linear elliptic diffusion operator
 void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
-                                           const SubGridList::CoarseNodeVectorType& coarse_node_vector) const
+                                           const LocalGridList::CoarseNodeVectorType& coarse_node_vector) const
     // x_T is the barycenter of the macro grid element T
 {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
@@ -204,35 +204,26 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinea
   global_matrix.communicate();
 } // assemble_matrix
 
-void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpaceType& host_space,
-                                                           LocalProblemOperator::DiscreteFunction& rhs) const {
+void LocalProblemOperator::set_zero_boundary_condition_RHS(const LocalGridDiscreteFunctionSpaceType& local_space,
+                                                           LocalGridDiscreteFunctionType& rhs) const {
   const auto& discreteFunctionSpace = rhs.space();
   const auto& subGrid = discreteFunctionSpace.grid();
-  const auto& hostGridPart = host_space.gridPart();
+  const auto& localGridPart = local_space.gridPart();
 
   // set Dirichlet Boundary to zero
-  for (const auto& subgrid_entity : discreteFunctionSpace) {
-    auto host_entity_pointer = subGrid.getHostEntity<0>(subgrid_entity);
-    const auto& host_entity = *host_entity_pointer;
+  for (const auto& localgrid_entity : discreteFunctionSpace) {
+//    auto host_entity_pointer = subGrid.getLocalEntity<0>(localgrid_entity);
+    const auto& host_entity = localgrid_entity;
 
-    auto iit = hostGridPart.ibegin(host_entity);
-    const auto endiit = hostGridPart.iend(host_entity);
+    auto iit = localGridPart.ibegin(host_entity);
+    const auto endiit = localGridPart.iend(host_entity);
     for (; iit != endiit; ++iit) {
-      if (iit->neighbor()) // if there is a neighbor entity
-      {
-        // check if the neighbor entity is in the subgrid
-        const auto neighborHostEntityPointer = iit->outside();
-        const auto& neighborHostEntity = *neighborHostEntityPointer;
-
-        if (subGrid.contains<0>(neighborHostEntity)) {
-          continue;
-        }
-      } else if (iit->boundaryId() != 1) {
+      if (iit->neighbor() && iit->boundaryId() != 1) {
         continue;
       }
 
-      auto rhs_local = rhs.localFunction(subgrid_entity);
-      const auto& lagrangePointSet = discreteFunctionSpace.lagrangePointSet(subgrid_entity);
+      auto rhs_local = rhs.localFunction(localgrid_entity);
+      const auto& lagrangePointSet = discreteFunctionSpace.lagrangePointSet(localgrid_entity);
 
       const int face = (*iit).indexInInside();
       for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
@@ -243,7 +234,7 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const HostDiscreteFun
 
 } // end method
 
-double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunction& rhs) const {
+double LocalProblemOperator::normRHS(const LocalProblemOperator::LocalGridDiscreteFunctionType& rhs) const {
   const auto& discreteFunctionSpace = rhs.space();
 
   double norm = 0.0;
@@ -268,7 +259,7 @@ double LocalProblemOperator::normRHS(const LocalProblemOperator::DiscreteFunctio
 
 void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e, // direction 'e'
                                               // rhs local msfem problem:
-                                              LocalProblemOperator::DiscreteFunction& local_problem_RHS) const {
+                                              LocalProblemOperator::LocalGridDiscreteFunctionType& local_problem_RHS) const {
   const auto& discreteFunctionSpace = local_problem_RHS.space();
 
   // set entries to zero:
@@ -316,7 +307,7 @@ void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e, // dir
 */
 void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEntity,
                                                const MacroMicroGridSpecifierType& specifier,
-                                               SubDiscreteFunctionVectorType& allLocalRHS) const {
+                                               LocalGridDiscreteFunctionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
   //! @todo correct the error message below (+1 for simplecial, +2 for arbitrary)
   BOOST_ASSERT_MSG(
@@ -346,12 +337,12 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
   const auto& discreteFunctionSpace = allLocalRHS[0]->space();
 
   //! @todo we should use the dirichlet constraints here somehow
-  SubDiscreteFunctionType dirichletExtension("dirichletExtension", discreteFunctionSpace);
+  LocalGridDiscreteFunctionType dirichletExtension("dirichletExtension", discreteFunctionSpace);
   dirichletExtension.clear();
-  HostDiscreteFunction dirichletExtensionCoarse("Dirichlet Extension Coarse", specifier.coarseSpace());
+  CommonTraits::DiscreteFunctionType dirichletExtensionCoarse("Dirichlet Extension Coarse", specifier.coarseSpace());
   dirichletExtensionCoarse.clear();
   //! @todo is this needed or could it be replaced by a method from dirichletconstraints.hh?
-  this->projectDirichletValues(dirichletExtensionCoarse);
+  projectDirichletValues(dirichletExtensionCoarse);
   Dune::Stuff::HeterogenousProjection<> projection;
   projection.project(dirichletExtensionCoarse, dirichletExtension);
 
@@ -459,10 +450,10 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
 
 void LocalProblemOperator::assemble_local_RHS(
     const JacobianRangeType& e,                                  // direction 'e'
-    const SubGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+    const LocalGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
     const int& oversampling_strategy,
     // rhs local msfem problem:
-    DiscreteFunction& local_problem_RHS) const {
+    LocalGridDiscreteFunctionType& local_problem_RHS) const {
 
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   local_problem_RHS.clear();
@@ -549,12 +540,13 @@ void LocalProblemOperator::assemble_local_RHS(
   }
 } // assemble_local_RHS
 
-void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(
-    const HostDiscreteFunction& dirichlet_extension,
-    const SubGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(const LocalGridDiscreteFunctionType &dirichlet_extension,
+    const LocalGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
     const int& oversampling_strategy,
     // rhs local msfem problem:
-    DiscreteFunction& local_problem_RHS) const {
+    LocalGridDiscreteFunctionType &local_problem_RHS) const {
+  DUNE_THROW(NotImplemented, "LOD only code. fix later");
+#if 0
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();
@@ -566,7 +558,7 @@ void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(
     const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
-    auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    auto host_entity_pointer = subGrid.getLocalEntity<0>(local_grid_entity);
     const auto& host_entity = *host_entity_pointer;
 
     // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
@@ -647,19 +639,19 @@ void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(
       }
     }
   }
-
+#endif //0
 } // assemble_local_RHS_Dirichlet_corrector
 
-void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
-    const NeumannBoundaryType& neumann_bc, const HostDiscreteFunctionSpaceType& host_space,
-    const SubGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(const NeumannBoundaryType& neumann_bc, const LocalGridDiscreteFunctionSpaceType& host_space,
+    const LocalGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
     const int& oversampling_strategy,
     // rhs local msfem problem:
-    DiscreteFunction& local_problem_RHS) const {
+    LocalGridDiscreteFunctionType &local_problem_RHS) const {
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();
-
+  DUNE_THROW(NotImplemented, "LOD only code");
+  #if 0 //LOD only code below -> fix later
   // gradient of micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace.mapper().maxNumDofs());
 
@@ -667,7 +659,7 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
     const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
-    const auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    const auto host_entity_pointer = subGrid.getLocalEntity<0>(local_grid_entity);
     const auto& host_entity = *host_entity_pointer;
 
     // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
@@ -756,11 +748,13 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(
       }
     }
   }
+#endif // 0 lod only code
 } // assemble_local_RHS_Neumann_corrector
 
-void LocalProblemOperator::assemble_local_RHS_lg_problems(const HostDiscreteFunction& coarse_basis_func,
+#if 0 // LOD only code
+void LocalProblemOperator::assemble_local_RHS_lg_problems(const LocalGridDiscreteFunctionType& coarse_basis_func,
                                                           double clement_weight,
-                                                          DiscreteFunction& local_problem_RHS) const {
+                                                          LocalGridDiscreteFunctionType& local_problem_RHS) const {
 
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
@@ -776,7 +770,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems(const HostDiscreteFunc
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    auto host_entity_pointer = subGrid.getLocalEntity<0>(local_grid_entity);
     const auto& host_entity = *host_entity_pointer;
     auto local_coarse_basis_func = coarse_basis_func.localFunction(host_entity);
 
@@ -802,10 +796,10 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems(const HostDiscreteFunc
 } // assemble_local_RHS_pre_processing
 
 void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
-    const std::vector<std::shared_ptr<HostDiscreteFunction>>& coarse_basis_func_list,
+    const std::vector<std::shared_ptr<LocalGridDiscreteFunction>>& coarse_basis_func_list,
     std::vector<double>& clement_weights, std::vector<std::size_t>& ids_basis_functions_in_subgrid,
     std::vector<std::unique_ptr<LocalProblemOperator::DiscreteFunction>>& local_problem_RHS) const {
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = local_problem_RHS[0]->space();
+  const LocalGridDiscreteFunctionSpaceType& discreteFunctionSpace = local_problem_RHS[0]->space();
 
   const auto& subGrid = discreteFunctionSpace.grid();
 
@@ -820,7 +814,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
     const auto& baseSet = local_problem_RHS[0]->localFunction(local_grid_entity).basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    auto host_entity_pointer = subGrid.getHostEntity<0>(local_grid_entity);
+    auto host_entity_pointer = subGrid.getLocalEntity<0>(local_grid_entity);
     const auto& host_entity = *host_entity_pointer;
 
     const auto quadrature = make_quadrature(local_grid_entity, discreteFunctionSpace);
@@ -849,12 +843,13 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
   }
 
 } // assemble_local_RHS_pre_processing_all
+#endif // 0 lod only code
 
 /** Set the dirichlet values to a given discrete function on the sub mesh
 *
 * @param[in, out] function The function in which the values will be set.
 */
-void LocalProblemOperator::projectDirichletValues(HostDiscreteFunction& function) const {
+void LocalProblemOperator::projectDirichletValues(CommonTraits::DiscreteFunctionType &function) const {
   /*  // make sure, we are on a hexahedral element
     BOOST_ASSERT_MSG(function.space().gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
            function.space().gridPart().grid().leafIndexSet().geomTypes(0)[0].isCube(),
@@ -864,8 +859,9 @@ void LocalProblemOperator::projectDirichletValues(HostDiscreteFunction& function
   auto dirichletDataPtr = Multiscale::Problem::getDirichletData();
   const auto& dirichletData = *dirichletDataPtr;
   //  Fem::GridFunctionAdapter<Multiscale::Problem::DirichletDataBase,
-  //  typename SubDiscreteFunctionType::DiscreteFunctionSpaceType::GridPartType> gf("dirichlet", dirichletData ,
+  //  typename LocalGridDiscreteFunctionType::LocalGridDiscreteFunctionSpaceType::GridPartType> gf("dirichlet", dirichletData ,
   // gridPart);
+  RangeType dirichletVal(0.0);
   for (const auto& localCell : function.space()) {
     if (localCell.hasBoundaryIntersections())
       for (const auto& intersection : DSC::intersectionRange(gridPart, localCell)) {
@@ -876,7 +872,6 @@ void LocalProblemOperator::projectDirichletValues(HostDiscreteFunction& function
           for (auto lp : DSC::lagrangePointSetRange<1>(function.space(), localCell, faceNumber)) {
             auto lagrangePoint = lagrangePointSet.point(lp);
             auto lagrangePointGlobal = localCell.geometry().global(lagrangePoint);
-            RangeType dirichletVal(0.0);
             dirichletData.evaluate(lagrangePointGlobal, dirichletVal);
             funcLocal[lp] = dirichletVal;
           }
@@ -886,6 +881,7 @@ void LocalProblemOperator::projectDirichletValues(HostDiscreteFunction& function
 
   return;
 }
+
 
 } // namespace MsFEM {
 } // namespace Multiscale {

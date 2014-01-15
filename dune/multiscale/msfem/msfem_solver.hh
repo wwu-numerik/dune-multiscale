@@ -31,24 +31,24 @@ private:
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename DiscreteFunctionSpace::GridType HostGrid;
-  typedef typename HostGrid::Traits::LeafIndexSet HostGridLeafIndexSet;
-  typedef typename HostGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
+  typedef typename DiscreteFunctionSpace::GridType LocalGrid;
+  typedef typename LocalGrid::Traits::LeafIndexSet LocalGridLeafIndexSet;
+  typedef typename LocalGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
   typedef typename DiscreteFunctionSpace::IteratorType HostgridIterator;
-  typedef typename HostgridIterator::Entity HostEntity;
-  typedef typename HostEntity::EntityPointer HostEntityPointer;
+  typedef typename HostgridIterator::Entity LocalEntity;
+  typedef typename LocalEntity::EntityPointer LocalEntityPointer;
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   static const int faceCodim = 1;
 
   // --------------------------- subgrid typedefs ------------------------------------
-  typedef MsFEMTraits::SubGridListType SubGridListType;
-  typedef MsFEMTraits::SubGridType SubGridType;
-  typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType SubgridDiscreteFunctionSpaceType;
-  typedef MsFEMTraits::SubGridDiscreteFunctionType SubgridDiscreteFunctionType;
+  typedef MsFEMTraits::LocalGridListType LocalGridListType;
+  typedef MsFEMTraits::LocalGridType LocalGridType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType SubgridDiscreteFunctionSpaceType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionType SubgridDiscreteFunctionType;
   //!-----------------------------------------------------------------------------------------
 
   typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType MsLinearOperatorTypeType;
@@ -73,7 +73,7 @@ private:
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   // ------------------------------------------------------------------------------------
-  void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+  void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
                                 const DiscreteFunctionType& coarse_msfem_solution,
                                 DiscreteFunctionType& fine_scale_part) const;
 
@@ -90,7 +90,7 @@ public:
   void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
                             // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                             // n(T)-layers.
-                            MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+                            MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
                             DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
                             DiscreteFunctionType& solution) const;
 };

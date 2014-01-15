@@ -17,7 +17,6 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
-#include <dune/subgrid/subgrid.hh>
 #include <cstddef>
 #include <memory>
 #include <vector>
@@ -31,50 +30,47 @@ namespace Multiscale {
 namespace MsFEM {
 
 class LocalProblemOperator {
-  typedef MsFEMLocalProblemSolver::SubDiscreteFunctionType SubDiscreteFunctionType;
-  typedef MsFEMLocalProblemSolver::SubDiscreteFunctionVectorType SubDiscreteFunctionVectorType;
+  typedef MsFEMLocalProblemSolver::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef MsFEMLocalProblemSolver::LocalGridDiscreteFunctionVectorType LocalGridDiscreteFunctionVectorType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
   static const int faceCodim = 1;
 
 private:
-  typedef SubDiscreteFunctionType DiscreteFunction;
   typedef DiffusionOperatorType DiffusionModel;
 
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename LocalGridDiscreteFunctionType::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
 
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename DiscreteFunctionSpaceType::GridType GridType;
-  typedef typename DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType GridPartType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::GridType GridType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef typename DiscreteFunctionSpaceType::DomainType DomainType;
-  typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
-  typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   static const int dimension = GridPartType::GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder;
+  static const int polynomialOrder = LocalGridDiscreteFunctionSpaceType::polynomialOrder;
 
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef typename DiscreteFunctionSpaceType::EntityType EntityType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType EntityType;
 
-  typedef typename CommonTraits::DiscreteFunctionType HostDiscreteFunction;
-  typedef typename HostDiscreteFunction::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
-  typedef typename HostDiscreteFunctionSpaceType::EntityType HostEntity;
-  typedef typename HostEntity::EntityPointer HostEntityPointer;
+  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
+  typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
 
 public:
-  LocalProblemOperator(const DiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
+  LocalProblemOperator(const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)
   void assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const;
 
   //! assemble stiffness matrix for local problems (oversampling strategy 2 and 3)
   void assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
-                       const SubGridList::CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
+                       const LocalGridList::CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
 
   //! assemble the right hand side of a local problem (reconstruction problem on entity)
   //! assemble method for the case of a linear diffusion operator
@@ -84,7 +80,7 @@ public:
       // direction 'e'
       const JacobianRangeType& e,
       // rhs local msfem problem:
-      DiscreteFunction& local_problem_RHS) const;
+      LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
   //! assemble method for the case of a linear diffusion operator
   //! in a constraint space, for oversampling strategy 2 and 3
@@ -92,52 +88,54 @@ public:
   //! - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
   void assemble_local_RHS(
       // direction 'e'
-      const JacobianRangeType& e, const SubGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
+      const JacobianRangeType& e, const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
       const int& oversampling_strategy,
       // rhs local msfem problem:
-      DiscreteFunction& local_problem_RHS) const;
+      LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
   void assemble_local_RHS_Dirichlet_corrector(
-      const HostDiscreteFunction& dirichlet_extension,
-      const SubGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
+      const LocalGridDiscreteFunctionType& dirichlet_extension,
+      const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
       const int& oversampling_strategy,
       // rhs local msfem problem:
-      DiscreteFunction& local_problem_RHS) const;
+      LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
   void
   assemble_local_RHS_Neumann_corrector(const NeumannBoundaryType& neumann_bc,
-                                       const HostDiscreteFunctionSpaceType& host_space,
-                                       const SubGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
+                                       const LocalGridDiscreteFunctionSpaceType& host_space,
+                                       const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
                                        const int& oversampling_strategy,
                                        // rhs local msfem problem:
-                                       DiscreteFunction& local_problem_RHS) const;
+                                       LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
   void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
-                           SubDiscreteFunctionVectorType& allLocalRHS) const;
+                           LocalGridDiscreteFunctionVectorType& allLocalRHS) const;
 
+#if 0 // LOD only code
   // assemble various right hand sides (for solving the local saddle point problems with lagrange multpliers)
-  void assemble_local_RHS_lg_problems(const HostDiscreteFunction /*CoarseBasisFunctionType*/& coarse_basis_func,
-                                      double weight, DiscreteFunction& local_problem_RHS) const;
+  void assemble_local_RHS_lg_problems(const LocalGridDiscreteFunctionType /*CoarseBasisFunctionType*/& coarse_basis_func,
+                                      double weight, LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
   void
-  assemble_local_RHS_lg_problems_all(const std::vector<std::shared_ptr<HostDiscreteFunction>>& coarse_basis_func_list,
+  assemble_local_RHS_lg_problems_all(const std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>>& coarse_basis_func_list,
                                      std::vector<double>& weights,
                                      std::vector<std::size_t>& ids_basis_functions_in_subgrid,
-                                     std::vector<std::unique_ptr<DiscreteFunction>>& local_problem_RHS) const;
+                                     std::vector<std::unique_ptr<LocalGridDiscreteFunctionType>>& local_problem_RHS) const;
+#endif // 0
 
   // given a discrete function (representing a right hands side of a local problem,
   // defined on a subgrid) set the boundary dofs to zero
-  void set_zero_boundary_condition_RHS(const HostDiscreteFunctionSpaceType& host_space, DiscreteFunction& rhs) const;
+  void set_zero_boundary_condition_RHS(const LocalGridDiscreteFunctionSpaceType& host_space, LocalGridDiscreteFunctionType& rhs) const;
 
-  double normRHS(const DiscreteFunction& rhs) const;
+  double normRHS(const LocalGridDiscreteFunctionType& rhs) const;
 
   // is a given 'point' in the convex hull of corner 0, corner 1 and corner 2 (which forms a codim 0 entity)
   bool point_is_in_element(const DomainType& corner_0, const DomainType& corner_1, const DomainType& corner_2,
                            const DomainType& point) const;
-  void projectDirichletValues(HostDiscreteFunction& function) const;
+  void projectDirichletValues(CommonTraits::DiscreteFunctionType &function) const;
 
 private:
-  const DiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
+  const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
 };
 

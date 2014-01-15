@@ -20,28 +20,32 @@
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
+/**
+ * @brief One LocalSolutionManager instance per
+ */
 class LocalSolutionManager {
 private:
-  typedef MsFEMTraits::SubGridListType SubGridListType;
+  typedef MsFEMTraits::LocalGridListType LocalGridListType;
   typedef typename CommonTraits::GridType::Traits::GlobalIdSet::IdType IdType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
 
-  typedef MsFEMTraits::SubGridPartType SubGridPartType;
-  typedef MsFEMTraits::SubGridDiscreteFunctionType DiscreteFunctionType;
-  typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef MsFEMTraits::LocalGridPartType LocalGridPartType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
 public:
-  typedef std::vector<std::unique_ptr<DiscreteFunctionType>> LocalSolutionVectorType;
+  typedef std::vector<std::unique_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 
-  LocalSolutionManager(const CoarseEntityType& coarseEntity, SubGridListType& subgridList,
+  LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridListType& subgridList,
                        const MacroMicroGridSpecifierType& gridSpecifier);
 
   LocalSolutionVectorType& getLocalSolutions();
 
-  const DiscreteFunctionSpaceType& getLocalDiscreteFunctionSpace() const;
+  const LocalGridDiscreteFunctionSpaceType& getLocalDiscreteFunctionSpace() const;
 
-  const SubGridPartType& getSubGridPart() const;
+  const LocalGridPartType& getSubGridPart() const;
 
   void loadLocalSolutions();
 
@@ -52,10 +56,10 @@ public:
   std::size_t numBoundaryCorrectors() const;
 
 private:
-  SubGridListType& subgridList_;
+  LocalGridListType& subgridList_;
   const MacroMicroGridSpecifierType& gridSpecifier_;
-  SubGridPartType subGridPart_;
-  DiscreteFunctionSpaceType localDiscreteFunctionSpace_;
+  LocalGridPartType subGridPart_;
+  LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_;
   const IdType coarseId_;
   bool loaded_;
   const std::size_t numBoundaryCorrectors_;

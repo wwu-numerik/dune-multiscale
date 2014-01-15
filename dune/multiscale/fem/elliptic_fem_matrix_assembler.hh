@@ -66,8 +66,8 @@ public:
   void assemble_matrix(MatrixType& global_matrix, bool boundary_treatment = true) const;
 
   //! Matrix Assembler for local problems on a Subgrid of the Hostgrid:
-  template <class MatrixType, class HostDiscreteFunctionSpaceType>
-  void assemble_matrix(MatrixType& global_matrix, HostDiscreteFunctionSpaceType& hostSpace,
+  template <class MatrixType, class LocalGridDiscreteFunctionSpaceType>
+  void assemble_matrix(MatrixType& global_matrix, LocalGridDiscreteFunctionSpaceType& hostSpace,
                        bool boundary_treatment = true) const;
 
   /** assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain

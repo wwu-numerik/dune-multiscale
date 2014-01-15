@@ -213,7 +213,7 @@ protected:
   const Constants constants_;
   typedef CommonTraits::GridType::LeafGridView View;
   typedef Dune::Stuff::GridboundaryInterface<typename View::Intersection> BoundaryInfoType;
-  typedef MsFEM::MsFEMTraits::SubGridType::LeafGridView SubView;
+  typedef MsFEM::MsFEMTraits::LocalGridType::LeafGridView SubView;
   typedef Dune::Stuff::GridboundaryInterface<typename SubView::Intersection> SubBoundaryInfoType;
 
 public:

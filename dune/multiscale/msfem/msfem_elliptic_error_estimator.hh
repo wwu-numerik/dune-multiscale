@@ -61,15 +61,15 @@ struct FluxContainer {
 
 //! \TODO docme
 template <class DiscreteFunctionImp, class DiffusionImp, class SourceImp, class MacroMicroGridSpecifierImp,
-          class SubGridListImp>
+          class LocalGridListImp>
 class MsFEMErrorEstimator {
 private:
-  typedef MsFEMErrorEstimator<DiscreteFunctionImp, DiffusionImp, SourceImp, MacroMicroGridSpecifierImp, SubGridListImp>
+  typedef MsFEMErrorEstimator<DiscreteFunctionImp, DiffusionImp, SourceImp, MacroMicroGridSpecifierImp, LocalGridListImp>
   ThisType;
   typedef DiffusionImp DiffusionOperatorType;
   typedef SourceImp SourceType;
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
-  typedef SubGridListImp SubGridListType;
+  typedef LocalGridListImp LocalGridListType;
 
   //! Necessary typedefs for the DiscreteFunctionImp:
 
@@ -103,16 +103,16 @@ private:
 
   // --------------------------- subgrid typedefs ------------------------------------
 
-  typedef typename MsFEMTraits::SubGridType SubGridType;
-  typedef typename MsFEMTraits::SubGridPartType SubGridPartType;
-  typedef typename MsFEMTraits::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
-  typedef typename MsFEMTraits::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
+  typedef typename MsFEMTraits::LocalGridType LocalGridType;
+  typedef typename MsFEMTraits::LocalGridPartType LocalGridPartType;
+  typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef typename MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
-  typedef typename SubGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
   typedef typename SubGridIteratorType::Entity SubGridEntityType;
-  typedef typename SubGridDiscreteFunctionType::LocalFunctionType SubGridLocalFunctionType;
+  typedef typename LocalGridDiscreteFunctionType::LocalFunctionType SubGridLocalFunctionType;
 
-  typedef typename SubGridDiscreteFunctionSpaceType::LagrangePointSetType SubGridLagrangePointSetType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::LagrangePointSetType SubGridLagrangePointSetType;
 
   static const int faceCodim = 1;
   typedef typename SubGridLagrangePointSetType::template Codim<faceCodim>::SubEntityIteratorType
@@ -120,7 +120,7 @@ private:
 
   typedef typename LagrangePointSetType::template Codim<faceCodim>::SubEntityIteratorType FaceDofIteratorType;
 
-  typedef typename SubGridType::template Codim<0>::Geometry SubGridEntityGeometryType;
+  typedef typename LocalGridType::template Codim<0>::Geometry SubGridEntityGeometryType;
 
   typedef std::array<RangeType, 3> JumpArray;
   typedef std::array<const Intersection*, 3> IntersectionArray;
@@ -141,13 +141,13 @@ private:
 
   const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace_;
   MacroMicroGridSpecifierType& specifier_;
-  SubGridListType& subgrid_list_;
+  LocalGridListType& subgrid_list_;
   const DiffusionOperatorType& diffusion_;
   const SourceType& f_;
 
 public:
   MsFEMErrorEstimator(const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace,
-                      MacroMicroGridSpecifierType& specifier, SubGridListType& subgrid_list,
+                      MacroMicroGridSpecifierType& specifier, LocalGridListType& subgrid_list,
                       const DiffusionOperatorType& diffusion, const SourceType& f)
     : fineDiscreteFunctionSpace_(fineDiscreteFunctionSpace)
     , specifier_(specifier)
@@ -203,10 +203,10 @@ private:
     // the sub grid U(T) that belongs to the coarse_grid_entity T
     auto subGridPart = subgrid_list_.gridPart(index_coarse_entity);
 
-    SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
-    std::array<SubGridDiscreteFunctionType, 2> conservative_flux_coarse_ent = {
-        {SubGridDiscreteFunctionType("Conservative Flux on coarse entity for e_0", localDiscreteFunctionSpace),
-         SubGridDiscreteFunctionType("Conservative Flux on coarse entity for e_1", localDiscreteFunctionSpace)}};
+    LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
+    std::array<LocalGridDiscreteFunctionType, 2> conservative_flux_coarse_ent = {
+        {LocalGridDiscreteFunctionType("Conservative Flux on coarse entity for e_0", localDiscreteFunctionSpace),
+         LocalGridDiscreteFunctionType("Conservative Flux on coarse entity for e_1", localDiscreteFunctionSpace)}};
     // --------- load local solutions -------
     boost::format flux_location("cf_problems/_conservativeFlux_e_%d_sg_%d");
     for (int i : {0, 1}) {
@@ -221,7 +221,7 @@ private:
          DSC::make_unique<DiscreteFunctionType>("Conservative Flux on coarse entity for e_1",
                                                 fineDiscreteFunctionSpace_)}};
 
-    EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent, cflux_coarse_ent_host);
+    DSG::subgrid_to_hostrid_function(conservative_flux_coarse_ent, cflux_coarse_ent_host);
 
     std::array<RangeType, 3> coarse_face_volume;
 
@@ -241,12 +241,12 @@ private:
 
         // --- get subgrids and load fluxes ---
         auto subGridPart_neighbor = subgrid_list_.gridPart(index_coarse_neighbor_entity);
-        SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_neighbor(subGridPart_neighbor);
+        LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_neighbor(subGridPart_neighbor);
 
-        std::array<SubGridDiscreteFunctionType, 2> conservative_flux_coarse_ent_neighbor = {
-            {SubGridDiscreteFunctionType("Conservative Flux on neighbor coarse entity for e_0",
+        std::array<LocalGridDiscreteFunctionType, 2> conservative_flux_coarse_ent_neighbor = {
+            {LocalGridDiscreteFunctionType("Conservative Flux on neighbor coarse entity for e_0",
                                          localDiscreteFunctionSpace_neighbor),
-             SubGridDiscreteFunctionType("Conservative Flux on neighbor coarse entity for e_1",
+             LocalGridDiscreteFunctionType("Conservative Flux on neighbor coarse entity for e_1",
                                          localDiscreteFunctionSpace_neighbor)}};
 
         // --------- load local solutions -------
@@ -260,7 +260,7 @@ private:
               "Conservative Flux on neighbor coarse entity for e_" + Stuff::Common::toString(i),
               fineDiscreteFunctionSpace_);
         }
-        EstimatorUtilsType::subgrid_to_hostrid_function(conservative_flux_coarse_ent_neighbor,
+        DSG::subgrid_to_hostrid_function(conservative_flux_coarse_ent_neighbor,
                                                         cflux_neighbor_ent_host.fluxes[local_face_index]);
       }
 
@@ -389,12 +389,12 @@ private:
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       auto subGridPart = subgrid_list_.gridPart(global_index_entity);
 
-      SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
+      LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      SubGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
+      LocalGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
       local_problem_solution_e0.clear();
 
-      SubGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
+      LocalGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
       local_problem_solution_e1.clear();
 
       // --------- load local solutions -------
@@ -413,7 +413,7 @@ private:
 
         // check if "local_grid_entity" (which is an entity of U(T)) is in T:
         // -------------------------------------------------------------------
-        const auto host_local_grid_it = localDiscreteFunctionSpace.grid().template getHostEntity<0>(local_grid_entity);
+        const auto host_local_grid_it = localDiscreteFunctionSpace.grid().template getLocalEntity<0>(local_grid_entity);
 
         auto father_of_loc_grid_it =
             DSG::make_father(coarseGridLeafIndexSet, host_local_grid_it, specifier_.getLevelDifference());
@@ -483,7 +483,7 @@ public:
                                 const DiscreteFunctionType& msfem_coarse_part,
                                 const DiscreteFunctionType& msfem_fine_part) const {
     DSC_LOG_INFO << "Start computing conservative fluxes..." << std::endl;
-    typedef ConservativeFluxProblemSolver<SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
+    typedef ConservativeFluxProblemSolver<LocalGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
                                           MacroMicroGridSpecifierImp> ConservativeFluxProblemSolverType;
     ConservativeFluxProblemSolverType flux_problem_solver(fineDiscreteFunctionSpace_, diffusion_, specifier_);
     flux_problem_solver.solve_all(subgrid_list_);

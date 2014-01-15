@@ -5,6 +5,6 @@
 #Name of the module
 Module: dune-multiscale
 Version: 1
-Maintainer: phenn_01@uni-muenster.de
+Maintainer: rene.milk@wwu.de
 #depending on 
-Depends: dune-grid dune-fem dune-common dune-istl dune-localfunctions dune-subgrid dune-stuff dune-spgrid
+Depends: dune-grid dune-fem dune-common dune-istl dune-localfunctions dune-stuff dune-spgrid
