@@ -66,11 +66,6 @@ private:
   void subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func,
                                      DiscreteFunctionType& host_func) const;
 
-  //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
-  // ------------------------------------------------------------------------------------
-  void projectCoarseToFineScale(MacroMicroGridSpecifier& specifier, const DiscreteFunctionType& coarse_msfem_solution,
-                                DiscreteFunctionType& coarse_scale_part) const;
-
   //! identify fine scale part of MsFEM solution (including the projection!)
   // ------------------------------------------------------------------------------------
   void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,

@@ -25,28 +25,6 @@
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
-bool LocalGridList::entityPatchInSubgrid(const LocalEntityPointerType& hit, const LocalGridPartType& localGridPart,
-                                       shared_ptr<const LocalGridType> subGrid,
-                                       const EntityPointerCollectionType& entities_sharing_same_node) const {
-  bool patch_in_subgrid = true;
-
-  // loop over the nodes of the enity
-  for (int i = 0; i < (*hit).count<LocalGridType::dimension>(); ++i) {
-    const HostNodePointer node = (*hit).subEntity<LocalGridType::dimension>(i);
-
-    const int global_index_node = localGridPart.indexSet().index(*node);
-
-    for (std::size_t j = 0; j < entities_sharing_same_node[global_index_node].size(); ++j) {
-      assert(false);
-//      if (!(subGrid->contains<0>(*entities_sharing_same_node[global_index_node][j])))
-      {
-        patch_in_subgrid = false;
-      }
-    }
-  }
-  return patch_in_subgrid;
-} // entityPatchInSubgrid
-
 
 LocalGridList::LocalGridList(MsFEMTraits::MacroMicroGridSpecifierType& specifier, bool silent /*= true*/)
   : coarseSpace_(specifier.coarseSpace())
@@ -55,11 +33,7 @@ LocalGridList::LocalGridList(MsFEMTraits::MacroMicroGridSpecifierType& specifier
   , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet())
   , fineToCoarseMap_(Fem::MPIManager::size()) {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list");
-
-//  fine_id_to_subgrid_ids_.resize(localGridPart_.grid().size(0));
-
-  // initialize the subgrids
-  identifySubGrids();
+  createSubGrids();
 }
 
 LocalGridList::~LocalGridList() {}
@@ -126,7 +100,7 @@ const std::vector<std::size_t>& LocalGridList::getSubgridIDs_that_contain_entity
 // for each given subgrid index return the vecor of ALL coarse nodes (global coordinates) that are in the subgrid,
 // this also includes the coarse nodes on the boundary of U(T), even if this is a global Dirichlet node!
 const LocalGridList::CoarseNodeVectorType& LocalGridList::getCoarseNodeVector(std::size_t i) const {
-  if (specifier_.getOversamplingStrategy() == 1)
+  if (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 1)
     DUNE_THROW(Dune::InvalidStateException, "Method 'getCoarseNodeVector' of class 'LocalGridList' should not be used in\
                 combination with oversampling strategy 1. Check your implementation!");
 
@@ -143,7 +117,7 @@ const LocalGridList::CoarseNodeVectorType& LocalGridList::getCoarseNodeVector(st
 // property of the weighted Clement operator is also applied to those coarse nodes, where
 // the corresponding basis function has a nonempty intersection with the patch
 const LocalGridList::CoarseNodeVectorType& LocalGridList::getExtendedCoarseNodeVector(std::size_t i) const {
-  if ((specifier_.getOversamplingStrategy() == 1) || (specifier_.getOversamplingStrategy() == 2))
+  if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 1) || (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 2))
     DUNE_THROW(Dune::InvalidStateException,
                "Method 'getExtendendCoarseNodeVector' of class 'LocalGridList' should not be used in\
                 combination with oversampling strategy 1 or 2. Check your implementation!");
@@ -168,13 +142,13 @@ bool LocalGridList::covers(const CoarseEntityType &coarse_entity, const LocalEnt
   return reference_element.checkInside(center_local);
 }
 
-void LocalGridList::identifySubGrids() {
-  DSC_PROFILER.startTiming("msfem.subgrid_list.identify");
+void LocalGridList::createSubGrids() {
+//  DSC_PROFILER ("msfem.subgrid_list.create");
   DSC_LOG_INFO << "Starting creation of subgrids." << std::endl << std::endl;
 
   // the number of coarse grid entities (of codim 0).
   const auto number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
-  const auto oversampling_strategy = specifier_.getOversamplingStrategy();
+  const auto oversampling_strategy = DSC_CONFIG_GET("msfem.oversampling_strategy", 1);
 
   if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
     coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
@@ -206,11 +180,13 @@ void LocalGridList::identifySubGrids() {
     array<unsigned int,dim_world> elemens;
     for(const auto i : DSC::valueRange(dim_world))
     {
-      elemens[i] = 8;
+      elemens[i] = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
       lowerLeft[i] = dimension.coord_limits[i].min();
       upperRight[i] = dimension.coord_limits[i].max();
     }
 
+    boost::format sp("Subgrid %d from (%f,%f) to (%f,%f) created.\n");
+    DSC_LOG_INFO << sp % coarse_index % lowerLeft[0] % lowerLeft[1] % upperRight[0] % upperRight[1];
     subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
 
     if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
@@ -222,8 +198,6 @@ void LocalGridList::identifySubGrids() {
       }
     }
   }
-  DSC_PROFILER.stopTiming("msfem.subgrid_list.identify");
-  return;
 }
 
 } // namespace MsFEM {

@@ -200,6 +200,8 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
 
         for (unsigned int j = 0; j < numBaseFunctions; ++j) {
           for (unsigned int i = 0; i < coarse_numBaseFunctions; ++i) {
+            DUNE_THROW(InvalidStateException, "Broken LOD-only code");
+#if 0 // LOD Only code
             if (specifier_.is_coarse_boundary_node(coarse_global_dof_number[i])) {
               continue;
             }
@@ -214,6 +216,7 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
               coarse_basis_interpolation_2.evaluate(global_point, coarse_phi_i);
 
             localMatrix.add(i, j, weight * coff[coarse_global_dof_number[i]] * coarse_phi_i * fine_phi[j]);
+#endif // 0 LOD Only code
           }
         }
       }

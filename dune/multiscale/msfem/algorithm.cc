@@ -256,14 +256,14 @@ void data_output(const CommonTraits::GridPartType& gridPart,
 }
 
 //! \TODO docme
-bool error_estimation(const CommonTraits::DiscreteFunctionType& msfem_solution,
-                      const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
-                      const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                      MsFEMTraits::MsFEMErrorEstimatorType& estimator,
-                      MsFEMTraits::MacroMicroGridSpecifierType& specifier, const int loop_number,
-                      std::vector<CommonTraits::RangeVectorVector*>& locals,
-                      std::vector<CommonTraits::RangeVector*>& totals,
-                      CommonTraits::RangeVector& total_estimated_H1_error_) {
+bool error_estimation(const CommonTraits::DiscreteFunctionType& /*msfem_solution*/,
+                      const CommonTraits::DiscreteFunctionType& /*coarse_part_msfem_solution*/,
+                      const CommonTraits::DiscreteFunctionType& /*fine_part_msfem_solution*/,
+                      MsFEMTraits::MsFEMErrorEstimatorType& /*estimator*/,
+                      MsFEMTraits::MacroMicroGridSpecifierType& /*specifier*/, const int /*loop_number*/,
+                      std::vector<CommonTraits::RangeVectorVector*>& /*locals*/,
+                      std::vector<CommonTraits::RangeVector*>& /*totals*/,
+                      CommonTraits::RangeVector& /*total_estimated_H1_error_*/) {
   using namespace Dune;
 
   DUNE_THROW(NotImplemented, "");
@@ -321,8 +321,8 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   // refine the grid 'starting_refinement_level' times:
   Dune::Fem::GlobalRefine::apply(*macro_grid_pointer, coarse_grid_level_);
 
-  CommonTraits::GridType& grid = *macro_grid_pointer;
-  CommonTraits::GridPartType gridPart(grid);
+  CommonTraits::GridType& cg_fem_grid = *macro_grid_pointer;
+  CommonTraits::GridPartType cg_fem_gridPart(cg_fem_grid);
   // coarse grid
   CommonTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
   CommonTraits::GridType& grid_coarse = *macro_grid_pointer_coarse;
@@ -331,14 +331,14 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
 
   // strategy for adaptivity:
   if (DSC_CONFIG_GET("adaptive", false) && local_indicators_available_)
-    adapt(grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_, locals,
+    adapt(cg_fem_grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_, locals,
           totals, total_estimated_H1_error_);
 
-  Dune::Fem::GlobalRefine::apply(grid, total_refinement_level_ - coarse_grid_level_);
+  Dune::Fem::GlobalRefine::apply(cg_fem_grid, total_refinement_level_ - coarse_grid_level_);
 
   //! ------------------------- discrete function spaces -----------------------------------
   // the global-problem function space:
-  CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+  CommonTraits::DiscreteFunctionSpaceType cg_fem_discreteFunctionSpace(cg_fem_gridPart);
   CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
 
   //! --------------------------- coefficient functions ------------------------------------
@@ -354,28 +354,21 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
   if (DSC_CONFIG_GET("msfem.vtkOutput", false)) 
-    data_output(gridPart, discreteFunctionSpace_coarse, outputparam, loop_number);
+    data_output(cg_fem_gridPart, discreteFunctionSpace_coarse, outputparam, loop_number);
 
   //! ---------------------- solve MsFEM problem ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", cg_fem_discreteFunctionSpace);
   msfem_solution.clear();
 
-  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution", discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution", cg_fem_discreteFunctionSpace);
   coarse_part_msfem_solution.clear();
 
-  CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", cg_fem_discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
-  const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
-
-  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-  MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
-  for (int i = 0; i < number_of_level_host_entities; ++i) {
-    specifier.setNoOfLayers(i, number_of_layers_);
-  }
-  specifier.setOversamplingStrategy(DSC_CONFIG_GET("msfem.oversampling_strategy", 1));
+  MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse);
 
   // default to false, error_estimation might change it
   bool repeat_algorithm = false;
@@ -385,7 +378,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
-    Elliptic_MsFEM_Solver msfem_solver(discreteFunctionSpace);
+    Elliptic_MsFEM_Solver msfem_solver(cg_fem_discreteFunctionSpace);
     msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
                                       fine_part_msfem_solution, msfem_solution);
     if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
@@ -406,12 +399,12 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   //! ---------------------- solve FEM problem with same (fine) resolution ---------------------------
   //! solution vector
   // solution of the standard finite element method
-  CommonTraits::DiscreteFunctionType fem_solution("FEM Solution", discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType fem_solution("FEM Solution", cg_fem_discreteFunctionSpace);
   fem_solution.clear();
 
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     // just for Dirichlet zero-boundary condition
-    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
+    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(cg_fem_discreteFunctionSpace);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
     fem_solver.solve_dirichlet_zero(diffusion_op, l_ptr, f, fem_solution);
     if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
@@ -423,7 +416,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
       // create and initialize output class
       OutputTraits::IOTupleType fem_solution_series(&fem_solution);
       outputparam.set_prefix("fem_solution");
-      OutputTraits::DataOutputType fem_dataoutput(gridPart.grid(), fem_solution_series, outputparam);
+      OutputTraits::DataOutputType fem_dataoutput(cg_fem_grid, fem_solution_series, outputparam);
       
       // write data
       fem_dataoutput.writeData(1.0 /*dummy*/, "fem_solution");

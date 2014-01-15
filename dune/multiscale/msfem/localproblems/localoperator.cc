@@ -207,12 +207,10 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinea
 void LocalProblemOperator::set_zero_boundary_condition_RHS(const LocalGridDiscreteFunctionSpaceType& local_space,
                                                            LocalGridDiscreteFunctionType& rhs) const {
   const auto& discreteFunctionSpace = rhs.space();
-  const auto& subGrid = discreteFunctionSpace.grid();
   const auto& localGridPart = local_space.gridPart();
 
   // set Dirichlet Boundary to zero
   for (const auto& localgrid_entity : discreteFunctionSpace) {
-//    auto host_entity_pointer = subGrid.getLocalEntity<0>(localgrid_entity);
     const auto& host_entity = localgrid_entity;
 
     auto iit = localGridPart.ibegin(host_entity);
@@ -231,7 +229,6 @@ void LocalProblemOperator::set_zero_boundary_condition_RHS(const LocalGridDiscre
       }
     }
   }
-
 } // end method
 
 double LocalProblemOperator::normRHS(const LocalProblemOperator::LocalGridDiscreteFunctionType& rhs) const {
@@ -309,14 +306,15 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
                                                const MacroMicroGridSpecifierType& specifier,
                                                LocalGridDiscreteFunctionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
-  //! @todo correct the error message below (+1 for simplecial, +2 for arbitrary)
-  BOOST_ASSERT_MSG(
-      (specifier.simplexCoarseGrid() && allLocalRHS.size() == GridType::dimension + 1) ||
-          (!(specifier.simplexCoarseGrid()) &&
-           static_cast<long long>(allLocalRHS.size()) ==
-               static_cast<long long>(specifier.fineSpace().mapper().maxNumDofs() + 2)),
-      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
-      " and the dirichlet- and neuman corrector");
+
+  //! @todo correct the error message below (+1 for simplecial, +2 for arbitrary), as there's no finespace any longer
+//  BOOST_ASSERT_MSG(
+//      (specifier.simplexCoarseGrid() && allLocalRHS.size() == GridType::dimension + 1) ||
+//          (!(specifier.simplexCoarseGrid()) &&
+//           static_cast<long long>(allLocalRHS.size()) ==
+//               static_cast<long long>(specifier.fineSpace().mapper().maxNumDofs() + 2)),
+//      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
+//      " and the dirichlet- and neuman corrector");
 
   // build unit vectors (needed for cases where rhs is assembled for unit vectors instead of coarse
   // base functions)
@@ -540,13 +538,13 @@ void LocalProblemOperator::assemble_local_RHS(
   }
 } // assemble_local_RHS
 
-void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(const LocalGridDiscreteFunctionType &dirichlet_extension,
-    const LocalGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
-    const int& oversampling_strategy,
+#if 0 // LOD-only code
+void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(const LocalGridDiscreteFunctionType &/*dirichlet_extension*/,
+    const LocalGridList::CoarseNodeVectorType& /*coarse_node_vector*/, // for constraints on the space
+    const int& /*oversampling_strategy*/,
     // rhs local msfem problem:
-    LocalGridDiscreteFunctionType &local_problem_RHS) const {
-  DUNE_THROW(NotImplemented, "LOD only code. fix later");
-#if 0
+    LocalGridDiscreteFunctionType &/*local_problem_RHS*/) const {
+
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();
@@ -639,7 +637,7 @@ void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(const LocalGri
       }
     }
   }
-#endif //0
+
 } // assemble_local_RHS_Dirichlet_corrector
 
 void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(const NeumannBoundaryType& neumann_bc, const LocalGridDiscreteFunctionSpaceType& host_space,
@@ -650,8 +648,6 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(const NeumannBou
   const auto& discreteFunctionSpace = local_problem_RHS.space();
   const auto& subGrid = discreteFunctionSpace.grid();
   local_problem_RHS.clear();
-  DUNE_THROW(NotImplemented, "LOD only code");
-  #if 0 //LOD only code below -> fix later
   // gradient of micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace.mapper().maxNumDofs());
 
@@ -748,10 +744,9 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(const NeumannBou
       }
     }
   }
-#endif // 0 lod only code
+
 } // assemble_local_RHS_Neumann_corrector
 
-#if 0 // LOD only code
 void LocalProblemOperator::assemble_local_RHS_lg_problems(const LocalGridDiscreteFunctionType& coarse_basis_func,
                                                           double clement_weight,
                                                           LocalGridDiscreteFunctionType& local_problem_RHS) const {
