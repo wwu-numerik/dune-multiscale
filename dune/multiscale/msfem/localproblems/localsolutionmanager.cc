@@ -8,7 +8,7 @@
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
-LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity, SubGridListType& subgridList,
+LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridListType& subgridList,
                                            const MacroMicroGridSpecifierType& gridSpecifier)
   : subgridList_(subgridList)
   , gridSpecifier_(gridSpecifier)
@@ -22,16 +22,16 @@ LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity,
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d") % coarseId_).str()) {
   for (auto& it : localSolutions_)
-    it = DSC::make_unique<DiscreteFunctionType>("Local problem Solution", localDiscreteFunctionSpace_);
+    it = DSC::make_unique<LocalGridDiscreteFunctionType>("Local problem Solution", localDiscreteFunctionSpace_);
 }
 
 LocalSolutionManager::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
 
-const LocalSolutionManager::DiscreteFunctionSpaceType& LocalSolutionManager::getLocalDiscreteFunctionSpace() const {
+const LocalSolutionManager::LocalGridDiscreteFunctionSpaceType& LocalSolutionManager::getLocalDiscreteFunctionSpace() const {
   return localDiscreteFunctionSpace_;
 }
 
-const LocalSolutionManager::SubGridPartType& LocalSolutionManager::getSubGridPart() const { return subGridPart_; }
+const LocalSolutionManager::LocalGridPartType& LocalSolutionManager::getSubGridPart() const { return subGridPart_; }
 
 void LocalSolutionManager::loadLocalSolutions() {
   // reader for the cell problem data file:

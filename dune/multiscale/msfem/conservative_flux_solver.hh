@@ -10,13 +10,10 @@
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
-#include <dune/multiscale/tools/subgrid_io.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
-
-#include <dune/subgrid/subgrid.hh>
 
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -46,24 +43,24 @@ public:
 };
 
 //! \TODO docme
-template <class SubGridDiscreteFunctionType, class DiscreteFunctionType, class DiffusionOperatorType,
+template <class LocalGridDiscreteFunctionType, class DiscreteFunctionType, class DiffusionOperatorType,
           class MacroMicroGridSpecifierType>
-class ConservativeFluxOperator : public Operator<typename SubGridDiscreteFunctionType::RangeFieldType,
-                                                 typename SubGridDiscreteFunctionType::RangeFieldType,
-                                                 SubGridDiscreteFunctionType, SubGridDiscreteFunctionType> {
-  typedef ConservativeFluxOperator<SubGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
+class ConservativeFluxOperator : public Operator<typename LocalGridDiscreteFunctionType::RangeFieldType,
+                                                 typename LocalGridDiscreteFunctionType::RangeFieldType,
+                                                 LocalGridDiscreteFunctionType, LocalGridDiscreteFunctionType> {
+  typedef ConservativeFluxOperator<LocalGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
                                    MacroMicroGridSpecifierType> This;
 
 private:
-  typedef SubGridDiscreteFunctionType SubGridDiscreteFunction;
+  typedef LocalGridDiscreteFunctionType LocalGridDiscreteFunction;
   typedef DiscreteFunctionType DiscreteFunction;
   typedef DiffusionOperatorType DiffusionModel;
 
-  typedef typename SubGridDiscreteFunction::DiscreteFunctionSpaceType SubGridDiscreteFunctionSpace;
+  typedef typename LocalGridDiscreteFunction::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpace;
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename SubGridDiscreteFunctionSpace::GridPartType SubGridPart;
+  typedef typename LocalGridDiscreteFunctionSpace::GridPartType SubGridPart;
 
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
@@ -76,11 +73,11 @@ private:
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename GridPart::template Codim<0>::EntityType Entity;
   typedef typename Entity::EntityPointer EntityPointer;
-  typedef typename SubGridDiscreteFunctionSpace::BasisFunctionSetType SubGridBaseFunctionSet;
-  typedef typename SubGridDiscreteFunctionSpace::EntityType SubGridEntity;
+  typedef typename LocalGridDiscreteFunctionSpace::BasisFunctionSetType SubGridBaseFunctionSet;
+  typedef typename LocalGridDiscreteFunctionSpace::EntityType SubGridEntity;
 
 public:
-  ConservativeFluxOperator(const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace,
+  ConservativeFluxOperator(const LocalGridDiscreteFunctionSpace& subDiscreteFunctionSpace,
                            const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionModel& diffusion_op,
                            const MacroMicroGridSpecifierType& specifier)
     : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
@@ -93,7 +90,7 @@ private:
 
 public:
   // dummy operator
-  virtual void operator()(const SubGridDiscreteFunction& u, SubGridDiscreteFunction& w) const;
+  virtual void operator()(const LocalGridDiscreteFunction& u, LocalGridDiscreteFunction& w) const;
 
   // assemble stiffness matrix for local problems
   template <class MatrixType>
@@ -103,14 +100,14 @@ public:
   void assemble_RHS( // direction 'e_i'
       JacobianRangeType& e_i,
       // solution of the local corrector problem
-      const SubGridDiscreteFunction& local_corrector_e_i, const int sub_grid_id,
+      const LocalGridDiscreteFunction& local_corrector_e_i, const int sub_grid_id,
       // rhs local msfem problem:
-      SubGridDiscreteFunction& rhs_flux_problem) const;
+      LocalGridDiscreteFunction& rhs_flux_problem) const;
 
-  double normRHS(SubGridDiscreteFunction& rhs) const;
+  double normRHS(LocalGridDiscreteFunction& rhs) const;
 
 private:
-  const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace_;
+  const LocalGridDiscreteFunctionSpace& subDiscreteFunctionSpace_;
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionModel& diffusion_operator_;
   const MacroMicroGridSpecifierType& specifier_;
@@ -118,20 +115,20 @@ private:
 
 //! dummy implementation of "operator()"
 //! 'w' = effect of the discrete operator on 'u'
-template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
+template <class LocalGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp>
 void
-ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp, MacroMicroGridSpecifierImp>::
-operator()(const SubGridDiscreteFunctionImp& /*u*/, SubGridDiscreteFunctionImp& /*w*/) const {
+ConservativeFluxOperator<LocalGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp, MacroMicroGridSpecifierImp>::
+operator()(const LocalGridDiscreteFunctionImp& /*u*/, LocalGridDiscreteFunctionImp& /*w*/) const {
   DUNE_THROW(Dune::NotImplemented,
              "the ()-operator of the ConservativeFluxOperator class is not yet implemented and still a dummy.");
 }
 
 //! assemble system matrix
-template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
+template <class LocalGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp>
 template <class MatrixType>
-void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
+void ConservativeFluxOperator<LocalGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
                               MacroMicroGridSpecifierImp>::assemble_matrix(const int sub_grid_id,
                                                                            MatrixType& global_matrix) const {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
@@ -141,7 +138,7 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
   std::vector<RangeType> phi(subDiscreteFunctionSpace_.mapper().maxNumDofs());
 
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
-    auto host_entity_pointer = subDiscreteFunctionSpace_.gridPart().grid().template getHostEntity<0>(sub_grid_entity);
+    auto host_entity_pointer = subDiscreteFunctionSpace_.gridPart().grid().template getLocalEntity<0>(sub_grid_entity);
 
     const auto& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
@@ -208,10 +205,10 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
   }
 } // assemble_matrix
 
-template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
+template <class LocalGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp>
-double ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
-                                MacroMicroGridSpecifierImp>::normRHS(SubGridDiscreteFunctionImp& rhs) const {
+double ConservativeFluxOperator<LocalGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
+                                MacroMicroGridSpecifierImp>::normRHS(LocalGridDiscreteFunctionImp& rhs) const {
   double norm = 0.0;
   const auto& discreteFunctionSpace = rhs.space();
 
@@ -237,17 +234,17 @@ double ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp,
 // assemble the right hand side of the conservative flux problem
 // ----------------------------------------------
 
-template <class SubGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
+template <class LocalGridDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp,
           class MacroMicroGridSpecifierImp>
 // template< class MatrixType >
-void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
+void ConservativeFluxOperator<LocalGridDiscreteFunctionImp, DiscreteFunctionImp, DiffusionImp,
                               MacroMicroGridSpecifierImp>::assemble_RHS( // direction 'e'
     JacobianRangeType& e_i,
     // solution of the local corrector problem
-    const SubGridDiscreteFunction& local_corrector_e_i, const int sub_grid_id,
+    const LocalGridDiscreteFunction& local_corrector_e_i, const int sub_grid_id,
     // rhs flux problem:
-    SubGridDiscreteFunction& rhs_flux_problem) const {
-  const SubGridDiscreteFunctionSpace& subDiscreteFunctionSpace = rhs_flux_problem.space();
+    LocalGridDiscreteFunction& rhs_flux_problem) const {
+  const LocalGridDiscreteFunctionSpace& subDiscreteFunctionSpace = rhs_flux_problem.space();
 
   // set entries to zero:
   rhs_flux_problem.clear();
@@ -256,7 +253,7 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
   std::vector<JacobianRangeType> gradient_phi(subDiscreteFunctionSpace.mapper().maxNumDofs());
 
   for (const auto& local_grid_entity : subDiscreteFunctionSpace) {
-    auto host_entity_pointer = subDiscreteFunctionSpace.gridPart().grid().template getHostEntity<0>(local_grid_entity);
+    auto host_entity_pointer = subDiscreteFunctionSpace.gridPart().grid().template getLocalEntity<0>(local_grid_entity);
 
     const auto& coarseGridLeafIndexSet = specifier_.coarseSpace().gridPart().grid().leafIndexSet();
 
@@ -311,50 +308,50 @@ void ConservativeFluxOperator<SubGridDiscreteFunctionImp, DiscreteFunctionImp, D
 } // assemble_RHS
 
 //! the essential local msfem problem solver class
-template <class SubGridDiscreteFunctionType, class HostDiscreteFunctionType, class DiffusionOperatorType,
+template <class LocalGridDiscreteFunctionType, class LocalGridDiscreteFunctionType, class DiffusionOperatorType,
           class MacroMicroGridSpecifierImp>
 class ConservativeFluxProblemSolver {
 private:
   typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
 
-  //! ---------------- typedefs for the HostDiscreteFunctionSpace -----------------------
-  typedef typename HostDiscreteFunctionType::DiscreteFunctionSpaceType HostDiscreteFunctionSpaceType;
-  typedef typename HostDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
-  typedef typename HostDiscreteFunctionSpaceType::GridPartType HostGridPartType;
-  typedef typename HostDiscreteFunctionSpaceType::GridType HostGridType;
-  typedef typename HostDiscreteFunctionSpaceType::EntityType HostEntityType;
-  typedef typename HostEntityType::EntityPointer HostEntityPointerType;
+  //! ---------------- typedefs for the LocalGridDiscreteFunctionSpace -----------------------
+  typedef typename LocalGridDiscreteFunctionType::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType LocalGridPartType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::GridType LocalGridType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
+  typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
 
-  static const int dimension = HostGridType::dimension;
+  static const int dimension = LocalGridType::dimension;
 
-  //! ---------------- typedefs for the SubGridDiscreteFunctionSpace -----------------------
-  typedef typename SubGridDiscreteFunctionType::DiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
-  typedef typename SubGridDiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
-  typedef typename SubGridDiscreteFunctionSpaceType::DomainType DomainType;
-  typedef typename SubGridDiscreteFunctionSpaceType::RangeType RangeType;
-  typedef typename SubGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename SubGridDiscreteFunctionSpaceType::EntityType SubGridEntityType;
+  //! ---------------- typedefs for the LocalGridDiscreteFunctionSpace -----------------------
+  typedef typename LocalGridDiscreteFunctionType::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType SubGridEntityType;
   typedef typename SubGridEntityType::EntityPointer SubGridEntityPointerType;
   //!-----------------------------------------------------------------------------------------
 
   //! ------------------ Matrix Traits for the local Problems ---------------------
   static const int faceCodim = 1;
   //! polynomial order of base functions
-  static const int polynomialOrder = SubGridDiscreteFunctionSpaceType::polynomialOrder;
+  static const int polynomialOrder = LocalGridDiscreteFunctionSpaceType::polynomialOrder;
 
-  typedef typename BackendChooser<SubGridDiscreteFunctionSpaceType>::LinearOperatorType FluxProbLinearOperatorType;
-  typedef typename BackendChooser<SubGridDiscreteFunctionSpaceType>::InverseOperatorType InverseLinearOperatorType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType FluxProbLinearOperatorType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType InverseLinearOperatorType;
 
 private:
   const DiffusionOperatorType& diffusion_;
-  const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
+  const LocalGridDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
 
   const MacroMicroGridSpecifierType& specifier_;
   mutable boost::format filename_template_;
 
 public:
   //! constructor - with diffusion operator A^{\epsilon}(x)
-  ConservativeFluxProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
+  ConservativeFluxProblemSolver(const LocalGridDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                                 const DiffusionOperatorType& diffusion_operator,
                                 const MacroMicroGridSpecifierType& specifier)
     : diffusion_(diffusion_operator)
@@ -365,12 +362,12 @@ public:
   //! ----------- method: solve the local MsFEM problem ------------------------------------------
 
   void solve(JacobianRangeType& e_i, // direction 'e_i'
-             const SubGridDiscreteFunctionType& local_corrector_e_i, const int sub_grid_id, const int direction_index,
-             SubGridDiscreteFunctionType& conservative_flux) const {
+             const LocalGridDiscreteFunctionType& local_corrector_e_i, const int sub_grid_id, const int direction_index,
+             LocalGridDiscreteFunctionType& conservative_flux) const {
     // set solution equal to zero:
     conservative_flux.clear();
 
-    const SubGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace = local_corrector_e_i.space();
+    const LocalGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace = local_corrector_e_i.space();
 
     //! the matrix in our linear system of equations
     FluxProbLinearOperatorType flux_prob_system_matrix("Conservative Flux Problem System Matrix",
@@ -379,13 +376,13 @@ public:
     //! define the discrete (elliptic) local MsFEM problem operator
     // ( effect of the discretized differential operator on a certain discrete function )
     // discrete elliptic operator describing the elliptic local msfem problems
-    typedef ConservativeFluxOperator<SubGridDiscreteFunctionType, HostDiscreteFunctionType, DiffusionOperatorType,
+    typedef ConservativeFluxOperator<LocalGridDiscreteFunctionType, LocalGridDiscreteFunctionType, DiffusionOperatorType,
                                      MacroMicroGridSpecifierType> ConservativeFluxOperatorType;
     ConservativeFluxOperatorType cf_problem_operator(localDiscreteFunctionSpace, hostDiscreteFunctionSpace_, diffusion_,
                                                      specifier_);
 
     //! right hand side vector of the algebraic local MsFEM problem
-    SubGridDiscreteFunctionType rhs("RHS of Conservative Flux Problem", localDiscreteFunctionSpace);
+    LocalGridDiscreteFunctionType rhs("RHS of Conservative Flux Problem", localDiscreteFunctionSpace);
     rhs.clear();
 
     // assemble the stiffness matrix
@@ -421,39 +418,19 @@ public:
 
   //! ----------- end method: solve local MsFEM problem ------------------------------------------
 
-  // create a hostgrid function from a subgridfunction
-  void subgrid_to_hostrid_function(const SubGridDiscreteFunctionType& sub_func,
-                                   HostDiscreteFunctionType& host_func) const {
-    host_func.clear();
-    const auto& subDiscreteFunctionSpace = sub_func.space();
-    const auto& subGrid = subDiscreteFunctionSpace.grid();
 
-    for (const auto& sub_entity : subDiscreteFunctionSpace) {
-      const auto host_entity_pointer = subGrid.template getHostEntity<0>(sub_entity);
-      const auto& host_entity = *host_entity_pointer;
-
-      const auto sub_loc_value = sub_func.localFunction(sub_entity);
-      auto host_loc_value = host_func.localFunction(host_entity);
-
-      const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
-      for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-        host_loc_value[i] = sub_loc_value[i];
-      }
-    }
-  } // subgrid_to_hostrid_function
-
-  void vtk_output(const SubGridDiscreteFunctionType& subgrid_disc_func, const int sub_grid_index,
+  void vtk_output(const LocalGridDiscreteFunctionType& subgrid_disc_func, const int sub_grid_index,
                   const int direction_index) const {
     // --------------- writing data output ---------------------
     // typedefs and initialization
-    typedef std::tuple<HostDiscreteFunctionType*> IOTupleType;
-    typedef Fem::DataOutput<HostGridType, IOTupleType> DataOutputType;
+    typedef std::tuple<LocalGridDiscreteFunctionType*> IOTupleType;
+    typedef Fem::DataOutput<LocalGridType, IOTupleType> DataOutputType;
 
     // general output parameters
     ConFluxProblemDataOutputParameters outputparam;
     // -------------------------------------------------------
 
-    HostDiscreteFunctionType host_disc_func("Conservative Flux", hostDiscreteFunctionSpace_);
+    LocalGridDiscreteFunctionType host_disc_func("Conservative Flux", hostDiscreteFunctionSpace_);
     subgrid_to_hostrid_function(subgrid_disc_func, host_disc_func);
 
     // create and initialize output class
@@ -465,14 +442,14 @@ public:
     cf_dataoutput.writeData(1.0 /*dummy*/, "conservative-flux");
   } // vtk_output
 
-  void file_data_output(const SubGridDiscreteFunctionType& subgrid_disc_func, const int sub_grid_index,
+  void file_data_output(const LocalGridDiscreteFunctionType& subgrid_disc_func, const int sub_grid_index,
                         const int direction_index) const {
     const std::string locprob_solution_location =
         std::string("cf_problems/") + (filename_template_ % direction_index % sub_grid_index).str();
     DiscreteFunctionWriter(locprob_solution_location).append(subgrid_disc_func);
   } // file_data_output
 
-  void solve_all(MsFEMTraits::SubGridListType& subgrid_list) const {
+  void solve_all(MsFEMTraits::LocalGridListType& subgrid_list) const {
     JacobianRangeType e[dimension];
 
     for (int i = 0; i < dimension; ++i) {
@@ -502,12 +479,12 @@ public:
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       auto subGridPart = subgrid_list.gridPart(global_index_entity);
 
-      SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
+      LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      SubGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
+      LocalGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
       local_problem_solution_e0.clear();
 
-      SubGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
+      LocalGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
       local_problem_solution_e1.clear();
 
       // --------- load local solutions -------
@@ -520,8 +497,8 @@ public:
       discrete_function_reader.read(0, local_problem_solution_e0);
       discrete_function_reader.read(1, local_problem_solution_e1);
 
-      SubGridDiscreteFunctionType conservative_flux_e0("Conservative Flux for e_0", localDiscreteFunctionSpace);
-      SubGridDiscreteFunctionType conservative_flux_e1("Conservative Flux for e_1", localDiscreteFunctionSpace);
+      LocalGridDiscreteFunctionType conservative_flux_e0("Conservative Flux for e_0", localDiscreteFunctionSpace);
+      LocalGridDiscreteFunctionType conservative_flux_e1("Conservative Flux for e_1", localDiscreteFunctionSpace);
 
       DSC_LOG_INFO << "Number of the 'conservative flux problem': " << dimension* global_index_entity << " (of "
                    << (dimension * number_of_coarse_grid_entities) - 1 << " problems in total)" << std::endl;

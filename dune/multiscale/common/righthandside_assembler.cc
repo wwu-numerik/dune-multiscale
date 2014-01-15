@@ -123,17 +123,13 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(
   }
 }
 
-void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(const Dune::Multiscale::CommonTraits::FirstSourceType &f, Dune::Multiscale::MsFEM::MacroMicroGridSpecifier &specifier, Dune::Multiscale::MsFEM::SubGridList &subgrid_list, Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
+void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(const Dune::Multiscale::CommonTraits::FirstSourceType &f, Dune::Multiscale::MsFEM::MacroMicroGridSpecifier &specifier, Dune::Multiscale::MsFEM::LocalGridList &subgrid_list, Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
 
   // gather some problem data
   auto diffusionPtr = Problem::getDiffusion();
   const auto& diffusion = *diffusionPtr;
   auto neumannDataPtr = Problem::getNeumannData();
   const auto& neumannData = *neumannDataPtr;
-
-  DiscreteFunctionType dirichletExtension("Dirichlet Extension", specifier.fineSpace());
-  dirichletExtension.clear();
-  Dune::Multiscale::copyDirichletValues(rhsVector.space(), dirichletExtension);
 
   // set rhsVector to zero:
   rhsVector.clear();
@@ -147,7 +143,6 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
     const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
     const auto& coarseBaseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
 
-
     // --------- add corrector contribution of right hand side --------------------------
     // Load local solutions
     MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list, specifier);
@@ -155,14 +150,16 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
     auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
 
-    // iterator for the micro grid ( grid for the reference element T_0 )
     const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
+
+    MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension("Dirichlet Extension",
+                                                                  localSolutionManager.getLocalDiscreteFunctionSpace());
+    dirichletExtension.clear();
+    Dune::Multiscale::copyDirichletValues(rhsVector.space(), dirichletExtension);
+
     auto view = subGrid.leafView();
-    for (const auto& localEntity : DSC::viewRange(view)) {
-      const auto& hostCell = subGrid.getHostEntity<0>(localEntity);
-      const auto enclosingCoarseCellIndex = subgrid_list.getEnclosingMacroCellIndex(hostCell);
-      auto dirichletExtensionLF = dirichletExtension.localFunction(*hostCell);
-      if (enclosingCoarseCellIndex == coarseEntityIndex) {
+    for (const auto& localEntity : DSC::viewRange(view)) {    
+      if (subgrid_list.covers(coarse_grid_entity, localEntity)) {
         // higher order quadrature, since A^{\epsilon} is highly variable
         const auto localQuadrature =
             make_quadrature(localEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
@@ -221,6 +218,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
 
         // assemble element-part
         const auto& localGeometry = localEntity.geometry();
+        auto dirichletExtensionLF = dirichletExtension.localFunction(localEntity);
         for (size_t qP = 0; qP < localQuadrature.nop(); ++qP) {
           // local (barycentric) coordinates (with respect to entity)
           const auto& quadPoint = localQuadrature.point(qP);

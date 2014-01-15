@@ -71,14 +71,14 @@ private:
   typedef typename CoarseDiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
   typedef typename CommonTraits::EntityType CoarseEntity;
 
-  typedef MsFEMTraits::SubGridListType SubGridListType;
+  typedef MsFEMTraits::LocalGridListType LocalGridListType;
 
 public:
   DiscreteEllipticMsFEMOperator(MacroMicroGridSpecifierType& specifier,
                                 const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
                                 // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                                 // n(T)-layers:
-                                MsFEMTraits::SubGridListType& subgrid_list, const DiffusionModel& diffusion_op);
+                                MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op);
 
   template <class SPMatrixObject>
   void assemble_matrix(SPMatrixObject& global_matrix) const;
@@ -86,7 +86,7 @@ public:
 private:
   MacroMicroGridSpecifierType& specifier_;
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
-  MsFEMTraits::SubGridListType& subgrid_list_;
+  MsFEMTraits::LocalGridListType& subgrid_list_;
   const DiffusionModel& diffusion_operator_;
   const bool petrovGalerkin_;
 };
@@ -132,11 +132,8 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     for (const auto& localGridEntity : localSolutionManager.getLocalDiscreteFunctionSpace()) {
       // check if "localGridEntity" (which is an entity of U(T)) is in T:
       // -------------------------------------------------------------------
-      const auto& hostEntity = localSolutionManager.getSubGridPart().grid().template getHostEntity<0>(localGridEntity);
       // ignore overlay elements
-      if (global_index_entity == subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
-        assert(hostEntity->partitionType() == InteriorEntity);
-
+      if (subgrid_list_.covers(coarse_grid_entity, localGridEntity)) {
         const auto& local_grid_geometry = localGridEntity.geometry();
 
         // higher order quadrature, since A^{\epsilon} is highly variable

@@ -39,9 +39,9 @@ private:
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename DiscreteFunctionSpace::GridType HostGrid;
-  typedef typename HostGrid::Traits::LeafIndexSet HostGridLeafIndexSet;
-  typedef typename HostGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
+  typedef typename DiscreteFunctionSpace::GridType LocalGrid;
+  typedef typename LocalGrid::Traits::LeafIndexSet LocalGridLeafIndexSet;
+  typedef typename LocalGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
@@ -106,29 +106,29 @@ private:
     }
   };
 
-  // typedef typename HostGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
+  // typedef typename LocalGrid ::template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
   // LevelEntityIteratorType;
 
   typedef typename DiscreteFunctionSpace::IteratorType HostgridIterator;
-  typedef typename HostgridIterator::Entity HostEntity;
-  typedef typename HostEntity::EntityPointer HostEntityPointer;
-  typedef typename HostEntity::EntitySeed FineGridEntitySeed;
+  typedef typename HostgridIterator::Entity LocalEntity;
+  typedef typename LocalEntity::EntityPointer LocalEntityPointer;
+  typedef typename LocalEntity::EntitySeed FineGridEntitySeed;
 
-  // typedef typename HostGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
-  // HostGridLevelEntityIterator;
+  // typedef typename LocalGrid :: template Codim< 0 > :: template Partition< All_Partition > :: LevelIterator
+  // LocalGridLevelEntityIterator;
 
   static const int faceCodim = 1;
 
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   // --------------------------- subgrid typedefs ------------------------------------
-  typedef MsFEMTraits::SubGridListType SubGridListType;
-  typedef MsFEMTraits::SubGridType SubGridType;
-  typedef MsFEMTraits::SubGridPartType SubGridPartType;
-  typedef MsFEMTraits::SubGridDiscreteFunctionSpaceType SubGridDiscreteFunctionSpaceType;
-  typedef MsFEMTraits::SubGridDiscreteFunctionType SubGridDiscreteFunctionType;
-  typedef typename SubGridDiscreteFunctionType::LocalFunctionType SubGridLocalFunctionType;
-  typedef typename SubGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
+  typedef MsFEMTraits::LocalGridListType LocalGridListType;
+  typedef MsFEMTraits::LocalGridType LocalGridType;
+  typedef MsFEMTraits::LocalGridPartType LocalGridPartType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef typename LocalGridDiscreteFunctionType::LocalFunctionType SubGridLocalFunctionType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType SubGridIteratorType;
   typedef typename SubGridIteratorType::Entity SubGridEntityType;
   //!-----------------------------------------------------------------------------------------
 
@@ -159,14 +159,14 @@ private:
   //! for each subgrid, store the vector of basis functions ids that
   //! correspond to interior coarse grid nodes in the subgrid
   // information stored in 'std::vector< std::vector< int > >'
-  void assemble_interior_basis_ids(MacroMicroGridSpecifier& specifier, SubGridListType& subgrid_list,
+  void assemble_interior_basis_ids(MacroMicroGridSpecifier& specifier, LocalGridListType& subgrid_list,
                                    std::map<std::size_t, std::size_t>& global_id_to_internal_id,
                                    std::map<OrderedDomainType, std::size_t>& coordinates_to_global_coarse_node_id,
                                    std::vector<std::vector<std::size_t>>& ids_basis_function_in_extended_subgrid,
                                    std::vector<std::vector<std::size_t>>& ids_basis_function_in_subgrid,
                                    std::vector<std::vector<std::size_t>>& ids_basis_function_in_interior_subgrid) const;
 
-  void subgrid_to_hostrid_projection(const SubGridDiscreteFunctionType& sub_func, DiscreteFunction& host_func) const;
+  void subgrid_to_hostrid_projection(const LocalGridDiscreteFunctionType& sub_func, DiscreteFunction& host_func) const;
 
   //! create standard coarse grid basis functions as discrete functions defined on the fine grid
   // ------------------------------------------------------------------------------------
@@ -177,16 +177,16 @@ private:
   //! add corrector part to MsFEM basis functions
   void add_corrector_contribution(MacroMicroGridSpecifier& specifier,
                                   std::map<std::size_t, std::size_t>& global_id_to_internal_id,
-                                  SubGridListType& subgrid_list,
+                                  LocalGridListType& subgrid_list,
                                   MsFEMBasisFunctionType& msfem_basis_function_list) const;
 
   //! assemble global dirichlet corrector
   void assemble_global_dirichlet_corrector(MacroMicroGridSpecifier& specifier,
-                                           MsFEMTraits::SubGridListType& subgrid_list,
+                                           MsFEMTraits::LocalGridListType& subgrid_list,
                                            DiscreteFunction& global_dirichlet_corrector) const;
 
   //! assemble global neumann corrector
-  void assemble_global_neumann_corrector(MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+  void assemble_global_neumann_corrector(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
                                          DiscreteFunction& global_neumann_corrector) const;
 
   template <class DiffusionOperator, class SeedSupportStorage>
@@ -387,7 +387,7 @@ public:
              const CommonTraits::NeumannBCType& neumann_bc,
              // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
              // n(T)-layers.
-             MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+             MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
              DiscreteFunction& coarse_scale_part, DiscreteFunction& fine_scale_part, DiscreteFunction& solution) const;
 };
 

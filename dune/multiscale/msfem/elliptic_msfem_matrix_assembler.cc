@@ -13,7 +13,7 @@ DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(
     MacroMicroGridSpecifierType& specifier, const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
     // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
     // n(T)-layers:
-    MsFEMTraits::SubGridListType& subgrid_list, const DiffusionModel& diffusion_op)
+    MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op)
   : specifier_(specifier)
   , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
   , subgrid_list_(subgrid_list)

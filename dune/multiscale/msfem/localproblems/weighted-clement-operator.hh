@@ -34,16 +34,16 @@ namespace MsFEM {
 class MacroMicroGridSpecifier;
 
 class WeightedClementOperator
-    : public Operator<typename MsFEMTraits::SubGridDiscreteFunctionType::RangeFieldType,
+    : public Operator<typename MsFEMTraits::LocalGridDiscreteFunctionType::RangeFieldType,
                       typename CommonTraits::DiscreteFunctionType::RangeFieldType,
-                      typename MsFEMTraits::SubGridDiscreteFunctionType, typename CommonTraits::DiscreteFunctionType>,
+                      typename MsFEMTraits::LocalGridDiscreteFunctionType, typename CommonTraits::DiscreteFunctionType>,
       public OEMSolver::PreconditionInterface {
 private:
   typedef std::vector<std::shared_ptr<CommonTraits::DiscreteFunctionType>> CoarseBasisFunctionList;
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
 
   //! type of discrete functions
-  typedef MsFEMTraits::SubGridDiscreteFunctionType DiscreteFunctionType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionType DiscreteFunctionType;
 
   typedef CoarseDiscreteFunction CoarseDiscreteFunctionType;
 
@@ -86,7 +86,7 @@ private:
   static const int dimension = GridType::dimension;
   static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
 
-  typedef Dune::Fem::SparseRowMatrixTraits<typename MsFEMTraits::SubGridDiscreteFunctionSpaceType,
+  typedef Dune::Fem::SparseRowMatrixTraits<typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType,
                                            typename CommonTraits::DiscreteFunctionSpaceType>
   WeightedClementMatrixObjectTraits;
 

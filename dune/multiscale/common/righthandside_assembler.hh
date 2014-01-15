@@ -16,7 +16,7 @@ namespace Multiscale {
 //! we call f the first Source and G the second Source
 namespace MsFEM {
 class MacroMicroGridSpecifier;
-class SubGridList;
+class LocalGridList;
 }  // namespace MsFEM
 
 class RightHandSideAssembler {
@@ -57,7 +57,7 @@ public:
    *  rhsVector is the output parameter (kind of return value)
    **/
   static void assemble_for_MsFEM_symmetric(const CommonTraits::FirstSourceType& f, MsFEM::MacroMicroGridSpecifier& specifier,
-                                           MsFEM::SubGridList& subgrid_list, DiscreteFunctionType& rhsVector);
+                                           MsFEM::LocalGridList& subgrid_list, DiscreteFunctionType& rhsVector);
 };  // end class
 } // end namespace Multiscale
 } // end namespace Dune

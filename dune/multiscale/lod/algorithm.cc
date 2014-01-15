@@ -63,8 +63,8 @@ void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, Dir
     const int level_difference = specifier.getLevelDifference();
     CommonTraits::DiscreteFunctionSpaceType& coarseSpace = specifier.coarseSpace();
 
-    typedef typename CommonTraits::GridType::Traits::LeafIndexSet HostGridLeafIndexSet;
-    const HostGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
+    typedef typename CommonTraits::GridType::Traits::LeafIndexSet LocalGridLeafIndexSet;
+    const LocalGridLeafIndexSet& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
 
     const auto& entity_ptr = coarseSpace.grid().entityPointer(entity.seed());
     const CommonTraits::EntityPointerType& coarse_father =
@@ -375,7 +375,7 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
 
   //! create subgrids:
   { // this scopes subgridlist
-    MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
+    MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
     Elliptic_Rigorous_MsFEM_Solver lod_solver(discreteFunctionSpace);

@@ -38,19 +38,17 @@ Elliptic_Rigorous_MsFEM_Solver::Elliptic_Rigorous_MsFEM_Solver(const DiscreteFun
 
 // create a hostgrid function from a subgridfunction (projection for global continuity)
 // Note: the maximum gride levels for both underlying grids must be the same
-void Elliptic_Rigorous_MsFEM_Solver::subgrid_to_hostrid_projection(const SubGridDiscreteFunctionType& sub_func,
+void Elliptic_Rigorous_MsFEM_Solver::subgrid_to_hostrid_projection(const LocalGridDiscreteFunctionType& sub_func,
                                                                    DiscreteFunction& host_func) const {
   host_func.clear();
 
-  const SubGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
-  const SubGridType& subGrid = subDiscreteFunctionSpace.grid();
+  assert(false);//this fails with new local grid stuff
 
-  const SubGridIteratorType sub_endit = subDiscreteFunctionSpace.end();
-  for (SubGridIteratorType sub_it = subDiscreteFunctionSpace.begin(); sub_it != sub_endit; ++sub_it) {
-    const SubGridEntityType& sub_entity = *sub_it;
+  const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace = sub_func.space();
+  const LocalGridType& subGrid = subDiscreteFunctionSpace.grid();
 
-    const HostEntityPointer host_entity_pointer = subGrid.getHostEntity<0>(*sub_it);
-    const HostEntity& host_entity = *host_entity_pointer;
+  for (const auto& sub_entity : subDiscreteFunctionSpace) {
+    const LocalEntity& host_entity = sub_entity;
 
     const SubGridLocalFunctionType sub_loc_value = sub_func.localFunction(sub_entity);
     auto host_loc_value = host_func.localFunction(host_entity);
@@ -93,7 +91,7 @@ void Elliptic_Rigorous_MsFEM_Solver::vtk_output(MsFEMBasisFunctionType& msfem_ba
 // subgrid
 // information stored in 'std::vector< std::vector< int > >'
 void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
-    MacroMicroGridSpecifier& specifier, SubGridListType& subgrid_list,
+    MacroMicroGridSpecifier& specifier, LocalGridListType& subgrid_list,
     std::map<std::size_t, std::size_t>& global_id_to_internal_id,
     std::map<OrderedDomainType, std::size_t>& coordinates_to_global_coarse_node_id,
     // all coarse nodes, where the corresponding coarse (nodal) basis function has a support that intersects with the
@@ -147,15 +145,15 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
 
   for (unsigned int sg_id = 0; sg_id < number_of_subgrids; sg_id += 1) {
     auto subGridPart = subgrid_list.gridPart(sg_id);
-    const SubGridDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
+    const LocalGridDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
 
     CoarseNodeVectorType coarse_nodes_in_subgrid = subgrid_list.getCoarseNodeVector(sg_id);
 
     const SubGridIteratorType sg_end = subDiscreteFunctionSpace.end();
     for (SubGridIteratorType sg_it = subDiscreteFunctionSpace.begin(); sg_it != sg_end; ++sg_it) {
       //! MARK actual subgrid usage
-      const HostEntityPointer host_entity_pointer = subGridPart.grid().getHostEntity<0>(*sg_it);
-      const HostEntity& host_entity = *host_entity_pointer;
+      const LocalEntityPointer host_entity_pointer = subGridPart.grid().getLocalEntity<0>(*sg_it);
+      const LocalEntity& host_entity = *host_entity_pointer;
 
       const auto iend = fine_space.gridPart().iend(host_entity);
       for (auto iit = fine_space.gridPart().ibegin(host_entity); iit != iend; ++iit) {
@@ -165,10 +163,10 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
         if (iit->neighbor()) // if there is a neighbor entity
         {
           // check if the neighbor entity is in the subgrid
-          const HostEntityPointer neighborHostEntityPointer = iit->outside();
-          const HostEntity& neighborHostEntity = *neighborHostEntityPointer;
+          const LocalEntityPointer neighborLocalEntityPointer = iit->outside();
+          const LocalEntity& neighborLocalEntity = *neighborLocalEntityPointer;
           //! MARK actual subgrid usage
-          if (subGridPart.grid().contains<0>(neighborHostEntity))
+          if (subGridPart.grid().contains<0>(neighborLocalEntity))
             is_subgrid_boundary_face = false;
         }
 
@@ -224,12 +222,12 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
 
-  const HostGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
+  const LocalGridLeafIndexSet& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
 
   for (HostgridIterator it = discreteFunctionSpace_.begin(); it != discreteFunctionSpace_.end(); ++it) {
-    typedef typename HostEntity::Codim<0>::EntityPointer HostEntityPointer;
-    HostEntityPointer coarse_father =
-        DSG::make_father(coarseGridLeafIndexSet, HostEntityPointer(*it), specifier.getLevelDifference());
+    typedef typename LocalEntity::Codim<0>::EntityPointer LocalEntityPointer;
+    LocalEntityPointer coarse_father =
+        DSG::make_father(coarseGridLeafIndexSet, LocalEntityPointer(*it), specifier.getLevelDifference());
 
     const CoarseBaseFunctionSet coarseBaseSet = specifier.coarseSpace().basisFunctionSet(*coarse_father);
     const auto numBaseFunctions = coarseBaseSet.size();
@@ -271,13 +269,13 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(
 
       auto loc_coarse_basis_function = (msfem_basis_function_list[global_interior_dof_number])->localFunction(*it);
 
-      const int number_of_nodes_in_fine_entity = it->count<HostGrid::dimension>();
+      const int number_of_nodes_in_fine_entity = it->count<LocalGrid::dimension>();
       if (!(number_of_nodes_in_fine_entity == int(loc_coarse_basis_function.basisFunctionSet().size()))) {
         DSC_LOG_ERROR << "Error! Inconsistency in 'rigorous_msfem_solver.hh'." << std::endl;
       }
 
       for (int i = 0; i < number_of_nodes_in_fine_entity; i += 1) {
-        const auto node = it->subEntity<HostGrid::dimension>(i);
+        const auto node = it->subEntity<LocalGrid::dimension>(i);
 
         const auto coordinates_of_node = node->geometry().corner(0);
         if (!(coordinates_of_node == it->geometry().corner(i))) {
@@ -298,7 +296,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(
 //! add corrector part to MsFEM basis functions
 void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
     MacroMicroGridSpecifier& specifier, std::map<std::size_t, std::size_t>& global_id_to_internal_id,
-    SubGridListType& subgrid_list, MsFEMBasisFunctionType& msfem_basis_function_list) const {
+    LocalGridListType& subgrid_list, MsFEMBasisFunctionType& msfem_basis_function_list) const {
 
   DSC_LOG_INFO << "Add global corrector to create MsFEM basis functions from standard FEM basis functions... ";
 
@@ -322,12 +320,12 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
     // the sub grid U(T) that belongs to the coarse_grid_entity T
     auto subGridPart = subgrid_list.gridPart(global_index_entity);
 
-    const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
+    const LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-    SubGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
+    LocalGridDiscreteFunctionType local_problem_solution_e0("Local problem Solution e_0", localDiscreteFunctionSpace);
     local_problem_solution_e0.clear();
 
-    SubGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
+    LocalGridDiscreteFunctionType local_problem_solution_e1("Local problem Solution e_1", localDiscreteFunctionSpace);
     local_problem_solution_e1.clear();
 
     // --------- load local solutions -------
@@ -375,7 +373,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
 
 //! assemble global dirichlet corrector
 void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
-    MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+    MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
     Elliptic_Rigorous_MsFEM_Solver::DiscreteFunction& global_dirichlet_corrector) const {
 
   DSC_LOG_INFO << "Sum up local Dirichlet boundary correctors to create the global Dirichlet Corrector... ";
@@ -416,9 +414,9 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
     if (boundary_corrector_available) {
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       auto subGridPart = subgrid_list.gridPart(global_index_entity);
-      const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
+      const LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      SubGridDiscreteFunctionType local_dirichlet_corrector("Local Dirichlet corrector", localDiscreteFunctionSpace);
+      LocalGridDiscreteFunctionType local_dirichlet_corrector("Local Dirichlet corrector", localDiscreteFunctionSpace);
       local_dirichlet_corrector.clear();
 
       // --------- load local Dirichlet corrector -------
@@ -443,7 +441,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
 
 //! assemble global neumann corrector
 void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
-    MacroMicroGridSpecifier& specifier, MsFEMTraits::SubGridListType& subgrid_list,
+    MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
     Elliptic_Rigorous_MsFEM_Solver::DiscreteFunction& global_neumann_corrector) const {
 
   DSC_LOG_INFO << "Sum up local Neumann boundary correctors to create the global Neumann Corrector... ";
@@ -469,9 +467,9 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
     if (boundary_corrector_available) {
       // the sub grid U(T) that belongs to the coarse_grid_entity T
       auto subGridPart = subgrid_list.gridPart(global_index_entity);
-      const SubGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
+      const LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace(subGridPart);
 
-      SubGridDiscreteFunctionType local_neumann_corrector("Local Neumann corrector", localDiscreteFunctionSpace);
+      LocalGridDiscreteFunctionType local_neumann_corrector("Local Neumann corrector", localDiscreteFunctionSpace);
       local_neumann_corrector.clear();
 
       // --------- load local neumann corrector -------
@@ -499,7 +497,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     const CommonTraits::DiscreteFunctionType& dirichlet_extension, const CommonTraits::NeumannBCType& neumann_bc,
     // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
     // n(T)-layers.
-    MacroMicroGridSpecifier& specifier, SubGridListType& subgrid_list, DiscreteFunction& coarse_scale_part,
+    MacroMicroGridSpecifier& specifier, LocalGridListType& subgrid_list, DiscreteFunction& coarse_scale_part,
     DiscreteFunction& fine_scale_part, DiscreteFunction& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_Rigorous_MsFEM_Solver.solve_dirichlet_zero");
 
@@ -628,9 +626,9 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     }
   }
 
-  const auto& hostGridLeafIndexSet = fine_space.gridPart().grid().leafIndexSet();
+  const auto& localGridLeafIndexSet = fine_space.gridPart().grid().leafIndexSet();
   for (auto it = fine_space.begin(); it != fine_space.end(); ++it) {
-    const auto fine_entity_id = hostGridLeafIndexSet.index(*it);
+    const auto fine_entity_id = localGridLeafIndexSet.index(*it);
 
     bool add_to_support_dirichlet_corrector = false;
     bool add_to_support_neumann_corrector = false;

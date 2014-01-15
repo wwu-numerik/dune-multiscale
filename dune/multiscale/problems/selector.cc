@@ -142,13 +142,13 @@ bool isDirichletBoundary(const typename CommonTraits::GridPartType::Intersection
 }
 
 template <>
-bool isNeumannBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+bool isNeumannBoundary(const typename MsFEM::MsFEMTraits::LocalGridPartType::IntersectionType& face) {
   static auto info = getModelData()->subBoundaryInfo();
   return info->neumann(face);
 }
 
 template <>
-bool isDirichletBoundary(const typename MsFEM::MsFEMTraits::SubGridPartType::IntersectionType& face) {
+bool isDirichletBoundary(const typename MsFEM::MsFEMTraits::LocalGridPartType::IntersectionType& face) {
   static auto info = getModelData()->subBoundaryInfo();
   return info->dirichlet(face);
 }

@@ -16,29 +16,6 @@ namespace MsFEM {
 //! \TODO docme
 template <class EstimatorType>
 struct EstimatorUtils {
-  //! create N hostgrid functions from N subgridfunctions
-  template <std::array<int, 1>::size_type N>
-  static void
-  subgrid_to_hostrid_function(const std::array<typename EstimatorType::SubGridDiscreteFunctionType, N>& sub_funcs,
-                              std::array<typename EstimatorType::DiscreteFunctionPointer, N>& host_funcs) {
-    for (auto& host_func : host_funcs)
-      host_func->clear();
-
-    const auto& subGrid = sub_funcs[0].space().grid();
-    for (const auto& sub_entity : sub_funcs[0].space()) {
-      const auto host_entity_pointer = subGrid.template getHostEntity<0>(sub_entity);
-      const auto& host_entity = *host_entity_pointer;
-      for (std::array<int, 1>::size_type j = 0; j < N; ++j) {
-        const auto sub_loc_value = sub_funcs[j].localFunction(sub_entity);
-        auto host_loc_value = host_funcs[j]->localFunction(host_entity);
-        const auto numBaseFunctions = sub_loc_value.basisFunctionSet().size();
-        for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-          host_loc_value[i] = sub_loc_value[i];
-        }
-      }
-    }
-  } // subgrid_to_hostrid_function
-
   //! is a given point on a given face?
   static bool point_on_face(const typename EstimatorType::Intersection& face,
                             const typename EstimatorType::DomainType& point) {
@@ -74,8 +51,8 @@ struct EstimatorUtils {
   } // is_subface
 
   static std::pair<typename EstimatorType::JumpArray, typename EstimatorType::JumpArray>
-  flux_contributions(const typename EstimatorType::SubGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace,
-                     const typename MsFEMTraits::SubGridPartType& sub_gridPart,
+  flux_contributions(const typename EstimatorType::LocalGridDiscreteFunctionSpaceType& localDiscreteFunctionSpace,
+                     const typename MsFEMTraits::LocalGridPartType& sub_gridPart,
                      const typename EstimatorType::LeafIndexSetType& coarseGridLeafIndexSet,
                      const typename EstimatorType::DiscreteFunctionPointerPair& cflux_coarse_ent_host,
                      const typename EstimatorType::DiscreteFunctionType& msfem_coarse_part,
@@ -90,11 +67,12 @@ struct EstimatorUtils {
 
     for (const auto& sub_entity : localDiscreteFunctionSpace) {
       //! MARK actual subgrid usage
-      auto host_entity_pointer = sub_gridPart.grid().template getHostEntity<0>(sub_entity);
-      const auto& host_entity = *host_entity_pointer;
+      assert(false);
+//      auto host_entity_pointer = sub_gridPart.grid().template getLocalEntity<0>(sub_entity);
+      const auto& host_entity = sub_entity;
 
-      auto father_of_sub_grid_entity = DSG::make_father(coarseGridLeafIndexSet, host_entity_pointer, level_difference);
-      const int coarse_sub_father_index = coarseGridLeafIndexSet.index(*father_of_sub_grid_entity);
+      const auto& father_of_sub_grid_entity = sub_entity;//DSG::make_father(coarseGridLeafIndexSet, host_entity_pointer, level_difference);
+      const int coarse_sub_father_index = coarseGridLeafIndexSet.index(father_of_sub_grid_entity);
       if (coarse_sub_father_index != index_coarse_entity) {
         continue;
       }

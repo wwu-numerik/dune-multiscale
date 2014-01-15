@@ -12,23 +12,26 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/msfem_elliptic_error_estimator.hh>
+//#include <dune/multiscale/msfem/msfem_elliptic_error_estimator.hh>
 #include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
+
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
+
 #include <cmath>
 #include <iterator>
 #include <memory>
 #include <sstream>
 
 #include "algorithm.hh"
-#include "dune/multiscale/problems/base.hh"
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -263,6 +266,8 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& msfem_solution,
                       CommonTraits::RangeVector& total_estimated_H1_error_) {
   using namespace Dune;
 
+  DUNE_THROW(NotImplemented, "");
+#if 0
   CommonTraits::RangeType total_estimated_H1_error(0.0);
 
   // error estimation
@@ -292,9 +297,10 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& msfem_solution,
       total_estimated_H1_error_[loop_number] += (*total)[loop_number];
     }
   }
-
   return DSC_CONFIG_GET("adaptive", false) ? total_estimated_H1_error > DSC_CONFIG_GET("msfem.error_tolerance", 1e-6)
                                            : false;
+#endif //0
+  return false;
 }
 
 //! algorithm
@@ -376,7 +382,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
 
   //! create subgrids:
   { // this scopes subgridlist
-    MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
+    MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
     Elliptic_MsFEM_Solver msfem_solver(discreteFunctionSpace);
@@ -389,9 +395,10 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     }
     // error estimation
     if (DSC_CONFIG_GET("msfem.error_estimation", 0)) {
-      MsFEMTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
-      error_estimation(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, estimator, specifier,
-                       loop_number, locals, totals, total_estimated_H1_error_);
+      DUNE_THROW(NotImplemented, "");
+//      MsFEMTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
+//      error_estimation(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, estimator, specifier,
+//                       loop_number, locals, totals, total_estimated_H1_error_);
       local_indicators_available_ = true;
     }
   }

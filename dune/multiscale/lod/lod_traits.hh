@@ -6,22 +6,20 @@
 #define DHUUNE_LOD_TRAITS_HH
 
 #include <dune/multiscale/common/traits.hh>
-#include <dune/subgrid/subgrid.hh>
+#include <dune/grid/sgrid.hh>
 
 namespace Dune {
-template <int D, class R>
-class Subgrid;
 
 namespace Multiscale {
 namespace LOD {
 class MacroMicroGridSpecifier;
-class SubGridList;
+class LocalGridList;
 
 // ! type construction for the MSFEM code
 struct LODTraits {
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
-  typedef Dune::SubGrid<CommonTraits::GridType::dimension, typename CommonTraits::GridType> SubGridType;
-  typedef SubGridList SubGridListType;
+  typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
+  typedef LocalGridList LocalGridListType;
 
   // the following two may change if we intend to use different meshes on coarse and fine level
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
