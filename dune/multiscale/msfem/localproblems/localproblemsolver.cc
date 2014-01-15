@@ -116,7 +116,7 @@ void MsFEMLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coar
   for (auto& it : allLocalRHS)
     it = DSC::make_unique<LocalGridDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
 
-  switch (specifier_.getOversamplingStrategy()) {
+  switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
     case 1:
       localProblemOperator.assemble_matrix(locProbSysMatrix);
       localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
@@ -185,7 +185,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, LocalGridD
   //! right hand side vector of the algebraic local MsFEM problem
   LocalGridDiscreteFunctionType local_problem_rhs("rhs of local MsFEM problem", subDiscreteFunctionSpace);
   local_problem_rhs.clear();
-  switch (specifier_.getOversamplingStrategy()) {
+  switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
     case 1:
       local_problem_op.assemble_matrix(locprob_system_matrix);
       local_problem_op.assemble_local_RHS(e, local_problem_rhs);
@@ -195,7 +195,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, LocalGridD
         DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
       local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector(coarse_index));
       local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector(coarse_index),
-                                          specifier_.getOversamplingStrategy(), local_problem_rhs);
+                                          DSC_CONFIG_GET("msfem.oversampling_strategy", 1), local_problem_rhs);
       break;
     case 3:
       if (coarse_index < 0)
@@ -206,7 +206,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, LocalGridD
         local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector(coarse_index));
       }
       local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector(coarse_index),
-                                          specifier_.getOversamplingStrategy(), local_problem_rhs);
+                                          DSC_CONFIG_GET("msfem.oversampling_strategy", 1), local_problem_rhs);
       break;
     default:
       DUNE_THROW(Dune::Fem::ParameterInvalid, "Oversampling Strategy must be 1, 2 or 3.");
@@ -252,7 +252,7 @@ void MsFEMLocalProblemSolver::solvelocalproblem(JacobianRangeType& e, LocalGridD
 
   const auto locprob_fem_biCGStab = make_inverse_operator(locprob_system_matrix);
 
-  const bool clement = specifier_.getOversamplingStrategy() == 3
+  const bool clement = DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3
                            ? DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement"
                            : false;
 
@@ -323,7 +323,7 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_ind
   // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
   // the result.
 
-  switch (specifier_.getOversamplingStrategy()) {
+  switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
     case 3:
       break;
     default:
@@ -527,7 +527,7 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(
   // consider to make separate implementation of 'assemble_local_RHS' for the LOD method
   local_problem_op.assemble_local_RHS(
       e, subgrid_list_.getCoarseNodeVector(coarse_index), /*coarse node vector is a dummy in this case*/
-      specifier_.getOversamplingStrategy(),               /*always '3' in this case */
+      DSC_CONFIG_GET("msfem.oversampling_strategy", 1),               /*always '3' in this case */
       corrector_problem_rhs);
 
   local_problem_op.set_zero_boundary_condition_RHS(hostDiscreteFunctionSpace_, corrector_problem_rhs);
@@ -673,7 +673,7 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
   local_problem_op.assemble_local_RHS_Dirichlet_corrector(
       *dirichlet_extension_,
       subgrid_list_.getCoarseNodeVector(coarse_index), /*coarse node vector is a dummy in this case*/
-      specifier_.getOversamplingStrategy(),            /*always '3' in this case */
+      DSC_CONFIG_GET("msfem.oversampling_strategy", 1),            /*always '3' in this case */
       corrector_problem_rhs);
 
   local_problem_op.set_zero_boundary_condition_RHS(hostDiscreteFunctionSpace_, corrector_problem_rhs);
@@ -818,7 +818,7 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
   local_problem_op.assemble_local_RHS_Neumann_corrector(
       *neumann_bc_, hostDiscreteFunctionSpace_,
       subgrid_list_.getCoarseNodeVector(coarse_index), /*coarse node vector is a dummy in this case*/
-      specifier_.getOversamplingStrategy(),            /*always '3' in this case */
+      DSC_CONFIG_GET("msfem.oversampling_strategy", 1),            /*always '3' in this case */
       corrector_problem_rhs);
 
   local_problem_op.set_zero_boundary_condition_RHS(hostDiscreteFunctionSpace_, corrector_problem_rhs);
@@ -993,7 +993,7 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
 
     const bool uzawa = DSC_CONFIG_GET("rigorous_msfem.uzawa_solver", false);
     const bool clement = (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement");
-    if ((!uzawa) && (specifier_.getOversamplingStrategy() == 3) && clement) {
+    if ((!uzawa) && (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) && clement) {
       DUNE_THROW(InvalidStateException, "broken lod only code");
     #if 0
       //! only for dimension 2 and simplex grid!

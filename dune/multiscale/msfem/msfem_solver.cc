@@ -30,45 +30,23 @@ void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteF
   Stuff::HeterogenousProjection<>::project(sub_func, host_func);
 } // subgrid_to_hostrid_projection
 
-void Elliptic_MsFEM_Solver::projectCoarseToFineScale(MacroMicroGridSpecifier& /*specifier*/,
-                                                     const DiscreteFunctionType& coarse_msfem_solution,
-                                                     DiscreteFunctionType& coarse_scale_part) const {
-
-  DSC_LOG_INFO << "Indentifying coarse scale part of the MsFEM solution... ";
-
-  coarse_scale_part.clear();
-  Dune::Stuff::HeterogenousProjection<> projection;
-  projection.project(coarse_msfem_solution, coarse_scale_part);
-  DSC_LOG_INFO << " done." << std::endl;
-}
-
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& specifier,
                                                      MsFEMTraits::LocalGridListType& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
   fine_scale_part.clear();
-
-  const GridPart& gridPart = discreteFunctionSpace_.gridPart();
-  const LocalGrid& grid = gridPart.grid();
-
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
-  const LocalGridLeafIndexSet& coarseGridLeafIndexSet = coarse_space.gridPart().grid().leafIndexSet();
-
-  const int number_of_nodes = grid.size(2 /*codim*/);
-  std::vector<std::vector<LocalEntityPointer>> entities_sharing_same_node(number_of_nodes);
 
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
   // traverse coarse space
   for (auto& coarseCell : coarse_space) {
-    const auto coarseCellIndex = coarseGridLeafIndexSet.index(coarseCell);
-
     LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
     localSolManager.loadLocalSolutions();
     auto& localSolutions = localSolManager.getLocalSolutions();
 
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
 
-    if ((specifier.getOversamplingStrategy() == 3) || specifier.simplexCoarseGrid()) {
+    if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) || specifier.simplexCoarseGrid()) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
                        "We should have dim local solutions per coarse element on triangular meshes!");
 
@@ -96,18 +74,17 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
       // add dirichlet corrector
       DiscreteFunctionType boundaryCorrector("Boundary Corrector", discreteFunctionSpace_);
-      boundaryCorrector.clear();
-      subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs() + 1], boundaryCorrector);
+      DMM::MsFEMTraits::LocalGridDiscreteFunctionType& ff = *localSolutions[coarseSolutionLF.numDofs() + 1];
+      subgrid_to_hostrid_projection(ff, boundaryCorrector);
       fine_scale_part += boundaryCorrector;
 
       // substract neumann corrector
-      boundaryCorrector.clear();
       subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs()], boundaryCorrector);
       fine_scale_part -= boundaryCorrector;
     }
 
     // oversampling strategy 3: just sum up the local correctors:
-    if ((specifier.getOversamplingStrategy() == 3)) {
+    if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3)) {
       DiscreteFunctionType correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
       subgrid_to_hostrid_projection(*localSolutions[0], correction_on_U_T);
       fine_scale_part += correction_on_U_T;
@@ -115,37 +92,29 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming
     // projection:
-    if ((specifier.getOversamplingStrategy() == 1) || (specifier.getOversamplingStrategy() == 2)) {
-      BOOST_ASSERT_MSG(localSolManager.getLocalDiscreteFunctionSpace().gridPart().grid().maxLevel() ==
-                           discreteFunctionSpace_.gridPart().grid().maxLevel(),
-                       "Error: MaxLevel of SubGrid not identical to MaxLevel of FineGrid.");
+    if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 1) || (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 2)) {
 
-      DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local solution. restriction also no longer works");
-#if 0
-      const auto& nodeToEntityMap = subgrid_list.getNodeEntityMap();
+//      DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local correctors. restriction also no longer works");
+//      for (auto& local_entity : localSolManager.getLocalDiscreteFunctionSpace()) {
+//        if (subgrid_list.covers(coarseCell, local_entity)) {
+//          const auto sub_loc_value = localSolutions[0]->localFunction(local_entity);
 
-      for (auto& local_entity : localSolManager.getLocalDiscreteFunctionSpace()) {
-        const auto hostFatherIndex = subgrid_list.getEnclosingMacroCellIndex(local_entity);
-        if (hostFatherIndex == coarseCellIndex) {
-          const auto sub_loc_value = localSolutions[0]->localFunction(local_entity);
+//          assert(localSolutions.size() == coarseSolutionLF.numDofs() + localSolManager.numBoundaryCorrectors());
+//          auto host_loc_value = fine_scale_part.localFunction(local_entity);
 
-          assert(localSolutions.size() == coarseSolutionLF.numDofs() + localSolManager.numBoundaryCorrectors());
-          auto host_loc_value = fine_scale_part.localFunction(local_entity);
+//          const auto number_of_nodes_entity = local_entity.count<LocalGrid::dimension>();
 
-          const auto number_of_nodes_entity = local_entity.count<LocalGrid::dimension>();
+//          for (auto i : DSC::valueRange(number_of_nodes_entity)) {
+//            const auto node = local_entity.subEntity<LocalGrid::dimension>(i);
+//            const auto global_index_node = gridPart.indexSet().index(*node);
 
-          for (auto i : DSC::valueRange(number_of_nodes_entity)) {
-            const auto node = local_entity.subEntity<LocalGrid::dimension>(i);
-            const auto global_index_node = gridPart.indexSet().index(*node);
-
-            // devide the value by the number of fine elements sharing the node (will be
-            // added numEntitiesSharingNode times)
-            const auto numEntitiesSharingNode = nodeToEntityMap[global_index_node].size();
-            host_loc_value[i] += (sub_loc_value[i] / numEntitiesSharingNode);
-          }
-        }
-      }
-#endif //0
+//            // devide the value by the number of fine elements sharing the node (will be
+//            // added numEntitiesSharingNode times)
+//            const auto numEntitiesSharingNode = nodeToEntityMap[global_index_node].size();
+//            host_loc_value[i] += (sub_loc_value[i] / numEntitiesSharingNode);
+//          }
+//        }
+//      }
     }
   }
   DSC_LOG_INFO << " done." << std::endl;
@@ -222,9 +191,6 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   solution.clear();
   Dune::Multiscale::copyDirichletValues(coarse_space, solution);
 
-  //! copy coarse scale part of MsFEM solution into a function defined on the fine grid
-  projectCoarseToFineScale(specifier, coarse_msfem_solution, coarse_scale_part);
-
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(specifier, subgrid_list, coarse_msfem_solution, fine_scale_part);
   {
@@ -235,6 +201,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
 
+  DS::HeterogenousProjection<>::project(coarse_msfem_solution, coarse_scale_part);
   // add coarse and fine scale part to solution
   solution += coarse_scale_part;
   solution += fine_scale_part;

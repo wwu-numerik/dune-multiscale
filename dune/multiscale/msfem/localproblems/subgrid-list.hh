@@ -113,11 +113,7 @@ public:
 private:
   typedef std::map<std::size_t, std::shared_ptr<LocalGridType>> SubGridStorageType;
 
-  bool entityPatchInSubgrid(const LocalEntityPointerType& hit, const LocalGridPartType& localGridPart,
-                            shared_ptr<const LocalGridType> subGrid,
-                            const EntityPointerCollectionType& entities_sharing_same_node) const;
-
-  void identifySubGrids();
+  void createSubGrids();
 
   const CommonTraits::DiscreteFunctionSpaceType& coarseSpace_;
   MsFEMTraits::MacroMicroGridSpecifierType& specifier_;

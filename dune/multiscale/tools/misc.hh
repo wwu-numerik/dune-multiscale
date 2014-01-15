@@ -71,15 +71,6 @@ subgrid_to_hostrid_function(const std::array<DMM::MsFEMTraits::LocalGridDiscrete
     HeterogenousProjection<>::project(sub_funcs[i], host_funcs[i]);
 } // subgrid_to_hostrid_function
 
-
-static void
-subgrid_to_hostrid_function(const DMM::MsFEMTraits::MsFEMTraits::LocalGridDiscreteFunctionType& sub_func,
-                            Multiscale::CommonTraits::DiscreteFunctionType& host_func)
-{
-  host_func.clear();
-  HeterogenousProjection<>::project(sub_func, host_func);
-}
-
 } // namespace Grid
 } // namespace Stuff
 } // namespace Dune
