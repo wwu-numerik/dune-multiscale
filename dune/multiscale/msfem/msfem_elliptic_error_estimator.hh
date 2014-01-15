@@ -145,6 +145,41 @@ private:
   const DiffusionOperatorType& diffusion_;
   const SourceType& f_;
 
+  // ----- local error indicators (for each coarse grid element T) -------------
+
+  // local coarse residual, i.e. H ||f||_{L^2(T)}
+  typedef std::vector<RangeType> RangeTypeVector;
+  RangeTypeVector loc_coarse_residual_;
+
+  // local coarse grid jumps (contribute to the total coarse residual)
+  RangeTypeVector loc_coarse_grid_jumps_;
+
+  // local projection error (we project to get a globaly continous approximation)
+  RangeTypeVector loc_projection_error_;
+
+  // local jump in the conservative flux
+  RangeTypeVector loc_conservative_flux_jumps_;
+
+  // local approximation error
+  RangeTypeVector loc_approximation_error_;
+
+  // local sum over the fine grid jumps (for a fixed subgrid that cooresponds with a coarse entity T)
+  RangeTypeVector loc_fine_grid_jumps_;
+
+  void initialize_local_error_manager();
+  void set_loc_coarse_residual(std::size_t index, const RangeType& loc_coarse_residual);
+  void set_loc_coarse_grid_jumps(std::size_t index, const RangeType& loc_coarse_grid_jumps);
+  void set_loc_projection_error(std::size_t index, const RangeType& loc_projection_error);
+  void set_loc_conservative_flux_jumps(std::size_t index, const RangeType& loc_conservative_flux_jumps);
+  void set_loc_approximation_error(std::size_t index, const RangeType& loc_approximation_error);
+  void set_loc_fine_grid_jumps(std::size_t index, const RangeType& loc_fine_grid_jumps);
+  RangeType get_loc_coarse_residual(std::size_t index) const;
+  RangeType get_loc_coarse_grid_jumps(std::size_t index) const;
+  RangeType get_loc_projection_error(std::size_t index) const;
+  RangeType get_loc_conservative_flux_jumps(std::size_t index) const;
+  RangeType get_loc_approximation_error(std::size_t index) const;
+  RangeType get_loc_fine_grid_jumps(std::size_t index) const;
+
 public:
   MsFEMErrorEstimator(const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace,
                       MacroMicroGridSpecifierType& specifier, LocalGridListType& subgrid_list,
@@ -477,6 +512,7 @@ private:
     }
   }
 
+
 public:
   // adaptive_refinement
   RangeType adaptive_refinement(const DiscreteFunctionType& msfem_solution,
@@ -539,6 +575,111 @@ public:
     return total_estimated_error;
   } // adaptive_refinement
 };  // end of class MsFEMErrorEstimator
+
+template <class A, class B, class C, class D, class E>
+void MsFEMErrorEstimator<A,B,C,D,E>::initialize_local_error_manager() {
+  //!TODO previous imp would append number_of_level_host_entities_ many zeroes every time it was called
+  loc_coarse_residual_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+  loc_projection_error_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+  loc_coarse_grid_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+  loc_conservative_flux_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+  loc_approximation_error_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+  loc_fine_grid_jumps_ = RangeTypeVector(number_of_level_host_entities_, 0.0);
+} // initialize_local_error_manager
+
+template <class A, class B, class C, class D, class E>
+void MsFEMErrorEstimator<A,B,C,D,E>::set_loc_coarse_residual(std::size_t index, const RangeType& loc_coarse_residual) {
+  loc_coarse_residual_[index] = loc_coarse_residual;
+}
+
+template <class A, class B, class C, class D, class E>
+void MsFEMErrorEstimator<A,B,C,D,E>::set_loc_coarse_grid_jumps(std::size_t index, const RangeType& loc_coarse_grid_jumps) {
+  loc_coarse_grid_jumps_[index] = loc_coarse_grid_jumps;
+}
+
+template <class A, class B, class C, class D, class E>
+void MsFEMErrorEstimator<A,B,C,D,E>::set_loc_projection_error(std::size_t index, const RangeType& loc_projection_error) {
+  loc_projection_error_[index] = loc_projection_error;
+}
+
+template <class A, class B, class C, class D, class E>
+void MsFEMErrorEstimator<A,B,C,D,E>::set_loc_conservative_flux_jumps(std::size_t index,
+                                                              const RangeType& loc_conservative_flux_jumps) {
+  loc_conservative_flux_jumps_[index] = loc_conservative_flux_jumps;
+}
+
+template <class A, class B, class C, class D, class E>
+void MsFEMErrorEstimator<A,B,C,D,E>::set_loc_approximation_error(std::size_t index, const RangeType& loc_approximation_error) {
+  loc_approximation_error_[index] = loc_approximation_error;
+}
+
+template <class A, class B, class C, class D, class E>
+void MsFEMErrorEstimator<A,B,C,D,E>::set_loc_fine_grid_jumps(std::size_t index,
+                                                      const MacroMicroGridSpecifier::RangeType& loc_fine_grid_jumps) {
+  loc_fine_grid_jumps_[index] = loc_fine_grid_jumps;
+}
+
+template <class A, class B, class C, class D, class E>
+MsFEMErrorEstimator<A,B,C,D,E>::RangeType MsFEMErrorEstimator<A,B,C,D,E>::get_loc_coarse_residual(std::size_t index) const {
+  if (loc_coarse_residual_.empty()) {
+    DUNE_THROW(Dune::InvalidStateException,
+               "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+  }
+  return loc_coarse_residual_[index];
+} // get_loc_coarse_residual
+
+template <class A, class B, class C, class D, class E>
+MsFEMErrorEstimator<A,B,C,D,E>::RangeType MsFEMErrorEstimator<A,B,C,D,E>::get_loc_coarse_grid_jumps(std::size_t index) const {
+  if (loc_coarse_grid_jumps_.empty()) {
+    DUNE_THROW(Dune::InvalidStateException,
+               "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+  }
+  return loc_coarse_grid_jumps_[index];
+} // get_loc_coarse_grid_jumps
+
+template <class A, class B, class C, class D, class E>
+MsFEMErrorEstimator<A,B,C,D,E>::RangeType MsFEMErrorEstimator<A,B,C,D,E>::get_loc_projection_error(std::size_t index) const {
+  if (loc_projection_error_.empty()) {
+    DUNE_THROW(Dune::InvalidStateException,
+               "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+  }
+  return loc_projection_error_[index];
+} // get_loc_projection_error
+
+template <class A, class B, class C, class D, class E>
+MsFEMErrorEstimator<A,B,C,D,E>::RangeType MsFEMErrorEstimator<A,B,C,D,E>::get_loc_conservative_flux_jumps(std::size_t index) const {
+  if (loc_conservative_flux_jumps_.empty()) {
+    DUNE_THROW(Dune::InvalidStateException,
+               "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+  }
+  return loc_conservative_flux_jumps_[index];
+} // get_loc_conservative_flux_jumps
+
+template <class A, class B, class C, class D, class E>
+MsFEMErrorEstimator<A,B,C,D,E>::RangeType MsFEMErrorEstimator<A,B,C,D,E>::get_loc_approximation_error(std::size_t index) const {
+  if (loc_approximation_error_.empty()) {
+    DUNE_THROW(Dune::InvalidStateException,
+               "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+  }
+  return loc_approximation_error_[index];
+} // get_loc_approximation_error
+
+template <class A, class B, class C, class D, class E>
+MsFEMErrorEstimator<A,B,C,D,E>::RangeType MsFEMErrorEstimator<A,B,C,D,E>::get_loc_fine_grid_jumps(std::size_t index) const {
+  if (loc_fine_grid_jumps_.empty()) {
+    DUNE_THROW(Dune::InvalidStateException,
+               "Error! Use: initialize_local_error_manager()-method for the grid specifier first!");
+  }
+  return loc_fine_grid_jumps_[index];
+}
+
+template <class A, class B, class C, class D, class E>
+void MsFEMErrorEstimator<A,B,C,D,E>::set_loc_coarse_residual(std::size_t index, const MsFEMErrorEstimator::RangeType &loc_coarse_residual)
+{
+
+}
+
+// get_loc_fine_grid_jumps
 
 } // namespace MsFEM {
 } // namespace Multiscale {
