@@ -16,7 +16,7 @@
 #include <memory>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/grid/common/gridfactory.hh>
-#include <dune/grid/utility/structuredgridfactory.hh>
+#include <dune/stuff/grid/structuredgridfactory.hh>
 
 #include <Eigen/Core>
 

@@ -7,7 +7,8 @@
 
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/multiscale/common/traits.hh>
-#include <dune/grid/sgrid.hh>
+
+#include <dune/grid/spgrid.hh>
 #include <dune/fem/space/lagrange.hh>
 
 namespace Dune {
@@ -23,7 +24,7 @@ class MsFEMErrorEstimator;
 struct MsFEMTraits {
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
-  typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
+  typedef Dune::SPGrid<double, CommonTraits::GridType::dimension> LocalGridType;
   typedef Fem::AdaptiveLeafGridPart<LocalGridType> LocalGridPartType;
   typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, LocalGridPartType, st_lagrangespace_order> LocalGridDiscreteFunctionSpaceType;
 

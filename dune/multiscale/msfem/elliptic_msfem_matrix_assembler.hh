@@ -129,7 +129,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
     std::vector<typename CoarseBaseFunctionSet::JacobianRangeType> gradientPhi(numMacroBaseFunctions);
 
     // iterator for the micro grid ( grid for the reference element T_0 )
-    for (const auto& localGridEntity : localSolutionManager.getLocalDiscreteFunctionSpace()) {
+    for (const auto& localGridEntity : localSolutionManager.space()) {
       // check if "localGridEntity" (which is an entity of U(T)) is in T:
       // -------------------------------------------------------------------
       // ignore overlay elements
@@ -138,7 +138,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
 
         // higher order quadrature, since A^{\epsilon} is highly variable
         const auto localQuadrature =
-            make_quadrature(localGridEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
+            make_quadrature(localGridEntity, localSolutionManager.space());
         const auto numQuadraturePoints = localQuadrature.nop();
 
         // number of local solutions without the boundary correctors. Those are only needed for the right hand side
