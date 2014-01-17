@@ -24,6 +24,8 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
+#include <dune/stuff/grid/information.hh>
+#include <dune/stuff/grid/structuredgridfactory.hh>
 
 #include <cmath>
 #include <iterator>
@@ -38,7 +40,7 @@ namespace Multiscale {
 namespace MsFEM {
 
 //! \TODO docme
-void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, const int loop_number,
+void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& coarse_grid, const int loop_number,
            int& total_refinement_level_, int& coarse_grid_level_, int& number_of_layers_,
            const std::vector<CommonTraits::RangeVectorVector*>& locals,
            const std::vector<CommonTraits::RangeVector*>& totals,
@@ -96,8 +98,6 @@ void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, co
     average_coarse_error_indicator[l] = average_coarse_error_indicator[l] / loc_coarse_residual_[l].size();
   }
 
-  // allgemeineren Algorithmus vorgestellt, aber noch nicht implementiert
-
   if (coarse_scale_error_dominant) {
     int number_of_refinements = 4;
     // allowed varianve from average ( in percent )
@@ -128,9 +128,8 @@ void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, co
       grid.adapt();
       grid.postAdapt();
 
-      // coarse grid
-      GridView gridView_coarse = grid_coarse.leafView();
-      const GridLeafIndexSet& gridLeafIndexSet_coarse = grid_coarse.leafIndexSet();
+      GridView gridView_coarse = coarse_grid.leafView();
+      const GridLeafIndexSet& gridLeafIndexSet_coarse = coarse_grid.leafIndexSet();
 
       for (ElementLeafIterator it = gridView_coarse.begin<0>(); it != gridView_coarse.end<0>(); ++it) {
         CommonTraits::RangeType loc_coarse_error_indicator =
@@ -138,12 +137,12 @@ void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, co
             loc_coarse_residual_[l][gridLeafIndexSet_coarse.index(*it)];
 
         if (loc_coarse_error_indicator >= variance * average_coarse_error_indicator[l]) {
-          grid_coarse.mark(number_of_refinements, *it);
+          coarse_grid.mark(number_of_refinements, *it);
         }
       }
-      grid_coarse.preAdapt();
-      grid_coarse.adapt();
-      grid_coarse.postAdapt();
+      coarse_grid.preAdapt();
+      coarse_grid.adapt();
+      coarse_grid.postAdapt();
     }
   }
 }
@@ -155,9 +154,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
                      Dune::Multiscale::OutputParameters& outputparam, const int loop_number,
                      int& total_refinement_level_, int& coarse_grid_level_) {
   using namespace Dune;
-  //! ----------------- writing data output MsFEM Solution -----------------
-  // --------- VTK data output for MsFEM solution --------------------------
-  // create and initialize output class
+
   OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
   const auto& gridPart = msfem_solution.space().gridPart();
   std::string outstring;
@@ -172,8 +169,6 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 
   OutputTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
   msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
-
-  // create and initialize output class
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
 
   if (DSC_CONFIG_GET("adaptive", false)) {
@@ -187,18 +182,14 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 
   OutputTraits::DataOutputType coarse_msfem_dataoutput(gridPart.grid(), coarse_msfem_solution_series, outputparam);
   coarse_msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
-
-  // create and initialize output class
   OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
 
   if (DSC_CONFIG_GET("adaptive", false)) {
     const std::string fine_msfem_fname_s = (boost::format("fine_part_msfem_solution_%d_") % loop_number).str();
     outputparam.set_prefix(fine_msfem_fname_s);
-    // write data
     outstring = fine_msfem_fname_s;
   } else {
     outputparam.set_prefix("fine_part_msfem_solution");
-    // write data
     outstring = "fine_msfem_solution";
   }
 
@@ -216,43 +207,29 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
+                 const CommonTraits::DiscreteFunctionSpaceType& coarse_discreteFunctionSpace,
                  Dune::Multiscale::OutputParameters& outputparam, const int loop_number) {
   using namespace Dune;
-  // sequence stamp
-  //! --------------------------------------------------------------------------------------
 
-  //! -------------------------- writing data output Exact Solution ------------------------
   if (Problem::getModelData()->hasExactSolution()) {
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
-    // create and initialize output class
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("exact_solution");
     OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
-    // write data
     exactsol_dataoutput.writeData(1.0 /*dummy*/, "exact-solution");
-    // -------------------------------------------------------
   }
-  //! --------------------------------------------------------------------------------------
 
-  //! --------------- writing data output for the coarse grid visualization ------------------
   CommonTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
-                                                               discreteFunctionSpace_coarse);
+                                                               coarse_discreteFunctionSpace);
   coarse_grid_visualization.clear();
-  // -------------------------- data output -------------------------
-  // create and initialize output class
   OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
-
   const auto coarse_grid_fname = (boost::format("coarse_grid_visualization_%d_") % loop_number).str();
   outputparam.set_prefix(coarse_grid_fname);
-  OutputTraits::DataOutputType coarse_grid_dataoutput(discreteFunctionSpace_coarse.gridPart().grid(),
+  OutputTraits::DataOutputType coarse_grid_dataoutput(coarse_discreteFunctionSpace.gridPart().grid(),
                                                       coarse_grid_series, outputparam);
-  // write data
   coarse_grid_dataoutput.writeData(1.0 /*dummy*/, coarse_grid_fname);
-  // -------------------------------------------------------
-  //! --------------------------------------------------------------------------------------
 }
 
 //! \TODO docme
@@ -303,6 +280,7 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& /*msfem_solution
   return false;
 }
 
+
 //! algorithm
 bool algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,
                int& coarse_grid_level_, int& number_of_layers_, std::vector<CommonTraits::RangeVectorVector*>& locals,
@@ -341,96 +319,69 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   CommonTraits::DiscreteFunctionSpaceType cg_fem_discreteFunctionSpace(cg_fem_gridPart);
   CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
 
-  //! --------------------------- coefficient functions ------------------------------------
-
-  // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
   const auto& diffusion_op = *diffusion_op_ptr;
-  // define (first) source term:
   auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
   const auto& f = *f_ptr;
 
-  //! ---------------------------- general output parameters ------------------------------
-  // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
   if (DSC_CONFIG_GET("msfem.vtkOutput", false)) 
-    data_output(cg_fem_gridPart, discreteFunctionSpace_coarse, outputparam, loop_number);
+    data_output(fine_gridPart, coarse_discreteFunctionSpace, outputparam, loop_number);
 
-  //! ---------------------- solve MsFEM problem ---------------------------
-  //! solution vector
-  // solution of the standard finite element method
-  CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", cg_fem_discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", fine_discreteFunctionSpace);
   msfem_solution.clear();
-
-  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution", cg_fem_discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution", fine_discreteFunctionSpace);
   coarse_part_msfem_solution.clear();
-
-  CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", cg_fem_discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", fine_discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
-  MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse);
+  MsFEMTraits::MacroMicroGridSpecifierType specifier(coarse_discreteFunctionSpace);
 
-  // default to false, error_estimation might change it
+  // error_estimation might change it
   bool repeat_algorithm = false;
 
-  //! create subgrids:
-  { // this scopes subgridlist
-    MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
+  MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
-    // just for Dirichlet zero-boundary condition
-    Elliptic_MsFEM_Solver msfem_solver(cg_fem_discreteFunctionSpace);
-    msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
-                                      fine_part_msfem_solution, msfem_solution);
-    if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
-      DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-      solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, outputparam, loop_number,
-                      total_refinement_level_, coarse_grid_level_);
-    }
-    // error estimation
-    if (DSC_CONFIG_GET("msfem.error_estimation", 0)) {
-      DUNE_THROW(NotImplemented, "");
+  Elliptic_MsFEM_Solver msfem_solver(fine_discreteFunctionSpace);
+  msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
+                                    fine_part_msfem_solution, msfem_solution);
+
+  if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
+    DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
+    solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, outputparam, loop_number,
+                    total_refinement_level_, coarse_grid_level_);
+  }
+
+  if (DSC_CONFIG_GET("msfem.error_estimation", 0)) {
+    DUNE_THROW(NotImplemented, "");
 //      MsFEMTraits::MsFEMErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
 //      error_estimation(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, estimator, specifier,
 //                       loop_number, locals, totals, total_estimated_H1_error_);
-      local_indicators_available_ = true;
-    }
+    local_indicators_available_ = true;
   }
 
   //! ---------------------- solve FEM problem with same (fine) resolution ---------------------------
-  //! solution vector
-  // solution of the standard finite element method
-  CommonTraits::DiscreteFunctionType fem_solution("FEM Solution", cg_fem_discreteFunctionSpace);
-  fem_solution.clear();
+  CommonTraits::DiscreteFunctionType fem_solution("FEM Solution", fine_discreteFunctionSpace);
 
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    // just for Dirichlet zero-boundary condition
-    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(cg_fem_discreteFunctionSpace);
+    fem_solution.clear();
+    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(fine_discreteFunctionSpace);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
     fem_solver.solve_dirichlet_zero(diffusion_op, l_ptr, f, fem_solution);
     if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
-      //! ----------------------------------------------------------------------
       DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
-      //! -------------------------- writing data output FEM Solution ----------
-      
-      // ------------- VTK data output for FEM solution --------------
-      // create and initialize output class
       OutputTraits::IOTupleType fem_solution_series(&fem_solution);
       outputparam.set_prefix("fem_solution");
-      OutputTraits::DataOutputType fem_dataoutput(cg_fem_grid, fem_solution_series, outputparam);
-      
-      // write data
+      OutputTraits::DataOutputType fem_dataoutput(fine_grid, fem_solution_series, outputparam);
       fem_dataoutput.writeData(1.0 /*dummy*/, "fem_solution");
-      // -------------------------------------------------------------
     }
   }
 
   ErrorCalculator(&msfem_solution, &fem_solution).print(DSC_LOG_INFO_0);
 
-  //! -------------------------------------------------------
-  if (DSC_CONFIG_GET("adaptive", false)) {
-    DSC_LOG_INFO_0 << std::endl << std::endl;
-    DSC_LOG_INFO_0 << "---------------------------------------------" << std::endl;
-  }
+  if (DSC_CONFIG_GET("adaptive", false))
+    DSC_LOG_INFO_0 << "\n\n---------------------------------------------" << std::endl;
+
   return repeat_algorithm;
 } // function algorithm
 
