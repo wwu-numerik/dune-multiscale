@@ -43,9 +43,9 @@ public:
 
   LocalSolutionVectorType& getLocalSolutions();
 
-  const LocalGridDiscreteFunctionSpaceType& getLocalDiscreteFunctionSpace() const;
+  const LocalGridDiscreteFunctionSpaceType& space() const;
 
-  const LocalGridPartType& getSubGridPart() const;
+  const LocalGridPartType& grid_part() const;
 
   void loadLocalSolutions();
 
