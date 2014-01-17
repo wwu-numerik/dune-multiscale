@@ -27,11 +27,11 @@ LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity,
 
 LocalSolutionManager::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
 
-const LocalSolutionManager::LocalGridDiscreteFunctionSpaceType& LocalSolutionManager::getLocalDiscreteFunctionSpace() const {
+const LocalSolutionManager::LocalGridDiscreteFunctionSpaceType& LocalSolutionManager::space() const {
   return localDiscreteFunctionSpace_;
 }
 
-const LocalSolutionManager::LocalGridPartType& LocalSolutionManager::getSubGridPart() const { return subGridPart_; }
+const LocalSolutionManager::LocalGridPartType& LocalSolutionManager::grid_part() const { return subGridPart_; }
 
 void LocalSolutionManager::loadLocalSolutions() {
   // reader for the cell problem data file:

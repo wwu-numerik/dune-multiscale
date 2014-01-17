@@ -153,7 +153,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
     const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
 
     MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension("Dirichlet Extension",
-                                                                  localSolutionManager.getLocalDiscreteFunctionSpace());
+                                                                  localSolutionManager.space());
     dirichletExtension.clear();
     Dune::Multiscale::copyDirichletValues(rhsVector.space(), dirichletExtension);
 
@@ -162,7 +162,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
       if (subgrid_list.covers(coarse_grid_entity, localEntity)) {
         // higher order quadrature, since A^{\epsilon} is highly variable
         const auto localQuadrature =
-            make_quadrature(localEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
+            make_quadrature(localEntity, localSolutionManager.space());
 
         // evaluate all local solutions and their jacobians in all quadrature points
         std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
@@ -177,7 +177,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(cons
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionJacobians[lsNum]);
 
           // assemble intersection-part
-          const auto& subGridPart = localSolutionManager.getSubGridPart();
+          const auto& subGridPart = localSolutionManager.grid_part();
           for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafView(), localEntity)) {
             if (Problem::isNeumannBoundary(intersection)) {
               const int orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
