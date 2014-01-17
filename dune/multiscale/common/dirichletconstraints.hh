@@ -351,7 +351,7 @@ template < class LocalGridOrCoarseDiscreteFunctionSpaceImp >
 void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
                             Fem::DiscreteFunctionInterface<LocalGridOrCoarseDiscreteFunctionSpaceImp>& function) {
   static bool initialized = false;
-  CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(
+  static CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(
       "Dirichlet Extension Coarse", coarseSpace);
   if (!initialized) {
     initialized = true;
