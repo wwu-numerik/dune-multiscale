@@ -21,14 +21,10 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+
+
 Elliptic_MsFEM_Solver::Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace)
   : discreteFunctionSpace_(discreteFunctionSpace) {}
-
-void Elliptic_MsFEM_Solver::subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func,
-                                                          DiscreteFunctionType& host_func) const {
-  host_func.clear();
-  Stuff::HeterogenousProjection<>::project(sub_func, host_func);
-} // subgrid_to_hostrid_projection
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& specifier,
                                                      MsFEMTraits::LocalGridListType& subgrid_list,
@@ -187,10 +183,12 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   if (!coarse_msfem_solution.dofsValid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
 
+  DSC_LOG_INFO << "DIRI" <<std::endl;
   // get the dirichlet values
   solution.clear();
   Dune::Multiscale::copyDirichletValues(coarse_space, solution);
 
+  DSC_LOG_INFO << "IDENT" <<std::endl;
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(specifier, subgrid_list, coarse_msfem_solution, fine_scale_part);
   {
@@ -201,6 +199,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
 
+  DSC_LOG_INFO << "PART PROJ" <<std::endl;
   DS::HeterogenousProjection<>::project(coarse_msfem_solution, coarse_scale_part);
   // add coarse and fine scale part to solution
   solution += coarse_scale_part;

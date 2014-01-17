@@ -61,11 +61,6 @@ public:
   Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace);
 
 private:
-  // create a hostgrid function from a subgridfunction (projection for global continuity)
-  // Note: the maximum gride levels for both underlying grids must be the same
-  void subgrid_to_hostrid_projection(const SubgridDiscreteFunctionType& sub_func,
-                                     DiscreteFunctionType& host_func) const;
-
   //! identify fine scale part of MsFEM solution (including the projection!)
   // ------------------------------------------------------------------------------------
   void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
