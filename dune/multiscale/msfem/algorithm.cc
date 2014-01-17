@@ -286,38 +286,46 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
                int& coarse_grid_level_, int& number_of_layers_, std::vector<CommonTraits::RangeVectorVector*>& locals,
                std::vector<CommonTraits::RangeVector*>& totals, CommonTraits::RangeVector& total_estimated_H1_error_) {
   using namespace Dune;
-  bool local_indicators_available_ = false;
 
   if (DSC_CONFIG_GET("adaptive", false))
     DSC_LOG_INFO_0 << "------------------ run " << loop_number + 1 << " --------------------" << std::endl << std::endl;
 
   DSC_LOG_INFO_0 << "loading dgf: " << macroGridName << std::endl;
-  // we might use further grid parameters (depending on the grid type, e.g. Alberta), here we switch to default values
-  // for the parameters:
-  // create a grid pointer for the DGF file belongig to the macro grid:
-  CommonTraits::GridPointerType macro_grid_pointer(macroGridName);
-  // refine the grid 'starting_refinement_level' times:
-  Dune::Fem::GlobalRefine::apply(*macro_grid_pointer, coarse_grid_level_);
 
-  CommonTraits::GridType& cg_fem_grid = *macro_grid_pointer;
-  CommonTraits::GridPartType cg_fem_gridPart(cg_fem_grid);
-  // coarse grid
-  CommonTraits::GridPointerType macro_grid_pointer_coarse(macroGridName);
-  CommonTraits::GridType& grid_coarse = *macro_grid_pointer_coarse;
-  Dune::Fem::GlobalRefine::apply(grid_coarse, coarse_grid_level_);
-  CommonTraits::GridPartType gridPart_coarse(grid_coarse);
+//  CommonTraits::GridPointerType coarse_gridptr(macroGridName);
+  const int dim_world = CommonTraits::GridType::dimensionworld;
+  typedef FieldVector<typename CommonTraits::GridType::ctype, dim_world> CoordType;
+  const auto coarse_cells = DSC_CONFIG_GET("msfem.macro_cells_per_dim", 8);
+  array<unsigned int,dim_world> elements;
+  for(const auto i : DSC::valueRange(dim_world))
+    elements[i] = coarse_cells;
+  auto coarse_gridptr = StructuredGridFactory<CommonTraits::GridType>
+                        ::createCubeGrid(CoordType(0.0), CoordType(1.0), elements);
+  CommonTraits::GridType& coarse_grid = *coarse_gridptr;
+  CommonTraits::GridPartType coarse_gridPart(coarse_grid);
+  const auto coarse_dimensions = DSG::dimensions(coarse_grid);
+  CoordType lowerLeft(0);
+  CoordType upperRight(0);
+  for(const auto i : DSC::valueRange(dim_world))
+  {
+    elements[i] = coarse_cells * DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
+    lowerLeft[i] = coarse_dimensions.coord_limits[i].min();
+    upperRight[i] = coarse_dimensions.coord_limits[i].max();
+  }
 
-  // strategy for adaptivity:
+  auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements);
+  CommonTraits::GridType& fine_grid = *fine_gridptr;
+  CommonTraits::GridPartType fine_gridPart(fine_grid);
+
+  // maybe adapt if this is our second iteration
+  static bool local_indicators_available_ = false;
   if (DSC_CONFIG_GET("adaptive", false) && local_indicators_available_)
-    adapt(cg_fem_grid, grid_coarse, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_, locals,
+    adapt(fine_grid, coarse_grid, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_, locals,
           totals, total_estimated_H1_error_);
 
-  Dune::Fem::GlobalRefine::apply(cg_fem_grid, total_refinement_level_ - coarse_grid_level_);
 
-  //! ------------------------- discrete function spaces -----------------------------------
-  // the global-problem function space:
-  CommonTraits::DiscreteFunctionSpaceType cg_fem_discreteFunctionSpace(cg_fem_gridPart);
-  CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
+  CommonTraits::DiscreteFunctionSpaceType fine_discreteFunctionSpace(fine_gridPart);
+  CommonTraits::DiscreteFunctionSpaceType coarse_discreteFunctionSpace(coarse_gridPart);
 
   auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
   const auto& diffusion_op = *diffusion_op_ptr;
