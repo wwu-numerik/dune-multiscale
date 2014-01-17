@@ -38,6 +38,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
 
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
+  DiscreteFunctionType fine_correction("Boundary Corrector", discreteFunctionSpace_);
+
   // traverse coarse space
   for (auto& coarseCell : coarse_space) {
     LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
@@ -45,6 +47,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
     auto& localSolutions = localSolManager.getLocalSolutions();
 
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
+    DMM::MsFEMTraits::LocalGridDiscreteFunctionType local_correction("", localSolManager.space());
+    local_correction.clear();
 
     if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) || specifier.simplexCoarseGrid()) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
@@ -73,21 +77,14 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
       }
 
       // add dirichlet corrector
-      DiscreteFunctionType boundaryCorrector("Boundary Corrector", discreteFunctionSpace_);
-      DMM::MsFEMTraits::LocalGridDiscreteFunctionType& ff = *localSolutions[coarseSolutionLF.numDofs() + 1];
-      subgrid_to_hostrid_projection(ff, boundaryCorrector);
-      fine_scale_part += boundaryCorrector;
-
+      local_correction += *localSolutions[coarseSolutionLF.numDofs() + 1];
       // substract neumann corrector
-      subgrid_to_hostrid_projection(*localSolutions[coarseSolutionLF.numDofs()], boundaryCorrector);
-      fine_scale_part -= boundaryCorrector;
+      local_correction -= *localSolutions[coarseSolutionLF.numDofs() + 1];
     }
 
     // oversampling strategy 3: just sum up the local correctors:
     if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3)) {
-      DiscreteFunctionType correction_on_U_T("correction_on_U_T", discreteFunctionSpace_);
-      subgrid_to_hostrid_projection(*localSolutions[0], correction_on_U_T);
-      fine_scale_part += correction_on_U_T;
+      local_correction += *localSolutions[0];
     }
 
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming
@@ -95,7 +92,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
     if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 1) || (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 2)) {
 
 //      DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local correctors. restriction also no longer works");
-//      for (auto& local_entity : localSolManager.getLocalDiscreteFunctionSpace()) {
+//      for (auto& local_entity : localSolManager.space()) {
 //        if (subgrid_list.covers(coarseCell, local_entity)) {
 //          const auto sub_loc_value = localSolutions[0]->localFunction(local_entity);
 
@@ -116,6 +113,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 //        }
 //      }
     }
+
+    Stuff::HeterogenousProjection<>::project(local_correction, fine_correction);
+    fine_scale_part += fine_correction;
   }
   DSC_LOG_INFO << " done." << std::endl;
 }
