@@ -77,7 +77,7 @@ public:
   //! f --> 'first' source term, scalar ('SourceTermType')
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   //! homogenous Dirchilet boundary condition!:
-  void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
+  void apply(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
                             // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
                             // n(T)-layers.
                             MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
