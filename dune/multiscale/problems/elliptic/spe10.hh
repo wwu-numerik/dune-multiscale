@@ -45,6 +45,9 @@ struct ModelProblemData : public IModelProblemData {
 
   std::unique_ptr<BoundaryInfoType> boundaryInfo() const;
   std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const;
+
+private:
+  Dune::ParameterTree boundary_settings() const;
 };
 
 //! ----------------- Definition of ' f ' ------------------------

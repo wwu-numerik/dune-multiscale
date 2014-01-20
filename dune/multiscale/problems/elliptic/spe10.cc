@@ -41,31 +41,16 @@ bool ModelProblemData::problemAllowsStochastics() const {
 
 std::unique_ptr<ModelProblemData::BoundaryInfoType>
 ModelProblemData::boundaryInfo() const {
-  Dune::ParameterTree boundarySettings;
-  if (DSC_CONFIG.hasSub("problem.boundaryInfo")) {
-    boundarySettings = DSC_CONFIG.sub("problem.boundaryInfo");
-  } else {
-    boundarySettings["default"] = "neumann";
-    boundarySettings["compare_tolerance"] = "1e-10";
-    switch (View::dimension /*View is defined in IModelProblemData*/) {
-    case 1:
-      DUNE_THROW(NotImplemented, "Boundary values are not implemented for SPE10 in 1D!");
-      break;
-    case 2:
-      boundarySettings["dirichlet.0"] = "[-1.0; 0.0]";
-      boundarySettings["dirichlet.1"] = "[1.0; 0.0]";
-      break;
-    case 3:
-      boundarySettings["dirichlet.0"] = "[-1.0; 0.0; 0.0]";
-      boundarySettings["dirichlet.1"] = "[1.0; 0.0; 0.0]";
-    }
-  }
-  return std::unique_ptr<BoundaryInfoType>(
-        Dune::Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundarySettings));
+  return DSC::make_unique<Stuff::GridboundaryNormalBased<typename View::Intersection>>(boundary_settings());
 }
 
 std::unique_ptr<ModelProblemData::SubBoundaryInfoType>
 ModelProblemData::subBoundaryInfo() const {
+  return DSC::make_unique<Stuff::GridboundaryNormalBased<typename SubView::Intersection>>(boundary_settings());
+}
+
+ParameterTree ModelProblemData::boundary_settings() const
+{
   Dune::ParameterTree boundarySettings;
   if (DSC_CONFIG.hasSub("problem.boundaryInfo")) {
     boundarySettings = DSC_CONFIG.sub("problem.boundaryInfo");
@@ -85,8 +70,7 @@ ModelProblemData::subBoundaryInfo() const {
       boundarySettings["dirichlet.1"] = "[1.0; 0.0; 0.0]";
     }
   }
-  return std::unique_ptr<SubBoundaryInfoType>(
-      Dune::Stuff::GridboundaryNormalBased<typename SubView::Intersection>::create(boundarySettings));
+  return boundarySettings;
 }
 
 // evaluate Dirichlet Boundary Function
