@@ -40,14 +40,11 @@ bool ModelProblemData::problemAllowsStochastics() const {
 }
 
 std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
-  auto defaultBoundaryIds = Dune::Stuff::GridboundaryIdBased<View>::defaultSettings();
-  return std::unique_ptr<BoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<typename View::Intersection>());
+  return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename View::Intersection>>();
 }
 
 std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
-  auto defaultBoundaryIds = Dune::Stuff::GridboundaryIdBased<SubView>::defaultSettings();
-  return std::unique_ptr<SubBoundaryInfoType>(
-      new Dune::Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>());
+  return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>>();
 }
 
 FirstSource::FirstSource() {}
