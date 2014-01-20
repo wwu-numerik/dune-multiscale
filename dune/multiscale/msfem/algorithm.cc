@@ -351,7 +351,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
   Elliptic_MsFEM_Solver msfem_solver(fine_discreteFunctionSpace);
-  msfem_solver.solve_dirichlet_zero(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
+  msfem_solver.apply(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
                                     fine_part_msfem_solution, msfem_solution);
 
   if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
