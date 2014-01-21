@@ -15,7 +15,6 @@ LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity,
   , subGridPart_(subgridList_.getSubGrid(coarseEntity))
   , localDiscreteFunctionSpace_(subGridPart_)
   , coarseId_(gridSpecifier_.coarseSpace().gridPart().grid().globalIdSet().id(coarseEntity))
-  , loaded_(false)
   , numBoundaryCorrectors_((gridSpecifier_.simplexCoarseGrid()) ? 1 : 2)
   , numLocalProblems_((gridSpecifier_.simplexCoarseGrid()) ? GridSelector::dimgrid + 1
                                                            : gridSpecifier_.coarseSpace().mapper().maxNumDofs() + 2)
@@ -41,7 +40,6 @@ void LocalSolutionManager::loadLocalSolutions() {
     localSolutions_[i]->clear();
     reader.read(i, *(localSolutions_[i]));
   }
-  loaded_ = true;
   return;
 } // loadLocalSolutions
 
@@ -53,9 +51,8 @@ void LocalSolutionManager::saveLocalSolutions() const {
     writer.append(*it);
 } // saveLocalSolutions
 
-bool LocalSolutionManager::solutionsWereLoaded() const { return loaded_; }
-
 std::size_t LocalSolutionManager::numBoundaryCorrectors() const { return numBoundaryCorrectors_; }
-}
-}
-}
+
+} // namespace MsFEM {
+} // namespace Multiscale {
+} // namespace Dune {

@@ -107,13 +107,9 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(SPMatrixObject& global_matri
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
-  const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
-
   for (const auto& coarse_grid_entity : coarseDiscreteFunctionSpace_) {
     const auto& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
-
-    const auto global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
 
     DSFe::LocalMatrixProxy<SPMatrixObject> local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
 
