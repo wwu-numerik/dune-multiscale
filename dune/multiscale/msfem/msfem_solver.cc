@@ -10,6 +10,7 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <sstream>
 
 #include "dune/multiscale/common/dirichletconstraints.hh"
@@ -21,7 +22,34 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+template <class SearchType>
+class LocalsolutionProxy
+    : public Dune::Fem::DiscreteFunctionDefault<Dune::Fem::AdaptiveDiscreteFunctionTraits<
+                                                                      CommonTraits::DiscreteFunctionSpaceType>>
+{
+  typedef CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSetType;
 
+public:
+  typedef std::map<typename LeafIndexSetType::IndexType, std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>>
+    CorrectionsMapType;
+
+  LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set, SearchType& search)
+    : corrections_(corrections)
+    , index_set_(index_set)
+    , search_(search)
+  {}
+
+  template <class FineEntity>
+  LocalFunctionType localFunction(const FineEntity& fine_entity) {
+    const auto& coarse_cell = *search_.current_coarse_pointer();
+    return corrections_[index_set_.index(coarse_cell)]->localFunction(fine_entity);
+  }
+
+private:
+  const CorrectionsMapType& corrections_;
+  const LeafIndexSetType& index_set_;
+  SearchType& search_;
+};
 
 Elliptic_MsFEM_Solver::Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace)
   : discreteFunctionSpace_(discreteFunctionSpace) {}
@@ -32,15 +60,22 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
                                                      DiscreteFunctionType& fine_scale_part) const {
   fine_scale_part.clear();
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
+  auto& coarse_indexset = coarse_space.gridPart().grid().leafIndexSet();
 
-  DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
-  DiscreteFunctionType fine_correction("Boundary Corrector", discreteFunctionSpace_);
+  typedef DS::HeterogenousProjection<LocalGridSearch> ProjectionType;
+  typedef LocalGridSearch<typename LocalGridType::LeafGridView> SearchType;
+  typedef LocalsolutionProxy<SearchType> ProxyType;
+  typename ProxyType::CorrectionsMapType local_corrections;
+
+  SearchType search(subgrid_list);
+  ProxyType proxy(local_corrections, coarse_indexset, search);
 
   // traverse coarse space
   for (auto& coarseCell : coarse_space) {
     LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
     localSolManager.loadLocalSolutions();
     auto& localSolutions = localSolManager.getLocalSolutions();
+//    local_corrections
 
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
     DMM::MsFEMTraits::LocalGridDiscreteFunctionType local_correction("", localSolManager.space());
@@ -109,10 +144,14 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 //        }
 //      }
     }
-
-    Stuff::HeterogenousProjection<>::project(local_correction, fine_correction);
-    fine_scale_part += fine_correction;
+    localSolutions[0]->assign(local_correction);
   }
+
+  DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
+  DiscreteFunctionType fine_correction("Boundary Corrector", discreteFunctionSpace_);
+  ProjectionType::project(proxy, fine_correction, search);
+  fine_scale_part += fine_correction;
+
   DSC_LOG_INFO << " done." << std::endl;
 }
 
