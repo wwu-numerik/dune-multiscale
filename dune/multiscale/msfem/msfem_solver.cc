@@ -24,9 +24,9 @@ namespace MsFEM {
 
 template <class SearchType>
 class LocalsolutionProxy
-    : public Dune::Fem::DiscreteFunctionDefault<Dune::Fem::AdaptiveDiscreteFunctionTraits<
-                                                                      CommonTraits::DiscreteFunctionSpaceType>>
+    : public MsFEMTraits::LocalGridDiscreteFunctionType
 {
+  typedef MsFEMTraits::LocalGridDiscreteFunctionType BaseType;
   typedef CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSetType;
 
 public:
@@ -34,7 +34,8 @@ public:
     CorrectionsMapType;
 
   LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set, SearchType& search)
-    : corrections_(corrections)
+    : BaseType("corrections_proxy", corrections.begin()->second->space())
+    , corrections_(corrections)
     , index_set_(index_set)
     , search_(search)
   {}
@@ -67,7 +68,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
   typedef LocalsolutionProxy<SearchType> ProxyType;
   typename ProxyType::CorrectionsMapType local_corrections;
 
-  SearchType search(subgrid_list);
+  SearchType search(coarse_space, subgrid_list);
   ProxyType proxy(local_corrections, coarse_indexset, search);
 
   // traverse coarse space
@@ -75,11 +76,13 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
     LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
     localSolManager.loadLocalSolutions();
     auto& localSolutions = localSolManager.getLocalSolutions();
-//    local_corrections
+    auto coarse_index = coarse_indexset.index(coarseCell);
+    local_corrections[coarse_index] =
+        DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>("", localSolManager.space());
 
-    auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
-    DMM::MsFEMTraits::LocalGridDiscreteFunctionType local_correction("", localSolManager.space());
+    auto& local_correction = *local_corrections[coarse_index];
     local_correction.clear();
+    auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
 
     if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) || specifier.simplexCoarseGrid()) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
@@ -144,7 +147,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 //        }
 //      }
     }
-    localSolutions[0]->assign(local_correction);
   }
 
   DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
