@@ -75,7 +75,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
       // add dirichlet corrector
       local_correction += *localSolutions[coarseSolutionLF.numDofs() + 1];
       // substract neumann corrector
-      local_correction -= *localSolutions[coarseSolutionLF.numDofs() + 1];
+      local_correction -= *localSolutions[coarseSolutionLF.numDofs()];
     }
 
     // oversampling strategy 3: just sum up the local correctors:
@@ -116,7 +116,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
   DSC_LOG_INFO << " done." << std::endl;
 }
 
-void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
+void Elliptic_MsFEM_Solver::apply(
     const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
     // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
     // n(T)-layers.
@@ -129,10 +129,6 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
 
   DiscreteFunctionType coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
   coarse_msfem_solution.clear();
-
-  //! define the right hand side assembler tool
-  // (for linear and non-linear elliptic and parabolic problems, for sources f and/or G )
-  typedef RightHandSideAssembler RhsAssembler;
 
   // Assemble and solve the local problems. Timing is done in assembleAndSolveAll-method
   MsFEMLocalProblemSolver localProblemSolver(specifier, subgrid_list, diffusion_op);
@@ -163,7 +159,7 @@ void Elliptic_MsFEM_Solver::solve_dirichlet_zero(
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))
     DSC_LOG_ERROR << "MsFEM does not work with Petrov-Galerkin at the moment!\n";
 
-  RhsAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
+  RightHandSideAssembler::assemble_for_MsFEM_symmetric(f, specifier, subgrid_list, msfem_rhs);
 
   msfem_rhs.communicate();
   DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS")
