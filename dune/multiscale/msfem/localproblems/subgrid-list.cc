@@ -91,10 +91,6 @@ const LocalGridList::CoarseEntitySeedType &LocalGridList::get_coarse_entity_seed
   return subgrid_id_to_base_coarse_entity_.at(i);
 }
 
-// given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
-const std::vector<std::size_t>& LocalGridList::getSubgridIDs_that_contain_entity(std::size_t host_enitity_index) const {
-  return fine_id_to_subgrid_ids_[host_enitity_index];
-}
 
 // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
 // for each given subgrid index return the vecor of ALL coarse nodes (global coordinates) that are in the subgrid,
@@ -129,7 +125,6 @@ const LocalGridList::CoarseNodeVectorType& LocalGridList::getExtendedCoarseNodeV
 } // getSubGrid
 
 // get number of sub grids
-std::size_t LocalGridList::getNumberOfSubGrids() const { return specifier_.getNumOfCoarseEntities(); }
 std::size_t LocalGridList::size() const { return specifier_.getNumOfCoarseEntities(); }
 
 MsFEM::MsFEMTraits::LocalGridPartType LocalGridList::gridPart(std::size_t i) { return LocalGridPartType(getSubGrid(i)); }

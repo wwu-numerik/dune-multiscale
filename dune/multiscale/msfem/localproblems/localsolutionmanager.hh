@@ -15,14 +15,13 @@
 
 #include "dune/multiscale/msfem/msfem_grid_specifier.hh"
 #include "dune/multiscale/msfem/msfem_traits.hh"
-// #include <dune/stuff/fem/functions/checks.hh>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
 /**
- * @brief One LocalSolutionManager instance per
+ * @brief One LocalSolutionManager instance per coarse cell
  */
 class LocalSolutionManager {
 private:
@@ -51,8 +50,6 @@ public:
 
   void saveLocalSolutions() const;
 
-  bool solutionsWereLoaded() const;
-
   std::size_t numBoundaryCorrectors() const;
 
 private:
@@ -61,7 +58,6 @@ private:
   LocalGridPartType subGridPart_;
   LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_;
   const IdType coarseId_;
-  bool loaded_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;
   LocalSolutionVectorType localSolutions_;

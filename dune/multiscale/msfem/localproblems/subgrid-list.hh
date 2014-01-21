@@ -59,12 +59,7 @@ public:
   typedef std::vector<DomainType> CoarseNodeVectorType;
 
 private:
-  typedef std::vector<CoarseNodeVectorType> CoarseGridNodeStorageType;
-
-  //! @todo this should eventually be changed to the type of the coarse space
-  typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType::Codim<0>::EntityType::Geometry::LocalCoordinate LocalCoordinateType;
-  typedef ReferenceElements<typename LocalCoordinateType::value_type, LocalCoordinateType::dimension>
-  CoarseRefElementType;
+  typedef std::vector<CoarseNodeVectorType> CoarseGridNodeStorageType; 
   typedef std::vector<std::vector<LocalEntityPointerType>> EntityPointerCollectionType;
 
 public:
@@ -79,7 +74,6 @@ public:
   const LocalGridType& getSubGrid(const CoarseEntityType& entity) const;
   LocalGridType& getSubGrid(const CoarseEntityType& entity);
 
-  std::size_t DUNE_DEPRECATED_MSG("use size() instead") getNumberOfSubGrids() const;
   std::size_t size() const;
 
   LocalGridPartType gridPart(std::size_t i);
@@ -124,8 +118,6 @@ private:
   const LeafIndexSet& coarseGridLeafIndexSet_;
   std::vector<std::map<std::size_t, std::size_t>> fineToCoarseMap_;
   std::map<IdType, IdType> fineToCoarseMapID_;
-  // given the id of a fine grid element, the vector returns the ids of all subgrids that share that element
-  std::vector<std::vector<std::size_t>> fine_id_to_subgrid_ids_;
 
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
