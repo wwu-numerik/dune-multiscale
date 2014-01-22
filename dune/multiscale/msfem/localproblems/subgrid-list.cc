@@ -149,15 +149,11 @@ void LocalGridList::createSubGrids() {
     coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
     extended_coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
   }
-
-  // ! ----------- create subgrids --------------------
   typedef StructuredGridFactory<LocalGridType> FactoryType;
-//  ::    createCubeGrid(const FieldVector<ctype,dimworld>& lowerLeft,
-//                                                           const FieldVector<ctype,dimworld>& upperRight,
-//                                                           const array<unsigned int,dim>& elements)
+  const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_strategy", 1);
+  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(coarseSpace_.gridPart().grid());
 
-  // loop to initialize subgrids (and to initialize the coarse node vector):
-  // -----------------------------------------------------------
+
   for (const auto& coarse_entity : coarseSpace_) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
@@ -167,7 +163,7 @@ void LocalGridList::createSubGrids() {
     assert(subGridList_.find(coarse_index) == subGridList_.end());
     subgrid_id_to_base_coarse_entity_.insert(std::make_pair(coarse_index, std::move(coarse_entity.seed())));
 
-    const auto dimension = DSG::dimensions<CommonTraits::GridType>(coarse_entity);
+    const auto dimensions = DSG::dimensions<CommonTraits::GridType>(coarse_entity);
     const int dim_world = LocalGridType::dimensionworld;
     typedef FieldVector<typename LocalGridType::ctype, dim_world> CoordType;
     CoordType lowerLeft(0);
@@ -176,8 +172,13 @@ void LocalGridList::createSubGrids() {
     for(const auto i : DSC::valueRange(dim_world))
     {
       elemens[i] = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
-      lowerLeft[i] = dimension.coord_limits[i].min();
-      upperRight[i] = dimension.coord_limits[i].max();
+      const auto min = dimensions.coord_limits[i].min();
+      const auto max = dimensions.coord_limits[i].max();
+      const auto coarse_min = coarse_dimensions.coord_limits[i].min();
+      const auto coarse_max = coarse_dimensions.coord_limits[i].max();
+      const auto delta = max - min;
+      lowerLeft[i] = std::max(min - oversampling_layer * delta, coarse_min);
+      upperRight[i] = std::min(max + oversampling_layer * delta, coarse_max);
     }
 
     boost::format sp("Subgrid %d from (%f,%f) to (%f,%f) created.\n");
