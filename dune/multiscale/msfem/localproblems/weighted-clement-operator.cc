@@ -16,13 +16,13 @@ class MacroMicroGridSpecifier;
 }  // namespace Multiscale
 }  // namespace Dune
 
-Dune::Multiscale::MsFEM::WeightedClementOperator::WeightedClementOperator(
-    const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionSpaceType& space,
-    const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionSpaceType& coarse_space,
-    const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseNodeVectorType& coarse_nodes,
-    const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseBasisFunctionList& coarse_basis,
+DMM::WeightedClementOperator::WeightedClementOperator(
+    const DMM::WeightedClementOperator::DiscreteFunctionSpaceType& space,
+    const DMM::WeightedClementOperator::CoarseDiscreteFunctionSpaceType& coarse_space,
+    const DMM::WeightedClementOperator::CoarseNodeVectorType& coarse_nodes,
+    const DMM::WeightedClementOperator::CoarseBasisFunctionList& coarse_basis,
     const std::map<std::size_t, std::size_t>& global_id_to_internal_id,
-    const Dune::Multiscale::MsFEM::MacroMicroGridSpecifier& specifier)
+    const DMM::MacroMicroGridSpecifier& specifier)
   : discreteFunctionSpace_(space)
   , coarse_space_(coarse_space)
   , dofManager_(DofManagerType::instance(space.grid()))
@@ -36,38 +36,38 @@ Dune::Multiscale::MsFEM::WeightedClementOperator::WeightedClementOperator(
   , gradCache_(discreteFunctionSpace_.mapper().maxNumDofs())
   , values_(discreteFunctionSpace_.mapper().maxNumDofs()) {}
 
-void Dune::Multiscale::MsFEM::WeightedClementOperator::
-operator()(const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionType& u,
-           Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionType& w) const {
+void DMM::WeightedClementOperator::
+operator()(const DMM::WeightedClementOperator::DiscreteFunctionType& u,
+           DMM::WeightedClementOperator::CoarseDiscreteFunctionType& w) const {
   systemMatrix().apply(u, w); /*@\label{sto:matrixEval}@*/
 }
 
-const Dune::Multiscale::MsFEM::WeightedClementOperator::PreconditionMatrixType&
-Dune::Multiscale::MsFEM::WeightedClementOperator::preconditionMatrix() const {
+const DMM::WeightedClementOperator::PreconditionMatrixType&
+DMM::WeightedClementOperator::preconditionMatrix() const {
   return systemMatrix().preconditionMatrix();
 }
 
-void Dune::Multiscale::MsFEM::WeightedClementOperator::applyTransposed(
-    const Dune::Multiscale::MsFEM::WeightedClementOperator::CoarseDiscreteFunctionType& u,
-    Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionType& w) const {
+void DMM::WeightedClementOperator::applyTransposed(
+    const DMM::WeightedClementOperator::CoarseDiscreteFunctionType& u,
+    DMM::WeightedClementOperator::DiscreteFunctionType& w) const {
   systemMatrix().apply_t(u, w); /*@\label{sto:applytransposed}@*/
 }
 
-bool Dune::Multiscale::MsFEM::WeightedClementOperator::hasPreconditionMatrix() const {
+bool DMM::WeightedClementOperator::hasPreconditionMatrix() const {
   return linearOperator_.hasPreconditionMatrix();
 }
 
-void Dune::Multiscale::MsFEM::WeightedClementOperator::print(std::ostream& out) const {
+void DMM::WeightedClementOperator::print(std::ostream& out) const {
   systemMatrix().matrix().print(out);
 }
 
-const Dune::Multiscale::MsFEM::WeightedClementOperator::DiscreteFunctionSpaceType&
-Dune::Multiscale::MsFEM::WeightedClementOperator::discreteFunctionSpace() const {
+const DMM::WeightedClementOperator::DiscreteFunctionSpaceType&
+DMM::WeightedClementOperator::discreteFunctionSpace() const {
   return discreteFunctionSpace_;
 }
 
-const Dune::Multiscale::MsFEM::WeightedClementOperator::LinearOperatorType&
-Dune::Multiscale::MsFEM::WeightedClementOperator::systemMatrix() const {
+const DMM::WeightedClementOperator::LinearOperatorType&
+DMM::WeightedClementOperator::systemMatrix() const {
   // if stored sequence number it not equal to the one of the
   // dofManager (or space) then the grid has been changed
   // and matrix has to be assembled new
@@ -77,7 +77,7 @@ Dune::Multiscale::MsFEM::WeightedClementOperator::systemMatrix() const {
   return linearOperator_;
 }
 
-void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
+void DMM::WeightedClementOperator::assemble() const {
   const auto& space = discreteFunctionSpace();
 
   // reserve memory for matrix
@@ -233,7 +233,7 @@ void Dune::Multiscale::MsFEM::WeightedClementOperator::assemble() const {
   sequence_ = dofManager_.sequence();
 }
 
-void Dune::Multiscale::MsFEM::WeightedClementOperator::boundaryTreatment() const {
+void DMM::WeightedClementOperator::boundaryTreatment() const {
   for (const auto& entity : discreteFunctionSpace_) {
     for (const auto& coarse_entity : coarse_space_) {
       if (!DSG::entities_identical(entity, coarse_entity))

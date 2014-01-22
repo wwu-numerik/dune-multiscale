@@ -53,9 +53,6 @@ private:
   SearchType& search_;
 };
 
-Elliptic_MsFEM_Solver::Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace)
-  : discreteFunctionSpace_(discreteFunctionSpace) {}
-
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& specifier,
                                                      MsFEMTraits::LocalGridListType& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
@@ -68,11 +65,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
   typedef LocalGridSearch<typename LocalGridType::LeafGridView> SearchType;
   typedef LocalsolutionProxy<SearchType> ProxyType;
   typename ProxyType::CorrectionsMapType local_corrections;
-
-  SearchType search(coarse_space, subgrid_list);
-  auto proxybase_gridpart = subgrid_list.gridPart(0);
-  MsFEMTraits::LocalGridDiscreteFunctionSpaceType proxybase_space(proxybase_gridpart);
-  ProxyType proxy(local_corrections, coarse_indexset, proxybase_space, search);
 
   // traverse coarse space
   for (auto& coarseCell : coarse_space) {
@@ -154,6 +146,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
   }
 
   DSC_LOG_INFO << "Identifying fine scale part of the MsFEM solution... ";
+  SearchType search(coarse_space, subgrid_list);
+  auto proxybase_gridpart = subgrid_list.gridPart(0);
+  MsFEMTraits::LocalGridDiscreteFunctionSpaceType proxybase_space(proxybase_gridpart);
+  ProxyType proxy(local_corrections, coarse_indexset, proxybase_space, search);
   ProjectionType::project(proxy, fine_scale_part, search);
   DSC_LOG_INFO << " done." << std::endl;
 }
