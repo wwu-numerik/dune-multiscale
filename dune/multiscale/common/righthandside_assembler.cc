@@ -123,21 +123,18 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(
   }
 }
 
-void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(const Dune::Multiscale::CommonTraits::FirstSourceType &f, Dune::Multiscale::MsFEM::MacroMicroGridSpecifier &specifier, Dune::Multiscale::MsFEM::LocalGridList &subgrid_list, Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
-
-  // gather some problem data
+void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
+    const Dune::Multiscale::CommonTraits::FirstSourceType &f,
+    DMM::MacroMicroGridSpecifier &specifier, DMM::LocalGridList &subgrid_list,
+    Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
   auto diffusionPtr = Problem::getDiffusion();
   const auto& diffusion = *diffusionPtr;
   auto neumannDataPtr = Problem::getNeumannData();
   const auto& neumannData = *neumannDataPtr;
 
-  // set rhsVector to zero:
   rhsVector.clear();
-  const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
   RangeType f_x;
   for (const auto& coarse_grid_entity : rhsVector.space()) {
-    const auto coarseEntityIndex = coarseGridLeafIndexSet.index(coarse_grid_entity);
-
     const auto& coarseGeometry = coarse_grid_entity.geometry();
     auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
     const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();

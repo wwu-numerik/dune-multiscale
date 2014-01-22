@@ -44,42 +44,31 @@ private:
 
   static const int faceCodim = 1;
 
-  // --------------------------- subgrid typedefs ------------------------------------
   typedef MsFEMTraits::LocalGridListType LocalGridListType;
   typedef MsFEMTraits::LocalGridType LocalGridType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType SubgridDiscreteFunctionSpaceType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType SubgridDiscreteFunctionType;
-  //!-----------------------------------------------------------------------------------------
 
   typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType MsLinearOperatorTypeType;
   typedef typename BackendChooser<DiscreteFunctionSpace>::InverseOperatorType InverseOperatorType;
 
-private:
-  const DiscreteFunctionSpace& discreteFunctionSpace_;
-
-public:
-  Elliptic_MsFEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace);
-
-private:
   //! identify fine scale part of MsFEM solution (including the projection!)
-  // ------------------------------------------------------------------------------------
   void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
                                 const DiscreteFunctionType& coarse_msfem_solution,
                                 DiscreteFunctionType& fine_scale_part) const;
 
 public:
 
-  //! - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
-  //! then:
-  //! A --> diffusion operator ('DiffusionOperatorType')
-  //! b --> advective part ('AdvectionTermType')
-  //! c --> reaction part ('ReactionTermType')
-  //! f --> 'first' source term, scalar ('SourceTermType')
-  //! G --> 'second' source term, vector valued ('SecondSourceTermType')
-  //! homogenous Dirchilet boundary condition!:
+  /** - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
+   then:
+   A --> diffusion operator ('DiffusionOperatorType')
+   b --> advective part ('AdvectionTermType')
+   c --> reaction part ('ReactionTermType')
+   f --> 'first' source term, scalar ('SourceTermType')
+   G --> 'second' source term, vector valued ('SecondSourceTermType')
+   homogenous Dirchilet boundary condition!:
+   **/
   void apply(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
-                            // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
-                            // n(T)-layers.
                             MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
                             DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
                             DiscreteFunctionType& solution) const;

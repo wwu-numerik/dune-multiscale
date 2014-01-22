@@ -158,15 +158,6 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
   const auto& gridPart = msfem_solution.space().gridPart();
   std::string outstring;
-  if (DSC_CONFIG_GET("adaptive", false)) {
-    const std::string msfem_fname_s = (boost::format("msfem_solution_%d_") % loop_number).str();
-    outputparam.set_prefix(msfem_fname_s);
-    outstring = msfem_fname_s;
-  } else {
-    outputparam.set_prefix("msfem_solution");
-    outstring = "msfem_solution";
-  }
-
   OutputTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
   msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
@@ -350,9 +341,8 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
 
   MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
-  Elliptic_MsFEM_Solver msfem_solver(fine_discreteFunctionSpace);
-  msfem_solver.apply(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
-                                    fine_part_msfem_solution, msfem_solution);
+  Elliptic_MsFEM_Solver().apply(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
+                     fine_part_msfem_solution, msfem_solution);
 
   if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
