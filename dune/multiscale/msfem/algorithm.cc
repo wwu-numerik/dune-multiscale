@@ -158,6 +158,15 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
   const auto& gridPart = msfem_solution.space().gridPart();
   std::string outstring;
+  if (DSC_CONFIG_GET("adaptive", false)) {
+    const std::string msfem_fname_s = (boost::format("msfem_solution_%d_") % loop_number).str();
+    outputparam.set_prefix(msfem_fname_s);
+    outstring = msfem_fname_s;
+  } else {
+    outputparam.set_prefix("msfem_solution");
+    outstring = "msfem_solution";
+  }
+
   OutputTraits::DataOutputType msfem_dataoutput(gridPart.grid(), msfem_solution_series, outputparam);
   msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
@@ -201,7 +210,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& coarse_discreteFunctionSpace,
                  Dune::Multiscale::OutputParameters& outputparam, const int loop_number) {
   using namespace Dune;
-
+  
   if (Problem::getModelData()->hasExactSolution()) {
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
@@ -211,7 +220,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
     OutputTraits::ExSolDataOutputType exactsol_dataoutput(gridPart.grid(), exact_solution_series, outputparam);
     exactsol_dataoutput.writeData(1.0 /*dummy*/, "exact-solution");
   }
-
+  
   CommonTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
                                                                coarse_discreteFunctionSpace);
   coarse_grid_visualization.clear();
@@ -265,6 +274,7 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& /*msfem_solution
       total_estimated_H1_error_[loop_number] += (*total)[loop_number];
     }
   }
+
   return DSC_CONFIG_GET("adaptive", false) ? total_estimated_H1_error > DSC_CONFIG_GET("msfem.error_tolerance", 1e-6)
                                            : false;
 #endif //0
@@ -313,7 +323,6 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   if (DSC_CONFIG_GET("adaptive", false) && local_indicators_available_)
     adapt(fine_grid, coarse_grid, loop_number, total_refinement_level_, coarse_grid_level_, number_of_layers_, locals,
           totals, total_estimated_H1_error_);
-
 
   CommonTraits::DiscreteFunctionSpaceType fine_discreteFunctionSpace(fine_gridPart);
   CommonTraits::DiscreteFunctionSpaceType coarse_discreteFunctionSpace(coarse_gridPart);

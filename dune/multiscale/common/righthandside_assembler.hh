@@ -48,7 +48,7 @@ public:
    * with non-homogeneous Dirichlet and Neumann boundary conditions:
    **/
   static void
-  assemble(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
+  assemble_hmm_lod(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
            const DiscreteFunctionType& dirichlet_extension,
            const CommonTraits::NeumannBCType& neumann_bc, DiscreteFunctionType& rhsVector);
 
@@ -62,4 +62,4 @@ public:
 } // end namespace Multiscale
 } // end namespace Dune
 
-#endif // ifndef DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
+#endif

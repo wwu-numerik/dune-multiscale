@@ -1,5 +1,5 @@
 #include <config.h>
-
+#include <config.h>
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
     // normal
     // macro problem
 
-    auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
+    auto cpu_time = DSC_PROFILER.stopTiming("msfem.all", DSC_CONFIG_GET("global.output_walltime", false));
     auto max_cpu_time = Dune::Fem::MPIManager::comm().max(cpu_time);
     DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");

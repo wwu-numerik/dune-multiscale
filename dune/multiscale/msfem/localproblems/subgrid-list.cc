@@ -8,15 +8,12 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/float_cmp.hh>
-#include <dune/stuff/grid/information.hh>
 #include <algorithm>
 #include <iterator>
 #include <ostream>
 #include <utility>
 #include <memory>
 #include <dune/multiscale/tools/misc.hh>
-#include <dune/grid/common/gridfactory.hh>
-#include <dune/stuff/grid/structuredgridfactory.hh>
 
 #include <Eigen/Core>
 

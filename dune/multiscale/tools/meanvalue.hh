@@ -60,7 +60,7 @@ class Meanvalue {
     RangeType theMeanValue(0.0);
 
     for (const auto& entity : space) {
-      const auto quadrature = make_quadrature(entity, space);
+      const auto quadrature = DSFe::make_quadrature(entity, space);
       const auto& geo = entity.geometry();
 
       // integrate
@@ -84,7 +84,7 @@ public:
 
     for (const auto& entity : space) {
       // create quadrature for given geometry type
-      const auto quadrature = make_quadrature(entity, space);
+      const auto quadrature = DSFe::make_quadrature(entity, space);
       const auto localfunc = discFunc.localFunction(entity);
       const auto& geo = entity.geometry();
 

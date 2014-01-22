@@ -744,7 +744,6 @@ void LocalProblemOperator::assemble_local_RHS_Neumann_corrector(const NeumannBou
       }
     }
   }
-
 } // assemble_local_RHS_Neumann_corrector
 
 void LocalProblemOperator::assemble_local_RHS_lg_problems(const LocalGridDiscreteFunctionType& coarse_basis_func,
@@ -876,7 +875,6 @@ void LocalProblemOperator::projectDirichletValues(CommonTraits::DiscreteFunction
 
   return;
 }
-
 
 } // namespace MsFEM {
 } // namespace Multiscale {

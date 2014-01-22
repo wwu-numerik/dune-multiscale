@@ -80,7 +80,7 @@ public:
   // return:  H_T^4 ||f||_{L^2(T)}^2
   template <class SourceType>
   RangeType indicator_f(const SourceType& f, const EntityType& entity) const {
-    const auto entityQuadrature = make_quadrature(entity, periodicDiscreteFunctionSpace_);
+    const auto entityQuadrature = DSFe::make_quadrature(entity, periodicDiscreteFunctionSpace_);
 
     // get geoemetry of entity
     const auto& geometry = entity.geometry();
@@ -133,7 +133,7 @@ public:
     for (const auto& micro_entity : periodicDiscreteFunctionSpace_) {
       // one quadrature formula ( A_h^{\eps}(y)=A^{\eps}(y_s) vs. A^{\eps}(y) )
       const auto center_local = micro_entity.geometry().local(micro_entity.geometry().center());
-      const auto high_order_quadrature = make_quadrature(micro_entity, periodicDiscreteFunctionSpace_);
+      const auto high_order_quadrature = DSFe::make_quadrature(micro_entity, periodicDiscreteFunctionSpace_);
 
       // Q_h(u_H)(x_T,y) on the micro entity:
       auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
@@ -222,7 +222,7 @@ public:
     // iterator over the elements of the periodic micro grid:
     for (const auto& micro_entity : periodicDiscreteFunctionSpace_) {
       // two quadrature formulas ( A_h^{\eps}(y)=A^{\eps}(y_s) vs. A^{\eps}(y) )
-      const auto high_order_quadrature = make_quadrature(micro_entity, periodicDiscreteFunctionSpace_);
+      const auto high_order_quadrature = DSFe::make_quadrature(micro_entity, periodicDiscreteFunctionSpace_);
 
       // Q_h(u_H)(x_T,y) on the micro entity:
       const auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);

@@ -21,19 +21,19 @@ namespace FEM {
 
 
 //! write discrete function to a file + VTK Output
-void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discrete_solution, const std::string prefix) {
+void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix) {
   // write the final (discrete) solution to a file
   std::string solution_file = (boost::format("%s_refLevel_%d") % prefix % DSC_CONFIG_GET("fem.grid_level", 4)).str();
-  DiscreteFunctionWriter(solution_file).append(discrete_solution);
+  DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(solution_file).append(discrete_solution);
 
   // writing paraview data output
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
 
   // create and initialize output class
-  typename OutputTraits::IOTupleType fem_solution_series(&discrete_solution);
+  typename OutputTraits::IOTupleType fem_solution_series(discrete_solution.get());
   outputparam.set_prefix((boost::format("%s_solution") % prefix).str());
-  typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution.space().gridPart().grid(),
+  typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution->space().gridPart().grid(),
                                                           fem_solution_series, outputparam);
   // write data
   if (DSC_CONFIG_GET("problem.linear", true))
@@ -46,11 +46,11 @@ void write_discrete_function(typename CommonTraits::DiscreteFunctionType& discre
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u,
-                                                                          discrete_solution.space().gridPart());
+                                                                          discrete_solution->space().gridPart());
     // create and initialize output class
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("exact_solution");
-    OutputTraits::ExSolDataOutputType exactsol_dataoutput(discrete_solution.space().gridPart().grid(),
+    OutputTraits::ExSolDataOutputType exactsol_dataoutput(discrete_solution->space().gridPart().grid(),
                                                           exact_solution_series, outputparam);
     // write data
     exactsol_dataoutput.writeData(1.0 /*dummy*/, "exact-solution");

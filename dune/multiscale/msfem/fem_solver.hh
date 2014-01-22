@@ -42,6 +42,13 @@ private:
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
 
+
+  void solve_linear(const CommonTraits::DiffusionType& diffusion_op,
+                    const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+                    const CommonTraits::FirstSourceType& f, DiscreteFunction& solution, const bool use_smp) const;
+  void solve_nonlinear(const CommonTraits::DiffusionType& diffusion_op,
+                        const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+                        const CommonTraits::FirstSourceType& f, DiscreteFunction& solution) const;
 public:
   Elliptic_FEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace);
 
@@ -52,14 +59,16 @@ public:
   //! c --> reaction part ('ReactionTermType')
   //! f --> 'first' source term, scalar ('SourceTermType')
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
-  void solve(const CommonTraits::DiffusionType& diffusion_op,
+  //! this is called from LOD code and therefore mostly copypasta
+  void solve_lod(const CommonTraits::DiffusionType& diffusion_op,
              const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
              const CommonTraits::FirstSourceType& f, const CommonTraits::DiscreteFunctionType& dirichlet_extension,
              const CommonTraits::NeumannBCType& neumann_bc, DiscreteFunction& solution) const;
 
-  void solve_dirichlet_zero(const CommonTraits::DiffusionType& diffusion_op,
-                            const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                            const CommonTraits::FirstSourceType& f, DiscreteFunction& solution) const;
+  void solve(const CommonTraits::DiffusionType& diffusion_op,
+             const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+             const CommonTraits::FirstSourceType& f, DiscreteFunction& solution,
+             const bool use_smp = false) const;
 };
 
 } // namespace Multiscale

@@ -15,6 +15,7 @@
 #endif
 
 #include <dune/fem/misc/mpimanager.hh>
+#include <dune/fem/misc/threads/threadmanager.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/logging.hh>
@@ -43,6 +44,7 @@ void init(int argc, char** argv) {
                        DSC_CONFIG_GETB("logging.dir", "log" /*path below datadir*/, useLogger));
   DSC_CONFIG.setRecordDefaults(true);
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
+  Dune::Fem::ThreadManager::setMaxNumberThreads(DSC_CONFIG_GET("threading.max_count", 1));
 } // init
 
 } // namespace Dune {

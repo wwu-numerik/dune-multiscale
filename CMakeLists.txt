@@ -15,6 +15,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")  
   ENDIF(CMAKE_GENERATOR MATCHES "Xcode")
+  LINK_DIRECTORIES( /opt/local/lib/ )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
 
@@ -36,6 +37,8 @@ find_package(METIS)
 find_package(ParMETIS)
 include(cmake/modules/AddMETISFlags.cmake)
 include(AddParMETISFlags)
+include(FindTBB)
+find_package(TBB REQUIRED)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
@@ -51,9 +54,6 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 #these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
-        dune/multiscale/hmm/cell_problem_numbering.cc
-        dune/multiscale/hmm/cell_problem_solver.cc
-        dune/multiscale/hmm/discrete_cell_operator.cc
         dune/multiscale/msfem/fem_solver.cc
         dune/multiscale/common/newton_rhs.cc
         dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
@@ -96,6 +96,9 @@ set( HMM_SOURCES
         dune/multiscale/hmm/algorithm_error.cc
         dune/multiscale/hmm/algorithm_step.cc
         dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc
+        dune/multiscale/hmm/cell_problem_solver.cc
+        dune/multiscale/hmm/cell_problem_numbering.cc
+        dune/multiscale/hmm/discrete_cell_operator.cc
     )
 
 set( MSFEM_SOURCES
@@ -111,6 +114,7 @@ set( FEM_SOURCES
 set( LODM_SOURCES 
         dune/multiscale/lod/algorithm.cc
         dune/multiscale/lod/lod_solver.cc
+        dune/multiscale/lod/localproblems.cc
     )
 
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
@@ -138,8 +142,7 @@ add_dune_parmetis_flags(multiscale_common)
 
 set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
 
-include_directories( ${PETSC_INCLUDES} )
-# set(ALL_MULTISCALE_LIBS multiscale_lodm multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
+include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
 set(ALL_MULTISCALE_LIBS multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
@@ -154,27 +157,29 @@ ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_fem)
 
-# ADD_EXECUTABLE(elliptic_lodm src/elliptic_lodm.cc  ${COMMON_HEADER} )
-# TARGET_LINK_LIBRARIES(elliptic_lodm multiscale_lodm ${COMMON_LIBS} )
-# add_dune_mpi_flags(elliptic_lodm)
+ADD_EXECUTABLE(elliptic_lodm src/elliptic_lodm.cc  ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(elliptic_lodm multiscale_lodm ${COMMON_LIBS} )
+add_dune_mpi_flags(elliptic_lodm)
 
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 add_dune_mpi_flags(msfem-1d)
 
-# IF( Gridtype matches ALUGRID )
+ADD_EXECUTABLE(thread_vis src/thread_vis.cc ${COMMON_HEADER} )
+TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
+add_dune_mpi_flags(thread_vis)
 
 add_dune_alugrid_flags(OBJECT multiscale_common)
 add_dune_alugrid_flags(OBJECT multiscale_problem)
-#add_dune_alugrid_flags(OBJECT multiscale_lodm)
+add_dune_alugrid_flags(OBJECT multiscale_lodm)
 add_dune_alugrid_flags(OBJECT multiscale_msfem)
 add_dune_alugrid_flags(OBJECT multiscale_hmm)
 add_dune_alugrid_flags(elliptic_hmm)
 add_dune_alugrid_flags(elliptic_msfem)
 add_dune_alugrid_flags(elliptic_fem)
-#add_dune_alugrid_flags(elliptic_lodm)
+add_dune_alugrid_flags(elliptic_lodm)
 add_dune_alugrid_flags(msfem-1d)
-# ENDIF( Gridtype matches ALUGRID )
+add_dune_alugrid_flags(thread_vis)
 
 # HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )

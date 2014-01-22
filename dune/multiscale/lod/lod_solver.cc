@@ -540,7 +540,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
 
     const auto& coarse_baseSet = coarse_space.basisFunctionSet(entity);
     const auto numBaseFunctions = coarse_baseSet.size();
-    const auto quadrature = make_quadrature(entity, coarse_space);
+    const auto quadrature = DSFe::make_quadrature(entity, coarse_space);
 
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
