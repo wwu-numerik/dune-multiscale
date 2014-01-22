@@ -33,8 +33,9 @@ public:
   typedef std::map<typename LeafIndexSetType::IndexType, std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>>
     CorrectionsMapType;
 
-  LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set, SearchType& search)
-    : BaseType("corrections_proxy", corrections.begin()->second->space())
+  LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set,
+                     const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& space, SearchType& search)
+    : BaseType("corrections_proxy", space)
     , corrections_(corrections)
     , index_set_(index_set)
     , search_(search)
@@ -69,7 +70,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
   typename ProxyType::CorrectionsMapType local_corrections;
 
   SearchType search(coarse_space, subgrid_list);
-  ProxyType proxy(local_corrections, coarse_indexset, search);
+  auto proxybase_gridpart = subgrid_list.gridPart(0);
+  MsFEMTraits::LocalGridDiscreteFunctionSpaceType proxybase_space(proxybase_gridpart);
+  ProxyType proxy(local_corrections, coarse_indexset, proxybase_space, search);
 
   // traverse coarse space
   for (auto& coarseCell : coarse_space) {
