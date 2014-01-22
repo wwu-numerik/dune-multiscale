@@ -41,11 +41,12 @@ private:
   std::map<IndexType, std::unique_ptr<PerGridSearchType>> coarse_searches_;
 };
 
+//! only returns a vector of entitypointers if all queried points lie within a single coarse cell
 template <class GridViewImp>
 template <class PointContainerType>
 typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<GridViewImp>::operator()(const PointContainerType& points)
 {
-  auto count_nulls = [&](typename EntityPointerVectorType::value_type& ptr){return ptr==nullptr;};
+  const auto count_nulls = [&](typename EntityPointerVectorType::value_type& ptr){return ptr==nullptr;};
   for(const auto& coarse_entity : coarse_space_) {
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
     const auto& index_set = coarse_space_.gridPart().grid().leafIndexSet();
@@ -57,8 +58,6 @@ typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<G
     auto non_nulls = std::count_if(entity_ptrs.begin(), entity_ptrs.end(), count_nulls);
     if(non_nulls == 0)
       return entity_ptrs;
-    if(non_nulls < long(entity_ptrs.size()))
-      DUNE_THROW(InvalidStateException, "partial coverage not supported atm");
   }
   DUNE_THROW(InvalidStateException, "local grid search failed");
 }
