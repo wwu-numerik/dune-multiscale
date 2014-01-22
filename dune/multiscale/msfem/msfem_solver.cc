@@ -86,6 +86,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
     auto& local_correction = *local_corrections[coarse_index];
     local_correction.clear();
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
+    auto& tmp_local_storage = *localSolutions[0];
 
     if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) || specifier.simplexCoarseGrid()) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
@@ -99,7 +100,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
       for (int spaceDimension = 0; spaceDimension < Dune::GridSelector::dimgrid; ++spaceDimension) {
         *localSolutions[spaceDimension] *= grad_coarse_msfem_on_entity[0][spaceDimension];
         if (spaceDimension > 0)
-          *localSolutions[0] += *localSolutions[spaceDimension];
+          tmp_local_storage += *localSolutions[spaceDimension];
       }
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
@@ -110,7 +111,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
       for (int dof = 0; dof < coarseSolutionLF.numDofs(); ++dof) {
         *localSolutions[dof] *= coarseSolutionLF[dof];
         if (dof > 0)
-          *localSolutions[0] += *localSolutions[dof];
+          tmp_local_storage += *localSolutions[dof];
       }
 
       // add dirichlet corrector
@@ -121,7 +122,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
     // oversampling strategy 3: just sum up the local correctors:
     if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3)) {
-      local_correction += *localSolutions[0];
+      local_correction += tmp_local_storage;
     }
 
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming
@@ -152,11 +153,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
     }
   }
 
-  DSC_LOG_INFO << "Indentifying fine scale part of the MsFEM solution... ";
-  DiscreteFunctionType fine_correction("Boundary Corrector", discreteFunctionSpace_);
-  ProjectionType::project(proxy, fine_correction, search);
-  fine_scale_part += fine_correction;
-
+  DSC_LOG_INFO << "Identifying fine scale part of the MsFEM solution... ";
+  ProjectionType::project(proxy, fine_scale_part, search);
   DSC_LOG_INFO << " done." << std::endl;
 }
 
