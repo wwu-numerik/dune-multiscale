@@ -273,7 +273,7 @@ void ConservativeFluxOperator<LocalGridDiscreteFunctionImp, DiscreteFunctionImp,
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
 
-    const auto quadrature = make_quadrature(local_grid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(local_grid_entity, subDiscreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);

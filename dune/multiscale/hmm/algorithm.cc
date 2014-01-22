@@ -28,8 +28,8 @@ void oneLinePrint(Stream& stream, const DiscFunc& func) {
 } // oneLinePrint
 
 //! loads a reference solution from disk
-void load_reference(typename CommonTraits::DiscreteFunctionType& reference_solution) {
-  reference_solution.clear();
+void load_reference(typename CommonTraits::DiscreteFunction_ptr& reference_solution) {
+  reference_solution->clear();
 
   const std::string location_reference_solution = DSC_CONFIG_GET("problem.rs_file", "");
   if (location_reference_solution == "")
@@ -40,7 +40,7 @@ void load_reference(typename CommonTraits::DiscreteFunctionType& reference_solut
   boost::filesystem::path ref_sol_file(location_reference_solution);
 
   // reader for the cell problem data file:
-  DiscreteFunctionReader(ref_sol_file).read(0, reference_solution);
+  DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(ref_sol_file.string()).read(0, reference_solution);
   DSC_LOG_INFO << "Reference solution successfully read from file." << std::endl;
 }
 
@@ -255,9 +255,9 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
   //   where we used the Newton method to solve the non-linear system of equations
   // - in general 'reference_solution' will be an accurate approximation of the exact solution, that is why we it also
   // called reference solution
-  typename CommonTraits::DiscreteFunctionType reference_solution(filename + " Reference Solution",
+  auto reference_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(filename + " Reference Solution",
                                                                  finerDiscreteFunctionSpace);
-  reference_solution.clear();
+  reference_solution->clear();
 
   if (DSC_CONFIG_GET("problem.reference_solution", false))
     load_reference(reference_solution);
@@ -274,13 +274,13 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
     //! solution vector
     // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the
     // non-linear system of equations
-    typename CommonTraits::DiscreteFunctionType hmm_solution(" HMM (+Newton) Solution", discreteFunctionSpace);
-    hmm_solution.clear();
+    auto hmm_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(" HMM (+Newton) Solution", discreteFunctionSpace);
+    hmm_solution->clear();
 
-    typename CommonTraits::RestrictProlongOperatorType rp(hmm_solution);
+    typename CommonTraits::RestrictProlongOperatorType rp(*hmm_solution);
     typename CommonTraits::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
-                                    *diffusion_op, hmm_solution, reference_solution, loop_cycle);
+                                    *diffusion_op, hmm_solution, *reference_solution, loop_cycle);
     // call of 'single_step': 'reference_solution' only required for error computation
 
     if (!DSC_CONFIG_GET("hmm.adaptivity", false))
@@ -293,7 +293,9 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
                  << std::endl << std::endl << std::endl;
     loop_cycle += 1;
   } // end while (repeat) of repeat loop (for the adaptive cicles)
-    //! ******************** End of assembling and solving the HMM problem ***************************
+
+  DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
+  DiscreteFunctionIO<HMMTraits::PeriodicDiscreteFunctionType>::clear();
 }
 
 } // namespace HMM {

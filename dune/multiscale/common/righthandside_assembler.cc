@@ -13,13 +13,14 @@
 #include "righthandside_assembler.hh"
 
 
-void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::CommonTraits::FirstSourceType &f, Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
+void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
+                                                        Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
   rhsVector.clear();
   for (const auto& entity : rhsVector.space()) {
     const auto& geometry = entity.geometry();
     auto elementOfRHS = rhsVector.localFunction(entity);
     const auto baseSet = rhsVector.space().basisFunctionSet(entity);
-    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
+    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space(), quadratureOrder);
     const auto numDofs = elementOfRHS.numDofs();
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       // the return values:
@@ -36,10 +37,15 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::
       }
     }
   }
+  const auto boundary = Problem::getModelData()->boundaryInfo();
+  const auto dirichlet_data = Problem::getDirichletData();
+  //! \TODO use the static thingies
+  DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, rhsVector.space());
+  constraints(*dirichlet_data, rhsVector);
 }
 
 
-void Dune::Multiscale::RightHandSideAssembler::assemble(
+void Dune::Multiscale::RightHandSideAssembler::assemble_hmm_lod(
     const Dune::Multiscale::CommonTraits::FirstSourceType &f,
     const Dune::Multiscale::CommonTraits::DiffusionType &A,
     const Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &
@@ -60,15 +66,12 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(
     // gradient of base function and gradient of old_u_H
     std::vector<JacobianRangeType> grad_phi_x(numDofs);
 
-    const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
-    const auto quadrature = make_quadrature(entity, rhsVector.space(), quadratureOrder);
-
     const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
 
     for (const auto& intersection : DSC::intersectionRange(rhsVector.space().gridPart(), entity)) {
       if (Problem::isNeumannBoundary(intersection)) {
         const auto face = intersection.indexInInside();
-        const auto faceQuadrature = make_quadrature(intersection, rhsVector.space(), quadratureOrder);
+        const auto faceQuadrature = DSFe::make_quadrature(intersection, rhsVector.space(), quadratureOrder);
         const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
         for (auto faceQuadraturePoint : DSC::valueRange(numFaceQuadraturePoints)) {
@@ -97,6 +100,9 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(
 
     JacobianRangeType gradient_dirichlet_extension;
     JacobianRangeType diffusive_flux_in_gradient_dirichlet_extension;
+
+    const auto loc_dirichlet_extension = dirichlet_extension.localFunction(entity);
+    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space(), quadratureOrder);
 
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       // local (barycentric) coordinates (with respect to entity)
@@ -132,9 +138,21 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
   auto neumannDataPtr = Problem::getNeumannData();
   const auto& neumannData = *neumannDataPtr;
 
+  DiscreteFunctionType dirichletExtension("Dirichlet Extension", specifier.fineSpace());
+  dirichletExtension.clear();
+  Dune::Multiscale::copyDirichletValues(rhsVector.space(), dirichletExtension);
+
+  // set rhsVector to zero:
   rhsVector.clear();
+  const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
   RangeType f_x;
-  for (const auto& coarse_grid_entity : rhsVector.space()) {
+  Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators(rhsVector.space().gridPart());
+
+  #ifdef _OPENMP
+  #pragma omp parallel
+  #endif
+  {
+  for (const auto& coarse_grid_entity : threadIterators) {
     const auto& coarseGeometry = coarse_grid_entity.geometry();
     auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
     const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
@@ -147,19 +165,14 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
     auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
 
+    // iterator for the micro grid ( grid for the reference element T_0 )
     const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
-
-    MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension("Dirichlet Extension",
-                                                                  localSolutionManager.space());
-    dirichletExtension.clear();
-    Dune::Multiscale::copyDirichletValues(rhsVector.space(), dirichletExtension);
-
     auto view = subGrid.leafView();
     for (const auto& localEntity : DSC::viewRange(view)) {    
       if (subgrid_list.covers(coarse_grid_entity, localEntity)) {
         // higher order quadrature, since A^{\epsilon} is highly variable
         const auto localQuadrature =
-            make_quadrature(localEntity, localSolutionManager.space());
+            DSFe::make_quadrature(localEntity, localSolutionManager.space());
 
         // evaluate all local solutions and their jacobians in all quadrature points
         std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
@@ -179,7 +192,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
             if (Problem::isNeumannBoundary(intersection)) {
               const int orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
               const int quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
-              const auto faceQuad = make_quadrature(intersection, localSolutions[lsNum]->space(), quadOrder);
+              const auto faceQuad = DSFe::make_quadrature(intersection, localSolutions[lsNum]->space(), quadOrder);
               RangeType neumannValue(0.0);
               const auto numQuadPoints = faceQuad.nop();
               // loop over all quadrature points
@@ -215,7 +228,6 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
 
         // assemble element-part
         const auto& localGeometry = localEntity.geometry();
-        auto dirichletExtensionLF = dirichletExtension.localFunction(localEntity);
         for (size_t qP = 0; qP < localQuadrature.nop(); ++qP) {
           // local (barycentric) coordinates (with respect to entity)
           const auto& quadPoint = localQuadrature.point(qP);
@@ -268,7 +280,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
         }
       }
     }
-  }
+  } // for
+  } // omp region
 
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);

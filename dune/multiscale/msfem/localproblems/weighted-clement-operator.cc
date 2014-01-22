@@ -6,6 +6,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
 #include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 #include "weighted-clement-operator.hh"
 
 namespace Dune {
@@ -109,7 +110,7 @@ void DMM::WeightedClementOperator::assemble() const {
     const auto numBaseFunctions = coarse_baseSet.size();
 
     // create quadrature of appropriate order
-    const auto quadrature = make_quadrature(entity, coarse_space_);
+    const auto quadrature = DSFe::make_quadrature(entity, coarse_space_);
 
     // loop over all quadrature points
     const auto numQuadraturePoints = quadrature.nop();
@@ -186,7 +187,7 @@ void DMM::WeightedClementOperator::assemble() const {
       // get base function set
       const auto& baseSet = space.basisFunctionSet(entity);
       const auto numBaseFunctions = baseSet.size();
-      const auto quadrature = make_quadrature(entity, space);
+      const auto quadrature = DSFe::make_quadrature(entity, space);
 
       // loop over all quadrature points
       const auto numQuadraturePoints = quadrature.nop();

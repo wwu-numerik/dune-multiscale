@@ -39,7 +39,7 @@ class WeightedClementOperator
                       typename MsFEMTraits::LocalGridDiscreteFunctionType, typename CommonTraits::DiscreteFunctionType>,
       public OEMSolver::PreconditionInterface {
 private:
-  typedef std::vector<std::shared_ptr<CommonTraits::DiscreteFunctionType>> CoarseBasisFunctionList;
+  typedef std::vector<CommonTraits::DiscreteFunction_ptr> CoarseBasisFunctionList;
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
 
   //! type of discrete functions

@@ -15,13 +15,16 @@
 #include <vector>
 #include <cassert>
 #include <memory>
+#include <unordered_map>
 
+#include <dune/multiscale/common/traits.hh>
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
+#include <dune/stuff/common/memory.hh>
 
 #include <boost/filesystem/path.hpp>
 
@@ -37,91 +40,154 @@ struct IOTraits {
 #endif
 };
 
-/**
- * \brief simple discrete function to disk writer
- * this class isn't type safe in the sense that different appends may append
- * non-convertible discrete function implementations
- */
-class DiscreteFunctionWriter {
-public:
-  /**
-   * \brief DiscreteFunctionWriter
-   * \param filename will open fstream at config["global.datadir"]/filename
-   *  filename may include additional path components
-   * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
-   */
-  DiscreteFunctionWriter(const std::string filename)
-    : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-    , size_(0) {
-    DSC::testCreateDirectory(dir_.string());
-  }
+template <class DiscreteFunctionType>
+class DiscreteFunctionIO : public boost::noncopyable {
+  static_assert(std::is_base_of<Dune::Fem::IsDiscreteFunction, DiscreteFunctionType>::value, "");
+
+  typedef DiscreteFunctionIO<DiscreteFunctionType> ThisType;
+  typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
+  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef std::vector<DiscreteFunction_ptr> Vector;
+  typedef typename DiscreteFunctionType::GridPartType GridPartType;
+
+  DiscreteFunctionIO() = default;
+
+  class DiskBackend : public boost::noncopyable {
+
+      void load_disk_functions()
+      {
+        DSC::testCreateDirectory(dir_.string());
+        // if functions present, load em
+      }
+
+    public:
+      /**
+       * \brief DiscreteFunctionWriter
+       * \param filename will open fstream at config["global.datadir"]/filename
+       *  filename may include additional path components
+       * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
+       */
+      DiskBackend(const std::string filename = "nonsense_default_for_map")
+        : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
+        , index_(0) {}
+
+      void append(const DiscreteFunction_ptr& df) {
+        const std::string fn = (dir_ / DSC::toString(index_++)).string();
+        DSC::testCreateDirectory(fn);
+    #ifdef MULTISCALE_USE_SION
+        IOTraits::OutstreamType stream(fn);
+        df->write(stream);
+    #else
+        df->write_xdr(fn);
+    #endif
+      }
+
+      void read(const unsigned long index, DiscreteFunction_ptr& df) {
+        const std::string fn = (dir_ / DSC::toString(index)).string();
+    #ifdef MULTISCALE_USE_SION
+        IOTraits::InstreamType stream(fn);
+        df->read(stream);
+    #else
+        df->read_xdr(fn);
+    #endif
+      }
+
+    private:
+      const boost::filesystem::path dir_;
+      unsigned int index_;
+    };
 
   /**
-   * \copydoc DiscreteFunctionReader()
+   * \brief simple discrete function to disk writer
+   * this class isn't type safe in the sense that different appends may append
+   * non-convertible discrete function implementations
    */
-  DiscreteFunctionWriter(const boost::filesystem::path& path)
-    : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path)
-    , size_(0) {
-    DSC::testCreateDirectory(dir_.string());
+  class MemoryBackend : public boost::noncopyable {
+
+  public:
+    /**
+     * \brief DiscreteFunctionWriter
+     * \param filename will open fstream at config["global.datadir"]/filename
+     *  filename may include additional path components
+     * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
+     */
+    MemoryBackend(typename GridPartType::GridType& grid, const std::string filename = "nonsense_default_for_map")
+      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
+      , grid_part_(grid)
+      , space_(grid_part_)
+    {}
+
+    void append(const DiscreteFunction_ptr& df) {
+      functions_.push_back(df);
+    }
+
+    void read(const unsigned long index, DiscreteFunction_ptr& df) {
+      if(index<functions_.size()) {
+        df = functions_.at(index);
+      }
+      else DUNE_THROW(InvalidStateException, "requesting function at oob index");
+      assert(df!=nullptr);
+    }
+
+    GridPartType& grid_part() { return grid_part_; }
+    DiscreteFunctionSpaceType& space() { return space_; }
+
+  private:
+    const boost::filesystem::path dir_;
+    GridPartType grid_part_;
+    DiscreteFunctionSpaceType space_;
+    Vector functions_;
+  };
+
+  static ThisType& instance() {
+    static ThisType s_this;
+    return s_this;
   }
 
-  template <class DiscreteFunctionTraits>
-  void append(const Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>& df) {
-    const std::string fn = (dir_ / DSC::toString(size_++)).string();
-    DSC::testCreateDirectory(fn);
-#ifdef MULTISCALE_USE_SION
-    IOTraits::OutstreamType stream(fn);
-    df.write(stream);
-#else
-    df.write_xdr(fn);
-#endif
-  } // append
+  template <class IOMapType, class ...Args>
+  typename IOMapType::mapped_type& get(IOMapType& map, std::string filename, Args&& ...ctor_args)
+  {
+    auto it = map.find(filename);
+    if(it != map.end())
+      return it->second;
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
+    auto ret = map.emplace(filename, std::move(ptr));
+    assert(ret.second);
+    return ret.first->second;
+  }
 
-  template <class DiscreteFunctionTraits>
-  void append(const std::vector<const Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>>& df_vec) {
-    for (const auto& df : df_vec)
-      append(df);
-  } // append
+  DiskBackend& get_disk(const std::string filename) {
+    return *get(disk_, filename, filename);
+  }
 
-private:
-  const boost::filesystem::path dir_;
-  unsigned int size_;
-};
-
-/**
- * \brief simple discrete function from disk reader
- * this class isn't type safe in the sense that different appends may append
- * non-convertible discrete function implementations
- * \todo base on discrete's functions write_xdr functionality
- */
-class DiscreteFunctionReader {
+  MemoryBackend& get_memory(const std::string filename, typename GridPartType::GridType& grid) {
+    return *get(memory_, filename, grid, filename);
+  }
 
 public:
-  DiscreteFunctionReader(const std::string filename)
-    : size_(0)
-    , dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename) {}
+  static MemoryBackend& memory(const std::string filename, typename GridPartType::GridType& grid) {
+    return instance().get_memory(filename, grid);
+  }
 
-  DiscreteFunctionReader(const boost::filesystem::path path)
-    : size_(0)
-    , dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / path) {}
+  static DiskBackend& disk(const std::string filename) {
+    return instance().get_disk(filename);
+  }
 
-  long size() const { return size_; }
-
-  template <class DiscreteFunctionTraits>
-  void read(const unsigned long index, Dune::Fem::DiscreteFunctionInterface<DiscreteFunctionTraits>& df) {
-    const std::string fn = (dir_ / DSC::toString(index)).string();
-#ifdef MULTISCALE_USE_SION
-    IOTraits::InstreamType stream(fn);
-    df.read(stream);
-#else
-    df.read_xdr(fn);
-#endif
-  } // read
+  //! this needs to be called before global de-init or else dune fem fails
+  static void clear() {
+    auto& th = instance();
+    th.memory_.clear();
+    th.disk_.clear();
+  }
 
 private:
-  long size_;
-  const boost::filesystem::path dir_;
-};
+  std::unordered_map<std::string, std::shared_ptr<MemoryBackend>> memory_;
+  std::unordered_map<std::string, std::shared_ptr<DiskBackend>> disk_;
+  std::mutex mutex_;
+
+
+};//class DiscreteFunctionIO
 
 } // namespace Multiscale {
 } // namespace Dune {

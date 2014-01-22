@@ -512,7 +512,6 @@ private:
     }
   }
 
-
 public:
   // adaptive_refinement
   RangeType adaptive_refinement(const DiscreteFunctionType& msfem_solution,

@@ -13,6 +13,7 @@
 #include <dune/stuff/fem/functions/analytical.hh>
 #include <dune/stuff/functions/global.hh>
 #include <dune/stuff/functions/interfaces.hh>
+#include <dune/stuff/functions/global.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
 #include <memory>
 #include <string>

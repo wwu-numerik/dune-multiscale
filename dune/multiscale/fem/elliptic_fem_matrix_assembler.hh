@@ -63,12 +63,7 @@ private:
 
 public:
   template <class MatrixType>
-  void assemble_matrix(MatrixType& global_matrix, bool boundary_treatment = true) const;
-
-  //! Matrix Assembler for local problems on a Subgrid of the Hostgrid:
-  template <class MatrixType, class LocalGridDiscreteFunctionSpaceType>
-  void assemble_matrix(MatrixType& global_matrix, LocalGridDiscreteFunctionSpaceType& hostSpace,
-                       bool boundary_treatment = true) const;
+  void assemble_matrix(MatrixType& global_matrix) const;
 
   /** assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain
    * discrete function (in case of the Newton method, it is the preceeding iterate u_H^{(n-1)} )
@@ -77,18 +72,57 @@ public:
    * (here, JA denotes the jacobian matrix of the diffusion operator A)
    **/
   template <class MatrixType>
-  void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix,
-                                bool boundary_treatment = true) const;
+  void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix) const;
 
   // for inhomogeneous boundary condition
   template <class MatrixType>
   void assemble_jacobian_matrix(DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension,
-                                MatrixType& global_matrix, bool boundary_treatment = true) const;
+                                MatrixType& global_matrix) const;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const DiffusionImp& diffusion_operator_;
   const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term_;
+};
+
+//! \TODO docme
+template <class DiscreteFunctionImp, class DiffusionImp>
+class SMPDiscreteEllipticOperator : public boost::noncopyable {
+  typedef SMPDiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp> This;
+
+  typedef DiscreteFunctionImp DiscreteFunction;
+
+  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef typename GridPart::GridType Grid;
+  typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
+
+  typedef typename DiscreteFunctionSpace::DomainType DomainType;
+  typedef typename DiscreteFunctionSpace::RangeType RangeType;
+
+  static const int dimension = GridPart::GridType::dimension;
+  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
+
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
+
+public:
+
+  /**
+   * \param lower_order_term Operator assumes ownership of it
+   **/
+  SMPDiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionImp& diffusion_op)
+    : discreteFunctionSpace_(discreteFunctionSpace)
+    , diffusion_operator_(diffusion_op)
+    {}
+
+public:
+  template <class MatrixType>
+  void assemble_matrix(MatrixType& global_matrix) const;
+
+private:
+  const DiscreteFunctionSpace& discreteFunctionSpace_;
+  const DiffusionImp& diffusion_operator_;
 };
 
 } // namespace FEM {
