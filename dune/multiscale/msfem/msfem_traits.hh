@@ -10,6 +10,7 @@
 
 #include <dune/grid/spgrid.hh>
 #include <dune/fem/space/lagrange.hh>
+#include <vector>
 
 namespace Dune {
 
@@ -31,15 +32,14 @@ struct MsFEMTraits {
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef LocalGridList LocalGridListType;
 
-  // ! -------------------------- MsFEM error estimator ----------------------------
   typedef MsFEMErrorEstimator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType,
                               typename CommonTraits::FirstSourceType, MacroMicroGridSpecifierType,
                               LocalGridListType> MsFEMErrorEstimatorType;
-  // ! -----------------------------------------------------------------------------
 
-  // the following two may change if we intend to use different meshes on coarse and fine level
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
   typedef typename CommonTraits::DiscreteFunctionSpaceType::BasisFunctionSetType CoarseBaseFunctionSetType;
+
+  typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 };
 
 } // namespace MsFEM {

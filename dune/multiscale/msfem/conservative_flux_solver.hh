@@ -153,7 +153,7 @@ void ConservativeFluxOperator<LocalGridDiscreteFunctionImp, DiscreteFunctionImp,
     const auto numBaseFunctions = baseSet.size();
 
     for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace_.gridPart(), *host_entity_pointer)) {
-      const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
+      const auto faceQuadrature = DSFe::make_quadrature(intersection, discreteFunctionSpace_);
       const auto& faceGeometry = intersection.geometry();
 
       bool set_zero = false;
@@ -213,7 +213,7 @@ double ConservativeFluxOperator<LocalGridDiscreteFunctionImp, DiscreteFunctionIm
   const auto& discreteFunctionSpace = rhs.space();
 
   for (const auto& entity : discreteFunctionSpace) {
-    const auto quadrature = make_quadrature(entity, discreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace);
     const auto& geo = entity.geometry();
     const auto localRHS = rhs.localFunction(entity);
     // integrate

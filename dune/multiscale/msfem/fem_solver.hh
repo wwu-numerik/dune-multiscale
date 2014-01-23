@@ -60,12 +60,12 @@ public:
   //! f --> 'first' source term, scalar ('SourceTermType')
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   //! this is called from LOD code and therefore mostly copypasta
-  void solve_lod(const CommonTraits::DiffusionType& diffusion_op,
+  void apply_lod(const CommonTraits::DiffusionType& diffusion_op,
              const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
              const CommonTraits::FirstSourceType& f, const CommonTraits::DiscreteFunctionType& dirichlet_extension,
              const CommonTraits::NeumannBCType& neumann_bc, DiscreteFunction& solution) const;
 
-  void solve(const CommonTraits::DiffusionType& diffusion_op,
+  void apply(const CommonTraits::DiffusionType& diffusion_op,
              const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
              const CommonTraits::FirstSourceType& f, DiscreteFunction& solution,
              const bool use_smp = false) const;

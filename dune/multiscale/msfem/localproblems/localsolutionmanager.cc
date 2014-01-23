@@ -8,9 +8,13 @@
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
+typedef DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType> IOType;
+
 LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridListType& subgridList,
                                            const MacroMicroGridSpecifierType& gridSpecifier)
   : subgridList_(subgridList)
+  , subgrid_(subgridList_.getSubGrid(coarseEntity))
   , gridSpecifier_(gridSpecifier)
   , subGridPart_(subgridList_.getSubGrid(coarseEntity))
   , localDiscreteFunctionSpace_(subGridPart_)
@@ -21,10 +25,10 @@ LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity,
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d") % coarseId_).str()) {
   for (auto& it : localSolutions_)
-    it = DSC::make_unique<LocalGridDiscreteFunctionType>("Local problem Solution", localDiscreteFunctionSpace_);
+    it = make_df_ptr<LocalGridDiscreteFunctionType>("Local problem Solution", localDiscreteFunctionSpace_);
 }
 
-LocalSolutionManager::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
+MsFEMTraits::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
 
 const LocalSolutionManager::LocalGridDiscreteFunctionSpaceType& LocalSolutionManager::space() const {
   return localDiscreteFunctionSpace_;
@@ -34,21 +38,21 @@ const LocalSolutionManager::LocalGridPartType& LocalSolutionManager::grid_part()
 
 void LocalSolutionManager::loadLocalSolutions() {
   // reader for the cell problem data file:
-  DiscreteFunctionReader reader(localSolutionLocation_);
+  auto& reader = IOType::memory(localSolutionLocation_, subgrid_);
 
   for (unsigned int i = 0; i < numLocalProblems_; ++i) {
     localSolutions_[i]->clear();
-    reader.read(i, *(localSolutions_[i]));
+    reader.read(i, localSolutions_[i]);
   }
   return;
 } // loadLocalSolutions
 
 void LocalSolutionManager::saveLocalSolutions() const {
   // reader for the cell problem data file:
-  DiscreteFunctionWriter writer(localSolutionLocation_);
+  auto& writer = IOType::memory(localSolutionLocation_, subgrid_);
 
   for (auto& it : localSolutions_)
-    writer.append(*it);
+    writer.append(it);
 } // saveLocalSolutions
 
 std::size_t LocalSolutionManager::numBoundaryCorrectors() const { return numBoundaryCorrectors_; }

@@ -451,8 +451,8 @@ void MsFEMLocalProblemSolver::preprocess_corrector_problems(const int coarse_ind
     const auto& host_entity = *host_entity_pointer;
 
     // exact for polynomials of degree 2:
-    const auto sg_quadrature = make_quadrature(localgrid_entity, subDiscreteFunctionSpace);
-    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
+    const auto sg_quadrature = DSFe::make_quadrature(localgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     const auto& geometry = host_entity.geometry();
 
@@ -549,8 +549,8 @@ void MsFEMLocalProblemSolver::solve_corrector_problem_lod(
     const auto& host_entity = *host_entity_pointer;
 
     // exact for polynomials of degree 2:
-    const auto sg_quadrature = make_quadrature(localgrid_entity, subDiscreteFunctionSpace);
-    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
+    const auto sg_quadrature = DSFe::make_quadrature(localgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 
@@ -696,8 +696,8 @@ void MsFEMLocalProblemSolver::solve_dirichlet_corrector_problem_lod(
     const auto& host_entity = *host_entity_pointer;
 
     // exact for polynomials of degree 2:
-    const auto sg_quadrature = make_quadrature(localgrid_entity, subDiscreteFunctionSpace);
-    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
+    const auto sg_quadrature = DSFe::make_quadrature(localgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 
@@ -840,8 +840,8 @@ void MsFEMLocalProblemSolver::solve_neumann_corrector_problem_lod(
     const auto& host_entity = *host_entity_pointer;
 
     // exact for polynomials of degree 2:
-    const auto sg_quadrature = make_quadrature(localgrid_entity, subDiscreteFunctionSpace);
-    const auto quadrature = make_quadrature(host_entity, hostDiscreteFunctionSpace_);
+    const auto sg_quadrature = DSFe::make_quadrature(localgrid_entity, subDiscreteFunctionSpace);
+    const auto quadrature = DSFe::make_quadrature(host_entity, hostDiscreteFunctionSpace_);
 
     RangeType value_local_problem_solution, value_coarse_basis_func_i;
 

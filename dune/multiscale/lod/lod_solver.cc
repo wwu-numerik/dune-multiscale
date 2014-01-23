@@ -921,7 +921,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
                 if (intersection.boundary() && (intersection.boundaryId() != 2))
                   continue;
 
-                const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
+                const auto faceQuadrature = DSFe::make_quadrature(intersection, discreteFunctionSpace_);
                 const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
                 for (const auto faceQuadraturePoint : DSC::valueRange(numFaceQuadraturePoints)) {
@@ -943,7 +943,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
               }
             }
 
-            const auto quadrature = make_quadrature(*it, discreteFunctionSpace_);
+            const auto quadrature = DSFe::make_quadrature(*it, discreteFunctionSpace_);
 
             for (const auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
               const auto global_point = geometry.global(quadrature.point(quadraturePoint));
@@ -1103,7 +1103,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
               if (intersection.boundary() && (intersection.boundaryId() != 2))
                 continue;
 
-              const auto faceQuadrature = make_quadrature(intersection, discreteFunctionSpace_);
+              const auto faceQuadrature = DSFe::make_quadrature(intersection, discreteFunctionSpace_);
               const auto numFaceQuadraturePoints = faceQuadrature.nop();
 
               for (const auto faceQuadraturePoint : DSC::valueRange(numFaceQuadraturePoints)) {
@@ -1124,7 +1124,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
               }
             }
 
-            const auto quadrature = make_quadrature(*it, discreteFunctionSpace_);
+            const auto quadrature = DSFe::make_quadrature(*it, discreteFunctionSpace_);
             const auto numQuadraturePoints = quadrature.nop();
             for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
               const auto global_point = geometry.global(quadrature.point(quadraturePoint));

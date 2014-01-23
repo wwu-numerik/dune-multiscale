@@ -111,7 +111,7 @@ struct EstimatorUtils {
         typename EstimatorType::JacobianRangeType gradient_msfem_coarse_neighbor_ent(0.);
         loc_msfem_coarse_part_neighbor.jacobian(outside_local_center, gradient_msfem_coarse_neighbor_ent);
 
-        const auto faceQuadrature = make_quadrature(*face_it_U_T, fineDiscreteFunctionSpace);
+        const auto faceQuadrature = DSFe::make_quadrature(*face_it_U_T, fineDiscreteFunctionSpace);
         // inside macht hier keinen Unterschied, da wir formal stetige Funktionen haben und nicht die Gradienten
         // auswerten
 

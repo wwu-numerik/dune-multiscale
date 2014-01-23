@@ -36,8 +36,6 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(MatrixType& global_matrix) c
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
-  const auto& coarseGridLeafIndexSet = coarseDiscreteFunctionSpace_.gridPart().grid().leafIndexSet();
-
   Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators(coarseDiscreteFunctionSpace_.gridPart());
 
   #ifdef _OPENMP
@@ -48,34 +46,26 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(MatrixType& global_matrix) c
     const auto& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
-    const auto global_index_entity = coarseGridLeafIndexSet.index(coarse_grid_entity);
-
     DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
 
     const auto& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = coarse_grid_baseSet.size();
 
-    // Load local solutions
     Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list_, specifier_);
     localSolutionManager.loadLocalSolutions();
     const auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
     std::vector<typename CoarseBaseFunctionSet::JacobianRangeType> gradientPhi(numMacroBaseFunctions);
 
-    // iterator for the micro grid ( grid for the reference element T_0 )
-    for (const auto& localGridEntity : localSolutionManager.getLocalDiscreteFunctionSpace()) {
-      // check if "localGridEntity" (which is an entity of U(T)) is in T:
-      // -------------------------------------------------------------------
-      const auto& hostEntity = localSolutionManager.getSubGridPart().grid().getHostEntity<0>(localGridEntity);
-      // ignore overlay elements
-      if (global_index_entity == subgrid_list_.getEnclosingMacroCellIndex(hostEntity)) {
-        assert(hostEntity->partitionType() == InteriorEntity);
+    for (const auto& localGridEntity : localSolutionManager.space()) {
 
+      // ignore overlay elements
+      if (subgrid_list_.covers(coarse_grid_entity, localGridEntity)) {
         const auto& local_grid_geometry = localGridEntity.geometry();
 
         // higher order quadrature, since A^{\epsilon} is highly variable
         const auto localQuadrature =
-            DSFe::make_quadrature(localGridEntity, localSolutionManager.getLocalDiscreteFunctionSpace());
+            DSFe::make_quadrature(localGridEntity, localSolutionManager.space());
         const auto numQuadraturePoints = localQuadrature.nop();
 
         // number of local solutions without the boundary correctors. Those are only needed for the right hand side

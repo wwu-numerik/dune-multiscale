@@ -28,8 +28,7 @@ void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, co
 void solution_output(const CommonTraits::DiscreteFunction_ptr &msfem_solution,
                      const CommonTraits::DiscreteFunction_ptr &coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunction_ptr &fine_part_msfem_solution,
-                     Dune::Multiscale::OutputParameters& outputparam, const int loop_number,
-                     int& total_refinement_level_, int& coarse_grid_level_);
+                     Dune::Multiscale::OutputParameters& outputparam, const int loop_number);
 
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,

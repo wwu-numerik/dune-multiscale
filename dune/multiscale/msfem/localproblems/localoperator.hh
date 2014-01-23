@@ -31,7 +31,6 @@ namespace MsFEM {
 
 class LocalProblemOperator {
   typedef MsFEMLocalProblemSolver::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
-  typedef MsFEMLocalProblemSolver::LocalGridDiscreteFunctionVectorType LocalGridDiscreteFunctionVectorType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
@@ -109,7 +108,7 @@ public:
                                        LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
   void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
-                           LocalGridDiscreteFunctionVectorType& allLocalRHS) const;
+                           MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
 #if 0 // LOD only code
   // assemble various right hand sides (for solving the local saddle point problems with lagrange multpliers)
