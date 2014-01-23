@@ -151,8 +151,7 @@ void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& coarse_grid, co
 void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                     Dune::Multiscale::OutputParameters& outputparam, const int loop_number,
-                     int& total_refinement_level_, int& coarse_grid_level_) {
+                     Dune::Multiscale::OutputParameters& outputparam, const int loop_number) {
   using namespace Dune;
 
   OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
@@ -195,11 +194,6 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 
   OutputTraits::DataOutputType fine_msfem_dataoutput(gridPart.grid(), fine_msfem_solution_series, outputparam);
   fine_msfem_dataoutput.writeData(1.0 /*dummy*/, outstring);
-
-  // ---------------------- write discrete msfem solution to file ---------
-  const std::string location =
-      (boost::format("msfem_solution_discFunc_refLevel_%d_%d") % total_refinement_level_ % coarse_grid_level_).str();
-  DiscreteFunctionWriter(location).append(msfem_solution);
 
   DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(), Dune::Fem::MPIManager::helper(),
                                  outputparam.path());
@@ -355,8 +349,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
 
   if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-    solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, outputparam, loop_number,
-                    total_refinement_level_, coarse_grid_level_);
+    solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, outputparam, loop_number);
   }
 
   if (DSC_CONFIG_GET("msfem.error_estimation", 0)) {
@@ -374,7 +367,7 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
     fem_solution.clear();
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(fine_discreteFunctionSpace);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-    fem_solver.solve_dirichlet_zero(diffusion_op, l_ptr, f, fem_solution);
+    fem_solver.apply(diffusion_op, l_ptr, f, fem_solution);
     if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
       DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
       OutputTraits::IOTupleType fem_solution_series(&fem_solution);

@@ -83,12 +83,8 @@ private:
   typedef typename LocalGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
+  typedef MsFEMTraits::LocalSolutionVectorType LocalGridDiscreteFunctionVectorType;
 
-public:
-  //! type of subgrid discrete function
-  typedef std::vector<std::unique_ptr<LocalGridDiscreteFunctionType>> LocalGridDiscreteFunctionVectorType;
-
-private:
   typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
   typedef typename SubgridIteratorType::Entity SubgridEntityType;
   typedef typename SubgridEntityType::EntityPointer SubgridEntityPointerType;

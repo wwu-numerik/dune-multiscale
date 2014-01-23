@@ -202,7 +202,7 @@ private:
   // return:  H_T ||f||_{L^2(T)}
   RangeType indicator_f(const EntityType& entity) const {
     // create quadrature for given geometry type
-    const auto entityQuadrature = make_quadrature(entity, fineDiscreteFunctionSpace_);
+    const auto entityQuadrature = DSFe::make_quadrature(entity, fineDiscreteFunctionSpace_);
 
     // get geoemetry of entity
     const auto& geometry = entity.geometry();
@@ -339,7 +339,7 @@ private:
       JacobianRangeType diffusive_flux_x;
       diffusion_.diffusiveFlux(x, gradient_msfem_sol, diffusive_flux_x);
 
-      const auto highOrder_entityQuadrature = make_quadrature(entity, fineDiscreteFunctionSpace_);
+      const auto highOrder_entityQuadrature = DSFe::make_quadrature(entity, fineDiscreteFunctionSpace_);
 
       for (auto quadraturePoint : DSC::valueRange(highOrder_entityQuadrature.nop())) {
         const double weight = highOrder_entityQuadrature.weight(quadraturePoint) *
@@ -471,7 +471,7 @@ private:
         // quadrature formula on the sub grid entity
 
         // higher order quadrature, since A^{\epsilon} is highly variable
-        const auto local_grid_quadrature = make_quadrature(local_grid_entity, localDiscreteFunctionSpace);
+        const auto local_grid_quadrature = DSFe::make_quadrature(local_grid_entity, localDiscreteFunctionSpace);
         const auto numQuadraturePoints = local_grid_quadrature.nop();
 
         for (size_t localQuadraturePoint = 0; localQuadraturePoint < numQuadraturePoints; ++localQuadraturePoint) {

@@ -34,13 +34,12 @@ private:
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
   typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
-public:
-  typedef std::vector<std::unique_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 
+public:
   LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridListType& subgridList,
                        const MacroMicroGridSpecifierType& gridSpecifier);
 
-  LocalSolutionVectorType& getLocalSolutions();
+  MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
   const LocalGridDiscreteFunctionSpaceType& space() const;
 
@@ -54,13 +53,14 @@ public:
 
 private:
   LocalGridListType& subgridList_;
+  MsFEMTraits::LocalGridType& subgrid_;
   const MacroMicroGridSpecifierType& gridSpecifier_;
   LocalGridPartType subGridPart_;
   LocalGridDiscreteFunctionSpaceType localDiscreteFunctionSpace_;
   const IdType coarseId_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;
-  LocalSolutionVectorType localSolutions_;
+  MsFEMTraits::LocalSolutionVectorType localSolutions_;
   const std::string localSolutionLocation_;
 };
 }

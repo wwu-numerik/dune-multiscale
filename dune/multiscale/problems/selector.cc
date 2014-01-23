@@ -129,17 +129,6 @@ bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& fac
   return info->dirichlet(face);
 }
 
-template <>
-bool isNeumannBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
-  static auto info = getModelData()->boundaryInfo();
-  return info->neumann(face);
-}
-
-template <>
-bool isDirichletBoundary(const typename CommonTraits::GridPartType::IntersectionType& face) {
-  static auto info = getModelData()->boundaryInfo();
-  return info->dirichlet(face);
-}
 
 template <>
 bool isNeumannBoundary(const typename MsFEM::MsFEMTraits::LocalGridPartType::IntersectionType& face) {

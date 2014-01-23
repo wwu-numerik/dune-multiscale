@@ -191,7 +191,7 @@ void Elliptic_FEM_Solver::solve_nonlinear(
 //  c --> reaction part (former 'ReactionTermType')
 //! f --> 'first' source term, scalar ('SourceTermType')
 //! G --> 'second' source term, vector valued ('SecondSourceTermType')
-void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
+void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
     const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution, const bool use_smp) const {
 
@@ -210,7 +210,7 @@ void Elliptic_FEM_Solver::solve(const CommonTraits::DiffusionType& diffusion_op,
 //  c --> reaction part (former 'ReactionTermType')
 //! f --> 'first' source term, scalar ('SourceTermType')
 //! G --> 'second' source term, vector valued ('SecondSourceTermType')
-void Elliptic_FEM_Solver::solve_lod(
+void Elliptic_FEM_Solver::apply_lod(
     const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term, // lower order term F(x, u(x), grad
                                                                                      // u(x) )

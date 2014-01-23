@@ -3,8 +3,10 @@
 #include <dune/common/exceptions.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <dune/fem/misc/threads/domainthreaditerator.hh>
 #include <memory>
 
+#include <dune/stuff/fem/functions/integrals.hh>
 #include "dune/multiscale/common/traits.hh"
 #include "dune/multiscale/common/dirichletconstraints.hh"
 #include "dune/multiscale/msfem/msfem_grid_specifier.hh"
@@ -37,11 +39,12 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::
       }
     }
   }
-  const auto boundary = Problem::getModelData()->boundaryInfo();
-  const auto dirichlet_data = Problem::getDirichletData();
-  //! \TODO use the static thingies
-  DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, rhsVector.space());
-  constraints(*dirichlet_data, rhsVector);
+  assert(false);//boundary treatment missing
+//  const auto boundary = Problem::getModelData()->boundaryInfo();
+//  const auto dirichlet_data = Problem::getDirichletData();
+//  //! \TODO use the static thingies
+//  DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, rhsVector.space());
+//  constraints(*dirichlet_data, rhsVector);
 }
 
 
@@ -138,13 +141,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
   auto neumannDataPtr = Problem::getNeumannData();
   const auto& neumannData = *neumannDataPtr;
 
-  DiscreteFunctionType dirichletExtension("Dirichlet Extension", specifier.fineSpace());
-  dirichletExtension.clear();
-  Dune::Multiscale::copyDirichletValues(rhsVector.space(), dirichletExtension);
-
-  // set rhsVector to zero:
   rhsVector.clear();
-  const auto& coarseGridLeafIndexSet = specifier.coarseSpace().gridPart().grid().leafIndexSet();
   RangeType f_x;
   Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators(rhsVector.space().gridPart());
 
@@ -164,6 +161,10 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
     localSolutionManager.loadLocalSolutions();
     auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
+    MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension("Dirichlet Extension",
+                                                                         localSolutionManager.space());
+    dirichletExtension.clear();
+    Dune::Multiscale::copyDirichletValues(rhsVector.space(), dirichletExtension);
 
     // iterator for the micro grid ( grid for the reference element T_0 )
     const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
@@ -173,6 +174,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
         // higher order quadrature, since A^{\epsilon} is highly variable
         const auto localQuadrature =
             DSFe::make_quadrature(localEntity, localSolutionManager.space());
+        auto dirichletExtensionLF = dirichletExtension.localFunction(localEntity);
 
         // evaluate all local solutions and their jacobians in all quadrature points
         std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
