@@ -35,15 +35,36 @@ std::unique_ptr<const CommonTraits::ModelProblemDataType> getModelData();
 std::unique_ptr<const CommonTraits::DirichletDataType> getDirichletData();
 std::unique_ptr<const CommonTraits::NeumannDataType> getNeumannData();
 
-template <class GridImp, class IntersectionImp>
-bool isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face);
-template <class GridImp, class IntersectionImp>
-bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face);
-
 std::string name();
+
+template < class IntersectionType >
+typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,bool>::type
+is_neumann(const IntersectionType& face) {
+  return getModelData()->boundaryInfo()->neumann(face);
+}
+
+template < class IntersectionType >
+typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,bool>::type
+is_neumann(const IntersectionType& face) {
+  return getModelData()->subBoundaryInfo()->neumann(face);
+}
+
+template < class IntersectionType >
+typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,bool>::type
+is_dirichlet(const IntersectionType& face) {
+  return getModelData()->boundaryInfo()->dirichlet(face);
+}
+
+template < class IntersectionType >
+typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,bool>::type
+is_dirichlet(const IntersectionType& face) {
+  return getModelData()->subBoundaryInfo()->dirichlet(face);
+}
 
 } //! @} namespace Problem
 } // namespace Multiscale
 } // namespace Dune
+
+namespace DMP = Dune::Multiscale::Problem;
 
 #endif // DUNE_MS_PROBLEMS_SELECTOR_HH

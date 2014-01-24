@@ -113,39 +113,6 @@ std::unique_ptr<const CommonTraits::NeumannDataType> Dune::Multiscale::Problem::
   return find_and_call_item(funcs);
 }
 
-namespace Dune {
-namespace Multiscale {
-namespace Problem {
-// for some reason gcc 4.7 does not like the specializations if they're not in an explicit ns scope
-template <class GridImp, class IntersectionImp>
-bool isNeumannBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
-  static auto info = getModelData()->boundaryInfo();
-  return info->neumann(face);
-}
-
-template <class GridImp, class IntersectionImp>
-bool isDirichletBoundary(const Dune::Intersection<GridImp, IntersectionImp>& face) {
-  static auto info = getModelData()->boundaryInfo();
-  return info->dirichlet(face);
-}
-
-
-template <>
-bool isNeumannBoundary(const typename MsFEM::MsFEMTraits::LocalGridPartType::IntersectionType& face) {
-  static auto info = getModelData()->subBoundaryInfo();
-  return info->neumann(face);
-}
-
-template <>
-bool isDirichletBoundary(const typename MsFEM::MsFEMTraits::LocalGridPartType::IntersectionType& face) {
-  static auto info = getModelData()->subBoundaryInfo();
-  return info->dirichlet(face);
-}
-
-} // namespace Problem
-} // namespace Multiscale
-} // namespace Dune
-
 std::unique_ptr<const CommonTraits::DirichletBCType> Dune::Multiscale::Problem::getDirichletBC() {
   static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::DirichletBCType>, DirichletBoundaryCondition);
   return find_and_call_item(funcs);
