@@ -410,7 +410,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
         const auto intEnd = discreteFunctionSpace.gridPart().iend(localGridCell);
         for (auto iIt = discreteFunctionSpace.gridPart().ibegin(localGridCell); iIt != intEnd; ++iIt) {
           const auto& intersection = *iIt;
-          if (Dune::Multiscale::Problem::isNeumannBoundary(intersection)) {
+          if (DMP::is_neumann(intersection)) {
             const auto orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
             const auto quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
             const auto faceQuad = DSFe::make_quadrature(intersection, discreteFunctionSpace, quadOrder);
@@ -860,7 +860,7 @@ void LocalProblemOperator::projectDirichletValues(CommonTraits::DiscreteFunction
   for (const auto& localCell : function.space()) {
     if (localCell.hasBoundaryIntersections())
       for (const auto& intersection : DSC::intersectionRange(gridPart, localCell)) {
-        if (Multiscale::Problem::isDirichletBoundary(intersection)) {
+        if (DMP::is_dirichlet(intersection)) {
           auto funcLocal = function.localFunction(localCell);
           const auto& lagrangePointSet = function.space().lagrangePointSet(localCell);
           const auto faceNumber = intersection.indexInInside();

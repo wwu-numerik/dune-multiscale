@@ -72,7 +72,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_hmm_lod(
     const auto& lagrangePointSet = rhsVector.space().lagrangePointSet(entity);
 
     for (const auto& intersection : DSC::intersectionRange(rhsVector.space().gridPart(), entity)) {
-      if (Problem::isNeumannBoundary(intersection)) {
+      if (DMP::is_neumann(intersection)) {
         const auto face = intersection.indexInInside();
         const auto faceQuadrature = DSFe::make_quadrature(intersection, rhsVector.space(), quadratureOrder);
         const auto numFaceQuadraturePoints = faceQuadrature.nop();
@@ -191,7 +191,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
           // assemble intersection-part
           const auto& subGridPart = localSolutionManager.grid_part();
           for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafView(), localEntity)) {
-            if (Problem::isNeumannBoundary(intersection)) {
+            if (DMP::is_neumann(intersection)) {
               const int orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
               const int quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
               const auto faceQuad = DSFe::make_quadrature(intersection, localSolutions[lsNum]->space(), quadOrder);

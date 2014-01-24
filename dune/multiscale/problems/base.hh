@@ -244,17 +244,18 @@ public:
   virtual bool symmetricDiffusion() const { return true; }
 
   virtual std::unique_ptr<BoundaryInfoType> boundaryInfo() const {
-    return std::unique_ptr<BoundaryInfoType>(new Dune::Stuff::GridboundaryAllDirichlet<typename View::Intersection>());
+    return DSC::make_unique<DS::GridboundaryAllDirichlet<typename View::Intersection>>();
   }
   virtual std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const {
-    return std::unique_ptr<SubBoundaryInfoType>(
-        new Dune::Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>());
+    return DSC::make_unique<DS::GridboundaryAllDirichlet<typename SubView::Intersection>>();
   }
 };
 
 } //! @} namespace Problem
 } // namespace Multiscale {
 } // namespace Dune {
+
+namespace DMP = Dune::Multiscale::Problem;
 
 #define MSCONSTANTFUNCTION(classname, constant)                                                                        \
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
