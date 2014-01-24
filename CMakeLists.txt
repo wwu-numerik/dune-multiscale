@@ -165,6 +165,11 @@ ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 add_dune_mpi_flags(msfem-1d)
 
+ADD_EXECUTABLE(fail src/fail.cc ${COMMON_HEADER} )
+# TARGET_LINK_LIBRARIES(fail ${COMMON_LIBS} )
+add_dune_mpi_flags(fail)
+
+
 ADD_EXECUTABLE(thread_vis src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
 add_dune_mpi_flags(thread_vis)
