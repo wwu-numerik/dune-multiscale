@@ -122,7 +122,7 @@ private:
   typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   // --------------------------- subgrid typedefs ------------------------------------
-  typedef MsFEMTraits::LocalGridListType LocalGridListType;
+  typedef LocalGridList LocalGridList;
   typedef MsFEMTraits::LocalGridType LocalGridType;
   typedef MsFEMTraits::LocalGridPartType LocalGridPartType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
@@ -159,7 +159,7 @@ private:
   //! for each subgrid, store the vector of basis functions ids that
   //! correspond to interior coarse grid nodes in the subgrid
   // information stored in 'std::vector< std::vector< int > >'
-  void assemble_interior_basis_ids(MacroMicroGridSpecifier& specifier, LocalGridListType& subgrid_list,
+  void assemble_interior_basis_ids(MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
                                    std::map<std::size_t, std::size_t>& global_id_to_internal_id,
                                    std::map<OrderedDomainType, std::size_t>& coordinates_to_global_coarse_node_id,
                                    std::vector<std::vector<std::size_t>>& ids_basis_function_in_extended_subgrid,
@@ -177,16 +177,16 @@ private:
   //! add corrector part to MsFEM basis functions
   void add_corrector_contribution(MacroMicroGridSpecifier& specifier,
                                   std::map<std::size_t, std::size_t>& global_id_to_internal_id,
-                                  LocalGridListType& subgrid_list,
+                                  LocalGridList& subgrid_list,
                                   MsFEMBasisFunctionType& msfem_basis_function_list) const;
 
   //! assemble global dirichlet corrector
   void assemble_global_dirichlet_corrector(MacroMicroGridSpecifier& specifier,
-                                           MsFEMTraits::LocalGridListType& subgrid_list,
+                                           LocalGridList& subgrid_list,
                                            DiscreteFunction& global_dirichlet_corrector) const;
 
   //! assemble global neumann corrector
-  void assemble_global_neumann_corrector(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
+  void assemble_global_neumann_corrector(MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
                                          DiscreteFunction& global_neumann_corrector) const;
 
   template <class DiffusionOperator, class SeedSupportStorage>
@@ -387,7 +387,7 @@ public:
              const CommonTraits::NeumannBCType& neumann_bc,
              // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
              // n(T)-layers.
-             MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
+             MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
              DiscreteFunction& coarse_scale_part, DiscreteFunction& fine_scale_part, DiscreteFunction& solution) const;
 };
 

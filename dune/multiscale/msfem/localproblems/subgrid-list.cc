@@ -25,10 +25,9 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-LocalGridList::LocalGridList(MsFEMTraits::MacroMicroGridSpecifierType& specifier, bool silent /*= true*/)
+LocalGridList::LocalGridList(MacroMicroGridSpecifier& specifier)
   : coarseSpace_(specifier.coarseSpace())
   , specifier_(specifier)
-  , silent_(silent)
   , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet())
   #ifdef ENABLE_LOD_ONLY_CODE
   , fineToCoarseMap_(Fem::MPIManager::size())

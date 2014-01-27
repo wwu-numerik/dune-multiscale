@@ -44,17 +44,17 @@ public:
 
 //! \TODO docme
 template <class LocalGridDiscreteFunctionType, class DiscreteFunctionType, class DiffusionOperatorType,
-          class MacroMicroGridSpecifierType>
+          class MacroMicroGridSpecifier>
 class ConservativeFluxOperator : public Operator<typename LocalGridDiscreteFunctionType::RangeFieldType,
                                                  typename LocalGridDiscreteFunctionType::RangeFieldType,
                                                  LocalGridDiscreteFunctionType, LocalGridDiscreteFunctionType> {
   typedef ConservativeFluxOperator<LocalGridDiscreteFunctionType, DiscreteFunctionType, DiffusionOperatorType,
-                                   MacroMicroGridSpecifierType> This;
+                                   MacroMicroGridSpecifier> This;
 
 private:
   typedef LocalGridDiscreteFunctionType LocalGridDiscreteFunction;
   typedef DiscreteFunctionType DiscreteFunction;
-  typedef DiffusionOperatorType DiffusionModel;
+  typedef DiffusionOperatorType DiffusionOperatorType;
 
   typedef typename LocalGridDiscreteFunction::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpace;
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
@@ -78,8 +78,8 @@ private:
 
 public:
   ConservativeFluxOperator(const LocalGridDiscreteFunctionSpace& subDiscreteFunctionSpace,
-                           const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionModel& diffusion_op,
-                           const MacroMicroGridSpecifierType& specifier)
+                           const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionOperatorType& diffusion_op,
+                           const MacroMicroGridSpecifier& specifier)
     : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
     , discreteFunctionSpace_(discreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
@@ -109,8 +109,8 @@ public:
 private:
   const LocalGridDiscreteFunctionSpace& subDiscreteFunctionSpace_;
   const DiscreteFunctionSpace& discreteFunctionSpace_;
-  const DiffusionModel& diffusion_operator_;
-  const MacroMicroGridSpecifierType& specifier_;
+  const DiffusionOperatorType& diffusion_operator_;
+  const MacroMicroGridSpecifier& specifier_;
 };
 
 //! dummy implementation of "operator()"
@@ -312,7 +312,7 @@ template <class LocalGridDiscreteFunctionType, class LocalGridDiscreteFunctionTy
           class MacroMicroGridSpecifierImp>
 class ConservativeFluxProblemSolver {
 private:
-  typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifier;
 
   //! ---------------- typedefs for the LocalGridDiscreteFunctionSpace -----------------------
   typedef typename LocalGridDiscreteFunctionType::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
@@ -346,14 +346,14 @@ private:
   const DiffusionOperatorType& diffusion_;
   const LocalGridDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
 
-  const MacroMicroGridSpecifierType& specifier_;
+  const MacroMicroGridSpecifier& specifier_;
   mutable boost::format filename_template_;
 
 public:
   //! constructor - with diffusion operator A^{\epsilon}(x)
   ConservativeFluxProblemSolver(const LocalGridDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
                                 const DiffusionOperatorType& diffusion_operator,
-                                const MacroMicroGridSpecifierType& specifier)
+                                const MacroMicroGridSpecifier& specifier)
     : diffusion_(diffusion_operator)
     , hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
     , specifier_(specifier)
@@ -377,7 +377,7 @@ public:
     // ( effect of the discretized differential operator on a certain discrete function )
     // discrete elliptic operator describing the elliptic local msfem problems
     typedef ConservativeFluxOperator<LocalGridDiscreteFunctionType, LocalGridDiscreteFunctionType, DiffusionOperatorType,
-                                     MacroMicroGridSpecifierType> ConservativeFluxOperatorType;
+                                     MacroMicroGridSpecifier> ConservativeFluxOperatorType;
     ConservativeFluxOperatorType cf_problem_operator(localDiscreteFunctionSpace, hostDiscreteFunctionSpace_, diffusion_,
                                                      specifier_);
 
@@ -449,7 +449,7 @@ public:
     DiscreteFunctionWriter(locprob_solution_location).append(subgrid_disc_func);
   } // file_data_output
 
-  void solve_all(MsFEMTraits::LocalGridListType& subgrid_list) const {
+  void solve_all(LocalGridList& subgrid_list) const {
     JacobianRangeType e[dimension];
 
     for (int i = 0; i < dimension; ++i) {

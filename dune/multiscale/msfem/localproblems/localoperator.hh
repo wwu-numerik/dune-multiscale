@@ -36,33 +36,26 @@ class LocalProblemOperator {
 
   static const int faceCodim = 1;
 
-private:
-  typedef DiffusionOperatorType DiffusionModel;
-
   typedef typename LocalGridDiscreteFunctionType::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-
   typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType GridPartType;
   typedef typename LocalGridDiscreteFunctionSpaceType::GridType GridType;
   typedef typename LocalGridDiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
-
   typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
   typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
   typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType EntityType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
 
   static const int dimension = GridPartType::GridType::dimension;
   static const int polynomialOrder = LocalGridDiscreteFunctionSpaceType::polynomialOrder;
 
-  typedef typename LocalGridDiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType EntityType;
-
-  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
   typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
 
 public:
-  LocalProblemOperator(const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
+  LocalProblemOperator(const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionOperatorType& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)
   void assemble_matrix(LocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const;
@@ -103,7 +96,7 @@ public:
   * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
   * functions. The discrete functions in allLocalRHS will be cleared in this function.
   */
-  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
+  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifier& specifier,
                            MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
 #ifdef ENABLE_LOD_ONLY_CODE
@@ -146,7 +139,7 @@ public:
 
 private:
   const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
-  const DiffusionModel& diffusion_operator_;
+  const DiffusionOperatorType& diffusion_operator_;
 };
 
 } // namespace MsFEM {

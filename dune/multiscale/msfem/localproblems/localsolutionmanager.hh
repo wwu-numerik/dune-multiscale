@@ -25,16 +25,16 @@ namespace MsFEM {
  */
 class LocalSolutionManager {
 private:
-  typedef MsFEMTraits::LocalGridListType LocalGridListType;
+  typedef LocalGridList LocalGridList;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef MsFEMTraits::LocalGridPartType LocalGridPartType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-  typedef MsFEMTraits::MacroMicroGridSpecifierType MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifier MacroMicroGridSpecifier;
 
 public:
-  LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridListType& subgridList,
-                       const MacroMicroGridSpecifierType& gridSpecifier);
+  LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridList& subgridList,
+                       const MacroMicroGridSpecifier& gridSpecifier);
 
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
@@ -49,9 +49,9 @@ public:
   std::size_t numBoundaryCorrectors() const;
 
 private:
-  LocalGridListType& subgridList_;
+  LocalGridList& subgridList_;
   MsFEMTraits::LocalGridType& subgrid_;
-  const MacroMicroGridSpecifierType& gridSpecifier_;
+  const MacroMicroGridSpecifier& gridSpecifier_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;
   MsFEMTraits::LocalSolutionVectorType localSolutions_;

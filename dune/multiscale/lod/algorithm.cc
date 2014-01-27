@@ -45,7 +45,7 @@ namespace MsFEM {
 
 //! set the dirichlet points to the Dirichlet BC
 template <class DirichletBC, class DiscreteFunctionType>
-void setDirichletValues(MsFEMTraits::MacroMicroGridSpecifierType& specifier, DirichletBC& dirichlet_func,
+void setDirichletValues(MacroMicroGridSpecifier& specifier, DirichletBC& dirichlet_func,
                         DiscreteFunctionType& func) {
   using namespace Dune::Stuff;
   const auto& discreteFunctionSpace = func.space();
@@ -358,7 +358,7 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
   const int number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
 
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-  MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
+  MacroMicroGridSpecifier specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
   for (int i = 0; i < number_of_level_host_entities; i += 1) {
     specifier.setNoOfLayers(i, number_of_layers_);
   }
@@ -375,7 +375,7 @@ void algorithm(const std::string& macroGridName, int& total_refinement_level_, i
 
   //! create subgrids:
   { // this scopes subgridlist
-    MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
+    LocalGridList subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
     // just for Dirichlet zero-boundary condition
     Elliptic_Rigorous_MsFEM_Solver lod_solver(discreteFunctionSpace);

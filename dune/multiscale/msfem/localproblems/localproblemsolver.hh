@@ -60,7 +60,7 @@ private:
   typedef typename MsFEMTraits::LocalGridPartType LocalGridPartType;
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
 
-  typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifier MacroMicroGridSpecifier;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
@@ -122,7 +122,7 @@ private:
 
   typedef WeightedClementOperator WeightedClementOperatorType;
   const DiffusionOperatorType& diffusion_;
-  const MacroMicroGridSpecifierType& specifier_;
+  const MacroMicroGridSpecifier& specifier_;
   LocalGridList& subgrid_list_;
 
 #ifdef ENABLE_LOD_ONLY_CODE
@@ -139,10 +139,10 @@ public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
-  LocalProblemSolver(const MacroMicroGridSpecifierType& specifier, LocalGridList& subgrid_list,
+  LocalProblemSolver(const MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator);
 
-  LocalProblemSolver(const MacroMicroGridSpecifierType& specifier,
+  LocalProblemSolver(const MacroMicroGridSpecifier& specifier,
       LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
       std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
       const DiffusionOperatorType& diffusion_operator, const CoarseBasisFunctionListType& coarse_basis,

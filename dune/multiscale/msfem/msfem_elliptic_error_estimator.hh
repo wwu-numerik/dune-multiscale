@@ -68,8 +68,8 @@ private:
   ThisType;
   typedef DiffusionImp DiffusionOperatorType;
   typedef SourceImp SourceType;
-  typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifierType;
-  typedef LocalGridListImp LocalGridListType;
+  typedef MacroMicroGridSpecifierImp MacroMicroGridSpecifier;
+  typedef LocalGridListImp LocalGridList;
 
   //! Necessary typedefs for the DiscreteFunctionImp:
 
@@ -140,8 +140,8 @@ private:
   static const int maxnumOfBaseFct = 100;
 
   const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace_;
-  MacroMicroGridSpecifierType& specifier_;
-  LocalGridListType& subgrid_list_;
+  MacroMicroGridSpecifier& specifier_;
+  LocalGridList& subgrid_list_;
   const DiffusionOperatorType& diffusion_;
   const SourceType& f_;
 
@@ -182,7 +182,7 @@ private:
 
 public:
   MsFEMErrorEstimator(const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace,
-                      MacroMicroGridSpecifierType& specifier, LocalGridListType& subgrid_list,
+                      MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
                       const DiffusionOperatorType& diffusion, const SourceType& f)
     : fineDiscreteFunctionSpace_(fineDiscreteFunctionSpace)
     , specifier_(specifier)

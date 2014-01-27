@@ -109,7 +109,7 @@ void subgrid_vis(const std::string& macroGridName, int total_refinement_level_,
   const auto number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
 
   // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-  MsFEM::MsFEMTraits::MacroMicroGridSpecifierType specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
+  MsFEM::MacroMicroGridSpecifier specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
   for (int i = 0; i < number_of_level_host_entities; ++i) {
     specifier.setNoOfLayers(i, number_of_layers_);
   }

@@ -91,7 +91,7 @@ void Elliptic_Rigorous_MsFEM_Solver::vtk_output(MsFEMBasisFunctionType& msfem_ba
 // subgrid
 // information stored in 'std::vector< std::vector< int > >'
 void Elliptic_Rigorous_MsFEM_Solver::assemble_interior_basis_ids(
-    MacroMicroGridSpecifier& specifier, LocalGridListType& subgrid_list,
+    MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
     std::map<std::size_t, std::size_t>& global_id_to_internal_id,
     std::map<OrderedDomainType, std::size_t>& coordinates_to_global_coarse_node_id,
     // all coarse nodes, where the corresponding coarse (nodal) basis function has a support that intersects with the
@@ -296,7 +296,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_coarse_basis_contribution(
 //! add corrector part to MsFEM basis functions
 void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
     MacroMicroGridSpecifier& specifier, std::map<std::size_t, std::size_t>& global_id_to_internal_id,
-    LocalGridListType& subgrid_list, MsFEMBasisFunctionType& msfem_basis_function_list) const {
+    LocalGridList& subgrid_list, MsFEMBasisFunctionType& msfem_basis_function_list) const {
 
   DSC_LOG_INFO << "Add global corrector to create MsFEM basis functions from standard FEM basis functions... ";
 
@@ -373,7 +373,7 @@ void Elliptic_Rigorous_MsFEM_Solver::add_corrector_contribution(
 
 //! assemble global dirichlet corrector
 void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
-    MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
+    MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
     Elliptic_Rigorous_MsFEM_Solver::DiscreteFunction& global_dirichlet_corrector) const {
 
   DSC_LOG_INFO << "Sum up local Dirichlet boundary correctors to create the global Dirichlet Corrector... ";
@@ -441,7 +441,7 @@ void Elliptic_Rigorous_MsFEM_Solver::assemble_global_dirichlet_corrector(
 
 //! assemble global neumann corrector
 void Elliptic_Rigorous_MsFEM_Solver::assemble_global_neumann_corrector(
-    MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
+    MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
     Elliptic_Rigorous_MsFEM_Solver::DiscreteFunction& global_neumann_corrector) const {
 
   DSC_LOG_INFO << "Sum up local Neumann boundary correctors to create the global Neumann Corrector... ";
@@ -497,7 +497,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     const CommonTraits::DiscreteFunctionType& dirichlet_extension, const CommonTraits::NeumannBCType& neumann_bc,
     // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
     // n(T)-layers.
-    MacroMicroGridSpecifier& specifier, LocalGridListType& subgrid_list, DiscreteFunction& coarse_scale_part,
+    MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list, DiscreteFunction& coarse_scale_part,
     DiscreteFunction& fine_scale_part, DiscreteFunction& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_Rigorous_MsFEM_Solver.solve_dirichlet_zero");
 

@@ -17,6 +17,12 @@ struct OutputParameters;
 
 namespace MsFEM {
 
+class MacroMicroGridSpecifier;
+class LocalGridList;
+
+typedef MsFEMErrorEstimator<typename CommonTraits::DiscreteFunctionType, typename CommonTraits::DiffusionType,
+                            typename CommonTraits::FirstSourceType, MacroMicroGridSpecifier,
+                            LocalGridList> MsFEMErrorEstimatorType;
 //! \TODO docme
 void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, const int loop_number,
            int& total_refinement_level_, int& coarse_grid_level_, int& number_of_layers_,
@@ -39,8 +45,8 @@ void data_output(const CommonTraits::GridPartType& gridPart,
 bool error_estimation(const CommonTraits::DiscreteFunctionType& msfem_solution,
                       const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                       const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution,
-                      MsFEMTraits::MsFEMErrorEstimatorType& estimator,
-                      MsFEMTraits::MacroMicroGridSpecifierType& specifier, const int loop_number,
+                      MsFEMErrorEstimatorType& estimator,
+                      MacroMicroGridSpecifier& specifier, const int loop_number,
                       std::vector<CommonTraits::RangeVectorVector*>& locals,
                       std::vector<CommonTraits::RangeVector*>& totals,
                       CommonTraits::RangeVector& total_estimated_H1_error_);

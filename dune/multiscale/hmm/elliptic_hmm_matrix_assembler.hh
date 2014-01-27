@@ -30,7 +30,7 @@ class DiscreteEllipticHMMOperator
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunction;
   typedef HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunction;
-  typedef CommonTraits::DiffusionType DiffusionModel;
+  typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename PeriodicDiscreteFunction::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpace;
   typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
@@ -46,7 +46,7 @@ private:
 public:
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                               const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
-                              const DiffusionModel& diffusion_op, const CellProblemNumberingManager& cp_num_manager)
+                              const DiffusionOperatorType& diffusion_op, const CellProblemNumberingManager& cp_num_manager)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
     , diffusion_operator_(diffusion_op)
@@ -65,7 +65,7 @@ public:
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
   const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace_;
-  const DiffusionModel& diffusion_operator_;
+  const DiffusionOperatorType& diffusion_operator_;
   const CellProblemNumberingManager& cp_num_manager_;
 
   // name of data file, e.g. required if we want to use the saved solutions of the cell problems

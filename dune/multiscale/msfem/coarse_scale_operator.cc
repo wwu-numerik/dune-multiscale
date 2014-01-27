@@ -11,9 +11,8 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-CoarseScaleOperator::CoarseScaleOperator(
-    MacroMicroGridSpecifierType& specifier, const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-    MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op)
+CoarseScaleOperator::CoarseScaleOperator(MacroMicroGridSpecifierType& specifier, const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
+    LocalGridList &subgrid_list, const DiffusionModel& diffusion_op)
   : specifier_(specifier)
   , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
   , subgrid_list_(subgrid_list)
