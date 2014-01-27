@@ -15,13 +15,13 @@ namespace MsFEM {
 MacroMicroGridSpecifier::MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space)
   : coarse_scale_space_(coarse_scale_space)
   , coarse_level_fine_level_difference_(std::numeric_limits<int>::max())
-  , number_of_level_host_entities_(coarse_scale_space.gridPart().grid().size(0 /*codim*/))
   , coarseGridIsSimplex_(coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0).size() == 1 &&
-                         coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0)[0].isSimplex()) {
-  boundary_nodes_identified_ = false;
-}
-// get number of coarse grid entities
-std::size_t MacroMicroGridSpecifier::getNumOfCoarseEntities() const { return number_of_level_host_entities_; }
+                         coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0)[0].isSimplex())
+#ifdef ENABLE_LOD_ONLY_CODE
+  , boundary_nodes_identified_(false)
+  , dirichlet_nodes_identified_(false)
+#endif // ENABLE_LOD_ONLY_CODE
+{}
 
 //! Get the difference between coarse and fine level
 int MacroMicroGridSpecifier::getLevelDifference() const { return coarse_level_fine_level_difference_; }
@@ -35,7 +35,7 @@ MacroMicroGridSpecifier::DiscreteFunctionSpaceType& MacroMicroGridSpecifier::coa
   return coarse_scale_space_;
 }
 
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
 void MacroMicroGridSpecifier::identify_coarse_boundary_nodes() {
   is_boundary_node_.resize(coarse_scale_space_.size());
 
@@ -126,7 +126,7 @@ bool MacroMicroGridSpecifier::is_coarse_dirichlet_node(std::size_t global_index)
   assert(dirichlet_nodes_identified_);
   return is_dirichlet_node_[global_index];
 }
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 
 bool MacroMicroGridSpecifier::simplexCoarseGrid() const { return coarseGridIsSimplex_; }
 

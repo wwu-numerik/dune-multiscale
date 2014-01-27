@@ -106,7 +106,7 @@ public:
   void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
                            MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
   void assemble_local_RHS_Dirichlet_corrector(
       const LocalGridDiscreteFunctionType& dirichlet_extension,
       const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
@@ -131,7 +131,7 @@ public:
                                      std::vector<double>& weights,
                                      std::vector<std::size_t>& ids_basis_functions_in_subgrid,
                                      std::vector<std::unique_ptr<LocalGridDiscreteFunctionType>>& local_problem_RHS) const;
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 
   // given a discrete function (representing a right hands side of a local problem,
   // defined on a subgrid) set the boundary dofs to zero

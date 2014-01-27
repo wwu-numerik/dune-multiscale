@@ -125,7 +125,7 @@ private:
   const MacroMicroGridSpecifierType& specifier_;
   LocalGridList& subgrid_list_;
 
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
   std::vector<std::vector<std::size_t>>* ids_relevant_basis_functions_for_subgrid_;
   std::vector<double>* inverse_of_L1_norm_coarse_basis_funcs_;
   const CoarseBasisFunctionListType* coarse_basis_;
@@ -133,7 +133,7 @@ private:
 
   const NeumannBoundaryType* neumann_bc_;
   const LocalGridDiscreteFunctionType* dirichlet_extension_;
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
@@ -153,7 +153,7 @@ private:
   void solveAllLocalProblems(const CoarseEntityType& coarseCell,
                              LocalGridDiscreteFunctionVectorType& allLocalSolutions) const;
 
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
   void solvelocalproblem(JacobianRangeType& e, LocalGridDiscreteFunctionType& local_problem_solution,
                          const int coarse_index = -1) const;
 
@@ -177,7 +177,7 @@ private:
   void solve_neumann_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
                                            MatrixType& lm_system_matrix, LocalGridDiscreteFunctionType& local_corrector,
                                            const int coarse_index /*= -1*/) const;
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 
   void output_local_solution(const int coarse_index, const int which,
                              const LocalGridDiscreteFunctionType& host_local_solution) const;

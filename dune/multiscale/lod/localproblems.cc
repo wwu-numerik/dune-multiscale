@@ -991,7 +991,7 @@ void LodLocalProblemSolver::assemble_all_clement_lod()
     }
 
   // number of coarse grid entities (of codim 0).
-  const auto coarseGridSize = specifier_.getNumOfCoarseEntities();
+  const auto coarseGridSize = specifier_.coarseSpace().grid().size(0);
 
   DSC_LOG_INFO << "in method 'assemble_all': coarseGridSize = " << coarseGridSize << std::endl;
   DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");

@@ -24,9 +24,6 @@ class MacroMicroGridSpecifier {
 public:
   MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space);
 
-  // get number of coarse grid entities
-  std::size_t getNumOfCoarseEntities() const;
-
   //! Get the difference between coarse and fine level
   int getLevelDifference() const;
 
@@ -46,6 +43,18 @@ private:
 
   // number of coarse grid boundary nodes
   std::size_t number_of_coarse_dirichlet_nodes_;
+
+  // have the Dirichlet boundary nodes been identified?
+  bool dirichlet_nodes_identified_;
+  // have the boundary nodes been identified?
+  bool boundary_nodes_identified_;
+
+  // is a given coarse node a boundary node of the coarse grid? true/false
+  std::vector<bool> is_boundary_node_;
+
+  // is a given coarse node a Dirichlet boundary node of the coarse grid? true/false
+  std::vector<bool> is_dirichlet_node_;
+
 public:
   bool is_coarse_boundary_node(std::size_t global_index) const;
   bool is_coarse_dirichlet_node(std::size_t global_index) const;
@@ -59,20 +68,7 @@ private:
   // level difference between coarse grid level and fine grid level
   const int coarse_level_fine_level_difference_;
 
-  // number of coarse grid entities
-  const std::size_t number_of_level_host_entities_;
 
-  // have the boundary nodes been identified?
-  bool boundary_nodes_identified_;
-
-  // have the Dirichlet boundary nodes been identified?
-  bool dirichlet_nodes_identified_;
-
-  // is a given coarse node a boundary node of the coarse grid? true/false
-  std::vector<bool> is_boundary_node_;
-
-  // is a given coarse node a Dirichlet boundary node of the coarse grid? true/false
-  std::vector<bool> is_dirichlet_node_;
 
   const bool coarseGridIsSimplex_;
 };
