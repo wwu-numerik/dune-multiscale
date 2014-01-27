@@ -42,7 +42,7 @@ LocalGridList::~LocalGridList() {}
 * @param[in] coarseCellIndex The index of a coarse cell.
 * @return Returns the subgrid belonging to the coarse cell with the given index.
 */
-MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(std::size_t coarseCellIndex) {
+MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(IndexType coarseCellIndex) {
   auto found = subGridList_.find(coarseCellIndex);
   BOOST_ASSERT_MSG(found != subGridList_.end(), "There is no subgrid for the index you provided!");
   assert(found->second);
@@ -54,7 +54,7 @@ MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(std::size_t coarseCellInde
 * @param[in] coarseCellIndex The index of a coarse cell.
 * @return Returns the subgrid belonging to the coarse cell with the given index.
 */
-const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(std::size_t coarseCellIndex) const {
+const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(IndexType coarseCellIndex) const {
   auto found = subGridList_.find(coarseCellIndex);
   BOOST_ASSERT_MSG(found != subGridList_.end(), "There is no subgrid for the index you provided!");
   assert(found->second);
@@ -94,7 +94,7 @@ const LocalGridList::CoarseEntitySeedType &LocalGridList::get_coarse_entity_seed
 // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
 // for each given subgrid index return the vecor of ALL coarse nodes (global coordinates) that are in the subgrid,
 // this also includes the coarse nodes on the boundary of U(T), even if this is a global Dirichlet node!
-const LocalGridList::CoarseNodeVectorType& LocalGridList::getCoarseNodeVector(std::size_t i) const {
+const LocalGridList::CoarseNodeVectorType& LocalGridList::getCoarseNodeVector(IndexType i) const {
   if (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 1)
     DUNE_THROW(Dune::InvalidStateException, "Method 'getCoarseNodeVector' of class 'LocalGridList' should not be used in\
                 combination with oversampling strategy 1. Check your implementation!");
@@ -111,7 +111,7 @@ const LocalGridList::CoarseNodeVectorType& LocalGridList::getCoarseNodeVector(st
 // According to the definition of the LOD 'not full coarse layers' require that the averaging
 // property of the weighted Clement operator is also applied to those coarse nodes, where
 // the corresponding basis function has a nonempty intersection with the patch
-const LocalGridList::CoarseNodeVectorType& LocalGridList::getExtendedCoarseNodeVector(std::size_t i) const {
+const LocalGridList::CoarseNodeVectorType& LocalGridList::getExtendedCoarseNodeVector(IndexType i) const {
   if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 1) || (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 2))
     DUNE_THROW(Dune::InvalidStateException,
                "Method 'getExtendendCoarseNodeVector' of class 'LocalGridList' should not be used in\
@@ -126,7 +126,7 @@ const LocalGridList::CoarseNodeVectorType& LocalGridList::getExtendedCoarseNodeV
 // get number of sub grids
 std::size_t LocalGridList::size() const { return specifier_.getNumOfCoarseEntities(); }
 
-MsFEM::MsFEMTraits::LocalGridPartType LocalGridList::gridPart(std::size_t i) { return LocalGridPartType(getSubGrid(i)); }
+MsFEM::MsFEMTraits::LocalGridPartType LocalGridList::gridPart(IndexType i) { return LocalGridPartType(getSubGrid(i)); }
 
 bool LocalGridList::covers(const CoarseEntityType &coarse_entity, const LocalEntityType &local_entity) {
   const auto& center = local_entity.geometry().center();
@@ -143,15 +143,15 @@ void LocalGridList::createSubGrids() {
   // the number of coarse grid entities (of codim 0).
   const auto number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
   const auto oversampling_strategy = DSC_CONFIG_GET("msfem.oversampling_strategy", 1);
+  const auto micro_per_macro = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
+  const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
     coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
     extended_coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
   }
   typedef StructuredGridFactory<LocalGridType> FactoryType;
-  const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_strategy", 1);
-  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(coarseSpace_.gridPart().grid());
-
+   const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(coarseSpace_.gridPart().grid());
 
   for (const auto& coarse_entity : coarseSpace_) {
     // make sure we only create subgrids for interior coarse elements, not
@@ -170,14 +170,14 @@ void LocalGridList::createSubGrids() {
     array<unsigned int,dim_world> elemens;
     for(const auto i : DSC::valueRange(dim_world))
     {
-      elemens[i] = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
+      elemens[i] = micro_per_macro + (2 * oversampling_layer);
       const auto min = dimensions.coord_limits[i].min();
       const auto max = dimensions.coord_limits[i].max();
       const auto coarse_min = coarse_dimensions.coord_limits[i].min();
       const auto coarse_max = coarse_dimensions.coord_limits[i].max();
-      const auto delta = max - min;
-      lowerLeft[i] = std::max(min - oversampling_layer * delta, coarse_min);
-      upperRight[i] = std::min(max + oversampling_layer * delta, coarse_max);
+      const auto delta = (max - min) / double(micro_per_macro);
+      lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarse_min);
+      upperRight[i] = std::min(max + (oversampling_layer * delta), coarse_max);
     }
 
     boost::format sp("Subgrid %d from (%f,%f) to (%f,%f) created.\n");
