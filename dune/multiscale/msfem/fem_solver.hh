@@ -23,21 +23,16 @@ class DummyMass;
 
 //! \todo docme
 class Elliptic_FEM_Solver {
-private:
+
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
   typedef DiscreteFunctionType DiscreteFunction;
-
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
   typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
+  typedef DummyMass<DiscreteFunctionSpace> DummyMassType;
 
   static const int faceCodim = 1;
-
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
-
-  typedef DummyMass<DiscreteFunctionSpace> DummyMassType;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;

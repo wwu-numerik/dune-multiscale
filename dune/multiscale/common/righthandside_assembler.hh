@@ -41,7 +41,7 @@ public:
    * if there is only one source (f) (there is no second source):
    * discreteFunction is an output parameter (kind of return value)
    **/
-  static void assemble(const CommonTraits::FirstSourceType& f, DiscreteFunctionType& rhsVector);
+  static void assemble_fem(const CommonTraits::FirstSourceType& f, DiscreteFunctionType& rhsVector);
 
   /**
    * The rhs-assemble()-methods for linear elliptic problems
@@ -56,7 +56,7 @@ public:
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)
    **/
-  static void assemble_for_MsFEM_symmetric(const CommonTraits::FirstSourceType& f, MsFEM::MacroMicroGridSpecifier& specifier,
+  static void assemble_msfem(const CommonTraits::FirstSourceType& f, MsFEM::MacroMicroGridSpecifier& specifier,
                                            MsFEM::LocalGridList& subgrid_list, DiscreteFunctionType& rhsVector);
 };  // end class
 } // end namespace Multiscale

@@ -4,6 +4,7 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/functions/femadapter.hh>
+#include <dune/stuff/common/profiler.hh>
 #include <dune/fem/misc/threads/domainthreaditerator.hh>
 #include <memory>
 
@@ -16,7 +17,7 @@
 #include "righthandside_assembler.hh"
 
 
-void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
+void Dune::Multiscale::RightHandSideAssembler::assemble_fem(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
                                                         Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
   rhsVector.clear();
   for (const auto& entity : rhsVector.space()) {
@@ -47,6 +48,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::
   DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, rhsVector.space());
   auto dd = DS::femFunctionAdapter(*dirichlet_data);
   constraints(dd, rhsVector);
+  rhsVector.communicate();
 }
 
 
@@ -134,10 +136,10 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_hmm_lod(
   }
 }
 
-void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
-    const Dune::Multiscale::CommonTraits::FirstSourceType &f,
+void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
     DMM::MacroMicroGridSpecifier &specifier, DMM::LocalGridList &subgrid_list,
     Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
+  DSC_PROFILER.startTiming("msfem.assembleRHS");
   auto diffusionPtr = Problem::getDiffusion();
   const auto& diffusion = *diffusionPtr;
   auto neumannDataPtr = Problem::getNeumannData();
@@ -289,4 +291,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
 
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
+  rhsVector.communicate();
+  DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS")
+               << "ms" << std::endl;
 }

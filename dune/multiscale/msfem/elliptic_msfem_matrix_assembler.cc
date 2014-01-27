@@ -1,6 +1,7 @@
 #include <config.h>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
+#include <dune/stuff/common/profiler.hh>
 #include <sstream>
 
 #include "dune/multiscale/msfem/msfem_traits.hh"
@@ -17,9 +18,8 @@ CoarseScaleOperator::CoarseScaleOperator(
   , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)
-  , petrovGalerkin_(false) {}
-
-void CoarseScaleOperator::assemble_matrix(MatrixType& global_matrix) const {
+  , petrovGalerkin_(false)
+  , global_matrix_("MsFEM stiffness matrix", coarseDiscreteFunctionSpace_, coarseDiscreteFunctionSpace_){
   // the local problem:
   // Let 'T' denote a coarse grid element and
   // let 'U(T)' denote the environment of 'T' that corresponds with the subgrid.
@@ -31,8 +31,8 @@ void CoarseScaleOperator::assemble_matrix(MatrixType& global_matrix) const {
     DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
 
   //!TODO diagonal stencil reicht
-  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
-  global_matrix.clear();
+  global_matrix_.reserve(DSFe::diagonalAndNeighborStencil(global_matrix_));
+  global_matrix_.clear();
 
   Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > threadIterators(coarseDiscreteFunctionSpace_.gridPart());
 
@@ -44,7 +44,7 @@ void CoarseScaleOperator::assemble_matrix(MatrixType& global_matrix) const {
     const auto& coarse_grid_geometry = coarse_grid_entity.geometry();
     assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
-    DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, coarse_grid_entity, coarse_grid_entity);
+    DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix_, coarse_grid_entity, coarse_grid_entity);
 
     const auto& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = coarse_grid_baseSet.size();
@@ -132,9 +132,24 @@ void CoarseScaleOperator::assemble_matrix(MatrixType& global_matrix) const {
   } // omp region
 
   // set unit rows for dirichlet dofs
-  Dune::Multiscale::getConstraintsCoarse(coarseDiscreteFunctionSpace_).applyToOperator(global_matrix);
-  global_matrix.communicate();
-} // assemble_matrix
+  Dune::Multiscale::getConstraintsCoarse(coarseDiscreteFunctionSpace_).applyToOperator(global_matrix_);
+  global_matrix_.communicate();
+}
+
+void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction &rhs, CoarseScaleOperator::CoarseDiscreteFunction &solution)
+{
+  BOOST_ASSERT_MSG(rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
+  DSC_PROFILER.startTiming("msfem.solveCoarse");
+  const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(global_matrix_, 1e-8, 1e-8,
+                                           DSC_CONFIG_GET("msfem.solver.iterations", rhs.size()),
+                                           DSC_CONFIG_GET("msfem.solver.verbose", false), "bcgs",
+                                           DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));
+  inverse(rhs, solution);
+  if (!solution.dofsValid())
+    DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
+  DSC_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.stopTiming("msfem.solveCoarse")
+               << "ms." << std::endl;
+} // constructor
 
 } // namespace MsFEM {
 } // namespace Multiscale {
