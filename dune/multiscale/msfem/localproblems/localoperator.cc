@@ -524,7 +524,44 @@ void LocalProblemOperator::assemble_local_RHS(
   }
 } // assemble_local_RHS
 
-#if 0 // LOD-only code
+/** Set the dirichlet values to a given discrete function on the sub mesh
+*
+* @param[in, out] function The function in which the values will be set.
+*/
+void LocalProblemOperator::projectDirichletValues(CommonTraits::DiscreteFunctionType &function) const {
+  /*  // make sure, we are on a hexahedral element
+    BOOST_ASSERT_MSG(function.space().gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
+           function.space().gridPart().grid().leafIndexSet().geomTypes(0)[0].isCube(),
+           "This method only works for hexahedral elements at the moment!");*/
+
+  const auto& gridPart = function.space().gridPart();
+  auto dirichletDataPtr = Multiscale::Problem::getDirichletData();
+  const auto& dirichletData = *dirichletDataPtr;
+  //  Fem::GridFunctionAdapter<Multiscale::Problem::DirichletDataBase,
+  //  typename LocalGridDiscreteFunctionType::LocalGridDiscreteFunctionSpaceType::GridPartType> gf("dirichlet", dirichletData ,
+  // gridPart);
+  RangeType dirichletVal(0.0);
+  for (const auto& localCell : function.space()) {
+    if (localCell.hasBoundaryIntersections())
+      for (const auto& intersection : DSC::intersectionRange(gridPart, localCell)) {
+        if (DMP::is_dirichlet(intersection)) {
+          auto funcLocal = function.localFunction(localCell);
+          const auto& lagrangePointSet = function.space().lagrangePointSet(localCell);
+          const auto faceNumber = intersection.indexInInside();
+          for (auto lp : DSC::lagrangePointSetRange<1>(function.space(), localCell, faceNumber)) {
+            auto lagrangePoint = lagrangePointSet.point(lp);
+            auto lagrangePointGlobal = localCell.geometry().global(lagrangePoint);
+            dirichletData.evaluate(lagrangePointGlobal, dirichletVal);
+            funcLocal[lp] = dirichletVal;
+          }
+        }
+      }
+  }
+  return;
+}
+
+
+#ifdef ENBABLE_LOD_ONLY_CODE
 void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(const LocalGridDiscreteFunctionType &/*dirichlet_extension*/,
     const LocalGridList::CoarseNodeVectorType& /*coarse_node_vector*/, // for constraints on the space
     const int& /*oversampling_strategy*/,
@@ -823,44 +860,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
   }
 
 } // assemble_local_RHS_pre_processing_all
-#endif // 0 lod only code
-
-/** Set the dirichlet values to a given discrete function on the sub mesh
-*
-* @param[in, out] function The function in which the values will be set.
-*/
-void LocalProblemOperator::projectDirichletValues(CommonTraits::DiscreteFunctionType &function) const {
-  /*  // make sure, we are on a hexahedral element
-    BOOST_ASSERT_MSG(function.space().gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
-           function.space().gridPart().grid().leafIndexSet().geomTypes(0)[0].isCube(),
-           "This method only works for hexahedral elements at the moment!");*/
-
-  const auto& gridPart = function.space().gridPart();
-  auto dirichletDataPtr = Multiscale::Problem::getDirichletData();
-  const auto& dirichletData = *dirichletDataPtr;
-  //  Fem::GridFunctionAdapter<Multiscale::Problem::DirichletDataBase,
-  //  typename LocalGridDiscreteFunctionType::LocalGridDiscreteFunctionSpaceType::GridPartType> gf("dirichlet", dirichletData ,
-  // gridPart);
-  RangeType dirichletVal(0.0);
-  for (const auto& localCell : function.space()) {
-    if (localCell.hasBoundaryIntersections())
-      for (const auto& intersection : DSC::intersectionRange(gridPart, localCell)) {
-        if (DMP::is_dirichlet(intersection)) {
-          auto funcLocal = function.localFunction(localCell);
-          const auto& lagrangePointSet = function.space().lagrangePointSet(localCell);
-          const auto faceNumber = intersection.indexInInside();
-          for (auto lp : DSC::lagrangePointSetRange<1>(function.space(), localCell, faceNumber)) {
-            auto lagrangePoint = lagrangePointSet.point(lp);
-            auto lagrangePointGlobal = localCell.geometry().global(lagrangePoint);
-            dirichletData.evaluate(lagrangePointGlobal, dirichletVal);
-            funcLocal[lp] = dirichletVal;
-          }
-        }
-      }
-  }
-
-  return;
-}
+#endif // ENBABLE_LOD_ONLY_CODE
 
 } // namespace MsFEM {
 } // namespace Multiscale {

@@ -56,7 +56,7 @@ set( COMMON_SOURCES
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
         dune/multiscale/common/newton_rhs.cc
-        dune/multiscale/msfem/elliptic_msfem_matrix_assembler.cc
+        dune/multiscale/msfem/coarse_scale_operator.cc
         dune/multiscale/msfem/localproblems/subgrid-list.cc
         dune/multiscale/msfem/msfem_grid_specifier.cc
         dune/multiscale/msfem/localproblems/localoperator.cc

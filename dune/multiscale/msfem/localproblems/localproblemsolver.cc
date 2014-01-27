@@ -53,14 +53,14 @@ LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specif
   : diffusion_(diffusion_operator)
   , specifier_(specifier)
   , subgrid_list_(subgrid_list)
-  #if 0 // LOD only
+  #ifdef ENBABLE_LOD_ONLY_CODE
   , ids_relevant_basis_functions_for_subgrid_(nullptr)
   , inverse_of_L1_norm_coarse_basis_funcs_(nullptr)
   , coarse_basis_(nullptr)
   , global_id_to_internal_id_(nullptr)
   , neumann_bc_(nullptr)
   , dirichlet_extension_(nullptr)
-  #endif //0 // LOD only
+  #endif // ENBABLE_LOD_ONLY_CODE
 {}
 
 LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specifier,
@@ -71,7 +71,7 @@ LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specif
   : diffusion_(diffusion_operator)
   , specifier_(specifier)
   , subgrid_list_(subgrid_list)
-  #if 0 // LOD only
+  #ifdef ENBABLE_LOD_ONLY_CODE
   , ids_relevant_basis_functions_for_subgrid_(&ids_basis_functions_in_subgrid)
   ,
   // ids of the coarse grid basis functions in the interior of the subgrid
@@ -80,10 +80,9 @@ LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specif
   , global_id_to_internal_id_(&global_id_to_internal_id)
   , neumann_bc_(&neumann_bc)
   , dirichlet_extension_(&dirichlet_extension)
-  #endif //0 // LOD only
+  #endif // ENBABLE_LOD_ONLY_CODE
 {}
 
-//! ----------- method: solve the local MsFEM problem ------------------------------------------
 /** Solve all local MsFEM problems for one coarse entity at once.
 *
 *
@@ -116,14 +115,11 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
   for (auto& it : allLocalRHS)
     it = DSC::make_unique<LocalGridDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
 
-  switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
-    case 1:
-      localProblemOperator.assemble_matrix(locProbSysMatrix);
-      localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
-      break;
-    default:
-      DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
-  }
+  if (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) != 1)
+    DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
+
+  localProblemOperator.assemble_matrix(locProbSysMatrix);
+  localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
 
   // set dirichlet dofs to zero
   Stuff::GridboundaryAllDirichlet<LocalGridType::LeafGridView::Intersection> boundaryInfo;
@@ -133,6 +129,7 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
   for (auto& rhsIt : allLocalRHS) {
     constraints.setValue(0.0, *rhsIt);
   }
+
   for (auto i : DSC::valueRange(allLocalSolutions.size())) {
     if (!allLocalRHS[i]->dofsValid())
       DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
@@ -163,139 +160,6 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
 
   return;
 }
-
-//! ----------- method: solve the local MsFEM problem ------------------------------------------
-
-void LocalProblemSolver::solvelocalproblem(JacobianRangeType& e, LocalGridDiscreteFunctionType& local_problem_solution,
-                                                const int coarse_index /*= -1*/) const {
-  // set solution equal to zero:
-  local_problem_solution.clear();
-
-  const auto& subDiscreteFunctionSpace = local_problem_solution.space();
-
-  //! the matrix in our linear system of equations
-  // in the non-linear case, it is the matrix for each iteration step
-  LocProbLinearOperatorTypeType locprob_system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
-                                                      subDiscreteFunctionSpace);
-
-  //! define the discrete (elliptic) local MsFEM problem operator
-  // ( effect of the discretized differential operator on a certain discrete function )
-  LocalProblemOperator local_problem_op(subDiscreteFunctionSpace, diffusion_);
-
-  //! right hand side vector of the algebraic local MsFEM problem
-  LocalGridDiscreteFunctionType local_problem_rhs("rhs of local MsFEM problem", subDiscreteFunctionSpace);
-  local_problem_rhs.clear();
-  if (coarse_index < 0)
-    DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
-  const auto oversampling_strategy = DSC_CONFIG_GET("msfem.oversampling_strategy", 1);
-  switch (oversampling_strategy) {
-    case 1:
-      local_problem_op.assemble_matrix(locprob_system_matrix);
-      local_problem_op.assemble_local_RHS(e, local_problem_rhs);
-      break;
-    case 2:
-      local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector(coarse_index));
-      local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector(coarse_index),
-                                          oversampling_strategy, local_problem_rhs);
-      break;
-    case 3:
-      if (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement") {
-        local_problem_op.assemble_matrix(locprob_system_matrix);
-      } else {
-        local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector(coarse_index));
-      }
-      local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector(coarse_index),
-                                          oversampling_strategy, local_problem_rhs);
-      break;
-    default:
-      DUNE_THROW(Dune::Fem::ParameterInvalid, "Oversampling Strategy must be 1, 2 or 3.");
-  }
-
-  //! boundary treatment:
-  for (const auto& local_entity : subDiscreteFunctionSpace) {
-    DSFe::LocalMatrixProxy<LocProbLinearOperatorTypeType> localMatrix(locprob_system_matrix, local_entity,
-                                                                      local_entity);
-
-    const auto& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(local_entity);
-    auto rhsLocal = local_problem_rhs.localFunction(local_entity);
-
-    for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), local_entity)) {
-      if (subgridIntersection.boundary()) {
-        const int face = subgridIntersection.indexInInside();
-        for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
-          localMatrix.unitRow(lp);
-          rhsLocal[lp] = 0;
-        }
-      }
-    }
-  }
-
-  if (!(local_problem_rhs.dofsValid())) {
-    DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
-  }
-
-  // NOTE:
-  // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
-  // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
-  // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
-  // the result.
-  if (local_problem_op.normRHS(local_problem_rhs) < /*1e-06*/ 1e-30) {
-    local_problem_solution.clear();
-    DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
-    return;
-  }
-
-  const auto locprob_fem_biCGStab = make_inverse_operator(locprob_system_matrix);
-
-  const bool clement = DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3
-                           ? DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement"
-                           : false;
-
-  if (clement) {
-    DUNE_THROW(NotImplemented, "LOD only code");
-  #if 0 //LOD only code below -> fix later
-    CommonTraits::DiscreteFunctionType zero("zero", specifier_.coarseSpace());
-    zero.clear();
-    const double dummy = 12345.67890;
-    double solverEps = 1e-2;
-    int maxIterations = 1000;
-
-    // we want to solve the local problem with the constraint that the weighted Clement interpoltion
-    // of the local problem solution is zero
-
-    // implementation of a weighted Clement interpolation operator for our purpose:
-    WeightedClementOperatorType clement_interpolation_op(subDiscreteFunctionSpace, specifier_.coarseSpace(),
-                                                         subgrid_list_.getCoarseNodeVector(coarse_index),
-                                                         *coarse_basis_, *global_id_to_internal_id_, specifier_);
-    //! NOTE TODO: implementation is not yet optimal, because the weighted Clement maps a function
-    //! defined on the local subgrid to a function defined on the whole(!) coarse space.
-    //! It would be better to implement a mapping to a localized coarse space, since
-    //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence).
-
-    // saddle point problem solver:
-    typedef UzawaInverseOp<LocalGridDiscreteFunctionType, LocalGridDiscreteFunctionType, InverseLocProbLinearOperatorTypeType,
-                           WeightedClementOperatorType> InverseUzawaOperatorType;
-
-    CommonTraits::DiscreteFunctionType lagrange_multiplier("lagrange multiplier", specifier_.coarseSpace());
-    lagrange_multiplier.clear();
-
-    // create inverse operator
-    // saddle point problem solver with uzawa algorithm:
-    {
-      DSC::Profiler::ScopedTiming st("uzawa");
-      InverseUzawaOperatorType uzawa(*locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations,
-                                     true);
-      uzawa(local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier);
-    }
-  #endif // 0
-  } else {
-    locprob_fem_biCGStab->apply(local_problem_rhs, local_problem_solution);
-  }
-
-  if (!(local_problem_solution.dofsValid())) {
-    DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
-  }
-} // solvelocalproblem
 
 void LocalProblemSolver::output_local_solution(const int coarse_index, const int which,
                                                     const LocalGridDiscreteFunctionType& host_local_solution) const {
@@ -360,7 +224,7 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
     const bool clement = (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement");
     if ((!uzawa) && (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) && clement) {
       DUNE_THROW(InvalidStateException, "broken lod only code");
-    #if 0
+    #ifdef ENBABLE_LOD_ONLY_CODE
       //! only for dimension 2 and simplex grid!
 
       // preprocessing step to assemble the two relevant system matrices:
@@ -495,7 +359,7 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
         output_local_solution(coarse_index, 0, local_problem_solution_0);
         output_local_solution(coarse_index, 1, local_problem_solution_1);
       }
-    #endif // 0 , LOD only code
+    #endif // ENBABLE_LOD_ONLY_CODE
     } else if (uzawa && !(specifier_.simplexCoarseGrid())) {
       DUNE_THROW(NotImplemented, "Uzawa-solver and non-simplex grid have not been tested together, yet!");
     } else {
@@ -536,7 +400,135 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
                << std::endl;
 } // assemble_all
 
-#if 0 //LOD only code below -> fix later
+#ifdef ENBABLE_LOD_ONLY_CODE
+void LocalProblemSolver::solvelocalproblem(JacobianRangeType& e, LocalGridDiscreteFunctionType& local_problem_solution,
+                                                const int coarse_index /*= -1*/) const {
+  // set solution equal to zero:
+  local_problem_solution.clear();
+
+  const auto& subDiscreteFunctionSpace = local_problem_solution.space();
+
+  //! the matrix in our linear system of equations
+  // in the non-linear case, it is the matrix for each iteration step
+  LocProbLinearOperatorTypeType locprob_system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
+                                                      subDiscreteFunctionSpace);
+
+  //! define the discrete (elliptic) local MsFEM problem operator
+  // ( effect of the discretized differential operator on a certain discrete function )
+  LocalProblemOperator local_problem_op(subDiscreteFunctionSpace, diffusion_);
+
+  //! right hand side vector of the algebraic local MsFEM problem
+  LocalGridDiscreteFunctionType local_problem_rhs("rhs of local MsFEM problem", subDiscreteFunctionSpace);
+  local_problem_rhs.clear();
+  if (coarse_index < 0)
+    DUNE_THROW(Dune::InvalidStateException, "Invalid coarse index: coarse_index < 0");
+  const auto oversampling_strategy = DSC_CONFIG_GET("msfem.oversampling_strategy", 1);
+  switch (oversampling_strategy) {
+    case 1:
+      local_problem_op.assemble_matrix(locprob_system_matrix);
+      local_problem_op.assemble_local_RHS(e, local_problem_rhs);
+      break;
+    case 2:
+      local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector(coarse_index));
+      local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector(coarse_index),
+                                          oversampling_strategy, local_problem_rhs);
+      break;
+    case 3:
+      if (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement") {
+        local_problem_op.assemble_matrix(locprob_system_matrix);
+      } else {
+        local_problem_op.assemble_matrix(locprob_system_matrix, subgrid_list_.getCoarseNodeVector(coarse_index));
+      }
+      local_problem_op.assemble_local_RHS(e, subgrid_list_.getCoarseNodeVector(coarse_index),
+                                          oversampling_strategy, local_problem_rhs);
+      break;
+    default:
+      DUNE_THROW(Dune::Fem::ParameterInvalid, "Oversampling Strategy must be 1, 2 or 3.");
+  }
+
+  //! boundary treatment:
+  for (const auto& local_entity : subDiscreteFunctionSpace) {
+    DSFe::LocalMatrixProxy<LocProbLinearOperatorTypeType> localMatrix(locprob_system_matrix, local_entity,
+                                                                      local_entity);
+
+    const auto& lagrangePointSet = subDiscreteFunctionSpace.lagrangePointSet(local_entity);
+    auto rhsLocal = local_problem_rhs.localFunction(local_entity);
+
+    for (const auto& subgridIntersection : DSC::intersectionRange(subDiscreteFunctionSpace.gridPart(), local_entity)) {
+      if (subgridIntersection.boundary()) {
+        const int face = subgridIntersection.indexInInside();
+        for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
+          localMatrix.unitRow(lp);
+          rhsLocal[lp] = 0;
+        }
+      }
+    }
+  }
+
+  if (!(local_problem_rhs.dofsValid())) {
+    DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
+  }
+
+  // NOTE:
+  // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
+  // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
+  // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
+  // the result.
+  if (local_problem_op.normRHS(local_problem_rhs) < /*1e-06*/ 1e-30) {
+    local_problem_solution.clear();
+    DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
+    return;
+  }
+
+  const auto locprob_fem_biCGStab = make_inverse_operator(locprob_system_matrix);
+
+  const bool clement = DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3
+                           ? DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement"
+                           : false;
+
+  if (clement) {
+    CommonTraits::DiscreteFunctionType zero("zero", specifier_.coarseSpace());
+    zero.clear();
+    const double dummy = 12345.67890;
+    double solverEps = 1e-2;
+    int maxIterations = 1000;
+
+    // we want to solve the local problem with the constraint that the weighted Clement interpoltion
+    // of the local problem solution is zero
+
+    // implementation of a weighted Clement interpolation operator for our purpose:
+    WeightedClementOperatorType clement_interpolation_op(subDiscreteFunctionSpace, specifier_.coarseSpace(),
+                                                         subgrid_list_.getCoarseNodeVector(coarse_index),
+                                                         *coarse_basis_, *global_id_to_internal_id_, specifier_);
+    //! NOTE TODO: implementation is not yet optimal, because the weighted Clement maps a function
+    //! defined on the local subgrid to a function defined on the whole(!) coarse space.
+    //! It would be better to implement a mapping to a localized coarse space, since
+    //! the uzawa solver must treat ALL coarse grid nodes (expensive and worse convergence).
+
+    // saddle point problem solver:
+    typedef UzawaInverseOp<LocalGridDiscreteFunctionType, LocalGridDiscreteFunctionType, InverseLocProbLinearOperatorTypeType,
+                           WeightedClementOperatorType> InverseUzawaOperatorType;
+
+    CommonTraits::DiscreteFunctionType lagrange_multiplier("lagrange multiplier", specifier_.coarseSpace());
+    lagrange_multiplier.clear();
+
+    // create inverse operator
+    // saddle point problem solver with uzawa algorithm:
+    {
+      DSC::Profiler::ScopedTiming st("uzawa");
+      InverseUzawaOperatorType uzawa(*locprob_fem_biCGStab, clement_interpolation_op, dummy, solverEps, maxIterations,
+                                     true);
+      uzawa(local_problem_rhs, zero /*interpolation is zero*/, local_problem_solution, lagrange_multiplier);
+    }
+  } else {
+    locprob_fem_biCGStab->apply(local_problem_rhs, local_problem_solution);
+  }
+
+  if (!(local_problem_solution.dofsValid())) {
+    DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
+  }
+} // solvelocalproblem
+
 // assemble the two relevant system matrices: one for the corrector problem without contraints
 // and the second of the low dimensional lagrange multiplier (describing the inverse of the schur complement)
 void LocalProblemSolver::preprocess_corrector_problems(const int coarse_index,
@@ -1159,7 +1151,7 @@ void LocalProblemSolver::solve_neumann_corrector_problem_lod(
 
   local_corrector -= preliminary_solution;
 } // solve_dirichlet_neumann_problem_lod
-#endif //0 //LOD only code below -> fix later
+#endif // ENBABLE_LOD_ONLY_CODE
 
 } // namespace MsFEM {
 } // namespace Multiscale {

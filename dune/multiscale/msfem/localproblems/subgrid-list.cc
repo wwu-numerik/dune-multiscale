@@ -30,21 +30,21 @@ LocalGridList::LocalGridList(MsFEMTraits::MacroMicroGridSpecifierType& specifier
   , specifier_(specifier)
   , silent_(silent)
   , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet())
-  #if 0 // LOD only
+  #ifdef ENBABLE_LOD_ONLY_CODE
   , fineToCoarseMap_(Fem::MPIManager::size())
-  #endif //0 // LOD only
+  #endif // ENBABLE_LOD_ONLY_CODE
 {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
   const auto oversampling_strategy = DSC_CONFIG_GET("msfem.oversampling_strategy", 1);
   const auto micro_per_macro = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
-#if 0 // LOD only
+#ifdef ENBABLE_LOD_ONLY_CODE
   const auto number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
   if ((oversampling_strategy == 2) || (oversampling_strategy == 3)) {
     coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
     extended_coarse_node_store_ = CoarseGridNodeStorageType(number_of_coarse_grid_entities, CoarseNodeVectorType());
   }
-#endif // 0 // LOD only
+#endif // ENBABLE_LOD_ONLY_CODE
   typedef StructuredGridFactory<LocalGridType> FactoryType;
   const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(coarseSpace_.gridPart().grid());
 
@@ -83,14 +83,14 @@ LocalGridList::LocalGridList(MsFEMTraits::MacroMicroGridSpecifierType& specifier
              "Index set is not suitable for the current implementation!");
       for (int c = 0; c < coarse_entity.geometry().corners(); ++c) {
         coarse_node_store_[coarse_index].emplace_back(coarse_entity.geometry().corner(c));
-#if 0 // LOD only
+#ifdef ENBABLE_LOD_ONLY_CODE
         extended_coarse_node_store_[coarse_index].emplace_back(coarse_entity.geometry().corner(c));
-#endif // 0 // LOD only
+#endif // ENBABLE_LOD_ONLY_CODE
       }
     }
-#if 0 // LOD only
+#ifdef ENBABLE_LOD_ONLY_CODE
     subgrid_id_to_base_coarse_entity_.insert(std::make_pair(coarse_index, std::move(coarse_entity.seed())));
-#endif // 0 // LOD only
+#endif // ENBABLE_LOD_ONLY_CODE
   }
 }
 
@@ -143,7 +143,7 @@ const LocalGridList::CoarseNodeVectorType& LocalGridList::getCoarseNodeVector(In
   return coarse_node_store_[i];
 } // getSubGrid
 
-#if 0 // LOD only
+#ifdef ENBABLE_LOD_ONLY_CODE
 // given the id of a subgrid, return the entity seed for the 'base coarse entity'
 // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
 const LocalGridList::CoarseEntitySeedType &LocalGridList::get_coarse_entity_seed(std::size_t i) const {
@@ -164,7 +164,7 @@ const LocalGridList::CoarseNodeVectorType& LocalGridList::getExtendedCoarseNodeV
   }
   return extended_coarse_node_store_[i];
 } // getSubGrid
-#endif // 0 // LOD only
+#endif // ENBABLE_LOD_ONLY_CODE
 
 } // namespace MsFEM {
 } // namespace Multiscale {

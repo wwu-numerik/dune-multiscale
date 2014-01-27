@@ -35,7 +35,7 @@ MacroMicroGridSpecifier::DiscreteFunctionSpaceType& MacroMicroGridSpecifier::coa
   return coarse_scale_space_;
 }
 
-#if 0 // LOD Only
+#ifdef ENBABLE_LOD_ONLY_CODE
 void MacroMicroGridSpecifier::identify_coarse_boundary_nodes() {
   is_boundary_node_.resize(coarse_scale_space_.size());
 
@@ -126,7 +126,7 @@ bool MacroMicroGridSpecifier::is_coarse_dirichlet_node(std::size_t global_index)
   assert(dirichlet_nodes_identified_);
   return is_dirichlet_node_[global_index];
 }
-#endif // 0 // LOD Only
+#endif // ENBABLE_LOD_ONLY_CODE
 
 bool MacroMicroGridSpecifier::simplexCoarseGrid() const { return coarseGridIsSimplex_; }
 
