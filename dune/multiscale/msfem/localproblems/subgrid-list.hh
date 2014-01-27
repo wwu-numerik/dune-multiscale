@@ -39,6 +39,7 @@ class LocalGridList : public boost::noncopyable {
   typedef typename LocalGridDiscreteFunctionSpaceType::GridType LocalGridType;
   typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType LocalGridPartType;
   typedef typename CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSet;
+  typedef typename LeafIndexSet::IndexType IndexType;
   typedef typename LocalGridType::Traits::LeafIndexSet LocalGridLeafIndexSet;
   typedef typename LocalGridLeafIndexSet::IndexType EntityIndexType;
 
@@ -67,8 +68,8 @@ public:
   ~LocalGridList();
 
 private:
-  LocalGridType& getSubGrid(std::size_t i);
-  const LocalGridType& getSubGrid(std::size_t i) const;
+  LocalGridType& getSubGrid(IndexType i);
+  const LocalGridType& getSubGrid(IndexType i) const;
 
 public:
   const LocalGridType& getSubGrid(const CoarseEntityType& entity) const;
@@ -76,13 +77,13 @@ public:
 
   std::size_t size() const;
 
-  LocalGridPartType gridPart(std::size_t i);
+  LocalGridPartType gridPart(IndexType i);
 
   // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
-  const std::vector<std::size_t>& getSubgridIDs_that_contain_entity(std::size_t host_enitity_index) const;
+  const std::vector<IndexType>& getSubgridIDs_that_contain_entity(IndexType host_enitity_index) const;
 
   // only required for oversampling strategies with constraints (e.g strategy 2 or 3):
-  const CoarseNodeVectorType& getCoarseNodeVector(std::size_t i) const;
+  const CoarseNodeVectorType& getCoarseNodeVector(IndexType i) const;
 
   // only required for oversampling strategy 3:
   // this method only differs from the method 'getCoarseNodeVector' if the oversampling patch
@@ -90,7 +91,7 @@ public:
   // According to the definition of the LOD 'not full coarse layers' require that the averaging
   // property of the weighted Clement operator is also applied to those coarse nodes, where
   // the corresponding basis function has a nonempty intersection with the patch
-  const CoarseNodeVectorType& getExtendedCoarseNodeVector(std::size_t i) const;
+  const CoarseNodeVectorType& getExtendedCoarseNodeVector(IndexType i) const;
 
   //! returns true if the coarse_entity covers the local_entity
   bool covers(const CoarseEntityType& coarse_entity, const LocalEntityType& local_entity);
@@ -105,7 +106,7 @@ public:
   const CoarseEntitySeedType& get_coarse_entity_seed(std::size_t i) const;
 
 private:
-  typedef std::map<std::size_t, std::shared_ptr<LocalGridType>> SubGridStorageType;
+  typedef std::map<IndexType, std::shared_ptr<LocalGridType>> SubGridStorageType;
 
   void createSubGrids();
 
@@ -116,7 +117,7 @@ private:
   CoarseGridNodeStorageType coarse_node_store_;
   CoarseGridNodeStorageType extended_coarse_node_store_;
   const LeafIndexSet& coarseGridLeafIndexSet_;
-  std::vector<std::map<std::size_t, std::size_t>> fineToCoarseMap_;
+  std::vector<std::map<IndexType, IndexType>> fineToCoarseMap_;
   std::map<IdType, IdType> fineToCoarseMapID_;
 
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
