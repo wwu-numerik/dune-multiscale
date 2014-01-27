@@ -10,7 +10,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(
+CoarseScaleOperator::CoarseScaleOperator(
     MacroMicroGridSpecifierType& specifier, const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
     MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op)
   : specifier_(specifier)
@@ -19,7 +19,7 @@ DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(
   , diffusion_operator_(diffusion_op)
   , petrovGalerkin_(false) {}
 
-void DiscreteEllipticMsFEMOperator::assemble_matrix(MatrixType& global_matrix) const {
+void CoarseScaleOperator::assemble_matrix(MatrixType& global_matrix) const {
   // the local problem:
   // Let 'T' denote a coarse grid element and
   // let 'U(T)' denote the environment of 'T' that corresponds with the subgrid.

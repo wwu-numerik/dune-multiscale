@@ -15,8 +15,8 @@
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
-#include "dune/multiscale/common/la_backend.hh"
-#include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
+#include <dune/multiscale/common/la_backend.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -46,11 +46,11 @@ private:
 
   typedef MsFEMTraits::LocalGridListType LocalGridListType;
   typedef MsFEMTraits::LocalGridType LocalGridType;
-  typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType SubgridDiscreteFunctionSpaceType;
-  typedef MsFEMTraits::LocalGridDiscreteFunctionType SubgridDiscreteFunctionType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
-  typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType MsLinearOperatorTypeType;
-  typedef typename BackendChooser<DiscreteFunctionSpace>::InverseOperatorType InverseOperatorType;
+  typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType CoarseScaleLinearOperatorType;
+  typedef typename BackendChooser<DiscreteFunctionSpace>::InverseOperatorType CoarseScaleInverseOperatorType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,

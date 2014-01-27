@@ -637,8 +637,8 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
     std::vector<std::size_t> ms_basis_funcs_that_contain_entity;
 
     // first iterate of the subgrids that contain the fine grid entity
-    for (unsigned int m = 0; m < subgrid_list.getSubgridIDs_that_contain_entity(fine_entity_id).size(); ++m) {
-      const auto subgrid_id = subgrid_list.getSubgridIDs_that_contain_entity(fine_entity_id)[m];
+    for (unsigned int m = 0; m < subgrid_list.getLocalGridIDs_that_contain_entity(fine_entity_id).size(); ++m) {
+      const auto subgrid_id = subgrid_list.getLocalGridIDs_that_contain_entity(fine_entity_id)[m];
 
       auto coarse_it = coarse_space.grid().entityPointer(subgrid_list.get_coarse_entity_seed(subgrid_id));
       auto& coarse_entity = *coarse_it;
@@ -708,7 +708,7 @@ void Elliptic_Rigorous_MsFEM_Solver::solve(
                               ids_basis_functions_in_interior_subgrid);
 
   //! assemble all local problems (within constructor!)
-  MsFEMLocalProblemSolver loc_prob_solver(specifier.fineSpace(), specifier, subgrid_list,
+  LocalProblemSolver loc_prob_solver(specifier.fineSpace(), specifier, subgrid_list,
                                           // ids_basis_functions_in_interior_subgrid,
                                           // ids_basis_functions_in_subgrid,
                                           ids_basis_functions_in_extended_subgrid, coff, diffusion_op,

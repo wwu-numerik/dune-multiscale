@@ -70,7 +70,7 @@ bool LocalProblemOperator::point_is_in_element(const DomainType& corner_0, const
 
 //! stiffness matrix for a linear elliptic diffusion operator
 // for oversampling strategy 1 (no constraints)
-void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const
+void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const
     // x_T is the barycenter of the macro grid element T
 {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
@@ -87,7 +87,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinea
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();
 
-    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(
+    DSFe::LocalMatrixProxy<LocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(
         global_matrix, sub_grid_entity, sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
@@ -124,7 +124,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinea
 } // assemble_matrix
 
 //! stiffness matrix for a linear elliptic diffusion operator
-void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
+void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
                                            const LocalGridList::CoarseNodeVectorType& coarse_node_vector) const
     // x_T is the barycenter of the macro grid element T
 {
@@ -155,7 +155,7 @@ void LocalProblemOperator::assemble_matrix(MsFEMLocalProblemSolver::LocProbLinea
       }
     }
 
-    DSFe::LocalMatrixProxy<MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(
+    DSFe::LocalMatrixProxy<LocalProblemSolver::LocProbLinearOperatorTypeType> local_matrix(
         global_matrix, sub_grid_entity, sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
@@ -255,14 +255,10 @@ double LocalProblemOperator::normRHS(const LocalProblemOperator::LocalGridDiscre
   return norm;
 } // end method
 
-void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e, // direction 'e'
-                                              // rhs local msfem problem:
+void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e,
                                               LocalProblemOperator::LocalGridDiscreteFunctionType& local_problem_RHS) const {
   const auto& discreteFunctionSpace = local_problem_RHS.space();
-
-  // set entries to zero:
   local_problem_RHS.clear();
-
   // gradient of micro scale base function:
   std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
 
@@ -294,15 +290,7 @@ void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e, // dir
   }
 } // assemble_local_RHS
 
-/** Assemble right hand side vectors for all local problems on one coarse cell.
-*
-* @param[in] coarseEntity The coarse cell.
-* @param[in] specifier A MacroMicroGridSpecifier (needed for access to the coarse base function set).
-* @param[out] allLocalRHS A vector with pointers to the discrete functions for the right hand sides.
-*
-* @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
-* functions. The discrete functions in allLocalRHS will be cleared in this function.
-*/
+
 void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEntity,
                                                const MacroMicroGridSpecifierType& specifier,
                                                MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
@@ -448,10 +436,9 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
 }
 
 void LocalProblemOperator::assemble_local_RHS(
-    const JacobianRangeType& e,                                  // direction 'e'
-    const LocalGridList::CoarseNodeVectorType& coarse_node_vector, // for constraints on the space
+    const JacobianRangeType& e,
+    const LocalGridList::CoarseNodeVectorType& coarse_node_vector,
     const int& oversampling_strategy,
-    // rhs local msfem problem:
     LocalGridDiscreteFunctionType& local_problem_RHS) const {
 
   const auto& discreteFunctionSpace = local_problem_RHS.space();
@@ -501,14 +488,12 @@ void LocalProblemOperator::assemble_local_RHS(
 
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
-
     const auto quadrature = DSFe::make_quadrature(local_grid_entity, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
       const auto& local_point = quadrature.point(quadraturePoint);
 
       // remember, we are concerned with: - \int_{U(T)} (A^eps)(x) e · ∇ \phi(x)
-      // global point in the subgrid
       const auto global_point = geometry.global(local_point);
       const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 

@@ -10,6 +10,7 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+//! given a Localgridlist, facilitate searching for evaluation points in a pseudo-hierachical manner
 template <class GridViewImp>
 class LocalGridSearch
     : public DSG::EntitySearchBase<GridViewImp>
@@ -47,6 +48,7 @@ template <class PointContainerType>
 typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<GridViewImp>::operator()(const PointContainerType& points)
 {
   const auto count_nulls = [&](typename EntityPointerVectorType::value_type& ptr){return ptr==nullptr;};
+  //! \TODO potential speedup by caching last coarse_entity position instead fo restarting at front
   for(const auto& coarse_entity : coarse_space_) {
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
     const auto& index_set = coarse_space_.gridPart().grid().leafIndexSet();

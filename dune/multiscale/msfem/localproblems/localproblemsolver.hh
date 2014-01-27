@@ -51,7 +51,7 @@ public:
 };
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
-class MsFEMLocalProblemSolver {
+class LocalProblemSolver {
 public:
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
@@ -85,16 +85,16 @@ private:
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef MsFEMTraits::LocalSolutionVectorType LocalGridDiscreteFunctionVectorType;
 
-  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
-  typedef typename SubgridIteratorType::Entity SubgridEntityType;
-  typedef typename SubgridEntityType::EntityPointer SubgridEntityPointerType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType LocalGridIteratorType;
+  typedef typename LocalGridIteratorType::Entity LocalGridEntityType;
+  typedef typename LocalGridEntityType::EntityPointer LocalGridEntityPointerType;
   typedef typename LocalGridDiscreteFunctionType::LocalFunctionType SubLocalFunctionType;
   typedef typename LocalGridDiscreteFunctionSpaceType::LagrangePointSetType SGLagrangePointSetType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::LagrangePointSetType LocalGridLagrangePointSetType;
   typedef typename LocalGridType::Codim<0>::Geometry SubGridEntityGeometry;
 
   static const int faceCodim = 1;
-  typedef typename SubgridLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType SubgridFaceDofIteratorType;
+  typedef typename LocalGridLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType LocalGridFaceDofIteratorType;
 
   //! polynomial order of base functions
   static const int polynomialOrder = LocalGridDiscreteFunctionSpaceType::polynomialOrder;
@@ -139,16 +139,17 @@ public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
-  MsFEMLocalProblemSolver(const MacroMicroGridSpecifierType& specifier, LocalGridList& subgrid_list,
+  LocalProblemSolver(const MacroMicroGridSpecifierType& specifier, LocalGridList& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator);
 
-  MsFEMLocalProblemSolver(const MacroMicroGridSpecifierType& specifier,
+  LocalProblemSolver(const MacroMicroGridSpecifierType& specifier,
       LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
       std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
       const DiffusionOperatorType& diffusion_operator, const CoarseBasisFunctionListType& coarse_basis,
       const std::map<std::size_t, std::size_t>& global_id_to_internal_id, const NeumannBoundaryType& neumann_bc,
       const LocalGridDiscreteFunctionType& dirichlet_extension);
 
+private:
   void solveAllLocalProblems(const CoarseEntityType& coarseCell,
                              LocalGridDiscreteFunctionVectorType& allLocalSolutions) const;
 
@@ -177,13 +178,17 @@ public:
                                            MatrixType& lm_system_matrix, LocalGridDiscreteFunctionType& local_corrector,
                                            const int coarse_index /*= -1*/) const;
 #endif // 0 // LOD only code
+
   void output_local_solution(const int coarse_index, const int which,
                              const LocalGridDiscreteFunctionType& host_local_solution) const;
 
-  //! method for solving and saving the solutions of the local msfem problems
-  //! for the whole set of macro-entities and for every unit vector e_i
-  //! ---- method: solve and save the whole set of local msfem problems -----
-  //! Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
+public:
+
+  /** method for solving and saving the solutions of the local msfem problems
+    * for the whole set of macro-entities and for every unit vector e_i
+    * ---- method: solve and save the whole set of local msfem problems -----
+    * Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
+    * **/
   void assembleAndSolveAll(bool /*verbose*/ = false /* state information on subgrids */);
 
 }; // end class
