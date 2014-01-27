@@ -3,6 +3,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/ranges.hh>
+#include <dune/stuff/functions/femadapter.hh>
 #include <dune/fem/misc/threads/domainthreaditerator.hh>
 #include <memory>
 
@@ -39,12 +40,13 @@ void Dune::Multiscale::RightHandSideAssembler::assemble(const Dune::Multiscale::
       }
     }
   }
-  assert(false);//boundary treatment missing
-//  const auto boundary = Problem::getModelData()->boundaryInfo();
-//  const auto dirichlet_data = Problem::getDirichletData();
-//  //! \TODO use the static thingies
-//  DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, rhsVector.space());
-//  constraints(*dirichlet_data, rhsVector);
+
+  const auto boundary = Problem::getModelData()->boundaryInfo();
+  const auto dirichlet_data = Problem::getDirichletData();
+  //! \TODO use the static thingies
+  DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, rhsVector.space());
+  auto dd = DS::femFunctionAdapter(*dirichlet_data);
+  constraints(dd, rhsVector);
 }
 
 
@@ -158,7 +160,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_for_MsFEM_symmetric(
     // --------- add corrector contribution of right hand side --------------------------
     // Load local solutions
     MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list, specifier);
-    localSolutionManager.loadLocalSolutions();
+    localSolutionManager.load();
     auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
     MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension("Dirichlet Extension",

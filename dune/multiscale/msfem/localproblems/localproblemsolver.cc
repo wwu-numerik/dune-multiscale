@@ -981,14 +981,9 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
   const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
   for (const auto& coarseEntity : coarseSpace) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
-    const auto coarseId = coarseSpace.gridPart().grid().globalIdSet().id(coarseEntity);
 
     DSC_LOG_INFO << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
-    const std::string name_local_solution = (boost::format("Local Problem Solution %d") % coarseId).str();
-    auto subGridPart = subgrid_list_.gridPart(coarse_index);
-
-    const LocalGridDiscreteFunctionSpaceType subDiscreteFunctionSpace(subGridPart);
     DSC_PROFILER.startTiming("none.saveLocalProblemsOnCell");
 
     const bool uzawa = DSC_CONFIG_GET("rigorous_msfem.uzawa_solver", false);
@@ -1146,7 +1141,7 @@ void MsFEMLocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
 
       // save the local solutions to disk
       DSC_PROFILER.startTiming("none.saveLocalProblemSolution");
-      localSolutionManager.saveLocalSolutions();
+      localSolutionManager.save();
       saveTime(DSC_PROFILER.stopTiming("none.saveLocalProblemSolution") / 1000.f);
       DSC_PROFILER.resetTiming("none.saveLocalProblemSolution");
     }

@@ -13,6 +13,7 @@
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/common/memory.hh>
+#include <dune/stuff/aliases.hh>
 
 namespace Dune {
 
@@ -134,6 +135,7 @@ template< class T = CommonTraits::DiscreteFunctionType>
 std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::DiscreteFunctionSpaceType& space)
 {
   return std::make_shared<T>(name, space);
+//  return DSC::make_unique<T>(name, space);
 }
 
 } // namespace Multiscale

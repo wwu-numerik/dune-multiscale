@@ -34,8 +34,8 @@ public:
     CorrectionsMapType;
 
   LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set,
-                     const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& space, SearchType& search)
-    : BaseType("corrections_proxy", space)
+                     const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& space_in, SearchType& search)
+    : BaseType("corrections_proxy", space_in)
     , corrections_(corrections)
     , index_set_(index_set)
     , search_(search)
@@ -69,7 +69,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
   // traverse coarse space
   for (auto& coarseCell : coarse_space) {
     LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
-    localSolManager.loadLocalSolutions();
+    localSolManager.load();
     auto& localSolutions = localSolManager.getLocalSolutions();
     auto coarse_index = coarse_indexset.index(coarseCell);
     local_corrections[coarse_index] =
