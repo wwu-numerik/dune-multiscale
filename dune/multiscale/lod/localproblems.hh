@@ -82,7 +82,7 @@ private:
   typedef typename HostGridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-  //! ---------------- typedefs for the SubgridDiscreteFunctionSpace -----------------------
+  //! ---------------- typedefs for the LocalGridDiscreteFunctionSpace -----------------------
   // ( typedefs for the local grid and the corresponding local ('sub') )discrete space )
 
   //! type of grid
@@ -98,16 +98,16 @@ public:
   typedef std::vector<MsFEMTraits::SubGridDiscreteFunction_ptr> SubDiscreteFunctionVectorType;
 
 private:
-  typedef typename SubDiscreteFunctionSpaceType::IteratorType SubgridIteratorType;
-  typedef typename SubgridIteratorType::Entity SubgridEntityType;
-  typedef typename SubgridEntityType::EntityPointer SubgridEntityPointerType;
+  typedef typename SubDiscreteFunctionSpaceType::IteratorType LocalGridIteratorType;
+  typedef typename LocalGridIteratorType::Entity LocalGridEntityType;
+  typedef typename LocalGridEntityType::EntityPointer LocalGridEntityPointerType;
   typedef typename SubDiscreteFunctionType::LocalFunctionType SubLocalFunctionType;
   typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SGLagrangePointSetType;
-  typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType SubgridLagrangePointSetType;
+  typedef typename SubDiscreteFunctionSpaceType::LagrangePointSetType LocalGridLagrangePointSetType;
   typedef typename SubGridType::Codim<0>::Geometry SubGridEntityGeometry;
 
   static const int faceCodim = 1;
-  typedef typename SubgridLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType SubgridFaceDofIteratorType;
+  typedef typename LocalGridLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType LocalGridFaceDofIteratorType;
 
   //! polynomial order of base functions
   static const int polynomialOrder = SubDiscreteFunctionSpaceType::polynomialOrder;

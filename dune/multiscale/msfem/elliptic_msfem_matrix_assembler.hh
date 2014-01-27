@@ -39,7 +39,7 @@ namespace MsFEM {
 /**
  * \todo docme
  */
-class DiscreteEllipticMsFEMOperator : boost::noncopyable {
+class CoarseScaleOperator : boost::noncopyable {
 private:
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
   typedef CommonTraits::DiscreteFunctionType FineDiscreteFunction;
@@ -60,7 +60,7 @@ private:
   typedef typename FineDiscreteFunctionSpace::RangeType RangeType;
   typedef typename FineDiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
-  typedef MsFEMLocalProblemSolver MsFEMLocalProblemSolverType;
+  typedef LocalProblemSolver LocalProblemSolverType;
 
   static const int dimension = FineGridPart::GridType::dimension;
   static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
@@ -76,7 +76,7 @@ private:
   typedef typename CommonTraits::LinearOperatorType MatrixType;
 
 public:
-  DiscreteEllipticMsFEMOperator(MacroMicroGridSpecifierType& specifier,
+  CoarseScaleOperator(MacroMicroGridSpecifierType& specifier,
                                 const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
                                 MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op);
 

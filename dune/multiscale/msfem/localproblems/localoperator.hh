@@ -30,7 +30,7 @@ namespace Multiscale {
 namespace MsFEM {
 
 class LocalProblemOperator {
-  typedef MsFEMLocalProblemSolver::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef LocalProblemSolver::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
@@ -65,26 +65,28 @@ public:
   LocalProblemOperator(const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionModel& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)
-  void assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const;
+  void assemble_matrix(LocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const;
 
   //! assemble stiffness matrix for local problems (oversampling strategy 2 and 3)
-  void assemble_matrix(MsFEMLocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
+  void assemble_matrix(LocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
                        const LocalGridList::CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
 
-  //! assemble the right hand side of a local problem (reconstruction problem on entity)
-  //! assemble method for the case of a linear diffusion operator
-  //! we compute the following entries for each fine-scale base function phi_h_i:
-  //! - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
+  /** assemble the right hand side of a local problem (reconstruction problem on entity)
+   * assemble method for the case of a linear diffusion operator
+   * we compute the following entries for each fine-scale base function phi_h_i:
+   * - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
+  **/
   void assemble_local_RHS(
       // direction 'e'
       const JacobianRangeType& e,
       // rhs local msfem problem:
       LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
-  //! assemble method for the case of a linear diffusion operator
-  //! in a constraint space, for oversampling strategy 2 and 3
-  //! we compute the following entries for each fine-scale base function phi_h_i:
-  //! - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
+  /** assemble method for the case of a linear diffusion operator
+   * in a constraint space, for oversampling strategy 2 and 3
+   * we compute the following entries for each fine-scale base function phi_h_i:
+   * - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
+   **/
   void assemble_local_RHS(
       // direction 'e'
       const JacobianRangeType& e, const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
@@ -107,6 +109,15 @@ public:
                                        // rhs local msfem problem:
                                        LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
+  /** Assemble right hand side vectors for all local problems on one coarse cell.
+  *
+  * @param[in] coarseEntity The coarse cell.
+  * @param[in] specifier A MacroMicroGridSpecifier (needed for access to the coarse base function set).
+  * @param[out] allLocalRHS A vector with pointers to the discrete functions for the right hand sides.
+  *
+  * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
+  * functions. The discrete functions in allLocalRHS will be cleared in this function.
+  */
   void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
                            MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 

@@ -161,7 +161,7 @@ void Elliptic_MsFEM_Solver::apply(
     MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
     DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
     DiscreteFunctionType& solution) const {
-  DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.solve_dirichlet_zero");
+  DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
 
   DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
 
@@ -169,28 +169,26 @@ void Elliptic_MsFEM_Solver::apply(
   coarse_msfem_solution.clear();
 
   // Assemble and solve the local problems. Timing is done in assembleAndSolveAll-method
-  MsFEMLocalProblemSolver localProblemSolver(specifier, subgrid_list, diffusion_op);
+  LocalProblemSolver localProblemSolver(specifier, subgrid_list, diffusion_op);
   localProblemSolver.assembleAndSolveAll();
 
   //! define the discrete (elliptic) operator that describes our problem
   // discrete elliptic MsFEM operator (corresponds with MsFEM Matrix)
   // ( effect of the discretized differential operator on a certain discrete function )
-  const DiscreteEllipticMsFEMOperator elliptic_msfem_op(specifier, coarse_space, subgrid_list, diffusion_op);
+  const CoarseScaleOperator elliptic_msfem_op(specifier, coarse_space, subgrid_list, diffusion_op);
 
   //! (stiffness) matrix
-  MsLinearOperatorTypeType msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
+  CoarseScaleLinearOperatorType msfem_matrix("MsFEM stiffness matrix", coarse_space, coarse_space);
 
   //! right hand side vector
   // right hand side for the finite element method:
   DiscreteFunctionType msfem_rhs("MsFEM right hand side", coarse_space);
   msfem_rhs.clear();
 
-  // to assemble the computational time
-  DSC_PROFILER.startTiming("msfem.assembleMatrix");
-  // assemble the MsFEM stiffness matrix
-  elliptic_msfem_op.assemble_matrix(msfem_matrix);
-  DSC_LOG_INFO << "Time to assemble MsFEM stiffness matrix: " << DSC_PROFILER.stopTiming("msfem.assembleMatrix")
-               << "ms" << std::endl;
+  {
+    DSC::Profiler::ScopedTiming st("msfem.assembleMatrix");
+    elliptic_msfem_op.assemble_matrix(msfem_matrix);
+  }
 
   // assemble right hand side
   DSC_PROFILER.startTiming("msfem.assembleRHS");
@@ -206,7 +204,7 @@ void Elliptic_MsFEM_Solver::apply(
   BOOST_ASSERT_MSG(msfem_rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
 
   DSC_PROFILER.startTiming("msfem.solveCoarse");
-  const InverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8,
+  const CoarseScaleInverseOperatorType msfem_biCGStab(msfem_matrix, 1e-8, 1e-8,
                                            DSC_CONFIG_GET("msfem.solver.iterations", msfem_rhs.size()),
                                            DSC_CONFIG_GET("msfem.solver.verbose", false), "bcgs",
                                            DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));
@@ -217,12 +215,9 @@ void Elliptic_MsFEM_Solver::apply(
   if (!coarse_msfem_solution.dofsValid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
 
-  DSC_LOG_INFO << "DIRI" <<std::endl;
-  // get the dirichlet values
   solution.clear();
   Dune::Multiscale::copyDirichletValues(coarse_space, solution);
 
-  DSC_LOG_INFO << "IDENT" <<std::endl;
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(specifier, subgrid_list, coarse_msfem_solution, fine_scale_part);
   {
@@ -233,7 +228,6 @@ void Elliptic_MsFEM_Solver::apply(
   BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
 
-  DSC_LOG_INFO << "PART PROJ" <<std::endl;
   DS::HeterogenousProjection<>::project(coarse_msfem_solution, coarse_scale_part);
   // add coarse and fine scale part to solution
   solution += coarse_scale_part;
