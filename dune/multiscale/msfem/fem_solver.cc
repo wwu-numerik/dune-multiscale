@@ -77,7 +77,7 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 
   DiscreteFunction fem_rhs("fem rhs", discreteFunctionSpace_);
   fem_rhs.clear();
-  RightHandSideAssembler::assemble(f, fem_rhs);
+  RightHandSideAssembler::assemble_fem(f, fem_rhs);
 
   const FEM::FEMTraits::InverseOperatorType inverse_op(
       fem_matrix, 1e-8, 1e-8, 5000, DSC_CONFIG_GET("global.cgsolver_verbose", false),

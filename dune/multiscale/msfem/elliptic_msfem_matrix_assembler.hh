@@ -80,7 +80,7 @@ public:
                                 const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
                                 MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op);
 
-  void assemble_matrix(MatrixType& global_matrix) const;
+  void apply_inverse(const CoarseDiscreteFunction& b, CoarseDiscreteFunction& x);
 
 private:
   MacroMicroGridSpecifierType& specifier_;
@@ -88,6 +88,7 @@ private:
   MsFEMTraits::LocalGridListType& subgrid_list_;
   const DiffusionModel& diffusion_operator_;
   const bool petrovGalerkin_;
+  MatrixType global_matrix_;
 };
 
 } // namespace MsFEM {

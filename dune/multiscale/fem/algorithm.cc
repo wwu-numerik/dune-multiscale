@@ -54,7 +54,7 @@ void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const
   const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
   const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
   const auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
-  fem_solver.solve(*diffusion_op, l_ptr, *f_ptr, *discrete_solution, true /*use_smp*/);
+  fem_solver.apply(*diffusion_op, l_ptr, *f_ptr, *discrete_solution, true /*use_smp*/);
 
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(discrete_solution, "fem");

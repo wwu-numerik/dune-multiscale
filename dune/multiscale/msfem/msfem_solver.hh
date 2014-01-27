@@ -50,7 +50,6 @@ private:
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
   typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType CoarseScaleLinearOperatorType;
-  typedef typename BackendChooser<DiscreteFunctionSpace>::InverseOperatorType CoarseScaleInverseOperatorType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
