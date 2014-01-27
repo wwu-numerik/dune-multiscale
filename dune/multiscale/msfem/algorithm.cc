@@ -237,7 +237,7 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& /*msfem_solution
                       CommonTraits::RangeVector& /*total_estimated_H1_error_*/) {
   using namespace Dune;
 
-  DUNE_THROW(NotImplemented, "");
+  DUNE_THROW(NotImplemented, "error_estimation");
 #if 0
   CommonTraits::RangeType total_estimated_H1_error(0.0);
 

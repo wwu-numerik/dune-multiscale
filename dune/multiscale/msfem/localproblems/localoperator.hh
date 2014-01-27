@@ -94,6 +94,19 @@ public:
       // rhs local msfem problem:
       LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
+  /** Assemble right hand side vectors for all local problems on one coarse cell.
+  *
+  * @param[in] coarseEntity The coarse cell.
+  * @param[in] specifier A MacroMicroGridSpecifier (needed for access to the coarse base function set).
+  * @param[out] allLocalRHS A vector with pointers to the discrete functions for the right hand sides.
+  *
+  * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
+  * functions. The discrete functions in allLocalRHS will be cleared in this function.
+  */
+  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
+                           MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
+
+#ifdef ENBABLE_LOD_ONLY_CODE
   void assemble_local_RHS_Dirichlet_corrector(
       const LocalGridDiscreteFunctionType& dirichlet_extension,
       const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
@@ -109,19 +122,6 @@ public:
                                        // rhs local msfem problem:
                                        LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
-  /** Assemble right hand side vectors for all local problems on one coarse cell.
-  *
-  * @param[in] coarseEntity The coarse cell.
-  * @param[in] specifier A MacroMicroGridSpecifier (needed for access to the coarse base function set).
-  * @param[out] allLocalRHS A vector with pointers to the discrete functions for the right hand sides.
-  *
-  * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
-  * functions. The discrete functions in allLocalRHS will be cleared in this function.
-  */
-  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifierType& specifier,
-                           MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
-
-#if 0 // LOD only code
   // assemble various right hand sides (for solving the local saddle point problems with lagrange multpliers)
   void assemble_local_RHS_lg_problems(const LocalGridDiscreteFunctionType /*CoarseBasisFunctionType*/& coarse_basis_func,
                                       double weight, LocalGridDiscreteFunctionType& local_problem_RHS) const;
@@ -131,7 +131,7 @@ public:
                                      std::vector<double>& weights,
                                      std::vector<std::size_t>& ids_basis_functions_in_subgrid,
                                      std::vector<std::unique_ptr<LocalGridDiscreteFunctionType>>& local_problem_RHS) const;
-#endif // 0
+#endif // ENBABLE_LOD_ONLY_CODE
 
   // given a discrete function (representing a right hands side of a local problem,
   // defined on a subgrid) set the boundary dofs to zero
