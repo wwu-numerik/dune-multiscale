@@ -78,8 +78,6 @@ private:
 public:
   DiscreteEllipticMsFEMOperator(MacroMicroGridSpecifierType& specifier,
                                 const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-                                // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
-                                // n(T)-layers:
                                 MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op);
 
   void assemble_matrix(MatrixType& global_matrix) const;

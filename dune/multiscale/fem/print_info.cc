@@ -24,7 +24,7 @@ namespace FEM {
 void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix) {
   // write the final (discrete) solution to a file
   std::string solution_file = (boost::format("%s_refLevel_%d") % prefix % DSC_CONFIG_GET("fem.grid_level", 4)).str();
-  DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(solution_file).append(discrete_solution);
+//  DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(solution_file).append(discrete_solution);
 
   // writing paraview data output
   // general output parameters

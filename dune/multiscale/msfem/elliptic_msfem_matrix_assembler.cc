@@ -12,8 +12,6 @@ namespace MsFEM {
 
 DiscreteEllipticMsFEMOperator::DiscreteEllipticMsFEMOperator(
     MacroMicroGridSpecifierType& specifier, const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-    // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
-    // n(T)-layers:
     MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op)
   : specifier_(specifier)
   , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
@@ -52,13 +50,12 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(MatrixType& global_matrix) c
     const auto numMacroBaseFunctions = coarse_grid_baseSet.size();
 
     Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list_, specifier_);
-    localSolutionManager.loadLocalSolutions();
+    localSolutionManager.load();
     const auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
     std::vector<typename CoarseBaseFunctionSet::JacobianRangeType> gradientPhi(numMacroBaseFunctions);
 
     for (const auto& localGridEntity : localSolutionManager.space()) {
-
       // ignore overlay elements
       if (subgrid_list_.covers(coarse_grid_entity, localGridEntity)) {
         const auto& local_grid_geometry = localGridEntity.geometry();
@@ -77,6 +74,7 @@ void DiscreteEllipticMsFEMOperator::assemble_matrix(MatrixType& global_matrix) c
           auto& sll = localSolutions[lsNum];
           assert(sll.get());
           assert(sll->dofsValid());
+          assert(localSolutionManager.space().indexSet().contains(localGridEntity));
           auto localFunction = sll->localFunction(localGridEntity);
           localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
         }

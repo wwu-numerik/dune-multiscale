@@ -44,7 +44,7 @@ void setDirichletValues(DirichletBC& dirichlet_func, DiscreteFunctionType& func)
   static constexpr unsigned int faceCodim = 1;
   for (const auto& entity : discreteFunctionSpace) {
     for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
-      if (Dune::Multiscale::Problem::isDirichletBoundary(intersection)) {
+      if (DMP::is_dirichlet(intersection)) {
         auto funcLocal = func.localFunction(entity);
         const auto face = intersection.indexInInside();
         for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {

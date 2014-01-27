@@ -16,44 +16,40 @@ LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity,
   : subgridList_(subgridList)
   , subgrid_(subgridList_.getSubGrid(coarseEntity))
   , gridSpecifier_(gridSpecifier)
-  , subGridPart_(subgridList_.getSubGrid(coarseEntity))
-  , localDiscreteFunctionSpace_(subGridPart_)
-  , coarseId_(gridSpecifier_.coarseSpace().gridPart().grid().globalIdSet().id(coarseEntity))
   , numBoundaryCorrectors_((gridSpecifier_.simplexCoarseGrid()) ? 1 : 2)
   , numLocalProblems_((gridSpecifier_.simplexCoarseGrid()) ? GridSelector::dimgrid + 1
                                                            : gridSpecifier_.coarseSpace().mapper().maxNumDofs() + 2)
   , localSolutions_(numLocalProblems_)
-  , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d") % coarseId_).str()) {
+  , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d")
+                            % gridSpecifier_.coarseSpace().gridPart().grid().leafIndexSet().index(coarseEntity)).str()) {
+  auto& reader = IOType::memory(localSolutionLocation_, subgrid_);
   for (auto& it : localSolutions_)
-    it = make_df_ptr<LocalGridDiscreteFunctionType>("Local problem Solution", localDiscreteFunctionSpace_);
+    it = make_df_ptr<LocalGridDiscreteFunctionType>("Local problem Solution", reader.space());
 }
 
 MsFEMTraits::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
 
 const LocalSolutionManager::LocalGridDiscreteFunctionSpaceType& LocalSolutionManager::space() const {
-  return localDiscreteFunctionSpace_;
+  return IOType::memory(localSolutionLocation_, subgrid_).space();
 }
 
-const LocalSolutionManager::LocalGridPartType& LocalSolutionManager::grid_part() const { return subGridPart_; }
+const LocalSolutionManager::LocalGridPartType& LocalSolutionManager::grid_part() const {
+  return IOType::memory(localSolutionLocation_, subgrid_).grid_part();
+}
 
-void LocalSolutionManager::loadLocalSolutions() {
-  // reader for the cell problem data file:
+void LocalSolutionManager::load() {
   auto& reader = IOType::memory(localSolutionLocation_, subgrid_);
-
   for (unsigned int i = 0; i < numLocalProblems_; ++i) {
     localSolutions_[i]->clear();
     reader.read(i, localSolutions_[i]);
   }
-  return;
-} // loadLocalSolutions
+} // load
 
-void LocalSolutionManager::saveLocalSolutions() const {
-  // reader for the cell problem data file:
+void LocalSolutionManager::save() const {
   auto& writer = IOType::memory(localSolutionLocation_, subgrid_);
-
   for (auto& it : localSolutions_)
     writer.append(it);
-} // saveLocalSolutions
+} // save
 
 std::size_t LocalSolutionManager::numBoundaryCorrectors() const { return numBoundaryCorrectors_; }
 

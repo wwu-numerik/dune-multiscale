@@ -122,7 +122,7 @@ class DiscreteFunctionIO : public boost::noncopyable {
     }
 
     void read(const unsigned long index, DiscreteFunction_ptr& df) {
-      if(index<functions_.size()) {
+      if(index < functions_.size()) {
         df = functions_.at(index);
       }
       else DUNE_THROW(InvalidStateException, "requesting function at oob index");
