@@ -91,7 +91,7 @@ public:
     **/
   const CoarseNodeVectorType& getCoarseNodeVector(IndexType i) const;
 
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
   // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
   const std::vector<IndexType>& getLocalGridIDs_that_contain_entity(IndexType host_enitity_index) const;
 
@@ -113,7 +113,7 @@ public:
     * (i.e. the coarse entity that the subgrid was constructed from by enrichment )
     **/
   const CoarseEntitySeedType& get_coarse_entity_seed(std::size_t i) const;
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 
 private:
   typedef std::map<IndexType, std::shared_ptr<LocalGridType>> SubGridStorageType;
@@ -124,7 +124,7 @@ private:
   SubGridStorageType subGridList_;
   const LeafIndexSet& coarseGridLeafIndexSet_;
   CoarseGridNodeStorageType coarse_node_store_;
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
   CoarseGridNodeStorageType extended_coarse_node_store_;
   std::vector<std::map<IndexType, IndexType>> fineToCoarseMap_;
   std::map<IdType, IdType> fineToCoarseMapID_;
@@ -132,7 +132,7 @@ private:
   // given the id of a subgrid, return the entity seed for the 'base coarse entity'
   // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
   std::map<CoarseEntityIndexType, CoarseEntitySeedType> subgrid_id_to_base_coarse_entity_;
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 };
 
 } // namespace MsFEM {

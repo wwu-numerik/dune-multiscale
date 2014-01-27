@@ -53,14 +53,14 @@ LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specif
   : diffusion_(diffusion_operator)
   , specifier_(specifier)
   , subgrid_list_(subgrid_list)
-  #ifdef ENBABLE_LOD_ONLY_CODE
+  #ifdef ENABLE_LOD_ONLY_CODE
   , ids_relevant_basis_functions_for_subgrid_(nullptr)
   , inverse_of_L1_norm_coarse_basis_funcs_(nullptr)
   , coarse_basis_(nullptr)
   , global_id_to_internal_id_(nullptr)
   , neumann_bc_(nullptr)
   , dirichlet_extension_(nullptr)
-  #endif // ENBABLE_LOD_ONLY_CODE
+  #endif // ENABLE_LOD_ONLY_CODE
 {}
 
 LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specifier,
@@ -71,7 +71,7 @@ LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specif
   : diffusion_(diffusion_operator)
   , specifier_(specifier)
   , subgrid_list_(subgrid_list)
-  #ifdef ENBABLE_LOD_ONLY_CODE
+  #ifdef ENABLE_LOD_ONLY_CODE
   , ids_relevant_basis_functions_for_subgrid_(&ids_basis_functions_in_subgrid)
   ,
   // ids of the coarse grid basis functions in the interior of the subgrid
@@ -80,7 +80,7 @@ LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specif
   , global_id_to_internal_id_(&global_id_to_internal_id)
   , neumann_bc_(&neumann_bc)
   , dirichlet_extension_(&dirichlet_extension)
-  #endif // ENBABLE_LOD_ONLY_CODE
+  #endif // ENABLE_LOD_ONLY_CODE
 {}
 
 /** Solve all local MsFEM problems for one coarse entity at once.
@@ -196,7 +196,7 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
     }
 
   // number of coarse grid entities (of codim 0).
-  const auto coarseGridSize = specifier_.getNumOfCoarseEntities();
+  const auto coarseGridSize = specifier_.coarseSpace().grid().size(0);
   if (Dune::Fem::MPIManager::size()>0)
     DSC_LOG_INFO << "Rank " << Dune::Fem::MPIManager::rank()
                  << " will solve local problems for " << coarseGridSize
@@ -224,7 +224,7 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
     const bool clement = (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement");
     if ((!uzawa) && (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) && clement) {
       DUNE_THROW(InvalidStateException, "broken lod only code");
-    #ifdef ENBABLE_LOD_ONLY_CODE
+    #ifdef ENABLE_LOD_ONLY_CODE
       //! only for dimension 2 and simplex grid!
 
       // preprocessing step to assemble the two relevant system matrices:
@@ -359,7 +359,7 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
         output_local_solution(coarse_index, 0, local_problem_solution_0);
         output_local_solution(coarse_index, 1, local_problem_solution_1);
       }
-    #endif // ENBABLE_LOD_ONLY_CODE
+    #endif // ENABLE_LOD_ONLY_CODE
     } else if (uzawa && !(specifier_.simplexCoarseGrid())) {
       DUNE_THROW(NotImplemented, "Uzawa-solver and non-simplex grid have not been tested together, yet!");
     } else {
@@ -400,7 +400,7 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
                << std::endl;
 } // assemble_all
 
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
 void LocalProblemSolver::solvelocalproblem(JacobianRangeType& e, LocalGridDiscreteFunctionType& local_problem_solution,
                                                 const int coarse_index /*= -1*/) const {
   // set solution equal to zero:
@@ -1151,7 +1151,7 @@ void LocalProblemSolver::solve_neumann_corrector_problem_lod(
 
   local_corrector -= preliminary_solution;
 } // solve_dirichlet_neumann_problem_lod
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 
 } // namespace MsFEM {
 } // namespace Multiscale {

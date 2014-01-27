@@ -80,7 +80,7 @@ DMM::WeightedClementOperator::systemMatrix() const {
 
 void DMM::WeightedClementOperator::assemble() const {
   DUNE_THROW(InvalidStateException, "Broken LOD-only code");
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
   const auto& space = discreteFunctionSpace();
 
   // reserve memory for matrix
@@ -233,7 +233,7 @@ void DMM::WeightedClementOperator::assemble() const {
 
   // get grid sequence number from space (for adaptive runs)    /*@LST0S@*/
   sequence_ = dofManager_.sequence();
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 }
 
 void DMM::WeightedClementOperator::boundaryTreatment() const {

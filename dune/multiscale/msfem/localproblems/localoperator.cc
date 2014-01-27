@@ -561,7 +561,7 @@ void LocalProblemOperator::projectDirichletValues(CommonTraits::DiscreteFunction
 }
 
 
-#ifdef ENBABLE_LOD_ONLY_CODE
+#ifdef ENABLE_LOD_ONLY_CODE
 void LocalProblemOperator::assemble_local_RHS_Dirichlet_corrector(const LocalGridDiscreteFunctionType &/*dirichlet_extension*/,
     const LocalGridList::CoarseNodeVectorType& /*coarse_node_vector*/, // for constraints on the space
     const int& /*oversampling_strategy*/,
@@ -860,7 +860,7 @@ void LocalProblemOperator::assemble_local_RHS_lg_problems_all(
   }
 
 } // assemble_local_RHS_pre_processing_all
-#endif // ENBABLE_LOD_ONLY_CODE
+#endif // ENABLE_LOD_ONLY_CODE
 
 } // namespace MsFEM {
 } // namespace Multiscale {

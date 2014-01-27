@@ -247,11 +247,11 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& /*msfem_solution
   { // intentional scope
     assert(locals.size() == totals.size());
     for (auto loc : locals)
-      (*loc)[loop_number] = CommonTraits::RangeVector(specifier.getNumOfCoarseEntities(), 0.0);
+      (*loc)[loop_number] = CommonTraits::RangeVector(specifier.coarseSpace().grid().size(0), 0.0);
     for (auto total : totals)
       (*total)[loop_number] = 0.0;
 
-    for (auto m : DSC::valueRange(specifier.getNumOfCoarseEntities())) {
+    for (auto m : DSC::valueRange(specifier.coarseSpace().grid().size(0))) {
       (*locals[0])[loop_number][m] = specifier.get_loc_coarse_residual(m);
       (*locals[1])[loop_number][m] = specifier.get_loc_coarse_grid_jumps(m);
       (*locals[2])[loop_number][m] = specifier.get_loc_projection_error(m);

@@ -526,7 +526,7 @@ public:
     DSC_LOG_INFO << "Conservative fluxes computed successfully." << std::endl;
     DSC_LOG_INFO << "Starting error estimation..." << std::endl;
 
-    const auto number_of_coarse_grid_entities = specifier_.getNumOfCoarseEntities();
+    const auto number_of_coarse_grid_entities = specifier_.coarseSpace().grid().size(0);
     specifier_.initialize_local_error_manager();
 
     ErrormapType errors(
