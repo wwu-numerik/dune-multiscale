@@ -230,8 +230,8 @@ void data_output(const CommonTraits::GridPartType& gridPart,
 bool error_estimation(const CommonTraits::DiscreteFunctionType& /*msfem_solution*/,
                       const CommonTraits::DiscreteFunctionType& /*coarse_part_msfem_solution*/,
                       const CommonTraits::DiscreteFunctionType& /*fine_part_msfem_solution*/,
-                      MsFEMTraits::MsFEMErrorEstimatorType& /*estimator*/,
-                      MsFEMTraits::MacroMicroGridSpecifierType& /*specifier*/, const int /*loop_number*/,
+                      MsFEMErrorEstimatorType& /*estimator*/,
+                      MacroMicroGridSpecifier& /*specifier*/, const int /*loop_number*/,
                       std::vector<CommonTraits::RangeVectorVector*>& /*locals*/,
                       std::vector<CommonTraits::RangeVector*>& /*totals*/,
                       CommonTraits::RangeVector& /*total_estimated_H1_error_*/) {
@@ -337,12 +337,12 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", fine_discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
-  MsFEMTraits::MacroMicroGridSpecifierType specifier(coarse_discreteFunctionSpace);
+  MacroMicroGridSpecifier specifier(coarse_discreteFunctionSpace);
 
   // error_estimation might change it
   bool repeat_algorithm = false;
 
-  MsFEMTraits::LocalGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
+  LocalGridList subgrid_list(specifier);
 
   Elliptic_MsFEM_Solver().apply(diffusion_op, f, specifier, subgrid_list, coarse_part_msfem_solution,
                      fine_part_msfem_solution, msfem_solution);

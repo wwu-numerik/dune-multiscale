@@ -29,7 +29,7 @@ class DiscreteCellProblemOperator : public Operator<typename HMMTraits::Periodic
   typedef typename HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionImp;
   typedef typename CommonTraits::DiffusionType DiffusionImp;
   typedef PeriodicDiscreteFunctionImp DiscreteFunction;
-  typedef DiffusionImp DiffusionModel;
+  typedef DiffusionImp DiffusionOperatorType;
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
   typedef typename DiscreteFunctionSpace::GridType GridType;
@@ -46,7 +46,7 @@ class DiscreteCellProblemOperator : public Operator<typename HMMTraits::Periodic
 
 public:
   DiscreteCellProblemOperator(const DiscreteFunctionSpace& periodicDiscreteFunctionSpace,
-                              const DiffusionModel& diffusion_op)
+                              const DiffusionOperatorType& diffusion_op)
     : periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
     , diffusion_operator_(diffusion_op) {}
 
@@ -149,7 +149,7 @@ public:
 
 private:
   const DiscreteFunctionSpace& periodicDiscreteFunctionSpace_;
-  const DiffusionModel& diffusion_operator_;
+  const DiffusionOperatorType& diffusion_operator_;
 };
 
 } // namespace HMM {

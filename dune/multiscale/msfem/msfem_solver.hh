@@ -44,7 +44,6 @@ private:
 
   static const int faceCodim = 1;
 
-  typedef MsFEMTraits::LocalGridListType LocalGridListType;
   typedef MsFEMTraits::LocalGridType LocalGridType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
@@ -52,7 +51,7 @@ private:
   typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType CoarseScaleLinearOperatorType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
+  void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
                                 const DiscreteFunctionType& coarse_msfem_solution,
                                 DiscreteFunctionType& fine_scale_part) const;
 
@@ -68,7 +67,7 @@ public:
    homogenous Dirchilet boundary condition!:
    **/
   void apply(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
-                            MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
+                            MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
                             DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
                             DiscreteFunctionType& solution) const;
 };

@@ -72,20 +72,19 @@ private:
   typedef typename CoarseDiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
   typedef typename CommonTraits::EntityType CoarseEntity;
 
-  typedef MsFEMTraits::LocalGridListType LocalGridListType;
   typedef typename CommonTraits::LinearOperatorType MatrixType;
 
 public:
   CoarseScaleOperator(MacroMicroGridSpecifierType& specifier,
                                 const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-                                MsFEMTraits::LocalGridListType& subgrid_list, const DiffusionModel& diffusion_op);
+                                LocalGridList& subgrid_list, const DiffusionModel& diffusion_op);
 
   void apply_inverse(const CoarseDiscreteFunction& b, CoarseDiscreteFunction& x);
 
 private:
   MacroMicroGridSpecifierType& specifier_;
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
-  MsFEMTraits::LocalGridListType& subgrid_list_;
+  LocalGridList& subgrid_list_;
   const DiffusionModel& diffusion_operator_;
   const bool petrovGalerkin_;
   MatrixType global_matrix_;

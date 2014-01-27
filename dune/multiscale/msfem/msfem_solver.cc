@@ -54,7 +54,7 @@ private:
 };
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& specifier,
-                                                     MsFEMTraits::LocalGridListType& subgrid_list,
+                                                     LocalGridList& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
   fine_scale_part.clear();
@@ -159,7 +159,7 @@ void Elliptic_MsFEM_Solver::apply(
     const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
     // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
     // n(T)-layers.
-    MacroMicroGridSpecifier& specifier, MsFEMTraits::LocalGridListType& subgrid_list,
+    MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
     DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
     DiscreteFunctionType& solution) const {
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))

@@ -11,8 +11,8 @@ namespace MsFEM {
 
 typedef DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType> IOType;
 
-LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridListType& subgridList,
-                                           const MacroMicroGridSpecifierType& gridSpecifier)
+LocalSolutionManager::LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridList& subgridList,
+                                           const MacroMicroGridSpecifier& gridSpecifier)
   : subgridList_(subgridList)
   , subgrid_(subgridList_.getSubGrid(coarseEntity))
   , gridSpecifier_(gridSpecifier)

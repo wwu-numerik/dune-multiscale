@@ -49,7 +49,7 @@ LodLocalProblemSolver::make_inverse_operator(LodLocalProblemSolver::LocProbLinea
 }
 
 LodLocalProblemSolver::LodLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
-                                                 const MacroMicroGridSpecifierType& specifier,
+                                                 const MacroMicroGridSpecifier& specifier,
                                                  SubGridList& subgrid_list,
                                                  const DiffusionOperatorType& diffusion_operator)
   : hostDiscreteFunctionSpace_(hostDiscreteFunctionSpace)
@@ -65,7 +65,7 @@ LodLocalProblemSolver::LodLocalProblemSolver(const HostDiscreteFunctionSpaceType
   , threadIterators_(specifier_.coarseSpace().gridPart()) {}
 
 LodLocalProblemSolver::LodLocalProblemSolver(
-    const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace, const MacroMicroGridSpecifierType& specifier,
+    const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace, const MacroMicroGridSpecifier& specifier,
     SubGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
     std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, const DiffusionOperatorType& diffusion_operator,
     const CoarseBasisFunctionListType& coarse_basis, const std::map<std::size_t, std::size_t>& global_id_to_internal_id,

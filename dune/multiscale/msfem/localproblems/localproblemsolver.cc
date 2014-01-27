@@ -47,7 +47,7 @@ LocalProblemSolver::make_inverse_operator(LocalProblemSolver::LocProbLinearOpera
       DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);
 }
 
-LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specifier,
+LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifier& specifier,
                                                  LocalGridList& subgrid_list,
                                                  const DiffusionOperatorType& diffusion_operator)
   : diffusion_(diffusion_operator)
@@ -63,7 +63,7 @@ LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specif
   #endif // ENABLE_LOD_ONLY_CODE
 {}
 
-LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifierType& specifier,
+LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifier& specifier,
     LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& /*ids_basis_functions_in_subgrid*/,
     std::vector<double>& /*inverse_of_L1_norm_coarse_basis_funcs*/, const DiffusionOperatorType& diffusion_operator,
     const CoarseBasisFunctionListType& /*coarse_basis*/, const std::map<std::size_t, std::size_t>& /*global_id_to_internal_id*/,

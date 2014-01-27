@@ -23,7 +23,7 @@ namespace Multiscale {
 namespace MsFEM {
 
 LocalProblemOperator::LocalProblemOperator(const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
-                                           const DiffusionModel& diffusion_op)
+                                           const DiffusionOperatorType& diffusion_op)
   : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
   , diffusion_operator_(diffusion_op) {}
 
@@ -292,7 +292,7 @@ void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e,
 
 
 void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEntity,
-                                               const MacroMicroGridSpecifierType& specifier,
+                                               const MacroMicroGridSpecifier& specifier,
                                                MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
 

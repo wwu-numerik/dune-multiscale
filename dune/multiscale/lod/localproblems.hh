@@ -54,7 +54,7 @@ public:
 class LodLocalProblemSolver {
 private:
   typedef CommonTraits::DiscreteFunctionType HostDiscreteFunctionType;
-  typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifier MacroMicroGridSpecifier;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
@@ -136,7 +136,7 @@ private:
   typedef WeightedClementOperator WeightedClementOperatorType;
   const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_;
-  const MacroMicroGridSpecifierType& specifier_;
+  const MacroMicroGridSpecifier& specifier_;
   SubGridList& subgrid_list_;
 
   std::vector<std::vector<std::size_t>>* ids_relevant_basis_functions_for_subgrid_;
@@ -153,11 +153,11 @@ public:
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
   LodLocalProblemSolver(const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace,
-                          const MacroMicroGridSpecifierType& specifier, SubGridList& subgrid_list,
+                          const MacroMicroGridSpecifier& specifier, SubGridList& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator);
 
   LodLocalProblemSolver(
-      const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace, const MacroMicroGridSpecifierType& specifier,
+      const HostDiscreteFunctionSpaceType& hostDiscreteFunctionSpace, const MacroMicroGridSpecifier& specifier,
       SubGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
       std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
       const DiffusionOperatorType& diffusion_operator, const CoarseBasisFunctionListType& coarse_basis,

@@ -56,7 +56,6 @@ class LocalGridList : public boost::noncopyable {
   typedef typename LocalGridDiscreteFunctionSpaceType::FunctionSpaceType::DomainType DomainType;
 
 public:
-  typedef typename LocalGridType::Traits::GlobalIdSet::IdType IdType;
   typedef std::vector<DomainType> CoarseNodeVectorType;
 
 private:
@@ -64,7 +63,7 @@ private:
   typedef std::vector<std::vector<LocalEntityPointerType>> EntityPointerCollectionType;
 
 public:
-  LocalGridList(MsFEMTraits::MacroMicroGridSpecifierType& specifier, bool silent = true);
+  LocalGridList(MacroMicroGridSpecifier& specifier);
 
 private:
   LocalGridType& getSubGrid(IndexType i);
@@ -119,8 +118,7 @@ private:
   typedef std::map<IndexType, std::shared_ptr<LocalGridType>> SubGridStorageType;
 
   const CommonTraits::DiscreteFunctionSpaceType& coarseSpace_;
-  MsFEMTraits::MacroMicroGridSpecifierType& specifier_;
-  bool silent_;
+  MacroMicroGridSpecifier& specifier_;
   SubGridStorageType subGridList_;
   const LeafIndexSet& coarseGridLeafIndexSet_;
   CoarseGridNodeStorageType coarse_node_store_;

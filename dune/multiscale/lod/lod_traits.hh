@@ -17,9 +17,9 @@ class LocalGridList;
 
 // ! type construction for the MSFEM code
 struct LODTraits {
-  typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
+  typedef MacroMicroGridSpecifier MacroMicroGridSpecifier;
   typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
-  typedef LocalGridList LocalGridListType;
+  typedef LocalGridList LocalGridList;
 
   // the following two may change if we intend to use different meshes on coarse and fine level
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
