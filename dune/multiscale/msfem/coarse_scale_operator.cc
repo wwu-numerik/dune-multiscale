@@ -5,7 +5,7 @@
 #include <sstream>
 
 #include "dune/multiscale/msfem/msfem_traits.hh"
-#include "elliptic_msfem_matrix_assembler.hh"
+#include "coarse_scale_operator.hh"
 
 namespace Dune {
 namespace Multiscale {
