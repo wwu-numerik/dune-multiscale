@@ -14,7 +14,7 @@
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
-
+#include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 
 

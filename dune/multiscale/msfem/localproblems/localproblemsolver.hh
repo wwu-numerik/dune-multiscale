@@ -22,7 +22,6 @@
 #include <dune/istl/solver.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/localproblems/weighted-clement-operator.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <cstddef>
 #include <map>
