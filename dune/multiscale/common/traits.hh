@@ -50,16 +50,11 @@ class IModelProblemData;
 
 //! type construction for the HMM algorithm
 struct CommonTraits {
-  //! --------- typedefs for the macro grid and the corresponding discrete space -------------
   typedef Dune::GridSelector::GridType GridType;
   typedef GridType::Codim<0>::Entity EntityType;
-  // Dune::InteriorBorder_Partition or Dune::All_Partition >?
-  // see:
-  // http://www.dune-project.org/doc/doxygen/dune-grid-html/group___g_i_related_types.html#ga5b9e8102d7f70f3f4178182629d98b6
-  typedef Dune::Fem::AdaptiveLeafGridPart<GridType /*,Dune::All_Partition*/> GridPartType;
+  typedef Dune::Fem::AdaptiveLeafGridPart<GridType> GridPartType;
   typedef Dune::GridPtr<GridType> GridPointerType;
   typedef Dune::Fem::FunctionSpace<double, double, GridType::dimension, 1> FunctionSpaceType;
-  //!-----------------------------------------------------------------------------------------
 
   typedef Dune::Stuff::GlobalFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
                                          FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange> FunctionBaseType;
@@ -67,33 +62,30 @@ struct CommonTraits {
   typedef Dune::Stuff::GlobalConstantFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
                                         FunctionSpaceType::RangeFieldType,
                                         FunctionSpaceType::dimRange> ConstantFunctionBaseType;
-  //! --------- typedefs for the coefficient and data functions ------------------------------
+
   typedef Problem::IModelProblemData ModelProblemDataType;
-  // type of first source term (right hand side of differential equation or type of 'f')
+  //! type of first source term (right hand side of differential equation or type of 'f')
   typedef FunctionBaseType FirstSourceType;
-  // type of second source term 'G' (second right hand side of differential equation 'div G')
+  //! type of second source term 'G' (second right hand side of differential equation 'div G')
   typedef FunctionBaseType SecondSourceType;
-  // type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
+  //! type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
   typedef Problem::DiffusionBase DiffusionType;
-  // type of (possibly non-linear) lower order term F( x, u(x), grad u(x) )
+  //! type of (possibly non-linear) lower order term F( x, u(x), grad u(x) )
   typedef Problem::LowerOrderBase LowerOrderTermType;
-  // type of inhomogeneous Dirichlet boundary condition
+  //! type of inhomogeneous Dirichlet boundary condition
   typedef FunctionBaseType DirichletBCType;
-  // type of inhomogeneous Neumann boundary condition
+  //! type of inhomogeneous Neumann boundary condition
   typedef FunctionBaseType NeumannBCType;
-  // type of dirichlet data
+  //! type of dirichlet data
   typedef Problem::DirichletDataBase DirichletDataType;
-  // type of neumann data
+  //! type of neumann data
   typedef Problem::NeumannDataBase NeumannDataType;
-  // type of mass (or reaction) term (i.e. 'm' or 'c')
+  //! type of mass (or reaction) term (i.e. 'm' or 'c')
   typedef FunctionBaseType MassTermType;
-  // default type for any missing coefficient function (e.g. advection,...)
+  //! default type for any missing coefficient function (e.g. advection,...)
   typedef FunctionBaseType DefaultDummyFunctionType;
-  //!-----------------------------------------------------------------------------------------
 
-  //! ---------  typedefs for the standard discrete function space (macroscopic) -------------
-
-  // type of exact solution (in general unknown)
+  //! type of exact solution (in general unknown)
   typedef FunctionBaseType ExactSolutionType;
 
   typedef FunctionSpaceType::DomainType DomainType;
@@ -118,17 +110,11 @@ struct CommonTraits {
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
   typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
 
-  //!------------------------- for adaptive grid refinement ---------------------------------
-  //! type of restrict-prolong operator
-  typedef Dune::Fem::RestrictProlongDefault<DiscreteFunctionType> RestrictProlongOperatorType;
-  //! type of the adaption manager
-  typedef Dune::Fem::AdaptationManager<GridType, RestrictProlongOperatorType> AdaptationManagerType;
-  //!---------------------------------------------------------------------------------------
-
   typedef std::vector<RangeType> RangeVector;
   typedef std::vector<RangeVector> RangeVectorVector;
 
-  static const int assembler_order = 2 * DiscreteFunctionSpaceType::polynomialOrder + 2;
+  static constexpr int polynomial_order = DiscreteFunctionSpaceType::polynomialOrder;
+  static constexpr int quadrature_order = 2 * polynomial_order + 2;
 };
 
 template< class T = CommonTraits::DiscreteFunctionType>

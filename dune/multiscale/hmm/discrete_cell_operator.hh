@@ -39,7 +39,7 @@ class DiscreteCellProblemOperator : public Operator<typename HMMTraits::Periodic
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
   static const int dimension = GridPart::GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
+  static const int CommonTraits::polynomial_order = DiscreteFunctionSpace::CommonTraits::polynomial_order;
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::EntityType Entity;

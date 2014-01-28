@@ -68,7 +68,7 @@ private:
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
   static const int dimension = GridPart::GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
+  static const int CommonTraits::polynomial_order = DiscreteFunctionSpace::CommonTraits::polynomial_order;
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
   typedef typename GridPart::template Codim<0>::EntityType Entity;
@@ -337,7 +337,7 @@ private:
   //! ------------------ Matrix Traits for the local Problems ---------------------
   static const int faceCodim = 1;
   //! polynomial order of base functions
-  static const int polynomialOrder = LocalGridDiscreteFunctionSpaceType::polynomialOrder;
+  static const int CommonTraits::polynomial_order = LocalGridDiscreteFunctionSpaceType::CommonTraits::polynomial_order;
 
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType FluxProbLinearOperatorType;
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType InverseLinearOperatorType;

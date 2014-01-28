@@ -11,44 +11,35 @@
 namespace Dune {
 namespace Multiscale {
 
+namespace MsFEM {
+  class LocalGridList;
+}  // namespace MsFEM
+
 //! Assembler for right rand side
 //! We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
 //! we call f the first Source and G the second Source
-namespace MsFEM {
-class MacroMicroGridSpecifier;
-class LocalGridList;
-}  // namespace MsFEM
-
 class RightHandSideAssembler {
 private:
-  typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-
+  typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
-  typedef typename DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef DomainFieldType TimeType;
-  typedef typename DiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename GridPartType::GridType GridType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename DiscreteFunctionSpaceType::DomainType DomainType;
-
-  static const int dimension = GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpaceType::polynomialOrder;
-  static const int quadratureOrder = 2*polynomialOrder + 2;
 
 public:
   /** assemble standard right hand side:
    * if there is only one source (f) (there is no second source):
    * discreteFunction is an output parameter (kind of return value)
    **/
-  static void assemble_fem(const CommonTraits::FirstSourceType& f, DiscreteFunctionType& rhsVector);
+  static void assemble_fem(const CommonTraits::FirstSourceType& f,
+                           CommonTraits::DiscreteFunctionType& rhsVector);
 
   /** assemble right hand side (if there is only one source - f):
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)
    **/
-  static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType &coarse_space, const CommonTraits::FirstSourceType& f,
-                                           MsFEM::LocalGridList& subgrid_list, DiscreteFunctionType& rhsVector);
+  static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType &coarse_space,
+                             const CommonTraits::FirstSourceType& f,
+                             MsFEM::LocalGridList& subgrid_list,
+                             CommonTraits::DiscreteFunctionType& rhsVector);
 };  // end class
 } // end namespace Multiscale
 } // end namespace Dune

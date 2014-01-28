@@ -53,7 +53,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
 
     if (fem_solution_) {
-      auto fem_error = l2error.norm(timefunctionAdapted(u), *fem_solution_);
+      const auto fem_error = l2error.norm(timefunctionAdapted(u), *fem_solution_);
       out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
 
       auto h1_fem_error = h1norm.distance(u_disc, *fem_solution_);
@@ -64,7 +64,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
   }
   if (msfem_solution_ && fem_solution_) {
-    auto approx_msfem_error = l2error.norm2<2 * CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2>(
+    const auto approx_msfem_error = l2error.norm2<2 * CommonTraits::polynomial_order + 2>(
         *fem_solution_, *msfem_solution_);
     out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 

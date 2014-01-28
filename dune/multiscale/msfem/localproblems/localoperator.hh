@@ -49,7 +49,6 @@ class LocalProblemOperator {
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
 
   static const int dimension = GridPartType::GridType::dimension;
-  static const int polynomialOrder = LocalGridDiscreteFunctionSpaceType::polynomialOrder;
 
   typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;

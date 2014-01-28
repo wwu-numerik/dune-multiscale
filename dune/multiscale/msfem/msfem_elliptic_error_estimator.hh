@@ -132,7 +132,7 @@ private:
   //!-----------------------------------------------------------------------------------------
 
   static const int dimension = GridType::dimension;
-  static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
+  static const int spacePolOrd = DiscreteFunctionSpaceType::CommonTraits::polynomial_order;
   static const int maxnumOfBaseFct = 100;
 
   const DiscreteFunctionSpaceType& fineDiscreteFunctionSpace_;

@@ -456,7 +456,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                       typename CommonTraits::DiscreteFunction_ptr& hmm_solution,
                       const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle) {
   DSC_LOG_INFO << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
-               << " unkowns and polynomial order " << CommonTraits::DiscreteFunctionSpaceType::polynomialOrder << "."
+               << " unkowns and polynomial order " << CommonTraits::DiscreteFunctionSpaceType::CommonTraits::polynomial_order << "."
                << std::endl << std::endl;
 
   const Dune::Fem::LPNorm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(gridPart, 2);
@@ -501,7 +501,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
     // old (expensive) hack to deal with discrete functions, defined on different grids
     // (should do the same as the heterogenous projection above - could therefore be used for comparison)
     /*
-    static const int hmm_polorder = 2* CommonTraits::DiscreteFunctionSpaceType::polynomialOrder + 2;
+    static const int hmm_polorder = 2* CommonTraits::DiscreteFunctionSpaceType::CommonTraits::polynomial_order + 2;
     Dune::ImprovedL2Error< typename CommonTraits::DiscreteFunctionType > impL2error;
     typename CommonTraits::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
       hmm_solution,

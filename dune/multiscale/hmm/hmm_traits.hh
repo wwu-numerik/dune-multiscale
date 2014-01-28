@@ -49,6 +49,11 @@ struct HMMTraits {
   //! --------------- ERROR ESTIMATOR NOT YET IMPLEMENTED ------------------------
   typedef ErrorEstimator<PeriodicDiscreteFunctionType, typename CommonTraits::DiscreteFunctionType,
                          typename CommonTraits::DiffusionType> ErrorEstimatorType;
+
+  //! type of restrict-prolong operator
+  typedef Dune::Fem::RestrictProlongDefault<typename CommonTraits::DiscreteFunctionType> RestrictProlongOperatorType;
+  //! type of the adaption manager
+  typedef Dune::Fem::AdaptationManager<typename CommonTraits::GridType, RestrictProlongOperatorType> AdaptationManagerType;
 }; // struct  HMMTraits
 
 } // namespace HMM {

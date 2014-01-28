@@ -163,7 +163,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType 
 
   LocalGridList subgrid_list(coarse_space);
   //! Solutions are kept in-memory via DiscreteFunctionIO::MemoryBackend by LocalsolutionManagers
-  LocalProblemSolver(coarse_space, subgrid_list, diffusion_op).assembleAndSolveAll();
+  LocalProblemSolver(coarse_space, subgrid_list, diffusion_op).solve_for_all_cells();
 
   DiscreteFunctionType msfem_rhs("MsFEM right hand side", coarse_space);
   msfem_rhs.clear();

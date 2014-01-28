@@ -40,7 +40,6 @@ class DiscreteEllipticOperator
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
   static const int dimension = GridPart::GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
 
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
 
@@ -102,8 +101,6 @@ class SMPDiscreteEllipticOperator : public boost::noncopyable {
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
 
   static const int dimension = GridPart::GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
-
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
 
 public:
