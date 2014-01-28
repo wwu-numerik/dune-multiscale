@@ -119,20 +119,9 @@ private:
   static std::unique_ptr<InverseLocProbLinearOperatorTypeType>
   make_inverse_operator(LocProbLinearOperatorTypeType& problem_matrix);
 
-  typedef WeightedClementOperator WeightedClementOperatorType;
   const DiffusionOperatorType& diffusion_;
   LocalGridList& subgrid_list_;
   const CommonTraits::DiscreteFunctionSpaceType& coarse_space_;
-
-#ifdef ENABLE_LOD_ONLY_CODE
-  std::vector<std::vector<std::size_t>>* ids_relevant_basis_functions_for_subgrid_;
-  std::vector<double>* inverse_of_L1_norm_coarse_basis_funcs_;
-  const CoarseBasisFunctionListType* coarse_basis_;
-  const std::map<std::size_t, std::size_t>* global_id_to_internal_id_;
-
-  const NeumannBoundaryType* neumann_bc_;
-  const LocalGridDiscreteFunctionType* dirichlet_extension_;
-#endif // ENABLE_LOD_ONLY_CODE
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
@@ -150,32 +139,6 @@ public:
 private:
   void solveAllLocalProblems(const CoarseEntityType& coarseCell,
                              LocalGridDiscreteFunctionVectorType& allLocalSolutions) const;
-
-#ifdef ENABLE_LOD_ONLY_CODE
-  void solvelocalproblem(JacobianRangeType& e, LocalGridDiscreteFunctionType& local_problem_solution,
-                         const int coarse_index = -1) const;
-
-  // Preprocessing step for the LOD:
-  // assemble the two relevant system matrices: one for the corrector problem without contraints
-  // and the second of the low dimensional lagrange multiplier (describing the inverse of the schur complement)
-  void preprocess_corrector_problems(const int coarse_index, LocProbLinearOperatorTypeType& locprob_system_matrix,
-                                     MatrixType& lm_system_matrix) const;
-
-  // solve local problem for Local Orthogonal Decomposition Method (LOD)
-  void solve_corrector_problem_lod(JacobianRangeType& e, LocProbLinearOperatorTypeType& locprob_system_matrix,
-                                   MatrixType& lm_system_matrix, LocalGridDiscreteFunctionType& local_corrector,
-                                   const int coarse_index /*= -1*/) const;
-
-  // solve Dirichlet boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
-  void solve_dirichlet_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
-                                             MatrixType& lm_system_matrix, LocalGridDiscreteFunctionType& local_corrector,
-                                             const int coarse_index /*= -1*/) const;
-
-  // solve Neumann boundary corrector problem for Local Orthogonal Decomposition Method (LOD)
-  void solve_neumann_corrector_problem_lod(LocProbLinearOperatorTypeType& locprob_system_matrix,
-                                           MatrixType& lm_system_matrix, LocalGridDiscreteFunctionType& local_corrector,
-                                           const int coarse_index /*= -1*/) const;
-#endif // ENABLE_LOD_ONLY_CODE
 
   void output_local_solution(const int coarse_index, const int which,
                              const LocalGridDiscreteFunctionType& host_local_solution) const;

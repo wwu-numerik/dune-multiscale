@@ -28,9 +28,6 @@ namespace MsFEM {
 LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet())
-  #ifdef ENABLE_LOD_ONLY_CODE
-  , fineToCoarseMap_(Fem::MPIManager::size())
-  #endif // ENABLE_LOD_ONLY_CODE
 {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
   const auto micro_per_macro = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
@@ -68,10 +65,6 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     boost::format sp("LocalGrid %d from (%f,%f) to (%f,%f) created.\n");
     DSC_LOG_INFO << sp % coarse_index % lowerLeft[0] % lowerLeft[1] % upperRight[0] % upperRight[1];
     subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
-
-#ifdef ENABLE_LOD_ONLY_CODE
-    subgrid_id_to_base_coarse_entity_.insert(std::make_pair(coarse_index, std::move(coarse_entity.seed())));
-#endif // ENABLE_LOD_ONLY_CODE
   }
 }
 
@@ -112,29 +105,6 @@ bool LocalGridList::covers(const CoarseEntityType &coarse_entity, const LocalEnt
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   return reference_element.checkInside(center_local);
 }
-
-#ifdef ENABLE_LOD_ONLY_CODE
-// given the id of a subgrid, return the entity seed for the 'base coarse entity'
-// (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-const LocalGridList::CoarseEntitySeedType &LocalGridList::get_coarse_entity_seed(std::size_t i) const {
-  // the following returns the mapped element for index i if present,
-  // if not, an out-of-range exception is thrown
-  assert(false);//need to eliminate narrowing conversion
-  return subgrid_id_to_base_coarse_entity_.at(i);
-}
-
-const LocalGridList::CoarseNodeVectorType& LocalGridList::getExtendedCoarseNodeVector(IndexType i) const {
-  if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 1) || (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 2))
-    DUNE_THROW(Dune::InvalidStateException,
-               "Method 'getExtendendCoarseNodeVector' of class 'LocalGridList' should not be used in\
-                combination with oversampling strategy 1 or 2. Check your implementation!");
-
-  if (i >= specifier_.coarseSpace().grid().size(0)) {
-    DUNE_THROW(Dune::RangeError, "Error. LocalGrid-Index too large.");
-  }
-  return extended_coarse_node_store_[i];
-} // getSubGrid
-#endif // ENABLE_LOD_ONLY_CODE
 
 } // namespace MsFEM {
 } // namespace Multiscale {

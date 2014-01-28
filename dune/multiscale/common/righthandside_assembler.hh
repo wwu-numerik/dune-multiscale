@@ -43,15 +43,6 @@ public:
    **/
   static void assemble_fem(const CommonTraits::FirstSourceType& f, DiscreteFunctionType& rhsVector);
 
-  /**
-   * The rhs-assemble()-methods for linear elliptic problems
-   * with non-homogeneous Dirichlet and Neumann boundary conditions:
-   **/
-  static void
-  assemble_hmm_lod(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
-           const DiscreteFunctionType& dirichlet_extension,
-           const CommonTraits::NeumannBCType& neumann_bc, DiscreteFunctionType& rhsVector);
-
   /** assemble right hand side (if there is only one source - f):
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)

@@ -12,113 +12,12 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-MacroMicroGridSpecifier::MacroMicroGridSpecifier(const DiscreteFunctionSpaceType& coarse_scale_space)
+MacroMicroGridSpecifier::MacroMicroGridSpecifier()
   : coarse_level_fine_level_difference_(std::numeric_limits<int>::max())
-  , coarseGridIsSimplex_(coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0).size() == 1 &&
-                         coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0)[0].isSimplex())
-#ifdef ENABLE_LOD_ONLY_CODE
-  , boundary_nodes_identified_(false)
-  , dirichlet_nodes_identified_(false)
-#endif // ENABLE_LOD_ONLY_CODE
 {}
 
 //! Get the difference between coarse and fine level
 int MacroMicroGridSpecifier::getLevelDifference() const { return coarse_level_fine_level_difference_; }
-
-#ifdef ENABLE_LOD_ONLY_CODE
-void MacroMicroGridSpecifier::identify_coarse_boundary_nodes() {
-  is_boundary_node_.resize(coarse_scale_space_.size());
-
-  number_of_coarse_boundary_nodes_ = 0;
-
-  const auto endit = coarse_scale_space_.end();
-  for (auto it = coarse_scale_space_.begin(); it != endit; ++it) {
-
-    std::vector<std::size_t> indices;
-    coarse_scale_space_.mapper().map(*it, indices);
-
-    auto intersection_it = coarse_scale_space_.gridPart().ibegin(*it);
-    const auto endiit = coarse_scale_space_.gridPart().iend(*it);
-    for (; intersection_it != endiit; ++intersection_it) {
-
-      if (!intersection_it->boundary())
-        continue;
-
-      const auto& lagrangePointSet = coarse_scale_space_.lagrangePointSet(*it);
-
-      const int face = (*intersection_it).indexInInside();
-      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-        is_boundary_node_[indices[lp]] = true;
-    }
-  }
-
-  for (size_t i = 0; i < is_boundary_node_.size(); ++i) {
-    if (is_boundary_node_[i])
-      number_of_coarse_boundary_nodes_ += 1;
-  }
-
-  boundary_nodes_identified_ = true;
-}
-
-void MacroMicroGridSpecifier::identify_coarse_dirichlet_nodes() {
-  is_dirichlet_node_.resize(coarse_scale_space_.size());
-
-  number_of_coarse_dirichlet_nodes_ = 0;
-
-  const auto endit = coarse_scale_space_.end();
-  for (auto it = coarse_scale_space_.begin(); it != endit; ++it) {
-
-    std::vector<std::size_t> indices;
-    coarse_scale_space_.mapper().map(*it, indices);
-
-    auto intersection_it = coarse_scale_space_.gridPart().ibegin(*it);
-    const auto endiit = coarse_scale_space_.gridPart().iend(*it);
-    for (; intersection_it != endiit; ++intersection_it) {
-
-      if (!intersection_it->boundary())
-        continue;
-
-      if (intersection_it->boundary() && (intersection_it->boundaryId() != 1))
-        continue;
-
-      const auto& lagrangePointSet = coarse_scale_space_.lagrangePointSet(*it);
-
-      const int face = (*intersection_it).indexInInside();
-      for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face))
-        is_dirichlet_node_[indices[lp]] = true;
-    }
-  }
-
-  for (size_t i = 0; i < is_dirichlet_node_.size(); ++i) {
-    if (is_dirichlet_node_[i])
-      number_of_coarse_dirichlet_nodes_ += 1;
-  }
-
-  dirichlet_nodes_identified_ = true;
-}
-
-std::size_t MacroMicroGridSpecifier::get_number_of_coarse_boundary_nodes() const {
-  assert(boundary_nodes_identified_);
-  return number_of_coarse_boundary_nodes_;
-}
-
-std::size_t MacroMicroGridSpecifier::get_number_of_coarse_dirichlet_nodes() const {
-  assert(dirichlet_nodes_identified_);
-  return number_of_coarse_dirichlet_nodes_;
-}
-
-bool MacroMicroGridSpecifier::is_coarse_boundary_node(std::size_t global_index) const {
-  assert(boundary_nodes_identified_);
-  return is_boundary_node_[global_index];
-}
-
-bool MacroMicroGridSpecifier::is_coarse_dirichlet_node(std::size_t global_index) const {
-  assert(dirichlet_nodes_identified_);
-  return is_dirichlet_node_[global_index];
-}
-#endif // ENABLE_LOD_ONLY_CODE
-
-bool MacroMicroGridSpecifier::simplexCoarseGrid() const { return coarseGridIsSimplex_; }
 
 } // namespace MsFEM {
 } // namespace Multiscale {

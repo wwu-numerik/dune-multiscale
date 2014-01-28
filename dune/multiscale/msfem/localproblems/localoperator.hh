@@ -98,33 +98,6 @@ public:
   void assembleAllLocalRHS(const CoarseEntityType& coarseEntity,
                            MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
-#ifdef ENABLE_LOD_ONLY_CODE
-  void assemble_local_RHS_Dirichlet_corrector(
-      const LocalGridDiscreteFunctionType& dirichlet_extension,
-      const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
-      const int& oversampling_strategy,
-      // rhs local msfem problem:
-      LocalGridDiscreteFunctionType& local_problem_RHS) const;
-
-  void
-  assemble_local_RHS_Neumann_corrector(const NeumannBoundaryType& neumann_bc,
-                                       const LocalGridDiscreteFunctionSpaceType& host_space,
-                                       const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
-                                       const int& oversampling_strategy,
-                                       // rhs local msfem problem:
-                                       LocalGridDiscreteFunctionType& local_problem_RHS) const;
-
-  // assemble various right hand sides (for solving the local saddle point problems with lagrange multpliers)
-  void assemble_local_RHS_lg_problems(const LocalGridDiscreteFunctionType /*CoarseBasisFunctionType*/& coarse_basis_func,
-                                      double weight, LocalGridDiscreteFunctionType& local_problem_RHS) const;
-
-  void
-  assemble_local_RHS_lg_problems_all(const std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>>& coarse_basis_func_list,
-                                     std::vector<double>& weights,
-                                     std::vector<std::size_t>& ids_basis_functions_in_subgrid,
-                                     std::vector<std::unique_ptr<LocalGridDiscreteFunctionType>>& local_problem_RHS) const;
-#endif // ENABLE_LOD_ONLY_CODE
-
   // given a discrete function (representing a right hands side of a local problem,
   // defined on a subgrid) set the boundary dofs to zero
   void set_zero_boundary_condition_RHS(const LocalGridDiscreteFunctionSpaceType& host_space, LocalGridDiscreteFunctionType& rhs) const;

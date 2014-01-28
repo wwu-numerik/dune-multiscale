@@ -111,12 +111,6 @@ set( FEM_SOURCES
         src/elliptic_fem.cc
     )
 
-set( LODM_SOURCES 
-        dune/multiscale/lod/algorithm.cc
-        dune/multiscale/lod/lod_solver.cc
-        dune/multiscale/lod/localproblems.cc
-    )
-
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native" 
   "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias" )
@@ -127,13 +121,11 @@ set(ENABLE_PETSC 0 CACHE BOOLEAN "")
 add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
-# ADD_LIBRARY(multiscale_lodm STATIC ${LODM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
 ADD_LIBRARY(multiscale_hmm STATIC ${HMM_SOURCES})
 
 add_dune_mpi_flags(OBJECT multiscale_common)
 add_dune_mpi_flags(OBJECT multiscale_problem)
-# add_dune_mpi_flags(OBJECT multiscale_lodm)
 add_dune_mpi_flags(OBJECT multiscale_msfem)
 add_dune_mpi_flags(OBJECT multiscale_hmm)
 
@@ -157,10 +149,6 @@ ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_fem)
 
-# ADD_EXECUTABLE(elliptic_lodm src/elliptic_lodm.cc  ${COMMON_HEADER} )
-# TARGET_LINK_LIBRARIES(elliptic_lodm multiscale_lodm ${COMMON_LIBS} )
-# add_dune_mpi_flags(elliptic_lodm)
-
 ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 add_dune_mpi_flags(msfem-1d)
@@ -176,13 +164,11 @@ add_dune_mpi_flags(thread_vis)
 
 add_dune_alugrid_flags(OBJECT multiscale_common)
 add_dune_alugrid_flags(OBJECT multiscale_problem)
-# add_dune_alugrid_flags(OBJECT multiscale_lodm)
 add_dune_alugrid_flags(OBJECT multiscale_msfem)
 add_dune_alugrid_flags(OBJECT multiscale_hmm)
 add_dune_alugrid_flags(elliptic_hmm)
 add_dune_alugrid_flags(elliptic_msfem)
 add_dune_alugrid_flags(elliptic_fem)
-# add_dune_alugrid_flags(elliptic_lodm)
 add_dune_alugrid_flags(msfem-1d)
 add_dune_alugrid_flags(thread_vis)
 
@@ -206,11 +192,11 @@ ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc
              ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
              ${dune} ${header})
 add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
-            ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} 
-            src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc )
+            ${HOM_FEM_SOURCES} ${FEM_SOURCES}
+            src/elliptic_hmm.cc src/elliptic_msfem.cc )
 add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
-           ${HOM_FEM_SOURCES} ${FEM_SOURCES} ${LODM_SOURCES} 
-           src/elliptic_hmm.cc src/elliptic_msfem.cc src/elliptic_lodm.cc
+           ${HOM_FEM_SOURCES} ${FEM_SOURCES}
+           src/elliptic_hmm.cc src/elliptic_msfem.cc
            ${header} ${dune})
 
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
