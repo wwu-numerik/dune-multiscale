@@ -105,7 +105,7 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
 //! \TODO docme
 bool adapt(const HMMResult& result, const int loop_cycle, const double error_tolerance_,
            const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-           typename CommonTraits::AdaptationManagerType& adaptationManager) {
+           typename HMMTraits::AdaptationManagerType& adaptationManager) {
   bool repeat = true;
   int default_refinement = 0;
   // double error_tolerance_ = 0.2;
@@ -277,8 +277,8 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
     auto hmm_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(" HMM (+Newton) Solution", discreteFunctionSpace);
     hmm_solution->clear();
 
-    typename CommonTraits::RestrictProlongOperatorType rp(*hmm_solution);
-    typename CommonTraits::AdaptationManagerType adaptationManager(grid, rp);
+    typename HMMTraits::RestrictProlongOperatorType rp(*hmm_solution);
+    typename HMMTraits::AdaptationManagerType adaptationManager(grid, rp);
     const auto result = single_step(gridPart, gridPartFine, discreteFunctionSpace, periodicDiscreteFunctionSpace,
                                     *diffusion_op, hmm_solution, *reference_solution, loop_cycle);
     // call of 'single_step': 'reference_solution' only required for error computation

@@ -7,6 +7,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 #include <iostream>
 #include <sstream>
 #include <vector>

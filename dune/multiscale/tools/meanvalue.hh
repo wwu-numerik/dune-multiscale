@@ -8,6 +8,7 @@
 
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/misc/l2error.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 
 #include "misc/linear-lagrange-interpolation.hh"
 
