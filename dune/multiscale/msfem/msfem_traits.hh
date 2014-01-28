@@ -18,9 +18,6 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-template <class F, class U, class B, class A, class R>
-class ErrorEstimator;
-
 //! type construction for the MSFEM code
 struct MsFEMTraits {
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
