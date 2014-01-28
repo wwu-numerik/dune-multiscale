@@ -39,17 +39,17 @@ namespace MsFEM {
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/") {}
 
-std::unique_ptr<LocalProblemSolver::InverseLocProbLinearOperatorTypeType>
-LocalProblemSolver::make_inverse_operator(LocalProblemSolver::LocProbLinearOperatorTypeType& problem_matrix) {
+std::unique_ptr<LocalProblemSolver::InverseOperatorType>
+LocalProblemSolver::make_inverse_operator(LocalProblemSolver::LinearOperatorTypeType& problem_matrix) {
   const auto solver =
       Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
-  return DSC::make_unique<InverseLocProbLinearOperatorTypeType>(
+  return DSC::make_unique<InverseOperatorType>(
       problem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false), solver,
       DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);
 }
 
 LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType &coarse_space, LocalGridList& subgrid_list,
-                                                 const DiffusionOperatorType& diffusion_operator)
+                                                 const CommonTraits::DiffusionType &diffusion_operator)
   : diffusion_(diffusion_operator)
   , subgrid_list_(subgrid_list)
   , coarse_space_(coarse_space)
@@ -60,8 +60,8 @@ LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpace
 *
 *
 */
-void LocalProblemSolver::solve_all_on_single_cell(const CoarseEntityType& coarseCell,
-                                                    LocalGridDiscreteFunctionVectorType& allLocalSolutions) const {
+void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
+                                                    MsFEMTraits::LocalSolutionVectorType &allLocalSolutions) const {
   assert(allLocalSolutions.size() > 0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
@@ -76,7 +76,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const CoarseEntityType& coarse
 
   //! the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LocProbLinearOperatorTypeType locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace,
+  LinearOperatorTypeType locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace,
                                                  subDiscreteFunctionSpace);
 
   //! define the discrete (elliptic) local MsFEM problem operator
@@ -84,15 +84,15 @@ void LocalProblemSolver::solve_all_on_single_cell(const CoarseEntityType& coarse
   LocalProblemOperator localProblemOperator(coarse_space_, subDiscreteFunctionSpace, diffusion_);
 
   // right hand side vector of the algebraic local MsFEM problem
-  LocalGridDiscreteFunctionVectorType allLocalRHS(allLocalSolutions.size());
+  MsFEMTraits::LocalSolutionVectorType allLocalRHS(allLocalSolutions.size());
   for (auto& it : allLocalRHS)
-    it = DSC::make_unique<LocalGridDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
+    it = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
 
   localProblemOperator.assemble_matrix(locProbSysMatrix);
-  localProblemOperator.assembleAllLocalRHS(coarseCell,allLocalRHS);
+  localProblemOperator.assemble_all_local_rhs(coarseCell,allLocalRHS);
 
   // set dirichlet dofs to zero
-  Stuff::GridboundaryAllDirichlet<LocalGridType::LeafGridView::Intersection> boundaryInfo;
+  Stuff::GridboundaryAllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
   DirichletConstraints<LocalGridDiscreteFunctionSpaceType> constraints(boundaryInfo, subDiscreteFunctionSpace);
   constraints.applyToOperator(locProbSysMatrix);
 

@@ -98,12 +98,10 @@ std::size_t LocalGridList::size() const { return subGridList_.size(); }
 
 MsFEM::MsFEMTraits::LocalGridPartType LocalGridList::gridPart(IndexType i) { return LocalGridPartType(getSubGrid(i)); }
 
-bool LocalGridList::covers(const CoarseEntityType &coarse_entity, const LocalEntityType &local_entity) {
+bool LocalGridList::covers(const CoarseEntityType &coarse_entity, const MsFEMTraits::LocalEntityType &local_entity) {
   const auto& center = local_entity.geometry().center();
-  const auto& coarse_geo = coarse_entity.geometry();
-  const auto center_local = coarse_geo.local(center);
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
-  return reference_element.checkInside(center_local);
+  return reference_element.checkInside(coarse_entity.geometry().local(center));
 }
 
 } // namespace MsFEM {

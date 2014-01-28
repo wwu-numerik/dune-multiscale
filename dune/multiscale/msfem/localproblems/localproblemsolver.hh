@@ -51,61 +51,23 @@ public:
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
 class LocalProblemSolver {
-public:
-  typedef typename MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
-private:
-  typedef typename MsFEMTraits::LocalGridType LocalGridType;
-  typedef typename MsFEMTraits::LocalGridPartType LocalGridPartType;
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-
-  typedef CommonTraits::DiffusionType DiffusionOperatorType;
-  typedef CommonTraits::NeumannBCType NeumannBoundaryType;
-
-  //! @todo LocalGridDiscreteFunctionType should be replaced by some kind of coarse function type
-  typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> CoarseBasisFunctionListType;
-
-  typedef typename LocalGridDiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
   typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
-  //! type of value of a gradient of a function
   typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
 
-  typedef typename LocalGridType::Traits::LeafIndexSet LocalGridLeafIndexSet;
-  typedef typename LocalGridType::Traits::GlobalIdSet::IdType IdType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType LocalGridEntityIteratorType;
-  typedef typename LocalGridEntityIteratorType::Entity LocalEntityType;
-  typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
-  typedef typename LocalGridType::Codim<0>::Geometry LocalGridEntityGeometry;
-  typedef typename LocalGridDiscreteFunctionType::LocalFunctionType HostLocalFunctionType;
-  typedef typename LocalGridPartType::IntersectionIteratorType HostIntersectionIterator;
-
-  typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-  typedef MsFEMTraits::LocalSolutionVectorType LocalGridDiscreteFunctionVectorType;
-
-  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType LocalGridIteratorType;
-  typedef typename LocalGridIteratorType::Entity LocalGridEntityType;
-  typedef typename LocalGridEntityType::EntityPointer LocalGridEntityPointerType;
-  typedef typename LocalGridDiscreteFunctionType::LocalFunctionType SubLocalFunctionType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::LagrangePointSetType SGLagrangePointSetType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::LagrangePointSetType LocalGridLagrangePointSetType;
-  typedef typename LocalGridType::Codim<0>::Geometry SubGridEntityGeometry;
-
-  static const int faceCodim = 1;
-  typedef typename LocalGridLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType LocalGridFaceDofIteratorType;
-
-
 public:
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LocProbLinearOperatorTypeType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorTypeType;
 
 private:
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType
-  InverseLocProbLinearOperatorTypeType;
+  InverseOperatorType;
 
-  static std::unique_ptr<InverseLocProbLinearOperatorTypeType>
-  make_inverse_operator(LocProbLinearOperatorTypeType& problem_matrix);
+  static std::unique_ptr<InverseOperatorType>
+  make_inverse_operator(LinearOperatorTypeType& problem_matrix);
 
-  const DiffusionOperatorType& diffusion_;
+  const CommonTraits::DiffusionType& diffusion_;
   LocalGridList& subgrid_list_;
   const CommonTraits::DiscreteFunctionSpaceType& coarse_space_;
 
@@ -114,11 +76,11 @@ public:
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
   LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, LocalGridList& subgrid_list,
-                          const DiffusionOperatorType& diffusion_operator);
+                          const CommonTraits::DiffusionType& diffusion_operator);
 
 private:
-  void solve_all_on_single_cell(const CoarseEntityType& coarseCell,
-                             LocalGridDiscreteFunctionVectorType& allLocalSolutions) const;
+  void solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
+                                MsFEMTraits::LocalSolutionVectorType& allLocalSolutions) const;
 public:
 
   /** method for solving and saving the solutions of the local msfem problems
