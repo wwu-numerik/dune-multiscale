@@ -13,6 +13,7 @@
 #include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
+#include <dune/multiscale/tools/misc.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/math.hh>
 #include <dune/stuff/common/memory.hh>
