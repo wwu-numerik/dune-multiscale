@@ -22,47 +22,14 @@ class MacroMicroGridSpecifier {
   static const int faceCodim = 1;
 
 public:
-  MacroMicroGridSpecifier(const DiscreteFunctionSpaceType& coarse_scale_space);
+  MacroMicroGridSpecifier();
 
   //! Get the difference between coarse and fine level
   int getLevelDifference() const;
 
-#if 0 // LOD Only
-  void identify_coarse_boundary_nodes();
-  void identify_coarse_dirichlet_nodes();
-
-  std::size_t get_number_of_coarse_boundary_nodes() const;
-  std::size_t get_number_of_coarse_dirichlet_nodes() const;
-private:
-
-  // number of coarse grid boundary nodes
-  std::size_t number_of_coarse_boundary_nodes_;
-
-  // number of coarse grid boundary nodes
-  std::size_t number_of_coarse_dirichlet_nodes_;
-
-  // have the Dirichlet boundary nodes been identified?
-  bool dirichlet_nodes_identified_;
-  // have the boundary nodes been identified?
-  bool boundary_nodes_identified_;
-
-  // is a given coarse node a boundary node of the coarse grid? true/false
-  std::vector<bool> is_boundary_node_;
-
-  // is a given coarse node a Dirichlet boundary node of the coarse grid? true/false
-  std::vector<bool> is_dirichlet_node_;
-
-public:
-  bool is_coarse_boundary_node(std::size_t global_index) const;
-  bool is_coarse_dirichlet_node(std::size_t global_index) const;
-#endif //0 // LOD Only
-
-  bool simplexCoarseGrid() const;
-
 private:
   // level difference between coarse grid level and fine grid level
   const int coarse_level_fine_level_difference_;
-  const bool coarseGridIsSimplex_;
 };
 
 } // namespace MsFEM {

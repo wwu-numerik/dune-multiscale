@@ -83,45 +83,12 @@ public:
   //! returns true if the coarse_entity covers the local_entity
   bool covers(const CoarseEntityType& coarse_entity, const LocalEntityType& local_entity);
 
-#ifdef ENABLE_LOD_ONLY_CODE
-  // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
-  const std::vector<IndexType>& getLocalGridIDs_that_contain_entity(IndexType host_enitity_index) const;
-
-  /** only required for oversampling strategy 3:
-    * this method only differs from the method 'getCoarseNodeVector' if the oversampling patch
-    * cannot be excluively described by a union of coarse grid elements.
-    * According to the definition of the LOD 'not full coarse layers' require that the averaging
-    * property of the weighted Clement operator is also applied to those coarse nodes, where
-    * the corresponding basis function has a nonempty intersection with the patch
-    **/
-  const CoarseNodeVectorType& getExtendedCoarseNodeVector(IndexType i) const;
-
-  /** Get the mapping from node number to codim 0 host entity.
-  * @return Returns the map.
-  * */
-  const EntityPointerCollectionType& getNodeEntityMap();
-
-  /** given the id of a subgrid, return the entity seed for the 'base coarse entity'
-    * (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-    **/
-  const CoarseEntitySeedType& get_coarse_entity_seed(std::size_t i) const;
-#endif // ENABLE_LOD_ONLY_CODE
-
 private:
   typedef std::map<IndexType, std::shared_ptr<LocalGridType>> SubGridStorageType;
 
   const CommonTraits::DiscreteFunctionSpaceType& coarseSpace_;
   SubGridStorageType subGridList_;
   const LeafIndexSet& coarseGridLeafIndexSet_;
-#ifdef ENABLE_LOD_ONLY_CODE
-  CoarseGridNodeStorageType extended_coarse_node_store_;
-  std::vector<std::map<IndexType, IndexType>> fineToCoarseMap_;
-  std::map<IdType, IdType> fineToCoarseMapID_;
-
-  // given the id of a subgrid, return the entity seed for the 'base coarse entity'
-  // (i.e. the coarse entity that the subgrid was constructed from by enrichment )
-  std::map<CoarseEntityIndexType, CoarseEntitySeedType> subgrid_id_to_base_coarse_entity_;
-#endif // ENABLE_LOD_ONLY_CODE
 };
 
 } // namespace MsFEM {
