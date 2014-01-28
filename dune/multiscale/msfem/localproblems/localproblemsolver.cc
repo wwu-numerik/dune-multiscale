@@ -55,21 +55,12 @@ LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpace
   , coarse_space_(coarse_space)
 {}
 
-LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType &coarse_space,
-    LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& /*ids_basis_functions_in_subgrid*/,
-    std::vector<double>& /*inverse_of_L1_norm_coarse_basis_funcs*/, const DiffusionOperatorType& diffusion_operator,
-    const CoarseBasisFunctionListType& /*coarse_basis*/, const std::map<std::size_t, std::size_t>& /*global_id_to_internal_id*/,
-    const NeumannBoundaryType& /*neumann_bc*/, const LocalGridDiscreteFunctionType& /*dirichlet_extension*/)
-  : diffusion_(diffusion_operator)
-  , subgrid_list_(subgrid_list)
-  , coarse_space_(coarse_space)
-{}
 
 /** Solve all local MsFEM problems for one coarse entity at once.
 *
 *
 */
-void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCell,
+void LocalProblemSolver::solve_all_on_single_cell(const CoarseEntityType& coarseCell,
                                                     LocalGridDiscreteFunctionVectorType& allLocalSolutions) const {
   assert(allLocalSolutions.size() > 0);
 
@@ -139,7 +130,7 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
 }
 
 
-void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
+void LocalProblemSolver::solve_for_all_cells() {
   static const int dimension = CommonTraits::GridType::dimension;
 
   JacobianRangeType unitVectors[dimension];
@@ -181,7 +172,7 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
     LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
 
     // solve the problems
-    solveAllLocalProblems(coarseEntity, localSolutionManager.getLocalSolutions());
+    solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
     // min/max time
     cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
     DSC_PROFILER.resetTiming("none.local_problem_solution");

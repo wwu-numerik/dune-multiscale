@@ -51,7 +51,7 @@ private:
   typedef typename DiscreteFunctionSpaceType::GridType::template Codim<0>::EntityPointer EntityPointerType;
 
   static const int dimension = PeriodicDiscreteFunctionType::GridType::dimension;
-  static const int spacePolOrd = PeriodicDiscreteFunctionSpaceType::polynomialOrder;
+  static const int spacePolOrd = PeriodicDiscreteFunctionSpaceType::CommonTraits::polynomial_order;
   static const int maxnumOfBaseFct = 100;
 
 private:

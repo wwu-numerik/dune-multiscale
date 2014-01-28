@@ -52,7 +52,7 @@ private:
 
   //! polynomial order of base functions
   enum {
-    polynomialOrder = PeriodicDiscreteFunctionSpaceType::polynomialOrder
+    CommonTraits::polynomial_order = PeriodicDiscreteFunctionSpaceType::CommonTraits::polynomial_order
   };
 
   //! type of the (possibly non-linear) diffusion operator

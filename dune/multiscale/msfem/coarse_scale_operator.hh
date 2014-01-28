@@ -63,7 +63,6 @@ private:
   typedef LocalProblemSolver LocalProblemSolverType;
 
   static const int dimension = FineGridPart::GridType::dimension;
-  static const int polynomialOrder = FineDiscreteFunctionSpace::polynomialOrder;
 
   typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType FineBaseFunctionSet;
   typedef typename FineDiscreteFunctionSpace::EntityType FineEntity;

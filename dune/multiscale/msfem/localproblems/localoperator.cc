@@ -400,7 +400,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
         for (auto iIt = discreteFunctionSpace.gridPart().ibegin(localGridCell); iIt != intEnd; ++iIt) {
           const auto& intersection = *iIt;
           if (DMP::is_neumann(intersection)) {
-            const auto orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
+            const auto orderOfIntegrand = (CommonTraits::polynomial_order - 1) + 2 * (CommonTraits::polynomial_order + 1);
             const auto quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
             const auto faceQuad = DSFe::make_quadrature(intersection, discreteFunctionSpace, quadOrder);
             RangeType neumannValue(0.0);

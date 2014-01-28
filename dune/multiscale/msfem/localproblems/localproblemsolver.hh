@@ -94,19 +94,6 @@ private:
   static const int faceCodim = 1;
   typedef typename LocalGridLagrangePointSetType::Codim<faceCodim>::SubEntityIteratorType LocalGridFaceDofIteratorType;
 
-  //! polynomial order of base functions
-  static const int polynomialOrder = LocalGridDiscreteFunctionSpaceType::polynomialOrder;
-
-  //! --------------------- istl matrix and vector types -------------------------------------
-
-  //! \TODO diese definitionen machen keinen sinn
-  typedef BlockVector<FieldVector<double, 1>> VectorType;
-  typedef Matrix<FieldMatrix<double, 1, 1>> MatrixType;
-  typedef MatrixAdapter<MatrixType, VectorType, VectorType> MatrixOperatorType;
-  // typedef SeqGS< MatrixType, VectorType, VectorType > PreconditionerType;
-  typedef SeqSOR<MatrixType, VectorType, VectorType> PreconditionerType;
-  // typedef BiCGSTABSolver< VectorType > SolverType;
-  typedef InverseOperatorResult InverseOperatorResultType;
 
 public:
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LocProbLinearOperatorTypeType;
@@ -129,19 +116,9 @@ public:
   LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, LocalGridList& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator);
 
-  LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType &coarse_space, LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
-      std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
-      const DiffusionOperatorType& diffusion_operator, const CoarseBasisFunctionListType& coarse_basis,
-      const std::map<std::size_t, std::size_t>& global_id_to_internal_id, const NeumannBoundaryType& neumann_bc,
-      const LocalGridDiscreteFunctionType& dirichlet_extension);
-
 private:
-  void solveAllLocalProblems(const CoarseEntityType& coarseCell,
+  void solve_all_on_single_cell(const CoarseEntityType& coarseCell,
                              LocalGridDiscreteFunctionVectorType& allLocalSolutions) const;
-
-  void output_local_solution(const int coarse_index, const int which,
-                             const LocalGridDiscreteFunctionType& host_local_solution) const;
-
 public:
 
   /** method for solving and saving the solutions of the local msfem problems
@@ -149,7 +126,7 @@ public:
     * ---- method: solve and save the whole set of local msfem problems -----
     * Use the host-grid entities of Level 'computational_level' as computational domains for the subgrid computations
     * **/
-  void assembleAndSolveAll(bool /*verbose*/ = false /* state information on subgrids */);
+  void solve_for_all_cells();
 
 }; // end class
 

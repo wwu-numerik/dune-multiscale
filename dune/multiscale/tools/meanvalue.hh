@@ -49,7 +49,7 @@ class Meanvalue {
   typedef typename EntityType::ctype coordType;
 
   static const int dimension = GridType::dimension;
-  static const int spacePolOrd = DiscreteFunctionSpaceType::polynomialOrder;
+  static const int spacePolOrd = DiscreteFunctionSpaceType::CommonTraits::polynomial_order;
 
   struct FunctorBase {
     virtual void evaluate(const DomainType& global_point, RangeType& y) const = 0;

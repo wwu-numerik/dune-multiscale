@@ -19,13 +19,14 @@
 
 
 void Dune::Multiscale::RightHandSideAssembler::assemble_fem(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
-                                                        Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
+                                                        Dune::Multiscale::CommonTraits::DiscreteFunctionType &rhsVector) {
+
   rhsVector.clear();
   for (const auto& entity : rhsVector.space()) {
     const auto& geometry = entity.geometry();
     auto elementOfRHS = rhsVector.localFunction(entity);
     const auto baseSet = rhsVector.space().basisFunctionSet(entity);
-    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space(), quadratureOrder);
+    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space());
     const auto numDofs = elementOfRHS.numDofs();
     for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
       // the return values:
@@ -54,7 +55,9 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_fem(const Dune::Multisca
 
 void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
                                                               const Dune::Multiscale::CommonTraits::FirstSourceType &f, DMM::LocalGridList &subgrid_list,
-    Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
+    Dune::Multiscale::CommonTraits::DiscreteFunctionType &rhsVector) {
+
+  static constexpr int dimension = CommonTraits::GridType::dimension;
   DSC_PROFILER.startTiming("msfem.assembleRHS");
   auto diffusionPtr = Problem::getDiffusion();
   const auto& diffusion = *diffusionPtr;
@@ -112,7 +115,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(const CommonTraits
           const auto& subGridPart = localSolutionManager.grid_part();
           for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafView(), localEntity)) {
             if (DMP::is_neumann(intersection)) {
-              const int orderOfIntegrand = (polynomialOrder - 1) + 2 * (polynomialOrder + 1);
+              const int orderOfIntegrand = (CommonTraits::polynomial_order - 1) + 2 * (CommonTraits::polynomial_order + 1);
               const int quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
               const auto faceQuad = DSFe::make_quadrature(intersection, localSolutions[lsNum]->space(), quadOrder);
               RangeType neumannValue(0.0);

@@ -41,7 +41,7 @@ private:
   typedef typename DiscreteFunctionSpace::EntityType Entity;
 
   static const int dimension = DiscreteFunctionSpace::GridType::dimension;
-  static const int polynomialOrder = DiscreteFunctionSpace::polynomialOrder;
+  static const int CommonTraits::polynomial_order = DiscreteFunctionSpace::CommonTraits::polynomial_order;
 
 public:
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
