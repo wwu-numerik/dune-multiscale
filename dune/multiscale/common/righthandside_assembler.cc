@@ -9,14 +9,13 @@
 #include <memory>
 
 #include <dune/stuff/fem/functions/integrals.hh>
-#include "dune/multiscale/common/traits.hh"
-#include "dune/multiscale/tools/misc.hh"
-#include "dune/multiscale/common/dirichletconstraints.hh"
-#include "dune/multiscale/msfem/msfem_grid_specifier.hh"
-#include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
-#include "dune/multiscale/msfem/localproblems/localsolutionmanager.hh"
-#include "righthandside_assembler.hh"
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/common/dirichletconstraints.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
+#include "righthandside_assembler.hh"
 
 void Dune::Multiscale::RightHandSideAssembler::assemble_fem(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
                                                         Dune::Multiscale::CommonTraits::DiscreteFunctionType &rhsVector) {

@@ -58,7 +58,6 @@ set( COMMON_SOURCES
         dune/multiscale/common/newton_rhs.cc
         dune/multiscale/msfem/coarse_scale_operator.cc
         dune/multiscale/msfem/localproblems/subgrid-list.cc
-        dune/multiscale/msfem/msfem_grid_specifier.cc
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc

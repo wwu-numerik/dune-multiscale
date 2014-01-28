@@ -29,7 +29,6 @@
 #include <vector>
 
 #include "dune/multiscale/common/la_backend.hh"
-#include "dune/multiscale/msfem/msfem_grid_specifier.hh"
 #include "dune/multiscale/msfem/msfem_traits.hh"
 #include "dune/multiscale/problems/base.hh"
 

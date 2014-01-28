@@ -5,16 +5,14 @@
 #ifndef LOCALSOLUTIONMANAGER_HEADERGUARD
 #define LOCALSOLUTIONMANAGER_HEADERGUARD
 
-// - Dune includes
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "dune/multiscale/msfem/msfem_grid_specifier.hh"
-#include "dune/multiscale/msfem/msfem_traits.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -36,11 +34,9 @@ public:
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
   const LocalGridDiscreteFunctionSpaceType& space() const;
-
   const LocalGridPartType& grid_part() const;
 
   void load();
-
   void save() const;
 
   std::size_t numBoundaryCorrectors() const;
