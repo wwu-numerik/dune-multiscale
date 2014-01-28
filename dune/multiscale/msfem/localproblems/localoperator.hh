@@ -22,7 +22,6 @@
 #include <vector>
 
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
@@ -64,7 +63,6 @@ public:
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
   * @param[in] coarseEntity The coarse cell.
-  * @param[in] specifier A MacroMicroGridSpecifier (needed for access to the coarse base function set).
   * @param[out] allLocalRHS A vector with pointers to the discrete functions for the right hand sides.
   *
   * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs

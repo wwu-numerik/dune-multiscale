@@ -5,7 +5,6 @@
 #include <dune/common/timer.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/msfem/coarse_scale_operator.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/profiler.hh>

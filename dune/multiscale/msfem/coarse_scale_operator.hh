@@ -17,7 +17,6 @@
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>

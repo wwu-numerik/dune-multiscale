@@ -12,8 +12,6 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-//#include <dune/multiscale/msfem/msfem_elliptic_error_estimator.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/selector.hh>
