@@ -277,7 +277,7 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& /*msfem_solution
 
 
 //! algorithm
-bool algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,
+void algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,
                int& coarse_grid_level_, int& number_of_layers_, std::vector<CommonTraits::RangeVectorVector*>& locals,
                std::vector<CommonTraits::RangeVector*>& totals, CommonTraits::RangeVector& total_estimated_H1_error_) {
   using namespace Dune;
@@ -337,27 +337,13 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
   CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", fine_discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
-  MacroMicroGridSpecifier specifier(coarse_discreteFunctionSpace);
 
-  // error_estimation might change it
-  bool repeat_algorithm = false;
-
-  LocalGridList subgrid_list(coarse_discreteFunctionSpace);
-
-  Elliptic_MsFEM_Solver().apply(diffusion_op, f, subgrid_list, coarse_part_msfem_solution,
+  Elliptic_MsFEM_Solver().apply(coarse_discreteFunctionSpace, diffusion_op, f, coarse_part_msfem_solution,
                      fine_part_msfem_solution, msfem_solution);
 
   if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, outputparam, loop_number);
-  }
-
-  if (DSC_CONFIG_GET("msfem.error_estimation", 0)) {
-    DUNE_THROW(NotImplemented, "");
-//      MsFEMTraits::ErrorEstimatorType estimator(discreteFunctionSpace, specifier, subgrid_list, diffusion_op, f);
-//      error_estimation(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution, estimator, specifier,
-//                       loop_number, locals, totals, total_estimated_H1_error_);
-    local_indicators_available_ = true;
   }
 
   //! ---------------------- solve FEM problem with same (fine) resolution ---------------------------
@@ -381,8 +367,6 @@ bool algorithm(const std::string& macroGridName, const int loop_number, int& tot
 
   if (DSC_CONFIG_GET("adaptive", false))
     DSC_LOG_INFO_0 << "\n\n---------------------------------------------" << std::endl;
-
-  return repeat_algorithm;
 } // function algorithm
 
 } // namespace MsFEM {

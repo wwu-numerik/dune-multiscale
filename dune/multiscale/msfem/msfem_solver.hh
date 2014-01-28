@@ -66,10 +66,9 @@ public:
    G --> 'second' source term, vector valued ('SecondSourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
-  void apply(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
-                            LocalGridList& subgrid_list,
-                            DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
-                            DiscreteFunctionType& solution) const;
+  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, const CommonTraits::DiffusionType& diffusion_op,
+             const CommonTraits::FirstSourceType& f, DiscreteFunctionType& coarse_scale_part,
+             DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const;
 };
 
 } // namespace MsFEM {

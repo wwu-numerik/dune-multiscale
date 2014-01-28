@@ -114,7 +114,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming
     // projection:
 
-    DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local correctors. restriction also no longer works");
+    if(DSC_CONFIG_GET("msfem.oversampling_layers", 0))
+      DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local correctors. restriction also no longer works");
 //    for (auto& local_entity : localSolManager.space()) {
 //      if (subgrid_list.covers(coarseCell, local_entity)) {
 //        const auto sub_loc_value = localSolutions[0]->localFunction(local_entity);
@@ -135,7 +136,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 //        }
 //      }
 //    }
-
   }
 
   DSC_LOG_INFO << "Identifying fine scale part of the MsFEM solution... ";
@@ -148,7 +148,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
 }
 
-void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f, LocalGridList& subgrid_list,
+void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType &coarse_space, const CommonTraits::DiffusionType& diffusion_op,
+                                  const CommonTraits::FirstSourceType& f,
     DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
     DiscreteFunctionType& solution) const {
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))
@@ -157,10 +158,10 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_o
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
 
-  const auto& coarse_space = coarse_scale_part.space();
   DiscreteFunctionType coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
   coarse_msfem_solution.clear();
 
+  LocalGridList subgrid_list(coarse_space);
   //! Solutions are kept in-memory via DiscreteFunctionIO::MemoryBackend by LocalsolutionManagers
   LocalProblemSolver(coarse_space, subgrid_list, diffusion_op).assembleAndSolveAll();
 
