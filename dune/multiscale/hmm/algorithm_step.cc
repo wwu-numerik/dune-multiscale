@@ -223,8 +223,7 @@ void solve_hmm_problem_nonlinear(
     }
 
     if (relative_newton_error > hmm_tolerance) {
-      auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step",
-                                                      hmm_iteration_step, DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
+      auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
       DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s." << std::endl
                    << std::endl;
 
@@ -313,7 +312,9 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
   // right hand side for the hm finite element method with Newton solver:
   typename CommonTraits::DiscreteFunctionType hmm_rhs("hmm rhs", discreteFunctionSpace);
   hmm_rhs.clear();
-  RightHandSideAssembler::assemble( *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
+  assert(false);
+  // correct rhs assembler was lost
+//  RightHandSideAssembler::assemble( *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
 
   // set Dirichlet Boundary to zero
   BoundaryTreatment::apply(hmm_rhs);
@@ -394,8 +395,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
 
   // residual solution almost identical to zero: break
   if (relative_newton_error <= hmm_tolerance) {
-    const auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", hmm_iteration_step,
-                                                          DSC_CONFIG_GET("global.output_walltime", false));
+    const auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", DSC_CONFIG_GET("global.output_walltime", false));
     DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "ms." << std::endl
                  << std::endl;
     DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
@@ -456,7 +456,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                       typename CommonTraits::DiscreteFunction_ptr& hmm_solution,
                       const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle) {
   DSC_LOG_INFO << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
-               << " unkowns and polynomial order " << CommonTraits::DiscreteFunctionSpaceType::CommonTraits::polynomial_order << "."
+               << " unknowns and polynomial order " << CommonTraits::polynomial_order << "."
                << std::endl << std::endl;
 
   const Dune::Fem::LPNorm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(gridPart, 2);

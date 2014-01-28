@@ -7,6 +7,7 @@
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 
 namespace Dune {
 namespace Multiscale {

@@ -225,7 +225,6 @@ void CellProblemSolver::saveTheSolutions_baseSet(
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-  static const int maxnumOfBaseFct = 100;
   const std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
   auto& dfw = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_location);
 
@@ -238,8 +237,6 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
   for (const auto& entity : discreteFunctionSpace) {
     typedef std::remove_reference<decltype(entity)>::type EntityType;
-    // gradients of the macroscopic base functions
-    std::vector<JacobianRangeType> gradientPhi(maxnumOfBaseFct);
 
     const auto baseSet = discreteFunctionSpace.basisFunctionSet(entity);
     const auto barycenter_of_entity = entity.geometry().center();
@@ -247,7 +244,8 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 
     // number of base functions on entity
     const auto numBaseFunctions = baseSet.size();
-
+    // gradients of the macroscopic base functions
+    std::vector<JacobianRangeType> gradientPhi(numBaseFunctions);
     // calc Jacobian inverse before volume is evaluated
     baseSet.jacobianAll(barycenter_local, gradientPhi);
 

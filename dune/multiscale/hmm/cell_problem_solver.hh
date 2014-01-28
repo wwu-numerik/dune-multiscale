@@ -34,36 +34,23 @@ private:
   typedef typename CommonTraits::DiffusionType DiffusionImp;
   //! type of discrete functions
   typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
-
   //! type of discrete function space
   typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpaceType;
-
   //! type of grid partition
   typedef typename PeriodicDiscreteFunctionSpaceType::GridPartType PeriodicGridPartType;
-
   //! type of grid
   typedef typename PeriodicDiscreteFunctionSpaceType::GridType PeriodicGridType;
-
   //! type of range vectors
   typedef typename PeriodicDiscreteFunctionSpaceType::RangeType RangeType;
-
   //! type of range vectors
   typedef typename PeriodicDiscreteFunctionSpaceType::DomainType DomainType;
-
-  //! polynomial order of base functions
-  enum {
-    CommonTraits::polynomial_order = PeriodicDiscreteFunctionSpaceType::CommonTraits::polynomial_order
-  };
-
   //! type of the (possibly non-linear) diffusion operator
   typedef DiffusionImp DiffusionType;
 
 public:
-  //! HMM
   typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::LinearOperatorType CellLinearOperatorType;
 
 private:
-  //! OEMGMRESOp //OEMBICGSQOp // OEMBICGSTABOp
   typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::InverseOperatorType InverseCellLinearOperatorType;
 
 private:

@@ -10,11 +10,8 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/entity.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 
-//!NOTE: 'ErrorEstimator' requires an access to the 'ModelProblemData' class (typically defined in
-// problem_specification.hh), which provides us with infomration about epsilon, delta, etc.
-
-//! ------------------------- nonlinear elliptic ------------------------------------------
 
 namespace Dune {
 namespace Multiscale {
@@ -51,7 +48,6 @@ private:
   typedef typename DiscreteFunctionSpaceType::GridType::template Codim<0>::EntityPointer EntityPointerType;
 
   static const int dimension = PeriodicDiscreteFunctionType::GridType::dimension;
-  static const int spacePolOrd = PeriodicDiscreteFunctionSpaceType::CommonTraits::polynomial_order;
   static const int maxnumOfBaseFct = 100;
 
 private:

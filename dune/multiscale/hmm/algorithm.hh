@@ -6,6 +6,7 @@
 #define DUNE_MS_HMM_ALGORITHM_HH
 
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/hmm/hmm_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -16,7 +17,7 @@ struct HMMResult;
 //! \TODO docme
 bool adapt(const HMMResult& result, const int loop_cycle, const double error_tolerance_,
            const typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
-           typename CommonTraits::AdaptationManagerType& adaptationManager);
+           typename HMMTraits::AdaptationManagerType& adaptationManager);
 
 //! the main hmm computation
 void
