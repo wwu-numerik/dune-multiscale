@@ -59,6 +59,12 @@ bool entities_identical(const Entity<cd, dim, GridImp, EntityImp>& entity,
   return true;
 }
 
+template < class TraitsImp >
+bool is_simplex_grid(const Dune::Fem::DiscreteFunctionSpaceInterface<TraitsImp>& space){
+  return space.grid_part().grid().leafIndexSet().geomTypes(0).size() == 1 &&
+         space.grid_part().grid().leafIndexSet().geomTypes(0)[0].isSimplex();
+}
+
 //! create N hostgrid functions from N subgridfunctions
 template <std::array<int, 1>::size_type N>
 static void

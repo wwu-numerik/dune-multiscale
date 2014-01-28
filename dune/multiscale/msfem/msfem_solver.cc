@@ -53,12 +53,11 @@ private:
   SearchType& search_;
 };
 
-void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& specifier,
-                                                     LocalGridList& subgrid_list,
+void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
   fine_scale_part.clear();
-  DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
+  const DiscreteFunctionSpace& coarse_space = coarse_msfem_solution.space();
   auto& coarse_indexset = coarse_space.gridPart().grid().leafIndexSet();
 
   typedef DS::HeterogenousProjection<LocalGridSearch> ProjectionType;
@@ -68,7 +67,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
 
   // traverse coarse space
   for (auto& coarseCell : coarse_space) {
-    LocalSolutionManager localSolManager(coarseCell, subgrid_list, specifier);
+    LocalSolutionManager localSolManager(coarse_space, coarseCell, subgrid_list);
     localSolManager.load();
     auto& localSolutions = localSolManager.getLocalSolutions();
     auto coarse_index = coarse_indexset.index(coarseCell);
@@ -80,7 +79,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
     auto& tmp_local_storage = *localSolutions[0];
 
-    if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) || specifier.simplexCoarseGrid()) {
+    if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) || DSG::is_simplex_grid(coarse_space)) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
                        "We should have dim local solutions per coarse element on triangular meshes!");
 
@@ -155,11 +154,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(MacroMicroGridSpecifier& sp
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
 }
 
-void Elliptic_MsFEM_Solver::apply(
-    const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
-    // number of layers per coarse grid entity T:  U(T) is created by enrichting T with
-    // n(T)-layers.
-    MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
+void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f, LocalGridList& subgrid_list,
     DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
     DiscreteFunctionType& solution) const {
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))
@@ -168,25 +163,25 @@ void Elliptic_MsFEM_Solver::apply(
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
 
-  DiscreteFunctionSpace& coarse_space = specifier.coarseSpace();
+  const auto& coarse_space = coarse_scale_part.space();
   DiscreteFunctionType coarse_msfem_solution("Coarse Part MsFEM Solution", coarse_space);
   coarse_msfem_solution.clear();
 
   //! Solutions are kept in-memory via DiscreteFunctionIO::MemoryBackend by LocalsolutionManagers
-  LocalProblemSolver(specifier, subgrid_list, diffusion_op).assembleAndSolveAll();
+  LocalProblemSolver(coarse_space, subgrid_list, diffusion_op).assembleAndSolveAll();
 
   DiscreteFunctionType msfem_rhs("MsFEM right hand side", coarse_space);
   msfem_rhs.clear();
-  RightHandSideAssembler::assemble_msfem(f, specifier, subgrid_list, msfem_rhs);
+  RightHandSideAssembler::assemble_msfem(coarse_space, f, subgrid_list, msfem_rhs);
   //! define the discrete (elliptic) operator that describes our problem
-  CoarseScaleOperator elliptic_msfem_op(specifier, coarse_space, subgrid_list, diffusion_op);
+  CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list, diffusion_op);
   elliptic_msfem_op.apply_inverse(msfem_rhs, coarse_msfem_solution);
 
   solution.clear();
   Dune::Multiscale::copyDirichletValues(coarse_space, solution);
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  identify_fine_scale_part(specifier, subgrid_list, coarse_msfem_solution, fine_scale_part);
+  identify_fine_scale_part(subgrid_list, coarse_msfem_solution, fine_scale_part);
 
   fine_scale_part.communicate();
 

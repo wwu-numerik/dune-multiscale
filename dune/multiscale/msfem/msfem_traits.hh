@@ -19,7 +19,7 @@ namespace Multiscale {
 namespace MsFEM {
 
 template <class F, class U, class B, class A, class R>
-class MsFEMErrorEstimator;
+class ErrorEstimator;
 
 //! type construction for the MSFEM code
 struct MsFEMTraits {

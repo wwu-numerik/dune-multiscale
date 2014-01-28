@@ -47,12 +47,11 @@ LocalProblemSolver::make_inverse_operator(LocalProblemSolver::LocProbLinearOpera
       DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);
 }
 
-LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifier& specifier,
-                                                 LocalGridList& subgrid_list,
+LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType &coarse_space, LocalGridList& subgrid_list,
                                                  const DiffusionOperatorType& diffusion_operator)
   : diffusion_(diffusion_operator)
-  , specifier_(specifier)
   , subgrid_list_(subgrid_list)
+  , coarse_space_(coarse_space)
   #ifdef ENABLE_LOD_ONLY_CODE
   , ids_relevant_basis_functions_for_subgrid_(nullptr)
   , inverse_of_L1_norm_coarse_basis_funcs_(nullptr)
@@ -63,14 +62,14 @@ LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifier& specifier,
   #endif // ENABLE_LOD_ONLY_CODE
 {}
 
-LocalProblemSolver::LocalProblemSolver(const MacroMicroGridSpecifier& specifier,
+LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType &coarse_space,
     LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& /*ids_basis_functions_in_subgrid*/,
     std::vector<double>& /*inverse_of_L1_norm_coarse_basis_funcs*/, const DiffusionOperatorType& diffusion_operator,
     const CoarseBasisFunctionListType& /*coarse_basis*/, const std::map<std::size_t, std::size_t>& /*global_id_to_internal_id*/,
     const NeumannBoundaryType& /*neumann_bc*/, const LocalGridDiscreteFunctionType& /*dirichlet_extension*/)
   : diffusion_(diffusion_operator)
-  , specifier_(specifier)
   , subgrid_list_(subgrid_list)
+  , coarse_space_(coarse_space)
   #ifdef ENABLE_LOD_ONLY_CODE
   , ids_relevant_basis_functions_for_subgrid_(&ids_basis_functions_in_subgrid)
   ,
@@ -92,7 +91,7 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
   assert(allLocalSolutions.size() > 0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
-  const auto numBoundaryCorrectors = specifier_.simplexCoarseGrid() ? 1u : 2u;
+  const auto numBoundaryCorrectors = DSG::is_simplex_grid(coarse_space_) ? 1u : 2u;
   const auto numInnerCorrectors = allLocalSolutions.size() - numBoundaryCorrectors;
 
   // clear return argument
@@ -108,7 +107,7 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
 
   //! define the discrete (elliptic) local MsFEM problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
-  LocalProblemOperator localProblemOperator(subDiscreteFunctionSpace, diffusion_);
+  LocalProblemOperator localProblemOperator(coarse_space_, subDiscreteFunctionSpace, diffusion_);
 
   // right hand side vector of the algebraic local MsFEM problem
   LocalGridDiscreteFunctionVectorType allLocalRHS(allLocalSolutions.size());
@@ -119,7 +118,7 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
     DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
 
   localProblemOperator.assemble_matrix(locProbSysMatrix);
-  localProblemOperator.assembleAllLocalRHS(coarseCell, specifier_, allLocalRHS);
+  localProblemOperator.assembleAllLocalRHS(coarseCell,allLocalRHS);
 
   // set dirichlet dofs to zero
   Stuff::GridboundaryAllDirichlet<LocalGridType::LeafGridView::Intersection> boundaryInfo;
@@ -157,8 +156,6 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
     if (!(allLocalSolutions[i]->dofsValid()))
       DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
   }
-
-  return;
 }
 
 void LocalProblemSolver::output_local_solution(const int coarse_index, const int which,
@@ -196,7 +193,7 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
     }
 
   // number of coarse grid entities (of codim 0).
-  const auto coarseGridSize = specifier_.coarseSpace().grid().size(0);
+  const auto coarseGridSize = coarse_space_.grid().size(0);
   if (Dune::Fem::MPIManager::size()>0)
     DSC_LOG_INFO << "Rank " << Dune::Fem::MPIManager::rank()
                  << " will solve local problems for " << coarseGridSize
@@ -211,9 +208,8 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
   DSC::MinMaxAvg<double> cell_time;
   DSC::MinMaxAvg<double> saveTime;
 
-  const auto& coarseSpace = specifier_.coarseSpace();
-  const auto& coarseGridLeafIndexSet = coarseSpace.gridPart().grid().leafIndexSet();
-  for (const auto& coarseEntity : coarseSpace) {
+  const auto& coarseGridLeafIndexSet = coarse_space_.gridPart().grid().leafIndexSet();
+  for (const auto& coarseEntity : coarse_space_) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
 
     DSC_LOG_INFO << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
@@ -360,12 +356,12 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
         output_local_solution(coarse_index, 1, local_problem_solution_1);
       }
     #endif // ENABLE_LOD_ONLY_CODE
-    } else if (uzawa && !(specifier_.simplexCoarseGrid())) {
+    } else if (uzawa && !(DSG::is_simplex_grid(coarse_space_))) {
       DUNE_THROW(NotImplemented, "Uzawa-solver and non-simplex grid have not been tested together, yet!");
     } else {
       // take time
       DSC_PROFILER.startTiming("none.local_problem_solution");
-      LocalSolutionManager localSolutionManager(coarseEntity, subgrid_list_, specifier_);
+      LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
 
       // solve the problems
       solveAllLocalProblems(coarseEntity, localSolutionManager.getLocalSolutions());

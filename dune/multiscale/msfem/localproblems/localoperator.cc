@@ -22,10 +22,12 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-LocalProblemOperator::LocalProblemOperator(const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
+LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
                                            const DiffusionOperatorType& diffusion_op)
   : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
-  , diffusion_operator_(diffusion_op) {}
+  , diffusion_operator_(diffusion_op)
+  , coarse_space_(coarse_space)
+{}
 
 // is a given 'point' in the convex hull of corner 0, corner 1 and corner 2 (which forms a codim 0 entity)
 bool LocalProblemOperator::point_is_in_element(const DomainType& corner_0, const DomainType& corner_1,
@@ -292,14 +294,13 @@ void LocalProblemOperator::assemble_local_RHS(const JacobianRangeType& e,
 
 
 void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEntity,
-                                               const MacroMicroGridSpecifier& specifier,
                                                MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
 
   //! @todo correct the error message below (+1 for simplecial, +2 for arbitrary), as there's no finespace any longer
 //  BOOST_ASSERT_MSG(
-//      (specifier.simplexCoarseGrid() && allLocalRHS.size() == GridType::dimension + 1) ||
-//          (!(specifier.simplexCoarseGrid()) &&
+//      (DSG::is_simplex_grid(coarse_space_) && allLocalRHS.size() == GridType::dimension + 1) ||
+//          (!(DSG::is_simplex_grid(coarse_space_)) &&
 //           static_cast<long long>(allLocalRHS.size()) ==
 //               static_cast<long long>(specifier.fineSpace().mapper().maxNumDofs() + 2)),
 //      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
@@ -326,7 +327,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
   //! @todo we should use the dirichlet constraints here somehow
   LocalGridDiscreteFunctionType dirichletExtension("dirichletExtension", discreteFunctionSpace);
   dirichletExtension.clear();
-  CommonTraits::DiscreteFunctionType dirichletExtensionCoarse("Dirichlet Extension Coarse", specifier.coarseSpace());
+  CommonTraits::DiscreteFunctionType dirichletExtensionCoarse("Dirichlet Extension Coarse", coarse_space_);
   dirichletExtensionCoarse.clear();
   //! @todo is this needed or could it be replaced by a method from dirichletconstraints.hh?
   projectDirichletValues(dirichletExtensionCoarse);
@@ -338,14 +339,14 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
     rhs->clear();
 
   // get the base function set of the coarse space for the given coarse entity
-  const auto& coarseBaseSet = specifier.coarseSpace().basisFunctionSet(coarseEntity);
+  const auto& coarseBaseSet = coarse_space_.basisFunctionSet(coarseEntity);
   std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseFuncJacs(coarseBaseSet.size());
 
   // gradient of micro scale base function:
   std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
   std::vector<RangeType> phi(discreteFunctionSpace.mapper().maxNumDofs());
 
-  const auto numBoundaryCorrectors = specifier.simplexCoarseGrid() ? 1u : 2u;
+  const auto numBoundaryCorrectors = DSG::is_simplex_grid(coarse_space_) ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
   for (auto& localGridCell : discreteFunctionSpace) {
@@ -375,7 +376,7 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
 
           JacobianRangeType diffusion(0.0);
           if (coarseBaseFunc < numInnerCorrectors) {
-            if (specifier.simplexCoarseGrid())
+            if (DSG::is_simplex_grid(coarse_space_))
               diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
             else {
               const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);

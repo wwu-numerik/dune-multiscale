@@ -11,10 +11,9 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-CoarseScaleOperator::CoarseScaleOperator(MacroMicroGridSpecifierType& specifier, const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-    LocalGridList &subgrid_list, const DiffusionModel& diffusion_op)
-  : specifier_(specifier)
-  , coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
+CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
+  LocalGridList &subgrid_list, const DiffusionModel& diffusion_op)
+  : coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)
   , petrovGalerkin_(false)
@@ -48,7 +47,7 @@ CoarseScaleOperator::CoarseScaleOperator(MacroMicroGridSpecifierType& specifier,
     const auto& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = coarse_grid_baseSet.size();
 
-    Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list_, specifier_);
+    Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarseDiscreteFunctionSpace_, coarse_grid_entity, subgrid_list_);
     localSolutionManager.load();
     const auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
@@ -96,7 +95,7 @@ CoarseScaleOperator::CoarseScaleOperator(MacroMicroGridSpecifierType& specifier,
 
               // Compute the gradients of the i'th and j'th local problem solutions
               JacobianRangeType gradLocProbSoli(0.0), gradLocProbSolj(0.0);
-              if (specifier_.simplexCoarseGrid()) {
+              if (DSG::is_simplex_grid(coarseDiscreteFunctionSpace_)) {
                 assert(allLocalSolutionEvaluations.size() == dimension);
                 // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
                 for (int k = 0; k < dimension; ++k) {
