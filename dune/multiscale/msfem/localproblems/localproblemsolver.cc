@@ -114,9 +114,6 @@ void LocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarseCel
   for (auto& it : allLocalRHS)
     it = DSC::make_unique<LocalGridDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
 
-  if (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) != 1)
-    DUNE_THROW(Fem::ParameterInvalid, "Oversampling Strategy must be 1 at the moment");
-
   localProblemOperator.assemble_matrix(locProbSysMatrix);
   localProblemOperator.assembleAllLocalRHS(coarseCell,allLocalRHS);
 
@@ -216,165 +213,22 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
 
     DSC_PROFILER.startTiming("none.saveLocalProblemsOnCell");
 
-    const bool uzawa = DSC_CONFIG_GET("rigorous_msfem.uzawa_solver", false);
-    const bool clement = (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement");
-    if ((!uzawa) && (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) && clement) {
-      DUNE_THROW(InvalidStateException, "broken lod only code");
-    #ifdef ENABLE_LOD_ONLY_CODE
-      //! only for dimension 2 and simplex grid!
+    // take time
+    DSC_PROFILER.startTiming("none.local_problem_solution");
+    LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
 
-      // preprocessing step to assemble the two relevant system matrices:
-      // one for the corrector problem without contraints
-      // and the second of the low dimensional lagrange multiplier
-      // (describing the inverse of the schur complement)
-      // the preprocessing step takes the main costs for solving the corrector problems,
-      // however, it is the same for all correctors on the same subgrid
-      // -----------------------------------------------------------------------------------------------------
-      //! the matrix in our linear system of equations
-      // in the non-linear case, it is the matrix for each iteration step
-      LocProbLinearOperatorTypeType locprob_system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
-                                                          subDiscreteFunctionSpace);
+    // solve the problems
+    solveAllLocalProblems(coarseEntity, localSolutionManager.getLocalSolutions());
+    // min/max time
+    cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
+    DSC_PROFILER.resetTiming("none.local_problem_solution");
 
-      const auto number_of_relevant_coarse_nodes_for_subgrid =
-          (*ids_relevant_basis_functions_for_subgrid_)[coarse_index].size();
-      MatrixType lagrange_multiplier_system_matrix(number_of_relevant_coarse_nodes_for_subgrid,
-                                                   number_of_relevant_coarse_nodes_for_subgrid);
+    // save the local solutions to disk
+    DSC_PROFILER.startTiming("none.saveLocalProblemSolution");
+    localSolutionManager.save();
+    saveTime(DSC_PROFILER.stopTiming("none.saveLocalProblemSolution") / 1000.f);
+    DSC_PROFILER.resetTiming("none.saveLocalProblemSolution");
 
-      std::cout << "Start preprocessing for subgrid " << coarse_index << "." << std::endl;
-      std::cout << "There are " << number_of_relevant_coarse_nodes_for_subgrid << " preprocessing problems to solve."
-                << std::endl;
-      preprocess_corrector_problems(coarse_index, locprob_system_matrix, lagrange_multiplier_system_matrix);
-      std::cout << "Preprocessing done." << std::endl;
-      // -----------------------------------------------------------------------------------------------------
-
-      LocalGridDiscreteFunctionType local_problem_solution_0(name_local_solution, subDiscreteFunctionSpace);
-      local_problem_solution_0.clear();
-
-      LocalGridDiscreteFunctionType local_problem_solution_1(name_local_solution, subDiscreteFunctionSpace);
-      local_problem_solution_1.clear();
-
-      // 'solve' methods requires the pre-processing step (that is the same for both directions e_0 and e_1)
-      // (this at least halfes the computational complexity)
-      solve_corrector_problem_lod(unitVectors[0], locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                  local_problem_solution_0, coarse_index);
-      solve_corrector_problem_lod(unitVectors[1], locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                  local_problem_solution_1, coarse_index);
-
-      assert(local_problem_solution_0.dofsValid());
-      assert(local_problem_solution_1.dofsValid());
-
-      const std::string locprob_solution_location =
-          (boost::format("local_problems/_localProblemSolutions_%d") % coarseId).str();
-      DiscreteFunctionWriter dfw(locprob_solution_location);
-      dfw.append(local_problem_solution_0);
-      dfw.append(local_problem_solution_1);
-
-      std::vector<std::size_t> indices;
-      coarseSpace.mapper().map(coarseEntity, indices);
-
-      // was the dirichlet (resp. neumann) boundary corrector for this element already assembled?
-      bool dirichlet_boundary_corrector_assembled = false;
-      bool neumann_boundary_corrector_assembled = false;
-      // assemble Dirichlet and Neumann boundary correctors
-      for (const auto& intersection : DSC::intersectionRange(coarseSpace.gridPart(), coarseEntity)) {
-        if ((!dirichlet_extension_) || (!neumann_bc_))
-          continue;
-
-        bool solve_for_dirichlet_corrector = false;
-        if (!dirichlet_boundary_corrector_assembled) {
-          if (intersection.boundary() && (intersection.boundaryId() == 1)) {
-            solve_for_dirichlet_corrector = true;
-          } else {
-            const auto& lagrangePointSet = coarseSpace.lagrangePointSet(coarseEntity);
-
-            const int face = intersection.indexInInside();
-            for (const auto& lp : DSC::lagrangePointSetRange(lagrangePointSet, face)) {
-              if (specifier_.is_coarse_dirichlet_node(indices[lp])) {
-                solve_for_dirichlet_corrector = true;
-              }
-            }
-            if ((!solve_for_dirichlet_corrector) && (!intersection.boundary())) {
-              continue;
-            }
-          }
-        } else {
-          solve_for_dirichlet_corrector = false;
-        }
-
-        // Dirichlet boundary corrector:
-        if (solve_for_dirichlet_corrector) {
-          const std::string name_dirichlet_corrector =
-              (boost::format("Dirichlet Boundary Corrector %d") % coarseId).str();
-          LocalGridDiscreteFunctionType dirichlet_boundary_corrector(name_dirichlet_corrector, subDiscreteFunctionSpace);
-          dirichlet_boundary_corrector.clear();
-
-          // also requires the pre-processing step:
-          std::cout << "Solve Dirichlet boundary corrector problem for subgrid " << coarse_index << std::endl;
-          solve_dirichlet_corrector_problem_lod(locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                                dirichlet_boundary_corrector, coarse_index);
-
-          assert(dirichlet_boundary_corrector.dofsValid());
-
-          const std::string dirichlet_corrector_location =
-              (boost::format("local_problems/_dirichletBoundaryCorrector_%d") % coarseId).str();
-          DiscreteFunctionWriter dfw_dirichlet(dirichlet_corrector_location);
-          dfw_dirichlet.append(dirichlet_boundary_corrector);
-          dirichlet_boundary_corrector_assembled = true;
-
-          if (DSC_CONFIG_GET("lod.localproblem_vtkoutput", true)) {
-            output_local_solution(coarse_index, 2, dirichlet_boundary_corrector); // 2 stands for Dirichlet
-          }
-        }
-
-        // Neumann boundary corrector:
-        if (intersection.boundary() && (intersection.boundaryId() == 2) && (!neumann_boundary_corrector_assembled)) {
-          const std::string name_neumann_corrector = (boost::format("Neumann Boundary Corrector %d") % coarseId).str();
-          LocalGridDiscreteFunctionType neumann_boundary_corrector(name_neumann_corrector, subDiscreteFunctionSpace);
-          neumann_boundary_corrector.clear();
-          std::cout << "Solve Neumann boundary corrector problem for subgrid " << coarse_index << std::endl;
-
-          // also requires the pre-processing step:
-          solve_neumann_corrector_problem_lod(locprob_system_matrix, lagrange_multiplier_system_matrix,
-                                              neumann_boundary_corrector, coarse_index);
-
-          assert(neumann_boundary_corrector.dofsValid());
-
-          const std::string neumann_corrector_location =
-              (boost::format("local_problems/_neumannBoundaryCorrector_%d") % coarseId).str();
-          DiscreteFunctionWriter dfw_neumann(neumann_corrector_location);
-          dfw_neumann.append(neumann_boundary_corrector);
-          neumann_boundary_corrector_assembled = true;
-
-          if (DSC_CONFIG_GET("lod.localproblem_vtkoutput", true)) {
-            output_local_solution(coarse_index, 3, neumann_boundary_corrector); // 3 stands for Neumann
-          }
-        }
-      }
-
-      if (DSC_CONFIG_GET("lod.localproblem_vtkoutput", true)) {
-        output_local_solution(coarse_index, 0, local_problem_solution_0);
-        output_local_solution(coarse_index, 1, local_problem_solution_1);
-      }
-    #endif // ENABLE_LOD_ONLY_CODE
-    } else if (uzawa && !(DSG::is_simplex_grid(coarse_space_))) {
-      DUNE_THROW(NotImplemented, "Uzawa-solver and non-simplex grid have not been tested together, yet!");
-    } else {
-      // take time
-      DSC_PROFILER.startTiming("none.local_problem_solution");
-      LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
-
-      // solve the problems
-      solveAllLocalProblems(coarseEntity, localSolutionManager.getLocalSolutions());
-      // min/max time
-      cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
-      DSC_PROFILER.resetTiming("none.local_problem_solution");
-
-      // save the local solutions to disk
-      DSC_PROFILER.startTiming("none.saveLocalProblemSolution");
-      localSolutionManager.save();
-      saveTime(DSC_PROFILER.stopTiming("none.saveLocalProblemSolution") / 1000.f);
-      DSC_PROFILER.resetTiming("none.saveLocalProblemSolution");
-    }
 
     DSC_LOG_INFO << "Total time for solving and saving all local problems for the current subgrid: "
                  << DSC_PROFILER.stopTiming("none.saveLocalProblemsOnCell") / 1000.f << "s"
@@ -385,13 +239,13 @@ void LocalProblemSolver::assembleAndSolveAll(bool /*verbose*/) {
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all") / 1000.f;
   DSC_LOG_INFO << std::endl;
-  DSC_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities." << std::endl;
-  DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s." << std::endl;
-  DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s." << std::endl;
-  DSC_LOG_INFO << "Average time for solving a localproblem = " << cell_time.average() << "s." << std::endl;
-  DSC_LOG_INFO << "Minimum time for saving a local problem = " << saveTime.min() << "s." << std::endl;
-  DSC_LOG_INFO << "Maximum time for saving a localproblem = " << saveTime.max() << "s." << std::endl;
-  DSC_LOG_INFO << "Average time for saving a localproblem = " << saveTime.average() << "s." << std::endl;
+  DSC_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n";
+  DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s.\n";
+  DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s.\n";
+  DSC_LOG_INFO << "Average time for solving a localproblem = " << cell_time.average() << "s.\n";
+  DSC_LOG_INFO << "Minimum time for saving a local problem = " << saveTime.min() << "s.\n";
+  DSC_LOG_INFO << "Maximum time for saving a localproblem = " << saveTime.max() << "s.\n";
+  DSC_LOG_INFO << "Average time for saving a localproblem = " << saveTime.average() << "s.\n";
   DSC_LOG_INFO << "Total time for computing and saving the localproblems = " << total_time << "s," << std::endl
                << std::endl;
 } // assemble_all

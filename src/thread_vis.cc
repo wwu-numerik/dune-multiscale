@@ -106,14 +106,7 @@ void subgrid_vis(const std::string& macroGridName, int total_refinement_level_,
   // the global-problem function space:
   CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
   CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace_coarse(gridPart_coarse);
-  const auto number_of_level_host_entities = grid_coarse.size(0 /*codim*/);
 
-  // number of layers per coarse grid entity T:  U(T) is created by enrichting T with n(T)-layers.
-  MsFEM::MacroMicroGridSpecifier specifier(discreteFunctionSpace_coarse, discreteFunctionSpace);
-  for (int i = 0; i < number_of_level_host_entities; ++i) {
-    specifier.setNoOfLayers(i, number_of_layers_);
-  }
-  specifier.setOversamplingStrategy(DSC_CONFIG_GET("msfem.oversampling_strategy", 1));
   MsFEM::MsFEMTraits::SubGridListType subgrid_list(specifier, DSC_CONFIG_GET("logging.subgrid_silent", false));
 
   typedef Dune::Fem::FiniteVolumeSpace<CommonTraits::FunctionSpaceType, CommonTraits::GridPartType, 0> FVSpace;
@@ -186,14 +179,6 @@ int main(int argc, char** argv) {
     int coarse_grid_level_ = DSC_CONFIG_GETV("msfem.coarse_grid_level", 4, DSC::ValidateLess<int>(-1));
     int number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
-    switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
-      case 1:
-        break;
-      case 2:
-        break;
-      default:
-        DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
-    }
 
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)

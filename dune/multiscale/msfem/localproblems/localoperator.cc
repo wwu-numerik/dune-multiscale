@@ -439,7 +439,6 @@ void LocalProblemOperator::assembleAllLocalRHS(const CoarseEntityType& coarseEnt
 void LocalProblemOperator::assemble_local_RHS(
     const JacobianRangeType& e,
     const LocalGridList::CoarseNodeVectorType& coarse_node_vector,
-    const int& oversampling_strategy,
     LocalGridDiscreteFunctionType& local_problem_RHS) const {
 
   const auto& discreteFunctionSpace = local_problem_RHS.space();
@@ -452,39 +451,23 @@ void LocalProblemOperator::assemble_local_RHS(
     const auto& geometry = local_grid_entity.geometry();
     assert(local_grid_entity.partitionType() == InteriorEntity);
 
-    // for strategy 3, we only integrate over 'T' instead of 'U(T)', therefor check if 'it' belongs to 'T':
-    if (oversampling_strategy == 3) {
-      // the first three elements of the 'coarse_node_vector' are the corners of the relevant coarse grid entity
-      // (the coarse grid entity that was the starting entity to create the current subgrid that was constructed by
-      // enrichment)
-      if (!(point_is_in_element(coarse_node_vector[0], coarse_node_vector[1], coarse_node_vector[2],
-                                geometry.center())))
-        continue;
-    }
-
-    // 'oversampling_strategy == 3' means that we use the rigorous MsFEM
-    bool clement = false;
-    if (oversampling_strategy == 3)
-      clement = (DSC_CONFIG_GET("rigorous_msfem.oversampling_strategy", "Clement") == "Clement");
-
     // if the we use oversampling strategy 2 or 3/Lagrange, we need to sort out some coarse grid nodes:
     std::vector<int> sub_grid_entity_corner_is_relevant;
-    if (!clement) {
-      for (int c = 0; c < geometry.corners(); ++c) {
-        for (size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size();
-             ++coarse_node_local_id) {
-          // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
-          // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
-          if ((coarse_node_vector[coarse_node_local_id] == geometry.corner(c)) &&
-              (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) ==
-               sub_grid_entity_corner_is_relevant.end())) {
-            sub_grid_entity_corner_is_relevant.push_back(c);
-            // std :: cout << std ::endl << "geometry.corner(" << c << ") = " << geometry.corner(c) << " is relevant."
-            // << std ::endl;
-          }
+    for (int c = 0; c < geometry.corners(); ++c) {
+      for (size_t coarse_node_local_id = 0; coarse_node_local_id < coarse_node_vector.size();
+           ++coarse_node_local_id) {
+        // if the subgrid corner 'c' is in the 'relevant coarse node vector' and if 'c' was not yet added to the
+        // vector 'sub_grid_entity_corner_is_relevant' then add it to the vector
+        if ((coarse_node_vector[coarse_node_local_id] == geometry.corner(c)) &&
+            (std::find(sub_grid_entity_corner_is_relevant.begin(), sub_grid_entity_corner_is_relevant.end(), c) ==
+             sub_grid_entity_corner_is_relevant.end())) {
+          sub_grid_entity_corner_is_relevant.push_back(c);
+          // std :: cout << std ::endl << "geometry.corner(" << c << ") = " << geometry.corner(c) << " is relevant."
+          // << std ::endl;
         }
       }
     }
+
     auto elementOfRHS = local_problem_RHS.localFunction(local_grid_entity);
 
     const auto& baseSet = elementOfRHS.basisFunctionSet();

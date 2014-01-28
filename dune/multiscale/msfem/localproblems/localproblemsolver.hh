@@ -60,7 +60,6 @@ private:
   typedef typename MsFEMTraits::LocalGridPartType LocalGridPartType;
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
 
-  typedef MacroMicroGridSpecifier MacroMicroGridSpecifier;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
