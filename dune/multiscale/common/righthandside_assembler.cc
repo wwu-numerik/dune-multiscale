@@ -10,6 +10,7 @@
 
 #include <dune/stuff/fem/functions/integrals.hh>
 #include "dune/multiscale/common/traits.hh"
+#include "dune/multiscale/tools/misc.hh"
 #include "dune/multiscale/common/dirichletconstraints.hh"
 #include "dune/multiscale/msfem/msfem_grid_specifier.hh"
 #include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
@@ -136,8 +137,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_hmm_lod(
   }
 }
 
-void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
-    DMM::MacroMicroGridSpecifier &specifier, DMM::LocalGridList &subgrid_list,
+void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+                                                              const Dune::Multiscale::CommonTraits::FirstSourceType &f, DMM::LocalGridList &subgrid_list,
     Dune::Multiscale::RightHandSideAssembler::DiscreteFunctionType &rhsVector) {
   DSC_PROFILER.startTiming("msfem.assembleRHS");
   auto diffusionPtr = Problem::getDiffusion();
@@ -157,11 +158,11 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(const Dune::Multis
     const auto& coarseGeometry = coarse_grid_entity.geometry();
     auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
     const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
-    const auto& coarseBaseSet = specifier.coarseSpace().basisFunctionSet(coarse_grid_entity);
+    const auto& coarseBaseSet = coarse_space.basisFunctionSet(coarse_grid_entity);
 
     // --------- add corrector contribution of right hand side --------------------------
     // Load local solutions
-    MsFEM::LocalSolutionManager localSolutionManager(coarse_grid_entity, subgrid_list, specifier);
+    MsFEM::LocalSolutionManager localSolutionManager(coarse_space, coarse_grid_entity, subgrid_list);
     localSolutionManager.load();
     auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
@@ -254,7 +255,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(const Dune::Multis
             JacobianRangeType reconstructionGradPhi(coarseBaseJacs[coarseBF]);
             RangeType reconstructionPhi(coarseBaseEvals[coarseBF]);
 
-            if (specifier.simplexCoarseGrid()) {
+            if (DSG::is_simplex_grid(coarse_space)) {
               assert(localSolutions.size() == dimension + localSolutionManager.numBoundaryCorrectors());
               for (const auto& i : DSC::valueRange(dimension))
                 reconstructionPhi +=

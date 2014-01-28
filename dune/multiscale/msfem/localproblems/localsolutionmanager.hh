@@ -33,8 +33,7 @@ private:
   typedef MacroMicroGridSpecifier MacroMicroGridSpecifier;
 
 public:
-  LocalSolutionManager(const CoarseEntityType& coarseEntity, LocalGridList& subgridList,
-                       const MacroMicroGridSpecifier& gridSpecifier);
+  LocalSolutionManager(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, const CoarseEntityType& coarseEntity, LocalGridList& subgridList);
 
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
@@ -51,7 +50,6 @@ public:
 private:
   LocalGridList& subgridList_;
   MsFEMTraits::LocalGridType& subgrid_;
-  const MacroMicroGridSpecifier& gridSpecifier_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;
   MsFEMTraits::LocalSolutionVectorType localSolutions_;

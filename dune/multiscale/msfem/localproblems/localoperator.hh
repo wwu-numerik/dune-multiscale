@@ -21,9 +21,10 @@
 #include <memory>
 #include <vector>
 
-#include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
-#include "dune/multiscale/msfem/msfem_grid_specifier.hh"
-#include "dune/multiscale/problems/base.hh"
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
+#include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -52,10 +53,11 @@ class LocalProblemOperator {
 
   typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
+  typedef CommonTraits::DiscreteFunctionSpaceType CoarseSpaceType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
 public:
-  LocalProblemOperator(const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionOperatorType& diffusion_op);
+  LocalProblemOperator(const CoarseSpaceType &coarse_space, const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionOperatorType& diffusion_op);
 
   //! assemble stiffness matrix for local problems (oversampling strategy 1)
   void assemble_matrix(LocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const;
@@ -96,7 +98,7 @@ public:
   * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
   * functions. The discrete functions in allLocalRHS will be cleared in this function.
   */
-  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity, const MacroMicroGridSpecifier& specifier,
+  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity,
                            MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
 #ifdef ENABLE_LOD_ONLY_CODE
@@ -140,6 +142,7 @@ public:
 private:
   const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_operator_;
+  const CoarseSpaceType& coarse_space_;
 };
 
 } // namespace MsFEM {

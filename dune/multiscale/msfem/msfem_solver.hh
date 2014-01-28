@@ -51,7 +51,7 @@ private:
   typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType CoarseScaleLinearOperatorType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  void identify_fine_scale_part(MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
+  void identify_fine_scale_part(LocalGridList& subgrid_list,
                                 const DiscreteFunctionType& coarse_msfem_solution,
                                 DiscreteFunctionType& fine_scale_part) const;
 
@@ -67,7 +67,7 @@ public:
    homogenous Dirchilet boundary condition!:
    **/
   void apply(const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
-                            MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
+                            LocalGridList& subgrid_list,
                             DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
                             DiscreteFunctionType& solution) const;
 };

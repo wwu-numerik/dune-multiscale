@@ -25,9 +25,8 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-LocalGridList::LocalGridList(MacroMicroGridSpecifier& specifier)
-  : coarseSpace_(specifier.coarseSpace())
-  , specifier_(specifier)
+LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
+  : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet())
   #ifdef ENABLE_LOD_ONLY_CODE
   , fineToCoarseMap_(Fem::MPIManager::size())
@@ -136,7 +135,7 @@ const LocalGridList::CoarseNodeVectorType& LocalGridList::getCoarseNodeVector(In
     DUNE_THROW(Dune::InvalidStateException, "Method 'getCoarseNodeVector' of class 'LocalGridList' should not be used in\
                 combination with oversampling strategy 1. Check your implementation!");
 
-  if (i >= specifier_.coarseSpace().grid().size(0)) {
+  if (i >= coarseSpace_.grid().size(0)) {
     DUNE_THROW(Dune::RangeError, "Error. LocalGrid-Index too large.");
   }
   return coarse_node_store_[i];

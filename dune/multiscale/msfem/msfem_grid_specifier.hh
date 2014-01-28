@@ -22,13 +22,10 @@ class MacroMicroGridSpecifier {
   static const int faceCodim = 1;
 
 public:
-  MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space);
+  MacroMicroGridSpecifier(const DiscreteFunctionSpaceType& coarse_scale_space);
 
   //! Get the difference between coarse and fine level
   int getLevelDifference() const;
-
-  const DiscreteFunctionSpaceType& coarseSpace() const;
-  DiscreteFunctionSpaceType& coarseSpace();
 
 #if 0 // LOD Only
   void identify_coarse_boundary_nodes();
@@ -63,13 +60,8 @@ public:
   bool simplexCoarseGrid() const;
 
 private:
-  DiscreteFunctionSpaceType& coarse_scale_space_;
-
   // level difference between coarse grid level and fine grid level
   const int coarse_level_fine_level_difference_;
-
-
-
   const bool coarseGridIsSimplex_;
 };
 

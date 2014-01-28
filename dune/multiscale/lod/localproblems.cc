@@ -94,7 +94,7 @@ void LodLocalProblemSolver::solveAllLocalProblems(const CoarseEntityType& coarse
   assert(allLocalSolutions.size() > 0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
-  const auto numBoundaryCorrectors = specifier_.simplexCoarseGrid() ? 1u : 2u;
+  const auto numBoundaryCorrectors = DSG::is_simplex_grid(coarse_space) ? 1u : 2u;
   const auto numInnerCorrectors = allLocalSolutions.size() - numBoundaryCorrectors;
 
   // clear return argument

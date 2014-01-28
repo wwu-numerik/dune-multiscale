@@ -122,8 +122,8 @@ private:
 
   typedef WeightedClementOperator WeightedClementOperatorType;
   const DiffusionOperatorType& diffusion_;
-  const MacroMicroGridSpecifier& specifier_;
   LocalGridList& subgrid_list_;
+  const CommonTraits::DiscreteFunctionSpaceType& coarse_space_;
 
 #ifdef ENABLE_LOD_ONLY_CODE
   std::vector<std::vector<std::size_t>>* ids_relevant_basis_functions_for_subgrid_;
@@ -139,11 +139,10 @@ public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
-  LocalProblemSolver(const MacroMicroGridSpecifier& specifier, LocalGridList& subgrid_list,
+  LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, LocalGridList& subgrid_list,
                           const DiffusionOperatorType& diffusion_operator);
 
-  LocalProblemSolver(const MacroMicroGridSpecifier& specifier,
-      LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
+  LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType &coarse_space, LocalGridList& subgrid_list, std::vector<std::vector<std::size_t>>& ids_basis_functions_in_subgrid,
       std::vector<double>& inverse_of_L1_norm_coarse_basis_funcs, // || coarse basis function ||_L1^(-1)
       const DiffusionOperatorType& diffusion_operator, const CoarseBasisFunctionListType& coarse_basis,
       const std::map<std::size_t, std::size_t>& global_id_to_internal_id, const NeumannBoundaryType& neumann_bc,

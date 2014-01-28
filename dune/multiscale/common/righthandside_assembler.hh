@@ -56,7 +56,7 @@ public:
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)
    **/
-  static void assemble_msfem(const CommonTraits::FirstSourceType& f, MsFEM::MacroMicroGridSpecifier& specifier,
+  static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType &coarse_space, const CommonTraits::FirstSourceType& f,
                                            MsFEM::LocalGridList& subgrid_list, DiscreteFunctionType& rhsVector);
 };  // end class
 } // end namespace Multiscale

@@ -63,7 +63,7 @@ private:
   typedef std::vector<std::vector<LocalEntityPointerType>> EntityPointerCollectionType;
 
 public:
-  LocalGridList(MacroMicroGridSpecifier& specifier);
+  LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace);
 
 private:
   LocalGridType& getSubGrid(IndexType i);
@@ -118,7 +118,6 @@ private:
   typedef std::map<IndexType, std::shared_ptr<LocalGridType>> SubGridStorageType;
 
   const CommonTraits::DiscreteFunctionSpaceType& coarseSpace_;
-  MacroMicroGridSpecifier& specifier_;
   SubGridStorageType subGridList_;
   const LeafIndexSet& coarseGridLeafIndexSet_;
   CoarseGridNodeStorageType coarse_node_store_;

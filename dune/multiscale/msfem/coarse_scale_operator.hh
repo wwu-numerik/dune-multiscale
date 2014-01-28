@@ -75,14 +75,12 @@ private:
   typedef typename CommonTraits::LinearOperatorType MatrixType;
 
 public:
-  CoarseScaleOperator(MacroMicroGridSpecifierType& specifier,
-                                const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
+  CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
                                 LocalGridList& subgrid_list, const DiffusionModel& diffusion_op);
 
   void apply_inverse(const CoarseDiscreteFunction& b, CoarseDiscreteFunction& x);
 
 private:
-  MacroMicroGridSpecifierType& specifier_;
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
   LocalGridList& subgrid_list_;
   const DiffusionModel& diffusion_operator_;

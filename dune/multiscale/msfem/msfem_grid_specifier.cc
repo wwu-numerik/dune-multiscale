@@ -12,9 +12,8 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-MacroMicroGridSpecifier::MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coarse_scale_space)
-  : coarse_scale_space_(coarse_scale_space)
-  , coarse_level_fine_level_difference_(std::numeric_limits<int>::max())
+MacroMicroGridSpecifier::MacroMicroGridSpecifier(const DiscreteFunctionSpaceType& coarse_scale_space)
+  : coarse_level_fine_level_difference_(std::numeric_limits<int>::max())
   , coarseGridIsSimplex_(coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0).size() == 1 &&
                          coarse_scale_space.gridPart().grid().leafIndexSet().geomTypes(0)[0].isSimplex())
 #ifdef ENABLE_LOD_ONLY_CODE
@@ -25,15 +24,6 @@ MacroMicroGridSpecifier::MacroMicroGridSpecifier(DiscreteFunctionSpaceType& coar
 
 //! Get the difference between coarse and fine level
 int MacroMicroGridSpecifier::getLevelDifference() const { return coarse_level_fine_level_difference_; }
-
-//! the coarse space
-const MacroMicroGridSpecifier::DiscreteFunctionSpaceType& MacroMicroGridSpecifier::coarseSpace() const {
-  return coarse_scale_space_;
-}
-//! the coarse space
-MacroMicroGridSpecifier::DiscreteFunctionSpaceType& MacroMicroGridSpecifier::coarseSpace() {
-  return coarse_scale_space_;
-}
 
 #ifdef ENABLE_LOD_ONLY_CODE
 void MacroMicroGridSpecifier::identify_coarse_boundary_nodes() {
