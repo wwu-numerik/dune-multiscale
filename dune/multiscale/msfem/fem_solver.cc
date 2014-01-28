@@ -1,4 +1,8 @@
 #include <config.h>
+
+#include <dune/fem/misc/h1norm.hh>
+#include <dune/fem/misc/l2error.hh>
+#include <dune/fem/misc/l2norm.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
 #include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
@@ -51,12 +55,12 @@ public:
   }
 };
 
-Elliptic_FEM_Solver::Elliptic_FEM_Solver(const Elliptic_FEM_Solver::DiscreteFunctionSpace& discreteFunctionSpace)
+Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace)
   : discreteFunctionSpace_(discreteFunctionSpace) {}
 
 void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-    const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution, const bool use_smp) const {
+    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const {
   DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
                << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
   DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
@@ -66,16 +70,16 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 
   CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
   if(use_smp) {
-    Multiscale::FEM::SMPDiscreteEllipticOperator<DiscreteFunction, CommonTraits::DiffusionType> (
+    Multiscale::FEM::SMPDiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType> (
         discreteFunctionSpace_, diffusion_op).assemble_matrix(fem_matrix);
   } else {
-    Multiscale::FEM::DiscreteEllipticOperator<DiscreteFunction, CommonTraits::DiffusionType> (
+    Multiscale::FEM::DiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType> (
         discreteFunctionSpace_, diffusion_op, lower_order_term).assemble_matrix(fem_matrix);
   }
 
   DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
 
-  DiscreteFunction fem_rhs("fem rhs", discreteFunctionSpace_);
+  CommonTraits::DiscreteFunctionType fem_rhs("fem rhs", discreteFunctionSpace_);
   fem_rhs.clear();
   RightHandSideAssembler::assemble_fem(f, fem_rhs);
 
@@ -93,7 +97,7 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 void Elliptic_FEM_Solver::solve_nonlinear(
     const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-    const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution) const {
+    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution) const {
   DSC_LOG_INFO << "Solving non-linear problem." << std::endl;
   DSC_LOG_INFO << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
                << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
@@ -102,15 +106,14 @@ void Elliptic_FEM_Solver::solve_nonlinear(
   Dune::Timer assembleTimer;
   //! residual vector
   // current residual
-  DiscreteFunction residual("FEM Newton Residual", discreteFunctionSpace_);
+  CommonTraits::DiscreteFunctionType residual("FEM Newton Residual", discreteFunctionSpace_);
   residual.clear();
 
   const NewtonRightHandSide newton_rhs = {};
-  DiscreteFunction system_rhs("fem newton rhs", discreteFunctionSpace_);
+  CommonTraits::DiscreteFunctionType system_rhs("fem newton rhs", discreteFunctionSpace_);
   system_rhs.clear();
 
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunctionSpace::RangeType RangeType;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType::RangeType RangeType;
 
   RangeType relative_newton_error_finescale = std::numeric_limits<typename CommonTraits::RangeType>::max();
   RangeType rhs_L2_norm = std::numeric_limits<typename CommonTraits::RangeType>::max();
@@ -118,7 +121,7 @@ void Elliptic_FEM_Solver::solve_nonlinear(
   //! (stiffness) matrix
   CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
-  Multiscale::FEM::DiscreteEllipticOperator<DiscreteFunction, CommonTraits::DiffusionType> discrete_elliptic_op(
+  Multiscale::FEM::DiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType> discrete_elliptic_op(
         discreteFunctionSpace_, diffusion_op, lower_order_term);
 
   int iteration_step = 1;
@@ -182,18 +185,9 @@ void Elliptic_FEM_Solver::solve_nonlinear(
                << std::endl << std::endl << std::endl;
 }
 
-//! - ∇ (A(x,∇u)) + F(x,u,∇u) = f - divG
-//! then:
-//! A --> diffusion operator ('DiffusionOperatorType')
-//! F --> lower order term ('LowerOrderTerm')
-//  e.g. F(x,u,∇u) = ∇u b + c u, with
-//  b --> advective part (former 'AdvectionTermType')
-//  c --> reaction part (former 'ReactionTermType')
-//! f --> 'first' source term, scalar ('SourceTermType')
-//! G --> 'second' source term, vector valued ('SecondSourceTermType')
 void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-    const CommonTraits::FirstSourceType& f, Elliptic_FEM_Solver::DiscreteFunction& solution, const bool use_smp) const {
+    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const {
 
   if (DSC_CONFIG_GET("problem.linear", true))
     solve_linear(diffusion_op, lower_order_term, f, solution, use_smp);

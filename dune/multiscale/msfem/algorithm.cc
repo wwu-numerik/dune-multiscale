@@ -226,55 +226,6 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   coarse_grid_dataoutput.writeData(1.0 /*dummy*/, coarse_grid_fname);
 }
 
-//! \TODO docme
-bool error_estimation(const CommonTraits::DiscreteFunctionType& /*msfem_solution*/,
-                      const CommonTraits::DiscreteFunctionType& /*coarse_part_msfem_solution*/,
-                      const CommonTraits::DiscreteFunctionType& /*fine_part_msfem_solution*/,
-                      ErrorEstimatorType& /*estimator*/,
-                      MacroMicroGridSpecifier& /*specifier*/, const int /*loop_number*/,
-                      std::vector<CommonTraits::RangeVectorVector*>& /*locals*/,
-                      std::vector<CommonTraits::RangeVector*>& /*totals*/,
-                      CommonTraits::RangeVector& /*total_estimated_H1_error_*/) {
-  using namespace Dune;
-
-  DUNE_THROW(NotImplemented, "error_estimation");
-#if 0
-  CommonTraits::RangeType total_estimated_H1_error(0.0);
-
-  // error estimation
-  total_estimated_H1_error =
-      estimator.adaptive_refinement(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
-  { // intentional scope
-    assert(locals.size() == totals.size());
-    for (auto loc : locals)
-      (*loc)[loop_number] = CommonTraits::RangeVector(specifier.coarseSpace().grid().size(0), 0.0);
-    for (auto total : totals)
-      (*total)[loop_number] = 0.0;
-
-    for (auto m : DSC::valueRange(specifier.coarseSpace().grid().size(0))) {
-      (*locals[0])[loop_number][m] = specifier.get_loc_coarse_residual(m);
-      (*locals[1])[loop_number][m] = specifier.get_loc_coarse_grid_jumps(m);
-      (*locals[2])[loop_number][m] = specifier.get_loc_projection_error(m);
-      (*locals[3])[loop_number][m] = specifier.get_loc_conservative_flux_jumps(m);
-      (*locals[4])[loop_number][m] = specifier.get_loc_approximation_error(m);
-      (*locals[5])[loop_number][m] = specifier.get_loc_fine_grid_jumps(m);
-
-      for (size_t i = 0; i < totals.size(); ++i)
-        (*totals[i])[loop_number] += std::pow((*locals[i])[loop_number][m], 2.0);
-    }
-    total_estimated_H1_error_[loop_number] = 0.0;
-    for (auto total : totals) {
-      (*total)[loop_number] = std::sqrt((*total)[loop_number]);
-      total_estimated_H1_error_[loop_number] += (*total)[loop_number];
-    }
-  }
-
-  return DSC_CONFIG_GET("adaptive", false) ? total_estimated_H1_error > DSC_CONFIG_GET("msfem.error_tolerance", 1e-6)
-                                           : false;
-#endif //0
-  return false;
-}
-
 
 //! algorithm
 void algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,

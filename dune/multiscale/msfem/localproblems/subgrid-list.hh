@@ -17,7 +17,6 @@
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/space/lagrange.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/grid/entity.hh>
 
@@ -40,15 +39,6 @@ class LocalGridList : public boost::noncopyable {
   typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType LocalGridPartType;
   typedef typename CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSet;
   typedef typename LeafIndexSet::IndexType IndexType;
-  typedef typename LocalGridType::Traits::LeafIndexSet LocalGridLeafIndexSet;
-  typedef typename LocalGridLeafIndexSet::IndexType EntityIndexType;
-
-  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType LocalGridEntityIteratorType;
-  typedef typename LocalGridEntityIteratorType::Entity LocalEntityType;
-  typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
-  typedef typename LocalEntityType::EntitySeed LocalGridEntitySeed;
-  typedef typename LocalEntityType::Codim<LocalGridType::dimension>::EntityPointer HostNodePointer;
-  typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType::IntersectionIteratorType HostIntersectionIterator;
 
   typedef typename MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef typename CoarseEntityType::EntitySeed CoarseEntitySeedType;
@@ -58,10 +48,6 @@ class LocalGridList : public boost::noncopyable {
 public:
   typedef std::vector<DomainType> CoarseNodeVectorType;
 
-private:
-  typedef std::vector<std::vector<LocalEntityPointerType>> EntityPointerCollectionType;
-
-public:
   LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace);
 
 private:
@@ -81,7 +67,7 @@ public:
 
   LocalGridPartType gridPart(IndexType i);
   //! returns true if the coarse_entity covers the local_entity
-  bool covers(const CoarseEntityType& coarse_entity, const LocalEntityType& local_entity);
+  bool covers(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity);
 
 private:
   typedef std::map<IndexType, std::shared_ptr<LocalGridType>> SubGridStorageType;

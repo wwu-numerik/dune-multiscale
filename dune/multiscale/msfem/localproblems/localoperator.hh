@@ -31,7 +31,7 @@ namespace Multiscale {
 namespace MsFEM {
 
 class LocalProblemOperator {
-  typedef LocalProblemSolver::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef CommonTraits::DiffusionType DiffusionOperatorType;
   typedef CommonTraits::NeumannBCType NeumannBoundaryType;
 
@@ -58,32 +58,8 @@ class LocalProblemOperator {
 public:
   LocalProblemOperator(const CoarseSpaceType &coarse_space, const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionOperatorType& diffusion_op);
 
-  //! assemble stiffness matrix for local problems (oversampling strategy 1)
-  void assemble_matrix(LocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix) const;
-
-  //! assemble stiffness matrix for local problems (oversampling strategy 2 and 3)
-  void assemble_matrix(LocalProblemSolver::LocProbLinearOperatorTypeType& global_matrix,
-                       const LocalGridList::CoarseNodeVectorType& coarse_node_vector /*for constraints*/) const;
-
-  /** assemble the right hand side of a local problem (reconstruction problem on entity)
-   * assemble method for the case of a linear diffusion operator
-   * we compute the following entries for each fine-scale base function phi_h_i:
-   * - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
-  **/
-  void assemble_local_RHS(
-      // direction 'e'
-      const JacobianRangeType& e,
-      // rhs local msfem problem:
-      LocalGridDiscreteFunctionType& local_problem_RHS) const;
-
-  /** assemble method for the case of a linear diffusion operator
-   * in a constraint space, for oversampling strategy 2 and 3
-   * we compute the following entries for each fine-scale base function phi_h_i:
-   * - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
-   **/
-  void assemble_local_RHS(
-      const JacobianRangeType& e, const LocalGridList::CoarseNodeVectorType& coarse_node_vector,
-      LocalGridDiscreteFunctionType& local_problem_RHS) const;
+  //! assemble stiffness matrix for local problems
+  void assemble_matrix(LocalProblemSolver::LinearOperatorTypeType& global_matrix) const;
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
@@ -94,19 +70,12 @@ public:
   * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
   * functions. The discrete functions in allLocalRHS will be cleared in this function.
   */
-  void assembleAllLocalRHS(const CoarseEntityType& coarseEntity,
-                           MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
-
-  // given a discrete function (representing a right hands side of a local problem,
-  // defined on a subgrid) set the boundary dofs to zero
-  void set_zero_boundary_condition_RHS(const LocalGridDiscreteFunctionSpaceType& host_space, LocalGridDiscreteFunctionType& rhs) const;
+  void assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
+                              MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
   double normRHS(const LocalGridDiscreteFunctionType& rhs) const;
 
-  // is a given 'point' in the convex hull of corner 0, corner 1 and corner 2 (which forms a codim 0 entity)
-  bool point_is_in_element(const DomainType& corner_0, const DomainType& corner_1, const DomainType& corner_2,
-                           const DomainType& point) const;
-  void projectDirichletValues(CommonTraits::DiscreteFunctionType &function) const;
+  void project_dirichlet_values(CommonTraits::DiscreteFunctionType &function) const;
 
 private:
   const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace_;

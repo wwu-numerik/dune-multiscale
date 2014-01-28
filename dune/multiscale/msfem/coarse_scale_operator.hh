@@ -43,46 +43,24 @@ class CoarseScaleOperator : boost::noncopyable {
 private:
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
   typedef CommonTraits::DiscreteFunctionType FineDiscreteFunction;
-  typedef MacroMicroGridSpecifier MacroMicroGridSpecifierType;
-
-  typedef CommonTraits::DiffusionType DiffusionModel;
-
+  typedef CommonTraits::LinearOperatorType MatrixType;
   typedef typename CoarseDiscreteFunction::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
+
   typedef typename FineDiscreteFunction::DiscreteFunctionSpaceType FineDiscreteFunctionSpace;
-
-  typedef typename FineDiscreteFunctionSpace::FunctionSpaceType FunctionSpace;
-
-  typedef typename FineDiscreteFunctionSpace::GridPartType FineGridPart;
-  typedef typename FineDiscreteFunctionSpace::GridType FineGrid;
-
-  typedef typename FineDiscreteFunctionSpace::RangeFieldType RangeFieldType;
   typedef typename FineDiscreteFunctionSpace::DomainType DomainType;
   typedef typename FineDiscreteFunctionSpace::RangeType RangeType;
   typedef typename FineDiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
-  typedef LocalProblemSolver LocalProblemSolverType;
-
-  static const int dimension = FineGridPart::GridType::dimension;
-
-  typedef typename FineDiscreteFunctionSpace::BasisFunctionSetType FineBaseFunctionSet;
-  typedef typename FineDiscreteFunctionSpace::EntityType FineEntity;
-  typedef typename FineEntity::EntityPointer FineEntityPointer;
-
-  typedef typename CoarseDiscreteFunctionSpace::BasisFunctionSetType CoarseBaseFunctionSet;
-  typedef typename CommonTraits::EntityType CoarseEntity;
-
-  typedef typename CommonTraits::LinearOperatorType MatrixType;
-
 public:
   CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-                                LocalGridList& subgrid_list, const DiffusionModel& diffusion_op);
+                      LocalGridList& subgrid_list, const CommonTraits::DiffusionType& diffusion_op);
 
   void apply_inverse(const CoarseDiscreteFunction& b, CoarseDiscreteFunction& x);
 
 private:
   const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
   LocalGridList& subgrid_list_;
-  const DiffusionModel& diffusion_operator_;
+  const CommonTraits::DiffusionType& diffusion_operator_;
   const bool petrovGalerkin_;
   MatrixType global_matrix_;
 };

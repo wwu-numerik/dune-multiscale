@@ -22,33 +22,21 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-class MacroMicroGridSpecifier;
-
+//! \TODO needs a better name
 class Elliptic_MsFEM_Solver {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-  typedef typename DiscreteFunctionType::FunctionSpaceType FunctionSpace;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename DiscreteFunctionSpace::GridType LocalGrid;
-  typedef typename LocalGrid::Traits::LeafIndexSet LocalGridLeafIndexSet;
-  typedef typename LocalGrid::Traits::LeafIndexSet CoarseGridLeafIndexSet;
+
   typedef typename DiscreteFunctionSpace::DomainType DomainType;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
   typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
-  typedef typename DiscreteFunctionSpace::IteratorType HostgridIterator;
-  typedef typename HostgridIterator::Entity LocalEntity;
-  typedef typename LocalEntity::EntityPointer LocalEntityPointer;
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
 
   static const int faceCodim = 1;
 
-  typedef MsFEMTraits::LocalGridType LocalGridType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
-  typedef typename BackendChooser<DiscreteFunctionSpace>::LinearOperatorType CoarseScaleLinearOperatorType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   void identify_fine_scale_part(LocalGridList& subgrid_list,
@@ -66,7 +54,8 @@ public:
    G --> 'second' source term, vector valued ('SecondSourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
-  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, const CommonTraits::DiffusionType& diffusion_op,
+  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+             const CommonTraits::DiffusionType& diffusion_op,
              const CommonTraits::FirstSourceType& f, DiscreteFunctionType& coarse_scale_part,
              DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const;
 };

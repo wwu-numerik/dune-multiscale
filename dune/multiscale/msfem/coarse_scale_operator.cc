@@ -12,7 +12,7 @@ namespace Multiscale {
 namespace MsFEM {
 
 CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-  LocalGridList &subgrid_list, const DiffusionModel& diffusion_op)
+  LocalGridList &subgrid_list, const CommonTraits::DiffusionType &diffusion_op)
   : coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)
@@ -51,7 +51,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
     localSolutionManager.load();
     const auto& localSolutions = localSolutionManager.getLocalSolutions();
     assert(localSolutions.size() > 0);
-    std::vector<typename CoarseBaseFunctionSet::JacobianRangeType> gradientPhi(numMacroBaseFunctions);
+    std::vector<JacobianRangeType> gradientPhi(numMacroBaseFunctions);
 
     for (const auto& localGridEntity : localSolutionManager.space()) {
       // ignore overlay elements
@@ -96,9 +96,9 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
               // Compute the gradients of the i'th and j'th local problem solutions
               JacobianRangeType gradLocProbSoli(0.0), gradLocProbSolj(0.0);
               if (DSG::is_simplex_grid(coarseDiscreteFunctionSpace_)) {
-                assert(allLocalSolutionEvaluations.size() == dimension);
+                assert(allLocalSolutionEvaluations.size() == CommonTraits::GridType::dimension);
                 // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
-                for (int k = 0; k < dimension; ++k) {
+                for (int k = 0; k < CommonTraits::GridType::dimension; ++k) {
                   gradLocProbSoli.axpy(gradientPhi[i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                   gradLocProbSolj.axpy(gradientPhi[j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                 }

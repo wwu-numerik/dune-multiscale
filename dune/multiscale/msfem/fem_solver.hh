@@ -6,10 +6,6 @@
 #define MS_Elliptic_FEM_Solver_HH
 
 
-#include <dune/fem/misc/h1norm.hh>
-#include <dune/fem/misc/l2error.hh>
-#include <dune/fem/misc/l2norm.hh>
-#include <dune/fem/solver/cginverseoperator.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <memory>
@@ -24,28 +20,18 @@ class DummyMass;
 //! \todo docme
 class Elliptic_FEM_Solver {
 
-  typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-  typedef DiscreteFunctionType DiscreteFunction;
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-  typedef typename DiscreteFunctionSpace::LagrangePointSetType LagrangePointSet;
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename GridPart::IntersectionIteratorType IntersectionIterator;
-  typedef DummyMass<DiscreteFunctionSpace> DummyMassType;
-
-  static const int faceCodim = 1;
-
-private:
-  const DiscreteFunctionSpace& discreteFunctionSpace_;
-
-
   void solve_linear(const CommonTraits::DiffusionType& diffusion_op,
                     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                    const CommonTraits::FirstSourceType& f, DiscreteFunction& solution, const bool use_smp) const;
+                    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const;
   void solve_nonlinear(const CommonTraits::DiffusionType& diffusion_op,
                         const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                        const CommonTraits::FirstSourceType& f, DiscreteFunction& solution) const;
+                        const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution) const;
+
+  static const int faceCodim = 1;
+  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_;
+
 public:
-  Elliptic_FEM_Solver(const DiscreteFunctionSpace& discreteFunctionSpace);
+  Elliptic_FEM_Solver(const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace);
 
   //! - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   //! then:
@@ -56,7 +42,7 @@ public:
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   void apply(const CommonTraits::DiffusionType& diffusion_op,
              const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-             const CommonTraits::FirstSourceType& f, DiscreteFunction& solution,
+             const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution,
              const bool use_smp = false) const;
 };
 
