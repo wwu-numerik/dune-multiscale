@@ -101,13 +101,8 @@ int main(int argc, char** argv) {
     ErrorContainer errors(max_loop_number);
 
     unsigned int loop_number = 0;
-    while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_, number_of_layers_,
-                     errors.locals, errors.totals, errors.total_estimated_H1_error_)) {
-    }
-
-    // the reference problem generaly has a 'refinement_difference_for_referenceproblem' higher resolution than the
-    // normal
-    // macro problem
+    algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_, number_of_layers_,
+                     errors.locals, errors.totals, errors.total_estimated_H1_error_);
 
     auto cpu_time = DSC_PROFILER.stopTiming("msfem.all", DSC_CONFIG_GET("global.output_walltime", false));
     auto max_cpu_time = Dune::Fem::MPIManager::comm().max(cpu_time);

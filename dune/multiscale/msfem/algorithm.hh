@@ -52,7 +52,7 @@ bool error_estimation(const CommonTraits::DiscreteFunctionType& msfem_solution,
                       CommonTraits::RangeVector& total_estimated_H1_error_);
 
 //! \TODO docme
-bool algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,
+void algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,
                int& coarse_grid_level_, int& number_of_layers_, std::vector<CommonTraits::RangeVectorVector*>& locals,
                std::vector<CommonTraits::RangeVector*>& totals, CommonTraits::RangeVector& total_estimated_H1_error_);
 
