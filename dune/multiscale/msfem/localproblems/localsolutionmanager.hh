@@ -25,12 +25,10 @@ namespace MsFEM {
  */
 class LocalSolutionManager {
 private:
-  typedef LocalGridList LocalGridList;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef MsFEMTraits::LocalGridPartType LocalGridPartType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-  typedef MacroMicroGridSpecifier MacroMicroGridSpecifier;
 
 public:
   LocalSolutionManager(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, const CoarseEntityType& coarseEntity, LocalGridList& subgridList);

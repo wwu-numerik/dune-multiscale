@@ -79,7 +79,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
     auto& tmp_local_storage = *localSolutions[0];
 
-    if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3) || DSG::is_simplex_grid(coarse_space)) {
+    if (DSG::is_simplex_grid(coarse_space)) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
                        "We should have dim local solutions per coarse element on triangular meshes!");
 
@@ -111,37 +111,31 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       local_correction -= *localSolutions[coarseSolutionLF.numDofs()];
     }
 
-    // oversampling strategy 3: just sum up the local correctors:
-    if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 3)) {
-      local_correction += tmp_local_storage;
-    }
-
     // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming
     // projection:
-    if ((DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 1) || (DSC_CONFIG_GET("msfem.oversampling_strategy", 1) == 2)) {
 
-//      DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local correctors. restriction also no longer works");
-//      for (auto& local_entity : localSolManager.space()) {
-//        if (subgrid_list.covers(coarseCell, local_entity)) {
-//          const auto sub_loc_value = localSolutions[0]->localFunction(local_entity);
+    DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local correctors. restriction also no longer works");
+//    for (auto& local_entity : localSolManager.space()) {
+//      if (subgrid_list.covers(coarseCell, local_entity)) {
+//        const auto sub_loc_value = localSolutions[0]->localFunction(local_entity);
 
-//          assert(localSolutions.size() == coarseSolutionLF.numDofs() + localSolManager.numBoundaryCorrectors());
-//          auto host_loc_value = fine_scale_part.localFunction(local_entity);
+//        assert(localSolutions.size() == coarseSolutionLF.numDofs() + localSolManager.numBoundaryCorrectors());
+//        auto host_loc_value = fine_scale_part.localFunction(local_entity);
 
-//          const auto number_of_nodes_entity = local_entity.count<LocalGrid::dimension>();
+//        const auto number_of_nodes_entity = local_entity.count<LocalGrid::dimension>();
 
-//          for (auto i : DSC::valueRange(number_of_nodes_entity)) {
-//            const auto node = local_entity.subEntity<LocalGrid::dimension>(i);
-//            const auto global_index_node = gridPart.indexSet().index(*node);
+//        for (auto i : DSC::valueRange(number_of_nodes_entity)) {
+//          const auto node = local_entity.subEntity<LocalGrid::dimension>(i);
+//          const auto global_index_node = gridPart.indexSet().index(*node);
 
-//            // devide the value by the number of fine elements sharing the node (will be
-//            // added numEntitiesSharingNode times)
-//            const auto numEntitiesSharingNode = nodeToEntityMap[global_index_node].size();
-//            host_loc_value[i] += (sub_loc_value[i] / numEntitiesSharingNode);
-//          }
+//          // devide the value by the number of fine elements sharing the node (will be
+//          // added numEntitiesSharingNode times)
+//          const auto numEntitiesSharingNode = nodeToEntityMap[global_index_node].size();
+//          host_loc_value[i] += (sub_loc_value[i] / numEntitiesSharingNode);
 //        }
 //      }
-    }
+//    }
+
   }
 
   DSC_LOG_INFO << "Identifying fine scale part of the MsFEM solution... ";

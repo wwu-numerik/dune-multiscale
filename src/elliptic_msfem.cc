@@ -39,15 +39,6 @@ int main(int argc, char** argv) {
     // syntax: info_from_par_file / default
     int number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
-    switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
-      case 1:
-        break;
-      case 2:
-        break;
-      default:
-        DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
-    }
-
     // data for the model problem; the information manager
     // (see 'problem_specification.hh' for details)
     auto info_ptr = Problem::getModelData();
@@ -75,7 +66,6 @@ int main(int argc, char** argv) {
       DSC_LOG_INFO_0 << "Computations were made for:" << std::endl << std::endl;
       DSC_LOG_INFO_0 << "Refinement Level for (uniform) Fine Grid = " << total_refinement_level_ << std::endl;
       DSC_LOG_INFO_0 << "Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-      DSC_LOG_INFO_0 << "Oversampling Strategy = " << DSC_CONFIG_GET("msfem.oversampling_strategy", 1) << std::endl;
       DSC_LOG_INFO_0 << "Number of layers for oversampling = " << number_of_layers_ << std::endl;
       if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
         DSC_LOG_INFO_0 << std::endl
@@ -97,7 +87,6 @@ int main(int argc, char** argv) {
       DSC_LOG_INFO_0 << "(Starting) Refinement Level for (uniform) Fine Grid = " << total_refinement_level_
                      << std::endl;
       DSC_LOG_INFO_0 << "(Starting) Refinement Level for (uniform) Coarse Grid = " << coarse_grid_level_ << std::endl;
-      DSC_LOG_INFO_0 << "Oversampling Strategy = " << DSC_CONFIG_GET("msfem.oversampling_strategy", 1) << std::endl;
       DSC_LOG_INFO_0 << "(Starting) Number of layers for oversampling = " << number_of_layers_ << std::endl;
       if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
         DSC_LOG_INFO_0 << std::endl << "Comparison with a standard FEM computation on the MsFEM Fine Grid."

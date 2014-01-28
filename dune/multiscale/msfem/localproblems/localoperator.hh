@@ -83,10 +83,7 @@ public:
    * - \int_{T_0} (A^eps ○ F)(x) ∇ \Phi_H(x_T) · ∇ \phi_h_i(x)
    **/
   void assemble_local_RHS(
-      // direction 'e'
-      const JacobianRangeType& e, const LocalGridList::CoarseNodeVectorType& coarse_node_vector, /*for constraints*/
-      const int& oversampling_strategy,
-      // rhs local msfem problem:
+      const JacobianRangeType& e, const LocalGridList::CoarseNodeVectorType& coarse_node_vector,
       LocalGridDiscreteFunctionType& local_problem_RHS) const;
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.

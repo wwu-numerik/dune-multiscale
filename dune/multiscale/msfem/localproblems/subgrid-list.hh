@@ -59,7 +59,6 @@ public:
   typedef std::vector<DomainType> CoarseNodeVectorType;
 
 private:
-  typedef std::vector<CoarseNodeVectorType> CoarseGridNodeStorageType; 
   typedef std::vector<std::vector<LocalEntityPointerType>> EntityPointerCollectionType;
 
 public:
@@ -83,12 +82,6 @@ public:
   LocalGridPartType gridPart(IndexType i);
   //! returns true if the coarse_entity covers the local_entity
   bool covers(const CoarseEntityType& coarse_entity, const LocalEntityType& local_entity);
-
-  /** only required for oversampling strategies with constraints (e.g strategy 2 or 3):
-    * for each given subgrid index return the vecor of ALL coarse nodes (global coordinates) that are in the subgrid,
-    * this also includes the coarse nodes on the boundary of U(T), even if this is a global Dirichlet node!
-    **/
-  const CoarseNodeVectorType& getCoarseNodeVector(IndexType i) const;
 
 #ifdef ENABLE_LOD_ONLY_CODE
   // given the index of a (codim 0) host grid entity, return the indices of the subgrids that contain the entity
@@ -120,7 +113,6 @@ private:
   const CommonTraits::DiscreteFunctionSpaceType& coarseSpace_;
   SubGridStorageType subGridList_;
   const LeafIndexSet& coarseGridLeafIndexSet_;
-  CoarseGridNodeStorageType coarse_node_store_;
 #ifdef ENABLE_LOD_ONLY_CODE
   CoarseGridNodeStorageType extended_coarse_node_store_;
   std::vector<std::map<IndexType, IndexType>> fineToCoarseMap_;
