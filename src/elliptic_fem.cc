@@ -8,6 +8,7 @@
 // which provides us with information about f, A, \Omega, etc.
 
 #include <dune/multiscale/common/main_init.hh>
+#include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/fem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
@@ -27,26 +28,11 @@ int main(int argc, char** argv) {
 
     // name of the error file in which the data will be saved
     std::string filename_;
-    const auto info = Problem::getModelData();
+    const auto save_filename = std::string(path + "/logdata/ms.log.log");
+    DSC_LOG_INFO << "LOG FILE\n" << "Data will be saved under: " << save_filename << std::endl;
 
-    const std::string save_filename = std::string(path + "/logdata/ms.log.log");
-    DSC_LOG_INFO << "LOG FILE " << std::endl << std::endl;
-    DSC_LOG_INFO << "Data will be saved under: " << save_filename << std::endl;
-
-    // refinement_level denotes the grid refinement level for the global problem, i.e. it describes 'H'
-    const int refinement_level = DSC_CONFIG_GET("fem.grid_level", 4);
-
-    // name of the grid file that describes the macro-grid:
-    const std::string gridName = info->getMacroGridFile();
-    DSC_LOG_INFO << "loading dgf: " << gridName << std::endl;
-
-    // create a grid pointer for the DGF file belongig to the macro grid:
-    CommonTraits::GridPointerType grid_pointer(gridName);
-
-    // refine the grid 'starting_refinement_level' times:
-    Dune::Fem::GlobalRefine::apply(*grid_pointer, refinement_level);
-
-    algorithm(grid_pointer, filename_);
+    const auto grids = Dune::Multiscale::make_grids();
+    algorithm(grids.second, filename_);
 
     const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu",
                                                   DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
