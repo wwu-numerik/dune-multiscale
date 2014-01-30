@@ -20,26 +20,16 @@ namespace MsFEM {
 class LocalGridList;
 
 //! \TODO docme
-void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, const int loop_number,
-           int& total_refinement_level_, int& coarse_grid_level_, int& number_of_layers_,
-           const std::vector<CommonTraits::RangeVectorVector*>& locals,
-           const std::vector<CommonTraits::RangeVector*>& totals,
-           const CommonTraits::RangeVector& total_estimated_H1_error_);
-
-//! \TODO docme
 void solution_output(const CommonTraits::DiscreteFunction_ptr &msfem_solution,
                      const CommonTraits::DiscreteFunction_ptr &coarse_part_msfem_solution,
-                     const CommonTraits::DiscreteFunction_ptr &fine_part_msfem_solution,
-                     const int loop_number);
+                     const CommonTraits::DiscreteFunction_ptr &fine_part_msfem_solution);
 
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse, const int loop_number);
+                 const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse);
 
 //! \TODO docme
-void algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,
-               int& coarse_grid_level_, int& number_of_layers_, std::vector<CommonTraits::RangeVectorVector*>& locals,
-               std::vector<CommonTraits::RangeVector*>& totals, CommonTraits::RangeVector& total_estimated_H1_error_);
+void algorithm();
 
 } // namespace MsFEM {
 } // namespace Multiscale {
