@@ -36,6 +36,18 @@ public:
   EntityPointerVectorType operator() (const PointContainerType& points);
 
   const EntityPointer& current_coarse_pointer() const;
+
+  template< class PointIterator >
+  bool covers_strict(const typename CoarseGridSpaceType::EntityType& coarse_entity, const PointIterator first, const PointIterator last) {
+    const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
+    const auto& coarse_geometry = coarse_entity.geometry();
+    for(auto it = first; it != last; ++it) {
+      if(!reference_element.checkInside(coarse_geometry.local(*it)))
+        return false;
+    }
+    return true;
+  }
+
 private:
   const CoarseGridSpaceType& coarse_space_;
   const LocalGridList& gridlist_;
@@ -47,7 +59,7 @@ template <class GridViewImp>
 template <class PointContainerType>
 typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<GridViewImp>::operator()(const PointContainerType& points)
 {
-  const auto count_nulls = [&](typename EntityPointerVectorType::value_type& ptr){return ptr==nullptr;};
+  const auto count_nulls = [&](const typename EntityPointerVectorType::value_type& ptr){return ptr==nullptr;};
   //! \TODO potential speedup by caching last coarse_entity position instead fo restarting at front
   for(const auto& coarse_entity : coarse_space_) {
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
@@ -56,10 +68,12 @@ typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<G
     auto& current_search_ptr = coarse_searches_[index];
     if(!current_search_ptr)
       current_search_ptr = DSC::make_unique<PerGridSearchType>(localgrid.leafView());
-    auto entity_ptrs = current_search_ptr->operator()(points);
-    auto non_nulls = std::count_if(entity_ptrs.begin(), entity_ptrs.end(), count_nulls);
-    if(non_nulls == 0)
-      return entity_ptrs;
+    if(covers_strict(coarse_entity, points.begin(), points.end())) {
+      auto entity_ptrs = current_search_ptr->operator()(points);
+      const auto null_count = std::count_if(entity_ptrs.begin(), entity_ptrs.end(), count_nulls);
+      if(null_count == 0)
+        return entity_ptrs;
+    }
   }
   DUNE_THROW(InvalidStateException, "local grid search failed");
 }
