@@ -42,16 +42,13 @@ void output_all(std::vector<std::unique_ptr<FunctionType>>& functions, CommonTra
   vtkio.write(out_filename.string());
 }
 
-void partition_vis_single(std::string macroGridName, std::string function_name, int level, int threadnum = 8)
+void partition_vis_single(const std::shared_ptr<CommonTraits::GridType>& grid, std::string function_name, int threadnum = 8)
 {
   Dune::Fem::ThreadManager::setMaxNumberThreads(threadnum);
   //Dune::Fem::Parameter::replace(std::string("fem.threads.partitioningmethod"), std::string("kway"));
   typedef Dune::Fem::FiniteVolumeSpace<CommonTraits::FunctionSpaceType, CommonTraits::GridPartType, 0> FVSpace;
   typedef Dune::Fem::AdaptiveDiscreteFunction<FVSpace> FVFunc;
-
-  auto grids = make_grids();
-  CommonTraits::GridType& fine_grid = *grids.second;
-  CommonTraits::GridPartType gridPart(fine_grid);
+  CommonTraits::GridPartType gridPart(*grid);
   FVSpace fv_space(gridPart);
 
   std::vector<std::unique_ptr<FVFunc>> functions(threadnum+1);
@@ -163,12 +160,11 @@ void subgrid_vis()
   output_all(weak_restricted_functions, fine_gridPart, "weak_restricted_");
 }
 
-void partition_vis(const std::string& macroGridName, int total_refinement_level_,
-               int coarse_grid_level_) {
-  partition_vis_single(macroGridName, "fine_grid", total_refinement_level_);
-  partition_vis_single(macroGridName, "coarse_grid", coarse_grid_level_);
+void partition_vis() {
+  auto grids = make_grids();
+  partition_vis_single(grids.second, "fine_grid");
+  partition_vis_single(grids.first, "coarse_grid");
 } // function algorithm
-
 
 } // namespace Dune {
 } // namespace Multiscale {
@@ -185,23 +181,8 @@ int main(int argc, char** argv) {
     DSC::testCreateDirectory(datadir);
     DSC_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n") %
                           datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
-    int coarse_grid_level_ = DSC_CONFIG_GETV("msfem.coarse_grid_level", 4, DSC::ValidateLess<int>(-1));
-    int number_of_layers_ = DSC_CONFIG_GET("msfem.oversampling_layers", 4);
 
-
-    // data for the model problem; the information manager
-    // (see 'problem_specification.hh' for details)
-    auto info_ptr = Problem::getModelData();
-    const auto& info = *info_ptr;
-
-    // total_refinement_level denotes the (starting) grid refinement level for the global fine scale problem, i.e. it
-    // describes 'h'
-    int total_refinement_level_ =
-        DSC_CONFIG_GETV("msfem.fine_grid_level", 4, DSC::ValidateLess<int>(coarse_grid_level_ - 1));
-
-    // name of the grid file that describes the macro-grid:
-    const std::string macroGridName = info.getMacroGridFile();
-    partition_vis(macroGridName, total_refinement_level_, coarse_grid_level_);
+    partition_vis();
     subgrid_vis();
     return 0;
   }
