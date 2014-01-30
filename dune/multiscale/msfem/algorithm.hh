@@ -30,12 +30,11 @@ void adapt(CommonTraits::GridType& grid, CommonTraits::GridType& grid_coarse, co
 void solution_output(const CommonTraits::DiscreteFunction_ptr &msfem_solution,
                      const CommonTraits::DiscreteFunction_ptr &coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunction_ptr &fine_part_msfem_solution,
-                     Dune::Multiscale::OutputParameters& outputparam, const int loop_number);
+                     const int loop_number);
 
 //! \TODO docme
 void data_output(const CommonTraits::GridPartType& gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse,
-                 Dune::Multiscale::OutputParameters& outputparam, const int loop_number);
+                 const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse, const int loop_number);
 
 //! \TODO docme
 void algorithm(const std::string& macroGridName, const int loop_number, int& total_refinement_level_,

@@ -28,18 +28,13 @@
 
 #include "fem_traits.hh"
 
-namespace {
-const std::string seperator_line =
-    "---------------------------------------------------------------------------------\n";
-}
-
 namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
 
 //! the main FEM computation
-void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, const std::string filename) {
+void algorithm(const std::shared_ptr<CommonTraits::GridType> &macro_grid_pointer, const std::string filename) {
   using namespace Dune;
   const auto problem_data = Problem::getModelData();
   print_info(*problem_data, DSC_LOG_INFO);
