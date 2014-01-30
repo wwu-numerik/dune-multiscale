@@ -65,17 +65,17 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   typename ProxyType::CorrectionsMapType local_corrections;
 
   // traverse coarse space
-  for (auto& coarseCell : coarse_space) {
-    LocalSolutionManager localSolManager(coarse_space, coarseCell, subgrid_list);
+  for (auto& coarse_entity : coarse_space) {
+    LocalSolutionManager localSolManager(coarse_space, coarse_entity, subgrid_list);
     localSolManager.load();
     auto& localSolutions = localSolManager.getLocalSolutions();
-    auto coarse_index = coarse_indexset.index(coarseCell);
+    auto coarse_index = coarse_indexset.index(coarse_entity);
     local_corrections[coarse_index] =
         DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>("", localSolManager.space());
 
     auto& local_correction = *local_corrections[coarse_index];
     local_correction.clear();
-    auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarseCell);
+    auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarse_entity);
     auto& tmp_local_storage = *localSolutions[0];
 
     if (DSG::is_simplex_grid(coarse_space)) {
@@ -84,7 +84,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
       JacobianRangeType grad_coarse_msfem_on_entity;
       // We only need the gradient of the coarse scale part on the element, which is a constant.
-      coarseSolutionLF.jacobian(coarseCell.geometry().center(), grad_coarse_msfem_on_entity);
+      coarseSolutionLF.jacobian(coarse_entity.geometry().center(), grad_coarse_msfem_on_entity);
 
       // get the coarse gradient on T, multiply it with the local correctors and sum it up.
       for (int spaceDimension = 0; spaceDimension < Dune::GridSelector::dimgrid; ++spaceDimension) {
@@ -110,31 +110,22 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       local_correction -= *localSolutions[coarseSolutionLF.numDofs()];
     }
 
-    // oversampling strategy 1 or 2: restrict the local correctors to the element T, sum them up and apply a conforming
-    // projection:
+    // oversampling strategy 1 or 2: restrict the local correctors to the element T
+    // ie set all dofs not "covered" by the coarse cell to 0
+    if(DSC_CONFIG_GET("msfem.oversampling_layers", 0)) {
+      for (auto& local_entity : localSolManager.space()) {
+        const auto& lg_points = localSolManager.space().lagrangePointSet(local_entity);
+        const auto& reference_element = DSG::reference_element(coarse_entity);
+        const auto& coarse_geometry = coarse_entity.geometry();
+        auto entity_local_correction = local_correction.localFunction(local_entity);
 
-    if(DSC_CONFIG_GET("msfem.oversampling_layers", 0))
-      DUNE_THROW(NotImplemented, "pretty sure this is bs. there's no sum of local correctors. restriction also no longer works");
-//    for (auto& local_entity : localSolManager.space()) {
-//      if (subgrid_list.covers(coarseCell, local_entity)) {
-//        const auto sub_loc_value = localSolutions[0]->localFunction(local_entity);
-
-//        assert(localSolutions.size() == coarseSolutionLF.numDofs() + localSolManager.numBoundaryCorrectors());
-//        auto host_loc_value = fine_scale_part.localFunction(local_entity);
-
-//        const auto number_of_nodes_entity = local_entity.count<LocalGrid::dimension>();
-
-//        for (auto i : DSC::valueRange(number_of_nodes_entity)) {
-//          const auto node = local_entity.subEntity<LocalGrid::dimension>(i);
-//          const auto global_index_node = gridPart.indexSet().index(*node);
-
-//          // devide the value by the number of fine elements sharing the node (will be
-//          // added numEntitiesSharingNode times)
-//          const auto numEntitiesSharingNode = nodeToEntityMap[global_index_node].size();
-//          host_loc_value[i] += (sub_loc_value[i] / numEntitiesSharingNode);
-//        }
-//      }
-//    }
+        for (const auto lg_i : DSC::valueRange(int(lg_points.size()))) {
+          const auto global_lg_point = local_entity.geometry().global(lg_points.point(lg_i));
+          const bool covered = reference_element.checkInside(coarse_geometry.local(global_lg_point));
+          entity_local_correction[lg_i] = covered ? entity_local_correction[lg_i] : RangeType::value_type(0);
+        }
+      }
+    }
   }
 
   DSC_LOG_INFO << "Identifying fine scale part of the MsFEM solution... ";
