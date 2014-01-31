@@ -112,7 +112,7 @@ set( FEM_SOURCES
 
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native" 
-  "-pipe" "-fomit-frame-pointer" "-flto" "-O4" "-fwhole-program" "-ftree-vectorize" "-fno-alias" )
+  "-pipe" "-fomit-frame-pointer" "-O3" "-fno-alias" )
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
