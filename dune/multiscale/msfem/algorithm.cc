@@ -47,17 +47,17 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   Dune::Multiscale::OutputParameters outputparam;
 
   OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
-  const auto msfem_fname_s = std::string("msfem_solution_%d_");
+  const auto msfem_fname_s = std::string("msfem_solution_");
   outputparam.set_prefix(msfem_fname_s);
   OutputTraits::DataOutputType(grid, msfem_solution_series, outputparam).writeData(1.0 /*dummy*/, msfem_fname_s);
 
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
-  const auto coarse_msfem_fname_s = std::string("coarse_part_msfem_solution_%d_");
+  const auto coarse_msfem_fname_s = std::string("coarse_part_msfem_solution_");
   outputparam.set_prefix(coarse_msfem_fname_s);
   OutputTraits::DataOutputType(grid, coarse_msfem_solution_series, outputparam).writeData(1.0 /*dummy*/, coarse_msfem_fname_s);
 
   OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
-  const auto fine_msfem_fname_s = std::string("fine_part_msfem_solution_%d_");
+  const auto fine_msfem_fname_s = std::string("fine_part_msfem_solution_");
   outputparam.set_prefix(fine_msfem_fname_s);
   OutputTraits::DataOutputType(grid, fine_msfem_solution_series, outputparam).writeData(1.0 /*dummy*/, fine_msfem_fname_s);
 

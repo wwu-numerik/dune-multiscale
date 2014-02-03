@@ -63,7 +63,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     }
 
     boost::format sp("LocalGrid %d from (%f,%f) to (%f,%f) created.\n");
-    DSC_LOG_INFO << sp % coarse_index % lowerLeft[0] % lowerLeft[1] % upperRight[0] % upperRight[1];
+    DSC_LOG_DEBUG << sp % coarse_index % lowerLeft[0] % lowerLeft[1] % upperRight[0] % upperRight[1];
     subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
   }
 }
