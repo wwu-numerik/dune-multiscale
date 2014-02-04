@@ -61,9 +61,7 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::DiscreteFunctionSpa
 void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
     const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const {
-  DSC_LOG_INFO << "Solving linear problem with standard FEM and resolution level "
-               << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
-  DSC_LOG_INFO << "------------------------------------------------------------------------------" << std::endl;
+  DSC_LOG_INFO << "Solving linear problem with standard FEM\n";
 
   // to assemble the computational time
   Dune::Timer assembleTimer;

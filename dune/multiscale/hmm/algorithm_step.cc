@@ -7,7 +7,6 @@
 
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/newton_rhs.hh>
-#include <dune/multiscale/tools/meanvalue.hh>
 #include <dune/multiscale/hmm/result.hh>
 
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
@@ -24,6 +23,7 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/functions/interfaces.hh>
+#include <dune/stuff/fem/functions/integrals.hh>
 
 #include "algorithm_error.hh"
 

@@ -8,7 +8,6 @@
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/constants.hh>
-#include <dune/multiscale/tools/misc/linear-lagrange-interpolation.hh>
 #include <string>
 
 #include "dune/multiscale/common/traits.hh"
