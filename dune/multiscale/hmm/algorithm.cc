@@ -65,7 +65,7 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
   const double delta_ = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 0);
   out << "Error File for Elliptic Model Problem " << Problem::name() << "." << std::endl << std::endl;
-  if (DSC_CONFIG_GET("problem.linear", true))
+  if (Problem::getModelData()->linear())
     out << "Problem is declared as being LINEAR." << std::endl;
   else
     out << "Problem is declared as being NONLINEAR." << std::endl;

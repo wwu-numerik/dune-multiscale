@@ -43,6 +43,7 @@ struct ModelProblemData : public IModelProblemData {
   //! does the problem allow a stochastic perturbation of the coefficients?
   bool problemAllowsStochastics() const;
   bool symmetricDiffusion() const { return false; }
+  bool linear() const { return false; }
 };
 
 //! ----------------- Definition of ' f ' ------------------------

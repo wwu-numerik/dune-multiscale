@@ -17,8 +17,6 @@ namespace Seven {
 CONSTANTSFUNCTION(0.05)
 
 ModelProblemData::ModelProblemData() : IModelProblemData(constants()) {
-  if (constants().get("linear", true))
-    DUNE_THROW(Dune::InvalidStateException, "Problem seven is entirely nonlinear, but problem.linear was true.");
   assert(constants_.epsilon != 0.0);
   if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()))
     DUNE_THROW(Dune::InvalidStateException,

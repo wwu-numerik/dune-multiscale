@@ -36,7 +36,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution->space().gridPart().grid(),
                                                           fem_solution_series, outputparam);
   // write data
-  if (DSC_CONFIG_GET("problem.linear", true))
+  if (Problem::getModelData()->linear())
     femsol_dataoutput.writeData(1.0 /*dummy*/, (boost::format("%s_solution") % prefix).str());
   else
     femsol_dataoutput.writeData(1.0 /*dummy*/, (boost::format("%s_newton_solution") % prefix).str());
@@ -64,7 +64,7 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
   const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);
   const int refinement_level_ = DSC_CONFIG_GET("fem.grid_level", 4);
   out << "Log-File for Elliptic Model Problem " << Problem::name() << "." << std::endl << std::endl;
-  if (DSC_CONFIG_GET("problem.linear", true))
+  if (Problem::getModelData()->linear())
     out << "Problem is declared as being LINEAR." << std::endl;
   else
     out << "Problem is declared as being NONLINEAR." << std::endl;

@@ -8,7 +8,7 @@
 std::pair<std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>, std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> > Dune::Multiscale::make_grids() {
   const int dim_world = CommonTraits::GridType::dimensionworld;
   typedef FieldVector<typename CommonTraits::GridType::ctype, dim_world> CoordType;
-  const auto coarse_cells = DSC_CONFIG_GET("msfem.macro_cells_per_dim", 8);
+  const auto coarse_cells = DSC_CONFIG_GET("global.macro_cells_per_dim", 8);
   array<unsigned int,dim_world> elements;
   for(const auto i : DSC::valueRange(dim_world))
     elements[i] = coarse_cells;
@@ -20,7 +20,7 @@ std::pair<std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>, std::shared
   CoordType upperRight(0);
   for(const auto i : DSC::valueRange(dim_world))
   {
-    elements[i] = coarse_cells * DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
+    elements[i] = coarse_cells * DSC_CONFIG_GET("global.micro_cells_per_macrocell_dim", 8);
     lowerLeft[i] = coarse_dimensions.coord_limits[i].min();
     upperRight[i] = coarse_dimensions.coord_limits[i].max();
   }

@@ -16,8 +16,6 @@ namespace Toy {
 CONSTANTSFUNCTION(1.0)
 
 ModelProblemData::ModelProblemData() : IModelProblemData(constants()) {
-  if (!constants().get("linear", true))
-    DUNE_THROW(Dune::InvalidStateException, "toy problem is entirely linear, but problem.linear was false");
   if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()))
     DUNE_THROW(Dune::InvalidStateException,
                "The problem does not allow stochastic perturbations. Please, switch the key off.");

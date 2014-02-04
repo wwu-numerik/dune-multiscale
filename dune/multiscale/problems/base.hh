@@ -230,18 +230,21 @@ public:
    */
   virtual std::string getMacroGridFile() const = 0;
 
-  // are the coefficients periodic? (e.g. A=A(x/eps))
-  // this method is only relevant if you want to use a standard homogenizer
+  //! are the coefficients periodic? (e.g. A=A(x/eps))
+  //! this method is only relevant if you want to use a standard homogenizer
   virtual bool problemIsPeriodic() const = 0;
 
-  // does the problem allow a stochastic perturbation of the coefficients?
+  //! does the problem allow a stochastic perturbation of the coefficients?
   virtual bool problemAllowsStochastics() const = 0;
 
-  // does the problem implement an exact solution?
+  //! does the problem implement an exact solution?
   virtual bool hasExactSolution() const { return false; }
 
-  // is the diffusion matrix symmetric?
+  //! is the diffusion matrix symmetric?
   virtual bool symmetricDiffusion() const { return true; }
+
+  //! linear/nonlinear toggle
+  virtual bool linear() const { return true; }
 
   virtual std::unique_ptr<BoundaryInfoType> boundaryInfo() const {
     return DSC::make_unique<DS::GridboundaryAllDirichlet<typename View::Intersection>>();

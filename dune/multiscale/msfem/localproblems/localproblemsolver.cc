@@ -44,7 +44,7 @@ LocalProblemSolver::make_inverse_operator(LocalProblemSolver::LinearOperatorType
   const auto solver =
       Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
   return DSC::make_unique<InverseOperatorType>(
-      problem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("localproblemsolver_verbose", false), solver,
+      problem_matrix, 1e-8, 1e-8, 20000, DSC_CONFIG_GET("msfem.localproblemsolver_verbose", false), solver,
       DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);
 }
 

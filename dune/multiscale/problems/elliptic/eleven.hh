@@ -42,6 +42,7 @@ struct ModelProblemData : public IModelProblemData {
   bool problemAllowsStochastics() const;
 
   bool symmetricDiffusion() const { return false; }
+  bool linear() const { return false; }
 };
 
 //! ----------------- Definition of ' f ' ------------------------

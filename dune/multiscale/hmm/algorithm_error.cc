@@ -56,7 +56,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
     corrector_u_H_on_entity->clear();
 
     // in the linear case, we still need to compute the corrector of u_H:
-    if (DSC_CONFIG_GET("problem.linear", true)) {
+    if (Problem::getModelData()->linear()) {
       auto corrector_of_base_func = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>("Corrector of macro base function",
                                                                               periodicDiscreteFunctionSpace);
       corrector_of_base_func->clear();
@@ -102,7 +102,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
         const auto& entity_outside = *it_outside;
 
         // in the linear case, we still need to compute the corrector of u_H:
-        if (DSC_CONFIG_GET("problem.linear", true)) {
+        if (Problem::getModelData()->linear()) {
           auto corrector_of_base_func_neighbor = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>(
               "Corrector of macro base function", periodicDiscreteFunctionSpace);
           corrector_of_base_func_neighbor->clear();
