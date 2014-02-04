@@ -27,6 +27,8 @@ class LocalGridSearch
   typedef CommonTraits::DiscreteFunctionSpaceType CoarseGridSpaceType;
   typedef typename CoarseGridSpaceType::GridType::Traits::LeafIndexSet::IndexType IndexType;
 
+  typedef typename CoarseGridSpaceType::EntityType::EntityPointer CoarseEntityPointerType;
+
 public:
   typedef typename BaseType::EntityPointerVectorType EntityPointerVectorType;
 
@@ -35,7 +37,7 @@ public:
   template < class PointContainerType >
   EntityPointerVectorType operator() (const PointContainerType& points);
 
-  const EntityPointer& current_coarse_pointer() const;
+  const CoarseEntityPointerType &current_coarse_pointer() const;
 
   template< class PointIterator >
   bool covers_strict(const typename CoarseGridSpaceType::EntityType& coarse_entity, const PointIterator first, const PointIterator last) {
@@ -52,6 +54,7 @@ private:
   const CoarseGridSpaceType& coarse_space_;
   const LocalGridList& gridlist_;
   std::map<IndexType, std::unique_ptr<PerGridSearchType>> coarse_searches_;
+  std::unique_ptr<CoarseEntityPointerType> current_coarse_pointer_;
 };
 
 //! only returns a vector of entitypointers if all queried points lie within a single coarse cell
@@ -65,8 +68,9 @@ typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<G
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
     const auto& index_set = coarse_space_.gridPart().grid().leafIndexSet();
     const auto index = index_set.index(coarse_entity);
+    current_coarse_pointer_ = DSC::make_unique<CoarseEntityPointerType>(coarse_entity);
     auto& current_search_ptr = coarse_searches_[index];
-    if(!current_search_ptr)
+    if(current_search_ptr == nullptr)
       current_search_ptr = DSC::make_unique<PerGridSearchType>(localgrid.leafView());
     if(covers_strict(coarse_entity, points.begin(), points.end())) {
       auto entity_ptrs = current_search_ptr->operator()(points);
@@ -83,6 +87,13 @@ LocalGridSearch<GridViewImp>::LocalGridSearch(const CoarseGridSpaceType& coarse_
   : coarse_space_(coarse_space)
   , gridlist_(gridlist)
 {}
+
+template <class GridViewImp>
+const typename LocalGridSearch<GridViewImp>::CoarseEntityPointerType& LocalGridSearch<GridViewImp>::current_coarse_pointer() const
+{
+  assert(current_coarse_pointer_);
+  return *current_coarse_pointer_;
+}
 
 } // namespace MsFEM {
 } // namespace Multiscale {
