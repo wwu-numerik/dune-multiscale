@@ -189,7 +189,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
     const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const {
 
-  if (DSC_CONFIG_GET("problem.linear", true))
+  if (Problem::getModelData()->linear())
     solve_linear(diffusion_op, lower_order_term, f, solution, use_smp);
   else
     solve_nonlinear(diffusion_op, lower_order_term, f, solution);

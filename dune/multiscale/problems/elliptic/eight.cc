@@ -17,8 +17,6 @@ namespace Eight {
 CONSTANTSFUNCTION(0.001)
 
 ModelProblemData::ModelProblemData() : IModelProblemData(constants()) {
-  if (constants().get("linear", true))
-    DUNE_THROW(Dune::InvalidStateException, "problem eight is entirely nonlinear, but problem.linear was true");
   if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()))
     DUNE_THROW(Dune::InvalidStateException,
                "The problem does not allow stochastic perturbations. Please, switch the key off.");

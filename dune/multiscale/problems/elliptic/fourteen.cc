@@ -17,8 +17,6 @@ namespace Fourteen {
 CONSTANTSFUNCTION(0.05)
 
 ModelProblemData::ModelProblemData() : IModelProblemData(constants()) {
-  if (!constants().get("linear", true))
-    DUNE_THROW(Dune::InvalidStateException, "problem Fourteen is entirely linear, but problem.linear was false");
   if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()))
     DUNE_THROW(Dune::InvalidStateException,
                "The problem does not allow stochastic perturbations. Please, switch the key off.");

@@ -120,7 +120,7 @@ void algorithm() {
   Elliptic_MsFEM_Solver().apply(coarse_discreteFunctionSpace, diffusion_op, f, coarse_part_msfem_solution,
                      fine_part_msfem_solution, msfem_solution);
 
-  if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
+  if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
     data_output(fine_gridPart, coarse_discreteFunctionSpace);
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
@@ -132,7 +132,7 @@ void algorithm() {
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(fine_discreteFunctionSpace);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
     fem_solver.apply(diffusion_op, l_ptr, f, fem_solution);
-    if (DSC_CONFIG_GET("msfem.vtkOutput", false)) {
+    if (DSC_CONFIG_GET("global.vtk_output", false)) {
       DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
       Dune::Multiscale::OutputParameters outputparam;
       OutputTraits::IOTupleType fem_solution_series(&fem_solution);

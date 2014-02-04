@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     // (macro) grid refinement level for which the reference problem was solved
     int refinement_level_referenceprob_ = 0;
     if (DSC_CONFIG_GET("problem.reference_solution", false)) // if there is a refernce solution
-      refinement_level_referenceprob_ = DSC_CONFIG_GET("problem.rs_grid_level", 0);
+      refinement_level_referenceprob_ = DSC_CONFIG_GET("hmm.rs_grid_level", 0);
     // (typically this is a very high level so that we get a very fine grid)
 
     // name of the grid file that describes the macro-grid:

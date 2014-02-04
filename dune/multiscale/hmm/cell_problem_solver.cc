@@ -111,7 +111,7 @@ void CellProblemSolver::solvecellproblem(
   // if yes, the solution of the cell problem is also identical to zero. The solver is getting a problem with this
   // situation, which is why we do not solve cell problems for zero-right-hand-side, since we already know the result.
 
-  if (DSC_CONFIG_GET("problem.linear", true)) {
+  if (Problem::getModelData()->linear()) {
     // assemble the stiffness matrix
     cell_problem_op.assemble_matrix(globalQuadPoint, cell_system_matrix);
     // assemble right hand side of algebraic cell problem

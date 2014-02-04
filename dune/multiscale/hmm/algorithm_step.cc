@@ -464,7 +464,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
   // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
   CellProblemNumberingManager cp_num_manager(discreteFunctionSpace);
 
-  if (DSC_CONFIG_GET("problem.linear", true))
+  if (Problem::getModelData()->linear())
     solve_hmm_problem_linear(periodicDiscreteFunctionSpace, diffusion_op, *hmm_solution, cp_num_manager,
                              discreteFunctionSpace);
   else // for a given loop cycle of the Newton scheme:
