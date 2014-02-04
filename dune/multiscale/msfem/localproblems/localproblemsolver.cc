@@ -10,7 +10,6 @@
 #include <dune/multiscale/common/dirichletconstraints.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/tools/misc/uzawa.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/tools/misc.hh>

@@ -1,4 +1,6 @@
 #include <config.h>
+#include "cell_problem_solver.hh"
+
 #include <boost/concept/usage.hpp>
 #include <dune/common/exceptions.hh>
 #include <dune/multiscale/hmm/discrete_cell_operator.hh>
@@ -9,9 +11,9 @@
 #include <limits>
 #include <sstream>
 
-#include "cell_problem_solver.hh"
-#include "dune/multiscale/common/traits.hh"
-#include "dune/multiscale/tools/discretefunctionwriter.hh"
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 namespace Dune {
 namespace Multiscale {
