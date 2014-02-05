@@ -17,13 +17,12 @@
 #include <dune/multiscale/common/output_traits.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
-#include <dune/fem/misc/l2norm.hh>
-#include <dune/fem/misc/l2error.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
+#include <dune/stuff/functions/norm.hh>
 
 #include "algorithm_error.hh"
 
@@ -201,8 +200,7 @@ void solve_hmm_problem_nonlinear(
                                                                  discreteFunctionSpace);
     zero_func_coarse.clear();
 
-    const Dune::Fem::LPNorm<typename CommonTraits::GridPartType> l2norm(hmm_newton_rhs.space().gridPart(), 2);
-    hmm_rhs_L2_norm = l2norm.distance(zero_func_coarse, hmm_newton_rhs);
+    hmm_rhs_L2_norm = DS::l2distance(zero_func_coarse, hmm_newton_rhs);
 
     DSC_LOG_INFO << "with L^2-Norm = " << hmm_rhs_L2_norm << "." << std::endl;
     DSC_LOG_INFO << "Assembled right hand side, with L^2-Norm of RHS = " << hmm_rhs_L2_norm << "." << std::endl;
@@ -385,11 +383,9 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
   }
 
   // || u^(n+1) - u^(n) ||_L2
-  const Dune::Fem::L2Norm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(
-      hmm_newton_residual.gridPart());
-  relative_newton_error = l2norm.norm(hmm_newton_residual);
+  relative_newton_error = DS::l2norm(hmm_newton_residual);
   // || u^(n+1) - u^(n) ||_L2 / || u^(n+1) ||_L2
-  relative_newton_error = relative_newton_error / l2norm.norm(*hmm_solution);
+  relative_newton_error = relative_newton_error / DS::l2norm(*hmm_solution);
 
   DSC_LOG_INFO << "Relative L2 HMM Newton iteration error = " << relative_newton_error << std::endl;
 
@@ -459,8 +455,6 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                << " unknowns and polynomial order " << CommonTraits::polynomial_order << "."
                << std::endl << std::endl;
 
-  const Dune::Fem::LPNorm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(gridPart, 2);
-
   // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
   CellProblemNumberingManager cp_num_manager(discreteFunctionSpace);
 
@@ -496,26 +490,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
     Dune::Stuff::HeterogenousProjection<DSG::EntityInlevelSearch>::project(*hmm_solution /*source*/,
                                                                            projected_hmm_solution /*target*/);
 
-    const auto hmm_error = l2norm.distance(projected_hmm_solution, reference_solution);
-
-    // old (expensive) hack to deal with discrete functions, defined on different grids
-    // (should do the same as the heterogenous projection above - could therefore be used for comparison)
-    /*
-    static const int hmm_polorder = 2* CommonTraits::DiscreteFunctionSpaceType::CommonTraits::polynomial_order + 2;
-    Dune::ImprovedL2Error< typename CommonTraits::DiscreteFunctionType > impL2error;
-    typename CommonTraits::RangeType hmm_error = impL2error.template norm_adaptive_grids_2< hmm_polorder >(
-      hmm_solution,
-      reference_solution);
-
-    const auto timeadapt = DSC_PROFILER.stopTiming("hmm.timeadapt,
-DSC_CONFIG_GET("global.output_walltime", false)") / 1000.f;
-    // if it took longer then 1 minute to compute the error:
-    if (timeadapt > 60)
-    {
-      DSC_LOG_INFO << "WARNING! EXPENSIVE! Error assembled in " << timeadapt << "s." << std::endl << std::endl;
-    }
-    */
-
+    const auto hmm_error = DS::l2distance(projected_hmm_solution, reference_solution);
     DSC_LOG_INFO << "|| u_hmm - u_reference ||_L2 =  " << hmm_error << std::endl << std::endl;
   }
 
@@ -524,11 +499,11 @@ DSC_CONFIG_GET("global.output_walltime", false)") / 1000.f;
     const auto u = Problem::getExactSolution();
     OutputTraits::DiscreteExactSolutionType gf("Exact Solution", *u, hmm_solution->space().gridPart());
 
-    const auto exact_hmm_error = l2norm.distance(gf, *hmm_solution);
+    const auto exact_hmm_error = DS::l2distance(gf, *hmm_solution);
 
     DSC_LOG_INFO << "|| u_hmm - u_exact ||_L2 =  " << exact_hmm_error << std::endl << std::endl;
     if (DSC_CONFIG_GET("problem.reference_solution", false)) {
-      const auto reference_sol_error = l2norm.distance(gf, reference_solution);
+      const auto reference_sol_error = DS::l2distance(gf, reference_solution);
 
       DSC_LOG_INFO << "|| u_reference - u_exact ||_L2 =  " << reference_sol_error << std::endl << std::endl;
     }

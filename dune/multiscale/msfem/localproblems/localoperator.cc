@@ -85,30 +85,6 @@ void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorTyp
 } // assemble_matrix
 
 
-double LocalProblemOperator::normRHS(const LocalProblemOperator::LocalGridDiscreteFunctionType& rhs) const {
-  const auto& discreteFunctionSpace = rhs.space();
-
-  double norm = 0.0;
-  for (const auto& entity : discreteFunctionSpace) {
-    // create quadrature for given geometry type
-    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace);
-    const auto& geo = entity.geometry();
-    const auto localRHS = rhs.localFunction(entity);
-
-    // integrate
-    for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
-      const double weight =
-          quadrature.weight(quadraturePoint) * geo.integrationElement(quadrature.point(quadraturePoint));
-      RangeType value(0.0);
-      localRHS.evaluate(quadrature[quadraturePoint], value);
-
-      norm += weight * value * value;
-    }
-  }
-  return norm;
-} // end method
-
-
 void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
                                                MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");

@@ -6,7 +6,6 @@
 #define DUNEMS_HMM_CELL_SOLVER_HH
 
 #include <dune/common/typetraits.hh>
-#include <dune/fem/misc/lpnorm.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/solver/oemsolver.hh>

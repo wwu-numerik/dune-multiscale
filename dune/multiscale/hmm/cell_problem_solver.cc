@@ -8,6 +8,7 @@
 #include <dune/stuff/common/math.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/functions/norm.hh>
 #include <limits>
 #include <sstream>
 
@@ -66,7 +67,7 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
                                                             corrector_of_old_coarse_function, gradient_PHI_H,
                                                             jac_cor_cell_problem_rhs);
 
-  const double norm_rhs = cell_problem_op.normRHS(jac_cor_cell_problem_rhs);
+  const double norm_rhs = DS::l2norm(jac_cor_cell_problem_rhs);
 
   if (!(jac_cor_cell_problem_rhs.dofsValid())) {
     DUNE_THROW(Dune::InvalidStateException, "Jacobian Corrector Cell Problem RHS invalid.");
@@ -118,7 +119,7 @@ void CellProblemSolver::solvecellproblem(
     cell_problem_op.assemble_matrix(globalQuadPoint, cell_system_matrix);
     // assemble right hand side of algebraic cell problem
     cell_problem_op.assembleCellRHS_linear(globalQuadPoint, gradient_PHI_H, cell_problem_rhs);
-    const double norm_rhs = cell_problem_op.normRHS(cell_problem_rhs);
+    const double norm_rhs = DS::l2norm(cell_problem_rhs);
     if (!(cell_problem_rhs.dofsValid())) {
       DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
     }
@@ -163,7 +164,7 @@ void CellProblemSolver::solvecellproblem(
       cell_problem_op.assembleCellRHS_nonlinear(globalQuadPoint, gradient_PHI_H, cell_problem_solution,
                                                 cell_problem_rhs);
 
-      const double norm_rhs = cell_problem_op.normRHS(cell_problem_rhs);
+      const double norm_rhs = DS::l2norm(cell_problem_rhs);
       if (!(cell_problem_rhs.dofsValid())) {
         DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
       }

@@ -172,29 +172,6 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(
   }
 } // assemble_jacobian_matrix
 
-double DiscreteCellProblemOperator::normRHS(const DiscreteFunction& rhs) const {
-  double norm = 0.0;
-
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-
-  const DiscreteFunctionSpaceType& discreteFunctionSpace = rhs.space();
-  for (const auto& entity : discreteFunctionSpace) {
-    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace);
-    const auto& geo = entity.geometry();
-    const auto localRHS = rhs.localFunction(entity);
-    // integrate
-    for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
-      const double weight =
-          quadrature.weight(quadraturePoint) * geo.integrationElement(quadrature.point(quadraturePoint));
-      RangeType value(0.0);
-      localRHS.evaluate(quadrature[quadraturePoint], value);
-
-      norm += weight * value * value;
-    }
-  }
-  return norm;
-} // end method
-
 void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T, const JacobianRangeType& gradient_PHI_H,
                                                          DiscreteFunction& cell_problem_RHS) const {
   const auto& discreteFunctionSpace = cell_problem_RHS.space();

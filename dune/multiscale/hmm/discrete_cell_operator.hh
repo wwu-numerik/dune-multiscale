@@ -144,8 +144,6 @@ public:
                                                  const JacobianRangeType& grad_coarse_base_function,
                                                  DiscreteFunction& jac_corrector_cell_problem_RHS) const;
 
-  double normRHS(const DiscreteFunction& rhs) const;
-
 private:
   const DiscreteFunctionSpace& periodicDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_operator_;
