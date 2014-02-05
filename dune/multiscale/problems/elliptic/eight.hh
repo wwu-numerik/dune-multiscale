@@ -39,13 +39,7 @@ private:
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType RangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   FirstSource() {}
@@ -54,8 +48,6 @@ public:
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
-MSNULLFUNCTION(SecondSource)
-
 class Diffusion : public DiffusionBase {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -63,12 +55,6 @@ public:
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
 
 private:
   double additivePart(const DomainType& x, const int i, const int j) const; // additivePart
@@ -83,13 +69,6 @@ public:
                              JacobianRangeType& flux) const;
 };
 
-class LowerOrderTerm : public ZeroLowerOrder {};
-
-MSCONSTANTFUNCTION(MassTerm, 0.0)
-MSNULLFUNCTION(DefaultDummyFunction)
-MSNULLFUNCTION(DirichletBoundaryCondition)
-MSNULLFUNCTION(NeumannBoundaryCondition)
-
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -97,11 +76,7 @@ public:
 public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   ExactSolution() {}
@@ -113,6 +88,13 @@ public:
 
 class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
+class LowerOrderTerm : public ZeroLowerOrder {};
+
+MSNULLFUNCTION(SecondSource)
+MSCONSTANTFUNCTION(MassTerm, 0.0)
+MSNULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(DirichletBoundaryCondition)
+MSNULLFUNCTION(NeumannBoundaryCondition)
 
 } //! @} namespace Eight {
 }

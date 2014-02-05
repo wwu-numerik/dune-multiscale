@@ -35,21 +35,10 @@ struct ModelProblemData : public IModelProblemData {
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType RangeType;
-
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   FirstSource();
@@ -58,21 +47,11 @@ public:
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
-MSNULLFUNCTION(SecondSource)
-
 class Diffusion : public DiffusionBase {
-public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType RangeType;
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
 
 public:
   Diffusion();
@@ -82,27 +61,12 @@ public:
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
-class LowerOrderTerm : public ZeroLowerOrder {};
-
-MSNULLFUNCTION(DirichletBoundaryCondition)
-MSNULLFUNCTION(NeumannBoundaryCondition)
-MSCONSTANTFUNCTION(MassTerm, 0.0)
-MSNULLFUNCTION(DefaultDummyFunction)
-
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType RangeType;
-
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   ExactSolution();
@@ -113,21 +77,11 @@ public:
 };
 
 class DirichletData : public DirichletDataBase {
-private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType RangeType;
-
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   DirichletData() {}
@@ -139,21 +93,10 @@ public:
 };
 
 class NeumannData : public NeumannDataBase {
-private:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
   typedef typename FunctionSpaceType::DomainType DomainType;
   typedef typename FunctionSpaceType::RangeType RangeType;
-
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   NeumannData() {}
@@ -161,6 +104,14 @@ public:
   void evaluate(const DomainType& x, RangeType& y) const;
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
+
+class LowerOrderTerm : public ZeroLowerOrder {};
+
+MSNULLFUNCTION(DirichletBoundaryCondition)
+MSNULLFUNCTION(NeumannBoundaryCondition)
+MSCONSTANTFUNCTION(MassTerm, 0.0)
+MSNULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(SecondSource)
 
 } //! @} namespace Nine {
 }

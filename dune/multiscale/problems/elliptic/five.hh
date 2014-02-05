@@ -45,7 +45,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   void evaluate(const DomainType& x, RangeType& y) const; // evaluate
@@ -66,7 +66,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
@@ -95,7 +95,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   ExactSolution() {}
