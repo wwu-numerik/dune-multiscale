@@ -46,7 +46,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   FirstSource() {}
@@ -69,7 +69,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   Diffusion();
@@ -99,7 +99,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   DirichletBoundaryCondition() {}
@@ -123,7 +123,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   NeumannBoundaryCondition() {}
@@ -145,7 +145,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   ExactSolution() {}

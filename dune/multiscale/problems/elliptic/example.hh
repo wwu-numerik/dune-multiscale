@@ -137,7 +137,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   //! evaluate f, i.e. return y=f(x) for a given x
@@ -163,7 +163,7 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
   typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   Diffusion() {}
@@ -247,7 +247,7 @@ public:
   //! This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also
   // an
   //! entry of a domain-element.
-  typedef DomainFieldType TimeType;
+  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 public:
   ExactSolution() {}
@@ -289,7 +289,7 @@ public:
 //  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
 //  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
 
-//  typedef DomainFieldType TimeType;
+//  typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
 // public:
 //  const FieldMatrixType& A_hom_;
