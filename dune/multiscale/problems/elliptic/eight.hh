@@ -18,35 +18,19 @@ namespace Problem {
  * @{ **/
 //! ------------ Elliptic Problem 8 -------------------
 
-// a nonlinear model problem - periodic setting
-
-// For details, see 'example.hh'
-
 namespace Eight {
-// description see below
 
-// NOTE that (delta/epsilon_est) needs to be a positive integer!
-
-//! model problem information
 struct ModelProblemData : public IModelProblemData {
   static const bool has_exact_solution = true;
 
   ModelProblemData();
 
-  //! \copydoc IModelProblemData::getMacroGridFile();
   std::string getMacroGridFile() const;
-
-  //! are the coefficients periodic? (e.g. A=A(x/eps))
-  //! this method is only relevant if you want to use a standard homogenizer
   bool problemIsPeriodic() const;
-
-  //! does the problem allow a stochastic perturbation of the coefficients?
   bool problemAllowsStochastics() const;
   bool symmetricDiffusion() const { return false; }
   bool linear() const { return false; }
 };
-
-//! ----------------- Definition of ' f ' ------------------------
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 private:
@@ -66,18 +50,12 @@ public:
 public:
   FirstSource() {}
 
-  void evaluate(const DomainType& x, RangeType& y) const; // evaluate
-
+  void evaluate(const DomainType& x, RangeType& y) const;
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
-/** \brief default class for the second source term G.
- * Realization: set G(x) = 0: **/
 MSNULLFUNCTION(SecondSource)
 
-//! the (non-linear) diffusion operator A^{\epsilon}(x,\xi)
-//! A^{\epsilon} : \Omega × R² -> R²
-//!
 class Diffusion : public DiffusionBase {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -93,47 +71,25 @@ public:
   typedef DomainFieldType TimeType;
 
 private:
-
-  //! to simplify evaluate
   double additivePart(const DomainType& x, const int i, const int j) const; // additivePart
-
-  // instantiate all possible cases of the evaluate-method:
 
 public:
   Diffusion() {}
 
-  // (diffusive) flux = A^{\epsilon}( x , gradient_of_a_function )
   void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const; // diffusiveFlux
-
-  // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
-  // "nabla w", i.e.
-  // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
-
-  // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
+                     JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const; // jacobianDiffusiveFlux
+                             JacobianRangeType& flux) const;
 };
 
-// dummmy for a lower order term F( x , u(x) , grad u(x) ) in a PDE like
-// - div ( A grad u ) + F ( x , u(x) , grad u(x) ) = f
-// NOTE: the operator describing the pde must be a monotone operator
-//! ------- Definition of the (possibly nonlinear) lower term F ---------
 class LowerOrderTerm : public ZeroLowerOrder {};
 
-//! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm, 0.0)
-
-//! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
-
-//! ------------ Definition of homogeneous boundary conditions ----------
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 
-//! ----------------- Definition of ' u ' ----------------------------
-//! Exact solution (typically it is unknown)
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -150,18 +106,11 @@ public:
 public:
   ExactSolution() {}
 
-  // in case 'u' has NO time-dependency use the following method:
   void evaluate(const DomainType& x, RangeType& y) const;
-
-  // in case 'u' HAS a time-dependency use the following method:
-  // unfortunately GRAPE requires both cases of the method 'evaluate' to be
-  // instantiated
   void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
-
   void jacobian(const DomainType&, typename FunctionSpaceType::JacobianRangeType&) const;
 };
 
-// set zero dirichlet and neumann-values by default
 class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
 

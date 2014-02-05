@@ -19,40 +19,21 @@ namespace Problem {
  * @{ **/
 //! ------------ Elliptic Problem 1 -------------------
 
-// linear elliptic model problem - periodic setting
-// no exact solution available!
-
-//! For more further details about the implementation see '../base.hh'
-//! For details on the classes, see 'example.hh'
-
 namespace One {
 
-//! model problem information
 struct ModelProblemData : public IModelProblemData {
   static const bool has_exact_solution = false;
 
   ModelProblemData();
 
-  //! \copydoc IModelProblemData::getMacroGridFile();
   std::string getMacroGridFile() const;
-
-  //! are the coefficients periodic? (e.g. A=A(x/eps))
-  //! this method is only relevant if you want to use a standard homogenizer
   bool problemIsPeriodic() const;
-
-  //! does the problem allow a stochastic perturbation of the coefficients?
   bool problemAllowsStochastics() const;
 };
 
-//! ----------------- Definition of ' f ' ----------------------------
 MSCONSTANTFUNCTION(FirstSource, 1.0)
-
-//! ----------------- Definition of ' G ' ----------------------------
 MSNULLFUNCTION(SecondSource)
 
-//! ----------------- Definition of ' A ' ------------------------
-//! the linear diffusion operator A^{\epsilon}(x,\xi)=A^{\epsilon}(x) \xi
-//! A^{\epsilon} : \Omega × R² -> R²
 class Diffusion : public DiffusionBase {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -69,41 +50,20 @@ public:
 
 public:
   Diffusion() {}
-  // in the linear setting, use the structure
-  // A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
 
-  // (diffusive) flux = A^{\epsilon}( x , direction )
-  // (typically direction is some 'gradient_of_a_function')
   void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const; // diffusiveFlux
-
-  // the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
-  // "nabla w", i.e.
-  // jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
-
-  // jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
+                     JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
-// dummmy for a lower order term F( x , u(x) , grad u(x) ) in a PDE like
-// - div ( A grad u ) + F ( x , u(x) , grad u(x) ) = f
-// NOTE: the operator describing the pde must be a monotone operator
-//! ------- Definition of the (possibly nonlinear) lower term F ---------
 class LowerOrderTerm : public ZeroLowerOrder {};
 
-//! ----------------- Definition of ' m ' ----------------------------
 MSCONSTANTFUNCTION(MassTerm, 0.0)
-
-//! ------------ Definition of homogeneous boundary conditions ----------
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
-
-//! ----------------- Definition of some dummy -----------------------
 MSNULLFUNCTION(DefaultDummyFunction)
 
-//! ----------------- Definition of ' u ' ----------------------------
-//! Exact solution is unknown for this model problem
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
@@ -122,18 +82,11 @@ public:
 public:
   ExactSolution() {}
 
-  // in case 'u' has NO time-dependency use the following method:
   void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const;
-
   void jacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
-
-  // in case 'u' HAS a time-dependency use the following method:
-  // unfortunately GRAPE requires both cases of the method 'evaluate' to be
-  // instantiated
   void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
 };
 
-// set zero dirichlet and neumann-values by default
 class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
 
