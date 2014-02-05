@@ -39,12 +39,14 @@ bool ModelProblemData::problemAllowsStochastics() const {
 
 std::unique_ptr<ModelProblemData::BoundaryInfoType>
 ModelProblemData::boundaryInfo() const {
-  return DSC::make_unique<Stuff::GridboundaryNormalBased<typename View::Intersection>>(boundary_settings());
+  return std::unique_ptr<ModelProblemData::BoundaryInfoType>(
+        Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));
 }
 
 std::unique_ptr<ModelProblemData::SubBoundaryInfoType>
 ModelProblemData::subBoundaryInfo() const {
-  return DSC::make_unique<Stuff::GridboundaryNormalBased<typename SubView::Intersection>>(boundary_settings());
+  return std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
+        Stuff::GridboundaryNormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
 ParameterTree ModelProblemData::boundary_settings() const
