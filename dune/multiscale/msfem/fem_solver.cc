@@ -1,8 +1,5 @@
 #include <config.h>
 
-#include <dune/fem/misc/h1norm.hh>
-#include <dune/fem/misc/l2error.hh>
-#include <dune/fem/misc/l2norm.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
 #include <dune/fem/function/adaptivefunction/adaptivefunction.hh>
@@ -13,6 +10,7 @@
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/stuff/common/logging.hh>
+#include <dune/stuff/functions/norm.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <limits>
 #include <sstream>
@@ -114,7 +112,6 @@ void Elliptic_FEM_Solver::solve_nonlinear(
   typedef typename CommonTraits::DiscreteFunctionSpaceType::RangeType RangeType;
 
   RangeType relative_newton_error_finescale = std::numeric_limits<typename CommonTraits::RangeType>::max();
-  RangeType rhs_L2_norm = std::numeric_limits<typename CommonTraits::RangeType>::max();
 
   //! (stiffness) matrix
   CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
@@ -141,8 +138,7 @@ void Elliptic_FEM_Solver::solve_nonlinear(
     system_rhs.clear();
     newton_rhs.assemble_for_Newton_method(f, diffusion_op, *lower_order_term, solution, system_rhs);
 
-    const Dune::Fem::L2Norm<typename CommonTraits::DiscreteFunctionType::GridPartType> l2norm(system_rhs.gridPart());
-    rhs_L2_norm = l2norm.norm(system_rhs);
+    const auto rhs_L2_norm = DS::l2norm(system_rhs);
     if (rhs_L2_norm < 1e-10) {
       // residual solution almost identical to zero: break
       DSC_LOG_INFO << "Residual solution almost identical to zero. Therefore: break loop." << std::endl;
@@ -161,8 +157,8 @@ void Elliptic_FEM_Solver::solve_nonlinear(
 
     if (residual.dofsValid()) {
       solution += residual;
-      relative_newton_error_finescale = l2norm.norm(residual);
-      relative_newton_error_finescale /= l2norm.norm(solution);
+      relative_newton_error_finescale = DS::l2norm(residual);
+      relative_newton_error_finescale /= DS::l2norm(solution);
 
       DSC_LOG_INFO << "Relative L2-Newton Error = " << relative_newton_error_finescale << std::endl;
       // residual solution almost identical to zero: break

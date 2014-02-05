@@ -71,8 +71,6 @@ public:
   void assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
                               MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
-  double normRHS(const LocalGridDiscreteFunctionType& rhs) const;
-
   void project_dirichlet_values(CommonTraits::DiscreteFunctionType &function) const;
 
 private:

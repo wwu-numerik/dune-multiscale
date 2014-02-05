@@ -2,11 +2,10 @@
 #include <assert.h>
 #include <boost/filesystem/fstream.hpp>
 #include <dune/fem/function/common/gridfunctionadapter.hh>
-#include <dune/fem/misc/h1norm.hh>
-#include <dune/fem/misc/l2error.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/functions/time.hh>
+#include <dune/stuff/functions/norm.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <iostream>
 #include <map>
@@ -28,8 +27,6 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 
   auto gridPart = fem_solution_ ? fem_solution_->gridPart() : msfem_solution_->gridPart();
-  Dune::Fem::H1Norm<CommonTraits::GridPartType> h1norm(gridPart);
-  Dune::Fem::L2Error<typename CommonTraits::DiscreteFunctionType> l2error;
 
   std::map<std::string, double> csv;
 
@@ -42,10 +39,10 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
         "", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
 
     if (msfem_solution_) {
-      auto msfem_error = l2error.norm(timefunctionAdapted(u), *msfem_solution_);
+      auto msfem_error = DS::l2distance(u_disc, *msfem_solution_);
       out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
 
-      auto h1_msfem_error = h1norm.distance(u_disc, *msfem_solution_);
+      auto h1_msfem_error = DS::h1distance(u_disc, *msfem_solution_);
       out << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
 
       csv["msfem_exact_L2"] = msfem_error;
@@ -53,10 +50,10 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
 
     if (fem_solution_) {
-      const auto fem_error = l2error.norm(timefunctionAdapted(u), *fem_solution_);
+      const auto fem_error = DS::l2distance(u_disc, *fem_solution_);
       out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
 
-      auto h1_fem_error = h1norm.distance(u_disc, *fem_solution_);
+      auto h1_fem_error = DS::h1distance(u_disc, *fem_solution_);
       out << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
 
       csv["fem_exact_L2"] = fem_error;
@@ -64,11 +61,10 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
   }
   if (msfem_solution_ && fem_solution_) {
-    const auto approx_msfem_error = l2error.norm2<2 * CommonTraits::polynomial_order + 2>(
-        *fem_solution_, *msfem_solution_);
+    const auto approx_msfem_error = DS::l2distance(*fem_solution_, *msfem_solution_);
     out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 
-    auto h1_approx_msfem_error = h1norm.distance(*fem_solution_, *msfem_solution_);
+    auto h1_approx_msfem_error = DS::h1distance(*fem_solution_, *msfem_solution_);
     out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
 
     csv["msfem_fem_L2"] = approx_msfem_error;

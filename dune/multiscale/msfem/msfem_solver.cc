@@ -45,7 +45,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   typedef LocalsolutionProxy<SearchType> ProxyType;
   typename ProxyType::CorrectionsMapType local_corrections;
 
-  // traverse coarse space
   for (auto& coarse_entity : coarse_space) {
     LocalSolutionManager localSolManager(coarse_space, coarse_entity, subgrid_list);
     localSolManager.load();
@@ -57,7 +56,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     auto& local_correction = *local_corrections[coarse_index];
     local_correction.clear();
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarse_entity);
-//    auto& tmp_local_storage = *localSolutions[0];
 
     if (DSG::is_simplex_grid(coarse_space)) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
@@ -107,6 +105,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       local_correction += *localSolutions[coarseSolutionLF.numDofs() + 1];
       // substract neumann corrector
       local_correction -= *localSolutions[coarseSolutionLF.numDofs()];
+
       if (DSC_CONFIG_GET("msfem.local_corrections_vtk_output", false)) {
         LocalOutputTraits::IOTupleType coarse_grid_series(&local_correction);
         const std::string name = (boost::format("local_correction_%d_") % coarse_index).str();

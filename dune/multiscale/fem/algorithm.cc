@@ -21,8 +21,6 @@
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
-#include <dune/fem/misc/l2norm.hh>
-
 #include <string>
 #include <fstream>
 
