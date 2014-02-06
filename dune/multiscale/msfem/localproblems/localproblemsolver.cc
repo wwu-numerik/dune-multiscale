@@ -20,6 +20,7 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+#include <dune/stuff/functions/norm.hh>
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -35,11 +36,19 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+/** \brief define output parameters for local problems
+ *  appends "local_problems" for path
+ **/
+struct LocalProblemDataOutputParameters : public OutputParameters {
+public:
+  explicit LocalProblemDataOutputParameters();
+};
+
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/") {}
 
 std::unique_ptr<LocalProblemSolver::InverseOperatorType>
-LocalProblemSolver::make_inverse_operator(LocalProblemSolver::LinearOperatorTypeType& problem_matrix) {
+LocalProblemSolver::make_inverse_operator(LinearOperatorType &problem_matrix) {
   const auto solver =
       Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
   return DSC::make_unique<InverseOperatorType>(
@@ -55,10 +64,7 @@ LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpace
 {}
 
 
-/** Solve all local MsFEM problems for one coarse entity at once.
-*
-*
-*/
+//! Solve all local MsFEM problems for one coarse entity at once.
 void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
                                                     MsFEMTraits::LocalSolutionVectorType &allLocalSolutions) const {
   assert(allLocalSolutions.size() > 0);
@@ -73,9 +79,9 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 
   const auto& subDiscreteFunctionSpace = allLocalSolutions[0]->space();
 
-  //! the matrix in our linear system of equations
+  // the matrix in our linear system of equations
   // in the non-linear case, it is the matrix for each iteration step
-  LinearOperatorTypeType locProbSysMatrix("Local Problem System Matrix", subDiscreteFunctionSpace,
+  LinearOperatorType system_matrix("Local Problem System Matrix", subDiscreteFunctionSpace,
                                                  subDiscreteFunctionSpace);
 
   //! define the discrete (elliptic) local MsFEM problem operator
@@ -87,43 +93,45 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   for (auto& it : allLocalRHS)
     it = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>("rhs of local MsFEM problem", subDiscreteFunctionSpace);
 
-  localProblemOperator.assemble_matrix(locProbSysMatrix);
+  localProblemOperator.assemble_matrix(system_matrix);
   localProblemOperator.assemble_all_local_rhs(coarseCell,allLocalRHS);
 
   // set dirichlet dofs to zero
   Stuff::GridboundaryAllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
   DirichletConstraints<LocalGridDiscreteFunctionSpaceType> constraints(boundaryInfo, subDiscreteFunctionSpace);
-  constraints.applyToOperator(locProbSysMatrix);
+  constraints.applyToOperator(system_matrix);
 
   for (auto& rhsIt : allLocalRHS) {
     constraints.setValue(0.0, *rhsIt);
   }
 
   for (auto i : DSC::valueRange(allLocalSolutions.size())) {
-    if (!allLocalRHS[i]->dofsValid())
+    auto& current_rhs = *allLocalRHS[i];
+    auto& current_solution = *allLocalSolutions[i];
+    if (!current_rhs.dofsValid())
       DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 
     // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    if (localProblemOperator.normRHS(*allLocalRHS[i]) < 1e-30) {
-      allLocalRHS[i]->clear();
+    if (DS::l2norm(current_rhs) < 1e-30) {
+      current_rhs.clear();
       DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
       continue;
     }
 
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
-      allLocalRHS[i]->clear();
+      current_rhs.clear();
       DSC_LOG_INFO << "Zero-Boundary corrector." << std::endl;
       continue;
     }
 
-    const auto localProblemSolver = make_inverse_operator(locProbSysMatrix);
-    localProblemSolver->apply(*allLocalRHS[i], *allLocalSolutions[i]);
+    const auto localProblemSolver = make_inverse_operator(system_matrix);
+    localProblemSolver->apply(current_rhs, current_solution);
 
-    if (!(allLocalSolutions[i]->dofsValid()))
+    if (!current_solution.dofsValid())
       DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
   }
 }

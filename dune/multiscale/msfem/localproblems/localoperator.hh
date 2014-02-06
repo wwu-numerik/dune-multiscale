@@ -58,7 +58,7 @@ public:
   LocalProblemOperator(const CoarseSpaceType &coarse_space, const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionOperatorType& diffusion_op);
 
   //! assemble stiffness matrix for local problems
-  void assemble_matrix(LocalProblemSolver::LinearOperatorTypeType& global_matrix) const;
+  void assemble_matrix(LocalProblemSolver::LinearOperatorType& global_matrix) const;
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
@@ -71,6 +71,10 @@ public:
   void assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
                               MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
+  /** Set the dirichlet values to a given discrete function on the sub mesh
+  *
+  * @param[in, out] function The function in which the values will be set.
+  */
   void project_dirichlet_values(CommonTraits::DiscreteFunctionType &function) const;
 
 private:

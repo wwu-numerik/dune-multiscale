@@ -29,9 +29,7 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, 
   , coarse_space_(coarse_space)
 {}
 
-//! stiffness matrix for a linear elliptic diffusion operator
-// for oversampling strategy 1 (no constraints)
-void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorTypeType& global_matrix) const
+void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorType &global_matrix) const
     // x_T is the barycenter of the macro grid element T
 {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
@@ -48,7 +46,7 @@ void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorTyp
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();
 
-    DSFe::LocalMatrixProxy<LocalProblemSolver::LinearOperatorTypeType> local_matrix(
+    DSFe::LocalMatrixProxy<LocalProblemSolver::LinearOperatorType> local_matrix(
         global_matrix, sub_grid_entity, sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
@@ -228,10 +226,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   return;
 }
 
-/** Set the dirichlet values to a given discrete function on the sub mesh
-*
-* @param[in, out] function The function in which the values will be set.
-*/
 void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFunctionType &function) const {
   /*  // make sure, we are on a hexahedral element
     BOOST_ASSERT_MSG(function.space().gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
