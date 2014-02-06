@@ -1,4 +1,7 @@
 # Doxyfile.in is regenerated from dunecontrol
 # add changes that need to persist here
 
-@INCLUDE = @top_srcdir@/doc/doxygen/Doxyfile.common
+INCLUDE = @top_srcdir@/doc/doxygen/Doxyfile.common
+
+INPUT                 += @top_srcdir@/dune/multiscale @top_srcdir@/src
+EXCLUDE               += @top_srcdir@/dune/multiscale/test 
