@@ -192,7 +192,7 @@ public:
   //! essentially: 'DomainFieldType' is the type of an entry of a domain-element.
   //! But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
   //! This makes sense since the time-dependency is a one-dimensional element of the 'typename
-  //FunctionSpaceType::DomainType' and is therefor also
+  // FunctionSpaceType::DomainType' and is therefor also
   // an
   //! entry of a domain-element.
 

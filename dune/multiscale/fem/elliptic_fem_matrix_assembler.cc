@@ -22,8 +22,7 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-void DiscreteEllipticOperator::operator()(const DiscreteFunctionImp& /*u*/,
-                                                                             DiscreteFunctionImp& /*w*/) const {
+void DiscreteEllipticOperator::operator()(const DiscreteFunctionImp& /*u*/, DiscreteFunctionImp& /*w*/) const {
   DUNE_THROW(Dune::NotImplemented,
              "the ()-operator of the DiscreteEllipticOperator class is not yet implemented and still a dummy.");
 } // ()
@@ -83,8 +82,7 @@ void DiscreteEllipticOperator::assemble_matrix(MatrixType& global_matrix) const 
   global_matrix.communicate();
 } // assemble_matrix
 
-void DiscreteEllipticOperator::assemble_jacobian_matrix(
-    DiscreteFunction& disc_func, MatrixType& global_matrix) const {
+void DiscreteEllipticOperator::assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix) const {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
@@ -176,9 +174,9 @@ void DiscreteEllipticOperator::assemble_jacobian_matrix(
   global_matrix.communicate();
 } // assemble_jacobian_matrix
 
-
-void DiscreteEllipticOperator::assemble_jacobian_matrix(
-    DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension, MatrixType& global_matrix) const {
+void DiscreteEllipticOperator::assemble_jacobian_matrix(DiscreteFunction& disc_func,
+                                                        const DiscreteFunction& dirichlet_extension,
+                                                        MatrixType& global_matrix) const {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
@@ -272,10 +270,10 @@ void DiscreteEllipticOperator::assemble_jacobian_matrix(
         local_matrix.unitRow(lp);
     }
   }
-global_matrix.communicate();
+  global_matrix.communicate();
 } // assemble_jacobian_matrix
 
-void SMPDiscreteEllipticOperator::assemble_matrix(CommonTraits::LinearOperatorType &global_matrix) const {
+void SMPDiscreteEllipticOperator::assemble_matrix(CommonTraits::LinearOperatorType& global_matrix) const {
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
   typedef typename DiscreteFunctionSpace::GridPartType GridPart;
   typedef typename DiscreteFunctionSpace::RangeType RangeType;
@@ -290,44 +288,44 @@ void SMPDiscreteEllipticOperator::assemble_matrix(CommonTraits::LinearOperatorTy
   // micro scale base function:
   std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
 
-  Fem::DomainDecomposedIteratorStorage< GridPart > threadIterators(discreteFunctionSpace_.gridPart());
+  Fem::DomainDecomposedIteratorStorage<GridPart> threadIterators(discreteFunctionSpace_.gridPart());
 
-  #ifdef _OPENMP
-  #pragma omp parallel
-  #endif
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
   {
-  for (const auto& entity : threadIterators) {
-    const auto& geometry = entity.geometry();
-    assert(entity.partitionType() == InteriorEntity);
+    for (const auto& entity : threadIterators) {
+      const auto& geometry = entity.geometry();
+      assert(entity.partitionType() == InteriorEntity);
 
-    DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, entity, entity);
+      DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix, entity, entity);
 
-    const auto& baseSet = local_matrix.domainBasisFunctionSet();
-    const auto numBaseFunctions = baseSet.size();
+      const auto& baseSet = local_matrix.domainBasisFunctionSet();
+      const auto numBaseFunctions = baseSet.size();
 
-    // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
-    // use a higher order quadrature:
-    const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace_);
-    const auto numQuadraturePoints = quadrature.nop();
-    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      // local (barycentric) coordinates (with respect to entity)
-      const auto& local_point = quadrature.point(quadraturePoint);
-      const auto global_point = geometry.global(local_point);
-      const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
+      // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
+      // use a higher order quadrature:
+      const auto quadrature = DSFe::make_quadrature(entity, discreteFunctionSpace_);
+      const auto numQuadraturePoints = quadrature.nop();
+      for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
+        // local (barycentric) coordinates (with respect to entity)
+        const auto& local_point = quadrature.point(quadraturePoint);
+        const auto global_point = geometry.global(local_point);
+        const double weight = quadrature.weight(quadraturePoint) * geometry.integrationElement(local_point);
 
-      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
-      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
-      typename BaseFunctionSet::JacobianRangeType diffusion_in_gradient_phi;
-      for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-        // A( \nabla \phi ) // diffusion operator evaluated in (x,\nabla \phi)
-        diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
-        for (unsigned int j = 0; j < numBaseFunctions; ++j) {
-          local_matrix.add(j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]));
+        baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
+        baseSet.evaluateAll(quadrature[quadraturePoint], phi);
+        typename BaseFunctionSet::JacobianRangeType diffusion_in_gradient_phi;
+        for (unsigned int i = 0; i < numBaseFunctions; ++i) {
+          // A( \nabla \phi ) // diffusion operator evaluated in (x,\nabla \phi)
+          diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
+          for (unsigned int j = 0; j < numBaseFunctions; ++j) {
+            local_matrix.add(j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]));
+          }
         }
       }
-    }
-  } // for
-  } // omp region
+    } // for
+  }   // omp region
 
   // set unit rows for dirichlet dofs
   const auto boundary = Problem::getModelData()->boundaryInfo();

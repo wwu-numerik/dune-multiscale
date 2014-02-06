@@ -42,10 +42,7 @@ void FirstSource::evaluate(const DomainType& x, RangeType& y) const {
   }
 }
 
-void Diffusion::diffusiveFlux(
-    const DomainType& x,
-    const JacobianRangeType& gradient,
-    JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient, JacobianRangeType& flux) const {
   double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt(fabs(2.0 * x[0])) / constants().epsilon) *
                                  sin(2.0 * M_PI * pow(1.5 * x[1], 2.0) / constants().epsilon);
 
@@ -59,11 +56,8 @@ void Diffusion::diffusiveFlux(
   flux[0][1] = coefficient * (gradient[0][1] + ((1.0 / 3.0) * pow(gradient[0][1], 3.0)));
 }
 
-void Diffusion::jacobianDiffusiveFlux(
-    const DomainType& x,
-    const JacobianRangeType& position_gradient,
-    const JacobianRangeType& direction_gradient,
-    JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& position_gradient,
+                                      const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const {
   double coefficient = 1.0 + (9.0 / 10.0) * sin(2.0 * M_PI * sqrt(fabs(2.0 * x[0])) / constants().epsilon) *
                                  sin(2.0 * M_PI * pow(1.5 * x[1], 2.0) / constants().epsilon);
 
@@ -79,21 +73,15 @@ void Diffusion::jacobianDiffusiveFlux(
   flux[0][1] = coefficient * direction_gradient[0][1] * (1.0 + pow(position_gradient[0][1], 2.0));
 }
 
-void ExactSolution::evaluate(
-    const ExactSolution::DomainType&,
-    ExactSolution::RangeType&) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType&, ExactSolution::RangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void ExactSolution::jacobian(
-    const ExactSolution::DomainType&,
-    ExactSolution::JacobianRangeType&) const {
+void ExactSolution::jacobian(const ExactSolution::DomainType&, ExactSolution::JacobianRangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void ExactSolution::evaluate(
-    const ExactSolution::DomainType& x, const TimeType&,
-    ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType& x, const TimeType&, ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
 

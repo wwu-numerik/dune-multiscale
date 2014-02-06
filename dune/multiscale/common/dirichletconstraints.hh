@@ -22,7 +22,8 @@ class DirichletConstraints {
 
   typedef DiscreteFunctionImp DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DomainSpaceType;
-  typedef Dune::Stuff::GridboundaryInterface<typename DomainSpaceType::GridType::LeafGridView::Intersection> BoundaryType;
+  typedef Dune::Stuff::GridboundaryInterface<typename DomainSpaceType::GridType::LeafGridView::Intersection>
+  BoundaryType;
   typedef typename DomainSpaceType::GridPartType GridPartType;
   typedef typename DomainSpaceType::GridType GridType;
   typedef typename DomainSpaceType::MapperType MapperType;
@@ -30,7 +31,8 @@ class DirichletConstraints {
   typedef typename DomainSpaceType::EntityType EntityType;
 
   typedef Dune::Fem::GridFunctionAdapter<CommonTraits::DirichletDataType,
-                                 CommonTraits::DiscreteFunctionSpaceType::GridPartType> GridFunctionType;
+                                         CommonTraits::DiscreteFunctionSpaceType::GridPartType> GridFunctionType;
+
 public:
   DirichletConstraints(const BoundaryType& boundary, const DomainSpaceType& domain_space);
 
@@ -44,7 +46,7 @@ private:
    */
   void operator()(const DiscreteFunctionType& u, DiscreteFunctionType& w) const;
 
-  public:
+public:
   /*! treatment of Dirichlet-DoFs for given discrete function
    *
    *   \note A LagrangeDomainSpace is implicitly assumed.
@@ -113,7 +115,8 @@ protected:
  *           instances. Therefore, this method should only be used for spaces on
 *the coarse grid!
 */
-DirichletConstraints<CommonTraits::DiscreteFunctionType> &getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space);
+DirichletConstraints<CommonTraits::DiscreteFunctionType>&
+getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space);
 
 /** Get the constraints for a given discrete function space.
 *

@@ -35,9 +35,7 @@ bool ModelProblemData::problemAllowsStochastics() const {
   return true; // = problem allows stochastic perturbations
 }
 
-void FirstSource::evaluate(
-    const FirstSource::DomainType& x,
-    FirstSource::RangeType& y) const {
+void FirstSource::evaluate(const FirstSource::DomainType& x, FirstSource::RangeType& y) const {
 
   // circle of radius 0.2 around the reentrant corner at (0.5,0.5)
   double distance = sqrt(pow(x[0] - 0.5, 2.0) + pow(x[1] - 0.5, 2.0));
@@ -49,16 +47,11 @@ void FirstSource::evaluate(
   }
 }
 
-void FirstSource::evaluate(
-    const FirstSource::DomainType& x, const TimeType&,
-    FirstSource::RangeType& y) const {
+void FirstSource::evaluate(const FirstSource::DomainType& x, const TimeType&, FirstSource::RangeType& y) const {
   evaluate(x, y);
 }
 
-void Diffusion::diffusiveFlux(
-    const DomainType& x,
-    const JacobianRangeType& gradient,
-    JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient, JacobianRangeType& flux) const {
 
   // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
   // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
@@ -68,11 +61,8 @@ void Diffusion::diffusiveFlux(
   flux[0][1] = coeff.second * gradient[0][1];
 }
 
-void Diffusion::jacobianDiffusiveFlux(
-    const DomainType& x,
-    const JacobianRangeType&,
-    const JacobianRangeType& direction_gradient,
-    JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType&,
+                                      const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const {
 
   // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
   // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
@@ -82,21 +72,15 @@ void Diffusion::jacobianDiffusiveFlux(
   flux[0][1] = coeff.second * direction_gradient[0][1];
 }
 
-void ExactSolution::evaluate(
-    const ExactSolution::DomainType&,
-    ExactSolution::RangeType&) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType&, ExactSolution::RangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void ExactSolution::jacobian(
-    const ExactSolution::DomainType&,
-    ExactSolution::JacobianRangeType&) const {
+void ExactSolution::jacobian(const ExactSolution::DomainType&, ExactSolution::JacobianRangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void ExactSolution::evaluate(
-    const ExactSolution::DomainType& x, const TimeType&,
-    ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType& x, const TimeType&, ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
 

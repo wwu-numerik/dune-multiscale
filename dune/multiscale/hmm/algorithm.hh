@@ -20,11 +20,9 @@ bool adapt(const HMMResult& result, const int loop_cycle, const double error_tol
            typename HMMTraits::AdaptationManagerType& adaptationManager);
 
 //! the main hmm computation
-void
-algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
-          typename CommonTraits::GridPointerType& fine_macro_grid_pointer,
-          typename CommonTraits::GridPointerType& periodic_grid_pointer,
-          const std::string filename);
+void algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
+               typename CommonTraits::GridPointerType& fine_macro_grid_pointer,
+               typename CommonTraits::GridPointerType& periodic_grid_pointer, const std::string filename);
 
 } // namespace HMM {
 } // namespace Multiscale {

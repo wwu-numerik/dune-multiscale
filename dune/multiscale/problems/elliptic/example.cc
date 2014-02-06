@@ -32,18 +32,13 @@ bool ModelProblemData::problemIsPeriodic() const {
 
 bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
-void FirstSource::evaluate(
-    const FirstSource::DomainType& x,
-    FirstSource::RangeType& y) const {
+void FirstSource::evaluate(const FirstSource::DomainType& x, FirstSource::RangeType& y) const {
 
   // f(x_1,x_2) :=  sin( 2 π x_1 ) · sin( 2 π x_2 )
   y = sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
 }
 
-void Diffusion::diffusiveFlux(
-    const DomainType&,
-    const JacobianRangeType& direction,
-    JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType&, const JacobianRangeType& direction, JacobianRangeType& flux) const {
 
   // coefficient = ( 1 /(8π²) )
   double coefficient = 1.0 * (1.0 / (8.0 * M_PI * M_PI));
@@ -52,11 +47,8 @@ void Diffusion::diffusiveFlux(
   flux[0][1] = coefficient * direction[0][1];
 }
 
-void Diffusion::jacobianDiffusiveFlux(
-    const DomainType&,
-    const JacobianRangeType&,
-    const JacobianRangeType& direction_gradient,
-    JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType&, const JacobianRangeType&,
+                                      const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const {
   // Note: in the linear case, we have
   //     'JA( x , position_gradient ) = A( x )'
   // for all directions.
@@ -67,16 +59,12 @@ void Diffusion::jacobianDiffusiveFlux(
   flux[0][1] = coefficient * direction_gradient[0][1];
 }
 
-void ExactSolution::evaluate(
-    const ExactSolution::DomainType& x,
-    ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType& x, ExactSolution::RangeType& y) const {
   // u( x_1, x_2 ) = sin( 2 π x_1 ) · sin( 2 π x_2 )
   y = sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
 }
 
-void ExactSolution::evaluate(
-    const ExactSolution::DomainType& x, const TimeType&,
-    ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType& x, const TimeType&, ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
 
