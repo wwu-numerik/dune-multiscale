@@ -1,3 +1,7 @@
+#include <config.h>
+
+#include "elliptic_fem_matrix_assembler.hh"
+
 #include <dune/fem/solver/oemsolver/oemsolver.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/discreteoperatorimp.hh>
@@ -18,16 +22,13 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-template <class DiscreteFunctionImp, class DiffusionImp>
-void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::operator()(const DiscreteFunctionImp& /*u*/,
+void DiscreteEllipticOperator::operator()(const DiscreteFunctionImp& /*u*/,
                                                                              DiscreteFunctionImp& /*w*/) const {
   DUNE_THROW(Dune::NotImplemented,
              "the ()-operator of the DiscreteEllipticOperator class is not yet implemented and still a dummy.");
 } // ()
 
-template <class DiscreteFunctionImp, class DiffusionImp>
-template <class MatrixType>
-void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matrix(MatrixType& global_matrix) const {
+void DiscreteEllipticOperator::assemble_matrix(MatrixType& global_matrix) const {
   //!TODO diagonal stencil would be enough
   DSFe::reserve_matrix(global_matrix);
   global_matrix.clear();
@@ -76,16 +77,13 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matri
 
   // set unit rows for dirichlet dofs
   const auto boundary = Problem::getModelData()->boundaryInfo();
-  DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
+  DirichletConstraints<DiscreteFunctionImp> constraints(*boundary, discreteFunctionSpace_);
   constraints.applyToOperator(global_matrix);
 
   global_matrix.communicate();
 } // assemble_matrix
 
-
-template <class DiscreteFunctionImp, class DiffusionImp>
-template <class MatrixType>
-void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacobian_matrix(
+void DiscreteEllipticOperator::assemble_jacobian_matrix(
     DiscreteFunction& disc_func, MatrixType& global_matrix) const {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
@@ -178,9 +176,8 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
   global_matrix.communicate();
 } // assemble_jacobian_matrix
 
-template <class DiscreteFunctionImp, class DiffusionImp>
-template <class MatrixType>
-void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacobian_matrix(
+
+void DiscreteEllipticOperator::assemble_jacobian_matrix(
     DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension, MatrixType& global_matrix) const {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
@@ -278,10 +275,7 @@ void DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_jacob
 global_matrix.communicate();
 } // assemble_jacobian_matrix
 
-
-template <class DiscreteFunctionImp, class DiffusionImp>
-template <class MatrixType>
-void SMPDiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_matrix(MatrixType& global_matrix) const {
+void SMPDiscreteEllipticOperator::assemble_matrix(MatrixType& global_matrix) const {
   //!TODO diagonal stencil would be enough
   DSFe::reserve_matrix(global_matrix);
   global_matrix.clear();
@@ -332,7 +326,7 @@ void SMPDiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp>::assemble_ma
 
   // set unit rows for dirichlet dofs
   const auto boundary = Problem::getModelData()->boundaryInfo();
-  DirichletConstraints<DiscreteFunctionSpace> constraints(*boundary, discreteFunctionSpace_);
+  DirichletConstraints<DiscreteFunctionImp> constraints(*boundary, discreteFunctionSpace_);
   constraints.applyToOperator(global_matrix);
 
   global_matrix.communicate();

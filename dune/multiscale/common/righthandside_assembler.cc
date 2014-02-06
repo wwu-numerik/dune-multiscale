@@ -9,6 +9,7 @@
 #include <memory>
 
 #include <dune/stuff/fem/functions/integrals.hh>
+#include <dune/stuff/functions/femadapter.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/common/dirichletconstraints.hh>
@@ -47,8 +48,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_fem(
   const auto boundary = Problem::getModelData()->boundaryInfo();
   const auto dirichlet_data = Problem::getDirichletData();
   //! \TODO use the static thingies
-  DirichletConstraints<CommonTraits::DiscreteFunctionSpaceType> constraints(*boundary, rhsVector.space());
-  auto dd = DS::femFunctionAdapter(*dirichlet_data);
+  DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(*boundary, rhsVector.space());
+  const auto dd = DS::gridFunctionAdapter(*dirichlet_data, rhsVector.space().gridPart());
   constraints(dd, rhsVector);
   rhsVector.communicate();
 }

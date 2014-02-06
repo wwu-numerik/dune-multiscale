@@ -17,15 +17,14 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-// used mith multiple type combinations, no real possibilty of splitting
-
 //! \TODO docme
-template <class DiscreteFunctionImp, class DiffusionImp>
 class DiscreteEllipticOperator
-    : public Operator<typename DiscreteFunctionImp::RangeFieldType, typename DiscreteFunctionImp::RangeFieldType,
-                      DiscreteFunctionImp, DiscreteFunctionImp>,
+    : public Operator<CommonTraits::DiscreteFunctionType::RangeFieldType, CommonTraits::DiscreteFunctionType::RangeFieldType,
+                      CommonTraits::DiscreteFunctionType, CommonTraits::DiscreteFunctionType>,
       boost::noncopyable {
-  typedef DiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp> This;
+  typedef CommonTraits::DiscreteFunctionType DiscreteFunctionImp;
+  typedef CommonTraits::DiffusionType DiffusionImp;
+  typedef CommonTraits::LinearOperatorType MatrixType;
 
   typedef DiscreteFunctionImp DiscreteFunction;
 
@@ -59,7 +58,6 @@ private:
   virtual void operator()(const DiscreteFunction& u, DiscreteFunction& w) const;
 
 public:
-  template <class MatrixType>
   void assemble_matrix(MatrixType& global_matrix) const;
 
   /** assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain
@@ -68,11 +66,9 @@ public:
    * \int JA(\nabla disc_func) \nabla phi_i \nabla phi_j
    * (here, JA denotes the jacobian matrix of the diffusion operator A)
    **/
-  template <class MatrixType>
   void assemble_jacobian_matrix(DiscreteFunction& disc_func, MatrixType& global_matrix) const;
 
-  // for inhomogeneous boundary condition
-  template <class MatrixType>
+  //! for inhomogeneous boundary condition
   void assemble_jacobian_matrix(DiscreteFunction& disc_func, const DiscreteFunction& dirichlet_extension,
                                 MatrixType& global_matrix) const;
 
@@ -83,10 +79,10 @@ private:
 };
 
 //! \TODO docme
-template <class DiscreteFunctionImp, class DiffusionImp>
 class SMPDiscreteEllipticOperator : public boost::noncopyable {
-  typedef SMPDiscreteEllipticOperator<DiscreteFunctionImp, DiffusionImp> This;
-
+  typedef CommonTraits::DiscreteFunctionType DiscreteFunctionImp;
+  typedef CommonTraits::DiffusionType DiffusionImp;
+  typedef CommonTraits::LinearOperatorType MatrixType;
   typedef DiscreteFunctionImp DiscreteFunction;
 
   typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
@@ -110,7 +106,6 @@ public:
     , diffusion_operator_(diffusion_op) {}
 
 public:
-  template <class MatrixType>
   void assemble_matrix(MatrixType& global_matrix) const;
 
 private:
@@ -121,7 +116,5 @@ private:
 } // namespace FEM {
 } // namespace Multiscale {
 } // namespace Dune {
-
-#include "elliptic_fem_matrix_assembler.cxx"
 
 #endif // #ifndef DiscreteElliptic_HH

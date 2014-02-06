@@ -97,7 +97,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 
   // set dirichlet dofs to zero
   Stuff::GridboundaryAllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
-  DirichletConstraints<LocalGridDiscreteFunctionSpaceType> constraints(boundaryInfo, subDiscreteFunctionSpace);
+  DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, subDiscreteFunctionSpace);
   constraints.applyToOperator(system_matrix);
 
   for (auto& rhsIt : allLocalRHS) {
