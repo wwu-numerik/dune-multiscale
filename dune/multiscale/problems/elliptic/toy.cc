@@ -29,13 +29,9 @@ bool ModelProblemData::problemIsPeriodic() const {
   return true; // = problem is periodic
 }
 
-bool ModelProblemData::problemAllowsStochastics() const {
-  return false;
+bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
-
-}
-
-void FirstSource::evaluate(const DomainType &x, RangeType &y) const {
+void FirstSource::evaluate(const DomainType& x, RangeType& y) const {
   double a_0_x_0 = 1.0 + pow(x[0], 2.0);
   double a_1_x_1 = 1.0 + pow(x[0], 2.0);
 
@@ -70,8 +66,7 @@ void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(
 }
 
 void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType& x,
-    const TimeType&,
+    const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType& x, const TimeType&,
     Dune::Multiscale::Problem::Toy::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

@@ -40,8 +40,10 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
   // location of the solutions of the cell problems for the discrete function u_H:
   const std::string cell_solution_location_discFunc = "/cell_problems/_cellSolutions_discFunc";
 
-  auto& discrete_function_reader_baseSet = DiscreteFunctionIO<typename HMMTraits::PeriodicDiscreteFunctionType>::disk(cell_solution_location_baseSet);
-  auto& discrete_function_reader_discFunc = DiscreteFunctionIO<typename HMMTraits::PeriodicDiscreteFunctionType>::disk(cell_solution_location_discFunc);
+  auto& discrete_function_reader_baseSet =
+      DiscreteFunctionIO<typename HMMTraits::PeriodicDiscreteFunctionType>::disk(cell_solution_location_baseSet);
+  auto& discrete_function_reader_discFunc =
+      DiscreteFunctionIO<typename HMMTraits::PeriodicDiscreteFunctionType>::disk(cell_solution_location_discFunc);
 
   const typename HMMTraits::ErrorEstimatorType error_estimator(periodicDiscreteFunctionSpace, discreteFunctionSpace,
                                                                auxiliaryDiscreteFunctionSpace, diffusion_op);
@@ -51,14 +53,14 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
   int element_number = 0;
   for (const auto& entity : discreteFunctionSpace) {
     // corrector of u_H^(n-1) \approx u_H on the macro element T
-    auto corrector_u_H_on_entity = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>("Corrector of u_H",
-                                                                             periodicDiscreteFunctionSpace);
+    auto corrector_u_H_on_entity = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>(
+        "Corrector of u_H", periodicDiscreteFunctionSpace);
     corrector_u_H_on_entity->clear();
 
     // in the linear case, we still need to compute the corrector of u_H:
     if (Problem::getModelData()->linear()) {
-      auto corrector_of_base_func = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>("Corrector of macro base function",
-                                                                              periodicDiscreteFunctionSpace);
+      auto corrector_of_base_func = make_df_ptr<typename HMMTraits::PeriodicDiscreteFunctionType>(
+          "Corrector of macro base function", periodicDiscreteFunctionSpace);
       corrector_of_base_func->clear();
       const auto local_hmm_solution = hmm_solution->localFunction(entity);
       const auto& baseSet = discreteFunctionSpace.basisFunctionSet(entity);
@@ -81,7 +83,8 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
     result.estimated_source_error += local_source_indicator;
 
     // contribution of the local approximation error
-    auto local_approximation_indicator = error_estimator.indicator_app_1(entity, *hmm_solution, *corrector_u_H_on_entity);
+    auto local_approximation_indicator =
+        error_estimator.indicator_app_1(entity, *hmm_solution, *corrector_u_H_on_entity);
 
     local_approximation_indicator += error_estimator.indicator_app_2(entity, *hmm_solution, *corrector_u_H_on_entity);
     result.estimated_approximation_error += local_approximation_indicator;

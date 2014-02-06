@@ -32,13 +32,9 @@ bool ModelProblemData::problemIsPeriodic() const {
   return false; // = problem is not periodic
 }
 
-bool ModelProblemData::problemAllowsStochastics() const {
-  return false;
+bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
-
-}
-
-void FirstSource::evaluate(const DomainType &x, RangeType &y) const {
+void FirstSource::evaluate(const DomainType& x, RangeType& y) const {
   if (x[1] >= 0.1) {
     y = 1.0;
   } else {
@@ -101,8 +97,7 @@ void Dune::Multiscale::Problem::Three::ExactSolution::jacobian(
 }
 
 void Dune::Multiscale::Problem::Three::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Three::ExactSolution::DomainType& x,
-    const TimeType&,
+    const Dune::Multiscale::Problem::Three::ExactSolution::DomainType& x, const TimeType&,
     Dune::Multiscale::Problem::Three::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

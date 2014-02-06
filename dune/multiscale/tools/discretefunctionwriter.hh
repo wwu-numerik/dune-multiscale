@@ -10,7 +10,6 @@
 #ifndef DISCRETEFUNCTIONWRITER_HEADERGUARD
 #define DISCRETEFUNCTIONWRITER_HEADERGUARD
 
-
 #include <fstream>
 #include <vector>
 #include <cassert>
@@ -33,7 +32,7 @@ namespace Multiscale {
 
 //! tiny struct to ensure i/o type don't diverge
 struct IOTraits {
-#if HAVE_SIONLIB && HAVE_MPI
+#if HAVE_SIONLIB&& HAVE_MPI
 #define MULTISCALE_USE_SION
   typedef Dune::Fem::SIONlibOutStream OutstreamType;
   typedef Dune::Fem::SIONlibInStream InstreamType;
@@ -54,48 +53,47 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
   class DiskBackend : public boost::noncopyable {
 
-      void load_disk_functions()
-      {
-        DSC::testCreateDirectory(dir_.string());
-        // if functions present, load em
-      }
+    void load_disk_functions() {
+      DSC::testCreateDirectory(dir_.string());
+      // if functions present, load em
+    }
 
-    public:
-      /**
-       * \brief DiscreteFunctionWriter
-       * \param filename will open fstream at config["global.datadir"]/filename
-       *  filename may include additional path components
-       * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
-       */
-      DiskBackend(const std::string filename = "nonsense_default_for_map")
-        : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-        , index_(0) {}
+  public:
+    /**
+     * \brief DiscreteFunctionWriter
+     * \param filename will open fstream at config["global.datadir"]/filename
+     *  filename may include additional path components
+     * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
+     */
+    DiskBackend(const std::string filename = "nonsense_default_for_map")
+      : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
+      , index_(0) {}
 
-      void append(const DiscreteFunction_ptr& df) {
-        const std::string fn = (dir_ / DSC::toString(index_++)).string();
-        DSC::testCreateDirectory(fn);
-    #ifdef MULTISCALE_USE_SION
-        IOTraits::OutstreamType stream(fn);
-        df->write(stream);
-    #else
-        df->write_xdr(fn);
-    #endif
-      }
+    void append(const DiscreteFunction_ptr& df) {
+      const std::string fn = (dir_ / DSC::toString(index_++)).string();
+      DSC::testCreateDirectory(fn);
+#ifdef MULTISCALE_USE_SION
+      IOTraits::OutstreamType stream(fn);
+      df->write(stream);
+#else
+      df->write_xdr(fn);
+#endif
+    }
 
-      void read(const unsigned long index, DiscreteFunction_ptr& df) {
-        const std::string fn = (dir_ / DSC::toString(index)).string();
-    #ifdef MULTISCALE_USE_SION
-        IOTraits::InstreamType stream(fn);
-        df->read(stream);
-    #else
-        df->read_xdr(fn);
-    #endif
-      }
+    void read(const unsigned long index, DiscreteFunction_ptr& df) {
+      const std::string fn = (dir_ / DSC::toString(index)).string();
+#ifdef MULTISCALE_USE_SION
+      IOTraits::InstreamType stream(fn);
+      df->read(stream);
+#else
+      df->read_xdr(fn);
+#endif
+    }
 
-    private:
-      const boost::filesystem::path dir_;
-      unsigned int index_;
-    };
+  private:
+    const boost::filesystem::path dir_;
+    unsigned int index_;
+  };
 
   /**
    * \brief simple discrete function to disk writer
@@ -114,19 +112,16 @@ class DiscreteFunctionIO : public boost::noncopyable {
     MemoryBackend(typename GridPartType::GridType& grid, const std::string filename = "nonsense_default_for_map")
       : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
       , grid_part_(grid)
-      , space_(grid_part_)
-    {}
+      , space_(grid_part_) {}
 
-    void append(const DiscreteFunction_ptr& df) {
-      functions_.push_back(df);
-    }
+    void append(const DiscreteFunction_ptr& df) { functions_.push_back(df); }
 
     void read(const unsigned long index, DiscreteFunction_ptr& df) {
-      if(index < functions_.size()) {
+      if (index < functions_.size()) {
         df = functions_.at(index);
-      }
-      else DUNE_THROW(InvalidStateException, "requesting function at oob index");
-      assert(df!=nullptr);
+      } else
+        DUNE_THROW(InvalidStateException, "requesting function at oob index");
+      assert(df != nullptr);
     }
 
     GridPartType& grid_part() { return grid_part_; }
@@ -144,11 +139,10 @@ class DiscreteFunctionIO : public boost::noncopyable {
     return s_this;
   }
 
-  template <class IOMapType, class ...Args>
-  typename IOMapType::mapped_type& get(IOMapType& map, std::string filename, Args&& ...ctor_args)
-  {
+  template <class IOMapType, class... Args>
+  typename IOMapType::mapped_type& get(IOMapType& map, std::string filename, Args&&... ctor_args) {
     auto it = map.find(filename);
-    if(it != map.end())
+    if (it != map.end())
       return it->second;
     std::lock_guard<std::mutex> lock(mutex_);
     auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
@@ -157,9 +151,7 @@ class DiscreteFunctionIO : public boost::noncopyable {
     return ret.first->second;
   }
 
-  DiskBackend& get_disk(const std::string filename) {
-    return *get(disk_, filename, filename);
-  }
+  DiskBackend& get_disk(const std::string filename) { return *get(disk_, filename, filename); }
 
   MemoryBackend& get_memory(const std::string filename, typename GridPartType::GridType& grid) {
     return *get(memory_, filename, grid, filename);
@@ -170,9 +162,7 @@ public:
     return instance().get_memory(filename, grid);
   }
 
-  static DiskBackend& disk(const std::string filename) {
-    return instance().get_disk(filename);
-  }
+  static DiskBackend& disk(const std::string filename) { return instance().get_disk(filename); }
 
   //! this needs to be called before global de-init or else dune fem fails
   static void clear() {
@@ -186,8 +176,7 @@ private:
   std::unordered_map<std::string, std::shared_ptr<DiskBackend>> disk_;
   std::mutex mutex_;
 
-
-};//class DiscreteFunctionIO
+}; // class DiscreteFunctionIO
 
 } // namespace Multiscale {
 } // namespace Dune {

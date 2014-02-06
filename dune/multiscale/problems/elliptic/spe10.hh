@@ -65,7 +65,7 @@ private:
   void readPermeability();
 
   std::vector<double> deltas_;
-  double* permeability_;//! TODO automatic memory
+  double* permeability_; //! TODO automatic memory
 };
 
 class LowerOrderTerm : public ZeroLowerOrder {};
@@ -78,44 +78,24 @@ MSNULLFUNCTION(ExactSolution)
 
 class DirichletData : public DirichletDataBase {
 private:
-
-
 public:
-
-
-
-
-
-
-
-
 public:
   DirichletData() {}
 
-  void evaluate(const typename FunctionSpaceType::DomainType &x, typename FunctionSpaceType::RangeType &y) const;
-  void evaluate(const typename FunctionSpaceType::DomainType &x, const TimeType &/*time*/,
-                typename FunctionSpaceType::RangeType &y) const;
+  void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
+  void evaluate(const typename FunctionSpaceType::DomainType& x, const TimeType& /*time*/,
+                typename FunctionSpaceType::RangeType& y) const;
 };
 
 class NeumannData : public NeumannDataBase {
 private:
-
-
 public:
-
-
-
-
-
-
-
-
 public:
   NeumannData() {}
 
-  void evaluate(const typename FunctionSpaceType::DomainType &x, typename FunctionSpaceType::RangeType &y) const;
-  void evaluate(const typename FunctionSpaceType::DomainType &x, const TimeType &/*time*/,
-                typename FunctionSpaceType::RangeType &y) const;
+  void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
+  void evaluate(const typename FunctionSpaceType::DomainType& x, const TimeType& /*time*/,
+                typename FunctionSpaceType::RangeType& y) const;
 };
 
 } //! @} namespace SPE10 {

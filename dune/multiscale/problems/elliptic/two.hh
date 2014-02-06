@@ -19,7 +19,6 @@ namespace Problem {
  * @{ **/
 //! ------------ Elliptic Problem 2 -------------------
 
-
 namespace Two {
 
 typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
@@ -40,8 +39,7 @@ struct ModelProblemData : public IModelProblemData {
 
 class Diffusion : public DiffusionBase {
 public:
-  void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const;
+  void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient, JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };

@@ -184,7 +184,8 @@ void solve_hmm_problem_nonlinear(
 
     const auto f = Problem::getFirstSource();
 
-    assemble_for_HMM_Newton_method(*f, diffusion_op, *hmm_solution, cp_num_manager, dummy_periodic_func, hmm_newton_rhs);
+    assemble_for_HMM_Newton_method(*f, diffusion_op, *hmm_solution, cp_num_manager, dummy_periodic_func,
+                                   hmm_newton_rhs);
     DSC_LOG_INFO << "Right hand side assembled!" << std::endl;
 
     if (!(hmm_newton_rhs.dofsValid())) {
@@ -221,7 +222,8 @@ void solve_hmm_problem_nonlinear(
     }
 
     if (relative_newton_error > hmm_tolerance) {
-      auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
+      auto newton_step_time =
+          DSC_PROFILER.stopTiming("hmm.newton_step", DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
       DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "s." << std::endl
                    << std::endl;
 
@@ -312,7 +314,7 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
   hmm_rhs.clear();
   assert(false);
   // correct rhs assembler was lost
-//  RightHandSideAssembler::assemble( *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
+  //  RightHandSideAssembler::assemble( *f, diffusion_op, dirichlet_extension, *neumann_bc, hmm_rhs);
 
   // set Dirichlet Boundary to zero
   BoundaryTreatment::apply(hmm_rhs);
@@ -391,7 +393,8 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
 
   // residual solution almost identical to zero: break
   if (relative_newton_error <= hmm_tolerance) {
-    const auto newton_step_time = DSC_PROFILER.stopTiming("hmm.newton_step", DSC_CONFIG_GET("global.output_walltime", false));
+    const auto newton_step_time =
+        DSC_PROFILER.stopTiming("hmm.newton_step", DSC_CONFIG_GET("global.output_walltime", false));
     DSC_LOG_INFO << std::endl << "Total time for current HMM Newton step = " << newton_step_time << "ms." << std::endl
                  << std::endl;
     DSC_LOG_INFO << "Since HMM-tolerance = " << hmm_tolerance << ": break loop." << std::endl;
@@ -452,8 +455,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                       typename CommonTraits::DiscreteFunction_ptr& hmm_solution,
                       const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle) {
   DSC_LOG_INFO << std::endl << "Solving HMM-macro-problem for " << discreteFunctionSpace.size()
-               << " unknowns and polynomial order " << CommonTraits::polynomial_order << "."
-               << std::endl << std::endl;
+               << " unknowns and polynomial order " << CommonTraits::polynomial_order << "." << std::endl << std::endl;
 
   // to identify (macro) entities and basefunctions with a fixed global number, which stands for a certain cell problem
   CellProblemNumberingManager cp_num_manager(discreteFunctionSpace);
@@ -471,8 +473,8 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
   const int refinement_level_macrogrid_ = DSC_CONFIG_GET("hmm.coarse_grid_level", 4);
   // for adaptive computations, the saved solution is not suitable for a later usage
   if (!DSC_CONFIG_GET("hmm.adaptivity", false) && DSC_CONFIG_GET("hmm.write_to_file", false)) {
-    DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk((boost::format("hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str())
-        .append(hmm_solution);
+    DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(
+        (boost::format("hmm_solution_discFunc_refLevel_%d") % refinement_level_macrogrid_).str()).append(hmm_solution);
   }
 
   DSC_LOG_INFO << std::endl << "The L2 errors:" << std::endl << std::endl;
@@ -530,18 +532,20 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
   return errors;
 }
 
-
-void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType &f, const CommonTraits::DiffusionType &A,
-                                    const CommonTraits::DiscreteFunctionType &old_u_H, const HMM::CellProblemNumberingManager &cp_num_manager,
-                                    const HMM::HMMTraits::PeriodicDiscreteFunctionType &dummy_func,
-                                    CommonTraits::DiscreteFunctionType &rhsVector) {
+void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
+                                    const CommonTraits::DiscreteFunctionType& old_u_H,
+                                    const HMM::CellProblemNumberingManager& cp_num_manager,
+                                    const HMM::HMMTraits::PeriodicDiscreteFunctionType& dummy_func,
+                                    CommonTraits::DiscreteFunctionType& rhsVector) {
   const std::string cell_solution_location_baseSet = "/cell_problems/_cellSolutions_baseSet";
   const std::string cell_solution_location_discFunc = "/cell_problems/_cellSolutions_discFunc";
 
   // reader for the cell problem data file:
-  auto& discrete_function_reader_baseSet = DiscreteFunctionIO<HMM::HMMTraits::PeriodicDiscreteFunctionType>::disk(cell_solution_location_baseSet);
+  auto& discrete_function_reader_baseSet =
+      DiscreteFunctionIO<HMM::HMMTraits::PeriodicDiscreteFunctionType>::disk(cell_solution_location_baseSet);
   // reader for the cell problem data file:
-  auto& discrete_function_reader_discFunc = DiscreteFunctionIO<HMM::HMMTraits::PeriodicDiscreteFunctionType>::disk(cell_solution_location_discFunc);
+  auto& discrete_function_reader_discFunc =
+      DiscreteFunctionIO<HMM::HMMTraits::PeriodicDiscreteFunctionType>::disk(cell_solution_location_discFunc);
 
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
   const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
@@ -583,10 +587,12 @@ void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType &f, cons
     old_u_H_loc.jacobian(barycenter_local, grad_old_u_H_x);
 
     // Q_h(u_H^{(n-1}))(x_T,y):
-    auto corrector_old_u_H = make_df_ptr<HMM::HMMTraits::PeriodicDiscreteFunctionType>("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace);
+    auto corrector_old_u_H = make_df_ptr<HMM::HMMTraits::PeriodicDiscreteFunctionType>("Corrector of u_H^(n-1)",
+                                                                                       periodicDiscreteFunctionSpace);
     corrector_old_u_H->clear();
 
-    auto corrector_Phi_i = make_df_ptr<HMM::HMMTraits::PeriodicDiscreteFunctionType>("Corrector of Phi_i", periodicDiscreteFunctionSpace);
+    auto corrector_Phi_i =
+        make_df_ptr<HMM::HMMTraits::PeriodicDiscreteFunctionType>("Corrector of Phi_i", periodicDiscreteFunctionSpace);
     discrete_function_reader_discFunc.read(number_of_entity, corrector_old_u_H);
     macro_grid_baseSet.jacobianAll(barycenter_local, grad_Phi_x_vec);
 
@@ -682,8 +688,7 @@ void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType &f, cons
             fine_scale_contribution +=
                 cutting_function * weight_micro_quadrature * (diffusive_flux[0] * grad_reconstruction_Phi_i[0]);
           } else {
-            fine_scale_contribution +=
-                cutting_function * weight_micro_quadrature * (diffusive_flux[0] * grad_Phi_x[0]);
+            fine_scale_contribution += cutting_function * weight_micro_quadrature * (diffusive_flux[0] * grad_Phi_x[0]);
           }
         }
       }

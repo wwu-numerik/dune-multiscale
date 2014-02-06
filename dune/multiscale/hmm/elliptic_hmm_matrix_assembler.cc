@@ -181,9 +181,12 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
   const double epsilon_estimated = DSC_CONFIG_GET("hmm.epsilon_guess", 1.0f);
 
   // reader for the cell problem data file:
-  auto& discrete_function_reader_baseSet = DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(cell_solution_location_baseSet);
-  auto& discrete_function_reader_discFunc = DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(cell_solution_location_discFunc);
-  auto& discrete_function_reader_jac_cor = DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(jac_cor_cell_solution_location_baseSet_discFunc);
+  auto& discrete_function_reader_baseSet =
+      DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(cell_solution_location_baseSet);
+  auto& discrete_function_reader_discFunc =
+      DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(cell_solution_location_discFunc);
+  auto& discrete_function_reader_jac_cor =
+      DiscreteFunctionIO<PeriodicDiscreteFunction>::disk(jac_cor_cell_solution_location_baseSet_discFunc);
 
   global_matrix.reserve();
   global_matrix.clear();
@@ -216,7 +219,8 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
     // here: no multiplication with jacobian inverse transposed required!
 
     // Q_h(u_H^{(n-1}))(x_T,y):
-    auto corrector_old_u_H = make_df_ptr<PeriodicDiscreteFunction>("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace_);
+    auto corrector_old_u_H =
+        make_df_ptr<PeriodicDiscreteFunction>("Corrector of u_H^(n-1)", periodicDiscreteFunctionSpace_);
     corrector_old_u_H->clear();
 
     discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
@@ -232,7 +236,8 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
       cell_problem_id[i] = cp_num_manager_.get_number_of_cell_problem(macro_entity_pointer, i);
 
       if (!DSC_CONFIG_GET("hmm.petrov_galerkin", true)) {
-        corrector_Phi[i] = make_df_ptr<PeriodicDiscreteFunction>("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_);
+        corrector_Phi[i] =
+            make_df_ptr<PeriodicDiscreteFunction>("Corrector Function of Phi_j", periodicDiscreteFunctionSpace_);
         corrector_Phi[i]->clear();
         discrete_function_reader_baseSet.read(cell_problem_id[i], corrector_Phi[i]);
       }
@@ -244,8 +249,8 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
     for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
       // D_Q(\Phi_i,u_H^{n-1})
       // the jacobian of the corrector operator applied to u_H^{(n-1)} in direction of gradient \Phi_i
-      auto jacobian_corrector_old_u_H_Phi_i = make_df_ptr<PeriodicDiscreteFunction>("Jacobian Corrector Function of u_H^(n-1) and Phi_i",
-                                                                periodicDiscreteFunctionSpace_);
+      auto jacobian_corrector_old_u_H_Phi_i = make_df_ptr<PeriodicDiscreteFunction>(
+          "Jacobian Corrector Function of u_H^(n-1) and Phi_i", periodicDiscreteFunctionSpace_);
       jacobian_corrector_old_u_H_Phi_i->clear();
 
       discrete_function_reader_jac_cor.read(cell_problem_id[i], jacobian_corrector_old_u_H_Phi_i);

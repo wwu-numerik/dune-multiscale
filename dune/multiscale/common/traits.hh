@@ -5,7 +5,6 @@
 #ifndef DUNE_MULTISCALE_COMMON_TRAITS_HH
 #define DUNE_MULTISCALE_COMMON_TRAITS_HH
 
-
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/common/tuples.hh>
 #include <dune/fem/space/common/functionspace.hh>
@@ -32,9 +31,9 @@ class AdaptationManager;
 } // namespace Fem
 
 namespace Stuff {
-template< class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim >
+template <class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim>
 class GlobalFunction;
-template< class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim >
+template <class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim>
 class GlobalConstantFunction;
 }
 namespace Multiscale {
@@ -57,11 +56,11 @@ struct CommonTraits {
   typedef Dune::Fem::FunctionSpace<double, double, GridType::dimension, 1> FunctionSpaceType;
 
   typedef Dune::Stuff::GlobalFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
-                                         FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange> FunctionBaseType;
+                                      FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange> FunctionBaseType;
 
-  typedef Dune::Stuff::GlobalConstantFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
-                                        FunctionSpaceType::RangeFieldType,
-                                        FunctionSpaceType::dimRange> ConstantFunctionBaseType;
+  typedef Dune::Stuff::GlobalConstantFunction<EntityType, FunctionSpaceType::DomainFieldType,
+                                              FunctionSpaceType::dimDomain, FunctionSpaceType::RangeFieldType,
+                                              FunctionSpaceType::dimRange> ConstantFunctionBaseType;
 
   typedef Problem::IModelProblemData ModelProblemDataType;
   //! type of first source term (right hand side of differential equation or type of 'f')
@@ -94,7 +93,7 @@ struct CommonTraits {
   //! defines the function space to which the numerical solution belongs to
   //! see dune/fem/lagrangebase.hh
   typedef Dune::Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, st_lagrangespace_order>
-      DiscreteFunctionSpaceType;
+  DiscreteFunctionSpaceType;
   typedef DiscreteFunctionSpaceType::DomainFieldType TimeType;
   typedef DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
@@ -117,11 +116,10 @@ struct CommonTraits {
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
 };
 
-template< class T = CommonTraits::DiscreteFunctionType>
-std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::DiscreteFunctionSpaceType& space)
-{
+template <class T = CommonTraits::DiscreteFunctionType>
+std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::DiscreteFunctionSpaceType& space) {
   return std::make_shared<T>(name, space);
-//  return DSC::make_unique<T>(name, space);
+  //  return DSC::make_unique<T>(name, space);
 }
 
 } // namespace Multiscale

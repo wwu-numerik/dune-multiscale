@@ -27,6 +27,5 @@ getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space) {
   return constraints;
 }
 
-
 } // namespace Multiscale
 } // namespace Dune

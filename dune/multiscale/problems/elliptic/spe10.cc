@@ -27,30 +27,21 @@ std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/spe10.dgf");
 }
 
-bool ModelProblemData::problemIsPeriodic() const {
-  return false;
-}
+bool ModelProblemData::problemIsPeriodic() const { return false; }
 
-bool ModelProblemData::problemAllowsStochastics() const {
-  return false;
+bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
-
-}
-
-std::unique_ptr<ModelProblemData::BoundaryInfoType>
-ModelProblemData::boundaryInfo() const {
+std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
   return std::unique_ptr<ModelProblemData::BoundaryInfoType>(
-        Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));
+      Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));
 }
 
-std::unique_ptr<ModelProblemData::SubBoundaryInfoType>
-ModelProblemData::subBoundaryInfo() const {
+std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
   return std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
-        Stuff::GridboundaryNormalBased<typename SubView::Intersection>::create(boundary_settings()));
+      Stuff::GridboundaryNormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
-ParameterTree ModelProblemData::boundary_settings() const
-{
+ParameterTree ModelProblemData::boundary_settings() const {
   Dune::ParameterTree boundarySettings;
   if (DSC_CONFIG.hasSub("problem.boundaryInfo")) {
     boundarySettings = DSC_CONFIG.sub("problem.boundaryInfo");
@@ -58,44 +49,35 @@ ParameterTree ModelProblemData::boundary_settings() const
     boundarySettings["default"] = "neumann";
     boundarySettings["compare_tolerance"] = "1e-10";
     switch (View::dimension /*View is defined in IModelProblemData*/) {
-    case 1:
-      DUNE_THROW(NotImplemented, "Boundary values are not implemented for SPE10 in 1D!");
-      break;
-    case 2:
-      boundarySettings["dirichlet.0"] = "[-1.0; 0.0]";
-      boundarySettings["dirichlet.1"] = "[1.0; 0.0]";
-      break;
-    case 3:
-      boundarySettings["dirichlet.0"] = "[-1.0; 0.0; 0.0]";
-      boundarySettings["dirichlet.1"] = "[1.0; 0.0; 0.0]";
+      case 1:
+        DUNE_THROW(NotImplemented, "Boundary values are not implemented for SPE10 in 1D!");
+        break;
+      case 2:
+        boundarySettings["dirichlet.0"] = "[-1.0; 0.0]";
+        boundarySettings["dirichlet.1"] = "[1.0; 0.0]";
+        break;
+      case 3:
+        boundarySettings["dirichlet.0"] = "[-1.0; 0.0; 0.0]";
+        boundarySettings["dirichlet.1"] = "[1.0; 0.0; 0.0]";
     }
   }
   return boundarySettings;
 }
 
-void DirichletData::evaluate(const DomainType& x,
-                             RangeType& y) const {
+void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
   // use pressure gradient in x-direction in 1D and 2D and in y-direction in 3D
-//  if (x[std::max(dimDomain-2,0)]<1e-6)
-//    y = 1.0;
-//  else
-//    y = 0.0;
+  //  if (x[std::max(dimDomain-2,0)]<1e-6)
+  //    y = 1.0;
+  //  else
+  //    y = 0.0;
   y = x[0];
 } // evaluate
 
-void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
-  evaluate(x, y);
-}
+void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
+void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
-void NeumannData::evaluate(const DomainType& /*x*/,
-                           RangeType& y) const {
-  y = 0.0;
-} // evaluate
-
-void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
-  evaluate(x, y);
-}
+void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
 FirstSource::FirstSource() {}
 

@@ -5,7 +5,6 @@
 #ifndef SUBGRIDLIST_HH
 #define SUBGRIDLIST_HH
 
-
 #include <boost/noncopyable.hpp>
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
@@ -68,7 +67,7 @@ public:
   LocalGridPartType gridPart(IndexType i);
   //! returns true iff all corners of local_entity are inside coarse_entity
   bool covers_strict(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity);
-  template< class PointIterator >
+  template <class PointIterator>
   bool covers_strict(const CoarseEntityType& coarse_entity, const PointIterator first, const PointIterator last);
   //! returns true if local_entity's center is inside coarse_entity
   bool covers(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity);

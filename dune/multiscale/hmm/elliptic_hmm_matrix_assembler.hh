@@ -45,7 +45,8 @@ private:
 public:
   DiscreteEllipticHMMOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
                               const PeriodicDiscreteFunctionSpace& periodicDiscreteFunctionSpace,
-                              const DiffusionOperatorType& diffusion_op, const CellProblemNumberingManager& cp_num_manager)
+                              const DiffusionOperatorType& diffusion_op,
+                              const CellProblemNumberingManager& cp_num_manager)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , periodicDiscreteFunctionSpace_(periodicDiscreteFunctionSpace)
     , diffusion_operator_(diffusion_op)

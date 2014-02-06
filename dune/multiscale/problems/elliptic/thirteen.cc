@@ -25,17 +25,9 @@ std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/cube_three_dirichlet_neumann.dgf");
 }
 
-bool ModelProblemData::problemIsPeriodic() const {
-  return false;
-}
+bool ModelProblemData::problemIsPeriodic() const { return false; }
 
-bool ModelProblemData::problemAllowsStochastics() const {
-  return false;
-
-
-}
-
-
+bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
 void FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
@@ -204,7 +196,6 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeTy
   flux[0][1] = a_1_0 * direction_gradient[0][0] + a_1_1 * direction_gradient[0][1];
 } // jacobianDiffusiveFlux
 
-
 void DirichletBoundaryCondition::evaluate(const DomainType& /*x*/, RangeType& y) const {
   y = 0.0; // 0.5 * exp( 1.0 - x[0] );
 
@@ -247,8 +238,7 @@ void Dune::Multiscale::Problem::Thirteen::ExactSolution::jacobian(
 }
 
 void Dune::Multiscale::Problem::Thirteen::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Thirteen::ExactSolution::DomainType& x,
-    const TimeType&,
+    const Dune::Multiscale::Problem::Thirteen::ExactSolution::DomainType& x, const TimeType&,
     Dune::Multiscale::Problem::Thirteen::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

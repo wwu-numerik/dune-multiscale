@@ -5,13 +5,11 @@
 #ifndef DUNE_ERRORESTIMATER_HH
 #define DUNE_ERRORESTIMATER_HH
 
-
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/entity.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
-
 
 namespace Dune {
 namespace Multiscale {

@@ -57,19 +57,20 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::DiscreteFunctionSpa
   : discreteFunctionSpace_(discreteFunctionSpace) {}
 
 void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffusion_op,
-    const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const {
+                                       const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+                                       const CommonTraits::FirstSourceType& f,
+                                       CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const {
   DSC_LOG_INFO << "Solving linear problem with standard FEM\n";
 
   // to assemble the computational time
   Dune::Timer assembleTimer;
 
   CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
-  if(use_smp) {
-    Multiscale::FEM::SMPDiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType> (
+  if (use_smp) {
+    Multiscale::FEM::SMPDiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType>(
         discreteFunctionSpace_, diffusion_op).assemble_matrix(fem_matrix);
   } else {
-    Multiscale::FEM::DiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType> (
+    Multiscale::FEM::DiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType>(
         discreteFunctionSpace_, diffusion_op, lower_order_term).assemble_matrix(fem_matrix);
   }
 
@@ -90,10 +91,11 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
                << std::endl;
 }
 
-void Elliptic_FEM_Solver::solve_nonlinear(
-    const CommonTraits::DiffusionType& diffusion_op,
-    const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution) const {
+void
+Elliptic_FEM_Solver::solve_nonlinear(const CommonTraits::DiffusionType& diffusion_op,
+                                     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+                                     const CommonTraits::FirstSourceType& f,
+                                     CommonTraits::DiscreteFunctionType& solution) const {
   DSC_LOG_INFO << "Solving non-linear problem." << std::endl;
   DSC_LOG_INFO << "Solving nonlinear problem with FEM + Newton-Method. Resolution level of grid = "
                << DSC_CONFIG_GET("fem.grid_level", 4) << "." << std::endl;
@@ -116,8 +118,8 @@ void Elliptic_FEM_Solver::solve_nonlinear(
   //! (stiffness) matrix
   CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
-  Multiscale::FEM::DiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType> discrete_elliptic_op(
-        discreteFunctionSpace_, diffusion_op, lower_order_term);
+  Multiscale::FEM::DiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType>
+  discrete_elliptic_op(discreteFunctionSpace_, diffusion_op, lower_order_term);
 
   int iteration_step = 1;
   // the Newton step for the FEM reference problem (solved with Newton Method):
@@ -180,8 +182,9 @@ void Elliptic_FEM_Solver::solve_nonlinear(
 }
 
 void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
-    const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const {
+                                const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+                                const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution,
+                                const bool use_smp) const {
 
   if (Problem::getModelData()->linear())
     solve_linear(diffusion_op, lower_order_term, f, solution, use_smp);

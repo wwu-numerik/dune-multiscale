@@ -7,7 +7,6 @@
 
 #include <string>
 
-
 #include <dune/fem/io/file/datawriter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 

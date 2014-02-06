@@ -5,7 +5,6 @@
 #ifndef MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
 #define MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
 
-
 #include <assert.h>
 #include <boost/noncopyable.hpp>
 #include <dune/common/fmatrix.hh>
@@ -51,8 +50,8 @@ private:
   typedef typename FineDiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
 public:
-  CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-                      LocalGridList& subgrid_list, const CommonTraits::DiffusionType& diffusion_op);
+  CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace, LocalGridList& subgrid_list,
+                      const CommonTraits::DiffusionType& diffusion_op);
 
   void apply_inverse(const CoarseDiscreteFunction& b, CoarseDiscreteFunction& x);
 

@@ -32,7 +32,6 @@ struct LocalOutputTraits {
   typedef Dune::Fem::DataWriter<MsFEMTraits::LocalGridType, IOTupleType> DataOutputType;
 };
 
-
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
@@ -86,7 +85,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
       // oversampling : restrict the local correctors to the element T
       // ie set all dofs not "covered" by the coarse cell to 0
-      if(DSC_CONFIG_GET("msfem.oversampling_layers", 0)) {
+      if (DSC_CONFIG_GET("msfem.oversampling_layers", 0)) {
         for (auto& local_entity : localSolManager.space()) {
           const auto& lg_points = localSolManager.space().lagrangePointSet(local_entity);
           const auto& reference_element = DSG::reference_element(coarse_entity);
@@ -125,12 +124,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
 }
 
-void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType &coarse_space,
+void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
                                   const CommonTraits::DiffusionType& diffusion_op,
-                                  const CommonTraits::FirstSourceType& f,
-                                  DiscreteFunctionType& coarse_scale_part,
-                                  DiscreteFunctionType& fine_scale_part,
-                                  DiscreteFunctionType& solution) const {
+                                  const CommonTraits::FirstSourceType& f, DiscreteFunctionType& coarse_scale_part,
+                                  DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
   if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))
     DSC_LOG_ERROR << "MsFEM does not work with Petrov-Galerkin at the moment!\n";
 

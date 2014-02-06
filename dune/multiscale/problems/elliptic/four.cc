@@ -55,8 +55,7 @@ void Dune::Multiscale::Problem::Four::FirstSource::evaluate(
 }
 
 void Dune::Multiscale::Problem::Four::FirstSource::evaluate(
-    const Dune::Multiscale::Problem::Four::FirstSource::DomainType& x,
-    const Dune::Multiscale::Problem::Four::TimeType&,
+    const Dune::Multiscale::Problem::Four::FirstSource::DomainType& x, const Dune::Multiscale::Problem::Four::TimeType&,
     Dune::Multiscale::Problem::Four::FirstSource::RangeType& y) const {
   evaluate(x, y);
 }
@@ -101,8 +100,7 @@ void Dune::Multiscale::Problem::Four::ExactSolution::jacobian(
 }
 
 void Dune::Multiscale::Problem::Four::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Four::ExactSolution::DomainType& x,
-    const TimeType&,
+    const Dune::Multiscale::Problem::Four::ExactSolution::DomainType& x, const TimeType&,
     Dune::Multiscale::Problem::Four::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

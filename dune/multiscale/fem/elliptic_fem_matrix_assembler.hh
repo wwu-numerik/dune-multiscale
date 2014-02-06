@@ -5,7 +5,6 @@
 #ifndef DiscreteElliptic_HH
 #define DiscreteElliptic_HH
 
-
 #include <memory>
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -44,7 +43,6 @@ class DiscreteEllipticOperator
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
 
 public:
-
   /**
    * \param lower_order_term Operator assumes ownership of it
    **/
@@ -104,14 +102,12 @@ class SMPDiscreteEllipticOperator : public boost::noncopyable {
   typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
 
 public:
-
   /**
    * \param lower_order_term Operator assumes ownership of it
    **/
   SMPDiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionImp& diffusion_op)
     : discreteFunctionSpace_(discreteFunctionSpace)
-    , diffusion_operator_(diffusion_op)
-    {}
+    , diffusion_operator_(diffusion_op) {}
 
 public:
   template <class MatrixType>

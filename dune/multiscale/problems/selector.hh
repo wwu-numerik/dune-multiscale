@@ -5,7 +5,6 @@
 #ifndef DUNE_MS_PROBLEMS_SELECTOR_HH
 #define DUNE_MS_PROBLEMS_SELECTOR_HH
 
-
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <memory>
@@ -14,8 +13,9 @@
 #include "dune/multiscale/common/traits.hh"
 
 namespace Dune {
-template <class GridImp, class IntersectionImp> class Intersection;
-}  // namespace Dune
+template <class GridImp, class IntersectionImp>
+class Intersection;
+} // namespace Dune
 
 namespace Dune {
 namespace Multiscale {
@@ -37,26 +37,28 @@ std::unique_ptr<const CommonTraits::NeumannDataType> getNeumannData();
 
 std::string name();
 
-template < class IntersectionType >
-typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,bool>::type
+template <class IntersectionType>
+typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value, bool>::type
 is_neumann(const IntersectionType& face) {
   return getModelData()->boundaryInfo()->neumann(face);
 }
 
-template < class IntersectionType >
-typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,bool>::type
+template <class IntersectionType>
+typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,
+                        bool>::type
 is_neumann(const IntersectionType& face) {
   return getModelData()->subBoundaryInfo()->neumann(face);
 }
 
-template < class IntersectionType >
-typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,bool>::type
+template <class IntersectionType>
+typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value, bool>::type
 is_dirichlet(const IntersectionType& face) {
   return getModelData()->boundaryInfo()->dirichlet(face);
 }
 
-template < class IntersectionType >
-typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,bool>::type
+template <class IntersectionType>
+typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,
+                        bool>::type
 is_dirichlet(const IntersectionType& face) {
   return getModelData()->subBoundaryInfo()->dirichlet(face);
 }

@@ -40,7 +40,8 @@ void load_reference(typename CommonTraits::DiscreteFunction_ptr& reference_solut
   boost::filesystem::path ref_sol_file(location_reference_solution);
 
   // reader for the cell problem data file:
-  DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(ref_sol_file.string()).read(0, reference_solution);
+  DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(ref_sol_file.string())
+      .read(0, reference_solution);
   DSC_LOG_INFO << "Reference solution successfully read from file." << std::endl;
 }
 
@@ -256,7 +257,7 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
   // - in general 'reference_solution' will be an accurate approximation of the exact solution, that is why we it also
   // called reference solution
   auto reference_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(filename + " Reference Solution",
-                                                                 finerDiscreteFunctionSpace);
+                                                                                     finerDiscreteFunctionSpace);
   reference_solution->clear();
 
   if (DSC_CONFIG_GET("problem.reference_solution", false))
@@ -274,7 +275,8 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
     //! solution vector
     // solution of the heterogeneous multiscale finite element method, where we used the Newton method to solve the
     // non-linear system of equations
-    auto hmm_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(" HMM (+Newton) Solution", discreteFunctionSpace);
+    auto hmm_solution =
+        make_df_ptr<typename CommonTraits::DiscreteFunctionType>(" HMM (+Newton) Solution", discreteFunctionSpace);
     hmm_solution->clear();
 
     typename HMMTraits::RestrictProlongOperatorType rp(*hmm_solution);

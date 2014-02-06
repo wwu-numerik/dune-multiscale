@@ -8,13 +8,12 @@
 #include <iosfwd>
 #include <string>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
 void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out);
-void write_discrete_function(CommonTraits::DiscreteFunction_ptr &discrete_solution, const std::string prefix);
+void write_discrete_function(CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix);
 
 template <class DiscreteFunctionType>
 void boundaryTreatment(DiscreteFunctionType& rhs) {

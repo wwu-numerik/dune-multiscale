@@ -6,7 +6,7 @@
 namespace Dune {
 namespace Multiscale {
 
-std::pair<std::shared_ptr<CommonTraits::GridType>,std::shared_ptr<CommonTraits::GridType>> make_grids();
+std::pair<std::shared_ptr<CommonTraits::GridType>, std::shared_ptr<CommonTraits::GridType>> make_grids();
 
 } // namespace Multiscale {
 } // namespace Dune {

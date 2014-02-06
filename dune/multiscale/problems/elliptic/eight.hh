@@ -48,11 +48,9 @@ class Diffusion : public DiffusionBase {
   double additivePart(const DomainType& x, const int i, const int j) const; // additivePart
 
 public:
-  void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const;
+  void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient, JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& position_gradient,
-                             const JacobianRangeType& direction_gradient,
-                             JacobianRangeType& flux) const;
+                             const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
