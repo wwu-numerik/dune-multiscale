@@ -193,27 +193,15 @@ MSNULLFUNCTION(DefaultDummyFunction)
 //! Exact solution (typically it is unknown)
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
-
-
 public:
-
-
-
-
-
-
-
-
   //! essentially: 'DomainFieldType' is the type of an entry of a domain-element.
   //! But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  //! This makes sense since the time-dependency is a one-dimensional element of the 'typename FunctionSpaceType::DomainType' and is therefor also
+  //! This makes sense since the time-dependency is a one-dimensional element of the 'typename
+  //FunctionSpaceType::DomainType' and is therefor also
   // an
   //! entry of a domain-element.
 
-
 public:
-
-
   //! evaluate 'u(x)'
   void evaluate(const DomainType& x, RangeType& y) const; // evaluate
 
@@ -244,8 +232,10 @@ public:
 //  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
 // public:
-//  typedef CommonTraits::FunctionSpaceType::typename FunctionSpaceType::DomainType        typename FunctionSpaceType::DomainType;
-//  typedef CommonTraits::FunctionSpaceType::typename FunctionSpaceType::RangeType         typename FunctionSpaceType::RangeType;
+//  typedef CommonTraits::FunctionSpaceType::typename FunctionSpaceType::DomainType        typename
+// FunctionSpaceType::DomainType;
+//  typedef CommonTraits::FunctionSpaceType::typename FunctionSpaceType::RangeType         typename
+// FunctionSpaceType::RangeType;
 //
 
 //

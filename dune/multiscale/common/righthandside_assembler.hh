@@ -12,8 +12,8 @@ namespace Dune {
 namespace Multiscale {
 
 namespace MsFEM {
-  class LocalGridList;
-}  // namespace MsFEM
+class LocalGridList;
+} // namespace MsFEM
 
 //! Assembler for right rand side
 //! We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
@@ -29,18 +29,16 @@ public:
    * if there is only one source (f) (there is no second source):
    * discreteFunction is an output parameter (kind of return value)
    **/
-  static void assemble_fem(const CommonTraits::FirstSourceType& f,
-                           CommonTraits::DiscreteFunctionType& rhsVector);
+  static void assemble_fem(const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& rhsVector);
 
   /** assemble right hand side (if there is only one source - f):
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)
    **/
-  static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType &coarse_space,
-                             const CommonTraits::FirstSourceType& f,
-                             MsFEM::LocalGridList& subgrid_list,
+  static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+                             const CommonTraits::FirstSourceType& f, MsFEM::LocalGridList& subgrid_list,
                              CommonTraits::DiscreteFunctionType& rhsVector);
-};  // end class
+}; // end class
 } // end namespace Multiscale
 } // end namespace Dune
 

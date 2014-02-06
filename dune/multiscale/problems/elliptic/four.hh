@@ -36,15 +36,15 @@ struct ModelProblemData : public IModelProblemData {
   bool problemAllowsStochastics() const;
 };
 
-class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {public:
+class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+public:
   void evaluate(const DomainType& x, RangeType& y) const; // evaluate
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
 class Diffusion : public DiffusionBase {
 public:
-  void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
-                     JacobianRangeType& flux) const;
+  void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient, JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };

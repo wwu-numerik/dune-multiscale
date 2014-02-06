@@ -304,7 +304,6 @@ protected:
   mutable std::vector<bool> dirichletBlocks_;
   mutable bool hasDirichletDofs_;
   mutable int sequence_;
-
 };
 
 /** Get the constraints for a given discrete function space.
@@ -347,22 +346,21 @@ getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space);
  *                        to perfom the correct projection.
  * @param[in, out] function The function to which the values will be projected.
  */
-template < class LocalGridOrCoarseDiscreteFunctionSpaceImp >
+template <class LocalGridOrCoarseDiscreteFunctionSpaceImp>
 void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
-                            Fem::DiscreteFunctionInterface<LocalGridOrCoarseDiscreteFunctionSpaceImp>& function) {
+                         Fem::DiscreteFunctionInterface<LocalGridOrCoarseDiscreteFunctionSpaceImp>& function) {
   static bool initialized = false;
-  static CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(
-      "Dirichlet Extension Coarse", coarseSpace);
+  static CommonTraits::DiscreteFunctionType dirichletExtensionCoarse("Dirichlet Extension Coarse", coarseSpace);
   if (!initialized) {
     initialized = true;
 
     auto dirichletDataPtr = Problem::getDirichletData();
-    const auto &dirichletData = *dirichletDataPtr;
+    const auto& dirichletData = *dirichletDataPtr;
 
-    Dune::Fem::GridFunctionAdapter<
-        CommonTraits::DirichletDataType,
-        CommonTraits::DiscreteFunctionSpaceType::GridPartType> gf(
-        "Dirichlet Data", dirichletData, coarseSpace.gridPart());
+    Dune::Fem::GridFunctionAdapter<CommonTraits::DirichletDataType,
+                                   CommonTraits::DiscreteFunctionSpaceType::GridPartType> gf("Dirichlet Data",
+                                                                                             dirichletData,
+                                                                                             coarseSpace.gridPart());
 
     dirichletExtensionCoarse.clear();
     getConstraintsCoarse(coarseSpace)(gf, dirichletExtensionCoarse);

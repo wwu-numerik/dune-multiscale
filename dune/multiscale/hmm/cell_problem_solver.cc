@@ -275,8 +275,9 @@ void CellProblemSolver::saveTheSolutions_baseSet(
     }
   } // end: for-loop entity
 
-  const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_baseSet",
-                                                  DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
+  const auto total_time =
+      DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_baseSet", DSC_CONFIG_GET("global.output_walltime", false)) /
+      1000.f;
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: saveTheSolutions_baseSet." << std::endl << std::endl;
   DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std::endl;
@@ -314,7 +315,7 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
     local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 
     auto cell_solution_on_entity = make_df_ptr<PeriodicDiscreteFunctionImp>("corrector of macro discrete function",
-                                                         periodicDiscreteFunctionSpace_);
+                                                                            periodicDiscreteFunctionSpace_);
 
     // take time
     DSC_PROFILER.startTiming("hmm.solver.saveTheSolutions_discFunc.solvecellproblem");
@@ -330,8 +331,8 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
     number_of_entity += 1;
   } // end: for-loop entity
 
-  const auto total_time = DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc",
-                                                  DSC_CONFIG_GET("global.output_walltime", false));
+  const auto total_time =
+      DSC_PROFILER.stopTiming("hmm.solver.saveTheSolutions_discFunc", DSC_CONFIG_GET("global.output_walltime", false));
   DSC_LOG_INFO << std::endl;
   DSC_LOG_INFO << "In method: saveTheSolutions_discFunc." << std::endl << std::endl;
   DSC_LOG_INFO << "Cell problems solved for " << discreteFunctionSpace.grid().size(0) << " leaf entities." << std::endl;
@@ -361,7 +362,8 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
   const std::string cell_solution_discFunc_location = subdir_ + "/_cellSolutions_discFunc";
 
   // reader for the cell problem data file (discrete functions):
-  auto& discrete_function_reader = DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_discFunc_location);
+  auto& discrete_function_reader =
+      DiscreteFunctionIO<PeriodicDiscreteFunctionImp>::disk(cell_solution_discFunc_location);
 
   DSC_PROFILER.startTiming("hmm.solver.saveTheJacCorSolutions_baseSet_discFunc");
 
@@ -385,12 +387,13 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 
-    auto corrector_macro_discrete_function = make_df_ptr<PeriodicDiscreteFunctionType>("corrector of macro discrete function",
-                                                                   periodicDiscreteFunctionSpace_);
+    auto corrector_macro_discrete_function = make_df_ptr<PeriodicDiscreteFunctionType>(
+        "corrector of macro discrete function", periodicDiscreteFunctionSpace_);
     discrete_function_reader.read(number_of_entity, corrector_macro_discrete_function);
 
     // the solution that we want to save to the data file
-    auto jac_corrector_Phi_i = make_df_ptr<PeriodicDiscreteFunctionType>("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
+    auto jac_corrector_Phi_i =
+        make_df_ptr<PeriodicDiscreteFunctionType>("jacobian corrector of Phi_i", periodicDiscreteFunctionSpace_);
 
     baseSet.jacobianAll(barycenter_local, gradientPhi);
 
@@ -402,12 +405,13 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
           "hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem");
 
       solve_jacobiancorrector_cellproblem(gradientPhi[i], grad_macro_discrete_function,
-                                          *corrector_macro_discrete_function, barycenter_of_entity, *jac_corrector_Phi_i);
+                                          *corrector_macro_discrete_function, barycenter_of_entity,
+                                          *jac_corrector_Phi_i);
 
       // min/max time
       cell_time(DSC_PROFILER.stopTiming(
           "hmm.solver.saveTheJacCorSolutions_baseSet_discFunc.solve_jacobiancorrector_cellproblem",
-                  DSC_CONFIG_GET("global.output_walltime", false)));
+          DSC_CONFIG_GET("global.output_walltime", false)));
 
       dfw.append(jac_corrector_Phi_i);
 

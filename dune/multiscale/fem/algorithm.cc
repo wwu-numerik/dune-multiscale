@@ -30,9 +30,8 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-
 //! the main FEM computation
-void algorithm(const std::shared_ptr<CommonTraits::GridType> &macro_grid_pointer, const std::string filename) {
+void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string filename) {
   using namespace Dune;
   const auto problem_data = Problem::getModelData();
   print_info(*problem_data, DSC_LOG_INFO);
@@ -41,7 +40,7 @@ void algorithm(const std::shared_ptr<CommonTraits::GridType> &macro_grid_pointer
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const auto diffusion_op = Problem::getDiffusion();
   auto discrete_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(filename + " FEM(-Newton) Solution",
-                                                                discreteFunctionSpace);
+                                                                                    discreteFunctionSpace);
   discrete_solution->clear();
 
   const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
@@ -54,7 +53,6 @@ void algorithm(const std::shared_ptr<CommonTraits::GridType> &macro_grid_pointer
   ErrorCalculator(nullptr, discrete_solution.get()).print(DSC_LOG_INFO_0);
   DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
 }
-
 
 } // namespace FEM {
 } // namespace Multiscale {

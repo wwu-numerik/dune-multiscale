@@ -5,7 +5,6 @@
 #ifndef LOCALOPERATOR_HH
 #define LOCALOPERATOR_HH
 
-
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>
@@ -55,7 +54,9 @@ class LocalProblemOperator {
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
 public:
-  LocalProblemOperator(const CoarseSpaceType &coarse_space, const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace, const DiffusionOperatorType& diffusion_op);
+  LocalProblemOperator(const CoarseSpaceType& coarse_space,
+                       const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
+                       const DiffusionOperatorType& diffusion_op);
 
   //! assemble stiffness matrix for local problems
   void assemble_matrix(LocalProblemSolver::LinearOperatorType& global_matrix) const;
@@ -75,7 +76,7 @@ public:
   *
   * @param[in, out] function The function in which the values will be set.
   */
-  void project_dirichlet_values(CommonTraits::DiscreteFunctionType &function) const;
+  void project_dirichlet_values(CommonTraits::DiscreteFunctionType& function) const;
 
 private:
   const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace_;

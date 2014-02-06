@@ -31,8 +31,7 @@ struct HMMTraits {
   //! --------- typedefs for the periodic micro grid and the corresponding discrete space ----
   typedef Dune::Fem::PeriodicLeafGridPart<typename CommonTraits::GridType> PeriodicGridPartType;
   typedef Dune::Fem::LagrangeDiscreteFunctionSpace<typename CommonTraits::FunctionSpaceType, PeriodicGridPartType,
-                                                   st_lagrangespace_order>
-      PeriodicDiscreteFunctionSpaceType;
+                                                   st_lagrangespace_order> PeriodicDiscreteFunctionSpaceType;
 
   typedef typename BackendChooser<PeriodicDiscreteFunctionSpaceType>::DiscreteFunctionType PeriodicDiscreteFunctionType;
 
@@ -53,7 +52,8 @@ struct HMMTraits {
   //! type of restrict-prolong operator
   typedef Dune::Fem::RestrictProlongDefault<typename CommonTraits::DiscreteFunctionType> RestrictProlongOperatorType;
   //! type of the adaption manager
-  typedef Dune::Fem::AdaptationManager<typename CommonTraits::GridType, RestrictProlongOperatorType> AdaptationManagerType;
+  typedef Dune::Fem::AdaptationManager<typename CommonTraits::GridType, RestrictProlongOperatorType>
+  AdaptationManagerType;
 }; // struct  HMMTraits
 
 } // namespace HMM {

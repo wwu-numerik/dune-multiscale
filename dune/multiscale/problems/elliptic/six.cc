@@ -79,8 +79,7 @@ void Dune::Multiscale::Problem::Six::ExactSolution::jacobian(
 }
 
 void Dune::Multiscale::Problem::Six::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Six::ExactSolution::DomainType& x,
-    const TimeType&,
+    const Dune::Multiscale::Problem::Six::ExactSolution::DomainType& x, const TimeType&,
     Dune::Multiscale::Problem::Six::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

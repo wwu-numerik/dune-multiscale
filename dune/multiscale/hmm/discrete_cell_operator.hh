@@ -5,7 +5,6 @@
 #ifndef DiscreteEllipticCellProblem_HH
 #define DiscreteEllipticCellProblem_HH
 
-
 #include <boost/noncopyable.hpp>
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/operator/2order/lagrangematrixsetup.hh>

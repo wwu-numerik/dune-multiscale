@@ -30,11 +30,7 @@ bool ModelProblemData::problemIsPeriodic() const {
   return false; // = problem is not periodic
 }
 
-bool ModelProblemData::problemAllowsStochastics() const {
-  return false;
-
-
-}
+bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
 } // namespace Example
 } // namespace Problem
@@ -84,8 +80,7 @@ void Dune::Multiscale::Problem::Example::ExactSolution::evaluate(
 }
 
 void Dune::Multiscale::Problem::Example::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Example::ExactSolution::DomainType& x,
-    const TimeType&,
+    const Dune::Multiscale::Problem::Example::ExactSolution::DomainType& x, const TimeType&,
     Dune::Multiscale::Problem::Example::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

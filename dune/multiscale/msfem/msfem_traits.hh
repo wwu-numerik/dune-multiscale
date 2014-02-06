@@ -22,13 +22,15 @@ namespace MsFEM {
 struct MsFEMTraits {
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
   typedef Dune::SPGrid<double, CommonTraits::GridType::dimension> LocalGridType;
-//  typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
+  //  typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
   typedef Fem::AdaptiveLeafGridPart<LocalGridType> LocalGridPartType;
-  typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, LocalGridPartType, st_lagrangespace_order> LocalGridDiscreteFunctionSpaceType;
+  typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, LocalGridPartType, st_lagrangespace_order>
+  LocalGridDiscreteFunctionSpaceType;
 
   typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType::Entity LocalEntityType;
 
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType
+  LocalGridDiscreteFunctionType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
   typedef typename CommonTraits::DiscreteFunctionSpaceType::BasisFunctionSetType CoarseBaseFunctionSetType;

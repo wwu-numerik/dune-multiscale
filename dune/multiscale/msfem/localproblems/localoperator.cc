@@ -17,19 +17,18 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
+LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
+                                           const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
                                            const DiffusionOperatorType& diffusion_op)
   : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
   , diffusion_operator_(diffusion_op)
-  , coarse_space_(coarse_space)
-{}
+  , coarse_space_(coarse_space) {}
 
-void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorType &global_matrix) const
+void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorType& global_matrix) const
     // x_T is the barycenter of the macro grid element T
 {
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
@@ -46,8 +45,8 @@ void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorTyp
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();
 
-    DSFe::LocalMatrixProxy<LocalProblemSolver::LinearOperatorType> local_matrix(
-        global_matrix, sub_grid_entity, sub_grid_entity);
+    DSFe::LocalMatrixProxy<LocalProblemSolver::LinearOperatorType> local_matrix(global_matrix, sub_grid_entity,
+                                                                                sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -82,19 +81,18 @@ void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorTyp
   global_matrix.communicate();
 } // assemble_matrix
 
-
 void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
-                                               MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
+                                                  MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
 
   //! @todo correct the error message below (+1 for simplecial, +2 for arbitrary), as there's no finespace any longer
-//  BOOST_ASSERT_MSG(
-//      (DSG::is_simplex_grid(coarse_space_) && allLocalRHS.size() == GridType::dimension + 1) ||
-//          (!(DSG::is_simplex_grid(coarse_space_)) &&
-//           static_cast<long long>(allLocalRHS.size()) ==
-//               static_cast<long long>(specifier.fineSpace().mapper().maxNumDofs() + 2)),
-//      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
-//      " and the dirichlet- and neuman corrector");
+  //  BOOST_ASSERT_MSG(
+  //      (DSG::is_simplex_grid(coarse_space_) && allLocalRHS.size() == GridType::dimension + 1) ||
+  //          (!(DSG::is_simplex_grid(coarse_space_)) &&
+  //           static_cast<long long>(allLocalRHS.size()) ==
+  //               static_cast<long long>(specifier.fineSpace().mapper().maxNumDofs() + 2)),
+  //      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
+  //      " and the dirichlet- and neuman corrector");
 
   // build unit vectors (needed for cases where rhs is assembled for unit vectors instead of coarse
   // base functions)
@@ -190,7 +188,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
         for (auto iIt = discreteFunctionSpace.gridPart().ibegin(localGridCell); iIt != intEnd; ++iIt) {
           const auto& intersection = *iIt;
           if (DMP::is_neumann(intersection)) {
-            const auto orderOfIntegrand = (CommonTraits::polynomial_order - 1) + 2 * (CommonTraits::polynomial_order + 1);
+            const auto orderOfIntegrand =
+                (CommonTraits::polynomial_order - 1) + 2 * (CommonTraits::polynomial_order + 1);
             const auto quadOrder = std::ceil((orderOfIntegrand + 1) / 2);
             const auto faceQuad = DSFe::make_quadrature(intersection, discreteFunctionSpace, quadOrder);
             RangeType neumannValue(0.0);
@@ -226,7 +225,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   return;
 }
 
-void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFunctionType &function) const {
+void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFunctionType& function) const {
   /*  // make sure, we are on a hexahedral element
     BOOST_ASSERT_MSG(function.space().gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
            function.space().gridPart().grid().leafIndexSet().geomTypes(0)[0].isCube(),
@@ -236,7 +235,8 @@ void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFuncti
   auto dirichletDataPtr = Multiscale::Problem::getDirichletData();
   const auto& dirichletData = *dirichletDataPtr;
   //  Fem::GridFunctionAdapter<Multiscale::Problem::DirichletDataBase,
-  //  typename LocalGridDiscreteFunctionType::LocalGridDiscreteFunctionSpaceType::GridPartType> gf("dirichlet", dirichletData ,
+  //  typename LocalGridDiscreteFunctionType::LocalGridDiscreteFunctionSpaceType::GridPartType> gf("dirichlet",
+  // dirichletData ,
   // gridPart);
   RangeType dirichletVal(0.0);
   for (const auto& localCell : function.space()) {

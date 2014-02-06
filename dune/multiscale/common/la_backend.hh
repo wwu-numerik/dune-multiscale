@@ -2,13 +2,13 @@
 #define DUNE_MULTISCALE_LA_BACKEND_HH
 
 #ifdef ENABLE_PETSC
-# include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
-# include <dune/fem/operator/linear/petscoperator.hh>
-# include <dune/fem/solver/petscsolver.hh>
+#include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
+#include <dune/fem/operator/linear/petscoperator.hh>
+#include <dune/fem/solver/petscsolver.hh>
 #else
-# include <dune/fem/function/adaptivefunction.hh>
-# include <dune/fem/operator/matrix/spmatrix.hh>
-# include <dune/fem/operator/linear/spoperator.hh>
+#include <dune/fem/function/adaptivefunction.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/operator/linear/spoperator.hh>
 #endif
 #include <dune/fem/solver/oemsolver.hh>
 
@@ -26,18 +26,13 @@ template <class T, class R, class S>
 class SparseRowMatrixOperator;
 } // namespace Fem
 
-
 namespace Multiscale {
 
 template <class DiscreteFunctionType, class LinearOperatorType>
-class FemSolverWrapper
-{
+class FemSolverWrapper {
 public:
-  FemSolverWrapper( LinearOperatorType& op,
-           double redEps,
-           double absLimit,
-           int maxIter,
-                    bool verbose, std::string type = "bcgs", std::string precond = "none", int precond_iterations = 1 )
+  FemSolverWrapper(LinearOperatorType& op, double redEps, double absLimit, int maxIter, bool verbose,
+                   std::string type = "bcgs", std::string precond = "none", int precond_iterations = 1)
     : op_(op)
     , redEps_(redEps)
     , absLimit_(absLimit)
@@ -45,18 +40,14 @@ public:
     , verbose_(verbose)
     , type_(type)
     , precond_(precond)
-    , precond_iterations_(precond_iterations)
-  {}
+    , precond_iterations_(precond_iterations) {}
 
-  void apply(const DiscreteFunctionType& arg, DiscreteFunctionType& dest) const
-  {
-    Dune::Fem::OEMBICGSTABOp<DiscreteFunctionType,LinearOperatorType>(op_, redEps_, absLimit_, maxIter_, verbose_).apply(arg, dest);
+  void apply(const DiscreteFunctionType& arg, DiscreteFunctionType& dest) const {
+    Dune::Fem::OEMBICGSTABOp<DiscreteFunctionType, LinearOperatorType>(op_, redEps_, absLimit_, maxIter_, verbose_)
+        .apply(arg, dest);
   }
 
-  void operator() (const DiscreteFunctionType& arg, DiscreteFunctionType& dest) const
-  {
-    apply(arg, dest);
-  }
+  void operator()(const DiscreteFunctionType& arg, DiscreteFunctionType& dest) const { apply(arg, dest); }
 
 private:
   LinearOperatorType& op_;
@@ -67,7 +58,6 @@ private:
   const std::string type_;
   const std::string precond_;
   const int precond_iterations_;
-
 };
 
 template <class DiscreteFunctionSpaceType>
@@ -82,8 +72,6 @@ struct BackendChooser {
   typedef Dune::Fem::SparseRowLinearOperator<DiscreteFunctionType, DiscreteFunctionType> LinearOperatorType;
   typedef FemSolverWrapper<DiscreteFunctionType, LinearOperatorType> InverseOperatorType;
 #endif
-
-
 };
 
 } // namespace Multiscale

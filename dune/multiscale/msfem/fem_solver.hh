@@ -5,7 +5,6 @@
 #ifndef MS_Elliptic_FEM_Solver_HH
 #define MS_Elliptic_FEM_Solver_HH
 
-
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <memory>
@@ -22,10 +21,11 @@ class Elliptic_FEM_Solver {
 
   void solve_linear(const CommonTraits::DiffusionType& diffusion_op,
                     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution, const bool use_smp) const;
+                    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution,
+                    const bool use_smp) const;
   void solve_nonlinear(const CommonTraits::DiffusionType& diffusion_op,
-                        const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                        const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution) const;
+                       const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+                       const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution) const;
 
   static const int faceCodim = 1;
   const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_;

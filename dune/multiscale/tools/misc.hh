@@ -12,7 +12,7 @@ namespace Dune {
 namespace Stuff {
 namespace Grid {
 
-template < class TraitsImp >
+template <class TraitsImp>
 bool is_simplex_grid(const Dune::Fem::DiscreteFunctionSpaceInterface<TraitsImp>& space) {
   return space.grid_part().grid().leafIndexSet().geomTypes(0).size() == 1 &&
          space.grid_part().grid().leafIndexSet().geomTypes(0)[0].isSimplex();

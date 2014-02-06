@@ -13,7 +13,7 @@ namespace Multiscale {
 namespace FEM {
 
 //! the main FEM computation
-void algorithm(const std::shared_ptr<CommonTraits::GridType> &macro_grid_pointer, const std::string filename);
+void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string filename);
 
 } // namespace FEM {
 } // namespace Multiscale {

@@ -27,13 +27,9 @@ std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/msfem_cube_three.dgf");
 }
 
-bool ModelProblemData::problemIsPeriodic() const {
-  return true;
-}
+bool ModelProblemData::problemIsPeriodic() const { return true; }
 
-bool ModelProblemData::problemAllowsStochastics() const {
-  return false;
-}
+bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
 std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
   return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename View::Intersection>>();
@@ -61,16 +57,18 @@ void __attribute__((hot)) FirstSource::evaluate(const DomainType& x, RangeType& 
   const double d_x0_coefficient_0 =
       pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (2.0 * M_PI)) * (1.0 / eps) * sin_2_pi_x0_eps;
 
-  const typename FunctionSpaceType::RangeType grad_u = (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) +
-                           ((-1.0) * eps * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
-                           (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
+  const typename FunctionSpaceType::RangeType grad_u =
+      (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) + ((-1.0) * eps * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
+      (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
 
-  const typename FunctionSpaceType::RangeType d_x0_x0_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-                              (2.0 * pi_square * (eps + (1.0 / eps)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
-                              (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
+  const typename FunctionSpaceType::RangeType d_x0_x0_u =
+      -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+      (2.0 * pi_square * (eps + (1.0 / eps)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
+      (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
-  const typename FunctionSpaceType::RangeType d_x1_x1_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-                              (2.0 * pi_square * eps * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+  const typename FunctionSpaceType::RangeType d_x1_x1_u =
+      -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+      (2.0 * pi_square * eps * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
 } // evaluate
@@ -123,30 +121,22 @@ void __attribute__((hot)) ExactSolution::jacobian(const DomainType& x, JacobianR
   const double sin_2_pi_x1 = sin(M_TWOPI * x[1]);
   const double cos_2_pi_x1 = cos(M_TWOPI * x[1]);
 
-  grad_u[0][1] = (M_TWOPI * sin_2_pi_x0 * cos_2_pi_x1)
-               + (eps * M_PI * cos_2_pi_x0 * cos_2_pi_x1 * sin_2_pi_x0_eps);
+  grad_u[0][1] = (M_TWOPI * sin_2_pi_x0 * cos_2_pi_x1) + (eps * M_PI * cos_2_pi_x0 * cos_2_pi_x1 * sin_2_pi_x0_eps);
 
-  grad_u[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1)
-               - (eps * M_PI * sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)
-               + (      M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
-
+  grad_u[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1) - (eps * M_PI * sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) +
+                 (M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
 } // jacobian
-
-
 
 void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
-
 void DirichletData::jacobian(const DomainType& /*x*/, JacobianRangeType& y) const { y[0] = 0.0; } // jacobian
-
 
 void DirichletData::jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const {
   jacobian(x, y);
 } // jacobian
-
 
 void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 1.0; } // evaluate
 

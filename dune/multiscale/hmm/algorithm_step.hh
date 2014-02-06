@@ -29,7 +29,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                       typename CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace,
                       typename HMMTraits::PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                       const typename CommonTraits::DiffusionType& diffusion_op,
-                      CommonTraits::DiscreteFunction_ptr &hmm_solution,
+                      CommonTraits::DiscreteFunction_ptr& hmm_solution,
                       const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle);
 
 //! The rhs-assemble()-methods for non-linear elliptic problems, solved with the heterogenous multiscale method
@@ -39,12 +39,11 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
  * old_u_H from the last iteration step to obtain some information about the
  * periodic discrete function space (space for the cell problems)
 **/
-static void
-assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
-                               const CommonTraits::DiscreteFunctionType& old_u_H,
-                               const CellProblemNumberingManager& cp_num_manager,
-                               const HMMTraits::PeriodicDiscreteFunctionType& dummy_func,
-                               CommonTraits::DiscreteFunctionType& rhsVector);
+static void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
+                                           const CommonTraits::DiscreteFunctionType& old_u_H,
+                                           const CellProblemNumberingManager& cp_num_manager,
+                                           const HMMTraits::PeriodicDiscreteFunctionType& dummy_func,
+                                           CommonTraits::DiscreteFunctionType& rhsVector);
 } // namespace HMM {
 } // namespace Multiscale {
 } // namespace Dune {

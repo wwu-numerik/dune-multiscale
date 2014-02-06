@@ -30,9 +30,7 @@ bool ModelProblemData::problemIsPeriodic() const {
   return true; // = problem is periodic
 }
 
-bool ModelProblemData::problemAllowsStochastics() const {
-  return false;
-}
+bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
 void FirstSource::evaluate(const DomainType& x, RangeType& y) const {
   y = -6.0 * exp(x[0] + x[1]);
@@ -117,7 +115,6 @@ void LowerOrderTerm::direction_derivative(const DomainType& /*x*/, const RangeTy
   y[0][0] = 0.0;
 
 } // direction_derivative
-
 
 void DirichletBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const { y = exp(x[0] + x[1]); } // evaluate
 

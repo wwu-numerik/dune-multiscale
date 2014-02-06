@@ -29,13 +29,14 @@ int main(int argc, char** argv) {
     // name of the error file in which the data will be saved
     std::string filename_;
     const auto save_filename = std::string(path + "/logdata/ms.log.log");
-    DSC_LOG_INFO << "LOG FILE\n" << "Data will be saved under: " << save_filename << std::endl;
+    DSC_LOG_INFO << "LOG FILE\n"
+                 << "Data will be saved under: " << save_filename << std::endl;
 
     const auto grids = Dune::Multiscale::make_grids();
     algorithm(grids.second, filename_);
 
-    const auto cpu_time = DSC_PROFILER.stopTiming("total_cpu",
-                                                  DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
+    const auto cpu_time =
+        DSC_PROFILER.stopTiming("total_cpu", DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
     DSC_LOG_INFO << "Total runtime of the program: " << cpu_time << "s" << std::endl;
     return 0;
   }

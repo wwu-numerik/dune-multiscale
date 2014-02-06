@@ -5,7 +5,6 @@
 #ifndef DiscreteEllipticMsFEMLocalProblem_HH
 #define DiscreteEllipticMsFEMLocalProblem_HH
 
-
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
@@ -33,13 +32,13 @@
 #include "dune/multiscale/problems/base.hh"
 
 namespace Dune {
-template <class K, int SIZE> class FieldVector;
-}  // namespace Dune
+template <class K, int SIZE>
+class FieldVector;
+} // namespace Dune
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
-
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
 class LocalProblemSolver {
@@ -53,11 +52,9 @@ public:
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
 
 private:
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType
-  InverseOperatorType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType InverseOperatorType;
 
-  static std::unique_ptr<InverseOperatorType>
-  make_inverse_operator(LinearOperatorType& problem_matrix);
+  static std::unique_ptr<InverseOperatorType> make_inverse_operator(LinearOperatorType& problem_matrix);
 
   const CommonTraits::DiffusionType& diffusion_;
   LocalGridList& subgrid_list_;
@@ -68,13 +65,13 @@ public:
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
   LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, LocalGridList& subgrid_list,
-                          const CommonTraits::DiffusionType& diffusion_operator);
+                     const CommonTraits::DiffusionType& diffusion_operator);
 
 private:
   void solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
                                 MsFEMTraits::LocalSolutionVectorType& allLocalSolutions) const;
-public:
 
+public:
   /** method for solving and saving the solutions of the local msfem problems
     * for the whole set of macro-entities and for every unit vector e_i
     * ---- method: solve and save the whole set of local msfem problems -----

@@ -37,14 +37,11 @@ private:
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
-
   //! identify fine scale part of MsFEM solution (including the projection!)
-  void identify_fine_scale_part(LocalGridList& subgrid_list,
-                                const DiscreteFunctionType& coarse_msfem_solution,
+  void identify_fine_scale_part(LocalGridList& subgrid_list, const DiscreteFunctionType& coarse_msfem_solution,
                                 DiscreteFunctionType& fine_scale_part) const;
 
 public:
-
   /** - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
    then:
    A --> diffusion operator ('DiffusionOperatorType')
@@ -55,9 +52,9 @@ public:
    homogenous Dirchilet boundary condition!:
    **/
   void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-             const CommonTraits::DiffusionType& diffusion_op,
-             const CommonTraits::FirstSourceType& f, DiscreteFunctionType& coarse_scale_part,
-             DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const;
+             const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
+             DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
+             DiscreteFunctionType& solution) const;
 };
 
 } // namespace MsFEM {

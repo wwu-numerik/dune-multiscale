@@ -25,8 +25,9 @@
 #include "selector.hh"
 
 namespace Dune {
-template <class GridImp, class IntersectionImp> class Intersection;
-}  // namespace Dune
+template <class GridImp, class IntersectionImp>
+class Intersection;
+} // namespace Dune
 
 #define PROBLEM_NAME Nine
 

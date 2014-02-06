@@ -54,12 +54,14 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
   const auto coarse_msfem_fname_s = std::string("coarse_part_msfem_solution_");
   outputparam.set_prefix(coarse_msfem_fname_s);
-  OutputTraits::DataOutputType(grid, coarse_msfem_solution_series, outputparam).writeData(1.0 /*dummy*/, coarse_msfem_fname_s);
+  OutputTraits::DataOutputType(grid, coarse_msfem_solution_series, outputparam)
+      .writeData(1.0 /*dummy*/, coarse_msfem_fname_s);
 
   OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
   const auto fine_msfem_fname_s = std::string("fine_part_msfem_solution_");
   outputparam.set_prefix(fine_msfem_fname_s);
-  OutputTraits::DataOutputType(grid, fine_msfem_solution_series, outputparam).writeData(1.0 /*dummy*/, fine_msfem_fname_s);
+  OutputTraits::DataOutputType(grid, fine_msfem_solution_series, outputparam)
+      .writeData(1.0 /*dummy*/, fine_msfem_fname_s);
 
   DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(), Dune::Fem::MPIManager::helper(),
                                  outputparam.path());
@@ -73,23 +75,23 @@ void data_output(const CommonTraits::GridPartType& gridPart,
 
   if (Problem::getModelData()->hasExactSolution()) {
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
-    const auto& u = *u_ptr;  
+    const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("exact_solution");
-    OutputTraits::ExSolDataOutputType(gridPart.grid(), exact_solution_series, outputparam).writeData(1.0 /*dummy*/, "exact-solution");
+    OutputTraits::ExSolDataOutputType(gridPart.grid(), exact_solution_series, outputparam)
+        .writeData(1.0 /*dummy*/, "exact-solution");
   }
-  
+
   CommonTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
                                                                coarse_discreteFunctionSpace);
   coarse_grid_visualization.clear();
   OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
   const std::string coarse_grid_name("coarse_grid_visualization_");
   outputparam.set_prefix(coarse_grid_name);
-  OutputTraits::DataOutputType(coarse_discreteFunctionSpace.gridPart().grid(),
-                               coarse_grid_series, outputparam).writeData(1.0 /*dummy*/, coarse_grid_name);
+  OutputTraits::DataOutputType(coarse_discreteFunctionSpace.gridPart().grid(), coarse_grid_series, outputparam)
+      .writeData(1.0 /*dummy*/, coarse_grid_name);
 }
-
 
 //! algorithm
 void algorithm() {
@@ -111,14 +113,14 @@ void algorithm() {
 
   CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", fine_discreteFunctionSpace);
   msfem_solution.clear();
-  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution", fine_discreteFunctionSpace);
+  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution",
+                                                                fine_discreteFunctionSpace);
   coarse_part_msfem_solution.clear();
   CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", fine_discreteFunctionSpace);
   fine_part_msfem_solution.clear();
 
-
   Elliptic_MsFEM_Solver().apply(coarse_discreteFunctionSpace, diffusion_op, f, coarse_part_msfem_solution,
-                     fine_part_msfem_solution, msfem_solution);
+                                fine_part_msfem_solution, msfem_solution);
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;

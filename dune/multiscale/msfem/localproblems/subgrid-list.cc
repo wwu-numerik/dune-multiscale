@@ -27,8 +27,7 @@ namespace MsFEM {
 
 LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
-  , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet())
-{
+  , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
   const auto micro_per_macro = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
@@ -49,9 +48,8 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     typedef FieldVector<typename LocalGridType::ctype, dim_world> CoordType;
     CoordType lowerLeft(0);
     CoordType upperRight(0);
-    array<unsigned int,dim_world> elemens;
-    for(const auto i : DSC::valueRange(dim_world))
-    {
+    array<unsigned int, dim_world> elemens;
+    for (const auto i : DSC::valueRange(dim_world)) {
       elemens[i] = micro_per_macro + (2 * oversampling_layer);
       const auto min = dimensions.coord_limits[i].min();
       const auto max = dimensions.coord_limits[i].max();
@@ -71,7 +69,6 @@ MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(IndexType coarseCellIndex)
   assert(found->second);
   return *(found->second);
 } // getSubGrid
-
 
 const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(IndexType coarseCellIndex) const {
   auto found = subGridList_.find(coarseCellIndex);
@@ -95,22 +92,22 @@ std::size_t LocalGridList::size() const { return subGridList_.size(); }
 
 MsFEM::MsFEMTraits::LocalGridPartType LocalGridList::gridPart(IndexType i) { return LocalGridPartType(getSubGrid(i)); }
 
-bool LocalGridList::covers_strict(const CoarseEntityType &coarse_entity, const MsFEMTraits::LocalEntityType &local_entity) {
+bool LocalGridList::covers_strict(const CoarseEntityType& coarse_entity,
+                                  const MsFEMTraits::LocalEntityType& local_entity) {
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
-  for(const auto i : DSC::valueRange(local_entity.geometry().corners())) {
-    if(!reference_element.checkInside(coarse_geometry.local(local_entity.geometry().corner(i))))
+  for (const auto i : DSC::valueRange(local_entity.geometry().corners())) {
+    if (!reference_element.checkInside(coarse_geometry.local(local_entity.geometry().corner(i))))
       return false;
   }
   return true;
 }
 
-bool LocalGridList::covers(const CoarseEntityType &coarse_entity, const MsFEMTraits::LocalEntityType &local_entity) {
+bool LocalGridList::covers(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity) {
   const auto& center = local_entity.geometry().center();
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   return reference_element.checkInside(coarse_entity.geometry().local(center));
 }
-
 
 } // namespace MsFEM {
 } // namespace Multiscale {

@@ -5,7 +5,6 @@
 #ifndef DUNE_MS_PROBLEMS_BASE_HH
 #define DUNE_MS_PROBLEMS_BASE_HH
 
-
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/constants.hh>
@@ -55,7 +54,6 @@ struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType 
   typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef double TimeType;
 
-
   virtual void evaluate(const DomainType& x, RangeType& ret) const { evaluate(x, TimeType(0), ret); }
   virtual void evaluate(const DomainType& x, const TimeType& time, RangeType& y) const = 0;
   virtual void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient,
@@ -74,11 +72,12 @@ struct ZeroLowerOrder : public LowerOrderBase {
   typedef double TimeType;
 
   virtual void evaluate(const DomainType&, RangeType& y) const DS_FINAL { y = RangeType(0); }
-  virtual void evaluate(const DomainType&, const TimeType&, RangeType& y) const DS_FINAL{ y = RangeType(0); }
+  virtual void evaluate(const DomainType&, const TimeType&, RangeType& y) const DS_FINAL { y = RangeType(0); }
   virtual void evaluate(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const DS_FINAL {
     y = RangeType(0);
   }
-  virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const DS_FINAL {
+  virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const
+      DS_FINAL {
     y = RangeType(0);
   }
   virtual void direction_derivative(const DomainType&, const RangeType&, const JacobianRangeType&,
@@ -97,7 +96,6 @@ public:
 
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
   virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
-
 };
 
 class ZeroDirichletData : public DirichletDataBase {
@@ -109,7 +107,9 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
-  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const DS_FINAL {
+    y = RangeType(0.0);
+  }
 };
 
 class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
@@ -122,7 +122,6 @@ public:
 
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
   virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
-
 };
 
 class ZeroNeumannData : public NeumannDataBase {
@@ -134,7 +133,9 @@ public:
   typedef typename FunctionSpaceType::DomainFieldType TimeType;
 
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
-  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const DS_FINAL {
+    y = RangeType(0.0);
+  }
 };
 
 /**
@@ -218,7 +219,6 @@ protected:
   typedef Dune::Stuff::GridboundaryInterface<typename SubView::Intersection> SubBoundaryInfoType;
 
 public:
-
   //! Constructor for ModelProblemData
   inline IModelProblemData(const Constants constants) : constants_(constants) {}
   virtual ~IModelProblemData() {}

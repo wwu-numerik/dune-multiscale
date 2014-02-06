@@ -30,11 +30,7 @@ bool ModelProblemData::problemIsPeriodic() const {
   return false; // = problem is not periodic
 }
 
-bool ModelProblemData::problemAllowsStochastics() const {
-  return false;
-
-
-}
+bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
 void ExactSolution::evaluate(const ExactSolution::DomainType& x, ExactSolution::RangeType& y) const {
   y = (-1.0) * ((x[0] * x[0]) - x[0]) * ((x[1] * x[1]) - x[1]);
@@ -42,8 +38,7 @@ void ExactSolution::evaluate(const ExactSolution::DomainType& x, ExactSolution::
        sin(2.0 * M_PI * x[1] / constants().epsilon);
 }
 
-void ExactSolution::evaluate(const ExactSolution::DomainType& x, const TimeType&,
-                             ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType& x, const TimeType&, ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
 
@@ -110,8 +105,7 @@ void FirstSource::evaluate(const FirstSource::DomainType& x, FirstSource::RangeT
   y -= 12.0 * pow((2.0 * x[1]) - 1.0, 2.0) * pow((x[0] * x[0]) - x[0], 3.0);
 }
 
-void FirstSource::evaluate(const FirstSource::DomainType& x, const TimeType&,
-                           FirstSource::RangeType& y) const {
+void FirstSource::evaluate(const FirstSource::DomainType& x, const TimeType&, FirstSource::RangeType& y) const {
   evaluate(x, y);
 }
 

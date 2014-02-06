@@ -7,11 +7,11 @@
 #include "dune/multiscale/common/traits.hh"
 #include "newton_rhs.hh"
 
-void Dune::Multiscale::NewtonRightHandSide::assemble_for_Newton_method(const Dune::Multiscale::CommonTraits::FirstSourceType &f,
-                                                                       const Dune::Multiscale::CommonTraits::DiffusionType &A,
-                                                                       const Dune::Multiscale::CommonTraits::LowerOrderTermType &F,
-                                                                       const Dune::Multiscale::CommonTraits::DiscreteFunctionType &old_u_H,
-                                                                       Dune::Multiscale::CommonTraits::DiscreteFunctionType &rhsVector) {
+void Dune::Multiscale::NewtonRightHandSide::assemble_for_Newton_method(
+    const Dune::Multiscale::CommonTraits::FirstSourceType& f, const Dune::Multiscale::CommonTraits::DiffusionType& A,
+    const Dune::Multiscale::CommonTraits::LowerOrderTermType& F,
+    const Dune::Multiscale::CommonTraits::DiscreteFunctionType& old_u_H,
+    Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;

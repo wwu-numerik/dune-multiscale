@@ -58,7 +58,6 @@ private:
   static const std::string subdir_; /*"cell_problems"*/
 
 public:
-
   //! constructor - with diffusion operator A^{\epsilon}(x)
   CellProblemSolver(const PeriodicDiscreteFunctionSpaceType& periodicDiscreteFunctionSpace,
                     const DiffusionType& diffusion_operator)
