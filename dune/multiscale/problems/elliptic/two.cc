@@ -106,7 +106,7 @@ void Dune::Multiscale::Problem::Two::ExactSolution::jacobian(
 
 void Dune::Multiscale::Problem::Two::ExactSolution::evaluate(
     const Dune::Multiscale::Problem::Two::ExactSolution::DomainType& x,
-    const Dune::Multiscale::Problem::Two::ExactSolution::TimeType&,
+    const TimeType&,
     Dune::Multiscale::Problem::Two::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

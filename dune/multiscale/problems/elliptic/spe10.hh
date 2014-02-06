@@ -7,7 +7,7 @@
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/base.hh>
-#include <dune/multiscale/problems/constants.hh>
+
 #include <string>
 #include <vector>
 
@@ -21,6 +21,11 @@ namespace Problem {
 //! ------------ SPE10 Problem -------------------
 
 namespace SPE10 {
+
+typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
+typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
+typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
+typedef CommonTraits::FunctionSpaceType::DomainFieldType TimeType;
 
 struct ModelProblemData : public IModelProblemData {
   virtual bool hasExactSolution() const { return false; }
@@ -38,22 +43,6 @@ private:
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-private:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
 public:
   FirstSource();
 
@@ -64,19 +53,6 @@ public:
 MSNULLFUNCTION(SecondSource)
 
 class Diffusion : public DiffusionBase {
-public:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
 public:
   Diffusion();
   ~Diffusion();
@@ -102,44 +78,44 @@ MSNULLFUNCTION(ExactSolution)
 
 class DirichletData : public DirichletDataBase {
 private:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+
 
 public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-  static const int dimDomain = DomainType::dimension;
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
+
+
+
+
+
+
+
 
 public:
   DirichletData() {}
 
-  void evaluate(const DomainType &x, RangeType &y) const;
-  void evaluate(const DomainType &x, const TimeType &/*time*/,
-                RangeType &y) const;
+  void evaluate(const typename FunctionSpaceType::DomainType &x, typename FunctionSpaceType::RangeType &y) const;
+  void evaluate(const typename FunctionSpaceType::DomainType &x, const TimeType &/*time*/,
+                typename FunctionSpaceType::RangeType &y) const;
 };
 
 class NeumannData : public NeumannDataBase {
 private:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+
 
 public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-  static const int dimDomain = DomainType::dimension;
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
+
+
+
+
+
+
+
 
 public:
   NeumannData() {}
 
-  void evaluate(const DomainType &x, RangeType &y) const;
-  void evaluate(const DomainType &x, const TimeType &/*time*/,
-                RangeType &y) const;
+  void evaluate(const typename FunctionSpaceType::DomainType &x, typename FunctionSpaceType::RangeType &y) const;
+  void evaluate(const typename FunctionSpaceType::DomainType &x, const TimeType &/*time*/,
+                typename FunctionSpaceType::RangeType &y) const;
 };
 
 } //! @} namespace SPE10 {

@@ -27,17 +27,13 @@ std::string ModelProblemData::getMacroGridFile() const {
 }
 
 bool ModelProblemData::problemIsPeriodic() const {
-  return false; // = problem is periodic
+  return false;
 }
 
 bool ModelProblemData::problemAllowsStochastics() const {
-  return false; // = problem does not allow stochastic perturbations
-                // (if you want it, you must add the 'perturb' method provided
-                // by 'constants.hh' - see model problems 4 to 7 for examples )
+  return false;
 }
 
-// evaluate f, i.e. return y=f(x) for a given x
-// the following method defines 'f':
 void FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 1.0; } // evaluate
 
 void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
@@ -80,7 +76,7 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeTy
   flux[0][1] = a_1_0 * direction_gradient[0][0] + a_1_1 * direction_gradient[0][1];
 } // jacobianDiffusiveFlux
 
-// evaluate Dirichlet Boundary Function
+
 void DirichletBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const {
   const double eps = constants().epsilon;
   const double x0_eps = (x[0] / eps);
@@ -97,9 +93,6 @@ void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /
   evaluate(x, y);
 }
 
-// evaluate Neumann Boundary Function 'q'
-// q = A( \nabla u ) \cdot n    (on the Neumann boundary)
-// ( A denotes the above diffusion operator and can be nonlinear )
 void NeumannBoundaryCondition::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void NeumannBoundaryCondition::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
@@ -120,7 +113,7 @@ void Dune::Multiscale::Problem::Fourteen::ExactSolution::jacobian(
 
 void Dune::Multiscale::Problem::Fourteen::ExactSolution::evaluate(
     const Dune::Multiscale::Problem::Fourteen::ExactSolution::DomainType& x,
-    const Dune::Multiscale::Problem::Fourteen::ExactSolution::TimeType&,
+    const TimeType&,
     Dune::Multiscale::Problem::Fourteen::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

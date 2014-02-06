@@ -28,13 +28,11 @@ std::string ModelProblemData::getMacroGridFile() const {
 }
 
 bool ModelProblemData::problemIsPeriodic() const {
-  return true; // = problem is periodic
+  return true;
 }
 
 bool ModelProblemData::problemAllowsStochastics() const {
-  return false; // = problem does not allow stochastic perturbations
-                // (if you want it, you must add the 'perturb' method provided
-                // by 'constants.hh' - see model problems 4 to 7 for examples )
+  return false;
 }
 
 std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
@@ -47,8 +45,6 @@ std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoun
 
 FirstSource::FirstSource() {}
 
-// evaluate f, i.e. return y=f(x) for a given x
-// the following method defines 'f':
 void __attribute__((hot)) FirstSource::evaluate(const DomainType& x, RangeType& y) const {
 
   const double eps = constants().epsilon;
@@ -65,15 +61,15 @@ void __attribute__((hot)) FirstSource::evaluate(const DomainType& x, RangeType& 
   const double d_x0_coefficient_0 =
       pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (2.0 * M_PI)) * (1.0 / eps) * sin_2_pi_x0_eps;
 
-  const RangeType grad_u = (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) +
+  const typename FunctionSpaceType::RangeType grad_u = (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) +
                            ((-1.0) * eps * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
                            (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
 
-  const RangeType d_x0_x0_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+  const typename FunctionSpaceType::RangeType d_x0_x0_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
                               (2.0 * pi_square * (eps + (1.0 / eps)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
                               (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
-  const RangeType d_x1_x1_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+  const typename FunctionSpaceType::RangeType d_x1_x1_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
                               (2.0 * pi_square * eps * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
@@ -116,7 +112,7 @@ void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
        (cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin(2.0 * M_PI * (x[0] / constants().epsilon)));
 } // evaluate
 
-void __attribute__((hot)) ExactSolution::jacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const {
+void __attribute__((hot)) ExactSolution::jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
   const double eps = constants().epsilon;
   static const double M_TWOPI = M_PI * 2.0;
   const double x0_eps = (x[0] / eps);
@@ -137,22 +133,21 @@ void __attribute__((hot)) ExactSolution::jacobian(const DomainType& x, typename 
 
 } // jacobian
 
-void ExactSolution::evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const { evaluate(x, y); }
 
-// evaluate Dirichlet Boundary Function
+
 void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
-// evaluate jacobian of dirichlet boundary function
+
 void DirichletData::jacobian(const DomainType& /*x*/, JacobianRangeType& y) const { y[0] = 0.0; } // jacobian
 
-// evaluate jacobian of dirichlet boundary function
+
 void DirichletData::jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const {
   jacobian(x, y);
 } // jacobian
 
-// evaluate Neumann Boundary Function
+
 void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 1.0; } // evaluate
 
 void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }

@@ -28,7 +28,7 @@ std::string ModelProblemData::getMacroGridFile() const {
 }
 
 bool ModelProblemData::problemIsPeriodic() const {
-  return false; // = problem is periodic
+  return false;
 }
 
 bool ModelProblemData::problemAllowsStochastics() const {
@@ -73,7 +73,6 @@ ParameterTree ModelProblemData::boundary_settings() const
   return boundarySettings;
 }
 
-// evaluate Dirichlet Boundary Function
 void DirichletData::evaluate(const DomainType& x,
                              RangeType& y) const {
   // use pressure gradient in x-direction in 1D and 2D and in y-direction in 3D
@@ -88,7 +87,7 @@ void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, Rang
   evaluate(x, y);
 }
 
-// evaluate Neumann Boundary Function
+
 void NeumannData::evaluate(const DomainType& /*x*/,
                            RangeType& y) const {
   y = 0.0;
@@ -100,10 +99,8 @@ void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeT
 
 FirstSource::FirstSource() {}
 
-// evaluate f, i.e. return y=f(x) for a given x
-// the following method defines 'f':
 void __attribute__((hot)) FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const {
-  y = RangeType(1.0);
+  y = typename FunctionSpaceType::RangeType(1.0);
 } // evaluate
 
 void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }

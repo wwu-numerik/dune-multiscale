@@ -38,6 +38,14 @@ bool ModelProblemData::problemAllowsStochastics() const {
                 // by 'constants.hh' - see model problems 4 to 7 for examples )
 }
 
+void FirstSource::evaluate(const DomainType &x, RangeType &y) const {
+  if (x[1] >= 0.1) {
+    y = 1.0;
+  } else {
+    y = 0.1;
+  }
+}
+
 } // namespace Three
 } // namespace Problem
 } // namespace Multiscale {
@@ -94,7 +102,7 @@ void Dune::Multiscale::Problem::Three::ExactSolution::jacobian(
 
 void Dune::Multiscale::Problem::Three::ExactSolution::evaluate(
     const Dune::Multiscale::Problem::Three::ExactSolution::DomainType& x,
-    const Dune::Multiscale::Problem::Three::ExactSolution::TimeType&,
+    const TimeType&,
     Dune::Multiscale::Problem::Three::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
