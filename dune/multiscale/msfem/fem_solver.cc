@@ -67,11 +67,9 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 
   CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
   if (use_smp) {
-    Multiscale::FEM::SMPDiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType>(
-        discreteFunctionSpace_, diffusion_op).assemble_matrix(fem_matrix);
+    FEM::SMPDiscreteEllipticOperator(discreteFunctionSpace_, diffusion_op).assemble_matrix(fem_matrix);
   } else {
-    Multiscale::FEM::DiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType>(
-        discreteFunctionSpace_, diffusion_op, lower_order_term).assemble_matrix(fem_matrix);
+    FEM::DiscreteEllipticOperator(discreteFunctionSpace_, diffusion_op, lower_order_term).assemble_matrix(fem_matrix);
   }
 
   DSC_LOG_INFO << "Time to assemble standard FEM stiffness matrix: " << assembleTimer.elapsed() << "s" << std::endl;
@@ -118,8 +116,7 @@ Elliptic_FEM_Solver::solve_nonlinear(const CommonTraits::DiffusionType& diffusio
   //! (stiffness) matrix
   CommonTraits::LinearOperatorType fem_matrix("FEM stiffness matrix", discreteFunctionSpace_, discreteFunctionSpace_);
 
-  Multiscale::FEM::DiscreteEllipticOperator<CommonTraits::DiscreteFunctionType, CommonTraits::DiffusionType>
-  discrete_elliptic_op(discreteFunctionSpace_, diffusion_op, lower_order_term);
+  FEM::DiscreteEllipticOperator discrete_elliptic_op(discreteFunctionSpace_, diffusion_op, lower_order_term);
 
   int iteration_step = 1;
   // the Newton step for the FEM reference problem (solved with Newton Method):
