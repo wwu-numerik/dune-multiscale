@@ -22,37 +22,6 @@
 namespace Dune {
 namespace Multiscale {
 
-//! define a dummy mass term:
-template <class FunctionSpaceImp>
-class DummyMass : public Dune::Fem::Function<FunctionSpaceImp, DummyMass<FunctionSpaceImp>> {
-private:
-  typedef FunctionSpaceImp FunctionSpaceType;
-
-  typedef DummyMass<FunctionSpaceType> ThisType;
-  typedef Dune::Fem::Function<FunctionSpaceType, ThisType> BaseType;
-
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef DomainFieldType TimeType;
-
-public:
-  inline void evaluate(const DomainType& /*x*/, RangeType& y) const {
-    DUNE_THROW(Dune::InvalidStateException, "Do not use the Dummy-class!!!");
-    y = 0;
-  }
-
-  // dummy implementation
-  inline void evaluate(const DomainType& x, const TimeType /*time*/, RangeType& y) const {
-    DSC_LOG_ERROR << "WARNING! Wrong call for 'evaluate' method of the MassTerm class (evaluate(x,t,y)). Return 0.0."
-                  << std::endl;
-    return evaluate(x, y);
-  }
-};
-
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace)
   : discreteFunctionSpace_(discreteFunctionSpace) {}
 

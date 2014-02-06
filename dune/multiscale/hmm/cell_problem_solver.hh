@@ -20,13 +20,13 @@
 
 #include "dune/multiscale/common/la_backend.hh"
 
-//! --------------------- the essential cell problem solver class ----------------------------------
 namespace Dune {
 namespace Multiscale {
 namespace HMM {
 
 class CellProblemNumberingManager;
 
+//! --------------------- the essential cell problem solver class ----------------------------------
 class CellProblemSolver {
 private:
   typedef typename HMMTraits::PeriodicDiscreteFunctionType PeriodicDiscreteFunctionImp;

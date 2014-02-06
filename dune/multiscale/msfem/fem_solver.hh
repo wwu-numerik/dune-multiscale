@@ -12,10 +12,6 @@
 namespace Dune {
 namespace Multiscale {
 
-//! define a dummy mass term:
-template <class FunctionSpaceImp>
-class DummyMass;
-
 //! \todo docme
 class Elliptic_FEM_Solver {
 

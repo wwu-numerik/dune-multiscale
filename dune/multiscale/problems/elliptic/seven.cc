@@ -35,44 +35,44 @@ bool ModelProblemData::problemAllowsStochastics() const {
   return true; // = problem allows stochastic perturbations
 }
 
-} // namespace Seven
-} // namespace Problem
-} // namespace Multiscale {
-} // namespace Dune {
-
-void Dune::Multiscale::Problem::Seven::Diffusion::diffusiveFlux(
-    const Dune::Multiscale::Problem::Seven::Diffusion::DomainType& x,
-    const Dune::Multiscale::Problem::Seven::Diffusion::JacobianRangeType& gradient,
-    Dune::Multiscale::Problem::Seven::Diffusion::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(
+    const DomainType& x,
+    const JacobianRangeType& gradient,
+    JacobianRangeType& flux) const {
   const auto coeff = constants().coefficients(x);
   flux[0][0] = coeff.first * (gradient[0][0] + ((1.0 / 3.0) * pow(gradient[0][0], 3.0)));
   flux[0][1] = coeff.second * (gradient[0][1] + ((1.0 / 3.0) * pow(gradient[0][1], 3.0)));
 }
 
-void Dune::Multiscale::Problem::Seven::Diffusion::jacobianDiffusiveFlux(
-    const Dune::Multiscale::Problem::Seven::Diffusion::DomainType& x,
-    const Dune::Multiscale::Problem::Seven::Diffusion::JacobianRangeType& position_gradient,
-    const Dune::Multiscale::Problem::Seven::Diffusion::JacobianRangeType& direction_gradient,
-    Dune::Multiscale::Problem::Seven::Diffusion::JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(
+    const DomainType& x,
+    const JacobianRangeType& position_gradient,
+    const JacobianRangeType& direction_gradient,
+    JacobianRangeType& flux) const {
   const auto coeff = constants().coefficients(x);
   flux[0][0] = coeff.first * direction_gradient[0][0] * (1.0 + pow(position_gradient[0][0], 2.0));
   flux[0][1] = coeff.second * direction_gradient[0][1] * (1.0 + pow(position_gradient[0][1], 2.0));
 }
 
-void Dune::Multiscale::Problem::Seven::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Seven::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Seven::ExactSolution::RangeType&) const {
+void ExactSolution::evaluate(
+    const ExactSolution::DomainType&,
+    ExactSolution::RangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void Dune::Multiscale::Problem::Seven::ExactSolution::jacobian(
-    const Dune::Multiscale::Problem::Seven::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Seven::ExactSolution::JacobianRangeType&) const {
+void ExactSolution::jacobian(
+    const ExactSolution::DomainType&,
+    ExactSolution::JacobianRangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void Dune::Multiscale::Problem::Seven::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Seven::ExactSolution::DomainType& x, const TimeType&,
-    Dune::Multiscale::Problem::Seven::ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(
+    const ExactSolution::DomainType& x, const TimeType&,
+    ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
+
+} // namespace Seven
+} // namespace Problem
+} // namespace Multiscale {
+} // namespace Dune {

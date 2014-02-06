@@ -21,11 +21,6 @@ namespace Problem {
 
 namespace Fourteen {
 
-typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
-typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
-typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
-typedef CommonTraits::FunctionSpaceType::DomainFieldType TimeType;
-
 struct ModelProblemData : public IModelProblemData {
   static const bool has_exact_solution = true;
 

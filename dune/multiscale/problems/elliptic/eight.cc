@@ -47,10 +47,10 @@ void ExactSolution::jacobian(const ExactSolution::DomainType&,
   DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
 }
 
-void Diffusion::jacobianDiffusiveFlux(const Diffusion::DomainType& x,
-                                      const Diffusion::JacobianRangeType& position_gradient,
-                                      const Diffusion::JacobianRangeType& direction_gradient,
-                                      Diffusion::JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
+                                      const JacobianRangeType& position_gradient,
+                                      const JacobianRangeType& direction_gradient,
+                                      JacobianRangeType& flux) const {
   double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon);
 
   flux[0][0] = direction_gradient[0][0] * (1.0 + 3.0 * coefficient * pow(position_gradient[0][0], 2.0));
@@ -60,8 +60,8 @@ void Diffusion::jacobianDiffusiveFlux(const Diffusion::DomainType& x,
   flux[0][1] *= (-1.0);
 }
 
-void Diffusion::diffusiveFlux(const Diffusion::DomainType& x, const Diffusion::JacobianRangeType& gradient,
-                              Diffusion::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
+                              JacobianRangeType& flux) const {
   double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon);
 
   flux[0][0] = gradient[0][0] + (coefficient * pow(gradient[0][0], 3.0));
@@ -73,7 +73,7 @@ void Diffusion::diffusiveFlux(const Diffusion::DomainType& x, const Diffusion::J
   flux[0][1] *= (-1.0);
 }
 
-double Diffusion::additivePart(const Diffusion::DomainType& x, const int i, const int j) const {
+double Diffusion::additivePart(const DomainType& x, const int i, const int j) const {
   double y = 0.0;
 
   y -= (x[0] + x[1]) * cos(2.0 * M_PI * x[i] / constants().epsilon) * sin(2.0 * M_PI * x[j] / constants().epsilon);

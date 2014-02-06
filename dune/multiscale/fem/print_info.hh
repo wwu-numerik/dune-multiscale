@@ -15,49 +15,6 @@ namespace FEM {
 void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out);
 void write_discrete_function(CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix);
 
-template <class DiscreteFunctionType>
-void boundaryTreatment(DiscreteFunctionType& rhs) {
-  using namespace Dune::Stuff;
-  const auto& discreteFunctionSpace = rhs.space();
-  static constexpr unsigned int faceCodim = 1;
-  for (const auto& entity : discreteFunctionSpace) {
-    for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
-      if (!intersection.boundary())
-        continue;
-      if (intersection.boundary() && (intersection.boundaryId() != 1))
-        continue;
-
-      auto rhsLocal = rhs.localFunction(entity);
-      const auto face = intersection.indexInInside();
-      for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
-        rhsLocal[loc_point] = 0;
-    }
-  }
-} // boundaryTreatment
-
-//! set the dirichlet points to the Dirichlet BC
-template <class DirichletBC, class DiscreteFunctionType>
-void setDirichletValues(DirichletBC& dirichlet_func, DiscreteFunctionType& func) {
-  using namespace Dune::Stuff;
-  const auto& discreteFunctionSpace = func.space();
-  static constexpr unsigned int faceCodim = 1;
-  for (const auto& entity : discreteFunctionSpace) {
-    for (const auto& intersection : DSC::intersectionRange(discreteFunctionSpace.gridPart(), entity)) {
-      if (DMP::is_dirichlet(intersection)) {
-        auto funcLocal = func.localFunction(entity);
-        const auto face = intersection.indexInInside();
-        for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
-          const auto& global_point =
-              entity.geometry().global(discreteFunctionSpace.lagrangePointSet(entity).point(loc_point));
-          CommonTraits::RangeType dirichlet_value(0.0);
-          dirichlet_func.evaluate(global_point, dirichlet_value);
-          funcLocal[loc_point] = dirichlet_value;
-        }
-      }
-    }
-  }
-} // setDirichletValues
-
 } // namespace FEM {
 } // namespace Multiscale {
 } // namespace Dune {
