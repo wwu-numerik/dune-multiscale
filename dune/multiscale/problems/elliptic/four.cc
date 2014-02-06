@@ -35,14 +35,9 @@ bool ModelProblemData::problemAllowsStochastics() const {
   return true; // = problem allows stochastic perturbations
 }
 
-} // namespace Four
-} // namespace Problem
-} // namespace Multiscale {
-} // namespace Dune {
-
-void Dune::Multiscale::Problem::Four::FirstSource::evaluate(
-    const Dune::Multiscale::Problem::Four::FirstSource::DomainType& x,
-    Dune::Multiscale::Problem::Four::FirstSource::RangeType& y) const {
+void FirstSource::evaluate(
+    const FirstSource::DomainType& x,
+    FirstSource::RangeType& y) const {
 
   // circle of radius 0.2 around the reentrant corner at (0.5,0.5)
   double distance = sqrt(pow(x[0] - 0.5, 2.0) + pow(x[1] - 0.5, 2.0));
@@ -54,16 +49,16 @@ void Dune::Multiscale::Problem::Four::FirstSource::evaluate(
   }
 }
 
-void Dune::Multiscale::Problem::Four::FirstSource::evaluate(
-    const Dune::Multiscale::Problem::Four::FirstSource::DomainType& x, const Dune::Multiscale::Problem::Four::TimeType&,
-    Dune::Multiscale::Problem::Four::FirstSource::RangeType& y) const {
+void FirstSource::evaluate(
+    const FirstSource::DomainType& x, const TimeType&,
+    FirstSource::RangeType& y) const {
   evaluate(x, y);
 }
 
-void Dune::Multiscale::Problem::Four::Diffusion::diffusiveFlux(
-    const Dune::Multiscale::Problem::Four::Diffusion::DomainType& x,
-    const Dune::Multiscale::Problem::Four::Diffusion::JacobianRangeType& gradient,
-    Dune::Multiscale::Problem::Four::Diffusion::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(
+    const DomainType& x,
+    const JacobianRangeType& gradient,
+    JacobianRangeType& flux) const {
 
   // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
   // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
@@ -73,11 +68,11 @@ void Dune::Multiscale::Problem::Four::Diffusion::diffusiveFlux(
   flux[0][1] = coeff.second * gradient[0][1];
 }
 
-void Dune::Multiscale::Problem::Four::Diffusion::jacobianDiffusiveFlux(
-    const Dune::Multiscale::Problem::Four::Diffusion::DomainType& x,
-    const Dune::Multiscale::Problem::Four::Diffusion::JacobianRangeType&,
-    const Dune::Multiscale::Problem::Four::Diffusion::JacobianRangeType& direction_gradient,
-    Dune::Multiscale::Problem::Four::Diffusion::JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(
+    const DomainType& x,
+    const JacobianRangeType&,
+    const JacobianRangeType& direction_gradient,
+    JacobianRangeType& flux) const {
 
   // coeff.first = ( 0.1 + ( 1.0 * pow(cos( 2.0 * M_PI * (x[0] / epsilon) ), 2.0) ) ) + stochastic perturbation
   // coeff.second = ( 0.1 + 1e-3 + ( 0.1 * sin( 2.0 * M_PI * (x[1] / epsilon) ) ) ) + stochastic perturbation
@@ -87,20 +82,25 @@ void Dune::Multiscale::Problem::Four::Diffusion::jacobianDiffusiveFlux(
   flux[0][1] = coeff.second * direction_gradient[0][1];
 }
 
-void Dune::Multiscale::Problem::Four::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Four::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Four::ExactSolution::RangeType&) const {
+void ExactSolution::evaluate(
+    const ExactSolution::DomainType&,
+    ExactSolution::RangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void Dune::Multiscale::Problem::Four::ExactSolution::jacobian(
-    const Dune::Multiscale::Problem::Four::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Four::ExactSolution::JacobianRangeType&) const {
+void ExactSolution::jacobian(
+    const ExactSolution::DomainType&,
+    ExactSolution::JacobianRangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void Dune::Multiscale::Problem::Four::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Four::ExactSolution::DomainType& x, const TimeType&,
-    Dune::Multiscale::Problem::Four::ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(
+    const ExactSolution::DomainType& x, const TimeType&,
+    ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
+
+} // namespace Four
+} // namespace Problem
+} // namespace Multiscale {
+} // namespace Dune {

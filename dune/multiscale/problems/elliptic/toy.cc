@@ -54,36 +54,36 @@ void FirstSource::evaluate(const DomainType& x, RangeType& y) const {
   y -= a_1_x_1 * d_yy_u;
 }
 
-} // namespace Toy
-} // namespace Problem
-} // namespace Multiscale {
-} // namespace Dune {
-
-void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType& x,
-    Dune::Multiscale::Problem::Toy::ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(
+    const ExactSolution::DomainType& x,
+    ExactSolution::RangeType& y) const {
   y = x[0] * (1.0 - x[0]) * (1.0 - x[1]) * x[1];
 }
 
-void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType& x, const TimeType&,
-    Dune::Multiscale::Problem::Toy::ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(
+    const ExactSolution::DomainType& x, const TimeType&,
+    ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
 
-void Dune::Multiscale::Problem::Toy::ExactSolution::jacobian(
-    const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType& x,
-    Dune::Multiscale::Problem::Toy::ExactSolution::JacobianRangeType& grad_u) const {
+void ExactSolution::jacobian(
+    const ExactSolution::DomainType& x,
+    ExactSolution::JacobianRangeType& grad_u) const {
   grad_u[0][0] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
   grad_u[0][1] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
 }
 
-void Dune::Multiscale::Problem::Toy::Diffusion::diffusiveFlux(
-    const Dune::Multiscale::Problem::Toy::Diffusion::DomainType& x,
-    const Dune::Multiscale::Problem::Toy::Diffusion::JacobianRangeType& gradient,
-    Dune::Multiscale::Problem::Toy::Diffusion::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(
+    const DomainType& x,
+    const JacobianRangeType& gradient,
+    JacobianRangeType& flux) const {
   double a_0 = 1.0 + pow(x[0], 2.0);
 
   flux[0][0] = a_0 * gradient[0][0];
   flux[0][1] = a_0 * gradient[0][1];
 }
+
+} // namespace Toy
+} // namespace Problem
+} // namespace Multiscale {
+} // namespace Dune {

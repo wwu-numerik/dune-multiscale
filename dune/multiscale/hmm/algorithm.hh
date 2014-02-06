@@ -21,12 +21,9 @@ bool adapt(const HMMResult& result, const int loop_cycle, const double error_tol
 
 //! the main hmm computation
 void
-algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid pointer that belongs to the macro grid
-          typename CommonTraits::GridPointerType& fine_macro_grid_pointer, // grid pointer that belongs to the fine
-                                                                           // macro grid (for
-                                                                           // reference computations)
-          typename CommonTraits::GridPointerType& periodic_grid_pointer,   // grid pointer that belongs to the periodic
-                                                                           // micro grid
+algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer,
+          typename CommonTraits::GridPointerType& fine_macro_grid_pointer,
+          typename CommonTraits::GridPointerType& periodic_grid_pointer,
           const std::string filename);
 
 } // namespace HMM {

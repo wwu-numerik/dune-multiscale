@@ -96,11 +96,6 @@ namespace Multiscale {
 namespace Problem {
 namespace Example {
 
-typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
-typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
-typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
-typedef CommonTraits::FunctionSpaceType::DomainFieldType TimeType;
-
 //! model problem information
 struct ModelProblemData : public Dune::Multiscale::Problem::IModelProblemData {
   //! is there an exact solution available? true/false

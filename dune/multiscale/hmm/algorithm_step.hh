@@ -32,9 +32,6 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
                       CommonTraits::DiscreteFunction_ptr& hmm_solution,
                       const typename CommonTraits::DiscreteFunctionType& reference_solution, const int loop_cycle);
 
-//! The rhs-assemble()-methods for non-linear elliptic problems, solved with the heterogenous multiscale method
-// ( requires reconstruction of old_u_H and local fine scale averages )
-
 /**
  * old_u_H from the last iteration step to obtain some information about the
  * periodic discrete function space (space for the cell problems)

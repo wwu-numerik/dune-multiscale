@@ -275,7 +275,12 @@ void DiscreteEllipticOperator::assemble_jacobian_matrix(
 global_matrix.communicate();
 } // assemble_jacobian_matrix
 
-void SMPDiscreteEllipticOperator::assemble_matrix(MatrixType& global_matrix) const {
+void SMPDiscreteEllipticOperator::assemble_matrix(CommonTraits::LinearOperatorType &global_matrix) const {
+  typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
+  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
+  typedef typename DiscreteFunctionSpace::RangeType RangeType;
+  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
+
   //!TODO diagonal stencil would be enough
   DSFe::reserve_matrix(global_matrix);
   global_matrix.clear();
@@ -326,7 +331,7 @@ void SMPDiscreteEllipticOperator::assemble_matrix(MatrixType& global_matrix) con
 
   // set unit rows for dirichlet dofs
   const auto boundary = Problem::getModelData()->boundaryInfo();
-  DirichletConstraints<DiscreteFunctionImp> constraints(*boundary, discreteFunctionSpace_);
+  DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(*boundary, discreteFunctionSpace_);
   constraints.applyToOperator(global_matrix);
 
   global_matrix.communicate();

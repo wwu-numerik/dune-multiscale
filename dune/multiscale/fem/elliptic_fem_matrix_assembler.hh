@@ -80,37 +80,24 @@ private:
 
 //! \TODO docme
 class SMPDiscreteEllipticOperator : public boost::noncopyable {
-  typedef CommonTraits::DiscreteFunctionType DiscreteFunctionImp;
-  typedef CommonTraits::DiffusionType DiffusionImp;
   typedef CommonTraits::LinearOperatorType MatrixType;
-  typedef DiscreteFunctionImp DiscreteFunction;
-
-  typedef typename DiscreteFunction::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
-  typedef typename DiscreteFunctionSpace::GridPartType GridPart;
-  typedef typename GridPart::GridType Grid;
-  typedef typename DiscreteFunctionSpace::RangeFieldType RangeFieldType;
-
-  typedef typename DiscreteFunctionSpace::DomainType DomainType;
-  typedef typename DiscreteFunctionSpace::RangeType RangeType;
-
-  static const int dimension = GridPart::GridType::dimension;
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
+  typedef CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
 
 public:
   /**
    * \param lower_order_term Operator assumes ownership of it
    **/
-  SMPDiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace, const DiffusionImp& diffusion_op)
+  SMPDiscreteEllipticOperator(const DiscreteFunctionSpace& discreteFunctionSpace,
+                              const CommonTraits::DiffusionType& diffusion_op)
     : discreteFunctionSpace_(discreteFunctionSpace)
     , diffusion_operator_(diffusion_op) {}
 
 public:
-  void assemble_matrix(MatrixType& global_matrix) const;
+  void assemble_matrix(CommonTraits::LinearOperatorType& global_matrix) const;
 
 private:
   const DiscreteFunctionSpace& discreteFunctionSpace_;
-  const DiffusionImp& diffusion_operator_;
+  const CommonTraits::DiffusionType& diffusion_operator_;
 };
 
 } // namespace FEM {
