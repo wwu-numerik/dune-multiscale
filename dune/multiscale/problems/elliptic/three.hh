@@ -7,7 +7,7 @@
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/base.hh>
-#include <dune/multiscale/problems/constants.hh>
+
 #include <string>
 
 #include "dune/multiscale/common/traits.hh"
@@ -23,6 +23,10 @@ namespace Problem {
 
 namespace Three {
 
+typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
+typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
+typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
+typedef CommonTraits::FunctionSpaceType::DomainFieldType TimeType;
 
 struct ModelProblemData : public IModelProblemData {
   static const bool has_exact_solution = false;
@@ -37,81 +41,20 @@ struct ModelProblemData : public IModelProblemData {
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-private:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
 public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
-public:
-  FirstSource() {}
-
-  void evaluate(const DomainType& x, RangeType& y) const {
-    if (x[1] >= 0.1) {
-      y = 1.0;
-    } else {
-      y = 0.1;
-    }
-  }
-
+  void evaluate(const DomainType& x, RangeType& y) const;
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 };
 
-MSNULLFUNCTION(SecondSource)
-
 class Diffusion : public DiffusionBase {
 public:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
-public:
-  Diffusion() {}
-
   void diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
                      JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& position_gradient,
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
-class LowerOrderTerm : public ZeroLowerOrder {};
-
-MSCONSTANTFUNCTION(MassTerm, 0.0)
-MSNULLFUNCTION(DirichletBoundaryCondition)
-MSNULLFUNCTION(NeumannBoundaryCondition)
-MSNULLFUNCTION(DefaultDummyFunction)
-
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-public:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
 public:
   void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const;
   void jacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
@@ -120,6 +63,13 @@ public:
 
 class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
+class LowerOrderTerm : public ZeroLowerOrder {};
+
+MSCONSTANTFUNCTION(MassTerm, 0.0)
+MSNULLFUNCTION(DirichletBoundaryCondition)
+MSNULLFUNCTION(NeumannBoundaryCondition)
+MSNULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(SecondSource)
 
 } //! @} namespace Three {
 }

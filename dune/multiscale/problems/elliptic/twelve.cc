@@ -27,7 +27,7 @@ std::string ModelProblemData::getMacroGridFile() const {
 }
 
 bool ModelProblemData::problemIsPeriodic() const {
-  return false; // = problem is periodic
+  return false;
 }
 
 bool ModelProblemData::problemAllowsStochastics() const {
@@ -36,8 +36,8 @@ bool ModelProblemData::problemAllowsStochastics() const {
                 // by 'constants.hh' - see model problems 4 to 7 for examples )
 }
 
-// evaluate f, i.e. return y=f(x) for a given x
-// the following method defines 'f':
+
+
 void FirstSource::evaluate(const DomainType& x, RangeType& y) const {
 
   double center = 0.5; // i.e. 'center = (center,center)'
@@ -199,7 +199,7 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeTy
   flux[0][1] = a_1_0 * direction_gradient[0][0] + a_1_1 * direction_gradient[0][1];
 } // jacobianDiffusiveFlux
 
-// evaluate Dirichlet Boundary Function
+
 void DirichletBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const { y = x[0]; } // evaluate
 
 void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
@@ -220,7 +220,7 @@ void Dune::Multiscale::Problem::Twelve::ExactSolution::jacobian(
 
 void Dune::Multiscale::Problem::Twelve::ExactSolution::evaluate(
     const Dune::Multiscale::Problem::Twelve::ExactSolution::DomainType& x,
-    const Dune::Multiscale::Problem::Twelve::ExactSolution::TimeType&,
+    const TimeType&,
     Dune::Multiscale::Problem::Twelve::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

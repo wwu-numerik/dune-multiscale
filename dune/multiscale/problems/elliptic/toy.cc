@@ -35,6 +35,29 @@ bool ModelProblemData::problemAllowsStochastics() const {
                 // by 'constants.hh' - see model problems 4 to 7 for examples )
 }
 
+void FirstSource::evaluate(const DomainType &x, RangeType &y) const {
+  double a_0_x_0 = 1.0 + pow(x[0], 2.0);
+  double a_1_x_1 = 1.0 + pow(x[0], 2.0);
+
+  double grad_a_0_x_0 = 2.0 * x[0];
+  double grad_a_1_x_1 = 0.0;
+
+  typename FunctionSpaceType::JacobianRangeType grad_u(0.0);
+
+  grad_u[0][0] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
+  grad_u[0][1] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
+
+  const typename FunctionSpaceType::RangeType d_xx_u = (-2.0) * (1.0 - x[1]) * x[1];
+  const typename FunctionSpaceType::RangeType d_yy_u = (-2.0) * (1.0 - x[0]) * x[0];
+
+  y = 0.0;
+  y -= grad_a_0_x_0 * grad_u[0][0];
+  y -= a_0_x_0 * d_xx_u;
+
+  y -= grad_a_1_x_1 * grad_u[0][1];
+  y -= a_1_x_1 * d_yy_u;
+}
+
 } // namespace Toy
 } // namespace Problem
 } // namespace Multiscale {
@@ -48,7 +71,7 @@ void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(
 
 void Dune::Multiscale::Problem::Toy::ExactSolution::evaluate(
     const Dune::Multiscale::Problem::Toy::ExactSolution::DomainType& x,
-    const Dune::Multiscale::Problem::Toy::ExactSolution::TimeType&,
+    const TimeType&,
     Dune::Multiscale::Problem::Toy::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

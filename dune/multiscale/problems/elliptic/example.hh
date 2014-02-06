@@ -8,7 +8,7 @@
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/problems/base.hh>
-#include <dune/multiscale/problems/constants.hh>
+
 #include <math.h>
 #include <string>
 
@@ -96,6 +96,11 @@ namespace Multiscale {
 namespace Problem {
 namespace Example {
 
+typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
+typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
+typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
+typedef CommonTraits::FunctionSpaceType::DomainFieldType TimeType;
+
 //! model problem information
 struct ModelProblemData : public Dune::Multiscale::Problem::IModelProblemData {
   //! is there an exact solution available? true/false
@@ -123,22 +128,6 @@ struct ModelProblemData : public Dune::Multiscale::Problem::IModelProblemData {
  is part from. (f \in FunctionSpace)
 */
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-private:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  static const int dimDomain = DomainType::dimension;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
 public:
   //! evaluate f, i.e. return y=f(x) for a given x
   //! the following method defines 'f':
@@ -153,21 +142,6 @@ MSNULLFUNCTION(SecondSource)
 //! A : \Omega × R² -> R²
 class Diffusion : public DiffusionBase {
 public:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-
-public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
-
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
-public:
-  Diffusion() {}
-
   //! in the linear setting, we have the structure
   //! A(x,\xi) = ( A_1(x,\xi), A_2(x,\xi) ) with
   //!              A_i(x,\xi) ) = A_{i1}(x) \xi_1 + A_{i2}(x) \xi_2
@@ -195,24 +169,12 @@ class LowerOrderTerm
     {
 
 public:
-
-  LowerOrderTerm(/*double scaling_factor = 1.0*/) {} // : scaling_factor_( scaling_factor ) {}
-
-  template <class DomainType, class RangeType>
   void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const {}
-
-  template <class DomainType, class TimeType, class RangeType>
   void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& /*y*/) const {}
-
-  template <class DomainType, class RangeType, class JacobianRangeType>
   void evaluate(const DomainType& /*x*/, const RangeType& /*position*/, const JacobianRangeType& /*direction_gradient*/,
                 RangeType& /*y*/) const {}
-
-  template <class DomainType, class RangeType, class JacobianRangeType>
   void position_derivative(const DomainType& /*x*/, const RangeType& /*position*/,
                            const JacobianRangeType& /*direction_gradient*/, RangeType& /*y*/) const {}
-
-  template <class DomainType, class RangeType, class JacobianRangeType>
   void direction_derivative(const DomainType& /*x*/, const RangeType& /*position*/,
                             const JacobianRangeType& /*direction_gradient*/, JacobianRangeType& /*y*/) const {}
 };
@@ -231,26 +193,26 @@ MSNULLFUNCTION(DefaultDummyFunction)
 //! Exact solution (typically it is unknown)
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+
 
 public:
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
 
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-  typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
+
+
+
+
+
 
   //! essentially: 'DomainFieldType' is the type of an entry of a domain-element.
   //! But: it is also used if 'u' (the exact solution) has a time-dependency ('u = u(x,t)').
-  //! This makes sense since the time-dependency is a one-dimensional element of the 'DomainType' and is therefor also
+  //! This makes sense since the time-dependency is a one-dimensional element of the 'typename FunctionSpaceType::DomainType' and is therefor also
   // an
   //! entry of a domain-element.
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
+
 
 public:
-  ExactSolution() {}
+
 
   //! evaluate 'u(x)'
   void evaluate(const DomainType& x, RangeType& y) const; // evaluate
@@ -274,7 +236,7 @@ public:
 // Dune::Multiscale::CommonTraits::FunctionSpaceType, FieldMatrixImp > >
 //{
 // public:
-//  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
+//
 //  typedef FieldMatrixImp   FieldMatrixType;
 
 // private:
@@ -282,14 +244,14 @@ public:
 //  typedef Dune::Fem::Function< FunctionSpaceType, ThisType > BaseType;
 
 // public:
-//  typedef typename FunctionSpaceType::DomainType        DomainType;
-//  typedef typename FunctionSpaceType::RangeType         RangeType;
-//  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
+//  typedef CommonTraits::FunctionSpaceType::typename FunctionSpaceType::DomainType        typename FunctionSpaceType::DomainType;
+//  typedef CommonTraits::FunctionSpaceType::typename FunctionSpaceType::RangeType         typename FunctionSpaceType::RangeType;
+//
 
-//  typedef typename FunctionSpaceType::DomainFieldType DomainFieldType;
-//  typedef typename FunctionSpaceType::RangeFieldType  RangeFieldType;
+//
+//  typedef CommonTraits::FunctionSpaceType::RangeFieldType  RangeFieldType;
 
-//  typedef typename FunctionSpaceType::DomainFieldType TimeType;
+//
 
 // public:
 //  const FieldMatrixType& A_hom_;

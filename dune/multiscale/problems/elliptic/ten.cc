@@ -166,7 +166,7 @@ void Dune::Multiscale::Problem::Ten::ExactSolution::jacobian(
 
 void Dune::Multiscale::Problem::Ten::ExactSolution::evaluate(
     const Dune::Multiscale::Problem::Ten::ExactSolution::DomainType& x,
-    const Dune::Multiscale::Problem::Ten::ExactSolution::TimeType&,
+    const TimeType&,
     Dune::Multiscale::Problem::Ten::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }

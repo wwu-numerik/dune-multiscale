@@ -7,7 +7,7 @@
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/base.hh>
-#include <dune/multiscale/problems/constants.hh>
+
 #include <memory>
 #include <string>
 
@@ -22,6 +22,11 @@ namespace Problem {
 
 namespace Nine {
 
+typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
+typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
+typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
+typedef CommonTraits::FunctionSpaceType::DomainFieldType TimeType;
+
 struct ModelProblemData : public IModelProblemData {
   virtual bool hasExactSolution() const { return true; }
 
@@ -35,11 +40,6 @@ struct ModelProblemData : public IModelProblemData {
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
 public:
   FirstSource();
 
@@ -48,11 +48,6 @@ public:
 };
 
 class Diffusion : public DiffusionBase {
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-
 public:
   Diffusion();
 
@@ -62,27 +57,14 @@ public:
 };
 
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
 public:
   ExactSolution();
 
   void evaluate(const DomainType& x, RangeType& y) const;
-  void jacobian(const DomainType& x, typename FunctionSpaceType::JacobianRangeType& grad_u) const;
-  void evaluate(const DomainType& x, const TimeType&, RangeType& y) const;
+  void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
 };
 
 class DirichletData : public DirichletDataBase {
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
 public:
   DirichletData() {}
 
@@ -93,11 +75,6 @@ public:
 };
 
 class NeumannData : public NeumannDataBase {
-  typedef Dune::Multiscale::CommonTraits::FunctionSpaceType FunctionSpaceType;
-  typedef typename FunctionSpaceType::DomainType DomainType;
-  typedef typename FunctionSpaceType::RangeType RangeType;
-  typedef typename FunctionSpaceType::DomainFieldType TimeType;
-
 public:
   NeumannData() {}
 

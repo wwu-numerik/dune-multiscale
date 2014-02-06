@@ -26,7 +26,7 @@ std::string ModelProblemData::getMacroGridFile() const {
 }
 
 bool ModelProblemData::problemIsPeriodic() const {
-  return false; // = problem is periodic
+  return false;
 }
 
 bool ModelProblemData::problemAllowsStochastics() const {
@@ -35,8 +35,8 @@ bool ModelProblemData::problemAllowsStochastics() const {
                 // by 'constants.hh' - see model problems 4 to 7 for examples )
 }
 
-// evaluate f, i.e. return y=f(x) for a given x
-// the following method defines 'f':
+
+
 void FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
@@ -204,7 +204,7 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeTy
   flux[0][1] = a_1_0 * direction_gradient[0][0] + a_1_1 * direction_gradient[0][1];
 } // jacobianDiffusiveFlux
 
-// evaluate Dirichlet Boundary Function
+
 void DirichletBoundaryCondition::evaluate(const DomainType& /*x*/, RangeType& y) const {
   y = 0.0; // 0.5 * exp( 1.0 - x[0] );
 
@@ -214,9 +214,6 @@ void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /
   evaluate(x, y);
 }
 
-// evaluate Neumann Boundary Function 'q'
-// q = A( \nabla u ) \cdot n    (on the Neumann boundary)
-// ( A denotes the above diffusion operator and can be nonlinear )
 void NeumannBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const {
 
   double conductor_thickness = 0.05;
@@ -251,7 +248,7 @@ void Dune::Multiscale::Problem::Thirteen::ExactSolution::jacobian(
 
 void Dune::Multiscale::Problem::Thirteen::ExactSolution::evaluate(
     const Dune::Multiscale::Problem::Thirteen::ExactSolution::DomainType& x,
-    const Dune::Multiscale::Problem::Thirteen::ExactSolution::TimeType&,
+    const TimeType&,
     Dune::Multiscale::Problem::Thirteen::ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
