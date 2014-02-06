@@ -34,10 +34,7 @@ bool ModelProblemData::problemIsPeriodic() const {
 
 bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
-void Diffusion::diffusiveFlux(
-    const DomainType& x,
-    const JacobianRangeType& gradient,
-    JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient, JacobianRangeType& flux) const {
 
   const auto diffusion_coefficient = 2.0 + sin(2.0 * M_PI * (x[0] / constants().epsilon));
 
@@ -45,11 +42,8 @@ void Diffusion::diffusiveFlux(
   flux[0][1] = diffusion_coefficient * gradient[0][1];
 }
 
-void Diffusion::jacobianDiffusiveFlux(
-    const DomainType& x,
-    const JacobianRangeType&,
-    const JacobianRangeType& direction_gradient,
-    JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType&,
+                                      const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const {
 
   const auto diffusion_coefficient = 2.0 + sin(2.0 * M_PI * (x[0] / constants().epsilon));
 
@@ -57,21 +51,15 @@ void Diffusion::jacobianDiffusiveFlux(
   flux[0][1] = diffusion_coefficient * direction_gradient[0][1];
 }
 
-void ExactSolution::evaluate(
-    const ExactSolution::DomainType&,
-    ExactSolution::RangeType&) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType&, ExactSolution::RangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void ExactSolution::jacobian(
-    const ExactSolution::DomainType&,
-    ExactSolution::JacobianRangeType&) const {
+void ExactSolution::jacobian(const ExactSolution::DomainType&, ExactSolution::JacobianRangeType&) const {
   DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
 }
 
-void ExactSolution::evaluate(
-    const ExactSolution::DomainType& x, const TimeType&,
-    ExactSolution::RangeType& y) const {
+void ExactSolution::evaluate(const ExactSolution::DomainType& x, const TimeType&, ExactSolution::RangeType& y) const {
   evaluate(x, y);
 }
 

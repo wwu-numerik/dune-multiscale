@@ -47,10 +47,8 @@ void ExactSolution::jacobian(const ExactSolution::DomainType&,
   DUNE_THROW(Dune::NotImplemented, "Dummy body for all-problem compile");
 }
 
-void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
-                                      const JacobianRangeType& position_gradient,
-                                      const JacobianRangeType& direction_gradient,
-                                      JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& position_gradient,
+                                      const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const {
   double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon);
 
   flux[0][0] = direction_gradient[0][0] * (1.0 + 3.0 * coefficient * pow(position_gradient[0][0], 2.0));
@@ -60,8 +58,7 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
   flux[0][1] *= (-1.0);
 }
 
-void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient,
-                              JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient, JacobianRangeType& flux) const {
   double coefficient = 2.0 + sin(2.0 * M_PI * (x[0] + x[1]) / constants().epsilon);
 
   flux[0][0] = gradient[0][0] + (coefficient * pow(gradient[0][0], 3.0));

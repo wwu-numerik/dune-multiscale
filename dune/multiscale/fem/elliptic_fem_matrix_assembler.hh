@@ -19,8 +19,9 @@ namespace FEM {
 
 //! \TODO docme
 class DiscreteEllipticOperator
-    : public Operator<CommonTraits::DiscreteFunctionType::RangeFieldType, CommonTraits::DiscreteFunctionType::RangeFieldType,
-                      CommonTraits::DiscreteFunctionType, CommonTraits::DiscreteFunctionType>,
+    : public Operator<CommonTraits::DiscreteFunctionType::RangeFieldType,
+                      CommonTraits::DiscreteFunctionType::RangeFieldType, CommonTraits::DiscreteFunctionType,
+                      CommonTraits::DiscreteFunctionType>,
       boost::noncopyable {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionImp;
   typedef CommonTraits::DiffusionType DiffusionImp;

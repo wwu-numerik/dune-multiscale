@@ -20,7 +20,7 @@ getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space) {
 }
 
 DirichletConstraints<CommonTraits::DiscreteFunctionType>&
-getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType &space) {
+getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space) {
   // set dirichlet dofs to zero
   static const auto boundary = Problem::getModelData()->boundaryInfo();
   static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(*boundary, space);
@@ -28,21 +28,23 @@ getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType &space) {
 }
 
 template <class DF>
-DirichletConstraints<DF>::DirichletConstraints(const DirichletConstraints::BoundaryType &boundary, const DirichletConstraints::DomainSpaceType &domain_space)
+DirichletConstraints<DF>::DirichletConstraints(const DirichletConstraints::BoundaryType& boundary,
+                                               const DirichletConstraints::DomainSpaceType& domain_space)
   : boundary_(boundary)
   , domain_space_(domain_space)
   , dirichletBlocks_()
   , hasDirichletDofs_(false)
-  , sequence_(-1)
-{}
+  , sequence_(-1) {}
 
 template <class DF>
-void DirichletConstraints<DF>::operator()(const DirichletConstraints::GridFunctionType &u, DirichletConstraints::DiscreteFunctionType &w) const {
+void DirichletConstraints<DF>::operator()(const DirichletConstraints::GridFunctionType& u,
+                                          DirichletConstraints::DiscreteFunctionType& w) const {
   apply(u, w);
 }
 
 template <class DF>
-void DirichletConstraints<DF>::setValue(const typename DiscreteFunctionType::RangeFieldType val, DiscreteFunctionType &w) const {
+void DirichletConstraints<DF>::setValue(const typename DiscreteFunctionType::RangeFieldType val,
+                                        DiscreteFunctionType& w) const {
   updateDirichletDofs();
 
   // if Dirichlet Dofs have been found, treat them
@@ -69,7 +71,7 @@ void DirichletConstraints<DF>::setValue(const typename DiscreteFunctionType::Ran
 }
 
 template <class DF>
-void DirichletConstraints<DF>::applyToOperator(DirichletConstraints::LinearOperatorType &linearOperator) const {
+void DirichletConstraints<DF>::applyToOperator(DirichletConstraints::LinearOperatorType& linearOperator) const {
   updateDirichletDofs();
   // if Dirichlet Dofs have been found, treat them
   if (hasDirichletDofs_) {
@@ -82,7 +84,7 @@ void DirichletConstraints<DF>::applyToOperator(DirichletConstraints::LinearOpera
 }
 
 template <class DF>
-void DirichletConstraints<DF>::apply(const DirichletConstraints::GridFunctionType &u, DiscreteFunctionType &w) const {
+void DirichletConstraints<DF>::apply(const DirichletConstraints::GridFunctionType& u, DiscreteFunctionType& w) const {
   updateDirichletDofs();
   // if Dirichlet Dofs have been found, treat them
   if (hasDirichletDofs_) {
@@ -93,7 +95,8 @@ void DirichletConstraints<DF>::apply(const DirichletConstraints::GridFunctionTyp
 }
 
 template <class DF>
-void DirichletConstraints<DF>::dirichletDofsCorrectOnEntity(DirichletConstraints::LinearOperatorType &linearOperator, const EntityType &entity) const {
+void DirichletConstraints<DF>::dirichletDofsCorrectOnEntity(DirichletConstraints::LinearOperatorType& linearOperator,
+                                                            const EntityType& entity) const {
   const auto& lagrangePointSet = domain_space_.lagrangePointSet(entity);
   auto localMatrix = linearOperator.localMatrix(entity, entity);
 
@@ -129,7 +132,9 @@ void DirichletConstraints<DF>::dirichletDofsCorrectOnEntity(DirichletConstraints
 }
 
 template <class DF>
-void DirichletConstraints<DF>::dirichletDofTreatment(const EntityType &entity, const DirichletConstraints::GridFunctionType &u, DiscreteFunctionType &w) const {
+void DirichletConstraints<DF>::dirichletDofTreatment(const EntityType& entity,
+                                                     const DirichletConstraints::GridFunctionType& u,
+                                                     DiscreteFunctionType& w) const {
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteSpaceType;
 
   auto wLocal = w.localFunction(entity);
@@ -195,7 +200,8 @@ void DirichletConstraints<DF>::updateDirichletDofs() const {
 }
 
 template <class DF>
-bool DirichletConstraints<DF>::searchEntityDirichletDofs(const EntityType &entity, const DirichletConstraints::BoundaryType &) const {
+bool DirichletConstraints<DF>::searchEntityDirichletDofs(const EntityType& entity,
+                                                         const DirichletConstraints::BoundaryType&) const {
   const auto& gridPart = domain_space_.gridPart();
   bool hasDirichletBoundary = false;
   const auto& lagrangePointSet = domain_space_.lagrangePointSet(entity);
@@ -227,7 +233,7 @@ bool DirichletConstraints<DF>::searchEntityDirichletDofs(const EntityType &entit
 }
 
 template <class DF>
-void DirichletConstraints<DF>::operator()(const DiscreteFunctionType &u, DiscreteFunctionType &w) const {
+void DirichletConstraints<DF>::operator()(const DiscreteFunctionType& u, DiscreteFunctionType& w) const {
   updateDirichletDofs();
 
   // if Dirichlet Dofs have been found, treat them
@@ -255,7 +261,7 @@ void DirichletConstraints<DF>::operator()(const DiscreteFunctionType &u, Discret
 }
 
 template class DirichletConstraints<CommonTraits::DiscreteFunctionType>;
-//template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
+// template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
 
 } // namespace Multiscale
 } // namespace Dune
