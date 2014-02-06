@@ -40,13 +40,6 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-/** \brief define output parameters for local problems
- *  appends "local_problems" for path
- **/
-struct LocalProblemDataOutputParameters : public OutputParameters {
-public:
-  explicit LocalProblemDataOutputParameters();
-};
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
 class LocalProblemSolver {
@@ -57,14 +50,14 @@ class LocalProblemSolver {
   typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
 
 public:
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorTypeType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
 
 private:
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType
   InverseOperatorType;
 
   static std::unique_ptr<InverseOperatorType>
-  make_inverse_operator(LinearOperatorTypeType& problem_matrix);
+  make_inverse_operator(LinearOperatorType& problem_matrix);
 
   const CommonTraits::DiffusionType& diffusion_;
   LocalGridList& subgrid_list_;
