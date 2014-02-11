@@ -67,8 +67,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       // get the coarse gradient on T, multiply it with the local correctors and sum it up.
       for (int spaceDimension = 0; spaceDimension < Dune::GridSelector::dimgrid; ++spaceDimension) {
         *localSolutions[spaceDimension] *= grad_coarse_msfem_on_entity[0][spaceDimension];
-        if (spaceDimension > 0)
-          local_correction += *localSolutions[spaceDimension];
+        local_correction += *localSolutions[spaceDimension];
       }
       BOOST_ASSERT_MSG(false, "no adding of the boundary correctors??");
     } else {
@@ -79,8 +78,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
           "The current implementation relies on having thesame types of elements on coarse and fine level!");
       for (int dof = 0; dof < coarseSolutionLF.numDofs(); ++dof) {
         *localSolutions[dof] *= coarseSolutionLF[dof];
-        if (dof > 0)
-          local_correction += *localSolutions[dof];
+        local_correction += *localSolutions[dof];
       }
 
       // oversampling : restrict the local correctors to the element T
