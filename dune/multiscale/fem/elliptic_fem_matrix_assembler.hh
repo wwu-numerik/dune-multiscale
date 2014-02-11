@@ -79,7 +79,7 @@ private:
   const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term_;
 };
 
-//! \TODO docme
+//! FEM operator with threaded matrix assembly
 class SMPDiscreteEllipticOperator : public boost::noncopyable {
   typedef CommonTraits::LinearOperatorType MatrixType;
   typedef CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
@@ -93,7 +93,6 @@ public:
     : discreteFunctionSpace_(discreteFunctionSpace)
     , diffusion_operator_(diffusion_op) {}
 
-public:
   void assemble_matrix(CommonTraits::LinearOperatorType& global_matrix) const;
 
 private:

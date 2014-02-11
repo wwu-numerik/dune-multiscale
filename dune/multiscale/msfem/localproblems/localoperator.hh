@@ -5,23 +5,6 @@
 #ifndef LOCALOPERATOR_HH
 #define LOCALOPERATOR_HH
 
-#include <dune/common/fmatrix.hh>
-#include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/fem/functions/checks.hh>
-#include <cstddef>
-#include <memory>
-#include <vector>
-
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
@@ -45,6 +28,7 @@ class LocalProblemOperator {
   typedef typename LocalGridDiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType EntityType;
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LocalLinearOperatorType;
 
   static const int dimension = GridPartType::GridType::dimension;
 
@@ -58,9 +42,6 @@ public:
                        const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
                        const DiffusionOperatorType& diffusion_op);
 
-  //! assemble stiffness matrix for local problems
-  void assemble_matrix(LocalProblemSolver::LinearOperatorType& global_matrix) const;
-
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
   * @param[in] coarseEntity The coarse cell.
@@ -72,16 +53,22 @@ public:
   void assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
                               MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
 
+  void apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
+                     MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
+private:
   /** Set the dirichlet values to a given discrete function on the sub mesh
   *
   * @param[in, out] function The function in which the values will be set.
   */
   void project_dirichlet_values(CommonTraits::DiscreteFunctionType& function) const;
 
-private:
+  //! assemble stiffness matrix for local problems
+  void assemble_matrix();
+
   const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
   const DiffusionOperatorType& diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
+  LocalLinearOperatorType system_matrix_;
 };
 
 } // namespace MsFEM {
