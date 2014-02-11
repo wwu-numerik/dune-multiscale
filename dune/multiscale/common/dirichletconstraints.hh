@@ -17,6 +17,8 @@
 namespace Dune {
 namespace Multiscale {
 
+/** explicitly instantiated in dirichletconstraints.cc for Coarse/Local DF types
+ **/
 template <class DiscreteFunctionImp>
 class DirichletConstraints {
 

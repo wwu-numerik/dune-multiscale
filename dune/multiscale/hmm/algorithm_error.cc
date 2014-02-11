@@ -186,7 +186,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
     result.min_variation = result.average_loc_indicator / result.minimal_loc_indicator;
   }
   return result;
-} //! -------- End Error Estimation --------
+}
 
 } // namespace HMM {
 } // namespace Multiscale {

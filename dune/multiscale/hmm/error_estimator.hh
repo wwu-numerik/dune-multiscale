@@ -15,10 +15,11 @@ namespace Dune {
 namespace Multiscale {
 namespace HMM {
 
-//! NOTE: das zweite Argument DiscreteFunctionImp sobald wie moeglich wieder loeschen. Alle 'Ableitungen' und Variablen
-//! von DiscreteFunctionImp ebenfalls loeschen und die zugehörigen von PeriodicDiscreteFunctionImp ersetzen. Aktuell ist
-//! es nur da, weil verschiedene Dinge wie der IntersectionIterator für das periodic Gridpart noch nicht implementiert
-//! sind.
+/** NOTE: das zweite Argument DiscreteFunctionImp sobald wie moeglich wieder loeschen. Alle 'Ableitungen' und Variablen
+ * von DiscreteFunctionImp ebenfalls loeschen und die zugehörigen von PeriodicDiscreteFunctionImp ersetzen. Aktuell ist
+ * es nur da, weil verschiedene Dinge wie der IntersectionIterator für das periodic Gridpart noch nicht implementiert
+ * sind.
+ **/
 template <class PeriodicDiscreteFunctionImp, class DiscreteFunctionImp, class DiffusionImp>
 class ErrorEstimator {
 private:

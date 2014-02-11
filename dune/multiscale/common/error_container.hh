@@ -7,6 +7,7 @@
 namespace Dune {
 namespace Multiscale {
 
+//! convenience struct for error keeping, eg used in our test suite
 struct ErrorContainer {
   ErrorContainer(std::size_t max_loop_number)
     : loc_coarse_residual_(max_loop_number)

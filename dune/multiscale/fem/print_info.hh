@@ -12,7 +12,9 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
+//! outputs Problem info to output stream
 void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out);
+//! write discrete function VTK Output
 void write_discrete_function(CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix);
 
 } // namespace FEM {

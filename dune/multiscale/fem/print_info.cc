@@ -17,14 +17,7 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-//! set the dirichlet points to zero
-
-//! write discrete function to a file + VTK Output
 void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix) {
-  // write the final (discrete) solution to a file
-  std::string solution_file = (boost::format("%s_refLevel_%d") % prefix % DSC_CONFIG_GET("fem.grid_level", 4)).str();
-  //  DiscreteFunctionIO<typename CommonTraits::DiscreteFunctionType>::disk(solution_file).append(discrete_solution);
-
   // writing paraview data output
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
@@ -56,7 +49,6 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   }
 }
 
-//! outputs Problem info to output stream
 void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out) {
   // epsilon is specified in the parameter file
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
