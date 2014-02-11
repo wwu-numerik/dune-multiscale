@@ -54,8 +54,6 @@ public:
 private:
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType InverseOperatorType;
 
-  static std::unique_ptr<InverseOperatorType> make_inverse_operator(LinearOperatorType& problem_matrix);
-
   const CommonTraits::DiffusionType& diffusion_;
   LocalGridList& subgrid_list_;
   const CommonTraits::DiscreteFunctionSpaceType& coarse_space_;
@@ -68,6 +66,7 @@ public:
                      const CommonTraits::DiffusionType& diffusion_operator);
 
 private:
+  //! Solve all local MsFEM problems for one coarse entity at once.
   void solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
                                 MsFEMTraits::LocalSolutionVectorType& allLocalSolutions) const;
 

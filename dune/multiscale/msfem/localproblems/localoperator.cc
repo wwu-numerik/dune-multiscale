@@ -16,6 +16,17 @@
 #include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
+#include <dune/common/fmatrix.hh>
+#include <dune/fem/gridpart/common/gridpart.hh>
+#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
+#include <dune/fem/operator/common/operator.hh>
+#include <dune/fem/operator/matrix/spmatrix.hh>
+#include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
+#include <dune/stuff/common/filesystem.hh>
+#include <dune/stuff/fem/functions/checks.hh>
+#include <dune/multiscale/common/dirichletconstraints.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -26,13 +37,17 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
                                            const DiffusionOperatorType& diffusion_op)
   : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
   , diffusion_operator_(diffusion_op)
-  , coarse_space_(coarse_space) {}
+  , coarse_space_(coarse_space)
+  , system_matrix_("Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace)
+{
+  assemble_matrix();
+}
 
-void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorType& global_matrix) const
+void LocalProblemOperator::assemble_matrix()
     // x_T is the barycenter of the macro grid element T
 {
-  global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
-  global_matrix.clear();
+  system_matrix_.reserve(DSFe::diagonalAndNeighborStencil(system_matrix_));
+  system_matrix_.clear();
 
   // local grid basis functions:
   std::vector<RangeType> phi(subDiscreteFunctionSpace_.mapper().maxNumDofs());
@@ -45,7 +60,7 @@ void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorTyp
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();
 
-    DSFe::LocalMatrixProxy<LocalProblemSolver::LinearOperatorType> local_matrix(global_matrix, sub_grid_entity,
+    DSFe::LocalMatrixProxy<LocalProblemSolver::LinearOperatorType> local_matrix(system_matrix_, sub_grid_entity,
                                                                                 sub_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
@@ -78,7 +93,10 @@ void LocalProblemOperator::assemble_matrix(LocalProblemSolver::LinearOperatorTyp
       }
     }
   }
-  global_matrix.communicate();
+  Stuff::GridboundaryAllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
+  DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, subDiscreteFunctionSpace_);
+  constraints.applyToOperator(system_matrix_);
+  system_matrix_.communicate();
 } // assemble_matrix
 
 void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
@@ -222,6 +240,11 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     }
   }
 
+  Stuff::GridboundaryAllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
+  DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, discreteFunctionSpace);
+  for (auto& rhsIt : allLocalRHS) {
+    constraints.setValue(0.0, *rhsIt);
+  }
   return;
 }
 
@@ -256,6 +279,23 @@ void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFuncti
       }
   }
   return;
+}
+
+void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType &current_rhs, MsFEMTraits::LocalGridDiscreteFunctionType &current_solution)
+{
+  if (!current_rhs.dofsValid())
+    DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
+
+  const auto solver =
+      Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
+  typedef BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType LocalInverseOperatorType;
+  const auto localProblemSolver = DSC::make_unique<LocalInverseOperatorType>(system_matrix_, 1e-8, 1e-8, 20000,
+                                               DSC_CONFIG_GET("msfem.localproblemsolver_verbose", false), solver,
+                                               DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);
+  localProblemSolver->apply(current_rhs, current_solution);
+
+  if (!current_solution.dofsValid())
+    DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
 }
 
 } // namespace MsFEM {
