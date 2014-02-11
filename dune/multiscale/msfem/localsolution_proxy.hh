@@ -23,7 +23,7 @@ template <class SearchType>
 struct LocalsolutionProxyTraits {
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef LocalsolutionProxy<SearchType> DiscreteFunctionType;
-  typedef MsFEMTraits::LocalGridDiscreteFunctionType ProxiedTraits;
+  typedef MsFEMTraits::LocalGridDiscreteFunctionType::Traits ProxiedTraits;
   typedef LocalsolutionProxyTraits<SearchType> Traits;
   typedef typename ProxiedTraits::LocalFunctionStorageType LocalFunctionStorageType;
   typedef typename ProxiedTraits::LocalFunctionType LocalFunctionType;
@@ -47,6 +47,9 @@ struct LocalsolutionProxyTraits {
   typedef typename ProxiedTraits::ConstDofBlockPtrType ConstDofBlockPtrType;
 }; // end struct LocalsolutionProxyTraits
 
+/**
+ * Fake DiscreteFunction that forwards localFcuntion calls to appropiate local_correction
+ */
 template <class SearchType>
 class LocalsolutionProxy : public Dune::Fem::DiscreteFunctionInterface<LocalsolutionProxyTraits<SearchType>> {
   typedef LocalsolutionProxyTraits<SearchType> TraitsType;

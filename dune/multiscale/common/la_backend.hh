@@ -28,6 +28,7 @@ class SparseRowMatrixOperator;
 
 namespace Multiscale {
 
+//! abstraction around linear solver, to possibly allow setting solver type at runtime
 template <class DiscreteFunctionType, class LinearOperatorType>
 class FemSolverWrapper {
 public:
@@ -63,6 +64,8 @@ private:
 template <class DiscreteFunctionSpaceType>
 struct BackendChooser {
 
+  static_assert(std::is_base_of<Dune::Fem::DiscreteFunctionSpaceInterface<typename DiscreteFunctionSpaceType::Traits>,
+                                DiscreteFunctionSpaceType>::value, "");
 #ifdef ENABLE_PETSC
   typedef Dune::Fem::PetscDiscreteFunction<DiscreteFunctionSpaceType> DiscreteFunctionType;
   typedef Dune::Fem::PetscLinearOperator<DiscreteFunctionType, DiscreteFunctionType> LinearOperatorType;

@@ -15,9 +15,10 @@ namespace MsFEM {
 class LocalGridList;
 } // namespace MsFEM
 
-//! Assembler for right rand side
-//! We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
-//! we call f the first Source and G the second Source
+/** Assembler for right rand side
+ * We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
+ * we call f the first Source and G the second Source
+ **/
 class RightHandSideAssembler {
 private:
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;

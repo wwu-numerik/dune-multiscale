@@ -24,6 +24,7 @@
 namespace Dune {
 namespace Multiscale {
 
+//! setup code common to fem/msfem/hmm
 void init(int argc, char** argv) {
   namespace DSC = Dune::Stuff::Common;
   Dune::Fem::MPIManager::initialize(argc, argv);
