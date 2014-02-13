@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <boost/filesystem/fstream.hpp>
 #include <dune/fem/function/common/gridfunctionadapter.hh>
+#include <dune/fem/operator/lagrangeinterpolation.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/functions/time.hh>
@@ -34,15 +35,37 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   if (Problem::getModelData()->hasExactSolution()) {
     auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
-    const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;
-    const Dune::Fem::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType> u_disc(
-        "", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
+
+    typedef Dune::Fem::LagrangeDiscreteFunctionSpace<CommonTraits::FunctionSpaceType,
+        CommonTraits::GridPartType, CommonTraits::exact_solution_space_order>
+    ExactSpaceType;
+    typedef BackendChooser<ExactSpaceType>::DiscreteFunctionType ExactDiscreteFunctionType;
+
+    ExactSpaceType u_disc_space(gridPart);
+    ExactDiscreteFunctionType u_disc("", u_disc_space);
+    Fem::LagrangeInterpolation<CommonTraits::ExactSolutionType, ExactDiscreteFunctionType>::apply(u, u_disc);
+
+    #if 0 // "quality assurance" for discrete exact solution
+    {
+      const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;
+      const Dune::Fem::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType> u_disc_adapter(
+          "", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
+      const auto ana_error = DS::l2distance(u_disc_adapter, u_disc);
+      out << "|| u_exact_ana - u_exact ||_L2 =  " << ana_error << std::endl;
+
+      const auto h1_ana_error = DS::h1distance(u_disc_adapter, u_disc);
+      out << "|| u_exact_ana - u_exact ||_H2 =  " << h1_ana_error << "\n\n";
+
+      csv["msfem_exact_L2"] = ana_error;
+      csv["msfem_exact_H1"] = h1_ana_error;
+    }
+    #endif
 
     if (msfem_solution_) {
-      auto msfem_error = DS::l2distance(u_disc, *msfem_solution_);
+      const auto msfem_error = DS::l2distance(u_disc, *msfem_solution_);
       out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
 
-      auto h1_msfem_error = DS::h1distance(u_disc, *msfem_solution_);
+      const auto h1_msfem_error = DS::h1distance(u_disc, *msfem_solution_);
       out << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
 
       csv["msfem_exact_L2"] = msfem_error;
@@ -53,7 +76,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
       const auto fem_error = DS::l2distance(u_disc, *fem_solution_);
       out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
 
-      auto h1_fem_error = DS::h1distance(u_disc, *fem_solution_);
+      const auto h1_fem_error = DS::h1distance(u_disc, *fem_solution_);
       out << "|| u_fem - u_exact ||_H1 =  " << h1_fem_error << std::endl << std::endl;
 
       csv["fem_exact_L2"] = fem_error;
@@ -64,7 +87,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     const auto approx_msfem_error = DS::l2distance(*fem_solution_, *msfem_solution_);
     out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 
-    auto h1_approx_msfem_error = DS::h1distance(*fem_solution_, *msfem_solution_);
+    const auto h1_approx_msfem_error = DS::h1distance(*fem_solution_, *msfem_solution_);
     out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
 
     csv["msfem_fem_L2"] = approx_msfem_error;

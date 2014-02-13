@@ -86,6 +86,7 @@ struct CommonTraits {
 
   //! type of exact solution (in general unknown)
   typedef FunctionBaseType ExactSolutionType;
+  static constexpr unsigned int exact_solution_space_order = 3 * st_lagrangespace_order;
 
   typedef FunctionSpaceType::DomainType DomainType;
   //! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
