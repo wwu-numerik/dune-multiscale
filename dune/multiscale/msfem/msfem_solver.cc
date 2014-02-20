@@ -120,6 +120,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   ProxyType proxy(local_corrections, coarse_indexset, proxybase_space, search);
   ProjectionType::project(proxy, fine_scale_part, search);
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
+  //backend storage no longer needed from here on
+  DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
