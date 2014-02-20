@@ -50,11 +50,11 @@ void LocalProblemOperator::assemble_matrix()
   system_matrix_.clear();
 
   // local grid basis functions:
-  std::vector<RangeType> phi(subDiscreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<RangeType> phi(subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // gradient of micro scale base function:
   std::vector<typename BasisFunctionSetType::JacobianRangeType> gradient_phi(
-      subDiscreteFunctionSpace_.mapper().maxNumDofs());
+      subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
   typename BasisFunctionSetType::JacobianRangeType diffusion_in_gradient_phi;
 
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
@@ -149,8 +149,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseFuncJacs(coarseBaseSet.size());
 
   // gradient of micro scale base function:
-  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
-  std::vector<RangeType> phi(discreteFunctionSpace.mapper().maxNumDofs());
+  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.blockMapper().maxNumDofs());
+  std::vector<RangeType> phi(discreteFunctionSpace.blockMapper().maxNumDofs());
 
   const auto numBoundaryCorrectors = DSG::is_simplex_grid(coarse_space_) ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;

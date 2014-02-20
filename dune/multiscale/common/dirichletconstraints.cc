@@ -108,7 +108,7 @@ void DirichletConstraints<DF>::dirichletDofsCorrectOnEntity(DirichletConstraints
   std::vector<std::size_t> globalDofs(localBlockSize);
   std::vector<std::size_t> globalBlockDofs(localBlocks);
 
-  domain_space_.mapper().map(entity, globalDofs);
+  domain_space_.blockMapper().map(entity, globalDofs);
   domain_space_.blockMapper().map(entity, globalBlockDofs);
 
   // counter for all local dofs (i.e. localBlockDof * localBlockSize + ... )
@@ -261,7 +261,7 @@ void DirichletConstraints<DF>::operator()(const DiscreteFunctionType& u, Discret
 }
 
 template class DirichletConstraints<CommonTraits::DiscreteFunctionType>;
-// template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
+//template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
 
 } // namespace Multiscale
 } // namespace Dune
