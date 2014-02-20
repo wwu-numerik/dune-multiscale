@@ -70,7 +70,7 @@ operator()(const PointContainerType& points) {
     current_coarse_pointer_ = DSC::make_unique<CoarseEntityPointerType>(coarse_entity);
     auto& current_search_ptr = coarse_searches_[index];
     if (current_search_ptr == nullptr)
-      current_search_ptr = DSC::make_unique<PerGridSearchType>(localgrid.leafView());
+      current_search_ptr = DSC::make_unique<PerGridSearchType>(localgrid.leafGridView());
     if (covers_strict(coarse_entity, points.begin(), points.end())) {
       auto entity_ptrs = current_search_ptr->operator()(points);
       const auto null_count = std::count_if(entity_ptrs.begin(), entity_ptrs.end(), count_nulls);

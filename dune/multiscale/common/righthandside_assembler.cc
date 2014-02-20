@@ -93,7 +93,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
 
       // iterator for the micro grid ( grid for the reference element T_0 )
       const auto& subGrid = subgrid_list.getSubGrid(coarse_grid_entity);
-      auto view = subGrid.leafView();
+      auto view = subGrid.leafGridView();
       for (const auto& localEntity : DSC::viewRange(view)) {
         if (subgrid_list.covers(coarse_grid_entity, localEntity)) {
           // higher order quadrature, since A^{\epsilon} is highly variable
@@ -114,7 +114,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
 
             // assemble intersection-part
             const auto& subGridPart = localSolutionManager.grid_part();
-            for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafView(), localEntity)) {
+            for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafGridView(), localEntity)) {
               if (DMP::is_neumann(intersection)) {
                 const int orderOfIntegrand =
                     (CommonTraits::polynomial_order - 1) + 2 * (CommonTraits::polynomial_order + 1);
