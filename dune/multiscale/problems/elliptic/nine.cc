@@ -102,12 +102,18 @@ ExactSolution::ExactSolution() {}
 void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   // approximation obtained by homogenized solution + first corrector
 
-  // coarse part
-  y = sin(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]);
+  const double eps = constants().epsilon;
+  static const double M_TWOPI = M_PI * 2.0;
+  const double x0_eps = (x[0] / eps);
+  const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
+  const double x0_2_pi = M_TWOPI * x[0];
+  const double x1_2_pi = M_TWOPI * x[1];
+  const double sin_2_pi_x0 = sin(x0_2_pi);
+  const double cos_2_pi_x0 = cos(x0_2_pi);
+  const double sin_2_pi_x1 = sin(x1_2_pi);
 
-  // fine part // || u_fine_part ||_L2 = 0.00883883 (for eps = 0.05 )
-  y += 0.5 * constants().epsilon *
-       (cos(2.0 * M_PI * x[0]) * sin(2.0 * M_PI * x[1]) * sin(2.0 * M_PI * (x[0] / constants().epsilon)));
+  y = sin_2_pi_x0 * sin_2_pi_x1
+      + (0.5 * eps * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 } // evaluate
 
 void __attribute__((hot)) ExactSolution::jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
@@ -116,10 +122,12 @@ void __attribute__((hot)) ExactSolution::jacobian(const DomainType& x, JacobianR
   const double x0_eps = (x[0] / eps);
   const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
   const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
-  const double sin_2_pi_x0 = sin(M_TWOPI * x[0]);
-  const double cos_2_pi_x0 = cos(M_TWOPI * x[0]);
-  const double sin_2_pi_x1 = sin(M_TWOPI * x[1]);
-  const double cos_2_pi_x1 = cos(M_TWOPI * x[1]);
+  const double x0_2_pi = M_TWOPI * x[0];
+  const double x1_2_pi = M_TWOPI * x[1];
+  const double sin_2_pi_x0 = sin(x0_2_pi);
+  const double cos_2_pi_x0 = cos(x0_2_pi);
+  const double sin_2_pi_x1 = sin(x1_2_pi);
+  const double cos_2_pi_x1 = cos(x1_2_pi);
 
   grad_u[0][1] = (M_TWOPI * sin_2_pi_x0 * cos_2_pi_x1) + (eps * M_PI * cos_2_pi_x0 * cos_2_pi_x1 * sin_2_pi_x0_eps);
 
