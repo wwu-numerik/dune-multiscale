@@ -18,12 +18,15 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   LINK_DIRECTORIES( /opt/local/lib/ )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
+if(NOT (dune-common_DIR OR dune-common_ROOT OR
+        "${CMAKE_PREFIX_PATH}" MATCHES ".*dune-common.*"))
+    string(REPLACE  ${CMAKE_PROJECT_NAME} dune-common dune-common_DIR
+      ${PROJECT_BINARY_DIR})
+endif()
 
 #find dune-common and set the module path
-find_package(dune-common)
-list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
-     "${CMAKE_SOURCE_DIR}/cmake/modules" ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../dune-stuff/cmake )
-     # make sure our own modules are found
+find_package(dune-common REQUIRED)
+list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 
 #include the dune macros
 include(DuneMacros)
