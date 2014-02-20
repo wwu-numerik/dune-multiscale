@@ -28,7 +28,7 @@ class DirichletConstraints {
   BoundaryType;
   typedef typename DomainSpaceType::GridPartType GridPartType;
   typedef typename DomainSpaceType::GridType GridType;
-  typedef typename DomainSpaceType::MapperType MapperType;
+
   typedef typename BackendChooser<DomainSpaceType>::LinearOperatorType LinearOperatorType;
   typedef typename DomainSpaceType::EntityType EntityType;
 

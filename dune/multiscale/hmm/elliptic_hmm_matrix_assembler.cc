@@ -55,7 +55,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::LinearOperatorTy
   global_matrix.reserve();
   global_matrix.clear();
 
-  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_Phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   for (const auto& macro_grid_entity : discreteFunctionSpace_) {
     const auto& macro_grid_geometry = macro_grid_entity.geometry();
@@ -73,7 +73,7 @@ void DiscreteEllipticHMMOperator::assemble_matrix(CommonTraits::LinearOperatorTy
     std::vector<std::size_t> cell_problem_id(numMacroBaseFunctions, 0);
 
     typedef std::shared_ptr<PeriodicDiscreteFunction> PeriodicDiscreteFunctionPointer;
-    std::vector<PeriodicDiscreteFunctionPointer> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
+    std::vector<PeriodicDiscreteFunctionPointer> corrector_Phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
     macro_grid_baseSet.jacobianAll(center_local, gradient_Phi);
 
@@ -191,9 +191,9 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
   global_matrix.reserve();
   global_matrix.clear();
 
-  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_Phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
   std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_Phi_new(
-      discreteFunctionSpace_.mapper().maxNumDofs());
+      discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   int number_of_macro_entity = 0;
 
@@ -225,7 +225,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
 
     discrete_function_reader_discFunc.read(number_of_macro_entity, corrector_old_u_H);
 
-    std::vector<std::shared_ptr<PeriodicDiscreteFunction>> corrector_Phi(discreteFunctionSpace_.mapper().maxNumDofs());
+    std::vector<std::shared_ptr<PeriodicDiscreteFunction>> corrector_Phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
     macro_grid_baseSet.jacobianAll(center_local, gradient_Phi);
 
     // gradients of macrocopic base functions:

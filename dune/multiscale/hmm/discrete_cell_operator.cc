@@ -38,11 +38,11 @@ void DiscreteCellProblemOperator::assemble_matrix(const DomainType& x_T,
   global_matrix.clear();
 
   // micro scale base function:
-  std::vector<RangeType> phi(periodicDiscreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<RangeType> phi(periodicDiscreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // gradient of micro scale base function:
   std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(
-      periodicDiscreteFunctionSpace_.mapper().maxNumDofs());
+      periodicDiscreteFunctionSpace_.blockMapper().maxNumDofs());
 
   for (const auto& cell_grid_entity : periodicDiscreteFunctionSpace_) {
     const auto& cell_grid_geometry = cell_grid_entity.geometry();
@@ -102,11 +102,11 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(
   global_matrix.clear();
 
   // micro scale base function:
-  std::vector<RangeType> phi(periodicDiscreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<RangeType> phi(periodicDiscreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // gradient of micro scale base function:
   std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(
-      periodicDiscreteFunctionSpace_.mapper().maxNumDofs());
+      periodicDiscreteFunctionSpace_.blockMapper().maxNumDofs());
 
   for (const auto& cell_grid_entity : periodicDiscreteFunctionSpace_) {
     const auto& cell_grid_geometry = cell_grid_entity.geometry();
@@ -183,7 +183,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T, 
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   // gradient of micro scale base function:
-  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
+  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.blockMapper().maxNumDofs());
 
   for (const auto& cell_grid_entity : periodicDiscreteFunctionSpace_) {
     const auto& geometry = cell_grid_entity.geometry();
@@ -236,7 +236,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   // gradient of micro scale base function:
-  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
+  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.blockMapper().maxNumDofs());
 
   for (const auto& cell_grid_entity : discreteFunctionSpace) {
     const auto& geometry = cell_grid_entity.geometry();
@@ -302,7 +302,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS( // 
   const double delta = DSC_CONFIG_GET("hmm.delta", 1.0f);
 
   // gradient of micro scale base function:
-  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.mapper().maxNumDofs());
+  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.blockMapper().maxNumDofs());
 
   for (const auto& cell_grid_entity : discreteFunctionSpace) {
     const auto& geometry = cell_grid_entity.geometry();

@@ -32,10 +32,10 @@ void DiscreteEllipticOperator::assemble_matrix(MatrixType& global_matrix) const 
   DSFe::reserve_matrix(global_matrix);
   global_matrix.clear();
 
-  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // micro scale base function:
-  std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<RangeType> phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
   for (const auto& entity : discreteFunctionSpace_) {
     const auto& geometry = entity.geometry();
     assert(entity.partitionType() == InteriorEntity);
@@ -86,10 +86,10 @@ void DiscreteEllipticOperator::assemble_jacobian_matrix(DiscreteFunction& disc_f
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
-  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // micro scale base function:
-  std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<RangeType> phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   for (const auto& entity : discreteFunctionSpace_) {
     const auto& geometry = entity.geometry();
@@ -180,10 +180,10 @@ void DiscreteEllipticOperator::assemble_jacobian_matrix(DiscreteFunction& disc_f
   global_matrix.reserve(DSFe::diagonalAndNeighborStencil(global_matrix));
   global_matrix.clear();
 
-  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // micro scale base function:
-  std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<RangeType> phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   for (const auto& entity : discreteFunctionSpace_) {
     const auto& geometry = entity.geometry();
@@ -283,10 +283,10 @@ void SMPDiscreteEllipticOperator::assemble_matrix(CommonTraits::LinearOperatorTy
   DSFe::reserve_matrix(global_matrix);
   global_matrix.clear();
 
-  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<typename BaseFunctionSet::JacobianRangeType> gradient_phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // micro scale base function:
-  std::vector<RangeType> phi(discreteFunctionSpace_.mapper().maxNumDofs());
+  std::vector<RangeType> phi(discreteFunctionSpace_.blockMapper().maxNumDofs());
 
   Fem::DomainDecomposedIteratorStorage<GridPart> threadIterators(discreteFunctionSpace_.gridPart());
 
