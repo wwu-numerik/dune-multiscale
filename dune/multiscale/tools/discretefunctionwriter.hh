@@ -24,6 +24,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/memory.hh>
+#include <dune/fem/io/streams/xdrstreams.hh>
 
 #include <boost/filesystem/path.hpp>
 
@@ -76,7 +77,8 @@ class DiscreteFunctionIO : public boost::noncopyable {
       IOTraits::OutstreamType stream(fn);
       df->write(stream);
 #else
-      df->write_xdr(fn);
+      Fem::XDRFileOutStream ss(fn);
+      df->write(ss);
 #endif
     }
 
@@ -86,7 +88,8 @@ class DiscreteFunctionIO : public boost::noncopyable {
       IOTraits::InstreamType stream(fn);
       df->read(stream);
 #else
-      df->read_xdr(fn);
+      Fem::XDRFileInStream ss(fn);
+      df->read(ss);
 #endif
     }
 
