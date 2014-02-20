@@ -53,8 +53,6 @@ int main(int argc, char** argv) {
       *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                       << "," << meanPeakMemConsumption << std::endl;
     }
-    Dune::Multiscale::DiscreteFunctionIO<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
-
     return 0;
   }
   catch (Dune::Exception& e) {
