@@ -33,7 +33,7 @@ class DirichletConstraints {
   typedef typename DomainSpaceType::EntityType EntityType;
 
   typedef Dune::Fem::GridFunctionAdapter<CommonTraits::DirichletDataType,
-                                         CommonTraits::DiscreteFunctionSpaceType::GridPartType> GridFunctionType;
+                                         typename DiscreteFunctionImp::GridPartType> GridFunctionType;
 
 public:
   DirichletConstraints(const BoundaryType& boundary, const DomainSpaceType& domain_space);
