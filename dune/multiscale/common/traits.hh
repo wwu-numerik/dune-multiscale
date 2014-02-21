@@ -7,6 +7,8 @@
 
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/common/tuples.hh>
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/sgrid.hh>
 #include <dune/fem/space/common/functionspace.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrange.hh>
@@ -49,7 +51,10 @@ class IModelProblemData;
 
 //! type construction for the HMM algorithm
 struct CommonTraits {
-  typedef Dune::GridSelector::GridType GridType;
+  static constexpr int world_dim = 2;
+//  typedef Dune::GridSelector::GridType GridType;
+//  typedef Dune::SGrid<world_dim, world_dim> GridType;
+  typedef Dune::YaspGrid<world_dim> GridType;
   typedef GridType::Codim<0>::Entity EntityType;
   typedef Dune::Fem::AdaptiveLeafGridPart<GridType> GridPartType;
   typedef Dune::GridPtr<GridType> GridPointerType;

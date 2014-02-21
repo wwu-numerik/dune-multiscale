@@ -14,16 +14,15 @@
 #include <vector>
 
 namespace Dune {
-
 namespace Multiscale {
 namespace MsFEM {
 
 //! type construction for the MSFEM code
 struct MsFEMTraits {
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
-  typedef Dune::SPGrid<double, CommonTraits::GridType::dimension> LocalGridType;
-  // change dirichletconstraints.cc bottom accordingly
-  // typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
+  // change dirichletconstraints.cc bottom on depending whether local/coarse grid are of the same type
+//  typedef Dune::SPGrid<double, CommonTraits::GridType::dimension> LocalGridType;
+  typedef Dune::SGrid<CommonTraits::world_dim, CommonTraits::world_dim> LocalGridType;
 
   typedef Fem::AdaptiveLeafGridPart<LocalGridType> LocalGridPartType;
   typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, LocalGridPartType, st_lagrangespace_order>
