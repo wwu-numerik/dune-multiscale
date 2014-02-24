@@ -137,18 +137,6 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeTy
   flux[0][1] = diff_coef * direction_gradient[0][1];
 }
 
-void ExactSolution::evaluate(const ExactSolution::DomainType&, ExactSolution::RangeType&) const {
-  DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-}
-
-void ExactSolution::jacobian(const ExactSolution::DomainType&, ExactSolution::JacobianRangeType&) const {
-  DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-}
-
-void ExactSolution::evaluate(const ExactSolution::DomainType& x, const TimeType&, ExactSolution::RangeType& y) const {
-  evaluate(x, y);
-}
-
 } // namespace Ten
 } // namespace Problem
 } // namespace Multiscale {

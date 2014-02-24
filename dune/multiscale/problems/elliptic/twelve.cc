@@ -197,24 +197,6 @@ void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /
   evaluate(x, y);
 }
 
-void Dune::Multiscale::Problem::Twelve::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Twelve::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Twelve::ExactSolution::RangeType&) const {
-  DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-}
-
-void Dune::Multiscale::Problem::Twelve::ExactSolution::jacobian(
-    const Dune::Multiscale::Problem::Twelve::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Twelve::ExactSolution::JacobianRangeType&) const {
-  DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-}
-
-void Dune::Multiscale::Problem::Twelve::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Twelve::ExactSolution::DomainType& x, const TimeType&,
-    Dune::Multiscale::Problem::Twelve::ExactSolution::RangeType& y) const {
-  evaluate(x, y);
-}
-
 } // namespace Twelve
 } // namespace Problem
 } // namespace Multiscale {

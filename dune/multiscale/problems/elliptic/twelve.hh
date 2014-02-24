@@ -53,13 +53,6 @@ public:
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
-class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-public:
-  void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const;
-  void jacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
-  void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
-};
-
 class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
 class LowerOrderTerm : public ZeroLowerOrder {};
@@ -68,6 +61,7 @@ MSNULLFUNCTION(NeumannBoundaryCondition)
 MSCONSTANTFUNCTION(MassTerm, 0.0)
 MSNULLFUNCTION(DefaultDummyFunction)
 MSNULLFUNCTION(SecondSource)
+MSNULLFUNCTION(ExactSolution)
 
 } //! @} namespace Twelve {
 }

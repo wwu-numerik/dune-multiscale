@@ -40,13 +40,6 @@ public:
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
-class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-public:
-  void evaluate(const DomainType& /*x*/, RangeType& /*y*/) const;
-  void jacobian(const DomainType& /*x*/, JacobianRangeType& /*grad_u*/) const;
-  void evaluate(const DomainType& x, const TimeType& /*timedummy*/, RangeType& y) const;
-};
-
 class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
 class LowerOrderTerm : public ZeroLowerOrder {};
@@ -57,6 +50,7 @@ MSCONSTANTFUNCTION(MassTerm, 0.0)
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 MSNULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(ExactSolution)
 
 } //! @} namespace Seven {
 }
