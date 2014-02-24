@@ -45,8 +45,6 @@ public:
   void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
-MSNULLFUNCTION(SecondSource)
-
 class Diffusion : public DiffusionBase {
 public:
   Diffusion();
@@ -62,14 +60,6 @@ private:
   std::vector<double> deltas_;
   double* permeability_; //! TODO automatic memory
 };
-
-class LowerOrderTerm : public ZeroLowerOrder {};
-
-MSCONSTANTFUNCTION(MassTerm, 0.0)
-MSNULLFUNCTION(DirichletBoundaryCondition)
-MSNULLFUNCTION(NeumannBoundaryCondition)
-MSNULLFUNCTION(DefaultDummyFunction)
-MSNULLFUNCTION(ExactSolution)
 
 class DirichletData : public DirichletDataBase {
 private:
@@ -92,6 +82,15 @@ public:
   void evaluate(const typename FunctionSpaceType::DomainType& x, const TimeType& /*time*/,
                 typename FunctionSpaceType::RangeType& y) const;
 };
+
+class LowerOrderTerm : public ZeroLowerOrder {};
+
+MSCONSTANTFUNCTION(MassTerm, 0.0)
+MSNULLFUNCTION(DirichletBoundaryCondition)
+MSNULLFUNCTION(NeumannBoundaryCondition)
+MSNULLFUNCTION(DefaultDummyFunction)
+MSNULLFUNCTION(ExactSolution)
+MSNULLFUNCTION(SecondSource)
 
 } //! @} namespace SPE10 {
 }
