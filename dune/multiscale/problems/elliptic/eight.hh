@@ -21,8 +21,6 @@ namespace Problem {
 namespace Eight {
 
 struct ModelProblemData : public IModelProblemData {
-  static const bool has_exact_solution = true;
-
   ModelProblemData();
 
   std::string getMacroGridFile() const;
@@ -30,6 +28,7 @@ struct ModelProblemData : public IModelProblemData {
   bool problemAllowsStochastics() const;
   bool symmetricDiffusion() const { return false; }
   bool linear() const { return false; }
+  bool hasExactSolution() const { return true; }
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {

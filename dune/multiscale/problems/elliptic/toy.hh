@@ -30,13 +30,12 @@ namespace Problem {
 namespace Toy {
 
 struct ModelProblemData : public IModelProblemData {
-  static const bool has_exact_solution = true;
-
   ModelProblemData();
 
   std::string getMacroGridFile() const;
   bool problemIsPeriodic() const;
   bool problemAllowsStochastics() const;
+  bool hasExactSolution() const { return true; }
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
