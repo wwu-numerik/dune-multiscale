@@ -24,6 +24,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/memory.hh>
+#include <dune/stuff/common/type_utils.hh>
 #include <dune/fem/io/streams/xdrstreams.hh>
 
 #include <boost/filesystem/path.hpp>
@@ -170,6 +171,8 @@ public:
   //! this needs to be called before global de-init or else dune fem fails
   static void clear() {
     auto& th = instance();
+    DSC_LOG_DEBUG << (boost::format("cleared %d in-memory functions\ncleared %d on-disk   functions\nfor %s\n")
+                      % th.memory_.size() % th.disk_.size() % DSC::getTypename(th)).str();
     th.memory_.clear();
     th.disk_.clear();
   }
