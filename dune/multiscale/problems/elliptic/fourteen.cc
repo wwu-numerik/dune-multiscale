@@ -88,30 +88,6 @@ void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /
   evaluate(x, y);
 }
 
-void NeumannBoundaryCondition::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
-
-void NeumannBoundaryCondition::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
-  evaluate(x, y);
-}
-
-void Dune::Multiscale::Problem::Fourteen::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Fourteen::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Fourteen::ExactSolution::RangeType&) const {
-  DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-}
-
-void Dune::Multiscale::Problem::Fourteen::ExactSolution::jacobian(
-    const Dune::Multiscale::Problem::Fourteen::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Fourteen::ExactSolution::JacobianRangeType&) const {
-  DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-}
-
-void Dune::Multiscale::Problem::Fourteen::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Fourteen::ExactSolution::DomainType& x, const TimeType&,
-    Dune::Multiscale::Problem::Fourteen::ExactSolution::RangeType& y) const {
-  evaluate(x, y);
-}
-
 } // namespace Fourteen
 } // namespace Problem
 } // namespace Multiscale {

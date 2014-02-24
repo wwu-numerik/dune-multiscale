@@ -225,24 +225,6 @@ void NeumannBoundaryCondition::evaluate(const DomainType& x, const TimeType& /*t
   evaluate(x, y);
 }
 
-void Dune::Multiscale::Problem::Thirteen::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Thirteen::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Thirteen::ExactSolution::RangeType&) const {
-  DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-}
-
-void Dune::Multiscale::Problem::Thirteen::ExactSolution::jacobian(
-    const Dune::Multiscale::Problem::Thirteen::ExactSolution::DomainType&,
-    Dune::Multiscale::Problem::Thirteen::ExactSolution::JacobianRangeType&) const {
-  DUNE_THROW(Dune::NotImplemented, "Exact solution not available!");
-}
-
-void Dune::Multiscale::Problem::Thirteen::ExactSolution::evaluate(
-    const Dune::Multiscale::Problem::Thirteen::ExactSolution::DomainType& x, const TimeType&,
-    Dune::Multiscale::Problem::Thirteen::ExactSolution::RangeType& y) const {
-  evaluate(x, y);
-}
-
 } // namespace Thirteen
 } // namespace Problem
 } // namespace Multiscale {
