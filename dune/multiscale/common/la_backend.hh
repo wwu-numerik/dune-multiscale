@@ -10,6 +10,8 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/operator/linear/spoperator.hh>
 #endif
+#include <dune/pdelab/backend/istl/descriptors.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/fem/solver/oemsolver.hh>
 
 namespace Dune {
@@ -25,6 +27,9 @@ class ParallelScalarProduct;
 template <class T, class R, class S>
 class SparseRowMatrixOperator;
 } // namespace Fem
+
+namespace PDELab {
+} //namespace PDELab
 
 namespace Multiscale {
 
@@ -75,6 +80,9 @@ struct BackendChooser {
   typedef Dune::Fem::SparseRowLinearOperator<DiscreteFunctionType, DiscreteFunctionType> LinearOperatorType;
   typedef FemSolverWrapper<DiscreteFunctionType, LinearOperatorType> InverseOperatorType;
 #endif
+  typedef Dune::PDELab::ISTLVectorBackend<> VectorBackendType;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MatrixBackendType;
+
 };
 
 } // namespace Multiscale

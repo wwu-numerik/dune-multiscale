@@ -26,12 +26,6 @@ private:
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
 public:
-  /** assemble standard right hand side:
-   * if there is only one source (f) (there is no second source):
-   * discreteFunction is an output parameter (kind of return value)
-   **/
-  static void assemble_fem(const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& rhsVector);
-
   /** assemble right hand side (if there is only one source - f):
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)

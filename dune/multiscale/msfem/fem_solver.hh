@@ -17,17 +17,16 @@ class Elliptic_FEM_Solver {
 
   void solve_linear(const CommonTraits::DiffusionType& diffusion_op,
                     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                    const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution,
-                    const bool use_smp) const;
+                    const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType &solution) const;
   void solve_nonlinear(const CommonTraits::DiffusionType& diffusion_op,
                        const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                       const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution) const;
+                       const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType& solution) const;
 
   static const int faceCodim = 1;
-  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_;
+  const CommonTraits::GridFunctionSpaceType& space_;
 
 public:
-  Elliptic_FEM_Solver(const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace);
+  Elliptic_FEM_Solver(const CommonTraits::GridFunctionSpaceType& space);
 
   //! - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   //! then:
@@ -38,8 +37,7 @@ public:
   //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   void apply(const CommonTraits::DiffusionType& diffusion_op,
              const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-             const CommonTraits::FirstSourceType& f, CommonTraits::DiscreteFunctionType& solution,
-             const bool use_smp = false) const;
+             const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType &solution) const;
 };
 
 } // namespace Multiscale

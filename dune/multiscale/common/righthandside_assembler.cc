@@ -18,42 +18,6 @@
 
 #include "righthandside_assembler.hh"
 
-void Dune::Multiscale::RightHandSideAssembler::assemble_fem(
-    const Dune::Multiscale::CommonTraits::FirstSourceType& f,
-    Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
-
-  rhsVector.clear();
-  for (const auto& entity : rhsVector.space()) {
-    const auto& geometry = entity.geometry();
-    auto elementOfRHS = rhsVector.localFunction(entity);
-    const auto baseSet = rhsVector.space().basisFunctionSet(entity);
-    const auto quadrature = DSFe::make_quadrature(entity, rhsVector.space());
-    const auto numDofs = elementOfRHS.numDofs();
-    for (auto quadraturePoint : DSC::valueRange(quadrature.nop())) {
-      // the return values:
-      RangeType f_x;
-      std::vector<RangeType> phi_x(numDofs);
-      // to save: A \nabla PHI_H * \nabla phi_h;
-      const auto det = geometry.integrationElement(quadrature.point(quadraturePoint));
-
-      f.evaluate(geometry.global(quadrature.point(quadraturePoint)), f_x);
-      baseSet.evaluateAll(quadrature[quadraturePoint], phi_x);
-
-      for (int i = 0; i < numDofs; ++i) {
-        elementOfRHS[i] += det * quadrature.weight(quadraturePoint) * (f_x * phi_x[i]);
-      }
-    }
-  }
-
-  const auto boundary = Problem::getModelData()->boundaryInfo();
-  const auto dirichlet_data = Problem::getDirichletData();
-  //! \TODO use the static thingies
-  DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(*boundary, rhsVector.space());
-  const auto dd = DS::gridFunctionAdapter(*dirichlet_data, rhsVector.space().gridPart());
-  constraints(dd, rhsVector);
-  rhsVector.communicate();
-}
-
 void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
     const Dune::Multiscale::CommonTraits::FirstSourceType& f, DMM::LocalGridList& subgrid_list,
