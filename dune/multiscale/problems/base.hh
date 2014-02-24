@@ -44,7 +44,7 @@ struct DiffusionBase {
   //! jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
   //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
   virtual void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
-                                     const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const = 0;
+                                     const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
 struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {

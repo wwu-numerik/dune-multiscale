@@ -56,7 +56,18 @@ public:
   void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
 };
 
+class DirichletData : public DirichletDataBase {
+public:
+  DirichletData() {}
+
+  void evaluate(const DomainType& x, RangeType& y) const;
+  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
+  void jacobian(const DomainType& x, JacobianRangeType& y) const;
+  void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const;
+};
+
 class LowerOrderTerm : public ZeroLowerOrder {};
+class NeumannData : public ZeroNeumannData {};
 
 MSCONSTANTFUNCTION(MassTerm, 0.0)
 MSNULLFUNCTION(DirichletBoundaryCondition)

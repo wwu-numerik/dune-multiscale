@@ -196,14 +196,6 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeTy
   flux[0][1] = a_1_0 * direction_gradient[0][0] + a_1_1 * direction_gradient[0][1];
 } // jacobianDiffusiveFlux
 
-void DirichletBoundaryCondition::evaluate(const DomainType& /*x*/, RangeType& y) const {
-  y = 0.0; // 0.5 * exp( 1.0 - x[0] );
-
-} // evaluate
-
-void DirichletBoundaryCondition::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
-  evaluate(x, y);
-}
 
 void NeumannBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const {
 

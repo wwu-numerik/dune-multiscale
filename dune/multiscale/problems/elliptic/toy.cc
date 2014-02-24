@@ -74,6 +74,19 @@ void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& grad
   flux[0][1] = a_0 * gradient[0][1];
 }
 
+void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
+  y = x[0] * (1.0 - x[0]) * (1.0 - x[1]) * x[1];
+}
+
+void DirichletData::evaluate(const DomainType& x, const TimeType&, RangeType& y) const {
+  evaluate(x, y);
+}
+
+void DirichletData::jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
+  grad_u[0][0] = (1.0 - x[0]) * (1.0 - x[1]) * x[1] - x[0] * (1.0 - x[1]) * x[1];
+  grad_u[0][1] = x[0] * (1.0 - x[0]) * (1.0 - x[1]) - x[0] * (1.0 - x[0]) * x[1];
+}
+
 } // namespace Toy
 } // namespace Problem
 } // namespace Multiscale {

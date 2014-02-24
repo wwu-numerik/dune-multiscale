@@ -22,6 +22,7 @@
 #include "elliptic/three.hh"
 #include "elliptic/twelve.hh"
 #include "elliptic/two.hh"
+#include "elliptic/toy.hh"
 #include "selector.hh"
 
 namespace Dune {
@@ -47,7 +48,8 @@ using namespace Dune::Multiscale;
        MAP_ITEM(SPE10, ReturnType, FunctionName),    MAP_ITEM(Eight, ReturnType, FunctionName),                        \
        MAP_ITEM(Nine, ReturnType, FunctionName),     MAP_ITEM(Ten, ReturnType, FunctionName),                          \
        MAP_ITEM(Eleven, ReturnType, FunctionName),   MAP_ITEM(Twelve, ReturnType, FunctionName),                       \
-       MAP_ITEM(Thirteen, ReturnType, FunctionName), })
+       MAP_ITEM(Thirteen, ReturnType, FunctionName), MAP_ITEM(Fourteen, ReturnType, FunctionName),                     \
+       MAP_ITEM(Toy, ReturnType, FunctionName),})
 
 /* to add a new problem a line like this above
  * MAP_ITEM(NewProblemName, ReturnType, FunctionName), \

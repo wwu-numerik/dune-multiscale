@@ -22,7 +22,7 @@ namespace Problem {
 namespace Thirteen {
 
 struct ModelProblemData : public IModelProblemData {
-  static const bool has_exact_solution = true;
+  static const bool has_exact_solution = false;
 
   ModelProblemData();
 
@@ -46,11 +46,6 @@ public:
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
-class DirichletBoundaryCondition : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-public:
-  void evaluate(const DomainType& x, RangeType& y) const;
-  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
-};
 
 class NeumannBoundaryCondition : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
@@ -66,6 +61,7 @@ MSCONSTANTFUNCTION(MassTerm, 0.0)
 MSNULLFUNCTION(DefaultDummyFunction)
 MSNULLFUNCTION(SecondSource)
 MSNULLFUNCTION(ExactSolution)
+MSNULLFUNCTION(DirichletBoundaryCondition)
 
 } //! @} namespace Thirteen {
 }
