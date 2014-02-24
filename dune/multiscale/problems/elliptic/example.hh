@@ -98,10 +98,6 @@ namespace Example {
 
 //! model problem information
 struct ModelProblemData : public Dune::Multiscale::Problem::IModelProblemData {
-  //! is there an exact solution available? true/false
-  //! (if 'true' it must be implemented below in the ExactSolution class)
-  static const bool has_exact_solution = true;
-
   ModelProblemData();
 
   //! \copydoc IModelProblemData::getMacroGridFile();
@@ -113,6 +109,7 @@ struct ModelProblemData : public Dune::Multiscale::Problem::IModelProblemData {
 
   //! does the problem allow a stochastic perturbation of the coefficients?
   bool problemAllowsStochastics() const;
+  bool hasExactSolution() const { return true; }
 };
 
 /**

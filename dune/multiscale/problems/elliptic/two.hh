@@ -22,8 +22,6 @@ namespace Problem {
 namespace Two {
 
 struct ModelProblemData : public IModelProblemData {
-  static const bool has_exact_solution = false;
-
   ModelProblemData();
 
   std::string getMacroGridFile() const;
