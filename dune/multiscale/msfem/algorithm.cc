@@ -128,23 +128,24 @@ void algorithm() {
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
   }
 
-  CommonTraits::DiscreteFunctionType fem_solution("FEM Solution", fine_discreteFunctionSpace);
+  std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution(nullptr);
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    fem_solution.clear();
+    fem_solution = DSC::make_unique<CommonTraits::DiscreteFunctionType>("FEM Solution", fine_discreteFunctionSpace);
+    fem_solution->clear();
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(fine_discreteFunctionSpace);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-    fem_solver.apply(diffusion_op, l_ptr, f, fem_solution);
+    fem_solver.apply(diffusion_op, l_ptr, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
       Dune::Multiscale::OutputParameters outputparam;
-      OutputTraits::IOTupleType fem_solution_series(&fem_solution);
+      OutputTraits::IOTupleType fem_solution_series(fem_solution.get());
       outputparam.set_prefix("fem_solution");
       OutputTraits::DataOutputType fem_dataoutput(fine_grid, fem_solution_series, outputparam);
       fem_dataoutput.writeData(1.0 /*dummy*/, "fem_solution");
     }
   }
 
-  ErrorCalculator(&msfem_solution, &fem_solution).print(DSC_LOG_INFO_0);
+  ErrorCalculator(&msfem_solution, fem_solution.get()).print(DSC_LOG_INFO_0);
 
   if (DSC_CONFIG_GET("adaptive", false))
     DSC_LOG_INFO_0 << "\n\n---------------------------------------------" << std::endl;
