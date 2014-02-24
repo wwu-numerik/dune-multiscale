@@ -63,8 +63,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   OutputTraits::DataOutputType(grid, fine_msfem_solution_series, outputparam)
       .writeData(1.0 /*dummy*/, fine_msfem_fname_s);
 
-  DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(), Dune::Fem::MPIManager::helper(),
-                                 outputparam.path());
+  DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(), outputparam.path());
 }
 
 //! \TODO docme
