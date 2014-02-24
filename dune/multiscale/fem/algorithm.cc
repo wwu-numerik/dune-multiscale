@@ -31,26 +31,28 @@ namespace Multiscale {
 namespace FEM {
 
 //! the main FEM computation
-void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string filename) {
+void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string /*filename*/) {
   using namespace Dune;
   const auto problem_data = Problem::getModelData();
   print_info(*problem_data, DSC_LOG_INFO);
-  typename CommonTraits::GridPartType gridPart(*macro_grid_pointer);
-  typename CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
+
+  const auto& grid_view = macro_grid_pointer->leafGridView();
+  CommonTraits::FEMapType fe_map(grid_view);
+  CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
+
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const auto diffusion_op = Problem::getDiffusion();
-  auto discrete_solution = make_df_ptr<typename CommonTraits::DiscreteFunctionType>(filename + " FEM(-Newton) Solution",
-                                                                                    discreteFunctionSpace);
-  discrete_solution->clear();
+  CommonTraits::PdelabVectorType solution(space, 0.0);
 
-  const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(discreteFunctionSpace);
+  const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
   const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
   const auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
-  fem_solver.apply(*diffusion_op, l_ptr, *f_ptr, *discrete_solution, true /*use_smp*/);
+  fem_solver.apply(*diffusion_op, l_ptr, *f_ptr, solution);
 
   // write FEM solution to a file and produce a VTK output
-  write_discrete_function(discrete_solution, "fem");
-  ErrorCalculator(nullptr, discrete_solution.get()).print(DSC_LOG_INFO_0);
+//  write_discrete_function(discrete_solution, "fem");
+//  ErrorCalculator(nullptr, discrete_solution.get()).print(DSC_LOG_INFO_0);
+
   DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
 }
 

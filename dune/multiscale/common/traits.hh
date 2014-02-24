@@ -13,6 +13,10 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
 
@@ -20,6 +24,12 @@ namespace Dune {
 
 template <class T>
 struct GridPtr;
+
+namespace PDELab {
+
+class NoConstraints;
+
+} //namespace PDELab
 
 namespace Fem {
 template <class T, class R>
@@ -58,7 +68,8 @@ struct CommonTraits {
   typedef GridType::Codim<0>::Entity EntityType;
   typedef Dune::Fem::AdaptiveLeafGridPart<GridType> GridPartType;
   typedef Dune::GridPtr<GridType> GridPointerType;
-  typedef Dune::Fem::FunctionSpace<double, double, GridType::dimension, 1> FunctionSpaceType;
+  typedef double FieldType;
+  typedef Dune::Fem::FunctionSpace<FieldType, FieldType, GridType::dimension, 1> FunctionSpaceType;
 
   typedef Dune::Stuff::GlobalFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
                                       FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange> FunctionBaseType;
@@ -120,6 +131,14 @@ struct CommonTraits {
 
   static constexpr int polynomial_order = DiscreteFunctionSpaceType::polynomialOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
+
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GridType::LeafGridView,GridType::ctype,FieldType,polynomial_order>
+  FEMapType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::VectorBackendType VectorBackendType;
+  typedef Dune::PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,Dune::PDELab::NoConstraints,
+            VectorBackendType> GridFunctionSpaceType;
+  typedef typename Dune::PDELab::BackendVectorSelector<GridFunctionSpaceType,FieldType>::Type PdelabVectorType;
+
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>
