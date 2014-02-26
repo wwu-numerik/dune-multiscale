@@ -44,7 +44,7 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
   // to assemble the computational time
   Dune::Timer timer;
 
-  typedef double Real;
+  typedef CommonTraits::FieldType Real;
   typedef CommonTraits::GridFunctionSpaceType GFS;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cg;

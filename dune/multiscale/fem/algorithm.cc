@@ -51,7 +51,7 @@ void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer
 
   // write FEM solution to a file and produce a VTK output
 //  write_discrete_function(discrete_solution, "fem");
-//  ErrorCalculator(nullptr, discrete_solution.get()).print(DSC_LOG_INFO_0);
+  ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO_0);
 
   DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
 }
