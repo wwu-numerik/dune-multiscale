@@ -50,7 +50,7 @@ void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer
   fem_solver.apply(*diffusion_op, l_ptr, *f_ptr, solution);
 
   // write FEM solution to a file and produce a VTK output
-//  write_discrete_function(discrete_solution, "fem");
+  write_discrete_function(solution, "fem");
   ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO_0);
 
   DiscreteFunctionIO<CommonTraits::DiscreteFunctionType>::clear();
