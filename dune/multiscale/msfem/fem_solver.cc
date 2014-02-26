@@ -18,7 +18,9 @@
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
-#include<dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/backend/seqistlsolverbackend.hh>
+#include <dune/pdelab/backend/ovlpistlsolverbackend.hh>
 
 #include <limits>
 #include <sstream>
@@ -42,31 +44,34 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
   // to assemble the computational time
   Dune::Timer timer;
 
-  const int magic_number_stencil = 9;
-  typedef BackendChooser<CommonTraits::DiscreteFunctionSpaceType>::MatrixBackendType MatrixBackendType;
-  MatrixBackendType fem_matrix(magic_number_stencil);
-  FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f, lower_order_term);
-
   typedef double Real;
   typedef CommonTraits::GridFunctionSpaceType GFS;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
-  typedef Dune::PDELab::GridOperator<GFS,GFS,FEM::Local_CG_FEM_Operator,MatrixBackendType,Real,Real,Real,CC,CC> GridOperatorType;
-  GridOperatorType global_operator(space_, space_, local_operator, fem_matrix);
+  CC cg;
+  cg.clear();
+  Dune::PDELab::DirichletConstraintsParameters constraintsparameters;
+  Dune::PDELab::constraints(constraintsparameters, space_,cg);
 
-//  std::cout << GridOperatorType::Traits::Jacobian(global_operator).patternStatistics() << std::endl;
+  FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f, lower_order_term);
 
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LinearSolverType;
+  const int magic_number_stencil = 9;
+  typedef BackendChooser<CommonTraits::DiscreteFunctionSpaceType>::MatrixBackendType MatrixBackendType;
+  MatrixBackendType fem_matrix(magic_number_stencil);
+
+  typedef Dune::PDELab::GridOperator<GFS,GFS,FEM::Local_CG_FEM_Operator,
+                                      MatrixBackendType,Real,Real,Real,CC,CC> GridOperatorType;
+  GridOperatorType global_operator(space_, cg, space_, cg, local_operator, fem_matrix);
+
+  std::cout << GridOperatorType::Traits::Jacobian(global_operator).patternStatistics() << std::endl;
+
+//  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
+//  typedef Dune::PDELab::ISTLBackend_NOVLP_CG_AMG_SSOR<GridOperatorType> LinearSolverType;
+  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
   LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
 
   typedef Dune::PDELab::StationaryLinearProblemSolver<GridOperatorType,LinearSolverType,CommonTraits::PdelabVectorType> SLP;
-  SLP slp(global_operator,solution,ls,1e-10);
+  SLP slp(global_operator,ls,solution,1e-10);
   slp.apply();
-
-//  const FEM::FEMTraits::InverseOperatorType inverse_op(
-//      fem_matrix, 1e-8, 1e-8, 5000, DSC_CONFIG_GET("global.cgsolver_verbose", false),
-//      DSC_CONFIG_GET("fem.algebraic_solver", "bcgs"), DSC_CONFIG_GET("fem.precond", "asm"), 1);
-//  fem_rhs.communicate();
-//  inverse_op.apply(fem_rhs, solution);
 
   DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
   DSC_LOG_INFO << "Standard FEM problem solved in " << timer.elapsed() << "s." << std::endl << std::endl

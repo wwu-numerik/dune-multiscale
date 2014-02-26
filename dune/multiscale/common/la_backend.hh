@@ -10,8 +10,13 @@
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/operator/linear/spoperator.hh>
 #endif
+
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
+#include <dune/pdelab/backend/eigenmatrixbackend.hh>
+#include <dune/pdelab/backend/eigensolverbackend.hh>
+#include <dune/pdelab/backend/eigenvectorbackend.hh>
+
 #include <dune/fem/solver/oemsolver.hh>
 
 namespace Dune {
