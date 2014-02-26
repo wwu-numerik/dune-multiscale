@@ -28,6 +28,7 @@ namespace FEM {
 class Local_CG_FEM_Operator
     : public Dune::PDELab::NumericalJacobianApplyVolume<Local_CG_FEM_Operator>,
       public Dune::PDELab::NumericalJacobianVolume<Local_CG_FEM_Operator>,
+      public Dune::PDELab::FullVolumePattern,
       public Dune::PDELab::LocalOperatorDefaultFlags,
       boost::noncopyable
 {
@@ -36,6 +37,12 @@ class Local_CG_FEM_Operator
   typedef typename CommonTraits::BasisFunctionSetType BaseFunctionSet;
 
 public:
+  // pattern assembly flags
+  enum { doPatternVolume = true };
+
+  // residual assembly flags
+  enum { doAlphaVolume = true };
+
   /**
    * \param lower_order_term Operator assumes ownership of it
    **/
@@ -59,12 +66,14 @@ public:
       Traits::LocalBasisType::Traits::JacobianType JacobianType;
     typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeType RangeType;
+    typedef typename LFSU::Traits::FiniteElementType::
+      Traits::LocalBasisType::Traits::DomainType DomainType;
     typedef typename LFSU::Traits::SizeType size_type;
 
     const auto& rule = Dune::QuadratureRules<DF,dimension>::rule(eg.geometry().type(),CommonTraits::quadrature_order);
     // loop over quadrature points
     for (auto quad_point : rule ) {
-      const auto local_point = quad_point->position();
+      const auto local_point = quad_point.position();
       const auto global_point = eg.geometry().global(local_point);
       // evaluate basis functions on reference element
       std::vector<RangeType> phi(lfsu.size());
@@ -76,28 +85,29 @@ public:
 
       // transform gradients from reference element to real element
       const auto jacobian_inverse = eg.geometry().jacobianInverseTransposed(local_point);
-      std::vector<RangeType> gradient_phi(lfsu.size());
+      std::vector<DomainType> gradient_phi(lfsu.size());
       for (size_type i=0; i<lfsu.size(); i++)
         jacobian_inverse.mv(jacobians[i][0],gradient_phi[i]);
 
       // compute gradient of u
-      RangeType gradu(0.0);
+      DomainType gradu(0.0);
       for (size_type i=0; i<lfsu.size(); i++)
         gradu.axpy(x(lfsu,i),gradient_phi[i]);
 
-      typename BaseFunctionSet::JacobianRangeType diffusion_in_gradient_phi;
-
       // integrate grad u * A * grad phi_i - (F+f) phi_i
+      Multiscale::Problem::JacobianRangeType gradient_phi_fem;
+      Multiscale::Problem::JacobianRangeType diffusion_in_gradient_phi;
       const auto factor = quad_point.weight()*eg.geometry().integrationElement(local_point);
       for (size_type i=0; i<lfsu.size(); i++) {
-        diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
+        gradient_phi_fem[0] = gradient_phi[i];
+        diffusion_operator_.diffusiveFlux(global_point, gradient_phi_fem, diffusion_in_gradient_phi);
         RangeType F_i(0.0);
         RangeType f_i(0.0);
         if (lower_order_term_)
-          lower_order_term_->evaluate(global_point, phi[i], gradient_phi[i], F_i);
+          lower_order_term_->evaluate(global_point, phi[i], gradient_phi_fem, F_i);
         source_.evaluate(global_point, f_i);
         F_i += f_i;
-        r.accumulate(lfsu, i, ( gradu*diffusion_in_gradient_phi - F_i*phi[i] )*factor);
+        r.accumulate(lfsu, i, ( gradu*diffusion_in_gradient_phi[0] - F_i*phi[i] )*factor);
       }
     }
   }
