@@ -5,6 +5,7 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
 #include <memory>
 #include <sstream>
 
@@ -69,6 +70,16 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
   out << "Refinement Level for Grid = " << refinement_level_ << std::endl << std::endl;
 
   out << "Epsilon = " << epsilon_ << std::endl << std::endl;
+}
+
+void write_discrete_function(CommonTraits::PdelabVectorType &discrete_solution, const std::string prefix)
+{
+  typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
+  const auto& gfs = discrete_solution.gridFunctionSpace();
+  SubsamplingVTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView(), CommonTraits::polynomial_order);
+  PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);
+  PDELab::addSolutionToVTKWriter(vtkwriter,gfs,discrete_solution, nn);
+  vtkwriter.write(prefix,Dune::VTK::appendedraw);
 }
 
 } // namespace FEM {
