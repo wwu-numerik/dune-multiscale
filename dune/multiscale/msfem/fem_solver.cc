@@ -64,8 +64,7 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 
   DSC_LOG_DEBUG << GridOperatorType::Traits::Jacobian(global_operator).patternStatistics() << std::endl;
 
-  Dune::PDELab::interpolate(Problem::getDirichletData()->gridFunction(space_.gridView()), space_ , solution);
-
+  Dune::PDELab::interpolate(DS::pdelabAdapted(*Problem::getDirichletData(), space_.gridView()), space_, solution);
 //  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
 //  LinearSolverType ls(space_, 5000);
 

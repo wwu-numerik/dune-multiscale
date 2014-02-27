@@ -68,7 +68,7 @@ void ExactSolution::jacobian(const ExactSolution::DomainType& x, ExactSolution::
 }
 
 void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& gradient, JacobianRangeType& flux) const {
-  double a_0 = 1.0 + pow(x[0], 2.0);
+  const double a_0 = 1.0 + pow(x[0], 2.0);
 
   flux[0][0] = a_0 * gradient[0][0];
   flux[0][1] = a_0 * gradient[0][1];
