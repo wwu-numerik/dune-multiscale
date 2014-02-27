@@ -11,6 +11,7 @@
 #include <dune/multiscale/common/output_traits.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
+#include <dune/multiscale/fem/print_info.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
@@ -127,20 +128,17 @@ void algorithm() {
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
   }
 
-  std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution(nullptr);
+  std::unique_ptr<CommonTraits::PdelabVectorType> fem_solution(nullptr);
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    fem_solution = DSC::make_unique<CommonTraits::DiscreteFunctionType>("FEM Solution", fine_discreteFunctionSpace);
-    fem_solution->clear();
-    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(fine_discreteFunctionSpace);
+    const auto& grid_view = coarse_grid.leafGridView();
+    CommonTraits::FEMapType fe_map(grid_view);
+    CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
+    fem_solution = DSC::make_unique<CommonTraits::PdelabVectorType>(space, 0.0);
+    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
     fem_solver.apply(diffusion_op, l_ptr, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
-      DSC_LOG_INFO_0 << "Data output for FEM Solution." << std::endl;
-      Dune::Multiscale::OutputParameters outputparam;
-      OutputTraits::IOTupleType fem_solution_series(fem_solution.get());
-      outputparam.set_prefix("fem_solution");
-      OutputTraits::DataOutputType fem_dataoutput(fine_grid, fem_solution_series, outputparam);
-      fem_dataoutput.writeData(1.0 /*dummy*/, "fem_solution");
+      Dune::Multiscale::FEM::write_discrete_function(*fem_solution, "fem_solution");
     }
   }
 
