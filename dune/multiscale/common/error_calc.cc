@@ -83,14 +83,15 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
   }
   if (msfem_solution_ && fem_solution_) {
-    const auto approx_msfem_error = DS::l2distance(*msfem_solution_,*fem_solution_);
-    out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
+    DUNE_THROW(NotImplemented, "disabled because l2distance needs special casing for this");
+//    const auto approx_msfem_error = DS::l2distance(*msfem_solution_,*fem_solution_);
+//    out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 
-    const auto h1_approx_msfem_error = DS::h1distance(*msfem_solution_,*fem_solution_);
-    out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
+//    const auto h1_approx_msfem_error = DS::h1distance(*msfem_solution_,*fem_solution_);
+//    out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
 
-    csv["msfem_fem_L2"] = approx_msfem_error;
-    csv["msfem_fem_H1"] = h1_approx_msfem_error;
+//    csv["msfem_fem_L2"] = approx_msfem_error;
+//    csv["msfem_fem_H1"] = h1_approx_msfem_error;
   }
 
   std::unique_ptr<boost::filesystem::ofstream> csvfile(

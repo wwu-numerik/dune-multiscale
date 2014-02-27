@@ -47,10 +47,10 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
   typedef CommonTraits::FieldType Real;
   typedef CommonTraits::GridFunctionSpaceType GFS;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
-  CC cg;
-  cg.clear();
-  Dune::PDELab::DirichletConstraintsParameters constraintsparameters;
-  Dune::PDELab::constraints(constraintsparameters, space_,cg);
+  CC constraints_container;
+  constraints_container.clear();
+  const auto& bc_type = Problem::getModelData()->boundaryInfo();
+  Dune::PDELab::constraints(*bc_type, space_, constraints_container);
 
   FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f, lower_order_term);
 
@@ -60,12 +60,15 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 
   typedef Dune::PDELab::GridOperator<GFS,GFS,FEM::Local_CG_FEM_Operator,
                                       MatrixBackendType,Real,Real,Real,CC,CC> GridOperatorType;
-  GridOperatorType global_operator(space_, cg, space_, cg, local_operator, fem_matrix);
+  GridOperatorType global_operator(space_, constraints_container, space_, constraints_container, local_operator, fem_matrix);
 
-  std::cout << GridOperatorType::Traits::Jacobian(global_operator).patternStatistics() << std::endl;
+  DSC_LOG_DEBUG << GridOperatorType::Traits::Jacobian(global_operator).patternStatistics() << std::endl;
+
+  Dune::PDELab::interpolate(Problem::getDirichletData()->gridFunction(space_.gridView()), space_ , solution);
 
 //  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
-//  typedef Dune::PDELab::ISTLBackend_NOVLP_CG_AMG_SSOR<GridOperatorType> LinearSolverType;
+//  LinearSolverType ls(space_, 5000);
+
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
   LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
 

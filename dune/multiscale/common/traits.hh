@@ -17,6 +17,8 @@
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
 
@@ -28,6 +30,7 @@ struct GridPtr;
 namespace PDELab {
 
 class NoConstraints;
+//class ConformingDirichletConstraints;
 
 } //namespace PDELab
 
@@ -132,12 +135,12 @@ struct CommonTraits {
   static constexpr int polynomial_order = DiscreteFunctionSpaceType::polynomialOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
 
-  typedef Dune::PDELab::QkLocalFiniteElementMap<GridType::LeafGridView,GridType::ctype,FieldType,polynomial_order>
+  typedef PDELab::QkLocalFiniteElementMap<GridType::LeafGridView,GridType::ctype,FieldType,polynomial_order>
   FEMapType;
   typedef BackendChooser<DiscreteFunctionSpaceType>::VectorBackendType VectorBackendType;
-  typedef Dune::PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,Dune::PDELab::NoConstraints,
+  typedef PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,PDELab::ConformingDirichletConstraints,
             VectorBackendType> GridFunctionSpaceType;
-  typedef typename Dune::PDELab::BackendVectorSelector<GridFunctionSpaceType,FieldType>::Type PdelabVectorType;
+  typedef typename PDELab::BackendVectorSelector<GridFunctionSpaceType,FieldType>::Type PdelabVectorType;
 
 };
 
