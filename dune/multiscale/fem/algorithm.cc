@@ -97,7 +97,7 @@ void algorithm(const std::shared_ptr< CommonTraits::GridType >& macro_grid_point
   const BoundaryInfoType boundary_info;
   // * create the space and the containers we need
   Dune::Timer timer;
-  DSC_LOG_INFO << "assembling system... " << std::flush;
+  DSC_LOG_INFO << "assembling system (on a grid view with " << grid_view_ptr->size(0) << " entities)... " << std::flush;
   const SpaceType space(grid_view_ptr);
   const std::unique_ptr< Stuff::LA::SparsityPatternDefault > sparsity_pattern(space.computePattern());
   MatrixType system_matrix(space.mapper().size(), space.mapper().size(), *sparsity_pattern);
@@ -184,7 +184,8 @@ void algorithm(const std::shared_ptr< CommonTraits::GridType >& macro_grid_point
   const auto finer_grid_view_ptr
       = std::make_shared< const GridViewType >(macro_grid_pointer->levelGridView(macro_grid_pointer->maxLevel()));
   DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-  DSC_LOG_INFO << "prolonging solution... " << std::flush;
+  DSC_LOG_INFO << "prolonging solution (to a grid view with " << finer_grid_view_ptr->size(0) << " entities)... "
+               << std::flush;
   const SpaceType finer_space(finer_grid_view_ptr);
   VectorType finer_solution_vector(finer_space.mapper().size());
   DiscreteFunctionType finer_solution(finer_space, finer_solution_vector);
