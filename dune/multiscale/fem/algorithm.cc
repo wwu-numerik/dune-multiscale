@@ -5,6 +5,9 @@
 
 #include "algorithm.hh"
 
+#include <string>
+#include <fstream>
+
 #include <dune/common/timer.hh>
 
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
@@ -22,12 +25,11 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
-
 #include <dune/stuff/grid/boundaryinfo.hh>
-#include <dune/stuff/la/container/eigen.hh>
+#include <dune/stuff/la/container.hh>
 #include <dune/stuff/la/solver.hh>
-#include <dune/stuff/functions/expression.hh>
 #include <dune/stuff/functions/combined.hh>
+#include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/functions/global.hh>
 
 #ifdef HAVE_DUNE_FEM // <- this is a temporary hack bc dune-gdt is not up to date with dune-fem
@@ -35,22 +37,12 @@
 #endif
 
 #include <dune/gdt/space/continuouslagrange/pdelab.hh>
-#include <dune/gdt/localevaluation/elliptic.hh>
-#include <dune/gdt/localoperator/codim0.hh>
-#include <dune/gdt/localevaluation/product.hh>
-#include <dune/gdt/localfunctional/codim0.hh>
-#include <dune/gdt/localfunctional/codim1.hh>
-#include <dune/gdt/discretefunction/default.hh>
-#include <dune/gdt/operator/projections.hh>
-#include <dune/gdt/assembler/local/codim0.hh>
-#include <dune/gdt/assembler/local/codim1.hh>
+#include <dune/gdt/operator/elliptic.hh>
+#include <dune/gdt/functional/l2.hh>
 #include <dune/gdt/space/constraints.hh>
 #include <dune/gdt/assembler/system.hh>
 #include <dune/gdt/operator/products.hh>
-#include <dune/gdt/operator/prolongations.hh>
-
-#include <string>
-#include <fstream>
+#include <dune/gdt/operator/projections.hh>
 
 #include "fem_traits.hh"
 
@@ -202,12 +194,12 @@ template< class GridViewType, class SpaceType, class MatrixType, class VectorTyp
 class EllipticDuneGdtDiscretization
 {
 public:
+  // this is the detailed version of how to discretize with dune-gdt problem nine
+  // (any function derived from Stuff::LocalizableFunctionInterface will serve as a data function)
   static VectorType solve(const std::shared_ptr< const GridViewType >& grid_view,
                           const std::shared_ptr< const GridViewType >& finer_grid_view)
   {
-    // this is the detailed version of how to discretize with dune-gdt problem nine
-    // (any function derived from Stuff::LocalizableFunctionInterface will serve as a data function)
-    // * some types
+    // first some types
     typedef typename SpaceType::DomainFieldType DomainFieldType;
     static const unsigned int                   dimDomain = SpaceType::dimDomain;
     typedef typename SpaceType::RangeFieldType  RangeFieldType;
@@ -216,75 +208,65 @@ public:
     typedef Stuff::Function::Constant< EntityType, DomainFieldType, dimDomain, RangeFieldType, dimRange >
         ConstantFunctionType;
     typedef GDT::DiscreteFunction< SpaceType, VectorType > DiscreteFunctionType;
+    typedef GDT::ConstDiscreteFunction< SpaceType, VectorType > ConstDiscreteFunctionType;
     typedef Stuff::GridboundaryAllDirichlet< typename GridViewType::Intersection > BoundaryInfoType;
     const BoundaryInfoType boundary_info;
-    // * create the space and the containers we need
     Dune::Timer timer;
     DSC_LOG_INFO << "assembling system (on a grid view with " << grid_view->size(0) << " entities)... "
                  << std::flush;
     const SpaceType space(grid_view);
-    MatrixType system_matrix(space.mapper().size(), space.mapper().size(), space.compute_pattern());
-    VectorType rhs_vector(space.mapper().size());
-    VectorType dirichlet_shift_vector(space.mapper().size());
-    // left hand side
-    // * elliptic diffusion operator
+    // elliptic operator (type only, for the sparsity pattern)
     typedef ProblemNineDiffusion< GridViewType > DiffusionType;
     const DiffusionType diffusion;
-    typedef GDT::LocalOperator::Codim0Integral< GDT::LocalEvaluation::Elliptic< DiffusionType > > EllipticOperatorType;
-    const EllipticOperatorType diffusion_operator(diffusion);
-    // right hand side
-    // * L2 force functional
+    typedef GDT::Operator::Elliptic< DiffusionType, MatrixType, SpaceType > EllipticOperatorType;
+    // container (using the sparsity pattern of the operator)
+    MatrixType system_matrix(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
+    VectorType rhs_vector(space.mapper().size());
+    VectorType dirichlet_shift_vector(space.mapper().size());
+    // now the elliptic operator
+    EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
+    // the force functional
     typedef ProblemNineForce< GridViewType > ForceType;
     const ForceType force;
-    typedef GDT::LocalFunctional::Codim0Integral< GDT::LocalEvaluation::Product< ForceType > > L2VolumeFunctionalType;
-    const L2VolumeFunctionalType force_functional(force);
-    // * L2 neumann functional
+    GDT::Functional::L2Volume< ForceType, VectorType, SpaceType > force_functional(force, rhs_vector, space);
+    // the neumann functional
     const ConstantFunctionType neumann(1.0);
-    typedef GDT::LocalFunctional::Codim1Integral< GDT::LocalEvaluation::Product< ConstantFunctionType > >
-        L2FaceFunctionalType;
-    const L2FaceFunctionalType neumann_functional(neumann);
+    GDT::Functional::L2Face< ConstantFunctionType, VectorType, SpaceType >
+        neumann_functional(neumann, rhs_vector, space);
     // dirichlet boundary values
     const ConstantFunctionType dirichlet(0.0);
-    DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector, "discrete dirichlet");
-    typedef GDT::ProjectionOperator::Dirichlet< GridViewType > DirichletProjectionOperatorType;
-    const DirichletProjectionOperatorType dirichlet_projection_operator(*(space.grid_view()), boundary_info);
-    dirichlet_projection_operator.apply(dirichlet, dirichlet_projection);
-    // local matrix assemBoundaryInfoTypebler
-    typedef GDT::LocalAssembler::Codim0Matrix< EllipticOperatorType > LocalEllipticOperatorMatrixAssemblerType;
-    const LocalEllipticOperatorMatrixAssemblerType diffusion_matrix_assembler(diffusion_operator);
-    // local vector assemblers
-    // * force vector
-    typedef GDT::LocalAssembler::Codim0Vector< L2VolumeFunctionalType > LocalL2VolumeFunctionalVectorAssemblerType;
-    const LocalL2VolumeFunctionalVectorAssemblerType force_vector_assembler(force_functional);
-    // * neumann vector
-    typedef GDT::LocalAssembler::Codim1Vector< L2FaceFunctionalType > LocalL2FaceFunctionalVectorAssemblerType;
-    const LocalL2FaceFunctionalVectorAssemblerType neumann_vector_assembler(neumann_functional);
-    // system assembler
-    typedef GDT::SystemAssembler< SpaceType > SystemAssemblerType;
-    SystemAssemblerType system_assembler(space);
-    system_assembler.add(diffusion_matrix_assembler, system_matrix);
-    system_assembler.add(force_vector_assembler, rhs_vector);
-    system_assembler.add(neumann_vector_assembler,
-                         rhs_vector,
-                         new GDT::ApplyOn::NeumannIntersections< GridViewType >(boundary_info));
+    DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector);
+    typedef GDT::ProjectionOperator::DirichletLocalizable< GridViewType, ConstantFunctionType, DiscreteFunctionType >
+        DirichletProjectionOperatorType;
+    DirichletProjectionOperatorType dirichlet_projection_operator(*(space.grid_view()),
+                                                                  boundary_info,
+                                                                  dirichlet,
+                                                                  dirichlet_projection);
+    // now assemble everything in one grid walk
+    GDT::SystemAssembler< SpaceType > system_assembler(space);
+    system_assembler.add(elliptic_operator);
+    system_assembler.add(force_functional);
+    system_assembler.add(neumann_functional, new GDT::ApplyOn::NeumannIntersections< GridViewType >(boundary_info));
+    system_assembler.add(dirichlet_projection_operator,
+                         new GDT::ApplyOn::BoundaryEntities< GridViewType >());
     system_assembler.assemble();
-    system_assembler.clear();
     DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
     timer.reset();
-    // substract the operators action on the dirichlet values, since we solve in H^1_0
-    // (this is the version that acts on the container interface, if you would only use eigen you can use the backend()
-    //  and get rid of the tmp)
+    // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
+    // (this is the version that acts on the container interface, if we would use the eigen container from dune-stuff we
+    //  could use the backend() and get rid of the tmp)
     DSC_LOG_INFO << "applying dirichlet constraints... " << std::flush;
     auto tmp = rhs_vector.copy();
     system_matrix.mv(dirichlet_shift_vector, tmp);
     rhs_vector -= tmp;
-    // apply the dirichlet zero constraints
+    // apply the dirichlet zero constraints to restrict the system to H^1_0
+    // (we do this in a second grid walk, no way around that atm)
     GDT::Constraints::Dirichlet < typename GridViewType::Intersection, RangeFieldType >
       dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
-    system_assembler.add(dirichlet_constraints, system_matrix);
-    system_assembler.add(dirichlet_constraints, rhs_vector);
-    system_assembler.assemble();
     system_assembler.clear();
+    system_assembler.add(dirichlet_constraints, system_matrix, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+    system_assembler.add(dirichlet_constraints, rhs_vector, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+    system_assembler.assemble();
     DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
     timer.reset();
     // solve the system
@@ -298,22 +280,39 @@ public:
     DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
     timer.reset();
 
-    typedef GDT::ConstDiscreteFunction< SpaceType, VectorType > ConstDiscreteFunctionType;
+    // now we measure the error (there are more intuitive ways to do this in dune-gdt, but this is the fastest)
+    // (note that we should compute the error on a refined grid for an accurate error imho!)
+    DSC_LOG_INFO << "computing errors... " << std::flush;
     const ConstDiscreteFunctionType solution(space, solution_vector);
     typedef ProblemNineExactSolution< GridViewType > ExactSolutionType;
     ExactSolutionType exact_solution;
-    const Stuff::Function::Difference< ExactSolutionType, ConstDiscreteFunctionType > difference(exact_solution,
-                                                                                                 solution);
-    DSC_LOG_INFO << "measuring L2 error:      " << std::flush;
-    const GDT::ProductOperator::L2Generic< GridViewType > l2_product(*grid_view);
-    DSC_LOG_INFO << std::sqrt(l2_product.apply2(difference, difference))
-                 << " (took " << timer.elapsed() << "s)" << std::endl;
-    timer.reset();
-    const GDT::ProductOperator::H1SemiGeneric< GridViewType > h1_semi_product(*grid_view);
-    DSC_LOG_INFO << "measuring H1 semi error: " << std::flush;
-    DSC_LOG_INFO << std::sqrt(h1_semi_product.apply2(difference, difference))
-                 << " (took " << timer.elapsed() << "s)" << std::endl;
-
+    typedef Stuff::Function::Difference< ExactSolutionType, ConstDiscreteFunctionType > DifferenceType;
+    const DifferenceType difference(exact_solution, solution);
+    // therefore we predefine all products
+    GDT::ProductOperator::L2Localizable< GridViewType, DifferenceType > l2_error_product(*grid_view, difference);
+    GDT::ProductOperator::L2Localizable< GridViewType, ExactSolutionType > l2_reference_product(*grid_view,
+                                                                                                exact_solution);
+    GDT::ProductOperator::H1SemiLocalizable< GridViewType, DifferenceType >
+        h1_semi_error_product(*grid_view, difference);
+    GDT::ProductOperator::H1SemiLocalizable< GridViewType, ExactSolutionType >
+        h1_semi_reference_product(*grid_view, exact_solution);
+    // so we can apply them all in one grid walk
+    system_assembler.clear();
+    system_assembler.add(l2_error_product);
+    system_assembler.add(l2_reference_product);
+    system_assembler.add(h1_semi_error_product);
+    system_assembler.add(h1_semi_reference_product);
+    system_assembler.assemble();
+    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+    // and access the result in apply2()
+    DSC_LOG_INFO << "L2 error      (abs/rel): "
+                 << std::sqrt(l2_error_product.apply2()) << " / "
+                 << std::sqrt(l2_error_product.apply2()) / std::sqrt(l2_reference_product.apply2()) << std::endl;
+    DSC_LOG_INFO << "semi H1 error (abs/rel): "
+                 << std::sqrt(h1_semi_error_product.apply2()) << " / "
+                 << std::sqrt(h1_semi_error_product.apply2()) / std::sqrt(h1_semi_reference_product.apply2())
+                 << std::endl;
+    // we have CoW and move constructors, so we can safely return an object
     return solution_vector;
   } // ... solve(...)
 }; // class EllipticDuneGdtDiscretization
