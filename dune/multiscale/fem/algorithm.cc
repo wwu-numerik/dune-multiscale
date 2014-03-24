@@ -223,8 +223,7 @@ public:
     DSC_LOG_INFO << "assembling system (on a grid view with " << grid_view->size(0) << " entities)... "
                  << std::flush;
     const SpaceType space(grid_view);
-    const std::unique_ptr< Stuff::LA::SparsityPatternDefault > sparsity_pattern(space.computePattern());
-    MatrixType system_matrix(space.mapper().size(), space.mapper().size(), *sparsity_pattern);
+    MatrixType system_matrix(space.mapper().size(), space.mapper().size(), space.compute_pattern());
     VectorType rhs_vector(space.mapper().size());
     VectorType dirichlet_shift_vector(space.mapper().size());
     // left hand side
@@ -248,7 +247,7 @@ public:
     const ConstantFunctionType dirichlet(0.0);
     DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector, "discrete dirichlet");
     typedef GDT::ProjectionOperator::Dirichlet< GridViewType > DirichletProjectionOperatorType;
-    const DirichletProjectionOperatorType dirichlet_projection_operator(*(space.gridView()), boundary_info);
+    const DirichletProjectionOperatorType dirichlet_projection_operator(*(space.grid_view()), boundary_info);
     dirichlet_projection_operator.apply(dirichlet, dirichlet_projection);
     // local matrix assemBoundaryInfoTypebler
     typedef GDT::LocalAssembler::Codim0Matrix< EllipticOperatorType > LocalEllipticOperatorMatrixAssemblerType;
@@ -263,12 +262,13 @@ public:
     // system assembler
     typedef GDT::SystemAssembler< SpaceType > SystemAssemblerType;
     SystemAssemblerType system_assembler(space);
-    system_assembler.addLocalAssembler(diffusion_matrix_assembler, system_matrix);
-    system_assembler.addLocalAssembler(force_vector_assembler, rhs_vector);
-    system_assembler.addLocalAssembler(neumann_vector_assembler,
-                                       typename SystemAssemblerType::AssembleOnNeumann(boundary_info),
-                                       rhs_vector);
+    system_assembler.add(diffusion_matrix_assembler, system_matrix);
+    system_assembler.add(force_vector_assembler, rhs_vector);
+    system_assembler.add(neumann_vector_assembler,
+                         rhs_vector,
+                         new GDT::ApplyOn::NeumannIntersections< GridViewType >(boundary_info));
     system_assembler.assemble();
+    system_assembler.clear();
     DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
     timer.reset();
     // substract the operators action on the dirichlet values, since we solve in H^1_0
@@ -281,9 +281,10 @@ public:
     // apply the dirichlet zero constraints
     GDT::Constraints::Dirichlet < typename GridViewType::Intersection, RangeFieldType >
       dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
-    system_assembler.addLocalConstraints(dirichlet_constraints, system_matrix);
-    system_assembler.addLocalConstraints(dirichlet_constraints, rhs_vector);
-    system_assembler.applyConstraints();
+    system_assembler.add(dirichlet_constraints, system_matrix);
+    system_assembler.add(dirichlet_constraints, rhs_vector);
+    system_assembler.assemble();
+    system_assembler.clear();
     DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
     timer.reset();
     // solve the system
