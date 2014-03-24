@@ -46,9 +46,9 @@ class AdaptationManager;
 } // namespace Fem
 
 namespace Stuff {
-template <class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim>
+template <class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim, int rangeDimCol = 1 >
 class GlobalFunction;
-template <class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim>
+template <class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim, int rangeDimCol = 1 >
 class GlobalConstantFunction;
 }
 namespace Multiscale {
