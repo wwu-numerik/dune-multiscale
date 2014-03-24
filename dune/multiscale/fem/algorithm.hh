@@ -27,6 +27,10 @@ class ProblemNineNeumann;
 template< class GridViewType >
 class ProblemNineExactSolution;
 
+
+template< class GridPartViewType, class SpaceType, class MatrixType, class VectorType >
+class EllipticDuneGdtDiscretization;
+
 //! the main FEM computation
 void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string filename);
 
