@@ -36,6 +36,7 @@ void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer
   const auto problem_data = Problem::getModelData();
   print_info(*problem_data, DSC_LOG_INFO);
   typename CommonTraits::GridPartType gridPart(*macro_grid_pointer);
+  DSC_LOG_INFO << "gridPart has " << gridPart.indexSet().size(0) << " entities" << std::endl;
   typename CommonTraits::DiscreteFunctionSpaceType discreteFunctionSpace(gridPart);
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
   const auto diffusion_op = Problem::getDiffusion();
