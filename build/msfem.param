@@ -4,8 +4,8 @@ datadir = data
 output_walltime = 1
 vtk_output = 1
 
-macro_cells_per_dim = 32
-micro_cells_per_macrocell_dim = 128
+macro_cells_per_dim = 16
+micro_cells_per_macrocell_dim = 32
 
 [msfem]
 # number of oversampling layers (layers of fine grid elements)
