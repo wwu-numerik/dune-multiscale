@@ -12,6 +12,21 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
+template< class GridViewType >
+class ProblemNineDiffusion;
+
+template< class GridViewType >
+class ProblemNineForce;
+
+template< class GridViewType >
+class ProblemNineDirichlet;
+
+template< class GridViewType >
+class ProblemNineNeumann;
+
+template< class GridViewType >
+class ProblemNineExactSolution;
+
 //! the main FEM computation
 void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string filename);
 
