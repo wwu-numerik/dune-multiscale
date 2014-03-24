@@ -57,6 +57,146 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
+template< class GridViewType >
+class ProblemNineDiffusion
+  : public Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
+                                , typename GridViewType::ctype, GridViewType::dimension
+                                , double, GridViewType::dimension, GridViewType::dimension >
+{
+  typedef Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
+                               , typename GridViewType::ctype, GridViewType::dimension
+                               , double, GridViewType::dimension, GridViewType::dimension > BaseType;
+public:
+  typedef typename BaseType::RangeType  RangeType;
+  typedef typename BaseType::DomainType DomainType;
+
+  ProblemNineDiffusion() {}
+
+  virtual size_t order() const DS_FINAL DS_OVERRIDE
+  {
+    return 3;
+  }
+
+  virtual void evaluate(const DomainType& xx, RangeType& ret) const DS_FINAL DS_OVERRIDE
+  {
+    assert(ret.rows() == 2);
+    assert(ret.cols() == 2);
+    ret *= 0.0;
+    ret[0][0] =
+          2.0 * (1.0 / (8.0 * M_PI * M_PI)) * (1.0 / (2.0 + cos(2.0 * M_PI * (xx[0] / 0.05))));
+    ret[1][1] = (1.0 / (8.0 * M_PI * M_PI)) * (1.0 + (0.5 * cos(2.0 * M_PI * (xx[0] / 0.05))));
+  } // ... evaluate(...)
+}; // ... ProblemNineDiffusion(...)
+
+template< class GridViewType >
+class ProblemNineForce
+  : public Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
+                                , typename GridViewType::ctype, GridViewType::dimension, double, 1 >
+{
+  typedef Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
+                               , typename GridViewType::ctype, GridViewType::dimension, double, 1 > BaseType;
+public:
+  typedef typename BaseType::RangeType  RangeType;
+  typedef typename BaseType::DomainType DomainType;
+
+  ProblemNineForce() {}
+
+  virtual size_t order() const DS_FINAL DS_OVERRIDE
+  {
+    return 3;
+  }
+
+  virtual void evaluate(const DomainType& xx, RangeType& ret) const DS_FINAL DS_OVERRIDE
+  {
+    const double eps = 0.05;
+    const double pi_square = pow(M_PI, 2.0);
+    const double x0_eps = (xx[0] / eps);
+    const double cos_2_pi_x0_eps = cos(2.0 * M_PI * x0_eps);
+    const double sin_2_pi_x0_eps = sin(2.0 * M_PI * x0_eps);
+    const double coefficient_0 = 2.0 * (1.0 / (8.0 * M_PI * M_PI)) * (1.0 / (2.0 + cos_2_pi_x0_eps));
+    const double coefficient_1 = (1.0 / (8.0 * M_PI * M_PI)) * (1.0 + (0.5 * cos_2_pi_x0_eps));
+    const double sin_2_pi_x0 = sin(2.0 * M_PI * xx[0]);
+    const double cos_2_pi_x0 = cos(2.0 * M_PI * xx[0]);
+    const double sin_2_pi_x1 = sin(2.0 * M_PI * xx[1]);
+
+    const double d_x0_coefficient_0 =
+        pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (2.0 * M_PI)) * (1.0 / eps) * sin_2_pi_x0_eps;
+
+    const RangeType grad_u =
+        (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) + ((-1.0) * eps * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
+        (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
+
+    const RangeType d_x0_x0_u =
+        -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+        (2.0 * pi_square * (eps + (1.0 / eps)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
+        (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
+
+    const RangeType d_x1_x1_u =
+        -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+        (2.0 * pi_square * eps * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+
+    ret = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
+  } // ... evaluate(...)
+}; // ... ProblemNineForce(...)
+
+
+template< class GridViewType >
+class ProblemNineExactSolution
+  : public Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
+                                , typename GridViewType::ctype, GridViewType::dimension, double, 1 >
+{
+  typedef Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
+                               , typename GridViewType::ctype, GridViewType::dimension, double, 1 > BaseType;
+public:
+  typedef typename BaseType::RangeType  RangeType;
+  typedef typename BaseType::DomainType DomainType;
+  typedef typename BaseType::JacobianRangeType JacobianRangeType;
+
+  ProblemNineExactSolution() {}
+
+  virtual size_t order() const DS_FINAL DS_OVERRIDE
+  {
+    return 3;
+  }
+
+  virtual void evaluate(const DomainType& xx, RangeType& ret) const DS_FINAL DS_OVERRIDE
+  {
+    const double eps = 0.05;
+    static const double M_TWOPI = M_PI * 2.0;
+    const double x0_eps = (xx[0] / eps);
+    const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
+    const double x0_2_pi = M_TWOPI * xx[0];
+    const double x1_2_pi = M_TWOPI * xx[1];
+    const double sin_2_pi_x0 = sin(x0_2_pi);
+    const double cos_2_pi_x0 = cos(x0_2_pi);
+    const double sin_2_pi_x1 = sin(x1_2_pi);
+
+    ret = sin_2_pi_x0 * sin_2_pi_x1
+        + (0.5 * eps * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+  } // ... evaluate(...)
+
+  virtual void jacobian(const DomainType& xx, JacobianRangeType& ret) const DS_FINAL DS_OVERRIDE
+  {
+    const double eps = 0.05;
+    static const double M_TWOPI = M_PI * 2.0;
+    const double x0_eps = (xx[0] / eps);
+    const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
+    const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
+    const double x0_2_pi = M_TWOPI * xx[0];
+    const double x1_2_pi = M_TWOPI * xx[1];
+    const double sin_2_pi_x0 = sin(x0_2_pi);
+    const double cos_2_pi_x0 = cos(x0_2_pi);
+    const double sin_2_pi_x1 = sin(x1_2_pi);
+    const double cos_2_pi_x1 = cos(x1_2_pi);
+
+    ret[0][1] = (M_TWOPI * sin_2_pi_x0 * cos_2_pi_x1) + (eps * M_PI * cos_2_pi_x0 * cos_2_pi_x1 * sin_2_pi_x0_eps);
+
+    ret[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1) - (eps * M_PI * sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) +
+                   (M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
+  }
+}; // ... ProblemNineExactSolution(...)
+
+
 //! the main FEM computation
 void algorithm(const std::shared_ptr< CommonTraits::GridType >& macro_grid_pointer, const std::string /*filename*/) {
   using namespace Dune;
