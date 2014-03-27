@@ -272,10 +272,14 @@ public:
     timer.reset();
     // solve the system
     const Stuff::LA::Solver< MatrixType >linear_solver(system_matrix);
-    const auto linear_solver_option = linear_solver.options()[0];
-    DSC_LOG_INFO << "solving the linear system using '" << linear_solver_option << "'... " << std::flush;
+    const auto linear_solver_type = linear_solver.options()[0];
+    auto linear_solver_options = linear_solver.options(linear_solver_type);
+    linear_solver_options.set("max_iter",                 "5000", true);
+    linear_solver_options.set("precision",                "1e-8", true);
+    linear_solver_options.set("post_check_solves_system", "0",    true);
+    DSC_LOG_INFO << "solving the linear system using '" << linear_solver_type << "'... " << std::flush;
     VectorType solution_vector(space.mapper().size());
-    linear_solver.apply(rhs_vector, solution_vector, linear_solver_option);
+    linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
     // add the dirichlet shift to obtain the solution in H^1
     solution_vector += dirichlet_shift_vector;
     DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
