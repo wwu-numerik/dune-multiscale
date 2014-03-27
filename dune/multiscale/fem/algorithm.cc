@@ -21,6 +21,8 @@
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 
+#define DUNE_STUFF_FUNCTIONS_DISABLE_CHECKS 1
+
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/logging.hh>
