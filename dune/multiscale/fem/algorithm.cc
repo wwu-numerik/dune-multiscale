@@ -41,8 +41,10 @@
 #include <dune/gdt/functional/l2.hh>
 #include <dune/gdt/space/constraints.hh>
 #include <dune/gdt/assembler/system.hh>
-#include <dune/gdt/operator/products.hh>
+#include <dune/gdt/product/l2.hh>
+#include <dune/gdt/product/h1.hh>
 #include <dune/gdt/operator/projections.hh>
+#include <dune/gdt/operator/prolongations.hh>
 
 #include "fem_traits.hh"
 
@@ -218,7 +220,7 @@ public:
     // elliptic operator (type only, for the sparsity pattern)
     typedef ProblemNineDiffusion< GridViewType > DiffusionType;
     const DiffusionType diffusion;
-    typedef GDT::Operator::Elliptic< DiffusionType, MatrixType, SpaceType > EllipticOperatorType;
+    typedef GDT::Operator::EllipticCG< DiffusionType, MatrixType, SpaceType > EllipticOperatorType;
     // container (using the sparsity pattern of the operator)
     MatrixType system_matrix(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
     VectorType rhs_vector(space.mapper().size());
@@ -263,7 +265,6 @@ public:
     // (we do this in a second grid walk, no way around that atm)
     GDT::Constraints::Dirichlet < typename GridViewType::Intersection, RangeFieldType >
       dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
-    system_assembler.clear();
     system_assembler.add(dirichlet_constraints, system_matrix, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
     system_assembler.add(dirichlet_constraints, rhs_vector, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
     system_assembler.assemble();
@@ -289,15 +290,14 @@ public:
     typedef Stuff::Function::Difference< ExactSolutionType, ConstDiscreteFunctionType > DifferenceType;
     const DifferenceType difference(exact_solution, solution);
     // therefore we predefine all products
-    GDT::ProductOperator::L2Localizable< GridViewType, DifferenceType > l2_error_product(*grid_view, difference);
-    GDT::ProductOperator::L2Localizable< GridViewType, ExactSolutionType > l2_reference_product(*grid_view,
+    GDT::Product::L2Localizable< GridViewType, DifferenceType > l2_error_product(*grid_view, difference);
+    GDT::Product::L2Localizable< GridViewType, ExactSolutionType > l2_reference_product(*grid_view,
                                                                                                 exact_solution);
-    GDT::ProductOperator::H1SemiLocalizable< GridViewType, DifferenceType >
+    GDT::Product::H1SemiLocalizable< GridViewType, DifferenceType >
         h1_semi_error_product(*grid_view, difference);
-    GDT::ProductOperator::H1SemiLocalizable< GridViewType, ExactSolutionType >
+    GDT::Product::H1SemiLocalizable< GridViewType, ExactSolutionType >
         h1_semi_reference_product(*grid_view, exact_solution);
     // so we can apply them all in one grid walk
-    system_assembler.clear();
     system_assembler.add(l2_error_product);
     system_assembler.add(l2_reference_product);
     system_assembler.add(h1_semi_error_product);
@@ -312,6 +312,45 @@ public:
                  << std::sqrt(h1_semi_error_product.apply2()) << " / "
                  << std::sqrt(h1_semi_error_product.apply2()) / std::sqrt(h1_semi_reference_product.apply2())
                  << std::endl;
+
+    // just to show how prolongations work
+    DSC_LOG_INFO << "prolonging to refined grid view (with " << finer_grid_view->indexSet().size(0) << " entities)... "
+                 << std::flush;
+    timer.reset();
+    const SpaceType finer_space(finer_grid_view);
+    VectorType finer_solution_vector(finer_space.mapper().size());
+    DiscreteFunctionType finer_solution(finer_space, finer_solution_vector);
+    GDT::ProlongationOperator::Generic< GridViewType > prolongation_operator(*finer_grid_view);
+    prolongation_operator.apply(solution, finer_solution);
+    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+    // now measure the error again (should be larger)
+    DSC_LOG_INFO << "computing errors on refined grid view... " << std::flush;
+    timer.reset();
+    const DifferenceType finer_difference(exact_solution, finer_solution);
+    GDT::Product::L2Localizable< GridViewType, DifferenceType > finer_l2_error_product(*finer_grid_view,
+                                                                                       finer_difference);
+    GDT::Product::L2Localizable< GridViewType, ExactSolutionType > finer_l2_reference_product(*finer_grid_view,
+                                                                                              exact_solution);
+    GDT::Product::H1SemiLocalizable< GridViewType, DifferenceType >
+        finer_h1_semi_error_product(*finer_grid_view, finer_difference);
+    GDT::Product::H1SemiLocalizable< GridViewType, ExactSolutionType >
+        finer_h1_semi_reference_product(*finer_grid_view, exact_solution);
+    system_assembler.add(finer_l2_error_product);
+    system_assembler.add(finer_l2_reference_product);
+    system_assembler.add(finer_h1_semi_error_product);
+    system_assembler.add(finer_h1_semi_reference_product);
+    system_assembler.assemble();
+    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+    // and access the result in apply2()
+    DSC_LOG_INFO << "L2 error      (abs/rel): "
+                 << std::sqrt(finer_l2_error_product.apply2()) << " / "
+                 << std::sqrt(finer_l2_error_product.apply2()) / std::sqrt(finer_l2_reference_product.apply2())
+                 << std::endl;
+    DSC_LOG_INFO << "semi H1 error (abs/rel): "
+                 << std::sqrt(finer_h1_semi_error_product.apply2()) << " / "
+                 << std::sqrt(finer_h1_semi_error_product.apply2()) / std::sqrt(finer_h1_semi_reference_product.apply2())
+                 << std::endl;
+
     // we have CoW and move constructors, so we can safely return an object
     return solution_vector;
   } // ... solve(...)
