@@ -7,6 +7,7 @@
 #include "dune/multiscale/common/traits.hh"
 #include "dune/multiscale/problems/base.hh"
 #include "dune/multiscale/problems/selector.hh"
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -261,7 +262,7 @@ void DirichletConstraints<DF>::operator()(const DiscreteFunctionType& u, Discret
 }
 
 template class DirichletConstraints<CommonTraits::DiscreteFunctionType>;
-//template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
+template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
 
 } // namespace Multiscale
 } // namespace Dune
