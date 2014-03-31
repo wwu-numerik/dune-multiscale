@@ -20,9 +20,9 @@ namespace MsFEM {
 //! type construction for the MSFEM code
 struct MsFEMTraits {
   typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
-  // change dirichletconstraints.cc bottom on depending whether local/coarse grid are of the same type
-//  typedef Dune::SPGrid<double, CommonTraits::GridType::dimension> LocalGridType;
-  typedef Dune::SGrid<CommonTraits::world_dim, CommonTraits::world_dim> LocalGridType;
+  typedef Dune::SPGrid<double, CommonTraits::GridType::dimension, SPIsotropicRefinement, No_Comm> LocalGridType;
+  // change dirichletconstraints.cc bottom accordingly
+  // typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
 
   typedef Fem::AdaptiveLeafGridPart<LocalGridType> LocalGridPartType;
   typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, LocalGridPartType, st_lagrangespace_order>
