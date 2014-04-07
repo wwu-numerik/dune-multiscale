@@ -18,14 +18,10 @@ Dune::Multiscale::make_grids() {
   for (const auto i : DSC::valueRange(dim_world))
     elements[i] = coarse_cells;
   auto coarse_gridptr =
-      StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements);
-
-//  const auto coarse_dimensions = DSG::dimensions(*coarse_gridptr);
+      StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
 
   for (const auto i : DSC::valueRange(dim_world)) {
     elements[i] = coarse_cells * DSC_CONFIG_GET("global.micro_cells_per_macrocell_dim", 8);
-//    lowerLeft[i] = coarse_dimensions.coord_limits[i].min();
-//    upperRight[i] = coarse_dimensions.coord_limits[i].max();
   }
   auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements);
   return {coarse_gridptr, fine_gridptr};
