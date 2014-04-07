@@ -105,7 +105,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
       if (DSC_CONFIG_GET("msfem.local_corrections_vtk_output", false)) {
         LocalOutputTraits::IOTupleType coarse_grid_series(&local_correction);
-        const std::string name = (boost::format("local_correction_%d_") % coarse_index).str();
+        const auto elId = coarse_space.gridPart().grid().globalIdSet().id(coarse_entity);
+        const std::string name = (boost::format("local_correction_%d_") % elId).str();
         Dune::Multiscale::OutputParameters outputparam;
         outputparam.set_prefix(name);
         auto& grid = localSolManager.space().gridPart().grid();
