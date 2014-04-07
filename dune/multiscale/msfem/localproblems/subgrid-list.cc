@@ -51,8 +51,10 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
       elemens[i] = micro_per_macro + (2 * oversampling_layer);
       const auto min = dimensions.coord_limits[i].min();
       const auto max = dimensions.coord_limits[i].max();
-      const auto coarse_min = coarse_dimensions.coord_limits[i].min();
-      const auto coarse_max = coarse_dimensions.coord_limits[i].max();
+      auto localMin = coarse_dimensions.coord_limits[i].min();
+      auto localMax = coarse_dimensions.coord_limits[i].max();
+      const auto coarse_min = coarseSpace.gridPart().grid().comm().min(localMin);
+      const auto coarse_max = coarseSpace.gridPart().grid().comm().max(localMax);
       const auto delta = (max - min) / double(micro_per_macro);
       lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarse_min);
       upperRight[i] = std::min(max + (oversampling_layer * delta), coarse_max);
