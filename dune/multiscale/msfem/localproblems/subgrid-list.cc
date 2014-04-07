@@ -48,7 +48,6 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     CoordType upperRight(0);
     array<unsigned int, dim_world> elemens;
     for (const auto i : DSC::valueRange(dim_world)) {
-      elemens[i] = micro_per_macro + (2 * oversampling_layer);
       const auto min = dimensions.coord_limits[i].min();
       const auto max = dimensions.coord_limits[i].max();
       auto localMin = coarse_dimensions.coord_limits[i].min();
@@ -58,6 +57,9 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
       const auto delta = (max - min) / double(micro_per_macro);
       lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarse_min);
       upperRight[i] = std::min(max + (oversampling_layer * delta), coarse_max);
+      int smaller = ((min - (oversampling_layer * delta)) < coarse_min);
+      int bigger = ((max + (oversampling_layer * delta)) > coarse_max);
+      elemens[i] = micro_per_macro + ((!smaller + !bigger) * oversampling_layer);
     }
     subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
   }
