@@ -115,9 +115,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   }
 
   SearchType search(coarse_space, subgrid_list);
-  auto proxybase_gridpart = subgrid_list.gridPart(0);
-  MsFEMTraits::LocalGridDiscreteFunctionSpaceType proxybase_space(proxybase_gridpart);
-  ProxyType proxy(local_corrections, coarse_indexset, proxybase_space, search);
+  ProxyType proxy(local_corrections, coarse_indexset, search);
   ProjectionType::project(proxy, fine_scale_part, search);
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
   //backend storage no longer needed from here on
