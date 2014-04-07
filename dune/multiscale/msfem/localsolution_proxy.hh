@@ -64,7 +64,7 @@ public:
                    std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
 
   LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set,
-                     const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& /*space_in*/, SearchType& search)
+                     SearchType& search)
     : corrections_(corrections)
     , index_set_(index_set)
     , search_(search) {}
