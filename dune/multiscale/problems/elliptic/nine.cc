@@ -14,7 +14,7 @@ namespace Multiscale {
 namespace Problem {
 namespace Nine {
 
-// default value for epsilon (if not sprecified in the parameter file)
+// default value for epsilon (if not specified in the parameter file)
 CONSTANTSFUNCTION(0.05)
 
 ModelProblemData::ModelProblemData() : IModelProblemData(constants()) {

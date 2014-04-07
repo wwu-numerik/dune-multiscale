@@ -48,7 +48,7 @@ struct LocalsolutionProxyTraits {
 }; // end struct LocalsolutionProxyTraits
 
 /**
- * Fake DiscreteFunction that forwards localFcuntion calls to appropiate local_correction
+ * Fake DiscreteFunction that forwards localFunction calls to appropriate local_correction
  */
 template <class SearchType>
 class LocalsolutionProxy : public Dune::Fem::DiscreteFunctionInterface<LocalsolutionProxyTraits<SearchType>> {
