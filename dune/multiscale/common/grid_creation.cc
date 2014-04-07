@@ -13,10 +13,17 @@ Dune::Multiscale::make_grids() {
   CoordType lowerLeft(0.0);
   CoordType upperRight(1.0);
 
+  const auto oversamplingLayers = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
+  const auto microPerMacro = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
+  const int overlapLayers = std::ceil(double(oversamplingLayers)/double(microPerMacro));
+
   const auto coarse_cells = DSC_CONFIG_GET("global.macro_cells_per_dim", 8);
   array<unsigned int, dim_world> elements;
-  for (const auto i : DSC::valueRange(dim_world))
+  array<unsigned int, dim_world> overCoarse;
+  for (const auto i : DSC::valueRange(dim_world)) {
     elements[i] = coarse_cells;
+    overCoarse[i] = overlapLayers;
+  }
   auto coarse_gridptr =
       StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
 
