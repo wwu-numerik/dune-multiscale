@@ -127,9 +127,6 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
                                   const CommonTraits::DiffusionType& diffusion_op,
                                   const CommonTraits::FirstSourceType& f, DiscreteFunctionType& coarse_scale_part,
                                   DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
-  if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))
-    DSC_LOG_ERROR << "MsFEM does not work with Petrov-Galerkin at the moment!\n";
-
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
 
