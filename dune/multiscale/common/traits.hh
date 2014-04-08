@@ -21,6 +21,7 @@
 
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
+#include <dune/stuff/functions/global.hh>
 
 namespace Dune {
 
@@ -45,12 +46,6 @@ template <class T, class R>
 class AdaptationManager;
 } // namespace Fem
 
-namespace Stuff {
-template <class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim>
-class GlobalFunction;
-template <class EntityImp, class DomainFieldImp, int domainDim, class RangeFieldImp, int rangeDim>
-class GlobalConstantFunction;
-}
 namespace Multiscale {
 namespace Problem {
 
