@@ -128,11 +128,11 @@ void algorithm() {
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
   }
 
+  const auto& grid_view = coarse_grid.leafGridView();
+  CommonTraits::FEMapType fe_map(grid_view);
+  CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
   std::unique_ptr<CommonTraits::PdelabVectorType> fem_solution(nullptr);
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    const auto& grid_view = coarse_grid.leafGridView();
-    CommonTraits::FEMapType fe_map(grid_view);
-    CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
     fem_solution = DSC::make_unique<CommonTraits::PdelabVectorType>(space, 0.0);
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
     const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
