@@ -39,7 +39,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   const DiscreteFunctionSpace& coarse_space = coarse_msfem_solution.space();
   auto& coarse_indexset = coarse_space.gridPart().grid().leafIndexSet();
 
-  typedef DS::HeterogenousProjection<LocalGridSearch> ProjectionType;
+  typedef DS::MsFEMProjection<LocalGridSearch> ProjectionType;
   typedef LocalGridSearch<typename MsFEMTraits::LocalGridType::LeafGridView> SearchType;
   typedef LocalsolutionProxy<SearchType> ProxyType;
   typename ProxyType::CorrectionsMapType local_corrections;
