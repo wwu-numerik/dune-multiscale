@@ -60,8 +60,8 @@ class IModelProblemData;
 //! type construction for the HMM algorithm
 struct CommonTraits {
   static constexpr int world_dim = 2;
-//  typedef Dune::GridSelector::GridType GridType;
-  typedef Dune::SGrid<world_dim, world_dim> GridType;
+  typedef Dune::GridSelector::GridType GridType;
+//  typedef Dune::SGrid<world_dim, world_dim> GridType;
 //  typedef Dune::YaspGrid<world_dim> GridType;
   typedef GridType::Codim<0>::Entity EntityType;
   typedef Dune::Fem::AdaptiveLeafGridPart<GridType> GridPartType;
