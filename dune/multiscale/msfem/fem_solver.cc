@@ -35,10 +35,10 @@ namespace Multiscale {
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GridFunctionSpaceType &space)
   : space_(space) {}
 
-void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffusion_op,
-                                       const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                                       const CommonTraits::FirstSourceType& f,
-                                       CommonTraits::PdelabVectorType& solution) const {
+void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
+                                const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
+                                const CommonTraits::FirstSourceType& f,
+                                CommonTraits::PdelabVectorType& solution) const {
   DSC_LOG_INFO << "Solving linear problem with standard FEM\n";
 
   // to assemble the computational time
@@ -78,29 +78,6 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
   DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
   DSC_LOG_INFO << "Standard FEM problem solved in " << timer.elapsed() << "s." << std::endl << std::endl
                << std::endl;
-}
-
-void
-Elliptic_FEM_Solver::solve_nonlinear(const CommonTraits::DiffusionType& /*diffusion_op*/,
-                                     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& /*lower_order_term*/,
-                                     const CommonTraits::FirstSourceType& /*f*/,
-                                     CommonTraits::PdelabVectorType & /*solution*/) const {
-  DSC_LOG_INFO << "Solving non-linear problem.\n";
-  DSC_LOG_INFO << "Solving nonlinear problem with FEM + Newton-Method.\n";
-  DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
-
-  DUNE_THROW(NotImplemented, "");
-
-}
-
-void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
-                                const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                                const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType& solution) const {
-
-  if (Problem::getModelData()->linear())
-    solve_linear(diffusion_op, lower_order_term, f, solution);
-  else
-    solve_nonlinear(diffusion_op, lower_order_term, f, solution);
 }
 
 } // namespace Multiscale
