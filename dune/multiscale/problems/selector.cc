@@ -26,22 +26,13 @@ using namespace Dune::Multiscale;
     #ProblemName, []() { return static_cast<ReturnType>(DSC::make_unique<Problem::ProblemName::FunctionName>()); }     \
   }
 
-#if PROBLEM_NINE_ONLY
-# define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
-    std::map<std::string, std::function<ReturnType()>>(                                                                \
-         {MAP_ITEM(Nine, ReturnType, FunctionName), })
-#else
 # define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
     std::map<std::string, std::function<ReturnType()>>(                                                                \
         {MAP_ITEM(Nine, ReturnType, FunctionName), MAP_ITEM(SPE10, ReturnType, FunctionName),})
-#endif
 
 /* to add a new problem a line like this above
  * MAP_ITEM(NewProblemName, ReturnType, FunctionName), \
 */
-
-// Toy doesn't comply with interface
-// MAP_ITEM(Toy, ReturnType, FunctionName)
 
 template <class FunctionType>
 typename FunctionType::result_type find_and_call_item(const std::map<std::string, FunctionType>& rets) {
