@@ -8,21 +8,10 @@
 #include "dune/multiscale/problems/base.hh"
 // for i in $(ls *hh) ; do echo \#include \"${i}\" ; done
 #include "elliptic/eight.hh"
-#include "elliptic/eleven.hh"
-#include "elliptic/five.hh"
-#include "elliptic/four.hh"
-#include "elliptic/fourteen.hh"
 #include "elliptic/nine.hh"
-#include "elliptic/one.hh"
-#include "elliptic/seven.hh"
-#include "elliptic/six.hh"
-#include "elliptic/spe10.hh"
-#include "elliptic/ten.hh"
+#include "elliptic/eleven.hh"
 #include "elliptic/thirteen.hh"
-#include "elliptic/three.hh"
-#include "elliptic/twelve.hh"
-#include "elliptic/two.hh"
-#include "elliptic/toy.hh"
+#include "elliptic/spe10.hh"
 #include "selector.hh"
 
 namespace Dune {
@@ -41,20 +30,13 @@ using namespace Dune::Multiscale;
 
 #if PROBLEM_NINE_ONLY
 # define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
-    std::map<std::string, std::function<ReturnType()>>(                                                               \
+    std::map<std::string, std::function<ReturnType()>>(                                                                \
          {MAP_ITEM(Nine, ReturnType, FunctionName), })
 #else
 # define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
     std::map<std::string, std::function<ReturnType()>>(                                                                \
-        {MAP_ITEM(One, ReturnType, FunctionName),      MAP_ITEM(Two, ReturnType, FunctionName),                        \
-         MAP_ITEM(Three, ReturnType, FunctionName),    MAP_ITEM(Four, ReturnType, FunctionName),                       \
-         MAP_ITEM(Fourteen, ReturnType, FunctionName), MAP_ITEM(Five, ReturnType, FunctionName),                       \
-         MAP_ITEM(Six, ReturnType, FunctionName),      MAP_ITEM(Seven, ReturnType, FunctionName),                      \
-         MAP_ITEM(SPE10, ReturnType, FunctionName),    MAP_ITEM(Eight, ReturnType, FunctionName),                      \
-         MAP_ITEM(Nine, ReturnType, FunctionName),     MAP_ITEM(Ten, ReturnType, FunctionName),                        \
-         MAP_ITEM(Eleven, ReturnType, FunctionName),   MAP_ITEM(Twelve, ReturnType, FunctionName),                     \
-         MAP_ITEM(Thirteen, ReturnType, FunctionName), MAP_ITEM(Fourteen, ReturnType, FunctionName),
-         MAP_ITEM(Toy, ReturnType, FunctionName),})
+        {MAP_ITEM(Eight, ReturnType, FunctionName), MAP_ITEM(Nine, ReturnType, FunctionName),                          \
+         MAP_ITEM(Eleven, ReturnType, FunctionName),   MAP_ITEM(SPE10, ReturnType, FunctionName),})
 #endif
 
 /* to add a new problem a line like this above
