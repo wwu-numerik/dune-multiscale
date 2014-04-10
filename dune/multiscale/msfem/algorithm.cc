@@ -128,7 +128,7 @@ void algorithm() {
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
   }
 
-  const auto& grid_view = coarse_grid.leafGridView();
+  const auto& grid_view = fine_grid.leafGridView();
   CommonTraits::FEMapType fe_map(grid_view);
   CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
   std::unique_ptr<CommonTraits::PdelabVectorType> fem_solution(nullptr);
