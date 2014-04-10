@@ -72,7 +72,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
 
-set( PROBLEM_NINE_ONLY 1 CACHE BOOL "wheter to compile all problesm into the binaries")
+set( PROBLEM_NINE_ONLY 0 CACHE BOOL "wheter to compile all problesm into the binaries")
 
 if( PROBLEM_NINE_ONLY )
     set( PROBLEM_SOURCES
@@ -83,8 +83,6 @@ if( PROBLEM_NINE_ONLY )
 else()
     set( PROBLEM_SOURCES
         dune/multiscale/problems/elliptic/nine.cc
-        dune/multiscale/problems/elliptic/eight.cc
-        dune/multiscale/problems/elliptic/eleven.cc
         dune/multiscale/problems/elliptic/spe10.cc
         dune/multiscale/problems/selector.cc
         dune/multiscale/problems/base.cc

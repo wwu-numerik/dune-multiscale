@@ -7,9 +7,7 @@
 
 #include "dune/multiscale/problems/base.hh"
 // for i in $(ls *hh) ; do echo \#include \"${i}\" ; done
-#include "elliptic/eight.hh"
 #include "elliptic/nine.hh"
-#include "elliptic/eleven.hh"
 #include "elliptic/thirteen.hh"
 #include "elliptic/spe10.hh"
 #include "selector.hh"
@@ -35,8 +33,7 @@ using namespace Dune::Multiscale;
 #else
 # define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
     std::map<std::string, std::function<ReturnType()>>(                                                                \
-        {MAP_ITEM(Eight, ReturnType, FunctionName), MAP_ITEM(Nine, ReturnType, FunctionName),                          \
-         MAP_ITEM(Eleven, ReturnType, FunctionName),   MAP_ITEM(SPE10, ReturnType, FunctionName),})
+        {MAP_ITEM(Nine, ReturnType, FunctionName), MAP_ITEM(SPE10, ReturnType, FunctionName),})
 #endif
 
 /* to add a new problem a line like this above
