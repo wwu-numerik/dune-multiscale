@@ -7,6 +7,7 @@
 
 #include <string>
 #include <fstream>
+#include <cmath>
 
 #include <dune/common/timer.hh>
 
@@ -38,15 +39,15 @@
 # undef HAVE_DUNE_FEM
 #endif
 
-#include <dune/gdt/space/continuouslagrange/pdelab.hh>
-#include <dune/gdt/operator/elliptic.hh>
-#include <dune/gdt/functional/l2.hh>
-#include <dune/gdt/space/constraints.hh>
+#include <dune/gdt/spaces/continuouslagrange/pdelab.hh>
+#include <dune/gdt/operators/elliptic.hh>
+#include <dune/gdt/functionals/l2.hh>
+#include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/assembler/system.hh>
-#include <dune/gdt/product/l2.hh>
-#include <dune/gdt/product/h1.hh>
-#include <dune/gdt/operator/projections.hh>
-#include <dune/gdt/operator/prolongations.hh>
+#include <dune/gdt/products/l2.hh>
+#include <dune/gdt/products/h1.hh>
+#include <dune/gdt/operators/projections.hh>
+#include <dune/gdt/operators/prolongations.hh>
 
 #include "fem_traits.hh"
 
@@ -194,201 +195,131 @@ public:
 }; // ... ProblemNineExactSolution(...)
 
 
-template< class GridViewType, class SpaceType, class MatrixType, class VectorType >
-class EllipticDuneGdtDiscretization
-{
-public:
-  // this is the detailed version of how to discretize with dune-gdt problem nine
-  // (any function derived from Stuff::LocalizableFunctionInterface will serve as a data function)
-  static VectorType solve(const std::shared_ptr< const GridViewType >& grid_view,
-                          const std::shared_ptr< const GridViewType >& finer_grid_view)
-  {
-    // first some types
-    typedef typename SpaceType::DomainFieldType DomainFieldType;
-    static const unsigned int                   dimDomain = SpaceType::dimDomain;
-    typedef typename SpaceType::RangeFieldType  RangeFieldType;
-    static const unsigned int                   dimRange = SpaceType::dimRange;
-    typedef typename SpaceType::EntityType EntityType;
-    typedef Stuff::Function::Constant< EntityType, DomainFieldType, dimDomain, RangeFieldType, dimRange >
-        ConstantFunctionType;
-    typedef GDT::DiscreteFunction< SpaceType, VectorType > DiscreteFunctionType;
-    typedef GDT::ConstDiscreteFunction< SpaceType, VectorType > ConstDiscreteFunctionType;
-    typedef Stuff::GridboundaryAllDirichlet< typename GridViewType::Intersection > BoundaryInfoType;
-    const BoundaryInfoType boundary_info;
-    Dune::Timer timer;
-    DSC_LOG_INFO << "assembling system (on a grid view with " << grid_view->size(0) << " entities)... "
-                 << std::flush;
-    const SpaceType space(grid_view);
-    // elliptic operator (type only, for the sparsity pattern)
-    typedef ProblemNineDiffusion< GridViewType > DiffusionType;
-    const DiffusionType diffusion;
-    typedef GDT::Operator::EllipticCG< DiffusionType, MatrixType, SpaceType > EllipticOperatorType;
-    // container (using the sparsity pattern of the operator)
-    MatrixType system_matrix(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
-    VectorType rhs_vector(space.mapper().size());
-    VectorType dirichlet_shift_vector(space.mapper().size());
-    // now the elliptic operator
-    EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
-    // the force functional
-    typedef ProblemNineForce< GridViewType > ForceType;
-    const ForceType force;
-    GDT::Functional::L2Volume< ForceType, VectorType, SpaceType > force_functional(force, rhs_vector, space);
-    // the neumann functional
-    const ConstantFunctionType neumann(1.0);
-    GDT::Functional::L2Face< ConstantFunctionType, VectorType, SpaceType >
-        neumann_functional(neumann, rhs_vector, space);
-    // dirichlet boundary values
-    const ConstantFunctionType dirichlet(0.0);
-    DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector);
-    typedef GDT::ProjectionOperator::DirichletLocalizable< GridViewType, ConstantFunctionType, DiscreteFunctionType >
-        DirichletProjectionOperatorType;
-    DirichletProjectionOperatorType dirichlet_projection_operator(*(space.grid_view()),
-                                                                  boundary_info,
-                                                                  dirichlet,
-                                                                  dirichlet_projection);
-    // now assemble everything in one grid walk
-    GDT::SystemAssembler< SpaceType > system_assembler(space);
-    system_assembler.add(elliptic_operator);
-    system_assembler.add(force_functional);
-    system_assembler.add(neumann_functional, new GDT::ApplyOn::NeumannIntersections< GridViewType >(boundary_info));
-    system_assembler.add(dirichlet_projection_operator,
-                         new GDT::ApplyOn::BoundaryEntities< GridViewType >());
-    system_assembler.assemble();
-    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-    timer.reset();
-    // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
-    // (this is the version that acts on the container interface, if we would use the eigen container from dune-stuff we
-    //  could use the backend() and get rid of the tmp)
-    DSC_LOG_INFO << "applying dirichlet constraints... " << std::flush;
-    auto tmp = rhs_vector.copy();
-    system_matrix.mv(dirichlet_shift_vector, tmp);
-    rhs_vector -= tmp;
-    // apply the dirichlet zero constraints to restrict the system to H^1_0
-    // (we do this in a second grid walk, no way around that atm)
-    GDT::Constraints::Dirichlet < typename GridViewType::Intersection, RangeFieldType >
-      dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
-    system_assembler.add(dirichlet_constraints, system_matrix, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
-    system_assembler.add(dirichlet_constraints, rhs_vector, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
-    system_assembler.assemble();
-    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-    timer.reset();
-    // solve the system
-    const Stuff::LA::Solver< MatrixType >linear_solver(system_matrix);
-    const auto linear_solver_type = linear_solver.options()[0];
-    auto linear_solver_options = linear_solver.options(linear_solver_type);
-    linear_solver_options.set("max_iter",                 "5000", true);
-    linear_solver_options.set("precision",                "1e-8", true);
-    linear_solver_options.set("post_check_solves_system", "0",    true);
-    DSC_LOG_INFO << "solving the linear system using '" << linear_solver_type << "'... " << std::flush;
-    VectorType solution_vector(space.mapper().size());
-    linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
-    // add the dirichlet shift to obtain the solution in H^1
-    solution_vector += dirichlet_shift_vector;
-    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-    timer.reset();
-
-    // now we measure the error (there are more intuitive ways to do this in dune-gdt, but this is the fastest)
-    // (note that we should compute the error on a refined grid for an accurate error imho!)
-    DSC_LOG_INFO << "computing errors... " << std::flush;
-    const ConstDiscreteFunctionType solution(space, solution_vector);
-    typedef ProblemNineExactSolution< GridViewType > ExactSolutionType;
-    ExactSolutionType exact_solution;
-    typedef Stuff::Function::Difference< ExactSolutionType, ConstDiscreteFunctionType > DifferenceType;
-    const DifferenceType difference(exact_solution, solution);
-    // therefore we predefine all products
-    GDT::Product::L2Localizable< GridViewType, DifferenceType > l2_error_product(*grid_view, difference);
-    GDT::Product::L2Localizable< GridViewType, ExactSolutionType > l2_reference_product(*grid_view,
-                                                                                                exact_solution);
-    GDT::Product::H1SemiLocalizable< GridViewType, DifferenceType >
-        h1_semi_error_product(*grid_view, difference);
-    GDT::Product::H1SemiLocalizable< GridViewType, ExactSolutionType >
-        h1_semi_reference_product(*grid_view, exact_solution);
-    // so we can apply them all in one grid walk
-    system_assembler.add(l2_error_product);
-    system_assembler.add(l2_reference_product);
-    system_assembler.add(h1_semi_error_product);
-    system_assembler.add(h1_semi_reference_product);
-    system_assembler.assemble();
-    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-    // and access the result in apply2()
-    DSC_LOG_INFO << "L2 error      (abs/rel): "
-                 << std::sqrt(l2_error_product.apply2()) << " / "
-                 << std::sqrt(l2_error_product.apply2()) / std::sqrt(l2_reference_product.apply2()) << std::endl;
-    DSC_LOG_INFO << "semi H1 error (abs/rel): "
-                 << std::sqrt(h1_semi_error_product.apply2()) << " / "
-                 << std::sqrt(h1_semi_error_product.apply2()) / std::sqrt(h1_semi_reference_product.apply2())
-                 << std::endl;
-
-    // just to show how prolongations work
-    DSC_LOG_INFO << "prolonging to refined grid view (with " << finer_grid_view->indexSet().size(0) << " entities)... "
-                 << std::flush;
-    timer.reset();
-    const SpaceType finer_space(finer_grid_view);
-    VectorType finer_solution_vector(finer_space.mapper().size());
-    DiscreteFunctionType finer_solution(finer_space, finer_solution_vector);
-    GDT::ProlongationOperator::Generic< GridViewType > prolongation_operator(*finer_grid_view);
-    prolongation_operator.apply(solution, finer_solution);
-    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-    // now measure the error again (should be larger)
-    DSC_LOG_INFO << "computing errors on refined grid view... " << std::flush;
-    timer.reset();
-    const DifferenceType finer_difference(exact_solution, finer_solution);
-    GDT::Product::L2Localizable< GridViewType, DifferenceType > finer_l2_error_product(*finer_grid_view,
-                                                                                       finer_difference);
-    GDT::Product::L2Localizable< GridViewType, ExactSolutionType > finer_l2_reference_product(*finer_grid_view,
-                                                                                              exact_solution);
-    GDT::Product::H1SemiLocalizable< GridViewType, DifferenceType >
-        finer_h1_semi_error_product(*finer_grid_view, finer_difference);
-    GDT::Product::H1SemiLocalizable< GridViewType, ExactSolutionType >
-        finer_h1_semi_reference_product(*finer_grid_view, exact_solution);
-    system_assembler.add(finer_l2_error_product);
-    system_assembler.add(finer_l2_reference_product);
-    system_assembler.add(finer_h1_semi_error_product);
-    system_assembler.add(finer_h1_semi_reference_product);
-    system_assembler.assemble();
-    DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-    // and access the result in apply2()
-    DSC_LOG_INFO << "L2 error      (abs/rel): "
-                 << std::sqrt(finer_l2_error_product.apply2()) << " / "
-                 << std::sqrt(finer_l2_error_product.apply2()) / std::sqrt(finer_l2_reference_product.apply2())
-                 << std::endl;
-    DSC_LOG_INFO << "semi H1 error (abs/rel): "
-                 << std::sqrt(finer_h1_semi_error_product.apply2()) << " / "
-                 << std::sqrt(finer_h1_semi_error_product.apply2()) / std::sqrt(finer_h1_semi_reference_product.apply2())
-                 << std::endl;
-
-    // we have CoW and move constructors, so we can safely return an object
-    return solution_vector;
-  } // ... solve(...)
-}; // class EllipticDuneGdtDiscretization
-
-
 //! the main FEM computation
 void algorithm(const std::shared_ptr< CommonTraits::GridType >& macro_grid_pointer, const std::string /*filename*/) {
-  using namespace Dune;
-
-  const auto problem_data = Problem::getModelData();
-  print_info(*problem_data, DSC_LOG_INFO);
+  // some types
   typedef typename CommonTraits::GridType::LevelGridView GridViewType;
-  macro_grid_pointer->globalRefine(2);
-  const auto grid_view_ptr
-      = std::make_shared< const GridViewType >(macro_grid_pointer->levelGridView(macro_grid_pointer->maxLevel() - 2));
-  const auto finer_grid_view_ptr
-      = std::make_shared< const GridViewType >(macro_grid_pointer->levelGridView(macro_grid_pointer->maxLevel()));
-
-  static const unsigned int polOrder = 1;
+  typedef typename GridViewType::template Codim< 0 >::Entity EntityType;
   typedef GridViewType::ctype DomainFieldType;
   static const unsigned int   dimDomain = GridViewType::dimension;
   typedef double            RangeFieldType;
   static const unsigned int dimRange = 1;
-  typedef GDT::ContinuousLagrangeSpace::PdelabWrapper< GridViewType, polOrder, RangeFieldType, dimRange > SpaceType;
+  const auto grid_view
+      = std::make_shared< const GridViewType >(macro_grid_pointer->levelGridView(macro_grid_pointer->maxLevel()));
+  typedef Stuff::GridboundaryAllDirichlet< typename GridViewType::Intersection > BoundaryInfoType;
+  const BoundaryInfoType boundary_info;
+  Dune::Timer timer;
+  // analytical data (should be problem nine)
+  typedef ProblemNineDiffusion< GridViewType > DiffusionType;
+  const DiffusionType diffusion;
+  typedef ProblemNineForce< GridViewType > ForceType;
+  const ForceType force;
+  typedef Stuff::Function::Constant< EntityType, DomainFieldType, dimDomain, RangeFieldType, dimRange >
+      ConstantFunctionType;
+  const ConstantFunctionType neumann(1.0);
+  const ConstantFunctionType dirichlet(0.0);
+  typedef ProblemNineExactSolution< GridViewType > ExactSolutionType;
+  const ExactSolutionType exact_solution;
+  DSC_LOG_INFO << "assembling system (on a grid view with " << grid_view->size(0) << " entities)... "
+               << std::flush;
+  static const unsigned int polOrder = 1;
+  typedef GDT::Spaces::ContinuousLagrange::PdelabBased< GridViewType, polOrder, RangeFieldType, dimRange > SpaceType;
+  const SpaceType space(grid_view);
   typedef Stuff::LA::IstlRowMajorSparseMatrix< RangeFieldType > MatrixType;
   typedef Stuff::LA::IstlDenseVector< RangeFieldType >          VectorType;
+  typedef GDT::DiscreteFunction< SpaceType, VectorType >      DiscreteFunctionType;
+  typedef GDT::ConstDiscreteFunction< SpaceType, VectorType > ConstDiscreteFunctionType;
+  // elliptic operator (type only, for the sparsity pattern)
+  typedef GDT::Operators::EllipticCG< DiffusionType, MatrixType, SpaceType > EllipticOperatorType;
+  // container
+  MatrixType system_matrix(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
+  VectorType rhs_vector(space.mapper().size());
+  VectorType dirichlet_shift_vector(space.mapper().size());
+  VectorType solution_vector(space.mapper().size());
+  // left hand side (elliptic operator)
+  EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
+  // right hand side
+  GDT::Functionals::L2Volume< ForceType, VectorType, SpaceType > force_functional(force, rhs_vector, space);
+  GDT::Functionals::L2Face< ConstantFunctionType, VectorType, SpaceType >
+      neumann_functional(neumann, rhs_vector, space);
+  // dirichlet boundary values
+  DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector);
+  GDT::Operators::DirichletProjectionLocalizable< GridViewType, ConstantFunctionType, DiscreteFunctionType >
+      dirichlet_projection_operator(*(space.grid_view()),
+                                    boundary_info,
+                                    dirichlet,
+                                    dirichlet_projection);
+  // now assemble everything in one grid walk
+  GDT::SystemAssembler< SpaceType > system_assembler(space);
+  system_assembler.add(elliptic_operator);
+  system_assembler.add(force_functional);
+  system_assembler.add(neumann_functional, new GDT::ApplyOn::NeumannIntersections< GridViewType >(boundary_info));
+  system_assembler.add(dirichlet_projection_operator,
+                       new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler.assemble();
+  DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+  timer.reset();
+  // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
+  DSC_LOG_INFO << "applying dirichlet constraints... " << std::flush;
+  auto tmp = rhs_vector.copy();
+  system_matrix.mv(dirichlet_shift_vector, tmp);
+  rhs_vector -= tmp;
+  // apply the dirichlet zero constraints to restrict the system to H^1_0
+  GDT::Constraints::Dirichlet < typename GridViewType::Intersection, RangeFieldType >
+    dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
+  system_assembler.add(dirichlet_constraints, system_matrix, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler.add(dirichlet_constraints, rhs_vector, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler.assemble();
+  DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+  timer.reset();
+  // solve the system
+  const Stuff::LA::Solver< MatrixType > linear_solver(system_matrix);
+  const auto linear_solver_type = linear_solver.options()[0];
+  auto linear_solver_options = linear_solver.options(linear_solver_type);
+  linear_solver_options.set("max_iter",                 "5000", true);
+  linear_solver_options.set("precision",                "1e-8", true);
+  linear_solver_options.set("post_check_solves_system", "0",    true);
+  DSC_LOG_INFO << "solving the linear system using '" << linear_solver_type << "'... " << std::flush;
+  linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
+  // add the dirichlet shift to obtain the solution in H^1
+  solution_vector += dirichlet_shift_vector;
+  DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+  timer.reset();
 
-  typedef EllipticDuneGdtDiscretization< GridViewType, SpaceType, MatrixType, VectorType > Discretization;
-  auto solution = Discretization::solve(grid_view_ptr, finer_grid_view_ptr);
-
-}
+  // now we measure the error (there are more intuitive ways to do this in dune-gdt, but this is the most efficient)
+  // for the record: the easy way would be
+  //   const Products::L2< GridViewType > l2_product(*grid_view);
+  //   const double l2_norm = l2_product.induced_norm(exact_solution - solution);
+  DSC_LOG_INFO << "computing errors... " << std::flush;
+  const ConstDiscreteFunctionType solution(space, solution_vector);
+  typedef Stuff::Function::Difference< ExactSolutionType, ConstDiscreteFunctionType > DifferenceType;
+  const DifferenceType difference(exact_solution, solution);
+  // therefore we predefine all products
+  const size_t over_integrate = 0; // <- would let the product use a higher quadrature oder than needed
+  GDT::Products::L2Localizable< GridViewType, DifferenceType >
+      l2_error_product(*grid_view, difference, over_integrate);
+  GDT::Products::L2Localizable< GridViewType, ExactSolutionType >
+      l2_reference_product(*grid_view, exact_solution, over_integrate);
+  GDT::Products::H1SemiLocalizable< GridViewType, DifferenceType >
+      h1_semi_error_product(*grid_view, difference, over_integrate);
+  GDT::Products::H1SemiLocalizable< GridViewType, ExactSolutionType >
+      h1_semi_reference_product(*grid_view, exact_solution, over_integrate);
+  // so we can apply them all in one grid walk
+  system_assembler.add(l2_error_product);
+  system_assembler.add(l2_reference_product);
+  system_assembler.add(h1_semi_error_product);
+  system_assembler.add(h1_semi_reference_product);
+  system_assembler.assemble();
+  DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+  // and access the result in apply2()
+  DSC_LOG_INFO << "L2 error      (abs/rel): "
+               << std::sqrt(l2_error_product.apply2()) << " / "
+               << std::sqrt(l2_error_product.apply2()) / std::sqrt(l2_reference_product.apply2()) << std::endl;
+  DSC_LOG_INFO << "semi H1 error (abs/rel): "
+               << std::sqrt(h1_semi_error_product.apply2()) << " / "
+               << std::sqrt(h1_semi_error_product.apply2()) / std::sqrt(h1_semi_reference_product.apply2())
+               << std::endl;
+} // ... algorithm(...)
 
 } // namespace FEM {
 } // namespace Multiscale {
