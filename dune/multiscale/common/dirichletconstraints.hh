@@ -154,7 +154,7 @@ void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSp
   if (!initialized) {
     initialized = true;
 
-    auto dirichletDataPtr = Problem::getDirichletData();
+    const auto& dirichletDataPtr = Problem::getDirichletData();
     const auto& dirichletData = *dirichletDataPtr;
 
     const auto gf = DS::gridFunctionAdapter(dirichletData, coarseSpace.gridPart());

@@ -22,18 +22,18 @@ namespace Multiscale {
 namespace Problem {
 
 typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
-BasePtr getFirstSource();
-BasePtr getExactSolution();
-BasePtr getSecondSource();
-BasePtr getMassTerm();
-std::unique_ptr<const CommonTraits::DiffusionType> getDiffusion();
-std::unique_ptr<const CommonTraits::LowerOrderTermType> getLowerOrderTerm();
-std::unique_ptr<const CommonTraits::DirichletBCType> getDirichletBC();
-std::unique_ptr<const CommonTraits::NeumannBCType> getNeumannBC();
-BasePtr getDefaultDummyFunction();
-std::unique_ptr<const CommonTraits::ModelProblemDataType> getModelData();
-std::unique_ptr<const CommonTraits::DirichletDataType> getDirichletData();
-std::unique_ptr<const CommonTraits::NeumannDataType> getNeumannData();
+const BasePtr& getFirstSource();
+const BasePtr& getExactSolution();
+const BasePtr&getSecondSource();
+const BasePtr& getMassTerm();
+const std::unique_ptr<const CommonTraits::DiffusionType>& getDiffusion();
+const std::unique_ptr<const CommonTraits::LowerOrderTermType>& getLowerOrderTerm();
+const std::unique_ptr<const CommonTraits::DirichletBCType>& getDirichletBC();
+const std::unique_ptr<const CommonTraits::NeumannBCType>& getNeumannBC();
+const BasePtr& getDefaultDummyFunction();
+const std::unique_ptr<const CommonTraits::ModelProblemDataType>& getModelData();
+const std::unique_ptr<const CommonTraits::DirichletDataType>& getDirichletData();
+const std::unique_ptr<const CommonTraits::NeumannDataType>& getNeumannData();
 
 std::string name();
 

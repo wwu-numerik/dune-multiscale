@@ -221,7 +221,7 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
           const std::string filename) {
   using namespace Dune;
 
-  auto problem_data = Problem::getModelData();
+  const auto& problem_data = Problem::getModelData();
   print_info(*problem_data, DSC_LOG_INFO);
   //! ---------------------------- grid parts ----------------------------------------------
   // grid part for the global function space, required for HMM-macro-problem
@@ -244,7 +244,7 @@ algorithm(typename CommonTraits::GridPointerType& macro_grid_pointer, // grid po
   //! --------------------------------------------------------------------------------------
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const auto diffusion_op = Problem::getDiffusion();
+  const auto& diffusion_op = Problem::getDiffusion();
 
   //! solution vector
   // - By reference_solution, we denote an (possibly accurate) approximation of the exact solution (used for comparison)

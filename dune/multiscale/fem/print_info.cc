@@ -33,8 +33,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
 
   //! -------------------------- writing data output Exact Solution ------------------------
   if (Problem::getModelData()->hasExactSolution()) {
-    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
-    const auto& u = *u_ptr;
+    const auto& u = *Dune::Multiscale::Problem::getExactSolution();
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u,
                                                                           discrete_solution->space().gridPart());
     // create and initialize output class
