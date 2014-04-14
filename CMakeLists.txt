@@ -125,7 +125,7 @@ set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_
 include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
 set(ALL_MULTISCALE_LIBS multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hmm EXCLUDE_FROM_ALL src/elliptic_hmm.cc ${COMMON_HEADER})
 TARGET_LINK_LIBRARIES(elliptic_hmm multiscale_hmm ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_hmm)
 
@@ -137,16 +137,16 @@ ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_fem)
 
-ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(msfem-1d EXCLUDE_FROM_ALL src/msfem-1d.cc ${COMMON_HEADER})
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 add_dune_mpi_flags(msfem-1d)
 
-ADD_EXECUTABLE(fail src/fail.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
 # TARGET_LINK_LIBRARIES(fail ${COMMON_LIBS} )
 add_dune_mpi_flags(fail)
 
 
-ADD_EXECUTABLE(thread_vis src/thread_vis.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
 add_dune_mpi_flags(thread_vis)
 
