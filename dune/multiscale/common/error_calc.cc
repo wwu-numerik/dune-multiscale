@@ -31,8 +31,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
 
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::getModelData()->hasExactSolution()) {
-    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
-    const auto& u = *u_ptr;
+    const auto& u = *Dune::Multiscale::Problem::getExactSolution();
 
     typedef Dune::Fem::LagrangeDiscreteFunctionSpace<CommonTraits::FunctionSpaceType,
         CommonTraits::GridPartType, CommonTraits::exact_solution_space_order>

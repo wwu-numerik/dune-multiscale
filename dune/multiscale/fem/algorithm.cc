@@ -33,20 +33,19 @@ namespace FEM {
 //! the main FEM computation
 void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string /*filename*/) {
   using namespace Dune;
-  const auto problem_data = Problem::getModelData();
-  print_info(*problem_data, DSC_LOG_INFO);
+  print_info(*Problem::getModelData(), DSC_LOG_INFO);
 
   const auto& grid_view = macro_grid_pointer->leafGridView();
   CommonTraits::FEMapType fe_map(grid_view);
   CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
 
   // defines the matrix A^{\epsilon} in our global problem  - div ( A^{\epsilon}(\nabla u^{\epsilon} ) = f
-  const auto diffusion_op = Problem::getDiffusion();
+  const auto& diffusion_op = Problem::getDiffusion();
   CommonTraits::PdelabVectorType solution(space, 0.0);
 
   const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
-  const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-  const auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
+  const auto& l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
+  const auto& f_ptr = Dune::Multiscale::Problem::getFirstSource();
   fem_solver.apply(*diffusion_op, l_ptr, *f_ptr, solution);
 
   // write FEM solution to a file and produce a VTK output

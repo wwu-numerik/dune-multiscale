@@ -126,8 +126,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   }
 
   // get dirichlet and neumann data
-  auto neumannDataPtr = Dune::Multiscale::Problem::getNeumannData();
-  const auto& neumannData = *neumannDataPtr;
+  const auto& neumannData = *Dune::Multiscale::Problem::getNeumannData();
   const auto& discreteFunctionSpace = allLocalRHS[0]->space();
 
   //! @todo we should use the dirichlet constraints here somehow
@@ -255,8 +254,7 @@ void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFuncti
            "This method only works for hexahedral elements at the moment!");*/
 
   const auto& gridPart = function.space().gridPart();
-  auto dirichletDataPtr = Multiscale::Problem::getDirichletData();
-  const auto& dirichletData = *dirichletDataPtr;
+  const auto& dirichletData = *Multiscale::Problem::getDirichletData();
   //  Fem::GridFunctionAdapter<Multiscale::Problem::DirichletDataBase,
   //  typename LocalGridDiscreteFunctionType::LocalGridDiscreteFunctionSpaceType::GridPartType> gf("dirichlet",
   // dirichletData ,

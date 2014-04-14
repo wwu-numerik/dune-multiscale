@@ -182,7 +182,7 @@ void solve_hmm_problem_nonlinear(
     typename CommonTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
     hmm_newton_rhs.clear();
 
-    const auto f = Problem::getFirstSource();
+    const auto& f = Problem::getFirstSource();
 
     assemble_for_HMM_Newton_method(*f, diffusion_op, *hmm_solution, cp_num_manager, dummy_periodic_func,
                                    hmm_newton_rhs);
@@ -291,15 +291,9 @@ solve_hmm_problem_linear(const typename HMMTraits::PeriodicDiscreteFunctionSpace
 
   DSC_LOG_INFO << "Time to assemble HMM macro stiffness matrix: " << hmmAssembleTimer.elapsed() << "s" << std::endl;
 
-  // assemble right hand side
-  //! right hand side vector
-  const auto f = Problem::getFirstSource(); // standard source f
-                                            // lower order term F(x, u(x), grad u(x) ):
 
   // Dirichlet boundary condition
-  const auto dirichlet_bc = Problem::getDirichletBC();
-  // Neumann boundary condition
-  const auto neumann_bc = Problem::getNeumannBC();
+  const auto& dirichlet_bc = Problem::getDirichletBC();
 
   // - div ( A^{\epsilon} \nabla u^{\epsilon} ) + F(x, u^{\epsilon}, \nabla u^{\epsilon}) = f - div G
 
@@ -431,7 +425,7 @@ void step_data_output(const typename CommonTraits::GridPartType& gridPart,
     // --------- data output discrete exact solution --------------
 
     // create and initialize output class
-    const auto u = Problem::getExactSolution();
+    const auto& u = Problem::getExactSolution();
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", *u, gridPartFine);
     typename OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("exact_solution");
@@ -498,7 +492,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
 
   // L2 errors with exact solution
   if (Problem::getModelData()->hasExactSolution()) {
-    const auto u = Problem::getExactSolution();
+    const auto& u = Problem::getExactSolution();
     OutputTraits::DiscreteExactSolutionType gf("Exact Solution", *u, hmm_solution->space().gridPart());
 
     const auto exact_hmm_error = DS::l2distance(gf, *hmm_solution);

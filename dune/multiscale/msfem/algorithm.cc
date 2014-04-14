@@ -74,7 +74,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   Dune::Multiscale::OutputParameters outputparam;
 
   if (Problem::getModelData()->hasExactSolution()) {
-    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
+    const auto& u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
@@ -106,10 +106,8 @@ void algorithm() {
   CommonTraits::DiscreteFunctionSpaceType fine_discreteFunctionSpace(fine_gridPart);
   CommonTraits::DiscreteFunctionSpaceType coarse_discreteFunctionSpace(coarse_gridPart);
 
-  auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
-  const auto& diffusion_op = *diffusion_op_ptr;
-  auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
-  const auto& f = *f_ptr;
+  const auto& diffusion_op = *Dune::Multiscale::Problem::getDiffusion();
+  const auto& f = *Dune::Multiscale::Problem::getFirstSource();
 
   CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", fine_discreteFunctionSpace);
   msfem_solution.clear();
@@ -135,7 +133,7 @@ void algorithm() {
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     fem_solution = DSC::make_unique<CommonTraits::PdelabVectorType>(space, 0.0);
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
-    const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
+    const auto& l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
     fem_solver.apply(diffusion_op, l_ptr, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       Dune::Multiscale::FEM::write_discrete_function(*fem_solution, "fem_solution");

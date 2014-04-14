@@ -25,10 +25,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
 
   static constexpr int dimension = CommonTraits::GridType::dimension;
   DSC_PROFILER.startTiming("msfem.assembleRHS");
-  auto diffusionPtr = Problem::getDiffusion();
-  const auto& diffusion = *diffusionPtr;
-  auto neumannDataPtr = Problem::getNeumannData();
-  const auto& neumannData = *neumannDataPtr;
+  const auto& diffusion = *Problem::getDiffusion();
+  const auto& neumannData = *Problem::getNeumannData();
 
   rhsVector.clear();
   RangeType f_x;
