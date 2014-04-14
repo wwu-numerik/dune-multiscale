@@ -35,7 +35,7 @@ const std::unique_ptr<const CommonTraits::ModelProblemDataType>& getModelData();
 const std::unique_ptr<const CommonTraits::DirichletDataType>& getDirichletData();
 const std::unique_ptr<const CommonTraits::NeumannDataType>& getNeumannData();
 
-std::string name();
+const std::string& name();
 
 template <class IntersectionType>
 typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value, bool>::type

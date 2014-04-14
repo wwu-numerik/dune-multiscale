@@ -138,4 +138,7 @@ const std::unique_ptr<const CommonTraits::NeumannBCType>& Dune::Multiscale::Prob
   return find_and_call_item(funcs);
 }
 
-std::string Dune::Multiscale::Problem::name() { return DSC_CONFIG_GET("problem.name", "Nine"); }
+const std::string& Dune::Multiscale::Problem::name() {
+  static std::string myName = DSC_CONFIG_GET("problem.name", "Nine");
+  return myName;
+}
