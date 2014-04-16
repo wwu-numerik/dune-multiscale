@@ -60,6 +60,8 @@ private:
 
   std::vector<double> deltas_;
   double* permeability_; //! TODO automatic memory
+  mutable DomainType permIntervalls_;
+  mutable Dune::FieldMatrix<double, DomainType::dimension, DomainType::dimension> permMatrix_;
 };
 
 class DirichletData : public DirichletDataBase {
