@@ -34,6 +34,8 @@ struct ModelProblemData : public IModelProblemData {
   std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
 
+private:
+  Dune::ParameterTree boundary_settings() const;
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {

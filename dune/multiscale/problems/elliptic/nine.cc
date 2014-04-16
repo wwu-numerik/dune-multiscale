@@ -39,12 +39,34 @@ ModelProblemData::gridCorners() const {
 }
 
 std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
-  return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename View::Intersection>>();
+  return std::unique_ptr<ModelProblemData::BoundaryInfoType>(
+        Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));
 }
 
 std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
   return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>>();
 }
+
+ParameterTree ModelProblemData::boundary_settings() const {
+  Dune::ParameterTree boundarySettings;
+  if (DSC_CONFIG.hasSub("problem.boundaryInfo")) {
+    boundarySettings = DSC_CONFIG.sub("problem.boundaryInfo");
+  } else {
+    boundarySettings["default"] = "dirichlet";
+    boundarySettings["compare_tolerance"] = "1e-10";
+    switch (View::dimension /*View is defined in IModelProblemData*/) {
+    case 1:
+      break;
+    case 2:
+      break;
+    case 3:
+      boundarySettings["neumann.0"] = "[0.0; 0.0; 1.0]";
+      boundarySettings["neumann.1"] = "[0.0; 0.0; -1.0]";
+    }
+  }
+  return boundarySettings;
+}
+
 
 FirstSource::FirstSource() {}
 
@@ -153,7 +175,7 @@ void DirichletData::jacobian(const DomainType& x, const TimeType& /*time*/, Jaco
   jacobian(x, y);
 } // jacobian
 
-void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 1.0; } // evaluate
+void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
