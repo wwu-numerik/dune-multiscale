@@ -32,6 +32,8 @@ struct ModelProblemData : public IModelProblemData {
   bool problemAllowsStochastics() const;
   std::unique_ptr<BoundaryInfoType> boundaryInfo() const;
   std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const;
+  std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
+
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {

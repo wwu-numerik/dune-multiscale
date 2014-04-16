@@ -4,6 +4,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 // Helper struct to make overlap for SPGrid possible
 // Declared in unnamed namespace to avoid naming conflicts
@@ -49,8 +50,9 @@ std::pair<std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>,
 Dune::Multiscale::make_grids() {
   const int dim_world = CommonTraits::GridType::dimensionworld;
   typedef FieldVector<typename CommonTraits::GridType::ctype, dim_world> CoordType;
-  CoordType lowerLeft(0.0);
-  CoordType upperRight(1.0);
+  const auto& gridCorners = Problem::getModelData()->gridCorners();
+  CoordType lowerLeft = gridCorners.first;
+  CoordType upperRight = gridCorners.second;
 
   const auto oversamplingLayers = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
   const auto microPerMacro = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
