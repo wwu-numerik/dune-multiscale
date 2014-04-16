@@ -218,6 +218,10 @@ public:
   virtual std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const {
     return DSC::make_unique<DS::GridboundaryAllDirichlet<typename SubView::Intersection>>();
   }
+  
+  virtual std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const {
+    return {CommonTraits::DomainType(0.0), CommonTraits::DomainType(1.0)};
+  }
 };
 
 } //! @} namespace Problem

@@ -31,6 +31,26 @@ bool ModelProblemData::problemIsPeriodic() const { return false; }
 
 bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
+std::pair<CommonTraits::DomainType, CommonTraits::DomainType>
+ModelProblemData::gridCorners() const {
+  CommonTraits::DomainType lowerLeft(0.0);
+  CommonTraits::DomainType upperRight(0.0);
+  switch (View::dimension /*View is defined in IModelProblemData*/) {
+    case 1:
+      DUNE_THROW(NotImplemented, "SPE10 is not defined in 1D!");
+      break;
+    case 2:
+    upperRight[0] = 365.76;
+    upperRight[1] = 670.56;
+  break;
+  case 3:
+    upperRight[0] = 365.76;
+    upperRight[1] = 670.56;
+    upperRight[2] = 51.816;
+  }
+  return {lowerLeft, upperRight};
+}
+
 std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
   return std::unique_ptr<ModelProblemData::BoundaryInfoType>(
       Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));

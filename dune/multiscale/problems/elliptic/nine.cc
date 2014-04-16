@@ -31,6 +31,13 @@ bool ModelProblemData::problemIsPeriodic() const { return true; }
 
 bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
+std::pair<CommonTraits::DomainType, CommonTraits::DomainType>
+ModelProblemData::gridCorners() const {
+  CommonTraits::DomainType lowerLeft(0.0);
+  CommonTraits::DomainType upperRight(1.0);
+  return {lowerLeft, upperRight};
+}
+
 std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
   return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename View::Intersection>>();
 }
