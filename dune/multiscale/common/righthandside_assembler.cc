@@ -23,6 +23,9 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
     const Dune::Multiscale::CommonTraits::FirstSourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
 
+  // cache grid variable
+  bool isSimplexGrid = DSG::is_simplex_grid(coarse_space);
+  
   static constexpr int dimension = CommonTraits::GridType::dimension;
   DSC_PROFILER.startTiming("msfem.assembleRHS");
   const auto& diffusion = *Problem::getDiffusion();
@@ -137,7 +140,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
               JacobianRangeType reconstructionGradPhi(coarseBaseJacs[coarseBF]);
               RangeType reconstructionPhi(coarseBaseEvals[coarseBF]);
 
-              if (DSG::is_simplex_grid(coarse_space)) {
+              if (isSimplexGrid) {
                 assert(localSolutions.size() == dimension + localSolutionManager.numBoundaryCorrectors());
                 for (const auto& i : DSC::valueRange(dimension))
                   reconstructionPhi += coarseBaseJacs[coarseBF][0][i] * allLocalSolutionEvaluations[i][qP];
