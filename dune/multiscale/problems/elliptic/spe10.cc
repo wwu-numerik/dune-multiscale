@@ -108,7 +108,8 @@ void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeT
 
 Diffusion::Diffusion()
   : deltas_{6.096, 3.048, 0.6096}
-  , permeability_(nullptr) {
+  , permeability_(nullptr)
+  , permMatrix_(0.0) {
   readPermeability();
 }
 
@@ -118,36 +119,31 @@ Diffusion::~Diffusion() {
 }
 
 void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const {
-  assert(x.size() <= 3 && "SPE 10 model is only defined for up to three dimensions!");
-  Dune::FieldMatrix<double, DomainType::dimension, DomainType::dimension> permeability(0.0);
-
+  BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
 
   // 3 is the maximum space dimension
-  std::vector<double> intervalls(3, 0.0);
   for (int dim = 0; dim < DomainType::dimension; ++dim)
-    intervalls[dim] = std::floor(x[dim] / deltas_[dim]);
+    permIntervalls_[dim] = std::floor(x[dim] / deltas_[dim]);
 
   int offset = 0;
   switch (DomainType::dimension) {
     case 1:
-      offset = intervalls[0];
-      permeability[0][0] = permeability_[offset];
-      break;
+      DUNE_THROW(NotImplemented, "SPE10 is not implemented for 1D!");
     case 2:
-      offset = intervalls[0] + intervalls[1] * 60;
-      permeability[0][0] = permeability_[offset];
-      permeability[1][1] = permeability_[offset + 1122000];
+      offset = permIntervalls_[0] + permIntervalls_[1] * 60;
+      permMatrix_[0][0] = permeability_[offset];
+      permMatrix_[1][1] = permeability_[offset + 1122000];
       break;
     case 3:
-      offset = intervalls[0] + intervalls[1] * 60 + intervalls[2] * 220 * 60;
-      permeability[0][0] = permeability_[offset];
-      permeability[1][1] = permeability_[offset + 1122000];
-      permeability[2][2] = permeability_[offset + 2244000];
+      offset = permIntervalls_[0] + permIntervalls_[1] * 60 + permIntervalls_[2] * 220 * 60;
+      permMatrix_[0][0] = permeability_[offset];
+      permMatrix_[1][1] = permeability_[offset + 1122000];
+      permMatrix_[2][2] = permeability_[offset + 2244000];
       break;
   }
 
-  permeability.mv(direction[0], flux[0]);
+  permMatrix_.mv(direction[0], flux[0]);
 } // diffusiveFlux
 
 void Diffusion::jacobianDiffusiveFlux(const DomainType& /*x*/, const JacobianRangeType& /*position_gradient*/,
