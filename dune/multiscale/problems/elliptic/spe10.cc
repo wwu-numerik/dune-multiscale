@@ -57,8 +57,7 @@ std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryIn
 }
 
 std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
-  return std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
-      Stuff::GridboundaryNormalBased<typename SubView::Intersection>::create(boundary_settings()));
+  return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>>();
 }
 
 ParameterTree ModelProblemData::boundary_settings() const {
@@ -73,12 +72,12 @@ ParameterTree ModelProblemData::boundary_settings() const {
         DUNE_THROW(NotImplemented, "Boundary values are not implemented for SPE10 in 1D!");
         break;
       case 2:
-        boundarySettings["dirichlet.0"] = "[-1.0; 0.0]";
-        boundarySettings["dirichlet.1"] = "[1.0; 0.0]";
+        boundarySettings["dirichlet.0"] = "[0.0; 1.0]";
+        boundarySettings["dirichlet.1"] = "[0.0; -1.0]";
         break;
       case 3:
-        boundarySettings["dirichlet.0"] = "[-1.0; 0.0; 0.0]";
-        boundarySettings["dirichlet.1"] = "[1.0; 0.0; 0.0]";
+        boundarySettings["dirichlet.0"] = "[0.0; 1.0; 0.0]";
+        boundarySettings["dirichlet.1"] = "[0.0; -1.0; 0.0]";
     }
   }
   return boundarySettings;
@@ -90,7 +89,7 @@ void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
   //    y = 1.0;
   //  else
   //    y = 0.0;
-  y = x[0];
+  y = x[1];
 } // evaluate
 
 void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
