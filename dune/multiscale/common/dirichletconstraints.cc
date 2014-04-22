@@ -196,7 +196,7 @@ void DirichletConstraints<DF>::updateDirichletDofs() const {
     // update sequence number
     sequence_ = domain_space_.sequence();
     hasDirichletDofs_ = hasDirichletBoundary;
-    domain_space_.gridPart().grid().comm().max(hasDirichletDofs_);
+//    domain_space_.gridPart().grid().comm().max(hasDirichletDofs_);
   }
 }
 
