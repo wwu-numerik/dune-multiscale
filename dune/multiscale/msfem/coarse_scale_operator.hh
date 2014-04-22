@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <boost/noncopyable.hpp>
 #include <dune/common/fmatrix.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/common/dirichletconstraints.hh>

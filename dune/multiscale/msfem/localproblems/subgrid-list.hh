@@ -12,7 +12,6 @@
 #include <dune/common/shared_ptr.hh>
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 //#include <dune/fem/function/adaptivefunction.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/fem/space/lagrange.hh>
