@@ -74,7 +74,7 @@ public:
     auto it = corrections_.find(index_set_.index(coarse_cell));
     if (it != corrections_.end())
       return it->second->localFunction(entity);
-    assert(false);
+    DUNE_THROW(InvalidStateException, "Coarse cell was not found!");
   }
 
   virtual bool read_xdr(const std::string) { return false; }
