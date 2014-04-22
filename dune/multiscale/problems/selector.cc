@@ -25,7 +25,7 @@ using namespace Dune::Multiscale;
 template< class ReturnType>
 struct AutoInitBase {
 
-  ~AutoInitBase(){}
+  virtual ~AutoInitBase(){}
 
   AutoInitBase()
     : ptr(nullptr)
