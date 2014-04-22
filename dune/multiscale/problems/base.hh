@@ -212,12 +212,10 @@ public:
   //! linear/nonlinear toggle
   virtual bool linear() const { return true; }
 
-  virtual std::unique_ptr<BoundaryInfoType> boundaryInfo() const {
-    return DSC::make_unique<DS::GridboundaryAllDirichlet<typename View::Intersection>>();
-  }
-  virtual std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const {
-    return DSC::make_unique<DS::GridboundaryAllDirichlet<typename SubView::Intersection>>();
-  }
+  virtual const BoundaryInfoType& boundaryInfo() const = 0;
+  
+  virtual const SubBoundaryInfoType& subBoundaryInfo() const = 0;
+  
   
   virtual std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const {
     return {CommonTraits::DomainType(0.0), CommonTraits::DomainType(1.0)};

@@ -30,12 +30,14 @@ struct ModelProblemData : public IModelProblemData {
   std::string getMacroGridFile() const;
   bool problemIsPeriodic() const;
   bool problemAllowsStochastics() const;
-  std::unique_ptr<BoundaryInfoType> boundaryInfo() const;
-  std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const;
+  const BoundaryInfoType& boundaryInfo() const;
+  const SubBoundaryInfoType& subBoundaryInfo() const;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
 
 private:
   Dune::ParameterTree boundary_settings() const;
+  std::unique_ptr<Stuff::GridboundaryNormalBased<typename View::Intersection>> boundaryInfo_;
+  Stuff::GridboundaryAllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {

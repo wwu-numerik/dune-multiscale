@@ -50,7 +50,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
   CC constraints_container;
   constraints_container.clear();
   const auto& bc_type = Problem::getModelData()->boundaryInfo();
-  Dune::PDELab::constraints(*bc_type, space_, constraints_container);
+  Dune::PDELab::constraints(bc_type, space_, constraints_container);
 
   FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f, lower_order_term);
 
