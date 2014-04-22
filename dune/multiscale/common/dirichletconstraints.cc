@@ -15,16 +15,16 @@ namespace Multiscale {
 DirichletConstraints<CommonTraits::DiscreteFunctionType>&
 getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space) {
   // set dirichlet dofs to zero
-  static const auto boundary = Problem::getModelData()->boundaryInfo();
-  static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(*boundary, space);
+  static const auto& boundary = Problem::getModelData()->boundaryInfo();
+  static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(boundary, space);
   return constraints;
 }
 
 DirichletConstraints<CommonTraits::DiscreteFunctionType>&
 getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space) {
   // set dirichlet dofs to zero
-  static const auto boundary = Problem::getModelData()->boundaryInfo();
-  static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(*boundary, space);
+  static const auto& boundary = Problem::getModelData()->boundaryInfo();
+  static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(boundary, space);
   return constraints;
 }
 

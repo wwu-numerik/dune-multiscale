@@ -17,10 +17,14 @@ namespace SPE10 {
 // default value for epsilon (if not specified in the parameter file)
 CONSTANTSFUNCTION(0.05)
 
-ModelProblemData::ModelProblemData() : IModelProblemData(constants()) {
   if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()))
     DUNE_THROW(Dune::InvalidStateException,
                "The problem does not allow stochastic perturbations. Please, switch the key off.");
+ModelProblemData::ModelProblemData()
+  : IModelProblemData(constants())
+  , subBoundaryInfo_()
+{
+  boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));
 }
 
 std::string ModelProblemData::getMacroGridFile() const {
@@ -51,13 +55,12 @@ ModelProblemData::gridCorners() const {
   return {lowerLeft, upperRight};
 }
 
-std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
-  return std::unique_ptr<ModelProblemData::BoundaryInfoType>(
-      Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));
+const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const {
+  return *boundaryInfo_;
 }
 
-std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
-  return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>>();
+const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const {
+  return subBoundaryInfo_;
 }
 
 ParameterTree ModelProblemData::boundary_settings() const {
