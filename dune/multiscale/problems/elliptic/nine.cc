@@ -17,15 +17,11 @@ namespace Nine {
 // default value for epsilon (if not specified in the parameter file)
 CONSTANTSFUNCTION(0.05)
 
-  if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()))
-    DUNE_THROW(Dune::InvalidStateException,
-               "The problem does not allow stochastic perturbations. Please, switch the key off.");
 ModelProblemData::ModelProblemData()
   : IModelProblemData(constants())
   , boundaryInfo_(Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_()
-{
-}
+{}
 
 std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/msfem_cube_three.dgf");
