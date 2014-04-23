@@ -133,7 +133,7 @@ struct CommonTraits {
   typedef PDELab::QkLocalFiniteElementMap<GridType::LeafGridView,GridType::ctype,FieldType,polynomial_order>
   FEMapType;
   typedef BackendChooser<DiscreteFunctionSpaceType>::VectorBackendType VectorBackendType;
-  typedef PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,PDELab::ConformingDirichletConstraints,
+  typedef PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,PDELab::OverlappingConformingDirichletConstraints,
             VectorBackendType> GridFunctionSpaceType;
   typedef typename PDELab::BackendVectorSelector<GridFunctionSpaceType,FieldType>::Type PdelabVectorType;
 
