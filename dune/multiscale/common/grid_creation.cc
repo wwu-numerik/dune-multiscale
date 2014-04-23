@@ -13,7 +13,7 @@ template< class GridType >
 class MyGridFactory {
   typedef typename GridType::ctype ctype;
   static const int dimworld = GridType::dimensionworld;
-  static const int dim = GridType::dim;
+  static const int dim = GridType::dimension;
 
 public:
   static std::shared_ptr<GridType>
