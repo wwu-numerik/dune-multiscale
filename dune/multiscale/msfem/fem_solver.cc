@@ -68,9 +68,12 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
 //  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
 //  LinearSolverType ls(space_, 5000);
 
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
-  LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-
+//  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
+//  LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LinearSolverType;
+  LinearSolverType ls(space_,constraints_container,5000,2);
+  
+  
   typedef Dune::PDELab::StationaryLinearProblemSolver<GridOperatorType,LinearSolverType,CommonTraits::PdelabVectorType> SLP;
   SLP slp(global_operator,ls,solution,1e-10);
   slp.apply();
