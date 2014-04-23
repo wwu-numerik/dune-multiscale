@@ -97,11 +97,6 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
                   // get local coordinate of quadrature point
                   const auto& xLocal = faceQuad.localPoint(iqP);
                   const auto& faceGeometry = intersection.geometry();
-
-                  // the following does not work because subgrid does not implement geometryInInside()
-                  // const auto& insideGeometry    = intersection.geometryInInside();
-                  // const typename FaceQuadratureType::CoordinateType& xInInside = insideGeometry.global(xLocal);
-                  // therefore, we have to do stupid things:
                   const auto& xGlobal = faceGeometry.global(xLocal);
                   const auto& xInCoarseLocal = coarse_grid_entity.geometry().local(xGlobal);
                   const double factor = faceGeometry.integrationElement(xLocal) * faceQuad.weight(iqP);
