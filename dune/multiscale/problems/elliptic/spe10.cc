@@ -17,9 +17,6 @@ namespace SPE10 {
 // default value for epsilon (if not specified in the parameter file)
 CONSTANTSFUNCTION(0.05)
 
-  if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()))
-    DUNE_THROW(Dune::InvalidStateException,
-               "The problem does not allow stochastic perturbations. Please, switch the key off.");
 ModelProblemData::ModelProblemData()
   : IModelProblemData(constants())
   , subBoundaryInfo_()
