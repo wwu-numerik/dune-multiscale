@@ -70,7 +70,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
               localSolutions.size(), std::vector<RangeType>(localQuadrature.nop(), 0.0));
           std::vector<std::vector<JacobianRangeType>> allLocalSolutionJacobians(
               localSolutions.size(), std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
-          for (auto lsNum : DSC::valueRange(localSolutions.size())) {
+          // add contributions for all inner correctors
+          for (auto lsNum : DSC::valueRange(numLocalBaseFunctions)) {
             auto localFunction = localSolutions[lsNum]->localFunction(localEntity);
             // this evaluates the local solutions in all quadrature points...
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
@@ -103,11 +104,9 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
 
                   neumannData.evaluate(xGlobal, neumannValue);
                   coarseBaseSet.evaluateAll(xInCoarseLocal, phi_x_vec);
-                  for (auto i : DSC::valueRange(numLocalBaseFunctions)) {
-                    assert((long long)i < (long long)phi_x_vec.size());
-                    assert(iqP < localSolutionOnFace.size());
-                    rhsLocalFunction[i] += factor * (neumannValue * (phi_x_vec[i] + localSolutionOnFace[iqP]));
-                  }
+                  assert((long long)lsNum < (long long)phi_x_vec.size());
+                  assert(iqP < localSolutionOnFace.size());
+                  rhsLocalFunction[lsNum] -= factor * (neumannValue * (phi_x_vec[lsNum] + localSolutionOnFace[iqP]));
                 }
               }
             }
