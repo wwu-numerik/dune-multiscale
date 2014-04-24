@@ -90,7 +90,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // the result.
     if (DS::l2norm(current_rhs) < 1e-30) {
       current_rhs.clear();
-      DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
+      DSC_LOG_INFO << "Local MsFEM problem with solution zero." << std::endl;
       continue;
     }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
