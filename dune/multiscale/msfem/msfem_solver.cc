@@ -156,9 +156,6 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   // add coarse and fine scale part to solution
   solution += coarse_scale_part;
   solution += fine_scale_part;
-
-  // seperate the msfem output from other output
-  std::cout << std::endl << std::endl;
 } // solve_dirichlet_zero
 
 } // namespace MsFEM {
