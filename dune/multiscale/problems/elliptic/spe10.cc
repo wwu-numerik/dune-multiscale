@@ -22,6 +22,7 @@ ModelProblemData::ModelProblemData()
   , subBoundaryInfo_()
 {
   boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));
+  subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(Stuff::GridboundaryNormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
 std::string ModelProblemData::getMacroGridFile() const {
@@ -41,13 +42,13 @@ ModelProblemData::gridCorners() const {
       DUNE_THROW(NotImplemented, "SPE10 is not defined in 1D!");
       break;
     case 2:
-    upperRight[0] = 365.76;
-    upperRight[1] = 670.56;
-  break;
-  case 3:
-    upperRight[0] = 365.76;
-    upperRight[1] = 670.56;
-    upperRight[2] = 51.816;
+      upperRight[0] = 365.76;
+      upperRight[1] = 670.56;
+      break;
+    case 3:
+      upperRight[0] = 365.76;
+      upperRight[1] = 670.56;
+      upperRight[2] = 51.816;
   }
   return {lowerLeft, upperRight};
 }
@@ -57,7 +58,7 @@ const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const
 }
 
 const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const {
-  return subBoundaryInfo_;
+  return *subBoundaryInfo_;
 }
 
 ParameterTree ModelProblemData::boundary_settings() const {
@@ -72,8 +73,7 @@ ParameterTree ModelProblemData::boundary_settings() const {
         DUNE_THROW(NotImplemented, "Boundary values are not implemented for SPE10 in 1D!");
         break;
       case 2:
-        boundarySettings["dirichlet.0"] = "[0.0; 1.0]";
-        boundarySettings["dirichlet.1"] = "[0.0; -1.0]";
+        boundarySettings["dirichlet.0"] = "[0.0; -1.0]";
         break;
       case 3:
         boundarySettings["dirichlet.0"] = "[0.0; 1.0; 0.0]";
@@ -84,24 +84,24 @@ ParameterTree ModelProblemData::boundary_settings() const {
 }
 
 void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
-  // use pressure gradient in x-direction in 1D and 2D and in y-direction in 3D
-  //  if (x[std::max(dimDomain-2,0)]<1e-6)
-  //    y = 1.0;
-  //  else
-  //    y = 0.0;
-  y = x[1];
+  y = 1.0;
 } // evaluate
 
 void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
-void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
+void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
+  if (std::abs(x[1]-670.56)<1e-6)
+    y = 1.0e-3;
+  else
+    y = 0.0;
+} // evaluate
 
 void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
 FirstSource::FirstSource() {}
 
 void __attribute__((hot)) FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const {
-  y = typename FunctionSpaceType::RangeType(1.0);
+  y = typename FunctionSpaceType::RangeType(0.0);
 } // evaluate
 
 void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
