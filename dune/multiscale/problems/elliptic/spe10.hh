@@ -37,7 +37,7 @@ struct ModelProblemData : public IModelProblemData {
 private:
   Dune::ParameterTree boundary_settings() const;
   std::unique_ptr<BoundaryInfoType> boundaryInfo_;
-  Stuff::GridboundaryAllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
+  std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo_;
 };
 
 class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
