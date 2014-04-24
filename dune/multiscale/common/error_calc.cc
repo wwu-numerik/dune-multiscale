@@ -84,7 +84,10 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   if (msfem_solution_ && fem_solution_) {
     const auto approx_msfem_error = DS::l2distance(*msfem_solution_,*fem_solution_);
     const auto no = DS::l2norm(*msfem_solution_);
-    out << "|| u_msfem - u_fem ||_L2 / || u_msfem ||_L2 =  " << approx_msfem_error/no << std::endl;
+    if (std::abs(no)>1e-12)
+      out << "|| u_msfem - u_fem ||_L2 / || u_msfem ||_L2 =  " << approx_msfem_error/no << std::endl;
+    else
+      out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 
 //    const auto h1_approx_msfem_error = DS::h1distance(*msfem_solution_,*fem_solution_);
 //    out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
