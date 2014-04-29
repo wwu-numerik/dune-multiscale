@@ -44,6 +44,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   typedef LocalsolutionProxy<SearchType> ProxyType;
   typename ProxyType::CorrectionsMapType local_corrections;
 
+  const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
+
   for (auto& coarse_entity : coarse_space) {
     LocalSolutionManager localSolManager(coarse_space, coarse_entity, subgrid_list);
     localSolManager.load();
@@ -56,7 +58,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     local_correction.clear();
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarse_entity);
 
-    if (DSG::is_simplex_grid(coarse_space)) {
+    if (is_simplex_grid) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
                        "We should have dim local solutions per coarse element on triangular meshes!");
 

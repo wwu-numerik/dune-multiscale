@@ -18,7 +18,6 @@
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
@@ -151,7 +150,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.blockMapper().maxNumDofs());
   std::vector<RangeType> phi(discreteFunctionSpace.blockMapper().maxNumDofs());
 
-  const auto numBoundaryCorrectors = DSG::is_simplex_grid(coarse_space_) ? 1u : 2u;
+  const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
+  const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
   for (auto& localGridCell : discreteFunctionSpace) {
@@ -181,7 +181,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
           JacobianRangeType diffusion(0.0);
           if (coarseBaseFunc < numInnerCorrectors) {
-            if (DSG::is_simplex_grid(coarse_space_))
+            if (is_simplex_grid)
               diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
             else {
               const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);

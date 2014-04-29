@@ -67,7 +67,7 @@ operator()(const PointContainerType& points) {
 
   static auto it = view.template begin< 0 >();
   const auto end = view.template end< 0 >();
-  size_t steps = 0;
+  int steps = 0;
   while(true) {
     const auto& coarse_entity = *it;
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
