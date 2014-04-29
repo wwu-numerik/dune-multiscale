@@ -14,11 +14,9 @@ namespace Multiscale {
 namespace Problem {
 namespace SPE10 {
 
-// default value for epsilon (if not specified in the parameter file)
-CONSTANTSFUNCTION(0.05)
 
 ModelProblemData::ModelProblemData()
-  : IModelProblemData(constants())
+  : IModelProblemData()
   , subBoundaryInfo_()
 {
   boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()));
@@ -83,11 +81,9 @@ ParameterTree ModelProblemData::boundary_settings() const {
   return boundarySettings;
 }
 
-void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
+void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const {
   y = 1.0;
 } // evaluate
-
-void DirichletData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
 void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
   if (std::abs(x[1]-670.56)<1e-6)
@@ -96,15 +92,11 @@ void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
     y = 0.0;
 } // evaluate
 
-void NeumannData::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
-
 FirstSource::FirstSource() {}
 
 void __attribute__((hot)) FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const {
   y = typename FunctionSpaceType::RangeType(0.0);
 } // evaluate
-
-void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
 Diffusion::Diffusion()
   : deltas_{6.096, 3.048, 0.6096}

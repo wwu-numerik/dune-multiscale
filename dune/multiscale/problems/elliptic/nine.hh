@@ -13,6 +13,22 @@
 
 #include "dune/multiscale/common/traits.hh"
 
+#ifdef __GNUC__
+
+  #define PURE        __attribute__((const))
+  #define HOT         __attribute__((hot))
+  #define ALWAYS_INLINE __attribute__((always_inline)) inline
+
+#else
+
+  #define PURE
+  #define HOT
+  #define ALWAYS_INLINE inline
+
+#endif
+
+const double epsilon = 0.05;
+
 namespace Dune {
 namespace Multiscale {
 namespace Problem {
@@ -44,16 +60,15 @@ class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   FirstSource();
 
-  void evaluate(const DomainType& x, RangeType& y) const;
-  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
+  PURE HOT  void evaluate(const DomainType& x, RangeType& y) const;
 };
 
 class Diffusion : public DiffusionBase {
 public:
   Diffusion();
 
-  void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const;
-  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
+  PURE HOT  void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const;
+  PURE  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
 };
 
@@ -61,26 +76,23 @@ class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   ExactSolution();
 
-  void evaluate(const DomainType& x, RangeType& y) const;
-  void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
+  PURE HOT  void evaluate(const DomainType& x, RangeType& y) const;
+  PURE HOT  void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
 };
 
 class DirichletData : public DirichletDataBase {
 public:
   DirichletData() {}
 
-  void evaluate(const DomainType& x, RangeType& y) const;
-  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
-  void jacobian(const DomainType& x, JacobianRangeType& y) const;
-  void jacobian(const DomainType& x, const TimeType& /*time*/, JacobianRangeType& y) const;
+  PURE  void evaluate(const DomainType& x, RangeType& y) const;
+  PURE  void jacobian(const DomainType& x, JacobianRangeType& y) const;
 };
 
 class NeumannData : public NeumannDataBase {
 public:
   NeumannData() {}
 
-  void evaluate(const DomainType& x, RangeType& y) const;
-  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
+  PURE  void evaluate(const DomainType& x, RangeType& y) const;
 };
 
 class LowerOrderTerm : public ZeroLowerOrder {};
@@ -90,6 +102,7 @@ MSNULLFUNCTION(NeumannBoundaryCondition)
 MSCONSTANTFUNCTION(MassTerm, 0.0)
 MSNULLFUNCTION(DefaultDummyFunction)
 MSNULLFUNCTION(SecondSource)
+
 
 } //! @} namespace Nine {
 }
