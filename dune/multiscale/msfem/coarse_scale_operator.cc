@@ -35,6 +35,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   Fem::DomainDecomposedIteratorStorage<CommonTraits::GridPartType> threadIterators(
       coarseDiscreteFunctionSpace_.gridPart());
 
+  const bool is_simplex_grid = DSG::is_simplex_grid(coarseDiscreteFunctionSpace_);
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -96,7 +98,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
                 // Compute the gradients of the i'th and j'th local problem solutions
                 JacobianRangeType gradLocProbSoli(0.0), gradLocProbSolj(0.0);
-                if (DSG::is_simplex_grid(coarseDiscreteFunctionSpace_)) {
+                if (is_simplex_grid) {
                   assert(allLocalSolutionEvaluations.size() == CommonTraits::GridType::dimension);
                   // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
                   for (int k = 0; k < CommonTraits::GridType::dimension; ++k) {
