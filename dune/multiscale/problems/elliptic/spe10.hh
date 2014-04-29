@@ -45,7 +45,6 @@ public:
   FirstSource();
 
   void evaluate(const DomainType& x, RangeType& y) const;
-  void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const;
 };
 
 class Diffusion : public DiffusionBase {
@@ -73,8 +72,6 @@ public:
   DirichletData() {}
 
   void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
-  void evaluate(const typename FunctionSpaceType::DomainType& x, const TimeType& /*time*/,
-                typename FunctionSpaceType::RangeType& y) const;
 };
 
 class NeumannData : public NeumannDataBase {
@@ -84,8 +81,6 @@ public:
   NeumannData() {}
 
   void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
-  void evaluate(const typename FunctionSpaceType::DomainType& x, const TimeType& /*time*/,
-                typename FunctionSpaceType::RangeType& y) const;
 };
 
 class LowerOrderTerm : public ZeroLowerOrder {};
