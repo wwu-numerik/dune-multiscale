@@ -3,10 +3,10 @@
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/validation.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
 #include <sstream>
 
 #include "dune/multiscale/problems/base.hh"
-#include "dune/multiscale/problems/constants.hh"
 #include "spe10.hh"
 
 namespace Dune {
