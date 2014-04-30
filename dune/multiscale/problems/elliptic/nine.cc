@@ -1,6 +1,7 @@
 #include <config.h>
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/parameter/validation.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <math.h>
