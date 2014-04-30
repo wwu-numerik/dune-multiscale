@@ -35,6 +35,7 @@ struct LocalOutputTraits {
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
+  DSC::Profiler::ScopedTiming st("msfem.idFine");
   fine_scale_part.clear();
   const DiscreteFunctionSpace& coarse_space = coarse_msfem_solution.space();
   auto& coarse_indexset = coarse_space.gridPart().grid().leafIndexSet();
