@@ -46,7 +46,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
 
   typedef CommonTraits::FieldType Real;
   typedef CommonTraits::GridFunctionSpaceType GFS;
-  typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
+  typedef typename GFS::ConstraintsContainer<Real>::Type CC;
   CC constraints_container;
   constraints_container.clear();
   const auto& bc_type = Problem::getModelData()->boundaryInfo();
