@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/parameter/validation.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <sstream>
