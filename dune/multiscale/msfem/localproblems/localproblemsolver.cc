@@ -89,13 +89,13 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
     if (DS::l2norm(current_rhs) < 1e-30) {
-      current_rhs.clear();
+      current_solution.clear();
       DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
       continue;
     }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
-      current_rhs.clear();
+      current_solution.clear();
       DSC_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
       continue;
     }
