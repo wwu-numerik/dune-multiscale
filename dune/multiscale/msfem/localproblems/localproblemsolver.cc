@@ -160,8 +160,8 @@ void LocalProblemSolver::solve_for_all_cells() {
   DSC_LOG_DEBUG << "Minimum time for saving a local problem = " << saveTime.min() << "s.\n";
   DSC_LOG_DEBUG << "Maximum time for saving a localproblem = " << saveTime.max() << "s.\n";
   DSC_LOG_DEBUG << "Average time for saving a localproblem = " << saveTime.average() << "s.\n";
-  DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = " << totalTime << "s on rank" << Dune::Fem::MPIManager::rank() << std::endl
-                << std::endl;
+  DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = "
+                << totalTime << "s on rank" << Dune::Fem::MPIManager::rank() << std::endl;
 } // assemble_all
 
 } // namespace MsFEM {
