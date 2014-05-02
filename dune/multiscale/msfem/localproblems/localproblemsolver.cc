@@ -90,13 +90,13 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // the result.
     if (DS::l2norm(current_rhs) < 1e-30) {
       current_rhs.clear();
-      DSC_LOG_INFO << "Local MsFEM problem with solution zero." << std::endl;
+      DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
       continue;
     }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
       current_rhs.clear();
-      DSC_LOG_INFO << "Zero-Boundary corrector." << std::endl;
+      DSC_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
       continue;
     }
     localProblemOperator.apply_inverse(current_rhs, current_solution);
@@ -119,10 +119,10 @@ void LocalProblemSolver::solve_for_all_cells() {
   // number of coarse grid entities (of codim 0).
   const auto coarseGridSize = coarse_space_.grid().size(0);
   if (Dune::Fem::MPIManager::size() > 0)
-    DSC_LOG_INFO << "Rank " << Dune::Fem::MPIManager::rank() << " will solve local problems for " << coarseGridSize
+    DSC_LOG_DEBUG << "Rank " << Dune::Fem::MPIManager::rank() << " will solve local problems for " << coarseGridSize
                  << " coarse entities!" << std::endl;
   else {
-    DSC_LOG_INFO << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
+    DSC_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
   }
   DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
 
@@ -133,10 +133,8 @@ void LocalProblemSolver::solve_for_all_cells() {
   const auto& coarseGridLeafIndexSet = coarse_space_.gridPart().grid().leafIndexSet();
   for (const auto& coarseEntity : coarse_space_) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
-
-    DSC_LOG_INFO << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
-
     DSC_PROFILER.startTiming("none.saveLocalProblemsOnCell");
+    DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time
     DSC_PROFILER.startTiming("none.local_problem_solution");
@@ -161,16 +159,15 @@ void LocalProblemSolver::solve_for_all_cells() {
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all") / 1000.f;
-  DSC_LOG_INFO << std::endl;
-  DSC_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n";
-  DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s.\n";
-  DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s.\n";
-  DSC_LOG_INFO << "Average time for solving a localproblem = " << cell_time.average() << "s.\n";
-  DSC_LOG_INFO << "Minimum time for saving a local problem = " << saveTime.min() << "s.\n";
-  DSC_LOG_INFO << "Maximum time for saving a localproblem = " << saveTime.max() << "s.\n";
-  DSC_LOG_INFO << "Average time for saving a localproblem = " << saveTime.average() << "s.\n";
-  DSC_LOG_INFO << "Total time for computing and saving the localproblems = " << total_time << "s," << std::endl
-               << std::endl;
+  DSC_LOG_DEBUG << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n";
+  DSC_LOG_DEBUG << "Minimum time for solving a local problem = " << cell_time.min() << "s.\n";
+  DSC_LOG_DEBUG << "Maximum time for solving a localproblem = " << cell_time.max() << "s.\n";
+  DSC_LOG_DEBUG << "Average time for solving a localproblem = " << cell_time.average() << "s.\n";
+  DSC_LOG_DEBUG << "Minimum time for saving a local problem = " << saveTime.min() << "s.\n";
+  DSC_LOG_DEBUG << "Maximum time for saving a localproblem = " << saveTime.max() << "s.\n";
+  DSC_LOG_DEBUG << "Average time for saving a localproblem = " << saveTime.average() << "s.\n";
+  DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = " << total_time << "s," << std::endl
+                << std::endl;
 } // assemble_all
 
 } // namespace MsFEM {

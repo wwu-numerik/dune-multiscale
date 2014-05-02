@@ -171,6 +171,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
   rhsVector.communicate();
-  DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS") << "ms"
+  DSC_PROFILER.stopTiming("msfem.assembleRHS");
+  DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.getTiming("msfem.assembleRHS") << "ms"
                << std::endl;
 }
