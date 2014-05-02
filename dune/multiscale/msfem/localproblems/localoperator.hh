@@ -69,6 +69,9 @@ private:
   const DiffusionOperatorType& diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
+  static bool cached_;
+  static std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseJacs_;
+  static std::vector<BasisFunctionSetType::JacobianRangeType> dirichletJacs_;
 };
 
 } // namespace MsFEM {
