@@ -24,9 +24,9 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
   // if Petrov-Galerkin-MsFEM
   if (petrovGalerkin_)
-    DSC_LOG_INFO << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
+    DSC_LOG_DEBUG << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
   else // if classical (symmetric) MsFEM
-    DSC_LOG_INFO << "Assembling MsFEM Matrix." << std::endl;
+    DSC_LOG_DEBUG << "Assembling MsFEM Matrix." << std::endl;
 
   //!TODO diagonal stencil reicht
   global_matrix_.reserve(DSFe::diagonalAndNeighborStencil(global_matrix_));
@@ -148,7 +148,8 @@ void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscret
   inverse(rhs, solution);
   if (!solution.dofsValid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
-  DSC_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.stopTiming("msfem.solveCoarse") << "ms."
+  DSC_PROFILER.stopTiming("msfem.solveCoarse");
+  DSC_LOG_DEBUG << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.solveCoarse") << "ms."
                << std::endl;
 } // constructor
 

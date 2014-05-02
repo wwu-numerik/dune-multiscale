@@ -39,10 +39,8 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
                                 const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
                                 const CommonTraits::FirstSourceType& f,
                                 CommonTraits::PdelabVectorType& solution) const {
-  DSC_LOG_INFO << "Solving linear problem with standard FEM\n";
-
-  // to assemble the computational time
-  Dune::Timer timer;
+  DSC_LOG_DEBUG << "Solving linear problem with standard FEM\n";
+  DSC_PROFILER.startTiming("fem.apply");
 
   typedef CommonTraits::FieldType Real;
   typedef CommonTraits::GridFunctionSpaceType GFS;
@@ -77,10 +75,8 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
   typedef Dune::PDELab::StationaryLinearProblemSolver<GridOperatorType,LinearSolverType,CommonTraits::PdelabVectorType> SLP;
   SLP slp(global_operator,ls,solution,1e-10);
   slp.apply();
-
-  DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
-  DSC_LOG_INFO << "Standard FEM problem solved in " << timer.elapsed() << "s." << std::endl << std::endl
-               << std::endl;
+  DSC_PROFILER.stopTiming("fem.apply");
+  DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms.\n";
 }
 
 } // namespace Multiscale
