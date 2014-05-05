@@ -128,7 +128,6 @@ void LocalProblemSolver::solve_for_all_cells() {
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> solveTime;
-  DSC::MinMaxAvg<double> saveTime;
 
   const auto& coarseGridLeafIndexSet = coarse_space_.gridPart().grid().leafIndexSet();
   for (const auto& coarseEntity : coarse_space_) {
@@ -142,24 +141,18 @@ void LocalProblemSolver::solve_for_all_cells() {
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
     solveTime(DSC_PROFILER.stopTiming("msfem.localProblemSolver.solve") / 1000.f);
 
-    // save the local solutions to disk
-    DSC_PROFILER.startTiming("msfem.localProblemSolver.save");
+    // save the local solutions to disk/mem
     localSolutionManager.save();
-    saveTime(DSC_PROFILER.stopTiming("msfem.localProblemSolver.save") / 1000.f);
 
     DSC_PROFILER.resetTiming("msfem.localProblemSolver.solve");
-    DSC_PROFILER.resetTiming("msfem.localProblemSolver.save");
   } // for
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DSC_PROFILER.stopTiming("msfem.localProblemSolver.solveAndSaveAll") / 1000.f;
   DSC_LOG_DEBUG << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n";
   DSC_LOG_DEBUG << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n";
-  DSC_LOG_DEBUG << "Maximum time for solving a localproblem = " << solveTime.max() << "s.\n";
-  DSC_LOG_DEBUG << "Average time for solving a localproblem = " << solveTime.average() << "s.\n";
-  DSC_LOG_DEBUG << "Minimum time for saving a local problem = " << saveTime.min() << "s.\n";
-  DSC_LOG_DEBUG << "Maximum time for saving a localproblem = " << saveTime.max() << "s.\n";
-  DSC_LOG_DEBUG << "Average time for saving a localproblem = " << saveTime.average() << "s.\n";
+  DSC_LOG_DEBUG << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n";
+  DSC_LOG_DEBUG << "Average time for solving a local problem = " << solveTime.average() << "s.\n";
   DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = "
                 << totalTime << "s on rank" << Dune::Fem::MPIManager::rank() << std::endl;
 } // assemble_all
