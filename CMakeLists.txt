@@ -75,6 +75,7 @@ set( COMMON_SOURCES
 set( PROBLEM_SOURCES
     dune/multiscale/problems/elliptic/nine.cc
     dune/multiscale/problems/elliptic/spe10.cc
+    dune/multiscale/problems/elliptic/tarbert.cc
     dune/multiscale/problems/selector.cc
     dune/multiscale/problems/base.cc
 )
