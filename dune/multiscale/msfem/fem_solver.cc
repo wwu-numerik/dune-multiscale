@@ -9,6 +9,7 @@
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/functions/norm.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
