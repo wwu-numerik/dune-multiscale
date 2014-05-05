@@ -9,8 +9,6 @@
 #include "dune/multiscale/problems/base.hh"
 #include "tarbert.hh"
 
-#include "/usr/local/include/eigen3/Eigen/Core"
-#include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -174,42 +172,42 @@ void Diffusion::readPermeability() {
   return;
 } /* readPermeability */
   
-  void Diffusion::visualizePermeability(const CommonTraits::GridType& grid) const
-  {
-    typedef typename CommonTraits::GridType::LeafGridView::template Codim< 0 >::Iterator IteratorType;
-    typedef typename CommonTraits::GridType::LeafGridView::template Codim< 0 >::Entity   EntityType;
-    const int dimDomain = DomainType::dimension;
-    
-    Eigen::MatrixXd perm(grid.size(0), dimDomain);
-//    Eigen::VectorXd perm_x(grid.size(0));
-//    Eigen::VectorXd perm_y(grid.size(0));
-//    Eigen::VectorXd perm_z(grid.size(0));
-    JacobianRangeType permeability(0.0);
-
-    for (const auto& entity : DSC::viewRange(grid.leafView())) {
-      // get the barycenter
-      auto center = entity.geometry().center();
-      int index = grid.leafView().indexSet().index(entity);
-      for (const auto& dim : DSC::valueRange(dimDomain)) {
-        JacobianRangeType dir(0.0);
-        dir[0][dim] = 1.0;
-        diffusiveFlux(center, dir, permeability);
-        perm(index, dim) = permeability[0][dim];
-      }
-//      perm_x(index) = permeabilityMatrix(0, 0);
-//      perm_y(index) = permeabilityMatrix(1, 1);
-//      perm_z(index) = permeabilityMatrix(2, 2);
-    }
-    
-    VTKWriter< typename CommonTraits::GridType::LeafGridView > vtkwriter(grid.leafView());
-    for (const auto& dim : DSC::valueRange(dimDomain))
-      vtkwriter.addCellData(perm.col(dim), "perm_" + DSC::toString(dim));
-//    vtkwriter.addCellData(perm_y, "perm_y");
-//    vtkwriter.addCellData(perm_z, "perm_z");
-    vtkwriter.write("data/Permeability");
-    
-    return;
-  }         // visualizePermeability
+//  void Diffusion::visualizePermeability(const CommonTraits::GridType& grid) const
+//  {
+//    typedef typename CommonTraits::GridType::LeafGridView::template Codim< 0 >::Iterator IteratorType;
+//    typedef typename CommonTraits::GridType::LeafGridView::template Codim< 0 >::Entity   EntityType;
+//    const int dimDomain = DomainType::dimension;
+//    
+//    Eigen::MatrixXd perm(grid.size(0), dimDomain);
+////    Eigen::VectorXd perm_x(grid.size(0));
+////    Eigen::VectorXd perm_y(grid.size(0));
+////    Eigen::VectorXd perm_z(grid.size(0));
+//    JacobianRangeType permeability(0.0);
+//
+//    for (const auto& entity : DSC::viewRange(grid.leafView())) {
+//      // get the barycenter
+//      auto center = entity.geometry().center();
+//      int index = grid.leafView().indexSet().index(entity);
+//      for (const auto& dim : DSC::valueRange(dimDomain)) {
+//        JacobianRangeType dir(0.0);
+//        dir[0][dim] = 1.0;
+//        diffusiveFlux(center, dir, permeability);
+//        perm(index, dim) = permeability[0][dim];
+//      }
+////      perm_x(index) = permeabilityMatrix(0, 0);
+////      perm_y(index) = permeabilityMatrix(1, 1);
+////      perm_z(index) = permeabilityMatrix(2, 2);
+//    }
+//    
+//    VTKWriter< typename CommonTraits::GridType::LeafGridView > vtkwriter(grid.leafView());
+//    for (const auto& dim : DSC::valueRange(dimDomain))
+//      vtkwriter.addCellData(perm.col(dim), "perm_" + DSC::toString(dim));
+////    vtkwriter.addCellData(perm_y, "perm_y");
+////    vtkwriter.addCellData(perm_z, "perm_z");
+//    vtkwriter.write("data/Permeability");
+//    
+//    return;
+//  }         // visualizePermeability
 
 } // namespace SPE10
 } // namespace Problem

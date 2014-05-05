@@ -56,7 +56,7 @@ public:
   void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
   
-  void visualizePermeability(const CommonTraits::GridType& grid) const;
+//  void visualizePermeability(const CommonTraits::GridType& grid) const;
 private:
   void readPermeability();
 
