@@ -11,6 +11,7 @@
 #include "elliptic/nine.hh"
 #include "elliptic/thirteen.hh"
 #include "elliptic/spe10.hh"
+#include "elliptic/tarbert.hh"
 #include "selector.hh"
 
 namespace Dune {
@@ -62,7 +63,7 @@ struct AutoInit : public AutoInitBase<ReturnType> {
 
 # define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
     std::map<std::string, std::shared_ptr<AutoInitBase<ReturnType>>>(                              \
-        {MAP_ITEM(Nine, ReturnType, FunctionName), MAP_ITEM(SPE10, ReturnType, FunctionName),})
+        {MAP_ITEM(Nine, ReturnType, FunctionName), MAP_ITEM(SPE10, ReturnType, FunctionName), MAP_ITEM(Tarbert, ReturnType, FunctionName)})
 
 /* to add a new problem a line like this above
  * MAP_ITEM(NewProblemName, ReturnType, FunctionName), \
