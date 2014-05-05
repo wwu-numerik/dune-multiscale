@@ -4,6 +4,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
+#include <dune/stuff/common/parameter/tree.hh>
 #include <dune/multiscale/problems/selector.hh>
 
 // Helper struct to make overlap for SPGrid possible
@@ -48,6 +49,9 @@ public:
 std::pair<std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>,
           std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>>
 Dune::Multiscale::make_grids() {
+  BOOST_ASSERT_MSG(DSC_CONFIG.hasSub("grids"), "Parameter tree needs to have 'grids' subtree!");
+  
+  const DSC::ExtendedParameterTree gridParameterTree(DSC_CONFIG.sub("grids"));
   const int dim_world = CommonTraits::GridType::dimensionworld;
   typedef FieldVector<typename CommonTraits::GridType::ctype, dim_world> CoordType;
   const auto& gridCorners = Problem::getModelData()->gridCorners();
@@ -55,21 +59,20 @@ Dune::Multiscale::make_grids() {
   CoordType upperRight = gridCorners.second;
 
   const auto oversamplingLayers = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
-  const auto microPerMacro = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
-  const int overlapLayers = std::ceil(double(oversamplingLayers)/double(microPerMacro));
+  std::vector<int> microPerMacro = gridParameterTree.getVector("micro_cells_per_macrocell_dim", 8, dim_world);
 
-  const auto coarse_cells = DSC_CONFIG_GET("global.macro_cells_per_dim", 8);
+  const std::vector<int> coarse_cells = gridParameterTree.getVector("macro_cells_per_dim", 8, dim_world);
   array<unsigned int, dim_world> elements;
   array<unsigned int, dim_world> overCoarse;
   for (const auto i : DSC::valueRange(dim_world)) {
-    elements[i] = coarse_cells;
-    overCoarse[i] = overlapLayers;
+    elements[i] = coarse_cells[i];
+    overCoarse[i] = std::ceil(double(oversamplingLayers)/double(microPerMacro[i]));
   }
   auto coarse_gridptr =
       MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
 
   for (const auto i : DSC::valueRange(dim_world)) {
-    elements[i] = coarse_cells * microPerMacro;
+    elements[i] = coarse_cells[i] * microPerMacro[i];
   }
   auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements);
   return {coarse_gridptr, fine_gridptr};
