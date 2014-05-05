@@ -27,7 +27,11 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
-  const auto micro_per_macro = DSC_CONFIG_GET("msfem.micro_cells_per_macrocell_dim", 8);
+  BOOST_ASSERT_MSG(DSC_CONFIG.hasSub("grids"), "Parameter tree needs to have 'grids' subtree!");
+  const int dim_world = LocalGridType::dimensionworld;
+
+  const DSC::ExtendedParameterTree gridParameterTree(DSC_CONFIG.sub("grids"));
+  std::vector<int> micro_per_macro = gridParameterTree.getVector("micro_cells_per_macrocell_dim", 8, dim_world);
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;
@@ -42,7 +46,6 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     assert(subGridList_.find(coarse_index) == subGridList_.end());
 
     const auto dimensions = DSG::dimensions<CommonTraits::GridType>(coarse_entity);
-    const int dim_world = LocalGridType::dimensionworld;
     typedef FieldVector<typename LocalGridType::ctype, dim_world> CoordType;
     CoordType lowerLeft(0);
     CoordType upperRight(0);
@@ -54,12 +57,12 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
       auto localMax = coarse_dimensions.coord_limits[i].max();
       const auto coarse_min = coarseSpace.gridPart().grid().comm().min(localMin);
       const auto coarse_max = coarseSpace.gridPart().grid().comm().max(localMax);
-      const auto delta = (max - min) / double(micro_per_macro);
+      const auto delta = (max - min) / double(micro_per_macro[i]);
       lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarse_min);
       upperRight[i] = std::min(max + (oversampling_layer * delta), coarse_max);
       int smaller = ((min - (oversampling_layer * delta)) < coarse_min);
       int bigger = ((max + (oversampling_layer * delta)) > coarse_max);
-      elemens[i] = micro_per_macro + ((!smaller + !bigger) * oversampling_layer);
+      elemens[i] = micro_per_macro[i] + ((!smaller + !bigger) * oversampling_layer);
     }
     subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
   }
