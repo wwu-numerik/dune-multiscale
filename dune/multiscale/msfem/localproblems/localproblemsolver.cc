@@ -88,7 +88,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    if (DS::l2norm(current_rhs) < 1e-30) {
+    if (DS::l2norm(current_rhs) < 1e-12) {
       current_solution.clear();
       DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
       continue;
