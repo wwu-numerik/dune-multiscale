@@ -82,7 +82,7 @@ Dune::Multiscale::make_grids() {
   if (Dune::Fem::MPIManager::size()>1) {
     const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(*coarse_gridptr);
     const auto fine_dimensions = DSG::dimensions<CommonTraits::GridType>(*fine_gridptr);
-    const auto eps = std::numeric_limits<decltype(coarse_dimensions.coord_limits[0].max())>::epsilon();
+    const auto eps = coarse_dimensions.entity_width.min();
     for (const auto i : DSC::valueRange(dim_world)) {
       const bool match = (std::abs(coarse_dimensions.coord_limits[i].min()-fine_dimensions.coord_limits[i].min())
                           < eps)
