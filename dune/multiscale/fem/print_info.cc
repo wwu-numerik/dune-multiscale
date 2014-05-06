@@ -72,7 +72,7 @@ void write_discrete_function(CommonTraits::PdelabVectorType &discrete_solution, 
 {
   typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
   const auto& gfs = discrete_solution.gridFunctionSpace();
-  SubsamplingVTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView(), CommonTraits::polynomial_order);
+  VTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView());
   PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);
   PDELab::addSolutionToVTKWriter(vtkwriter,gfs,discrete_solution, nn);
   vtkwriter.write(prefix,Dune::VTK::appendedraw);
