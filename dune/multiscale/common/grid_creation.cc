@@ -71,27 +71,28 @@ Dune::Multiscale::make_grids() {
   auto coarse_gridptr =
       MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
 
+
   for (const auto i : DSC::valueRange(dim_world)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
   auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements);
 
-#ifndef NDEBUG
   // check whether grids match (may not match after load balancing if different refinements in different
   // spatial directions are used)
   if (Dune::Fem::MPIManager::size()>1) {
     const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(*coarse_gridptr);
     const auto fine_dimensions = DSG::dimensions<CommonTraits::GridType>(*fine_gridptr);
-    
+    const auto eps = std::numeric_limits<decltype(coarse_dimensions.coord_limits[0].max())>::epsilon();
     for (const auto i : DSC::valueRange(dim_world)) {
       const bool match = (std::abs(coarse_dimensions.coord_limits[i].min()-fine_dimensions.coord_limits[i].min())
-                            < std::numeric_limits<decltype(coarse_dimensions.coord_limits[i].min())>::min())
-                         && (std::abs(coarse_dimensions.coord_limits[i].max()-fine_dimensions.coord_limits[i].max())
-                            < std::numeric_limits<decltype(coarse_dimensions.coord_limits[i].max())>::min());
-      BOOST_ASSERT_MSG(match, "Coarse and fine mesh do not match after load balancing, do \
+                          < eps)
+                          && (std::abs(coarse_dimensions.coord_limits[i].max()-fine_dimensions.coord_limits[i].max())
+                              < eps);
+      if (!match)
+        DUNE_THROW(InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
                        you use different refinements in different spatial dimensions?");
     }
   }
-#endif
+
   return {coarse_gridptr, fine_gridptr};
 }
