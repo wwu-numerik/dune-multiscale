@@ -103,6 +103,14 @@ void LocalProblemOperator::assemble_matrix()
   system_matrix_.communicate();
 } // assemble_matrix
 
+long LocalProblemOperator::getNumQuadPoints(const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& discreteFunctionSpace) const {
+  const auto quadOrder = (2*discreteFunctionSpace.order()+2);
+  int m = 0;
+  while ((2*m-1 < quadOrder) && m < quadOrder)
+    ++m;
+  return std::pow(m, CommonTraits::GridType::dimension);
+}
+  
 void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
                                                   MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
@@ -162,6 +170,14 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   int dirichletJacCacheCounter = 0;
   JacobianRangeType dirichletJac(0.0);
   CoarseBaseFunctionSetType::JacobianRangeType coarseBaseJac;
+  // reserve memory for the jacobian caches
+  if (!cached_) {
+    // compute the number of quadrature points resulting from a standard quadrature on the current space
+    const auto& numQuadPoints = getNumQuadPoints(discreteFunctionSpace);
+    const auto& gridSize = discreteFunctionSpace.gridPart().grid().size(0);
+    coarseBaseJacs_.reserve(gridSize * numQuadPoints * numInnerCorrectors);
+    dirichletJacs_.reserve(gridSize * numQuadPoints);
+  }
   
   for (auto& localGridCell : discreteFunctionSpace) {
     const auto& geometry = localGridCell.geometry();
