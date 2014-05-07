@@ -18,6 +18,13 @@
 
 #include "righthandside_assembler.hh"
 
+std::vector<std::vector<Dune::Multiscale::RightHandSideAssembler::RangeType>>
+Dune::Multiscale::RightHandSideAssembler::coarseBaseEvals_;
+std::vector<std::vector<Dune::Multiscale::RightHandSideAssembler::JacobianRangeType>>
+Dune::Multiscale::RightHandSideAssembler::coarseBaseJacs_;
+bool Dune::Multiscale::RightHandSideAssembler::cached_ = false;
+
+
 void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
     const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
@@ -34,12 +41,12 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
   rhsVector.clear();
   RangeType f_x;
   Fem::DomainDecomposedIteratorStorage<CommonTraits::GridPartType> threadIterators(rhsVector.space().gridPart());
-
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
   {
     for (const auto& coarse_grid_entity : threadIterators) {
+      int cacheCounter = 0;
       const auto& coarseGeometry = coarse_grid_entity.geometry();
       auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
       const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
@@ -112,6 +119,10 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
             }
           }
 
+          // element part of boundary conditions
+          std::vector<JacobianRangeType> dirichletVals(localQuadrature.nop(), 0.0);
+          dirichletExtensionLF.evaluateQuadrature(localQuadrature, dirichletVals);
+
           // assemble element-part
           const auto& localGeometry = localEntity.geometry();
           for (size_t qP = 0; qP < localQuadrature.nop(); ++qP) {
@@ -123,32 +134,32 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
 
             // evaluate gradient of basis function
             const auto quadPointLocalInCoarse = coarseGeometry.local(quadPointGlobal);
-            std::vector<RangeType> coarseBaseEvals(numLocalBaseFunctions);
-            std::vector<JacobianRangeType> coarseBaseJacs(numLocalBaseFunctions);
-            coarseBaseSet.evaluateAll(quadPointLocalInCoarse, coarseBaseEvals);
-            coarseBaseSet.jacobianAll(quadPointLocalInCoarse, coarseBaseJacs);
+
+
+            if (!cached_) {
+              coarseBaseEvals_.push_back(std::vector<RangeType>(numLocalBaseFunctions, 0.0));
+              coarseBaseJacs_.push_back(std::vector<JacobianRangeType>(numLocalBaseFunctions, 0.0));
+              coarseBaseSet.evaluateAll(quadPointLocalInCoarse, coarseBaseEvals_[cacheCounter]);
+              coarseBaseSet.jacobianAll(quadPointLocalInCoarse, coarseBaseJacs_[cacheCounter]);
+            }
 
             for (int coarseBF = 0; coarseBF < numLocalBaseFunctions; ++coarseBF) {
               JacobianRangeType diffusive_flux(0.0);
 
-              JacobianRangeType reconstructionGradPhi(coarseBaseJacs[coarseBF]);
-              RangeType reconstructionPhi(coarseBaseEvals[coarseBF]);
+              JacobianRangeType reconstructionGradPhi(coarseBaseJacs_[cacheCounter][coarseBF]);
+              RangeType reconstructionPhi(coarseBaseEvals_[cacheCounter][coarseBF]);
 
               if (isSimplexGrid) {
                 assert(localSolutions.size() == dimension + localSolutionManager.numBoundaryCorrectors());
                 for (const auto& i : DSC::valueRange(dimension))
-                  reconstructionPhi += coarseBaseJacs[coarseBF][0][i] * allLocalSolutionEvaluations[i][qP];
+                  reconstructionPhi += coarseBaseJacs_[cacheCounter][coarseBF][0][i] * allLocalSolutionEvaluations[i][qP];
                 //! @todo add the dirichlet and neumann-correctors!
               } else {
                 assert(localSolutions.size() == numLocalBaseFunctions + localSolutionManager.numBoundaryCorrectors());
                 // local corrector for coarse base func
                 reconstructionPhi += allLocalSolutionEvaluations[coarseBF][qP];
                 // element part of boundary conditions
-                JacobianRangeType directionOfFlux(0.0);
-                //! @attention At this point we assume, that the quadrature points on the subgrid and hostgrid
-                //! are the same (dirichletExtensionLF is a localfunction on the hostgrid, quadPoint stems from
-                //! a quadrature on the subgrid)!!
-                dirichletExtensionLF.jacobian(quadPoint, directionOfFlux);
+                JacobianRangeType directionOfFlux = dirichletVals[qP];
                 // add dirichlet-corrector
                 directionOfFlux += allLocalSolutionJacobians[numLocalBaseFunctions + 1][qP];
                 // subtract neumann-corrector
@@ -162,9 +173,11 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
               rhsLocalFunction[coarseBF] += quadWeight * (f_x * reconstructionPhi);
               rhsLocalFunction[coarseBF] -= quadWeight * (diffusive_flux[0] * reconstructionGradPhi[0]);
             }
+            ++cacheCounter;
           }
         }
       }
+      cached_ = true;
     } // for
   }   // omp region
 

@@ -33,6 +33,11 @@ public:
   static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
                              const CommonTraits::SourceType& f, MsFEM::LocalGridList& subgrid_list,
                              CommonTraits::DiscreteFunctionType& rhsVector);
+private:
+  static std::vector<std::vector<RangeType>> coarseBaseEvals_;
+  static std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
+  static bool cached_;
+
 }; // end class
 } // end namespace Multiscale
 } // end namespace Dune
