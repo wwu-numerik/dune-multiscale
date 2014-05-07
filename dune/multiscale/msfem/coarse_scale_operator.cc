@@ -19,15 +19,6 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   , petrovGalerkin_(false)
   , global_matrix_("MsFEM stiffness matrix", coarseDiscreteFunctionSpace_, coarseDiscreteFunctionSpace_)
   , cached_(false) {
-  // the local problem:
-  // Let 'T' denote a coarse grid element and
-  // let 'U(T)' denote the environment of 'T' that corresponds with the subgrid.
-
-  // if Petrov-Galerkin-MsFEM
-  if (petrovGalerkin_)
-    DSC_LOG_DEBUG << "Assembling Petrov-Galerkin-MsFEM Matrix." << std::endl;
-  else // if classical (symmetric) MsFEM
-    DSC_LOG_DEBUG << "Assembling MsFEM Matrix." << std::endl;
 
   //!TODO diagonal stencil reicht
   global_matrix_.reserve(DSFe::diagonalAndNeighborStencil(global_matrix_));
