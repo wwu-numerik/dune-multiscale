@@ -262,7 +262,7 @@ void DirichletConstraints<DF>::operator()(const DiscreteFunctionType& u, Discret
 }
 
 template class DirichletConstraints<CommonTraits::DiscreteFunctionType>;
-template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
+//template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
 
 } // namespace Multiscale
 } // namespace Dune
