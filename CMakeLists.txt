@@ -58,7 +58,6 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
-        dune/multiscale/common/newton_rhs.cc
         dune/multiscale/msfem/coarse_scale_operator.cc
         dune/multiscale/msfem/localproblems/subgrid-list.cc
         dune/multiscale/msfem/localproblems/localoperator.cc
