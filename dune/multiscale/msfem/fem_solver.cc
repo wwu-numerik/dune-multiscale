@@ -37,7 +37,6 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GridFunctionSpaceTy
   : space_(space) {}
 
 void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
-                                const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
                                 const CommonTraits::FirstSourceType& f,
                                 CommonTraits::PdelabVectorType& solution) const {
   DSC_LOG_DEBUG << "Solving linear problem with standard FEM\n";
@@ -51,7 +50,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
   const auto& bc_type = Problem::getModelData()->boundaryInfo();
   Dune::PDELab::constraints(bc_type, space_, constraints_container);
 
-  FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f, lower_order_term);
+  FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f);
 
   const int magic_number_stencil = 9;
   typedef BackendChooser<CommonTraits::DiscreteFunctionSpaceType>::MatrixBackendType MatrixBackendType;

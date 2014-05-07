@@ -133,8 +133,7 @@ void algorithm() {
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     fem_solution = DSC::make_unique<CommonTraits::PdelabVectorType>(space, 0.0);
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
-    const auto& l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-    fem_solver.apply(diffusion_op, l_ptr, f, *fem_solution);
+    fem_solver.apply(diffusion_op, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       Dune::Multiscale::FEM::write_discrete_function(*fem_solution, "fem_solution");
     }

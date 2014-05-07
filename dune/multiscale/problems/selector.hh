@@ -24,13 +24,9 @@ namespace Problem {
 typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
 const BasePtr& getFirstSource();
 const BasePtr& getExactSolution();
-const BasePtr&getSecondSource();
-const BasePtr& getMassTerm();
 const std::unique_ptr<const CommonTraits::DiffusionType>& getDiffusion();
-const std::unique_ptr<const CommonTraits::LowerOrderTermType>& getLowerOrderTerm();
 const std::unique_ptr<const CommonTraits::DirichletBCType>& getDirichletBC();
 const std::unique_ptr<const CommonTraits::NeumannBCType>& getNeumannBC();
-const BasePtr& getDefaultDummyFunction();
 const std::unique_ptr<const CommonTraits::ModelProblemDataType>& getModelData();
 const std::unique_ptr<const CommonTraits::DirichletDataType>& getDirichletData();
 const std::unique_ptr<const CommonTraits::NeumannDataType>& getNeumannData();

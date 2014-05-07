@@ -126,19 +126,9 @@ public:
  *   evaluate DA^{\epsilon}( x , position ) direction  --> jacobianDiffusiveFlux
 
 
- * class MassTerm -> describes m^{\epsilon}
- * methods:
- *   evaluate m^{\epsilon}( x )         --> evaluate
- *
-
  * class FirstSource -> describes f
  * methods:
  *   evaluate f( x )                    --> evaluate
-
-
- * class SecondSource -> describes G
- * methods:
- *   evaluate G( x )                    --> evaluate
 
 
  ! See 'elliptic_problems/example.hh' for details

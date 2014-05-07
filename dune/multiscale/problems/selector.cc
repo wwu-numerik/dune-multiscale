@@ -21,7 +21,6 @@ class Intersection;
 
 
 using namespace Dune::Multiscale;
-//std::tuple<std::string, std::function<ReturnType()>> maek()
 
 template< class ReturnType>
 struct AutoInitBase {
@@ -84,33 +83,13 @@ const Problem::BasePtr& Dune::Multiscale::Problem::getFirstSource() {
   return find_and_call_item(funcs);
 }
 
-const Problem::BasePtr &Dune::Multiscale::Problem::getSecondSource() {
-  static auto funcs = FUNCTION_MAP(BasePtr, SecondSource);
-  return find_and_call_item(funcs);
-}
-
 const Problem::BasePtr& Dune::Multiscale::Problem::getExactSolution() {
   static auto funcs = FUNCTION_MAP(BasePtr, ExactSolution);
   return find_and_call_item(funcs);
 }
 
-const Problem::BasePtr &Dune::Multiscale::Problem::getMassTerm() {
-  static auto funcs = FUNCTION_MAP(BasePtr, MassTerm);
-  return find_and_call_item(funcs);
-}
-
-const Problem::BasePtr& Dune::Multiscale::Problem::getDefaultDummyFunction() {
-  static auto funcs = FUNCTION_MAP(BasePtr, DefaultDummyFunction);
-  return find_and_call_item(funcs);
-}
-
 const std::unique_ptr<const CommonTraits::ModelProblemDataType>& Dune::Multiscale::Problem::getModelData() {
   static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::ModelProblemDataType>, ModelProblemData);
-  return find_and_call_item(funcs);
-}
-
-const std::unique_ptr<const CommonTraits::LowerOrderTermType>& Dune::Multiscale::Problem::getLowerOrderTerm() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::LowerOrderTermType>, LowerOrderTerm);
   return find_and_call_item(funcs);
 }
 

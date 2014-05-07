@@ -85,12 +85,9 @@ public:
 
 class LowerOrderTerm : public ZeroLowerOrder {};
 
-MSCONSTANTFUNCTION(MassTerm, 0.0)
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
-MSNULLFUNCTION(DefaultDummyFunction)
 MSNULLFUNCTION(ExactSolution)
-MSNULLFUNCTION(SecondSource)
 
 } //! @} namespace SPE10 {
 }
