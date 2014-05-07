@@ -84,14 +84,10 @@ public:
   void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
 };
 
-class LowerOrderTerm : public ZeroLowerOrder {};
 
-MSCONSTANTFUNCTION(MassTerm, 0.0)
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
-MSNULLFUNCTION(DefaultDummyFunction)
 MSNULLFUNCTION(ExactSolution)
-MSNULLFUNCTION(SecondSource)
 
 } //! @} namespace Tarbert {
 }
