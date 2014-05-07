@@ -3,7 +3,6 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
 #include <dune/fem/function/common/function.hh>
-#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
