@@ -206,7 +206,7 @@ void algorithm(const std::shared_ptr< CommonTraits::GridType >& macro_grid_point
   static const unsigned int dimRange = 1;
   const auto grid_view
       = std::make_shared< const GridViewType >(macro_grid_pointer->levelGridView(macro_grid_pointer->maxLevel()));
-  typedef Stuff::GridboundaryAllDirichlet< typename GridViewType::Intersection > BoundaryInfoType;
+  typedef DSG::BoundaryInfos::AllDirichlet< typename GridViewType::Intersection > BoundaryInfoType;
   const BoundaryInfoType boundary_info;
   Dune::Timer timer;
   // analytical data (should be problem nine)
@@ -214,7 +214,7 @@ void algorithm(const std::shared_ptr< CommonTraits::GridType >& macro_grid_point
   const DiffusionType diffusion;
   typedef ProblemNineForce< GridViewType > ForceType;
   const ForceType force;
-  typedef Stuff::Function::Constant< EntityType, DomainFieldType, dimDomain, RangeFieldType, dimRange >
+  typedef Stuff::Functions::Constant< EntityType, DomainFieldType, dimDomain, RangeFieldType, dimRange >
       ConstantFunctionType;
   const ConstantFunctionType neumann(1.0);
   const ConstantFunctionType dirichlet(0.0);
@@ -292,7 +292,7 @@ void algorithm(const std::shared_ptr< CommonTraits::GridType >& macro_grid_point
   //   const double l2_norm = l2_product.induced_norm(exact_solution - solution);
   DSC_LOG_INFO << "computing errors... " << std::flush;
   const ConstDiscreteFunctionType solution(space, solution_vector);
-  typedef Stuff::Function::Difference< ExactSolutionType, ConstDiscreteFunctionType > DifferenceType;
+  typedef Stuff::Functions::Difference< ExactSolutionType, ConstDiscreteFunctionType > DifferenceType;
   const DifferenceType difference(exact_solution, solution);
   // therefore we predefine all products
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature oder than needed
