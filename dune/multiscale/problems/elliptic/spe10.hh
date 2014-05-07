@@ -40,9 +40,9 @@ private:
   std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo_;
 };
 
-class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
-  FirstSource();
+  Source();
 
   void evaluate(const DomainType& x, RangeType& y) const;
 };

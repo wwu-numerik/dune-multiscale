@@ -36,7 +36,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
  * old_u_H from the last iteration step to obtain some information about the
  * periodic discrete function space (space for the cell problems)
 **/
-static void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
+static void assemble_for_HMM_Newton_method(const CommonTraits::SourceType& f, const CommonTraits::DiffusionType& A,
                                            const CommonTraits::DiscreteFunctionType& old_u_H,
                                            const CellProblemNumberingManager& cp_num_manager,
                                            const HMMTraits::PeriodicDiscreteFunctionType& dummy_func,

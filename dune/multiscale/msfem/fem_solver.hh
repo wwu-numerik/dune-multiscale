@@ -28,7 +28,7 @@ public:
   //! c --> reaction part ('ReactionTermType')
   //! f --> 'first' source term, scalar ('SourceTermType')
   void apply(const CommonTraits::DiffusionType& diffusion_op,
-             const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType &solution) const;
+             const CommonTraits::SourceType& f, CommonTraits::PdelabVectorType &solution) const;
 };
 
 } // namespace Multiscale

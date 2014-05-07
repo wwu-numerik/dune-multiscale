@@ -49,7 +49,7 @@ public:
   /**
    * \param lower_order_term Operator assumes ownership of it
    **/
-  Local_CG_FEM_Operator(const CommonTraits::DiffusionType& diffusion_op, const Dune::Multiscale::CommonTraits::FirstSourceType& source,
+  Local_CG_FEM_Operator(const CommonTraits::DiffusionType& diffusion_op, const Dune::Multiscale::CommonTraits::SourceType& source,
                         const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term = nullptr)
     : diffusion_operator_(diffusion_op)
     , lower_order_term_(lower_order_term)
@@ -197,7 +197,7 @@ public:
 private:
   const CommonTraits::DiffusionType& diffusion_operator_;
   const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term_;
-  const Dune::Multiscale::CommonTraits::FirstSourceType& source_;
+  const Dune::Multiscale::CommonTraits::SourceType& source_;
 };
 
 

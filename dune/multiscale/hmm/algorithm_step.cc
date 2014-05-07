@@ -182,7 +182,7 @@ void solve_hmm_problem_nonlinear(
     typename CommonTraits::DiscreteFunctionType hmm_newton_rhs("hmm rhs", discreteFunctionSpace);
     hmm_newton_rhs.clear();
 
-    const auto& f = Problem::getFirstSource();
+    const auto& f = Problem::getSource();
 
     assemble_for_HMM_Newton_method(*f, diffusion_op, *hmm_solution, cp_num_manager, dummy_periodic_func,
                                    hmm_newton_rhs);
@@ -526,7 +526,7 @@ HMMResult single_step(typename CommonTraits::GridPartType& gridPart, typename Co
   return errors;
 }
 
-void assemble_for_HMM_Newton_method(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
+void assemble_for_HMM_Newton_method(const CommonTraits::SourceType& f, const CommonTraits::DiffusionType& A,
                                     const CommonTraits::DiscreteFunctionType& old_u_H,
                                     const HMM::CellProblemNumberingManager& cp_num_manager,
                                     const HMM::HMMTraits::PeriodicDiscreteFunctionType& dummy_func,

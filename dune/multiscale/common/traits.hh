@@ -78,7 +78,7 @@ struct CommonTraits {
 
   typedef Problem::IModelProblemData ModelProblemDataType;
   //! type of first source term (right hand side of differential equation or type of 'f')
-  typedef FunctionBaseType FirstSourceType;
+  typedef FunctionBaseType SourceType;
 
   //! type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
   typedef Problem::DiffusionBase DiffusionType;

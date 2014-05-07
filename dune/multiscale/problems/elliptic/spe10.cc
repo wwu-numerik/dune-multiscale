@@ -92,9 +92,9 @@ void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
     y = 0.0;
 } // evaluate
 
-FirstSource::FirstSource() {}
+Source::Source() {}
 
-void __attribute__((hot)) FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const {
+void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y) const {
   y = typename FunctionSpaceType::RangeType(0.0);
 } // evaluate
 

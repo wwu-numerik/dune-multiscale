@@ -22,7 +22,7 @@ namespace Multiscale {
 namespace Problem {
 
 typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
-const BasePtr& getFirstSource();
+const BasePtr& getSource();
 const BasePtr& getExactSolution();
 const std::unique_ptr<const CommonTraits::DiffusionType>& getDiffusion();
 const std::unique_ptr<const CommonTraits::DirichletBCType>& getDirichletBC();

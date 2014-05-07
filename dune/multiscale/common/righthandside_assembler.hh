@@ -31,7 +31,7 @@ public:
    *  rhsVector is the output parameter (kind of return value)
    **/
   static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                             const CommonTraits::FirstSourceType& f, MsFEM::LocalGridList& subgrid_list,
+                             const CommonTraits::SourceType& f, MsFEM::LocalGridList& subgrid_list,
                              CommonTraits::DiscreteFunctionType& rhsVector);
 }; // end class
 } // end namespace Multiscale

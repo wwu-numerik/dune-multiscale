@@ -126,7 +126,7 @@ public:
  *   evaluate DA^{\epsilon}( x , position ) direction  --> jacobianDiffusiveFlux
 
 
- * class FirstSource -> describes f
+ * class Source -> describes f
  * methods:
  *   evaluate f( x )                    --> evaluate
 
@@ -147,7 +147,7 @@ public:
  * The second source term G is constantly zero:
  * ! G(x) := 0
 
- * !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
+ * !Source defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
  * The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y
  * := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
  * is part from. (f \in FunctionSpace)

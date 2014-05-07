@@ -8,7 +8,7 @@
 #include "newton_rhs.hh"
 
 void Dune::Multiscale::NewtonRightHandSide::assemble_for_Newton_method(
-    const Dune::Multiscale::CommonTraits::FirstSourceType& f, const Dune::Multiscale::CommonTraits::DiffusionType& A,
+    const Dune::Multiscale::CommonTraits::SourceType& f, const Dune::Multiscale::CommonTraits::DiffusionType& A,
     const Dune::Multiscale::CommonTraits::LowerOrderTermType& F,
     const Dune::Multiscale::CommonTraits::DiscreteFunctionType& old_u_H,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
