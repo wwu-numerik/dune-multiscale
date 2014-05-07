@@ -17,7 +17,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)
   , petrovGalerkin_(false)
-  , global_matrix_("MsFEM stiffness matrix", coarseDiscreteFunctionSpace_, coarseDiscreteFunctionSpace_) {
+  , global_matrix_("MsFEM stiffness matrix", coarseDiscreteFunctionSpace_, coarseDiscreteFunctionSpace_)
+  , cached_(false) {
   // the local problem:
   // Let 'T' denote a coarse grid element and
   // let 'U(T)' denote the environment of 'T' that corresponds with the subgrid.
@@ -42,6 +43,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 #endif
   {
     for (const auto& coarse_grid_entity : threadIterators) {
+      int cacheCounter = 0;
       const auto& coarse_grid_geometry = coarse_grid_entity.geometry();
       assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
@@ -55,7 +57,6 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
       localSolutionManager.load();
       const auto& localSolutions = localSolutionManager.getLocalSolutions();
       assert(localSolutions.size() > 0);
-      std::vector<JacobianRangeType> gradientPhi(numMacroBaseFunctions);
 
       for (const auto& localGridEntity : localSolutionManager.space()) {
         // ignore overlay elements
@@ -90,7 +91,10 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
             // evaluate the jacobian of the coarse grid base set
             const auto& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
-            coarse_grid_baseSet.jacobianAll(local_coarse_point, gradientPhi);
+            if (!cached_) {
+              coarseBaseJacs_.push_back(std::vector<JacobianRangeType>(numMacroBaseFunctions, 0.0));
+              coarse_grid_baseSet.jacobianAll(local_coarse_point, coarseBaseJacs_[cacheCounter]);
+            }
 
             for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
               for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
@@ -102,8 +106,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
                   assert(allLocalSolutionEvaluations.size() == CommonTraits::GridType::dimension);
                   // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
                   for (int k = 0; k < CommonTraits::GridType::dimension; ++k) {
-                    gradLocProbSoli.axpy(gradientPhi[i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
-                    gradLocProbSolj.axpy(gradientPhi[j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
+                    gradLocProbSoli.axpy(coarseBaseJacs_[cacheCounter][i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
+                    gradLocProbSolj.axpy(coarseBaseJacs_[cacheCounter][j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                   }
                 } else {
                   assert(allLocalSolutionEvaluations.size() == numMacroBaseFunctions);
@@ -111,14 +115,14 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
                   gradLocProbSolj = allLocalSolutionEvaluations[j][localQuadraturePoint];
                 }
 
-                JacobianRangeType reconstructionGradPhii(gradientPhi[i]);
+                JacobianRangeType reconstructionGradPhii(coarseBaseJacs_[cacheCounter][i]);
                 reconstructionGradPhii += gradLocProbSoli;
-                JacobianRangeType reconstructionGradPhij(gradientPhi[j]);
+                JacobianRangeType reconstructionGradPhij(coarseBaseJacs_[cacheCounter][j]);
                 reconstructionGradPhij += gradLocProbSolj;
                 JacobianRangeType diffusive_flux(0.0);
                 diffusion_operator_.diffusiveFlux(global_point_in_U_T, reconstructionGradPhii, diffusive_flux);
                 if (petrovGalerkin_)
-                  local_integral += weight_local_quadrature * (diffusive_flux[0] * gradientPhi[j][0]);
+                  local_integral += weight_local_quadrature * (diffusive_flux[0] * coarseBaseJacs_[cacheCounter][j][0]);
                 else
                   local_integral += weight_local_quadrature * (diffusive_flux[0] * reconstructionGradPhij[0]);
 
@@ -126,9 +130,13 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
                 local_matrix.add(j, i, local_integral);
               }
             }
+
+            ++cacheCounter;
           }
         }
       }
+      // cache was filled;
+      cached_ = true;
     } // for
   }   // omp region
 
