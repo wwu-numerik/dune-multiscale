@@ -99,10 +99,6 @@ class LowerOrderTerm : public ZeroLowerOrder {};
 
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
-MSCONSTANTFUNCTION(MassTerm, 0.0)
-MSNULLFUNCTION(DefaultDummyFunction)
-MSNULLFUNCTION(SecondSource)
-
 
 } //! @} namespace Nine {
 }

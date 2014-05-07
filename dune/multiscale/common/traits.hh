@@ -79,8 +79,7 @@ struct CommonTraits {
   typedef Problem::IModelProblemData ModelProblemDataType;
   //! type of first source term (right hand side of differential equation or type of 'f')
   typedef FunctionBaseType FirstSourceType;
-  //! type of second source term 'G' (second right hand side of differential equation 'div G')
-  typedef FunctionBaseType SecondSourceType;
+
   //! type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
   typedef Problem::DiffusionBase DiffusionType;
   //! type of (possibly non-linear) lower order term F( x, u(x), grad u(x) )
@@ -93,10 +92,6 @@ struct CommonTraits {
   typedef Problem::DirichletDataBase DirichletDataType;
   //! type of neumann data
   typedef Problem::NeumannDataBase NeumannDataType;
-  //! type of mass (or reaction) term (i.e. 'm' or 'c')
-  typedef FunctionBaseType MassTermType;
-  //! default type for any missing coefficient function (e.g. advection,...)
-  typedef FunctionBaseType DefaultDummyFunctionType;
 
   //! type of exact solution (in general unknown)
   typedef FunctionBaseType ExactSolutionType;

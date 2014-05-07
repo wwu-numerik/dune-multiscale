@@ -53,9 +53,6 @@ class LowerOrderTerm : public ZeroLowerOrder {};
 class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
 
-MSCONSTANTFUNCTION(MassTerm, 0.0)
-MSNULLFUNCTION(DefaultDummyFunction)
-MSNULLFUNCTION(SecondSource)
 MSNULLFUNCTION(ExactSolution)
 MSNULLFUNCTION(DirichletBoundaryCondition)
 
