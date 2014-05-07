@@ -214,13 +214,13 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
               diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
             else {
               const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
-            if (!cached_) {
-              coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
-              coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
-              coarseBaseJacs_.push_back(coarseBaseJac);
-            } else
-              coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
-            diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
+              if (!cached_) {
+                coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
+                coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
+                coarseBaseJacs_.push_back(coarseBaseJac);
+              } else
+                coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
+              diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
             }
           } else {
             if (!cached_) {
