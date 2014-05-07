@@ -142,7 +142,8 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
   DiscreteFunctionType msfem_rhs("MsFEM right hand side", coarse_space);
   msfem_rhs.clear();
-  RightHandSideAssembler::assemble_msfem(coarse_space, f, subgrid_list, msfem_rhs);
+  RightHandSideAssembler rhsAss;
+  rhsAss.assemble(coarse_space, f, subgrid_list, msfem_rhs);
   //! define the discrete (elliptic) operator that describes our problem
   CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list, diffusion_op);
   elliptic_msfem_op.apply_inverse(msfem_rhs, coarse_msfem_solution);
