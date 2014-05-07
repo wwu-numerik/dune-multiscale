@@ -18,18 +18,12 @@
 
 #include "righthandside_assembler.hh"
 
-std::vector<std::vector<Dune::Multiscale::RightHandSideAssembler::RangeType>>
-Dune::Multiscale::RightHandSideAssembler::coarseBaseEvals_;
-std::vector<std::vector<Dune::Multiscale::RightHandSideAssembler::JacobianRangeType>>
-Dune::Multiscale::RightHandSideAssembler::coarseBaseJacs_;
-bool Dune::Multiscale::RightHandSideAssembler::cached_ = false;
-
-
 void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
     const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
-
+  cached_ = false;
+  
   // cache grid variable
   const bool isSimplexGrid = DSG::is_simplex_grid(coarse_space);
   

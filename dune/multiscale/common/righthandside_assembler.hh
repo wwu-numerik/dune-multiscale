@@ -32,9 +32,9 @@ public:
                       const CommonTraits::SourceType& f, MsFEM::LocalGridList& subgrid_list,
                       CommonTraits::DiscreteFunctionType& rhsVector);
 private:
-  static std::vector<std::vector<RangeType>> coarseBaseEvals_;
-  static std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
-  static bool cached_;
+  std::vector<std::vector<RangeType>> coarseBaseEvals_;
+  std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
+  bool cached_;
 
 }; // end class
 } // namespace MsFEM
