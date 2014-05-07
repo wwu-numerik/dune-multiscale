@@ -52,7 +52,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
       const auto& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
       const auto numMacroBaseFunctions = coarse_grid_baseSet.size();
 
-      Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarseDiscreteFunctionSpace_, coarse_grid_entity,
+      Multiscale::MsFEM::LocalSolutionManager localSolutionManager(coarseDiscreteFunctionSpace_,
+                                                                   coarse_grid_entity,
                                                                    subgrid_list_);
       localSolutionManager.load();
       const auto& localSolutions = localSolutionManager.getLocalSolutions();
