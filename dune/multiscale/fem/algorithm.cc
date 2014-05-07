@@ -45,7 +45,7 @@ void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer
 
   const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
   const auto& l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-  const auto& f_ptr = Dune::Multiscale::Problem::getFirstSource();
+  const auto& f_ptr = Dune::Multiscale::Problem::getSource();
   fem_solver.apply(*diffusion_op, l_ptr, *f_ptr, solution);
 
   // write FEM solution to a file and produce a VTK output

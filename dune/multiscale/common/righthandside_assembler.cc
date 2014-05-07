@@ -20,7 +20,7 @@
 
 void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-    const Dune::Multiscale::CommonTraits::FirstSourceType& f, DMM::LocalGridList& subgrid_list,
+    const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
 
   // cache grid variable

@@ -78,8 +78,8 @@ const FunctionType& find_and_call_item(
   return el;
 }
 
-const Problem::BasePtr& Dune::Multiscale::Problem::getFirstSource() {
-  static auto funcs = FUNCTION_MAP(BasePtr, FirstSource);
+const Problem::BasePtr& Dune::Multiscale::Problem::getSource() {
+  static auto funcs = FUNCTION_MAP(BasePtr, Source);
   return find_and_call_item(funcs);
 }
 

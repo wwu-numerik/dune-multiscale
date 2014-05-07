@@ -37,7 +37,7 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GridFunctionSpaceTy
   : space_(space) {}
 
 void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
-                                const CommonTraits::FirstSourceType& f,
+                                const CommonTraits::SourceType& f,
                                 CommonTraits::PdelabVectorType& solution) const {
   DSC_LOG_DEBUG << "Solving linear problem with standard FEM\n";
   DSC_PROFILER.startTiming("fem.apply");

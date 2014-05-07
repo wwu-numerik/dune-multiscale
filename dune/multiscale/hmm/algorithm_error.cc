@@ -49,7 +49,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
                                                                auxiliaryDiscreteFunctionSpace, diffusion_op);
 
   HMMResult result(discreteFunctionSpace.grid().size(0));
-  const auto& f = Problem::getFirstSource();
+  const auto& f = Problem::getSource();
   int element_number = 0;
   for (const auto& entity : discreteFunctionSpace) {
     // corrector of u_H^(n-1) \approx u_H on the macro element T

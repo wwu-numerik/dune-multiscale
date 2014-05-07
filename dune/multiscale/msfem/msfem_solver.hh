@@ -51,7 +51,7 @@ public:
    homogenous Dirchilet boundary condition!:
    **/
   void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-             const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
+             const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::SourceType& f,
              DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
              DiscreteFunctionType& solution) const;
 };

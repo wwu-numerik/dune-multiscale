@@ -19,7 +19,7 @@ public:
    * discreteFunction is an output parameter (kind of return value)
    * \param old_u_H from the last iteration step
    **/
-  static void assemble_for_Newton_method(const CommonTraits::FirstSourceType& f, const CommonTraits::DiffusionType& A,
+  static void assemble_for_Newton_method(const CommonTraits::SourceType& f, const CommonTraits::DiffusionType& A,
                                          const CommonTraits::LowerOrderTermType& F,
                                          const CommonTraits::DiscreteFunctionType& old_u_H,
                                          CommonTraits::DiscreteFunctionType& rhsVector);

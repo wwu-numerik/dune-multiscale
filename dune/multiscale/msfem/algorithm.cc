@@ -107,7 +107,7 @@ void algorithm() {
   CommonTraits::DiscreteFunctionSpaceType coarse_discreteFunctionSpace(coarse_gridPart);
 
   const auto& diffusion_op = *Dune::Multiscale::Problem::getDiffusion();
-  const auto& f = *Dune::Multiscale::Problem::getFirstSource();
+  const auto& f = *Dune::Multiscale::Problem::getSource();
 
   CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", fine_discreteFunctionSpace);
   msfem_solution.clear();

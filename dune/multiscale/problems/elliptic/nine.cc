@@ -65,12 +65,12 @@ ParameterTree ModelProblemData::boundary_settings() const {
 }
 
 
-FirstSource::FirstSource() {}
+Source::Source() {}
 Diffusion::Diffusion() {}
 ExactSolution::ExactSolution() {}
 
 
-PURE HOT  void FirstSource::evaluate(const DomainType& x, RangeType& y) const {
+PURE HOT  void Source::evaluate(const DomainType& x, RangeType& y) const {
   constexpr double pi_square = M_PI * M_PI;
   const double x0_eps = (x[0] / epsilon);
   const double cos_2_pi_x0_eps = cos(2.0 * M_PI * x0_eps);

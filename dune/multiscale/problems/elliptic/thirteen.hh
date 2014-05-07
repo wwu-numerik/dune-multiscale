@@ -29,7 +29,7 @@ struct ModelProblemData : public IModelProblemData {
   bool problemAllowsStochastics() const;
 };
 
-class FirstSource : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   void evaluate(const DomainType& x, RangeType& y) const;
 };
