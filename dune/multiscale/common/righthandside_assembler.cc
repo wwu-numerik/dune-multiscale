@@ -25,7 +25,7 @@ Dune::Multiscale::RightHandSideAssembler::coarseBaseJacs_;
 bool Dune::Multiscale::RightHandSideAssembler::cached_ = false;
 
 
-void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
+void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
     const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
