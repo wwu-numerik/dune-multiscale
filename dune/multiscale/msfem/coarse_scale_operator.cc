@@ -19,6 +19,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   , petrovGalerkin_(false)
   , global_matrix_("MsFEM stiffness matrix", coarseDiscreteFunctionSpace_, coarseDiscreteFunctionSpace_)
   , cached_(false) {
+    DSC_PROFILER.startTiming("msfem.assembleMatrix");
 
   //!TODO diagonal stencil reicht
   global_matrix_.reserve(DSFe::diagonalAndNeighborStencil(global_matrix_));
@@ -135,6 +136,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   // set unit rows for dirichlet dofs
   Dune::Multiscale::getConstraintsCoarse(coarseDiscreteFunctionSpace_).applyToOperator(global_matrix_);
   global_matrix_.communicate();
+  DSC_PROFILER.stopTiming("msfem.assembleMatrix");
+  DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM matrix: " << DSC_PROFILER.getTiming("msfem.assembleMatrix") << "ms\n";
 }
 
 void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
