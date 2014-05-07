@@ -93,7 +93,7 @@ void LocalProblemOperator::assemble_matrix()
       }
     }
   }
-  Stuff::GridboundaryAllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
+  DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
   DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, subDiscreteFunctionSpace_);
   constraints.applyToOperator(system_matrix_);
   system_matrix_.communicate();
@@ -240,7 +240,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     }
   }
 
-  Stuff::GridboundaryAllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
+  DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
   DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, discreteFunctionSpace);
   for (auto& rhsIt : allLocalRHS) {
     constraints.setValue(0.0, *rhsIt);

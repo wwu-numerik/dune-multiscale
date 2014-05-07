@@ -180,9 +180,9 @@ class IModelProblemData {
 protected:
   const Constants constants_;
   typedef CommonTraits::GridType::LeafGridView View;
-  typedef Dune::Stuff::GridboundaryInterface<typename View::Intersection> BoundaryInfoType;
+  typedef DSG::BoundaryInfoInterface<typename View::Intersection> BoundaryInfoType;
   typedef MsFEM::MsFEMTraits::LocalGridType::LeafGridView SubView;
-  typedef Dune::Stuff::GridboundaryInterface<typename SubView::Intersection> SubBoundaryInfoType;
+  typedef DSG::BoundaryInfoInterface<typename SubView::Intersection> SubBoundaryInfoType;
 
 public:
   //! Constructor for ModelProblemData
@@ -213,10 +213,10 @@ public:
   virtual bool linear() const { return true; }
 
   virtual std::unique_ptr<BoundaryInfoType> boundaryInfo() const {
-    return DSC::make_unique<DS::GridboundaryAllDirichlet<typename View::Intersection>>();
+    return DSC::make_unique<DSG::BoundaryInfos::AllDirichlet<typename View::Intersection>>();
   }
   virtual std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const {
-    return DSC::make_unique<DS::GridboundaryAllDirichlet<typename SubView::Intersection>>();
+    return DSC::make_unique<DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection>>();
   }
 };
 

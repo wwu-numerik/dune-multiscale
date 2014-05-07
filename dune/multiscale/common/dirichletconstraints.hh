@@ -24,7 +24,7 @@ class DirichletConstraints {
 
   typedef DiscreteFunctionImp DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DomainSpaceType;
-  typedef Dune::Stuff::GridboundaryInterface<typename DomainSpaceType::GridType::LeafGridView::Intersection>
+  typedef DSG::BoundaryInfoInterface<typename DomainSpaceType::GridType::LeafGridView::Intersection>
   BoundaryType;
   typedef typename DomainSpaceType::GridPartType GridPartType;
   typedef typename DomainSpaceType::GridType GridType;

@@ -32,11 +32,11 @@ bool ModelProblemData::problemIsPeriodic() const { return true; }
 bool ModelProblemData::problemAllowsStochastics() const { return false; }
 
 std::unique_ptr<ModelProblemData::BoundaryInfoType> ModelProblemData::boundaryInfo() const {
-  return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename View::Intersection>>();
+  return DSC::make_unique<DSG::BoundaryInfos::AllDirichlet<typename View::Intersection>>();
 }
 
 std::unique_ptr<ModelProblemData::SubBoundaryInfoType> ModelProblemData::subBoundaryInfo() const {
-  return DSC::make_unique<Stuff::GridboundaryAllDirichlet<typename SubView::Intersection>>();
+  return DSC::make_unique<DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection>>();
 }
 
 FirstSource::FirstSource() {}
