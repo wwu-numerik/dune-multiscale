@@ -6,7 +6,6 @@
 #include <fstream>
 
 #include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/hmm/result.hh>
 
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
