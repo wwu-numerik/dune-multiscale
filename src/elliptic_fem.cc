@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO << "LOG FILE\n"
                  << "Data will be saved under: " << save_filename << std::endl;
 
-    const auto grids = Dune::Multiscale::make_grids();
+    auto grids = Dune::Multiscale::make_grids();
     algorithm(grids.second, filename_);
 
     const auto cpu_time =
