@@ -263,10 +263,10 @@ void DirichletConstraints<DF>::operator()(const DiscreteFunctionType& u, Discret
 }
 
 template class DirichletConstraints<CommonTraits::DiscreteFunctionType>;
-//#if BOOST_GCC
+#if BOOST_GCC
   // apparently gcc sees grid types as different, where clang does not
   template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
-//#endif
+#endif
 
 } // namespace Multiscale
 } // namespace Dune
