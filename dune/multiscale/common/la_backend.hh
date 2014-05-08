@@ -31,8 +31,12 @@ template <class T, class R, class S>
 class SparseRowMatrixOperator;
 } // namespace Fem
 
-namespace PDELab {
-} //namespace PDELab
+namespace Stuff {
+namespace LA {
+template <class T> class IstlRowMajorSparseMatrix;
+template <class T> class IstlDenseVector;
+}
+}
 
 namespace Multiscale {
 
@@ -83,8 +87,9 @@ struct BackendChooser {
   typedef Dune::Fem::SparseRowLinearOperator<DiscreteFunctionType, DiscreteFunctionType> LinearOperatorType;
   typedef FemSolverWrapper<DiscreteFunctionType, LinearOperatorType> InverseOperatorType;
 #endif
-  typedef Dune::PDELab::ISTLVectorBackend<> VectorBackendType;
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MatrixBackendType;
+  typedef typename DiscreteFunctionType::RangeFieldType RangeFieldType;
+  typedef Stuff::LA::IstlRowMajorSparseMatrix< RangeFieldType > GdtMatrixBackendType;
+  typedef Stuff::LA::IstlDenseVector< RangeFieldType >          GdtVectorBackendType;
 
 };
 

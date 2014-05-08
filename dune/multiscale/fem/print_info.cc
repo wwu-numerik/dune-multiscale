@@ -68,14 +68,15 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
   out << "Epsilon = " << epsilon_ << std::endl << std::endl;
 }
 
-void write_discrete_function(CommonTraits::PdelabVectorType &discrete_solution, const std::string prefix)
+void write_discrete_function(CommonTraits::GdtDiscreteFunctionType &discrete_solution, const std::string prefix)
 {
-  typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
-  const auto& gfs = discrete_solution.gridFunctionSpace();
-  VTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView());
-  PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);
-  PDELab::addSolutionToVTKWriter(vtkwriter,gfs,discrete_solution, nn);
-  vtkwriter.write(prefix,Dune::VTK::appendedraw);
+  DUNE_THROW(NotImplemented, "");
+//  typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
+//  const auto& gfs = discrete_solution.gridFunctionSpace();
+//  VTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView());
+//  PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);
+//  PDELab::addSolutionToVTKWriter(vtkwriter,gfs,discrete_solution, nn);
+//  vtkwriter.write(prefix,Dune::VTK::appendedraw);
 }
 
 } // namespace FEM {

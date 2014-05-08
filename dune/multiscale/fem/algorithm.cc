@@ -28,14 +28,13 @@
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
-#include <dune/stuff/grid/provider/default.hh>
 #include <dune/stuff/la/container.hh>
 #include <dune/stuff/la/solver.hh>
 #include <dune/stuff/functions/combined.hh>
 #include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/functions/global.hh>
 
-#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/spaces/continuouslagrange/pdelab.hh>
 #include <dune/gdt/operators/elliptic.hh>
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/gdt/spaces/constraints.hh>
