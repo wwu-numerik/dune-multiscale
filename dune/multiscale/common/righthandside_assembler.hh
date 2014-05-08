@@ -10,10 +10,8 @@
 
 namespace Dune {
 namespace Multiscale {
-
 namespace MsFEM {
 class LocalGridList;
-} // namespace MsFEM
 
 /** Assembler for right rand side
  * We assemble the right hand side in a LSE, i.e. f \cdot \Phi_H + G \cdot \nabala \Phi_H
@@ -30,10 +28,16 @@ public:
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)
    **/
-  static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                             const CommonTraits::SourceType& f, MsFEM::LocalGridList& subgrid_list,
-                             CommonTraits::DiscreteFunctionType& rhsVector);
+  void assemble(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+                      const CommonTraits::SourceType& f, MsFEM::LocalGridList& subgrid_list,
+                      CommonTraits::DiscreteFunctionType& rhsVector);
+private:
+  std::vector<std::vector<RangeType>> coarseBaseEvals_;
+  std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
+  bool cached_;
+
 }; // end class
+} // namespace MsFEM
 } // end namespace Multiscale
 } // end namespace Dune
 

@@ -103,6 +103,14 @@ void LocalProblemOperator::assemble_matrix()
   system_matrix_.communicate();
 } // assemble_matrix
 
+long LocalProblemOperator::getNumQuadPoints(const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& discreteFunctionSpace) const {
+  const auto quadOrder = (2*discreteFunctionSpace.order()+2);
+  int m = 0;
+  while ((2*m-1 < quadOrder) && m < quadOrder)
+    ++m;
+  return std::pow(m, CommonTraits::GridType::dimension);
+}
+  
 void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
                                                   MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
@@ -151,8 +159,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   const auto& coarseBaseSet = coarse_space_.basisFunctionSet(coarseEntity);
   std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseFuncJacs(coarseBaseSet.size());
 
-  // gradient of micro scale base function:
-  std::vector<RangeType> phi(discreteFunctionSpace.blockMapper().maxNumDofs());
+  auto numBasisFunctions = discreteFunctionSpace.blockMapper().maxNumDofs();
+  std::vector<RangeType> phi(numBasisFunctions);
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
@@ -162,6 +170,14 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   int dirichletJacCacheCounter = 0;
   JacobianRangeType dirichletJac(0.0);
   CoarseBaseFunctionSetType::JacobianRangeType coarseBaseJac;
+  // reserve memory for the jacobian caches
+  if (!cached_) {
+    // compute the number of quadrature points resulting from a standard quadrature on the current space
+    const auto& numQuadPoints = getNumQuadPoints(discreteFunctionSpace);
+    const auto& gridSize = discreteFunctionSpace.gridPart().grid().size(0);
+    coarseBaseJacs_.reserve(gridSize * numQuadPoints * numInnerCorrectors);
+    dirichletJacs_.reserve(gridSize * numQuadPoints);
+  }
   
   for (auto& localGridCell : discreteFunctionSpace) {
     const auto& geometry = localGridCell.geometry();
@@ -171,7 +187,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     const auto quadrature = DSFe::make_quadrature(localGridCell, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
     std::vector<std::vector<JacobianRangeType>> gradient_phi(numQuadraturePoints,
-                                                             std::vector<JacobianRangeType>(discreteFunctionSpace.blockMapper().maxNumDofs()));
+                                                             std::vector<JacobianRangeType>(numBasisFunctions));
 
     const auto& baseSet = discreteFunctionSpace.basisFunctionSet(localGridCell);
     const auto numBaseFunctions = baseSet.size();
@@ -198,13 +214,13 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
               diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
             else {
               const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
-            if (!cached_) {
-              coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
-              coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
-              coarseBaseJacs_.push_back(coarseBaseJac);
-            } else
-              coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
-            diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
+              if (!cached_) {
+                coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
+                coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
+                coarseBaseJacs_.push_back(coarseBaseJac);
+              } else
+                coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
+              diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
             }
           } else {
             if (!cached_) {
