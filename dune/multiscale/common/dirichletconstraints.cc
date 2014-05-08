@@ -1,4 +1,5 @@
 #include <config.h>
+#include <boost/config.hpp>
 #include <dune/fem/function/common/gridfunctionadapter.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <memory>
@@ -262,7 +263,10 @@ void DirichletConstraints<DF>::operator()(const DiscreteFunctionType& u, Discret
 }
 
 template class DirichletConstraints<CommonTraits::DiscreteFunctionType>;
-//template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
+#if BOOST_GCC
+  // apparently gcc sees grid types as different, where clang does not
+  template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
+#endif
 
 } // namespace Multiscale
 } // namespace Dune
