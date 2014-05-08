@@ -8,7 +8,6 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>
 #include <dune/fem/operator/matrix/spmatrix.hh>

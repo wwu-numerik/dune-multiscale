@@ -3,12 +3,12 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
 #include <dune/fem/function/common/function.hh>
-#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/functions/norm.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
@@ -35,24 +35,21 @@ namespace Multiscale {
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GridFunctionSpaceType &space)
   : space_(space) {}
 
-void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffusion_op,
-                                       const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                                       const CommonTraits::FirstSourceType& f,
-                                       CommonTraits::PdelabVectorType& solution) const {
-  DSC_LOG_INFO << "Solving linear problem with standard FEM\n";
-
-  // to assemble the computational time
-  Dune::Timer timer;
+void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
+                                const CommonTraits::SourceType& f,
+                                CommonTraits::PdelabVectorType& solution) const {
+  DSC_LOG_DEBUG << "Solving linear problem with standard FEM\n";
+  DSC_PROFILER.startTiming("fem.apply");
 
   typedef CommonTraits::FieldType Real;
   typedef CommonTraits::GridFunctionSpaceType GFS;
-  typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
+  typedef typename GFS::ConstraintsContainer<Real>::Type CC;
   CC constraints_container;
   constraints_container.clear();
   const auto& bc_type = Problem::getModelData()->boundaryInfo();
-  Dune::PDELab::constraints(*bc_type, space_, constraints_container);
+  Dune::PDELab::constraints(bc_type, space_, constraints_container);
 
-  FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f, lower_order_term);
+  FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f);
 
   const int magic_number_stencil = 9;
   typedef BackendChooser<CommonTraits::DiscreteFunctionSpaceType>::MatrixBackendType MatrixBackendType;
@@ -68,39 +65,17 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 //  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
 //  LinearSolverType ls(space_, 5000);
 
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
-  LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-
+//  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
+//  LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LinearSolverType;
+  LinearSolverType ls(space_,constraints_container,5000,2);
+  
+  
   typedef Dune::PDELab::StationaryLinearProblemSolver<GridOperatorType,LinearSolverType,CommonTraits::PdelabVectorType> SLP;
   SLP slp(global_operator,ls,solution,1e-10);
   slp.apply();
-
-  DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
-  DSC_LOG_INFO << "Standard FEM problem solved in " << timer.elapsed() << "s." << std::endl << std::endl
-               << std::endl;
-}
-
-void
-Elliptic_FEM_Solver::solve_nonlinear(const CommonTraits::DiffusionType& /*diffusion_op*/,
-                                     const std::unique_ptr<const CommonTraits::LowerOrderTermType>& /*lower_order_term*/,
-                                     const CommonTraits::FirstSourceType& /*f*/,
-                                     CommonTraits::PdelabVectorType & /*solution*/) const {
-  DSC_LOG_INFO << "Solving non-linear problem.\n";
-  DSC_LOG_INFO << "Solving nonlinear problem with FEM + Newton-Method.\n";
-  DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
-
-  DUNE_THROW(NotImplemented, "");
-
-}
-
-void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
-                                const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                                const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType& solution) const {
-
-  if (Problem::getModelData()->linear())
-    solve_linear(diffusion_op, lower_order_term, f, solution);
-  else
-    solve_nonlinear(diffusion_op, lower_order_term, f, solution);
+  DSC_PROFILER.stopTiming("fem.apply");
+  DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms.\n";
 }
 
 } // namespace Multiscale

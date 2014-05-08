@@ -48,11 +48,10 @@ public:
    b --> advective part ('AdvectionTermType')
    c --> reaction part ('ReactionTermType')
    f --> 'first' source term, scalar ('SourceTermType')
-   G --> 'second' source term, vector valued ('SecondSourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
   void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-             const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::FirstSourceType& f,
+             const CommonTraits::DiffusionType& diffusion_op, const CommonTraits::SourceType& f,
              DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
              DiscreteFunctionType& solution) const;
 };

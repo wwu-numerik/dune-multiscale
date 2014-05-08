@@ -48,7 +48,7 @@ struct LocalsolutionProxyTraits {
 }; // end struct LocalsolutionProxyTraits
 
 /**
- * Fake DiscreteFunction that forwards localFcuntion calls to appropiate local_correction
+ * Fake DiscreteFunction that forwards localFunction calls to appropriate local_correction
  */
 template <class SearchType>
 class LocalsolutionProxy : public Dune::Fem::DiscreteFunctionInterface<LocalsolutionProxyTraits<SearchType>> {
@@ -64,7 +64,7 @@ public:
                    std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
 
   LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set,
-                     const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& /*space_in*/, SearchType& search)
+                     SearchType& search)
     : corrections_(corrections)
     , index_set_(index_set)
     , search_(search) {}
@@ -74,7 +74,7 @@ public:
     auto it = corrections_.find(index_set_.index(coarse_cell));
     if (it != corrections_.end())
       return it->second->localFunction(entity);
-    assert(false);
+    DUNE_THROW(InvalidStateException, "Coarse cell was not found!");
   }
 
   virtual bool read_xdr(const std::string) { return false; }

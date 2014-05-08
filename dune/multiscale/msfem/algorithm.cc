@@ -74,7 +74,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
   Dune::Multiscale::OutputParameters outputparam;
 
   if (Problem::getModelData()->hasExactSolution()) {
-    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
+    const auto& u_ptr = Dune::Multiscale::Problem::getExactSolution();
     const auto& u = *u_ptr;
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
     OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
@@ -106,10 +106,8 @@ void algorithm() {
   CommonTraits::DiscreteFunctionSpaceType fine_discreteFunctionSpace(fine_gridPart);
   CommonTraits::DiscreteFunctionSpaceType coarse_discreteFunctionSpace(coarse_gridPart);
 
-  auto diffusion_op_ptr = Dune::Multiscale::Problem::getDiffusion();
-  const auto& diffusion_op = *diffusion_op_ptr;
-  auto f_ptr = Dune::Multiscale::Problem::getFirstSource();
-  const auto& f = *f_ptr;
+  const auto& diffusion_op = *Dune::Multiscale::Problem::getDiffusion();
+  const auto& f = *Dune::Multiscale::Problem::getSource();
 
   CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", fine_discreteFunctionSpace);
   msfem_solution.clear();
@@ -128,15 +126,14 @@ void algorithm() {
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
   }
 
+  const auto& grid_view = fine_grid.leafGridView();
+  CommonTraits::FEMapType fe_map(grid_view);
+  CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
   std::unique_ptr<CommonTraits::PdelabVectorType> fem_solution(nullptr);
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    const auto& grid_view = coarse_grid.leafGridView();
-    CommonTraits::FEMapType fe_map(grid_view);
-    CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
     fem_solution = DSC::make_unique<CommonTraits::PdelabVectorType>(space, 0.0);
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
-    const auto l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
-    fem_solver.apply(diffusion_op, l_ptr, f, *fem_solution);
+    fem_solver.apply(diffusion_op, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       Dune::Multiscale::FEM::write_discrete_function(*fem_solution, "fem_solution");
     }

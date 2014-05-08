@@ -31,8 +31,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
 
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::getModelData()->hasExactSolution()) {
-    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
-    const auto& u = *u_ptr;
+    const auto& u = *Dune::Multiscale::Problem::getExactSolution();
 
     typedef Dune::Fem::LagrangeDiscreteFunctionSpace<CommonTraits::FunctionSpaceType,
         CommonTraits::GridPartType, CommonTraits::exact_solution_space_order>
@@ -84,13 +83,17 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   }
   if (msfem_solution_ && fem_solution_) {
     const auto approx_msfem_error = DS::l2distance(*msfem_solution_,*fem_solution_);
-    out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
+    const auto no = DS::l2norm(*msfem_solution_);
+    if (std::abs(no)>1e-12)
+      out << "|| u_msfem - u_fem ||_L2 / || u_msfem ||_L2 =  " << approx_msfem_error/no << std::endl;
+    else
+      out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 
-    const auto h1_approx_msfem_error = DS::h1distance(*msfem_solution_,*fem_solution_);
-    out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
+//    const auto h1_approx_msfem_error = DS::h1distance(*msfem_solution_,*fem_solution_);
+//    out << "|| u_msfem - u_fem ||_H1 =  " << h1_approx_msfem_error << std::endl << std::endl;
 
     csv["msfem_fem_L2"] = approx_msfem_error;
-    csv["msfem_fem_H1"] = h1_approx_msfem_error;
+//    csv["msfem_fem_H1"] = h1_approx_msfem_error;
   }
 
   std::unique_ptr<boost::filesystem::ofstream> csvfile(

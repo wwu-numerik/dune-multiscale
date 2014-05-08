@@ -7,7 +7,6 @@
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/problems/constants.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
 #include <dune/stuff/functions/global.hh>
@@ -26,7 +25,6 @@ namespace Problem {
 typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
 typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
 typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
-typedef CommonTraits::FunctionSpaceType::DomainFieldType TimeType;
 
 struct DiffusionBase {
 
@@ -49,8 +47,7 @@ struct DiffusionBase {
 
 struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 
-  virtual void evaluate(const DomainType& x, RangeType& ret) const { evaluate(x, TimeType(0), ret); }
-  virtual void evaluate(const DomainType& x, const TimeType& time, RangeType& y) const = 0;
+  virtual void evaluate(const DomainType& x, RangeType& ret) const = 0;
   virtual void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient,
                         RangeType& y) const = 0;
   virtual void position_derivative(const DomainType& x, const RangeType& position,
@@ -62,7 +59,6 @@ struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType 
 struct ZeroLowerOrder : public LowerOrderBase {
 public:
   virtual void evaluate(const DomainType&, RangeType& y) const DS_FINAL { y = RangeType(0); }
-  virtual void evaluate(const DomainType&, const TimeType&, RangeType& y) const DS_FINAL { y = RangeType(0); }
   virtual void evaluate(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const DS_FINAL {
     y = RangeType(0);
   }
@@ -79,29 +75,21 @@ public:
 class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
-  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
 };
 
 class ZeroDirichletData : public DirichletDataBase {
 public:
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
-  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const DS_FINAL {
-    y = RangeType(0.0);
-  }
 };
 
 class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
-  virtual void evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const = 0;
 };
 
 class ZeroNeumannData : public NeumannDataBase {
 public:
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
-  virtual void evaluate(const DomainType& /*x*/, const TimeType& /*time*/, RangeType& y) const DS_FINAL {
-    y = RangeType(0.0);
-  }
 };
 
 /**
@@ -178,7 +166,6 @@ public:
 **/
 class IModelProblemData {
 protected:
-  const Constants constants_;
   typedef CommonTraits::GridType::LeafGridView View;
   typedef DSG::BoundaryInfoInterface<typename View::Intersection> BoundaryInfoType;
   typedef MsFEM::MsFEMTraits::LocalGridType::LeafGridView SubView;
@@ -186,7 +173,7 @@ protected:
 
 public:
   //! Constructor for ModelProblemData
-  inline IModelProblemData(const Constants constants) : constants_(constants) {}
+  inline IModelProblemData() {}
   virtual ~IModelProblemData() {}
 
   /**
@@ -212,11 +199,13 @@ public:
   //! linear/nonlinear toggle
   virtual bool linear() const { return true; }
 
-  virtual std::unique_ptr<BoundaryInfoType> boundaryInfo() const {
-    return DSC::make_unique<DSG::BoundaryInfos::AllDirichlet<typename View::Intersection>>();
-  }
-  virtual std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo() const {
-    return DSC::make_unique<DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection>>();
+  virtual const BoundaryInfoType& boundaryInfo() const = 0;
+  
+  virtual const SubBoundaryInfoType& subBoundaryInfo() const = 0;
+  
+  
+  virtual std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const {
+    return {CommonTraits::DomainType(0.0), CommonTraits::DomainType(1.0)};
   }
 };
 

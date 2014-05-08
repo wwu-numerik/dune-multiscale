@@ -88,15 +88,15 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    if (DS::l2norm(current_rhs) < 1e-30) {
-      current_rhs.clear();
-      DSC_LOG_ERROR << "Local MsFEM problem with solution zero." << std::endl;
+    if (DS::l2norm(current_rhs) < 1e-12) {
+      current_solution.clear();
+      DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
       continue;
     }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
-      current_rhs.clear();
-      DSC_LOG_INFO << "Zero-Boundary corrector." << std::endl;
+      current_solution.clear();
+      DSC_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
       continue;
     }
     localProblemOperator.apply_inverse(current_rhs, current_solution);
@@ -119,58 +119,42 @@ void LocalProblemSolver::solve_for_all_cells() {
   // number of coarse grid entities (of codim 0).
   const auto coarseGridSize = coarse_space_.grid().size(0);
   if (Dune::Fem::MPIManager::size() > 0)
-    DSC_LOG_INFO << "Rank " << Dune::Fem::MPIManager::rank() << " will solve local problems for " << coarseGridSize
+    DSC_LOG_DEBUG << "Rank " << Dune::Fem::MPIManager::rank() << " will solve local problems for " << coarseGridSize
                  << " coarse entities!" << std::endl;
   else {
-    DSC_LOG_INFO << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
+    DSC_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
   }
-  DSC_PROFILER.startTiming("msfem.localproblemsolver.assemble_all");
+  DSC_PROFILER.startTiming("msfem.localProblemSolver.solveAndSaveAll");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-  DSC::MinMaxAvg<double> cell_time;
-  DSC::MinMaxAvg<double> saveTime;
+  DSC::MinMaxAvg<double> solveTime;
 
   const auto& coarseGridLeafIndexSet = coarse_space_.gridPart().grid().leafIndexSet();
   for (const auto& coarseEntity : coarse_space_) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
-
-    DSC_LOG_INFO << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
-
-    DSC_PROFILER.startTiming("none.saveLocalProblemsOnCell");
+    DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time
-    DSC_PROFILER.startTiming("none.local_problem_solution");
+    DSC_PROFILER.startTiming("msfem.localProblemSolver.solve");
     LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
-
     // solve the problems
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
-    // min/max time
-    cell_time(DSC_PROFILER.stopTiming("none.local_problem_solution") / 1000.f);
-    DSC_PROFILER.resetTiming("none.local_problem_solution");
+    solveTime(DSC_PROFILER.stopTiming("msfem.localProblemSolver.solve") / 1000.f);
 
-    // save the local solutions to disk
-    DSC_PROFILER.startTiming("none.saveLocalProblemSolution");
+    // save the local solutions to disk/mem
     localSolutionManager.save();
-    saveTime(DSC_PROFILER.stopTiming("none.saveLocalProblemSolution") / 1000.f);
-    DSC_PROFILER.resetTiming("none.saveLocalProblemSolution");
 
-    DSC_LOG_INFO << "Total time for solving and saving all local problems for the current subgrid: "
-                 << DSC_PROFILER.stopTiming("none.saveLocalProblemsOnCell") / 1000.f << "s" << std::endl << std::endl;
-    DSC_PROFILER.resetTiming("none.saveLocalProblemsOnCell");
+    DSC_PROFILER.resetTiming("msfem.localProblemSolver.solve");
   } // for
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
-  const auto total_time = DSC_PROFILER.stopTiming("msfem.localproblemsolver.assemble_all") / 1000.f;
-  DSC_LOG_INFO << std::endl;
-  DSC_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n";
-  DSC_LOG_INFO << "Minimum time for solving a local problem = " << cell_time.min() << "s.\n";
-  DSC_LOG_INFO << "Maximum time for solving a localproblem = " << cell_time.max() << "s.\n";
-  DSC_LOG_INFO << "Average time for solving a localproblem = " << cell_time.average() << "s.\n";
-  DSC_LOG_INFO << "Minimum time for saving a local problem = " << saveTime.min() << "s.\n";
-  DSC_LOG_INFO << "Maximum time for saving a localproblem = " << saveTime.max() << "s.\n";
-  DSC_LOG_INFO << "Average time for saving a localproblem = " << saveTime.average() << "s.\n";
-  DSC_LOG_INFO << "Total time for computing and saving the localproblems = " << total_time << "s," << std::endl
-               << std::endl;
+  const auto totalTime = DSC_PROFILER.stopTiming("msfem.localProblemSolver.solveAndSaveAll") / 1000.f;
+  DSC_LOG_DEBUG << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n";
+  DSC_LOG_DEBUG << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n";
+  DSC_LOG_DEBUG << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n";
+  DSC_LOG_DEBUG << "Average time for solving a local problem = " << solveTime.average() << "s.\n";
+  DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = "
+                << totalTime << "s on rank" << Dune::Fem::MPIManager::rank() << std::endl;
 } // assemble_all
 
 } // namespace MsFEM {

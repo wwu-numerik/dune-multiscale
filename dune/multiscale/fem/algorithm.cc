@@ -14,7 +14,6 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/common/output_traits.hh>
 #include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/fem/print_info.hh>
@@ -34,10 +33,6 @@
 #include <dune/stuff/functions/combined.hh>
 #include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/functions/global.hh>
-
-#ifdef HAVE_DUNE_FEM // <- this is a temporary hack bc dune-gdt is not up to date with dune-fem
-# undef HAVE_DUNE_FEM
-#endif
 
 #include <dune/gdt/spaces/continuouslagrange/pdelab.hh>
 #include <dune/gdt/operators/elliptic.hh>
