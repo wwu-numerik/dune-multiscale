@@ -28,16 +28,12 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   outputparam.set_prefix((boost::format("%s_solution") % prefix).str());
   typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution->space().gridPart().grid(),
                                                           fem_solution_series, outputparam);
-  // write data
-  if (Problem::getModelData()->linear())
-    femsol_dataoutput.writeData(1.0 /*dummy*/, (boost::format("%s_solution") % prefix).str());
-  else
-    femsol_dataoutput.writeData(1.0 /*dummy*/, (boost::format("%s_newton_solution") % prefix).str());
+
+  femsol_dataoutput.writeData(1.0 /*dummy*/, (boost::format("%s_solution") % prefix).str());
 
   //! -------------------------- writing data output Exact Solution ------------------------
   if (Problem::getModelData()->hasExactSolution()) {
-    auto u_ptr = Dune::Multiscale::Problem::getExactSolution();
-    const auto& u = *u_ptr;
+    const auto& u = *Dune::Multiscale::Problem::getExactSolution();
     const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u,
                                                                           discrete_solution->space().gridPart());
     // create and initialize output class
@@ -76,7 +72,7 @@ void write_discrete_function(CommonTraits::PdelabVectorType &discrete_solution, 
 {
   typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
   const auto& gfs = discrete_solution.gridFunctionSpace();
-  SubsamplingVTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView(), CommonTraits::polynomial_order);
+  VTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView());
   PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);
   PDELab::addSolutionToVTKWriter(vtkwriter,gfs,discrete_solution, nn);
   vtkwriter.write(prefix,Dune::VTK::appendedraw);

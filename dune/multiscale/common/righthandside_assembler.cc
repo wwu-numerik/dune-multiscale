@@ -20,15 +20,16 @@
 
 void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-    const Dune::Multiscale::CommonTraits::FirstSourceType& f, DMM::LocalGridList& subgrid_list,
+    const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
 
+  // cache grid variable
+  const bool isSimplexGrid = DSG::is_simplex_grid(coarse_space);
+  
   static constexpr int dimension = CommonTraits::GridType::dimension;
   DSC_PROFILER.startTiming("msfem.assembleRHS");
-  auto diffusionPtr = Problem::getDiffusion();
-  const auto& diffusion = *diffusionPtr;
-  auto neumannDataPtr = Problem::getNeumannData();
-  const auto& neumannData = *neumannDataPtr;
+  const auto& diffusion = *Problem::getDiffusion();
+  const auto& neumannData = *Problem::getNeumannData();
 
   rhsVector.clear();
   RangeType f_x;
@@ -69,7 +70,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
               localSolutions.size(), std::vector<RangeType>(localQuadrature.nop(), 0.0));
           std::vector<std::vector<JacobianRangeType>> allLocalSolutionJacobians(
               localSolutions.size(), std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
-          for (auto lsNum : DSC::valueRange(localSolutions.size())) {
+          // add contributions for all inner correctors
+          for (auto lsNum : DSC::valueRange(numLocalBaseFunctions)) {
             auto localFunction = localSolutions[lsNum]->localFunction(localEntity);
             // this evaluates the local solutions in all quadrature points...
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
@@ -96,22 +98,15 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
                   // get local coordinate of quadrature point
                   const auto& xLocal = faceQuad.localPoint(iqP);
                   const auto& faceGeometry = intersection.geometry();
-
-                  // the following does not work because subgrid does not implement geometryInInside()
-                  // const auto& insideGeometry    = intersection.geometryInInside();
-                  // const typename FaceQuadratureType::CoordinateType& xInInside = insideGeometry.global(xLocal);
-                  // therefore, we have to do stupid things:
                   const auto& xGlobal = faceGeometry.global(xLocal);
                   const auto& xInCoarseLocal = coarse_grid_entity.geometry().local(xGlobal);
                   const double factor = faceGeometry.integrationElement(xLocal) * faceQuad.weight(iqP);
 
                   neumannData.evaluate(xGlobal, neumannValue);
                   coarseBaseSet.evaluateAll(xInCoarseLocal, phi_x_vec);
-                  for (auto i : DSC::valueRange(numLocalBaseFunctions)) {
-                    assert((long long)i < (long long)phi_x_vec.size());
-                    assert(iqP < localSolutionOnFace.size());
-                    rhsLocalFunction[i] += factor * (neumannValue * (phi_x_vec[i] + localSolutionOnFace[iqP]));
-                  }
+                  assert((long long)lsNum < (long long)phi_x_vec.size());
+                  assert(iqP < localSolutionOnFace.size());
+                  rhsLocalFunction[lsNum] -= factor * (neumannValue * (phi_x_vec[lsNum] + localSolutionOnFace[iqP]));
                 }
               }
             }
@@ -139,7 +134,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
               JacobianRangeType reconstructionGradPhi(coarseBaseJacs[coarseBF]);
               RangeType reconstructionPhi(coarseBaseEvals[coarseBF]);
 
-              if (DSG::is_simplex_grid(coarse_space)) {
+              if (isSimplexGrid) {
                 assert(localSolutions.size() == dimension + localSolutionManager.numBoundaryCorrectors());
                 for (const auto& i : DSC::valueRange(dimension))
                   reconstructionPhi += coarseBaseJacs[coarseBF][0][i] * allLocalSolutionEvaluations[i][qP];
@@ -176,6 +171,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
   rhsVector.communicate();
-  DSC_LOG_INFO << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.stopTiming("msfem.assembleRHS") << "ms"
+  DSC_PROFILER.stopTiming("msfem.assembleRHS");
+  DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.getTiming("msfem.assembleRHS") << "ms"
                << std::endl;
 }

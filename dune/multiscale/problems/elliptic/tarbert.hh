@@ -2,8 +2,8 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SPE10
-#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SPE10
+#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_TARBERT
+#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_TARBERT
 
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/base.hh>
@@ -16,11 +16,11 @@
 namespace Dune {
 namespace Multiscale {
 namespace Problem {
-/** \addtogroup problem_spe10 Problem::SPE10
+/** \addtogroup problem_tarbert Problem::Tarbert
  * @{ **/
-//! ------------ SPE10 Problem -------------------
+//! ------------ Tarbert Problem -------------------
 
-namespace SPE10 {
+namespace Tarbert {
 
 struct ModelProblemData : public IModelProblemData {
   virtual bool hasExactSolution() const { return false; }
@@ -55,7 +55,8 @@ public:
   void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
                              const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
-
+  
+//  void visualizePermeability(const CommonTraits::GridType& grid) const;
 private:
   void readPermeability();
 
@@ -83,15 +84,14 @@ public:
   void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
 };
 
-class LowerOrderTerm : public ZeroLowerOrder {};
 
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 MSNULLFUNCTION(ExactSolution)
 
-} //! @} namespace SPE10 {
+} //! @} namespace Tarbert {
 }
 } // namespace Multiscale {
 } // namespace Dune {
 
-#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE
+#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_TARBERT

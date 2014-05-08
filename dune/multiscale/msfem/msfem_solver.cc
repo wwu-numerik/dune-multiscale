@@ -35,14 +35,17 @@ struct LocalOutputTraits {
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
+  DSC::Profiler::ScopedTiming st("msfem.idFine");
   fine_scale_part.clear();
   const DiscreteFunctionSpace& coarse_space = coarse_msfem_solution.space();
   auto& coarse_indexset = coarse_space.gridPart().grid().leafIndexSet();
 
-  typedef DS::HeterogenousProjection<LocalGridSearch> ProjectionType;
+  typedef DS::MsFEMProjection<LocalGridSearch> ProjectionType;
   typedef LocalGridSearch<typename MsFEMTraits::LocalGridType::LeafGridView> SearchType;
   typedef LocalsolutionProxy<SearchType> ProxyType;
   typename ProxyType::CorrectionsMapType local_corrections;
+
+  const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
 
   for (auto& coarse_entity : coarse_space) {
     LocalSolutionManager localSolManager(coarse_space, coarse_entity, subgrid_list);
@@ -56,7 +59,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     local_correction.clear();
     auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarse_entity);
 
-    if (DSG::is_simplex_grid(coarse_space)) {
+    if (is_simplex_grid) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
                        "We should have dim local solutions per coarse element on triangular meshes!");
 
@@ -105,7 +108,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
       if (DSC_CONFIG_GET("msfem.local_corrections_vtk_output", false)) {
         LocalOutputTraits::IOTupleType coarse_grid_series(&local_correction);
-        const std::string name = (boost::format("local_correction_%d_") % coarse_index).str();
+        const auto elId = coarse_space.gridPart().grid().globalIdSet().id(coarse_entity);
+        const std::string name = (boost::format("local_correction_%d_") % elId).str();
         Dune::Multiscale::OutputParameters outputparam;
         outputparam.set_prefix(name);
         auto& grid = localSolManager.space().gridPart().grid();
@@ -115,9 +119,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   }
 
   SearchType search(coarse_space, subgrid_list);
-  auto proxybase_gridpart = subgrid_list.gridPart(0);
-  MsFEMTraits::LocalGridDiscreteFunctionSpaceType proxybase_space(proxybase_gridpart);
-  ProxyType proxy(local_corrections, coarse_indexset, proxybase_space, search);
+  ProxyType proxy(local_corrections, coarse_indexset, search);
   ProjectionType::project(proxy, fine_scale_part, search);
   BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
   //backend storage no longer needed from here on
@@ -126,11 +128,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
                                   const CommonTraits::DiffusionType& diffusion_op,
-                                  const CommonTraits::FirstSourceType& f, DiscreteFunctionType& coarse_scale_part,
+                                  const CommonTraits::SourceType& f, DiscreteFunctionType& coarse_scale_part,
                                   DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
-  if (DSC_CONFIG_GET("msfem.petrov_galerkin", 1))
-    DSC_LOG_ERROR << "MsFEM does not work with Petrov-Galerkin at the moment!\n";
-
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
 
@@ -160,9 +159,6 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   // add coarse and fine scale part to solution
   solution += coarse_scale_part;
   solution += fine_scale_part;
-
-  // seperate the msfem output from other output
-  std::cout << std::endl << std::endl;
 } // solve_dirichlet_zero
 
 } // namespace MsFEM {

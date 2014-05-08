@@ -7,6 +7,7 @@
 #include "dune/multiscale/common/traits.hh"
 #include "dune/multiscale/problems/base.hh"
 #include "dune/multiscale/problems/selector.hh"
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -14,16 +15,16 @@ namespace Multiscale {
 DirichletConstraints<CommonTraits::DiscreteFunctionType>&
 getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space) {
   // set dirichlet dofs to zero
-  static const auto boundary = Problem::getModelData()->boundaryInfo();
-  static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(*boundary, space);
+  static const auto& boundary = Problem::getModelData()->boundaryInfo();
+  static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(boundary, space);
   return constraints;
 }
 
 DirichletConstraints<CommonTraits::DiscreteFunctionType>&
 getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space) {
   // set dirichlet dofs to zero
-  static const auto boundary = Problem::getModelData()->boundaryInfo();
-  static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(*boundary, space);
+  static const auto& boundary = Problem::getModelData()->boundaryInfo();
+  static DirichletConstraints<CommonTraits::DiscreteFunctionType> constraints(boundary, space);
   return constraints;
 }
 
@@ -195,7 +196,7 @@ void DirichletConstraints<DF>::updateDirichletDofs() const {
     // update sequence number
     sequence_ = domain_space_.sequence();
     hasDirichletDofs_ = hasDirichletBoundary;
-    domain_space_.gridPart().grid().comm().max(hasDirichletDofs_);
+//    domain_space_.gridPart().grid().comm().max(hasDirichletDofs_);
   }
 }
 
@@ -261,7 +262,7 @@ void DirichletConstraints<DF>::operator()(const DiscreteFunctionType& u, Discret
 }
 
 template class DirichletConstraints<CommonTraits::DiscreteFunctionType>;
-//template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
+template class DirichletConstraints<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>;
 
 } // namespace Multiscale
 } // namespace Dune

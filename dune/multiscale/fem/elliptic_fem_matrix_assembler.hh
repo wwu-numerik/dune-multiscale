@@ -28,6 +28,8 @@ namespace FEM {
 class Local_CG_FEM_Operator
     : public Dune::PDELab::NumericalJacobianApplyVolume<Local_CG_FEM_Operator>,
       public Dune::PDELab::NumericalJacobianVolume<Local_CG_FEM_Operator>,
+      public Dune::PDELab::NumericalJacobianApplyBoundary<Local_CG_FEM_Operator>,
+      public Dune::PDELab::NumericalJacobianBoundary<Local_CG_FEM_Operator>,
       public Dune::PDELab::FullVolumePattern,
       public Dune::PDELab::LocalOperatorDefaultFlags,
       boost::noncopyable
@@ -42,12 +44,13 @@ public:
 
   // residual assembly flags
   enum { doAlphaVolume = true };
+  enum { doAlphaBoundary = true };
 
   /**
    * \param lower_order_term Operator assumes ownership of it
    **/
-  Local_CG_FEM_Operator(const CommonTraits::DiffusionType& diffusion_op, const Dune::Multiscale::CommonTraits::FirstSourceType& source,
-                           const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term = nullptr)
+  Local_CG_FEM_Operator(const CommonTraits::DiffusionType& diffusion_op, const Dune::Multiscale::CommonTraits::SourceType& source,
+                        const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term = nullptr)
     : diffusion_operator_(diffusion_op)
     , lower_order_term_(lower_order_term)
     , source_(source)
@@ -111,6 +114,72 @@ public:
       }
     }
   }
+
+
+  // boundary integral
+  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+  void alpha_boundary (const IG& ig, const LFSU& lfsu_s, const X& x_s,
+                       const LFSV& lfsv_s, R& r_s) const
+  {
+    BOOST_ASSERT_MSG(ig.boundary(), "alpha_boundary called on intersection that is not part of the boundary!");
+    // assume Galerkin: lfsu_s == lfsv_s
+    // This yields more efficient code since the local functionspace only
+    // needs to be evaluated once, but would be incorrect for a finite volume
+    // method
+    
+    // some types
+    typedef typename LFSU::Traits::FiniteElementType::
+    Traits::LocalBasisType::Traits::DomainFieldType DF;
+    typedef typename LFSU::Traits::FiniteElementType::
+    Traits::LocalBasisType::Traits::RangeFieldType RF;
+    typedef typename LFSU::Traits::FiniteElementType::
+    Traits::LocalBasisType::Traits::RangeType Range;
+    typedef typename LFSU::Traits::SizeType size_type;
+    
+    // dimensions
+    const int dim = IG::dimension;
+    
+    // select quadrature rule for face
+    Dune::GeometryType gtface = ig.geometryInInside().type();
+    const Dune::QuadratureRule<DF,dim-1>&
+    rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,2);
+    
+    const auto& neumannData = *Dune::Multiscale::Problem::getNeumannData();
+
+    // loop over quadrature points and integrate normal flux
+    for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin();
+         it!=rule.end(); ++it)
+    {
+      // skip rest if we are on Dirichlet boundary
+      if ( Dune::Multiscale::Problem::is_dirichlet( ig.intersection() ) )
+        continue;
+      
+      // position of quadrature point in local coordinates of element
+      Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+      
+      // evaluate basis functions at integration point
+      std::vector<Range> phi(lfsu_s.size());
+      lfsu_s.finiteElement().localBasis().evaluateFunction(local,phi);
+      
+      // evaluate u (e.g. flux may depend on u)
+      RF u=0.0;
+      for (size_type i=0; i<lfsu_s.size(); ++i)
+        u += x_s(lfsu_s,i)*phi[i];
+      
+      // evaluate flux boundary condition
+      Dune::FieldVector<RF,dim> globalpos = ig.geometry().global(it->position());
+      Range j;
+      neumannData.evaluate(globalpos, j);
+
+      // integrate j
+      RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+      for (size_type i=0; i<lfsu_s.size(); ++i)
+        r_s.accumulate(lfsu_s,i,j*phi[i]*factor);
+    }
+  }
+
+
+
 #if 0
   /** assemble stiffness matrix for the jacobian matrix of the diffusion operator evaluated in the gradient of a certain
    * discrete function (in case of the Newton method, it is the preceeding iterate u_H^{(n-1)} )
@@ -128,7 +197,7 @@ public:
 private:
   const CommonTraits::DiffusionType& diffusion_operator_;
   const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term_;
-  const Dune::Multiscale::CommonTraits::FirstSourceType& source_;
+  const Dune::Multiscale::CommonTraits::SourceType& source_;
 };
 
 

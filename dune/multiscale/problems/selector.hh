@@ -22,45 +22,41 @@ namespace Multiscale {
 namespace Problem {
 
 typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
-BasePtr getFirstSource();
-BasePtr getExactSolution();
-BasePtr getSecondSource();
-BasePtr getMassTerm();
-std::unique_ptr<const CommonTraits::DiffusionType> getDiffusion();
-std::unique_ptr<const CommonTraits::LowerOrderTermType> getLowerOrderTerm();
-std::unique_ptr<const CommonTraits::DirichletBCType> getDirichletBC();
-std::unique_ptr<const CommonTraits::NeumannBCType> getNeumannBC();
-BasePtr getDefaultDummyFunction();
-std::unique_ptr<const CommonTraits::ModelProblemDataType> getModelData();
-std::unique_ptr<const CommonTraits::DirichletDataType> getDirichletData();
-std::unique_ptr<const CommonTraits::NeumannDataType> getNeumannData();
+const BasePtr& getSource();
+const BasePtr& getExactSolution();
+const std::unique_ptr<const CommonTraits::DiffusionType>& getDiffusion();
+const std::unique_ptr<const CommonTraits::DirichletBCType>& getDirichletBC();
+const std::unique_ptr<const CommonTraits::NeumannBCType>& getNeumannBC();
+const std::unique_ptr<const CommonTraits::ModelProblemDataType>& getModelData();
+const std::unique_ptr<const CommonTraits::DirichletDataType>& getDirichletData();
+const std::unique_ptr<const CommonTraits::NeumannDataType>& getNeumannData();
 
-std::string name();
+const std::string& name();
 
 template <class IntersectionType>
 typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value, bool>::type
 is_neumann(const IntersectionType& face) {
-  return getModelData()->boundaryInfo()->neumann(face);
+  return getModelData()->boundaryInfo().neumann(face);
 }
 
 template <class IntersectionType>
 typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,
                         bool>::type
 is_neumann(const IntersectionType& face) {
-  return getModelData()->subBoundaryInfo()->neumann(face);
+  return getModelData()->subBoundaryInfo().neumann(face);
 }
 
 template <class IntersectionType>
 typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value, bool>::type
 is_dirichlet(const IntersectionType& face) {
-  return getModelData()->boundaryInfo()->dirichlet(face);
+  return getModelData()->boundaryInfo().dirichlet(face);
 }
 
 template <class IntersectionType>
 typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,
                         bool>::type
 is_dirichlet(const IntersectionType& face) {
-  return getModelData()->subBoundaryInfo()->dirichlet(face);
+  return getModelData()->subBoundaryInfo().dirichlet(face);
 }
 
 } //! @} namespace Problem

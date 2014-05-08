@@ -58,7 +58,6 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
-        dune/multiscale/common/newton_rhs.cc
         dune/multiscale/msfem/coarse_scale_operator.cc
         dune/multiscale/msfem/localproblems/subgrid-list.cc
         dune/multiscale/msfem/localproblems/localoperator.cc
@@ -73,27 +72,13 @@ set( COMMON_SOURCES
     )
 
 set( PROBLEM_SOURCES
-	dune/multiscale/problems/elliptic/eight.cc
-	dune/multiscale/problems/elliptic/example.cc
-	dune/multiscale/problems/elliptic/eleven.cc
-	dune/multiscale/problems/elliptic/five.cc
-	dune/multiscale/problems/elliptic/four.cc
-	dune/multiscale/problems/elliptic/fourteen.cc
-	dune/multiscale/problems/elliptic/nine.cc
-	dune/multiscale/problems/elliptic/one.cc
-	dune/multiscale/problems/elliptic/seven.cc
-	dune/multiscale/problems/elliptic/six.cc
-	dune/multiscale/problems/elliptic/ten.cc
-	dune/multiscale/problems/elliptic/thirteen.cc
-	dune/multiscale/problems/elliptic/three.cc
-	dune/multiscale/problems/elliptic/toy.cc
-	dune/multiscale/problems/elliptic/twelve.cc
-	dune/multiscale/problems/elliptic/two.cc
-	dune/multiscale/problems/elliptic/spe10.cc
-	dune/multiscale/problems/selector.cc
-	dune/multiscale/problems/base.cc
-    )
-    
+    dune/multiscale/problems/elliptic/nine.cc
+    dune/multiscale/problems/elliptic/spe10.cc
+    dune/multiscale/problems/elliptic/tarbert.cc
+    dune/multiscale/problems/selector.cc
+    dune/multiscale/problems/base.cc
+)
+
 set( HMM_SOURCES  
         dune/multiscale/hmm/algorithm.cc
         dune/multiscale/hmm/algorithm_error.cc
@@ -135,12 +120,12 @@ add_dune_mpi_flags(OBJECT multiscale_hmm)
 add_dune_metis_flags(multiscale_common)
 add_dune_parmetis_flags(multiscale_common)
 
-set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
+set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
 
 include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
 set(ALL_MULTISCALE_LIBS multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hmm EXCLUDE_FROM_ALL src/elliptic_hmm.cc ${COMMON_HEADER})
 TARGET_LINK_LIBRARIES(elliptic_hmm multiscale_hmm ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_hmm)
 
@@ -152,16 +137,16 @@ ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_fem)
 
-ADD_EXECUTABLE(msfem-1d src/msfem-1d.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(msfem-1d EXCLUDE_FROM_ALL src/msfem-1d.cc ${COMMON_HEADER})
 TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
 add_dune_mpi_flags(msfem-1d)
 
-ADD_EXECUTABLE(fail src/fail.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
 # TARGET_LINK_LIBRARIES(fail ${COMMON_LIBS} )
 add_dune_mpi_flags(fail)
 
 
-ADD_EXECUTABLE(thread_vis src/thread_vis.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
 add_dune_mpi_flags(thread_vis)
 

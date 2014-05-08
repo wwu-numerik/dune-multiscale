@@ -60,8 +60,8 @@ class IModelProblemData;
 //! type construction for the HMM algorithm
 struct CommonTraits {
   static constexpr int world_dim = 2;
-//  typedef Dune::GridSelector::GridType GridType;
-  typedef Dune::SGrid<world_dim, world_dim> GridType;
+  typedef Dune::GridSelector::GridType GridType;
+//  typedef Dune::SGrid<world_dim, world_dim> GridType;
 //  typedef Dune::YaspGrid<world_dim> GridType;
   typedef GridType::Codim<0>::Entity EntityType;
   typedef Dune::Fem::AdaptiveLeafGridPart<GridType> GridPartType;
@@ -78,9 +78,8 @@ struct CommonTraits {
 
   typedef Problem::IModelProblemData ModelProblemDataType;
   //! type of first source term (right hand side of differential equation or type of 'f')
-  typedef FunctionBaseType FirstSourceType;
-  //! type of second source term 'G' (second right hand side of differential equation 'div G')
-  typedef FunctionBaseType SecondSourceType;
+  typedef FunctionBaseType SourceType;
+
   //! type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
   typedef Problem::DiffusionBase DiffusionType;
   //! type of (possibly non-linear) lower order term F( x, u(x), grad u(x) )
@@ -93,10 +92,6 @@ struct CommonTraits {
   typedef Problem::DirichletDataBase DirichletDataType;
   //! type of neumann data
   typedef Problem::NeumannDataBase NeumannDataType;
-  //! type of mass (or reaction) term (i.e. 'm' or 'c')
-  typedef FunctionBaseType MassTermType;
-  //! default type for any missing coefficient function (e.g. advection,...)
-  typedef FunctionBaseType DefaultDummyFunctionType;
 
   //! type of exact solution (in general unknown)
   typedef FunctionBaseType ExactSolutionType;
@@ -133,7 +128,7 @@ struct CommonTraits {
   typedef PDELab::QkLocalFiniteElementMap<GridType::LeafGridView,GridType::ctype,FieldType,polynomial_order>
   FEMapType;
   typedef BackendChooser<DiscreteFunctionSpaceType>::VectorBackendType VectorBackendType;
-  typedef PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,PDELab::ConformingDirichletConstraints,
+  typedef PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,PDELab::OverlappingConformingDirichletConstraints,
             VectorBackendType> GridFunctionSpaceType;
   typedef typename PDELab::BackendVectorSelector<GridFunctionSpaceType,FieldType>::Type PdelabVectorType;
 

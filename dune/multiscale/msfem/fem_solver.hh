@@ -15,13 +15,6 @@ namespace Multiscale {
 //! \todo docme
 class Elliptic_FEM_Solver {
 
-  void solve_linear(const CommonTraits::DiffusionType& diffusion_op,
-                    const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                    const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType &solution) const;
-  void solve_nonlinear(const CommonTraits::DiffusionType& diffusion_op,
-                       const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-                       const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType& solution) const;
-
   static const int faceCodim = 1;
   const CommonTraits::GridFunctionSpaceType& space_;
 
@@ -34,10 +27,8 @@ public:
   //! b --> advective part ('AdvectionTermType')
   //! c --> reaction part ('ReactionTermType')
   //! f --> 'first' source term, scalar ('SourceTermType')
-  //! G --> 'second' source term, vector valued ('SecondSourceTermType')
   void apply(const CommonTraits::DiffusionType& diffusion_op,
-             const std::unique_ptr<const CommonTraits::LowerOrderTermType>& lower_order_term,
-             const CommonTraits::FirstSourceType& f, CommonTraits::PdelabVectorType &solution) const;
+             const CommonTraits::SourceType& f, CommonTraits::PdelabVectorType &solution) const;
 };
 
 } // namespace Multiscale

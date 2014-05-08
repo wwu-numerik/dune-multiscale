@@ -63,7 +63,13 @@ typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<G
 operator()(const PointContainerType& points) {
   const auto count_nulls = [&](const typename EntityPointerVectorType::value_type& ptr) { return ptr == nullptr; };
   //! \TODO potential speedup by caching last coarse_entity position instead fo restarting at front
-  for (const auto& coarse_entity : coarse_space_) {
+  const auto view = coarse_space_.grid().leafGridView();
+
+  static auto it = view.template begin< 0 >();
+  const auto end = view.template end< 0 >();
+  int steps = 0;
+  while(true) {
+    const auto& coarse_entity = *it;
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
     const auto& index_set = coarse_space_.gridPart().grid().leafIndexSet();
     const auto index = index_set.index(coarse_entity);
@@ -77,8 +83,13 @@ operator()(const PointContainerType& points) {
       if (null_count == 0)
         return entity_ptrs;
     }
+    if (++it == end) {
+      if (++steps < view.size(0))
+        it = view.template begin< 0 >();
+      else
+        DUNE_THROW(InvalidStateException, "local grid search failed");
+    }
   }
-  DUNE_THROW(InvalidStateException, "local grid search failed");
 }
 
 template <class GridViewImp>
