@@ -5,6 +5,10 @@
 #ifndef DUNE_FEM_ALGORITHM_HH
 #define DUNE_FEM_ALGORITHM_HH
 
+#include <dune/stuff/la/container/interfaces.hh>
+
+#include <dune/gdt/spaces/interface.hh>
+
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 
@@ -27,12 +31,13 @@ class ProblemNineNeumann;
 template< class GridViewType >
 class ProblemNineExactSolution;
 
-
-template< class GridPartViewType, class SpaceType, class MatrixType, class VectorType >
+template< class GridType,
+          GDT::ChooseSpaceBackend space_backend = GDT::ChooseSpaceBackend::pdelab,
+          Stuff::LA::ChooseBackend la_backend = Stuff::LA::ChooseBackend::istl_sparse >
 class EllipticDuneGdtDiscretization;
 
 //! the main FEM computation
-void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string filename);
+void algorithm(std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string filename);
 
 } // namespace FEM {
 } // namespace Multiscale {
