@@ -57,8 +57,8 @@ ParameterTree ModelProblemData::boundary_settings() const {
     case 2:
       break;
     case 3:
-      boundarySettings["neumann.0"] = "[0.0; 0.0; 1.0]";
-      boundarySettings["neumann.1"] = "[0.0; 0.0; -1.0]";
+      boundarySettings["neumann.0"] = "[0.0 0.0 1.0]";
+      boundarySettings["neumann.1"] = "[0.0 0.0 -1.0]";
     }
   }
   return boundarySettings;
