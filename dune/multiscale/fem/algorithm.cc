@@ -390,7 +390,7 @@ public:
 //! the main FEM computation
 void algorithm(std::shared_ptr< CommonTraits::GridType >& macro_grid_pointer, const std::string /*filename*/) {
   typedef EllipticDuneGdtDiscretization< CommonTraits::GridType,
-      GDT::ChooseSpaceBackend::pdelab,
+      GDT::ChooseSpaceBackend::fem,
       Stuff::LA::ChooseBackend::istl_sparse > DiscretizationType;
   DiscretizationType::discretize(macro_grid_pointer);
 } // ... algorithm(...)
