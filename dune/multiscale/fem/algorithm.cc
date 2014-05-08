@@ -8,7 +8,6 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/common/newton_rhs.hh>
 #include <dune/multiscale/common/output_traits.hh>
 #include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/fem/print_info.hh>
@@ -44,9 +43,8 @@ void algorithm(const std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer
   CommonTraits::PdelabVectorType solution(space, 0.0);
 
   const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
-  const auto& l_ptr = Dune::Multiscale::Problem::getLowerOrderTerm();
   const auto& f_ptr = Dune::Multiscale::Problem::getSource();
-  fem_solver.apply(*diffusion_op, l_ptr, *f_ptr, solution);
+  fem_solver.apply(*diffusion_op, *f_ptr, solution);
 
   // write FEM solution to a file and produce a VTK output
   write_discrete_function(solution, "fem");
