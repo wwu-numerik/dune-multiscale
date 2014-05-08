@@ -32,48 +32,17 @@
 namespace Dune {
 namespace Multiscale {
 
-Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GridFunctionSpaceType &space)
+Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType &space)
   : space_(space) {}
 
 void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
                                 const CommonTraits::SourceType& f,
-                                CommonTraits::PdelabVectorType& solution) const {
+                                CommonTraits::GdtDiscreteFunctionType &solution) const {
   DSC_LOG_DEBUG << "Solving linear problem with standard FEM\n";
   DSC_PROFILER.startTiming("fem.apply");
 
-  typedef CommonTraits::FieldType Real;
-  typedef CommonTraits::GridFunctionSpaceType GFS;
-  typedef typename GFS::ConstraintsContainer<Real>::Type CC;
-  CC constraints_container;
-  constraints_container.clear();
-  const auto& bc_type = Problem::getModelData()->boundaryInfo();
-  Dune::PDELab::constraints(bc_type, space_, constraints_container);
+  DUNE_THROW(NotImplemented, "");
 
-  FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f);
-
-  const int magic_number_stencil = 9;
-  typedef BackendChooser<CommonTraits::DiscreteFunctionSpaceType>::MatrixBackendType MatrixBackendType;
-  MatrixBackendType fem_matrix(magic_number_stencil);
-
-  typedef Dune::PDELab::GridOperator<GFS,GFS,FEM::Local_CG_FEM_Operator,
-                                      MatrixBackendType,Real,Real,Real,CC,CC> GridOperatorType;
-  GridOperatorType global_operator(space_, constraints_container, space_, constraints_container, local_operator, fem_matrix);
-
-  DSC_LOG_DEBUG << GridOperatorType::Traits::Jacobian(global_operator).patternStatistics() << std::endl;
-
-  Dune::PDELab::interpolate(DS::pdelabAdapted(*Problem::getDirichletData(), space_.gridView()), space_, solution);
-//  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
-//  LinearSolverType ls(space_, 5000);
-
-//  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
-//  LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LinearSolverType;
-  LinearSolverType ls(space_,constraints_container,5000,2);
-  
-  
-  typedef Dune::PDELab::StationaryLinearProblemSolver<GridOperatorType,LinearSolverType,CommonTraits::PdelabVectorType> SLP;
-  SLP slp(global_operator,ls,solution,1e-10);
-  slp.apply();
   DSC_PROFILER.stopTiming("fem.apply");
   DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms.\n";
 }

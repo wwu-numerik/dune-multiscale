@@ -13,12 +13,8 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-
+#include <dune/gdt/spaces/continuouslagrange/pdelab.hh>
+#include <dune/stuff/la/container.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/functions/global.hh>
@@ -46,6 +42,12 @@ template <class T, class R>
 class AdaptationManager;
 } // namespace Fem
 
+namespace GDT {
+template <class T, class R>
+class DiscreteFunction;
+template <class T, class R>
+class ConstDiscreteFunction;
+}
 namespace Multiscale {
 namespace Problem {
 
@@ -118,6 +120,8 @@ struct CommonTraits {
   typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
   typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtMatrixBackendType GdtMatrixBackendType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorBackendType GdtVectorBackendType;
 
   typedef std::vector<RangeType> RangeVector;
   typedef std::vector<RangeVector> RangeVectorVector;
@@ -125,12 +129,10 @@ struct CommonTraits {
   static constexpr int polynomial_order = DiscreteFunctionSpaceType::polynomialOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
 
-  typedef PDELab::QkLocalFiniteElementMap<GridType::LeafGridView,GridType::ctype,FieldType,polynomial_order>
-  FEMapType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::VectorBackendType VectorBackendType;
-  typedef PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,PDELab::OverlappingConformingDirichletConstraints,
-            VectorBackendType> GridFunctionSpaceType;
-  typedef typename PDELab::BackendVectorSelector<GridFunctionSpaceType,FieldType>::Type PdelabVectorType;
+  typedef typename CommonTraits::GridType::LevelGridView GridViewType;
+  typedef GDT::Spaces::ContinuousLagrange::PdelabBased< GridViewType, st_lagrangespace_order, RangeFieldType, FunctionSpaceType::dimRange > GdtSpaceType;
+  typedef GDT::DiscreteFunction< GdtSpaceType, GdtVectorBackendType >      GdtDiscreteFunctionType;
+  typedef GDT::ConstDiscreteFunction< GdtSpaceType, GdtVectorBackendType > GdtConstDiscreteFunctionType;
 
 };
 

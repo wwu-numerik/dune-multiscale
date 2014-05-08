@@ -130,6 +130,7 @@ void algorithm() {
   CommonTraits::FEMapType fe_map(grid_view);
   CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
   std::unique_ptr<CommonTraits::PdelabVectorType> fem_solution(nullptr);
+
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     fem_solution = DSC::make_unique<CommonTraits::PdelabVectorType>(space, 0.0);
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
