@@ -13,7 +13,7 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #include <dune/fem/space/lagrange.hh>
 #include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/gdt/spaces/continuouslagrange/pdelab.hh>
+#include <dune/gdt/spaces/continuouslagrange.hh>
 #include <dune/stuff/la/container.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
@@ -59,17 +59,19 @@ class IModelProblemData;
 
 } // namespace Problem
 
-//! type construction for the HMM algorithm
+//! Common Type, duh
 struct CommonTraits {
   static constexpr int world_dim = 2;
   typedef Dune::GridSelector::GridType GridType;
+  static constexpr int dimRange = 1;
+  static constexpr int dimDomain = GridType::dimension;
 //  typedef Dune::SGrid<world_dim, world_dim> GridType;
 //  typedef Dune::YaspGrid<world_dim> GridType;
   typedef GridType::Codim<0>::Entity EntityType;
   typedef Dune::Fem::AdaptiveLeafGridPart<GridType> GridPartType;
   typedef Dune::GridPtr<GridType> GridPointerType;
   typedef double FieldType;
-  typedef Dune::Fem::FunctionSpace<FieldType, FieldType, GridType::dimension, 1> FunctionSpaceType;
+  typedef Dune::Fem::FunctionSpace<FieldType, FieldType, dimDomain, dimRange> FunctionSpaceType;
 
   typedef Dune::Stuff::GlobalFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
                                       FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange> FunctionBaseType;
@@ -116,12 +118,11 @@ struct CommonTraits {
   //!TODO carry the rename over to the type def'ed name
   typedef DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
   typedef DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
+  typedef DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
 
   typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
   typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtMatrixBackendType GdtMatrixBackendType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorBackendType GdtVectorBackendType;
 
   typedef std::vector<RangeType> RangeVector;
   typedef std::vector<RangeVector> RangeVectorVector;
@@ -129,11 +130,22 @@ struct CommonTraits {
   static constexpr int polynomial_order = DiscreteFunctionSpaceType::polynomialOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
 
-  typedef typename CommonTraits::GridType::LevelGridView GridViewType;
-  typedef GDT::Spaces::ContinuousLagrange::PdelabBased< GridViewType, st_lagrangespace_order, RangeFieldType, FunctionSpaceType::dimRange > GdtSpaceType;
-  typedef GDT::DiscreteFunction< GdtSpaceType, GdtVectorBackendType >      GdtDiscreteFunctionType;
-  typedef GDT::ConstDiscreteFunction< GdtSpaceType, GdtVectorBackendType > GdtConstDiscreteFunctionType;
+  //GDT::ChooseSpaceBackend::pdelab UsePdelab;
 
+  typedef GDT::Spaces::ContinuousLagrangeProvider< GridType, DSG::ChooseLayer::leaf,
+                                                   GDT::ChooseSpaceBackend::fem,
+                                                   st_lagrangespace_order, RangeFieldType, dimRange > GdtSpaceProviderType;
+
+
+
+  typedef GdtSpaceProviderType::Type GdtSpaceType;
+  typedef GdtSpaceType::GridViewType GridViewType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtMatrixType GdtMatrixType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorType GdtVectorType;
+  typedef GDT::DiscreteFunction< GdtSpaceType, GdtVectorType >      GdtDiscreteFunctionType;
+  typedef GDT::ConstDiscreteFunction< GdtSpaceType, GdtVectorType > GdtConstDiscreteFunctionType;
+  typedef Stuff::Functions::Constant< EntityType, DomainFieldType, dimDomain, RangeFieldType, dimRange >
+      GdtConstantFunctionType;
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>

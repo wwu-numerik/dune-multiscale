@@ -11,9 +11,7 @@
 #include <dune/fem/operator/linear/spoperator.hh>
 #endif
 
-#include <dune/pdelab/backend/istl/descriptors.hh>
-#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-
+#include <dune/stuff/la/container.hh>
 
 #include <dune/fem/solver/oemsolver.hh>
 
@@ -88,9 +86,9 @@ struct BackendChooser {
   typedef FemSolverWrapper<DiscreteFunctionType, LinearOperatorType> InverseOperatorType;
 #endif
   typedef typename DiscreteFunctionType::RangeFieldType RangeFieldType;
-  typedef Stuff::LA::IstlRowMajorSparseMatrix< RangeFieldType > GdtMatrixBackendType;
-  typedef Stuff::LA::IstlDenseVector< RangeFieldType >          GdtVectorBackendType;
 
+  typedef typename Stuff::LA::Container< RangeFieldType, Stuff::LA::ChooseBackend::istl_sparse >::VectorType GdtVectorType;
+  typedef typename Stuff::LA::Container< RangeFieldType, Stuff::LA::ChooseBackend::istl_sparse >::MatrixType GdtMatrixType;
 };
 
 } // namespace Multiscale
