@@ -203,9 +203,10 @@ class EllipticDuneGdtDiscretization
   typedef double                    RangeFieldType;
   static const unsigned int         dimRange = 1;
 
-  typedef typename GDT::Spaces::ContinuousLagrangeSpace< GridType, grid_layer,
-                                                         space_backend,
-                                                         1, RangeFieldType, dimRange >::Type SpaceType;
+  typedef GDT::Spaces::ContinuousLagrangeProvider< GridType, grid_layer,
+                                                   space_backend,
+                                                   1, RangeFieldType, dimRange > SpaceProvider;
+  typedef typename SpaceProvider::Type SpaceType;
   typedef typename SpaceType::GridViewType GridViewType;
 
   typedef typename Stuff::LA::Container< RangeFieldType, la_backend >::VectorType VectorType;
@@ -230,7 +231,7 @@ public:
     typedef ProblemNineExactSolution< GridViewType > ExactSolutionType;
     const ExactSolutionType exact_solution;
     Stuff::Grid::Providers::ConstDefault< GridType > grid_provider(grid_ptr);
-    const SpaceType space(grid_provider.template layer< grid_layer, SpaceType::part_view_type >(grid_level));
+    const SpaceType space = SpaceProvider::create(grid_provider, grid_level);
     const auto grid_view = space.grid_view();
     DSC_LOG_INFO << "assembling system (on a grid with " << grid_view->size(0) << " entities)... "
                  << std::flush;
