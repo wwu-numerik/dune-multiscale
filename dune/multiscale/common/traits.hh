@@ -76,7 +76,7 @@ struct CommonTraits {
   typedef Dune::Fem::FunctionSpace<FieldType, FieldType, dimDomain, dimRange> FunctionSpaceType;
 
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
-
+  typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain> DiffusionFunctionBaseType;
   typedef Stuff::Functions::Constant< EntityType, FieldType, dimDomain, FieldType, dimRange > ConstantFunctionBaseType;
 
   typedef Problem::IModelProblemData ModelProblemDataType;

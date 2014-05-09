@@ -52,89 +52,6 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-template< class GridViewType >
-class ProblemNineDiffusion
-  : public Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
-                                , typename GridViewType::ctype, GridViewType::dimension
-                                , double, GridViewType::dimension, GridViewType::dimension >
-{
-  typedef Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
-                               , typename GridViewType::ctype, GridViewType::dimension
-                               , double, GridViewType::dimension, GridViewType::dimension > BaseType;
-public:
-  typedef typename BaseType::RangeType  RangeType;
-  typedef typename BaseType::DomainType DomainType;
-
-  ProblemNineDiffusion() {}
-
-  virtual size_t order() const DS_FINAL DS_OVERRIDE
-  {
-    return 2;
-  }
-
-  virtual void evaluate(const DomainType& xx, RangeType& ret) const DS_FINAL DS_OVERRIDE
-  {
-    assert(ret.N() == 2);
-    assert(ret.M() == 2);
-    ret *= 0.0;
-    ret[0][0] =
-          2.0 * (1.0 / (8.0 * M_PI * M_PI)) * (1.0 / (2.0 + cos(2.0 * M_PI * (xx[0] / 0.05))));
-    ret[1][1] = (1.0 / (8.0 * M_PI * M_PI)) * (1.0 + (0.5 * cos(2.0 * M_PI * (xx[0] / 0.05))));
-  } // ... evaluate(...)
-}; // ... ProblemNineDiffusion(...)
-
-template< class GridViewType >
-class ProblemNineForce
-  : public Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
-                                , typename GridViewType::ctype, GridViewType::dimension, double, 1 >
-{
-  typedef Stuff::GlobalFunction< typename GridViewType::template Codim< 0 >::Entity
-                               , typename GridViewType::ctype, GridViewType::dimension, double, 1 > BaseType;
-public:
-  typedef typename BaseType::RangeType  RangeType;
-  typedef typename BaseType::DomainType DomainType;
-
-  ProblemNineForce() {}
-
-  virtual size_t order() const DS_FINAL DS_OVERRIDE
-  {
-    return 1;
-  }
-
-  virtual void evaluate(const DomainType& xx, RangeType& ret) const DS_FINAL DS_OVERRIDE
-  {
-    const double eps = 0.05;
-    const double pi_square = pow(M_PI, 2.0);
-    const double x0_eps = (xx[0] / eps);
-    const double cos_2_pi_x0_eps = cos(2.0 * M_PI * x0_eps);
-    const double sin_2_pi_x0_eps = sin(2.0 * M_PI * x0_eps);
-    const double coefficient_0 = 2.0 * (1.0 / (8.0 * M_PI * M_PI)) * (1.0 / (2.0 + cos_2_pi_x0_eps));
-    const double coefficient_1 = (1.0 / (8.0 * M_PI * M_PI)) * (1.0 + (0.5 * cos_2_pi_x0_eps));
-    const double sin_2_pi_x0 = sin(2.0 * M_PI * xx[0]);
-    const double cos_2_pi_x0 = cos(2.0 * M_PI * xx[0]);
-    const double sin_2_pi_x1 = sin(2.0 * M_PI * xx[1]);
-
-    const double d_x0_coefficient_0 =
-        pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (2.0 * M_PI)) * (1.0 / eps) * sin_2_pi_x0_eps;
-
-    const RangeType grad_u =
-        (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) + ((-1.0) * eps * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
-        (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
-
-    const RangeType d_x0_x0_u =
-        -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-        (2.0 * pi_square * (eps + (1.0 / eps)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
-        (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
-
-    const RangeType d_x1_x1_u =
-        -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-        (2.0 * pi_square * eps * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
-
-    ret = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
-  } // ... evaluate(...)
-}; // ... ProblemNineForce(...)
-
-
 //! the main FEM computation
 void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid_pointer, const std::string /*filename*/) {
 
@@ -142,10 +59,7 @@ void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid
   typedef CommonTraits::GridViewType GridViewType;
   typedef typename GridViewType::Intersection IntersectionType;
 
-  // diffusion data (should be Problem::getDiffusion())
-  typedef ProblemNineDiffusion< GridViewType > DiffusionType;
-  const DiffusionType diffusion;
-
+  const auto& diffusion = Problem::getDiffusion();
   const auto& force = Problem::getSource();
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
@@ -159,14 +73,14 @@ void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid
                << std::flush;
 
   // elliptic operator (type only, for the sparsity pattern)
-  typedef GDT::Operators::EllipticCG< DiffusionType, CommonTraits::GdtMatrixType, CommonTraits::GdtSpaceType > EllipticOperatorType;
+  typedef GDT::Operators::EllipticCG< CommonTraits::DiffusionType, CommonTraits::GdtMatrixType, CommonTraits::GdtSpaceType > EllipticOperatorType;
   // container
   CommonTraits::GdtMatrixType system_matrix(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
   CommonTraits::GdtVectorType dirichlet_shift_vector(space.mapper().size());
   CommonTraits::GdtVectorType solution_vector(space.mapper().size());
   // left hand side (elliptic operator)
-  EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
+  EllipticOperatorType elliptic_operator(*diffusion, system_matrix, space);
   // right hand side
   GDT::Functionals::L2Volume< CommonTraits::SourceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType > force_functional(*force, rhs_vector, space);
   GDT::Functionals::L2Face< CommonTraits::NeumannDataType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
