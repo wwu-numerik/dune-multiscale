@@ -192,117 +192,88 @@ public:
 }; // ... ProblemNineExactSolution(...)
 
 
-template< class GridType, Stuff::Grid::ChooseLayer grid_layer,
-          GDT::ChooseSpaceBackend space_backend,
-          Stuff::LA::ChooseBackend la_backend >
-class EllipticDuneGdtDiscretization
-{
-  // lets fix some types
-  typedef typename GridType::template Codim< 0 >::Entity EntityType;
-  typedef typename GridType::ctype  DomainFieldType;
-  static const unsigned int         dimDomain = GridType::dimension;
-  typedef double                    RangeFieldType;
-  static const unsigned int         dimRange = 1;
-
-  typedef GDT::Spaces::ContinuousLagrangeProvider< GridType, grid_layer,
-                                                   space_backend,
-                                                   1, RangeFieldType, dimRange > SpaceProvider;
-  typedef typename SpaceProvider::Type SpaceType;
-  typedef typename SpaceType::GridViewType GridViewType;
-
-  typedef typename Stuff::LA::Container< RangeFieldType, la_backend >::VectorType VectorType;
-  typedef typename Stuff::LA::Container< RangeFieldType, la_backend >::MatrixType MatrixType;
-
-}; // class EllipticDuneGdtDiscretization
-
-
 //! the main FEM computation
 void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid_pointer, const std::string /*filename*/) {
-  typedef EllipticDuneGdtDiscretization< CommonTraits::GridType,
-      Stuff::Grid::ChooseLayer::leaf,
-      GDT::ChooseSpaceBackend::fem,
-      Stuff::LA::ChooseBackend::istl_sparse > DiscretizationType;
-//  DiscretizationType::discretize(macro_grid_pointer);
 
   typedef CommonTraits::GridViewType GridViewType;
   typedef typename GridViewType::Intersection IntersectionType;
-      typedef DSG::BoundaryInfos::AllDirichlet< IntersectionType > BoundaryInfoType;
-      const BoundaryInfoType boundary_info;
-      Dune::Timer timer;
-      // analytical data (should be problem nine)
-      typedef ProblemNineDiffusion< GridViewType > DiffusionType;
-      const DiffusionType diffusion;
-      typedef ProblemNineForce< GridViewType > ForceType;
-      const ForceType force;
+//  typedef DSG::BoundaryInfos::AllDirichlet< IntersectionType > BoundaryInfoType;
+  const auto& boundary_info = Problem::getModelData()->boundaryInfo();
+  Dune::Timer timer;
+  // analytical data (should be problem nine)
+  typedef ProblemNineDiffusion< GridViewType > DiffusionType;
+  const DiffusionType diffusion;
+  typedef ProblemNineForce< GridViewType > ForceType;
+  const ForceType force;
 
-      const CommonTraits::GdtConstantFunctionType neumann(1.0);
-      const CommonTraits::GdtConstantFunctionType dirichlet(0.0);
-      typedef ProblemNineExactSolution< GridViewType > ExactSolutionType;
-      const ExactSolutionType exact_solution;
-      Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(macro_grid_pointer);
-      const auto grid_level = 0;
-      const CommonTraits::GdtSpaceType space = CommonTraits::GdtSpaceProviderType::create(grid_provider, grid_level);
-      const auto grid_view = space.grid_view();
-      DSC_LOG_INFO << "assembling system (on a grid with " << grid_view->size(0) << " entities)... "
-                   << std::flush;
-      typedef GDT::DiscreteFunction< CommonTraits::GdtSpaceType, CommonTraits::GdtVectorType >      DiscreteFunctionType;
-      typedef GDT::ConstDiscreteFunction< CommonTraits::GdtSpaceType, CommonTraits::GdtVectorType > ConstDiscreteFunctionType;
-      // elliptic operator (type only, for the sparsity pattern)
-      typedef GDT::Operators::EllipticCG< DiffusionType, CommonTraits::GdtMatrixType, CommonTraits::GdtSpaceType > EllipticOperatorType;
-      // container
-      CommonTraits::GdtMatrixType system_matrix(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
-      CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
-      CommonTraits::GdtVectorType dirichlet_shift_vector(space.mapper().size());
-      CommonTraits::GdtVectorType solution_vector(space.mapper().size());
-      // left hand side (elliptic operator)
-      EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
-      // right hand side
-      GDT::Functionals::L2Volume< ForceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType > force_functional(force, rhs_vector, space);
-      GDT::Functionals::L2Face< CommonTraits::GdtConstantFunctionType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
-          neumann_functional(neumann, rhs_vector, space);
-      // dirichlet boundary values
-      DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector);
-      GDT::Operators::DirichletProjectionLocalizable< GridViewType, CommonTraits::GdtConstantFunctionType, DiscreteFunctionType >
-          dirichlet_projection_operator(*(space.grid_view()),
-                                        boundary_info,
-                                        dirichlet,
-                                        dirichlet_projection);
-      // now assemble everything in one grid walk
-      GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(space);
-      system_assembler.add(elliptic_operator);
-      system_assembler.add(force_functional);
-      system_assembler.add(neumann_functional, new GDT::ApplyOn::NeumannIntersections< GridViewType >(boundary_info));
-      system_assembler.add(dirichlet_projection_operator,
-                           new GDT::ApplyOn::BoundaryEntities< GridViewType >());
-      system_assembler.assemble();
-      DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-      timer.reset();
-      // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
-      DSC_LOG_INFO << "applying dirichlet constraints... " << std::flush;
-      auto tmp = rhs_vector.copy();
-      system_matrix.mv(dirichlet_shift_vector, tmp);
-      rhs_vector -= tmp;
-      // apply the dirichlet zero constraints to restrict the system to H^1_0
-      GDT::Constraints::Dirichlet < typename GridViewType::Intersection, CommonTraits::RangeFieldType >
-        dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
-      system_assembler.add(dirichlet_constraints, system_matrix, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
-      system_assembler.add(dirichlet_constraints, rhs_vector, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
-      system_assembler.assemble();
-      DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-      timer.reset();
-      // solve the system
-      const Stuff::LA::Solver< CommonTraits::GdtMatrixType > linear_solver(system_matrix);
-      const auto linear_solver_type = linear_solver.options()[0];
-      auto linear_solver_options = linear_solver.options(linear_solver_type);
-      linear_solver_options.set("max_iter",                 "5000", true);
-      linear_solver_options.set("precision",                "1e-8", true);
-      linear_solver_options.set("post_check_solves_system", "0",    true);
-      DSC_LOG_INFO << "solving the linear system using '" << linear_solver_type << "'... " << std::flush;
-      linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
-      // add the dirichlet shift to obtain the solution in H^1
-      solution_vector += dirichlet_shift_vector;
-      DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
-      timer.reset();
+  const CommonTraits::GdtConstantFunctionType neumann(1.0);
+  const CommonTraits::GdtConstantFunctionType dirichlet(0.0);
+  typedef ProblemNineExactSolution< GridViewType > ExactSolutionType;
+
+  Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(macro_grid_pointer);
+  const auto grid_level = 0;
+  const CommonTraits::GdtSpaceType space = CommonTraits::GdtSpaceProviderType::create(grid_provider, grid_level);
+  const auto grid_view = space.grid_view();
+  DSC_LOG_INFO << "assembling system (on a grid with " << grid_view->size(0) << " entities)... "
+               << std::flush;
+  typedef GDT::DiscreteFunction< CommonTraits::GdtSpaceType, CommonTraits::GdtVectorType >      DiscreteFunctionType;
+  typedef GDT::ConstDiscreteFunction< CommonTraits::GdtSpaceType, CommonTraits::GdtVectorType > ConstDiscreteFunctionType;
+  // elliptic operator (type only, for the sparsity pattern)
+  typedef GDT::Operators::EllipticCG< DiffusionType, CommonTraits::GdtMatrixType, CommonTraits::GdtSpaceType > EllipticOperatorType;
+  // container
+  CommonTraits::GdtMatrixType system_matrix(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
+  CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
+  CommonTraits::GdtVectorType dirichlet_shift_vector(space.mapper().size());
+  CommonTraits::GdtVectorType solution_vector(space.mapper().size());
+  // left hand side (elliptic operator)
+  EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
+  // right hand side
+  GDT::Functionals::L2Volume< ForceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType > force_functional(force, rhs_vector, space);
+  GDT::Functionals::L2Face< CommonTraits::GdtConstantFunctionType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
+      neumann_functional(neumann, rhs_vector, space);
+  // dirichlet boundary values
+  DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector);
+  GDT::Operators::DirichletProjectionLocalizable< GridViewType, CommonTraits::GdtConstantFunctionType, DiscreteFunctionType >
+      dirichlet_projection_operator(*(space.grid_view()),
+                                    boundary_info,
+                                    dirichlet,
+                                    dirichlet_projection);
+  // now assemble everything in one grid walk
+  GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(space);
+  system_assembler.add(elliptic_operator);
+  system_assembler.add(force_functional);
+  system_assembler.add(neumann_functional, new GDT::ApplyOn::NeumannIntersections< GridViewType >(boundary_info));
+  system_assembler.add(dirichlet_projection_operator,
+                       new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler.assemble();
+  DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+  timer.reset();
+  // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
+  DSC_LOG_INFO << "applying dirichlet constraints... " << std::flush;
+  auto tmp = rhs_vector.copy();
+  system_matrix.mv(dirichlet_shift_vector, tmp);
+  rhs_vector -= tmp;
+  // apply the dirichlet zero constraints to restrict the system to H^1_0
+  GDT::Constraints::Dirichlet < typename GridViewType::Intersection, CommonTraits::RangeFieldType >
+      dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
+  system_assembler.add(dirichlet_constraints, system_matrix, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler.add(dirichlet_constraints, rhs_vector, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler.assemble();
+  DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+  timer.reset();
+  // solve the system
+  const Stuff::LA::Solver< CommonTraits::GdtMatrixType > linear_solver(system_matrix);
+  const auto linear_solver_type = linear_solver.options()[0];
+  auto linear_solver_options = linear_solver.options(linear_solver_type);
+  linear_solver_options.set("max_iter",                 "5000", true);
+  linear_solver_options.set("precision",                "1e-8", true);
+  linear_solver_options.set("post_check_solves_system", "0",    true);
+  DSC_LOG_INFO << "solving the linear system using '" << linear_solver_type << "'... " << std::flush;
+  linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
+  // add the dirichlet shift to obtain the solution in H^1
+  solution_vector += dirichlet_shift_vector;
+  DSC_LOG_INFO << "done (took " << timer.elapsed() << "s)" << std::endl;
+  timer.reset();
 } // ... algorithm(...)
 
 } // namespace FEM {

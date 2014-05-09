@@ -166,7 +166,7 @@ public:
 **/
 class IModelProblemData {
 protected:
-  typedef CommonTraits::GridType::LeafGridView View;
+  typedef CommonTraits::GridViewType View;
   typedef DSG::BoundaryInfoInterface<typename View::Intersection> BoundaryInfoType;
   typedef MsFEM::MsFEMTraits::LocalGridType::LeafGridView SubView;
   typedef DSG::BoundaryInfoInterface<typename SubView::Intersection> SubBoundaryInfoType;
