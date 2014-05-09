@@ -35,8 +35,7 @@
 #include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/functions/global.hh>
 
-#include <dune/gdt/spaces/continuouslagrange/fem.hh>
-#include <dune/gdt/spaces/continuouslagrange/pdelab.hh>
+#include <dune/gdt/spaces/continuouslagrange.hh>
 #include <dune/gdt/operators/elliptic.hh>
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/gdt/spaces/constraints.hh>
@@ -192,67 +191,11 @@ public:
 }; // ... ProblemNineExactSolution(...)
 
 
-template< class GridType, GDT::ChooseSpaceBackend space_backend, Stuff::LA::ChooseBackend la_backend >
+template< class GridType, Stuff::Grid::ChooseLayer grid_layer,
+          GDT::ChooseSpaceBackend space_backend,
+          Stuff::LA::ChooseBackend la_backend >
 class EllipticDuneGdtDiscretization
 {
-  // this stuff should be in dune-gdt, but its not yet
-  template< class G, class R, int r, int p, GDT::ChooseSpaceBackend b >
-  class SpaceChooser
-  {
-    static_assert(AlwaysFalse< G >::value, "No space available for this backend!");
-  };
-
-  template< class G, class R, int r, int p >
-  class SpaceChooser< G, R, r, p, GDT::ChooseSpaceBackend::fem >
-  {
-    typedef typename Stuff::Grid::LeafPartView< G, Stuff::Grid::ChoosePartView::part >::Type GridPartViewType;
-  public:
-    typedef GDT::Spaces::ContinuousLagrange::FemBased< GridPartViewType, p, R, r > Type;
-  };
-
-  template< class G, class R, int r, int p >
-  class SpaceChooser< G, R, r, p, GDT::ChooseSpaceBackend::pdelab >
-  {
-    typedef typename Stuff::Grid::LeafPartView< G, Stuff::Grid::ChoosePartView::view >::Type GridPartViewType;
-  public:
-    typedef GDT::Spaces::ContinuousLagrange::PdelabBased< GridPartViewType, p, R, r > Type;
-  };
-
-  // this stuff should be in dune-stuff/dune-gdt, but its not yet
-  template< class R, Stuff::LA::ChooseBackend b >
-  struct ContainerChooser
-  {
-    static_assert(AlwaysFalse< R >::value, "No container available for this backend!");
-  };
-
-  template< class R >
-  struct ContainerChooser< R, Stuff::LA::ChooseBackend::common_dense >
-  {
-    typedef Stuff::LA::CommonDenseMatrix< R > MatrixType;
-    typedef Stuff::LA::CommonDenseVector< R > VectorType;
-  };
-
-  template< class R >
-  struct ContainerChooser< R, Stuff::LA::ChooseBackend::istl_sparse >
-  {
-    typedef Stuff::LA::IstlRowMajorSparseMatrix< R > MatrixType;
-    typedef Stuff::LA::IstlDenseVector< R > VectorType;
-  };
-
-  template< class R >
-  struct ContainerChooser< R, Stuff::LA::ChooseBackend::eigen_dense >
-  {
-    typedef Stuff::LA::EigenDenseMatrix< R > MatrixType;
-    typedef Stuff::LA::EigenDenseVector< R > VectorType;
-  };
-
-  template< class R >
-  struct ContainerChooser< R, Stuff::LA::ChooseBackend::eigen_sparse >
-  {
-    typedef Stuff::LA::EigenRowMajorSparseMatrix< R > MatrixType;
-    typedef Stuff::LA::EigenDenseVector< R > VectorType;
-  };
-
   // lets fix some types
   typedef typename GridType::template Codim< 0 >::Entity EntityType;
   typedef typename GridType::ctype  DomainFieldType;
@@ -260,14 +203,16 @@ class EllipticDuneGdtDiscretization
   typedef double                    RangeFieldType;
   static const unsigned int         dimRange = 1;
 
-  typedef typename SpaceChooser< GridType, RangeFieldType, dimRange, 1, space_backend >::Type SpaceType;
+  typedef typename GDT::Spaces::ContinuousLagrangeSpace< GridType, grid_layer,
+                                                         space_backend,
+                                                         1, RangeFieldType, dimRange >::Type SpaceType;
   typedef typename SpaceType::GridViewType GridViewType;
 
-  typedef typename ContainerChooser< RangeFieldType, la_backend >::VectorType VectorType;
-  typedef typename ContainerChooser< RangeFieldType, la_backend >::MatrixType MatrixType;
+  typedef typename Stuff::LA::Container< RangeFieldType, la_backend >::VectorType VectorType;
+  typedef typename Stuff::LA::Container< RangeFieldType, la_backend >::MatrixType MatrixType;
 
 public:
-  static void discretize(std::shared_ptr< GridType >& grid_ptr)
+  static void discretize(const std::shared_ptr< const GridType >& grid_ptr, const int grid_level = 0)
   {
     typedef typename GridViewType::Intersection IntersectionType;
     typedef DSG::BoundaryInfos::AllDirichlet< IntersectionType > BoundaryInfoType;
@@ -284,8 +229,8 @@ public:
     const ConstantFunctionType dirichlet(0.0);
     typedef ProblemNineExactSolution< GridViewType > ExactSolutionType;
     const ExactSolutionType exact_solution;
-    Stuff::Grid::Providers::Default< GridType > grid_provider(grid_ptr);
-    const SpaceType space(grid_provider.template leaf< SpaceType::part_view_type >());
+    Stuff::Grid::Providers::ConstDefault< GridType > grid_provider(grid_ptr);
+    const SpaceType space(grid_provider.template layer< grid_layer, SpaceType::part_view_type >(grid_level));
     const auto grid_view = space.grid_view();
     DSC_LOG_INFO << "assembling system (on a grid with " << grid_view->size(0) << " entities)... "
                  << std::flush;
@@ -381,15 +326,14 @@ public:
                  << std::sqrt(h1_semi_error_product.apply2()) << " / "
                  << std::sqrt(h1_semi_error_product.apply2()) / std::sqrt(h1_semi_reference_product.apply2())
                  << std::endl;
-  }
-
-
+  } // ... discretize(...)
 }; // class EllipticDuneGdtDiscretization
 
 
 //! the main FEM computation
-void algorithm(std::shared_ptr< CommonTraits::GridType >& macro_grid_pointer, const std::string /*filename*/) {
+void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid_pointer, const std::string /*filename*/) {
   typedef EllipticDuneGdtDiscretization< CommonTraits::GridType,
+      Stuff::Grid::ChooseLayer::leaf,
       GDT::ChooseSpaceBackend::fem,
       Stuff::LA::ChooseBackend::istl_sparse > DiscretizationType;
   DiscretizationType::discretize(macro_grid_pointer);

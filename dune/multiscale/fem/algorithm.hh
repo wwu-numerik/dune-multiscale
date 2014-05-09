@@ -5,7 +5,8 @@
 #ifndef DUNE_FEM_ALGORITHM_HH
 #define DUNE_FEM_ALGORITHM_HH
 
-#include <dune/stuff/la/container/interfaces.hh>
+#include <dune/stuff/grid/partview.hh>
+#include <dune/stuff/la/container.hh>
 
 #include <dune/gdt/spaces/interface.hh>
 
@@ -32,12 +33,13 @@ template< class GridViewType >
 class ProblemNineExactSolution;
 
 template< class GridType,
+          Stuff::Grid::ChooseLayer grid_layer = Stuff::Grid::ChooseLayer::leaf,
           GDT::ChooseSpaceBackend space_backend = GDT::ChooseSpaceBackend::pdelab,
           Stuff::LA::ChooseBackend la_backend = Stuff::LA::ChooseBackend::istl_sparse >
 class EllipticDuneGdtDiscretization;
 
 //! the main FEM computation
-void algorithm(std::shared_ptr<CommonTraits::GridType>& macro_grid_pointer, const std::string filename);
+void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid_pointer, const std::string filename);
 
 } // namespace FEM {
 } // namespace Multiscale {
