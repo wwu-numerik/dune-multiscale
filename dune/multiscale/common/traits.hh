@@ -135,6 +135,7 @@ struct CommonTraits {
                                                    GDT::ChooseSpaceBackend::fem,
                                                    st_lagrangespace_order, FieldType, dimRange > GdtSpaceProviderType;
 
+  static constexpr auto st_gdt_grid_level = 0;
   typedef GdtSpaceProviderType::Type GdtSpaceType;
   typedef GdtSpaceType::GridViewType GridViewType;
   typedef BackendChooser<DiscreteFunctionSpaceType>::GdtMatrixType GdtMatrixType;

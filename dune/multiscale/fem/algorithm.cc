@@ -51,9 +51,7 @@ void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid
   const auto& diffusion = Problem::getDiffusion();
 
   Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(macro_grid_pointer);
-  const auto grid_level = 0;
-  const CommonTraits::GdtSpaceType space = CommonTraits::GdtSpaceProviderType::create(grid_provider, grid_level);
-
+  const CommonTraits::GdtSpaceType space = CommonTraits::GdtSpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
   CommonTraits::GdtVectorType solution_vector(space.mapper().size());
   CommonTraits::GdtDiscreteFunctionType solution(space, solution_vector);
   Elliptic_FEM_Solver(space).apply(*diffusion, *source, solution);
