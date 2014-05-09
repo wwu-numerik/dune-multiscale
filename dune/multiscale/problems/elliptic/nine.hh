@@ -78,6 +78,7 @@ public:
 
   PURE HOT  void evaluate(const DomainType& x, RangeType& y) const;
   PURE HOT  void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
+  virtual size_t order() const;
 };
 
 class DirichletData : public DirichletDataBase {

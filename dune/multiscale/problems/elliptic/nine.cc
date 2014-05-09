@@ -157,7 +157,12 @@ PURE HOT  void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& g
   grad_u[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1) - (eps_pi_sin_2_pi_x0_eps * sin_2_pi_x0 * sin_2_pi_x1 ) +
                  (M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
-} // jacobian
+}
+
+size_t ExactSolution::order() const
+{
+  return 4;
+}
 
 PURE  void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
