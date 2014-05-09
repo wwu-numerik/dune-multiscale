@@ -22,7 +22,7 @@
 #include "error_calc.hh"
 
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType* const msfem_solution,
-                                                   const CommonTraits::GdtDiscreteFunctionType * const fem_solution)
+                                                   const CommonTraits::GdtConstDiscreteFunctionType * const fem_solution)
   : msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution) {}
 
@@ -76,7 +76,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     if (fem_solution_) {
       GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(fem_solution_->space());
 
-      typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::GdtDiscreteFunctionType > DifferenceType;
+      typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::GdtConstDiscreteFunctionType > DifferenceType;
       const DifferenceType difference(u, *fem_solution_);
         const size_t over_integrate = 0; // <- would let the product use a higher quadrature oder than needed
       const auto& grid_view = fem_solution_->space().grid_view();

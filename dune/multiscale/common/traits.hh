@@ -61,10 +61,12 @@ class IModelProblemData;
 
 //! Common Type, duh
 struct CommonTraits {
-  static constexpr int world_dim = 2;
+
   typedef Dune::GridSelector::GridType GridType;
   static constexpr int dimRange = 1;
   static constexpr int dimDomain = GridType::dimension;
+  static constexpr int world_dim = dimDomain
+                                     ;
 //  typedef Dune::SGrid<world_dim, world_dim> GridType;
 //  typedef Dune::YaspGrid<world_dim> GridType;
   typedef GridType::Codim<0>::Entity EntityType;
@@ -73,12 +75,9 @@ struct CommonTraits {
   typedef double FieldType;
   typedef Dune::Fem::FunctionSpace<FieldType, FieldType, dimDomain, dimRange> FunctionSpaceType;
 
-  typedef Dune::Stuff::GlobalFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
-                                      FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange> FunctionBaseType;
+  typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
 
-  typedef Dune::Stuff::GlobalConstantFunction<EntityType, FunctionSpaceType::DomainFieldType,
-                                              FunctionSpaceType::dimDomain, FunctionSpaceType::RangeFieldType,
-                                              FunctionSpaceType::dimRange> ConstantFunctionBaseType;
+  typedef Stuff::Functions::Constant< EntityType, FieldType, dimDomain, FieldType, dimRange > ConstantFunctionBaseType;
 
   typedef Problem::IModelProblemData ModelProblemDataType;
   //! type of first source term (right hand side of differential equation or type of 'f')
@@ -117,8 +116,8 @@ struct CommonTraits {
   typedef GridType::Codim<1>::Geometry FaceGeometryType;
   //!TODO carry the rename over to the type def'ed name
   typedef DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
-  typedef DiscreteFunctionSpaceType::DomainFieldType DomainFieldType;
+  typedef FieldType RangeFieldType;
+  typedef FieldType DomainFieldType;
 
   typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
@@ -134,9 +133,7 @@ struct CommonTraits {
 
   typedef GDT::Spaces::ContinuousLagrangeProvider< GridType, DSG::ChooseLayer::leaf,
                                                    GDT::ChooseSpaceBackend::fem,
-                                                   st_lagrangespace_order, RangeFieldType, dimRange > GdtSpaceProviderType;
-
-
+                                                   st_lagrangespace_order, FieldType, dimRange > GdtSpaceProviderType;
 
   typedef GdtSpaceProviderType::Type GdtSpaceType;
   typedef GdtSpaceType::GridViewType GridViewType;
@@ -144,8 +141,7 @@ struct CommonTraits {
   typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorType GdtVectorType;
   typedef GDT::DiscreteFunction< GdtSpaceType, GdtVectorType >      GdtDiscreteFunctionType;
   typedef GDT::ConstDiscreteFunction< GdtSpaceType, GdtVectorType > GdtConstDiscreteFunctionType;
-  typedef Stuff::Functions::Constant< EntityType, DomainFieldType, dimDomain, RangeFieldType, dimRange >
-      GdtConstantFunctionType;
+  typedef ConstantFunctionBaseType GdtConstantFunctionType;
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>
