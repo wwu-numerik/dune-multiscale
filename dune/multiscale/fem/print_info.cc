@@ -70,8 +70,7 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
 
 void write_discrete_function(CommonTraits::GdtDiscreteFunctionType &discrete_solution, const std::string prefix)
 {
-  DUNE_THROW(NotImplemented, "");
-//  typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
+  //  typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
 //  const auto& gfs = discrete_solution.gridFunctionSpace();
 //  VTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView());
 //  PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);

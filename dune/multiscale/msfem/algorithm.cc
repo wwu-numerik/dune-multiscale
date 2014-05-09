@@ -25,6 +25,8 @@
 #include <dune/stuff/grid/output/entity_visualization.hh>
 #include <dune/stuff/grid/information.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
+#include <dune/stuff/grid/provider.hh>
+#include <dune/gdt/discretefunction/default.hh>
 
 #include <cmath>
 #include <iterator>
@@ -126,13 +128,14 @@ void algorithm() {
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
   }
 
-  const auto& grid_view = fine_grid.leafGridView();
-  CommonTraits::FEMapType fe_map(grid_view);
-  CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
-  std::unique_ptr<CommonTraits::PdelabVectorType> fem_solution(nullptr);
+  Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(grids.second);
+  const CommonTraits::GdtSpaceType space = CommonTraits::GdtSpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
+  std::unique_ptr<CommonTraits::GdtVectorType> solution_vector(nullptr);
+  std::unique_ptr<CommonTraits::GdtDiscreteFunctionType> fem_solution(nullptr);
 
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    fem_solution = DSC::make_unique<CommonTraits::PdelabVectorType>(space, 0.0);
+    solution_vector = DSC::make_unique<CommonTraits::GdtVectorType>(space.mapper().size());
+    fem_solution = DSC::make_unique<CommonTraits::GdtDiscreteFunctionType>(space, *solution_vector);
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
     fem_solver.apply(diffusion_op, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
