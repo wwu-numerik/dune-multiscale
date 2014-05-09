@@ -66,7 +66,6 @@ set( COMMON_SOURCES
         dune/multiscale/common/grid_creation.cc
         dune/multiscale/common/righthandside_assembler.cc
         dune/multiscale/fem/print_info.cc
-        dune/multiscale/fem/elliptic_fem_matrix_assembler.cc
         dune/multiscale/common/dirichletconstraints.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )

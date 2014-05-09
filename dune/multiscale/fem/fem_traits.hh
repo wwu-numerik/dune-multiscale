@@ -9,7 +9,6 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/common/tuples.hh>
 
-#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 
 #include <dune/fem/space/common/adaptmanager.hh>

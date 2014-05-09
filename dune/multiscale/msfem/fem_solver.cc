@@ -5,7 +5,6 @@
 #include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/fem/fem_traits.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
