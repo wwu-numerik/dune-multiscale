@@ -26,7 +26,10 @@ typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
 typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
 typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
 
-struct DiffusionBase {
+struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
+
+  //! currently used in gdt assembler
+  virtual void evaluate(const DomainType& x, CommonTraits::DiffusionFunctionBaseType::RangeType& y) const = 0;
 
   virtual ~DiffusionBase() {}
 
@@ -34,15 +37,15 @@ struct DiffusionBase {
   //! A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
   //! (diffusive) flux = A^{\epsilon}( x , direction )
   //! (typically direction is some 'gradient_of_a_function')
-  virtual void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction,
-                             JacobianRangeType& flux) const = 0;
+  virtual void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                             Problem::JacobianRangeType& flux) const = 0;
 
   //! the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
   //! "nabla w", i.e.
   //! jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
   //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  virtual void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
-                                     const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
+  virtual void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
+                                     const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
 };
 
 struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {

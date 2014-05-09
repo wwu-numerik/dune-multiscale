@@ -111,7 +111,12 @@ Diffusion::~Diffusion() {
   permeability_ = nullptr;
 }
 
-void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const {
+void Diffusion::evaluate(const DomainType &x, Diffusion::RangeType &y) const
+{
+  DUNE_THROW(NotImplemented, "");
+}
+
+void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
   BOOST_ASSERT_MSG(x.size() <= 3, "Tarbert model is only defined for up to three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
 
@@ -141,9 +146,9 @@ void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& dire
 //  flux[0]=direction[0];
 } // diffusiveFlux
 
-void Diffusion::jacobianDiffusiveFlux(const DomainType& /*x*/, const JacobianRangeType& /*position_gradient*/,
-                                      const JacobianRangeType& /*direction_gradient*/,
-                                      JacobianRangeType& /*flux*/) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType& /*x*/, const Problem::JacobianRangeType& /*position_gradient*/,
+                                      const Problem::JacobianRangeType& /*direction_gradient*/,
+                                      Problem::JacobianRangeType& /*flux*/) const {
   DUNE_THROW(NotImplemented, "Jacobian of Flux is not implemented at the moment!");
 } // jacobianDiffusiveFlux
 

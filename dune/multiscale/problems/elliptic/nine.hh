@@ -67,9 +67,13 @@ class Diffusion : public DiffusionBase {
 public:
   Diffusion();
 
-  PURE HOT  void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const;
-  PURE  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
+  //! currently used in gdt assembler
+  virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const;
+  PURE HOT  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const;
+
+  //! HMM-only
+  PURE  void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
+                             const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
 };
 
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
