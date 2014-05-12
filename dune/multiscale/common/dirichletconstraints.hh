@@ -134,6 +134,12 @@ getConstraintsCoarse(const CommonTraits::DiscreteFunctionSpaceType& space);
 DirichletConstraints<CommonTraits::DiscreteFunctionType>&
 getConstraintsFine(const CommonTraits::DiscreteFunctionSpaceType& space);
 
+template <class DataType, class GridPartType>
+Dune::Fem::GridFunctionAdapter<DataType, GridPartType> gridFunctionAdapter(const DataType& data, const GridPartType& grid_part)
+{
+  return Dune::Fem::GridFunctionAdapter<DataType, GridPartType> ("", data, grid_part);
+}
+
 /** Copy the dirichlet values to a given discrete function on the fine mesh.
  *
  *  This method projects the dirichlet values to a function on the coarse mesh.
@@ -157,7 +163,7 @@ void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSp
     const auto& dirichletDataPtr = Problem::getDirichletData();
     const auto& dirichletData = *dirichletDataPtr;
 
-    const auto gf = DS::gridFunctionAdapter(dirichletData, coarseSpace.gridPart());
+    const auto gf = gridFunctionAdapter(dirichletData, coarseSpace.gridPart());
     dirichletExtensionCoarse.clear();
     getConstraintsCoarse(coarseSpace)(gf, dirichletExtensionCoarse);
   }

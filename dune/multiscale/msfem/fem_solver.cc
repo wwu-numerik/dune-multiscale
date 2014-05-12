@@ -45,7 +45,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   const auto& neumann = Problem::getNeumannData();
   const auto& dirichlet = Problem::getDirichletData();
 
-  const auto& space = solution.space();
+  const auto& space = space_;
   // elliptic operator (type only, for the sparsity pattern)
   typedef GDT::Operators::EllipticCG< CommonTraits::DiffusionType, CommonTraits::GdtMatrixType, CommonTraits::GdtSpaceType > EllipticOperatorType;
   // container
