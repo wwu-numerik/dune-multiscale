@@ -132,7 +132,11 @@ class DiscreteFunctionIO : public boost::noncopyable {
       return it->second;
     std::lock_guard<std::mutex> lock(mutex_);
     auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
+#if HAVE_EMPLACE
     auto ret = map.emplace(filename, std::move(ptr));
+#else 
+    auto ret = map.insert(std::make_pair(filename, std::move(ptr)));
+#endif
     assert(ret.second);
     return ret.first->second;
   }
