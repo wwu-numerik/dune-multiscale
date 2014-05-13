@@ -19,9 +19,9 @@ class LocalGridList;
  **/
 class RightHandSideAssembler {
 private:
-  typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
-  typedef typename DiscreteFunctionSpaceType::RangeType RangeType;
-  typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename CommonTraits::RangeType RangeType;
+  typedef typename CommonTraits::JacobianRangeType JacobianRangeType;
 
 public:
   /** assemble right hand side (if there is only one source - f):

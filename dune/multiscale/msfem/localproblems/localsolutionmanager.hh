@@ -24,7 +24,7 @@ namespace MsFEM {
 class LocalSolutionManager {
 private:
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-  typedef MsFEMTraits::LocalGridPartType LocalGridPartType;
+  typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
 
@@ -35,7 +35,7 @@ public:
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
   const LocalGridDiscreteFunctionSpaceType& space() const;
-  const LocalGridPartType& grid_part() const;
+  const LocalGridViewType& grid_view() const;
 
   void load();
   void save() const;

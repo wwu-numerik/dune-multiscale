@@ -32,16 +32,16 @@ namespace MsFEM {
 //! container for cell problem subgrids
 class LocalGridList : public boost::noncopyable {
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
-  typedef typename LocalGridDiscreteFunctionType::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::GridType LocalGridType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType LocalGridPartType;
+  typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef typename MsFEMTraits::LocalGridType LocalGridType;
+
   typedef typename CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSet;
   typedef typename LeafIndexSet::IndexType IndexType;
 
   typedef typename MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef typename CoarseEntityType::EntitySeed CoarseEntitySeedType;
   typedef typename LeafIndexSet::IndexType CoarseEntityIndexType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::FunctionSpaceType::DomainType DomainType;
+  typedef typename CommonTraits::DomainType DomainType;
 
 public:
   typedef std::vector<DomainType> CoarseNodeVectorType;
@@ -63,7 +63,6 @@ public:
 
   std::size_t size() const;
 
-  LocalGridPartType gridPart(IndexType i);
   //! returns true iff all corners of local_entity are inside coarse_entity
   bool covers_strict(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity);
   template <class PointIterator>

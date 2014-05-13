@@ -39,7 +39,7 @@ class DiscreteCellProblemOperator : public Operator<typename HMMTraits::Periodic
 
   static const int dimension = GridPart::GridType::dimension;
 
-  typedef typename DiscreteFunctionSpace::BasisFunctionSetType BaseFunctionSet;
+  typedef typename DiscreteFunctionSpace::BaseFunctionSetType BaseFunctionSet;
   typedef typename DiscreteFunctionSpace::EntityType Entity;
 
 public:

@@ -6,6 +6,7 @@
 #include <dune/stuff/grid/information.hh>
 #include <dune/stuff/common/parameter/tree.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/common/parallel/mpihelper.hh>
 
 // Helper struct to make overlap for SPGrid possible
 // Declared in unnamed namespace to avoid naming conflicts
@@ -55,7 +56,6 @@ Dune::Multiscale::make_grids() {
   const int dim_world = CommonTraits::GridType::dimensionworld;
   typedef FieldVector<typename CommonTraits::GridType::ctype, dim_world> CoordType;
 
-  const auto& foo = Problem::getDiffusion();
   const auto& gridCorners = Problem::getModelData()->gridCorners();
   CoordType lowerLeft = gridCorners.first;
   CoordType upperRight = gridCorners.second;
@@ -81,7 +81,7 @@ Dune::Multiscale::make_grids() {
 
   // check whether grids match (may not match after load balancing if different refinements in different
   // spatial directions are used)
-  if (Dune::Fem::MPIManager::size()>1) {
+  if (Dune::MPIHelper::size()>1) {
     const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(*coarse_gridptr);
     const auto fine_dimensions = DSG::dimensions<CommonTraits::GridType>(*fine_gridptr);
     const auto eps = coarse_dimensions.entity_width.min();

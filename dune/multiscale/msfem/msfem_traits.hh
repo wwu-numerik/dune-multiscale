@@ -10,7 +10,6 @@
 
 #include <dune/grid/spgrid.hh>
 #include <dune/grid/sgrid.hh>
-#include <dune/fem/space/lagrange.hh>
 #include <vector>
 
 namespace Dune {
@@ -19,22 +18,20 @@ namespace MsFEM {
 
 //! type construction for the MSFEM code
 struct MsFEMTraits {
-  typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
   typedef Dune::SPGrid<double, CommonTraits::GridType::dimension, SPIsotropicRefinement, No_Comm> LocalGridType;
   // change dirichletconstraints.cc bottom accordingly
   // typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
 
-  typedef Fem::AdaptiveLeafGridPart<LocalGridType> LocalGridPartType;
-  typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, LocalGridPartType, st_lagrangespace_order>
-  LocalGridDiscreteFunctionSpaceType;
+  typedef CommonTraits::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef LocalGridType::LeafGridView LocalGridViewType;
 
-  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType::Entity LocalEntityType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
 
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType
   LocalGridDiscreteFunctionType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
-  typedef typename CommonTraits::DiscreteFunctionSpaceType::BasisFunctionSetType CoarseBaseFunctionSetType;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;
 
   typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 };

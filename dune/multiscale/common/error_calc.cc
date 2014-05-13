@@ -1,8 +1,6 @@
 #include <config.h>
 #include <assert.h>
 #include <boost/filesystem/fstream.hpp>
-#include <dune/fem/function/common/gridfunctionadapter.hh>
-#include <dune/fem/operator/lagrangeinterpolation.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/functions/time.hh>
@@ -23,7 +21,7 @@
 #include "error_calc.hh"
 
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType* const msfem_solution,
-                                                   const CommonTraits::GdtConstDiscreteFunctionType * const fem_solution)
+                                                   const CommonTraits::ConstDiscreteFunctionType * const fem_solution)
   : msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution) {}
 
@@ -33,8 +31,9 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
 
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature oder than needed
   typedef DS::Functions::FemAdapter<CommonTraits::DiscreteFunctionType> FemAdapter;
-  typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::GdtConstDiscreteFunctionType > DifferenceType;
+  typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType > DifferenceType;
   /// TODO this should actually select the space from either non-null solution, once msfem is gdt too
+  /// also only call assemble once
   GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(fem_solution_->space());
   const auto& grid_view = fem_solution_->space().grid_view();
 
@@ -44,13 +43,13 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   if (Problem::getModelData()->hasExactSolution()) {
     const auto& u = *Dune::Multiscale::Problem::getExactSolution();
 
-    typedef Dune::Fem::LagrangeDiscreteFunctionSpace<CommonTraits::FunctionSpaceType,
-        CommonTraits::GridPartType, CommonTraits::exact_solution_space_order>
-    ExactSpaceType;
-    typedef BackendChooser<ExactSpaceType>::DiscreteFunctionType ExactDiscreteFunctionType;
 
     #if 0 // "quality assurance" for discrete exact solution
     {
+      typedef Dune::Fem::LagrangeDiscreteFunctionSpace<CommonTraits::FunctionSpaceType,
+          CommonTraits::GridPartType, CommonTraits::exact_solution_space_order>
+      ExactSpaceType;
+      typedef BackendChooser<ExactSpaceType>::DiscreteFunctionType ExactDiscreteFunctionType;
       const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;
       const Dune::Fem::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType> u_disc_adapter(
           "", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
@@ -109,7 +108,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   if (msfem_solution_ && fem_solution_) {
 
     FemAdapter fem_adapter(*msfem_solution_);
-    typedef Stuff::Functions::Difference< FemAdapter, CommonTraits::GdtConstDiscreteFunctionType > DiscreteDifferenceType;
+    typedef Stuff::Functions::Difference< FemAdapter, CommonTraits::ConstDiscreteFunctionType > DiscreteDifferenceType;
     const DiscreteDifferenceType difference(fem_adapter, *fem_solution_);
 
     GDT::Products::L2Localizable< CommonTraits::GridViewType, DiscreteDifferenceType >

@@ -53,7 +53,7 @@ void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid
   Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(macro_grid_pointer);
   const CommonTraits::GdtSpaceType space = CommonTraits::GdtSpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
   CommonTraits::GdtVectorType solution_vector(space.mapper().size());
-  CommonTraits::GdtDiscreteFunctionType solution(space, solution_vector);
+  CommonTraits::DiscreteFunctionType solution(space, solution_vector);
   Elliptic_FEM_Solver(space).apply(*diffusion, *source, solution);
 
   ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO);

@@ -43,8 +43,8 @@ namespace MsFEM {
 class LocalProblemSolver {
 
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
   typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
 
 public:

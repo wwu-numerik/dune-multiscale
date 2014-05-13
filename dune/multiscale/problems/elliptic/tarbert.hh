@@ -64,7 +64,7 @@ private:
   void readPermeability();
 
   std::vector<double> deltas_;
-  double* permeability_; //! TODO automatic memory
+  double* permeability_; //! \todo automatic memory
   mutable DomainType permIntervalls_;
   mutable Dune::FieldMatrix<double, DomainType::dimension, DomainType::dimension> permMatrix_;
 };
