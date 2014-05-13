@@ -30,7 +30,13 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteF
 void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   assert(msfem_solution_ || fem_solution_);
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
+
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature oder than needed
+  typedef DS::Functions::FemAdapter<CommonTraits::DiscreteFunctionType> FemAdapter;
+  typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::GdtConstDiscreteFunctionType > DifferenceType;
+  /// TODO this should actually select the space from either non-null solution, once msfem is gdt too
+  GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(fem_solution_->space());
+  const auto& grid_view = fem_solution_->space().grid_view();
 
   std::map<std::string, double> csv;
 
@@ -48,9 +54,9 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
       const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;
       const Dune::Fem::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType> u_disc_adapter(
           "", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
+
       const auto ana_error = DS::l2distance(u_disc_adapter, u_disc);
       out << "|| u_exact_ana - u_exact ||_L2 =  " << ana_error << std::endl;
-
       const auto h1_ana_error = DS::h1distance(u_disc_adapter, u_disc);
       out << "|| u_exact_ana - u_exact ||_H2 =  " << h1_ana_error << "\n\n";
 
@@ -60,35 +66,39 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     #endif
 
     if (msfem_solution_) {
-      auto gridPart = msfem_solution_->gridPart();
-      ExactSpaceType u_disc_space(gridPart);
-      ExactDiscreteFunctionType u_disc("", u_disc_space);
-      Fem::LagrangeInterpolation<CommonTraits::ExactSolutionType, ExactDiscreteFunctionType>::apply(u, u_disc);
+      typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, FemAdapter > FemDifferenceType;
+      FemAdapter fem_adapter(*msfem_solution_);
+      const FemDifferenceType difference(u, fem_adapter);
+      GDT::Products::L2Localizable< CommonTraits::GridViewType, FemDifferenceType >
+          l2_error_product(*grid_view, difference, over_integrate);
+      system_assembler.add(l2_error_product);
+      GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, FemDifferenceType >
+          h1_semi_error_product(*grid_view, difference, over_integrate);
+      system_assembler.add(h1_semi_error_product);
+      system_assembler.assemble();
 
-      const auto msfem_error = DS::l2distance(u_disc, *msfem_solution_);
+      const auto msfem_error = std::sqrt(l2_error_product.apply2());
       out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
-
-      const auto h1_msfem_error = DS::h1distance(u_disc, *msfem_solution_);
-      out << "|| u_msfem - u_exact ||_H1 =  " << h1_msfem_error << std::endl << std::endl;
+      const auto h1_msfem_error = std::sqrt(h1_semi_error_product.apply2());
+      out << "|| u_msfem - u_exact ||_H1s =  " << h1_msfem_error << std::endl << std::endl;
 
       csv["msfem_exact_L2"] = msfem_error;
-      csv["msfem_exact_H1"] = h1_msfem_error;
+      csv["msfem_exact_H1s"] = h1_msfem_error;
     }
 
     if (fem_solution_) {
-      GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(fem_solution_->space());
-      typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::GdtConstDiscreteFunctionType > DifferenceType;
       const DifferenceType difference(u, *fem_solution_);
-      const auto& grid_view = fem_solution_->space().grid_view();
+
       GDT::Products::L2Localizable< CommonTraits::GridViewType, DifferenceType >
           l2_error_product(*grid_view, difference, over_integrate);
+      system_assembler.add(l2_error_product);
       GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
           h1_semi_error_product(*grid_view, difference, over_integrate);
+      system_assembler.add(h1_semi_error_product);
       system_assembler.assemble();
 
       const auto fem_error = std::sqrt(l2_error_product.apply2());
       out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
-
       const auto h1_fem_error = std::sqrt(h1_semi_error_product.apply2());
       out << "|| u_fem - u_exact ||_H1s =  " << h1_fem_error << std::endl << std::endl;
 
@@ -97,19 +107,22 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     }
   }
   if (msfem_solution_ && fem_solution_) {
-    GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(fem_solution_->space());
-    typedef DS::Functions::FemAdapter<CommonTraits::DiscreteFunctionType> FemAdapter;
+
     FemAdapter fem_adapter(*msfem_solution_);
-    typedef Stuff::Functions::Difference< FemAdapter, CommonTraits::GdtConstDiscreteFunctionType > DifferenceType;
-    const DifferenceType difference(fem_adapter, *fem_solution_);
-    const auto& grid_view = fem_solution_->space().grid_view();
-    GDT::Products::L2Localizable< CommonTraits::GridViewType, DifferenceType >
+    typedef Stuff::Functions::Difference< FemAdapter, CommonTraits::GdtConstDiscreteFunctionType > DiscreteDifferenceType;
+    const DiscreteDifferenceType difference(fem_adapter, *fem_solution_);
+
+    GDT::Products::L2Localizable< CommonTraits::GridViewType, DiscreteDifferenceType >
         l2_error_product(*grid_view, difference, over_integrate);
+    system_assembler.add(l2_error_product);
     GDT::Products::L2Localizable< CommonTraits::GridViewType, FemAdapter >
         l2_msfem(*grid_view, fem_adapter, over_integrate);
-    GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
+    system_assembler.add(l2_msfem);
+    GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, DiscreteDifferenceType >
         h1_semi_error_product(*grid_view, difference, over_integrate);
+    system_assembler.add(h1_semi_error_product);
     system_assembler.assemble();
+
     const auto approx_msfem_error = std::sqrt(l2_error_product.apply2());
     const auto no = std::sqrt(l2_msfem.apply2());
     if (std::abs(no)>1e-12)
