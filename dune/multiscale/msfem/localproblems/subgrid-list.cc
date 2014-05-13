@@ -95,8 +95,6 @@ MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const CoarseEntityType& en
 // get number of sub grids
 std::size_t LocalGridList::size() const { return subGridList_.size(); }
 
-MsFEM::MsFEMTraits::LocalGridPartType LocalGridList::gridPart(IndexType i) { return LocalGridPartType(getSubGrid(i)); }
-
 bool LocalGridList::covers_strict(const CoarseEntityType& coarse_entity,
                                   const MsFEMTraits::LocalEntityType& local_entity) {
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);

@@ -12,12 +12,11 @@
 #include <dune/grid/spgrid/capabilities.hh>
 #endif
 
-#include <dune/fem/misc/mpimanager.hh>
-#include <dune/fem/misc/threads/threadmanager.hh>
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/common/threadmanager.hh>
 
 #include <dune/multiscale/common/traits.hh>
 
@@ -27,8 +26,8 @@ namespace Multiscale {
 //! setup code common to fem/msfem/hmm
 void init(int argc, char** argv) {
   namespace DSC = Dune::Stuff::Common;
-  Dune::Fem::MPIManager::initialize(argc, argv);
-  if (Dune::Fem::MPIManager::size() > 1 &&
+  auto& helper = Dune::MPIHelper::instance(argc, argv);
+  if (helper.size() > 1 &&
       !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v)) {
     DUNE_THROW(Dune::InvalidStateException, "mpi enabled + serial grid = bad idea");
   }
@@ -43,7 +42,7 @@ void init(int argc, char** argv) {
                        DSC_CONFIG_GETB("logging.dir", "log" /*path below datadir*/, useLogger));
   DSC_CONFIG.setRecordDefaults(true);
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
-  Dune::Fem::ThreadManager::setMaxNumberThreads(DSC_CONFIG_GET("threading.max_count", 1));
+  DS::ThreadManager::set_max_threads(DSC_CONFIG_GET("threading.max_count", 1));
 } // init
 
 } // namespace Dune {

@@ -25,7 +25,7 @@ class LocalProblemOperator {
   typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
   typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
   typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType EntityType;
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LocalLinearOperatorType;
@@ -75,7 +75,7 @@ private:
   LocalLinearOperatorType system_matrix_;
   static bool cached_;
   static std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseJacs_;
-  static std::vector<BasisFunctionSetType::JacobianRangeType> dirichletJacs_;
+  static std::vector<BaseFunctionSetType::JacobianRangeType> dirichletJacs_;
 };
 
 } // namespace MsFEM {

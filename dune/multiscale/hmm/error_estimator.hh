@@ -41,7 +41,7 @@ private:
   typedef DiscreteFunctionImp DiscreteFunctionType;
   typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
-  typedef typename DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
+  typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
 
   typedef typename DiscreteFunctionSpaceType::GridType::template Codim<0>::Entity EntityType;
   typedef typename DiscreteFunctionSpaceType::GridType::template Codim<0>::EntityPointer EntityPointerType;

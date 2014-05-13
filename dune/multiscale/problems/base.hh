@@ -22,9 +22,9 @@ namespace Dune {
 namespace Multiscale {
 namespace Problem {
 
-typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
-typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
-typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
+typedef CommonTraits::DomainType DomainType;
+typedef CommonTraits::RangeType RangeType;
+typedef CommonTraits::JacobianRangeType JacobianRangeType;
 
 struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
 
@@ -228,8 +228,6 @@ namespace DMP = Dune::Multiscale::Problem;
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
   public:                                                                                                              \
     classname() : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                     \
-    classname(const Dune::Multiscale::CommonTraits::FunctionSpaceType&)                                                \
-      : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                               \
   };
 
 #endif // DUNE_MS_PROBLEMS_BASE_HH

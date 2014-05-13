@@ -39,6 +39,8 @@ public:
 
   virtual std::string macroGridName(const int dim) const;
 
+  std::string fullname(const CommonTraits::DiscreteFunctionBaseType& function);
+
 private:
   //! to avoid confusion path is only changeable in ctor
   void set_path(std::string my_path) = delete;

@@ -9,38 +9,19 @@
 #include <dune/common/tuples.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
-#include <dune/fem/space/common/functionspace.hh>
-#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-#include <dune/fem/space/lagrange.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/discretefunction/default.hh>
+#include <dune/gdt/operators/elliptic.hh>
 #include <dune/stuff/la/container.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/functions/global.hh>
+#include <dune/stuff/grid/provider.hh>
 
 namespace Dune {
 
 template <class T>
 struct GridPtr;
-
-namespace PDELab {
-
-class NoConstraints;
-//class ConformingDirichletConstraints;
-
-} //namespace PDELab
-
-namespace Fem {
-template <class T, class R>
-class GridFunctionAdapter;
-template <class T, class R>
-class DataOutput;
-template <class T, class R>
-class DataWriter;
-template <class T, class R>
-class AdaptationManager;
-} // namespace Fem
 
 namespace GDT {
 template <class T, class R>
@@ -59,25 +40,40 @@ class IModelProblemData;
 
 } // namespace Problem
 
-//! Common Type, duh
+//! Common Types, duh
 struct CommonTraits {
 
   typedef Dune::GridSelector::GridType GridType;
   static constexpr int dimRange = 1;
   static constexpr int dimDomain = GridType::dimension;
-  static constexpr int world_dim = dimDomain
-                                     ;
+  static constexpr int world_dim = dimDomain;
+  static constexpr unsigned int exact_solution_space_order = 3 * st_lagrangespace_order;
+
 //  typedef Dune::SGrid<world_dim, world_dim> GridType;
 //  typedef Dune::YaspGrid<world_dim> GridType;
   typedef GridType::Codim<0>::Entity EntityType;
-  typedef Dune::Fem::AdaptiveLeafGridPart<GridType> GridPartType;
-  typedef Dune::GridPtr<GridType> GridPointerType;
   typedef double FieldType;
-  typedef Dune::Fem::FunctionSpace<FieldType, FieldType, dimDomain, dimRange> FunctionSpaceType;
+
+  typedef DSG::Providers::ConstDefault< GridType > GridProviderType;
+  typedef GDT::Spaces::ContinuousLagrangeProvider< GridType, DSG::ChooseLayer::leaf,
+                                                   GDT::ChooseSpaceBackend::fem,
+                                                   st_lagrangespace_order, FieldType, dimRange > GdtSpaceProviderType;
+
+  static constexpr auto st_gdt_grid_level = 0;
+  typedef GdtSpaceProviderType::Type GdtSpaceType;
+  typedef GdtSpaceType DiscreteFunctionSpaceType;
+  typedef GdtSpaceType::GridViewType GridViewType;
+
+  typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorType GdtVectorType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionBaseType DiscreteFunctionBaseType;
+  typedef GDT::DiscreteFunction< GdtSpaceType, GdtVectorType >      DiscreteFunctionType;
+  typedef GDT::ConstDiscreteFunction< GdtSpaceType, GdtVectorType > ConstDiscreteFunctionType;
 
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain> DiffusionFunctionBaseType;
   typedef Stuff::Functions::Constant< EntityType, FieldType, dimDomain, FieldType, dimRange > ConstantFunctionBaseType;
+  typedef ConstantFunctionBaseType GdtConstantFunctionType;
 
   typedef Problem::IModelProblemData ModelProblemDataType;
   //! type of first source term (right hand side of differential equation or type of 'f')
@@ -98,51 +94,29 @@ struct CommonTraits {
 
   //! type of exact solution (in general unknown)
   typedef FunctionBaseType ExactSolutionType;
-  static constexpr unsigned int exact_solution_space_order = 3 * st_lagrangespace_order;
 
-  typedef FunctionSpaceType::DomainType DomainType;
-  //! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
-  typedef FunctionSpaceType::RangeType RangeType;
-  //! defines the function space to which the numerical solution belongs to
-  //! see dune/fem/lagrangebase.hh
-  typedef Dune::Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, st_lagrangespace_order>
-  DiscreteFunctionSpaceType;
-  typedef DiscreteFunctionSpaceType::DomainFieldType TimeType;
-  typedef DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef DiscreteFunctionSpaceType::DomainType DomainType;
+  typedef DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
+  typedef FieldType TimeType;
+  typedef DiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
 
-  typedef GridPartType::IntersectionType FaceType;
   typedef GridType::Codim<0>::EntityPointer EntityPointerType;
   typedef GridType::Codim<0>::Geometry EntityGeometryType;
   typedef GridType::Codim<1>::Geometry FaceGeometryType;
-  //!TODO carry the rename over to the type def'ed name
-  typedef DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
+
   typedef FieldType RangeFieldType;
   typedef FieldType DomainFieldType;
 
-  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
 
   typedef std::vector<RangeType> RangeVector;
   typedef std::vector<RangeVector> RangeVectorVector;
 
-  static constexpr int polynomial_order = DiscreteFunctionSpaceType::polynomialOrder;
+  static constexpr int polynomial_order = DiscreteFunctionSpaceType::polOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
 
-  //GDT::ChooseSpaceBackend::pdelab UsePdelab;
+  typedef GDT::Operators::EllipticCG< DiffusionType, LinearOperatorType, GdtSpaceType > EllipticOperatorType;
 
-  typedef GDT::Spaces::ContinuousLagrangeProvider< GridType, DSG::ChooseLayer::leaf,
-                                                   GDT::ChooseSpaceBackend::fem,
-                                                   st_lagrangespace_order, FieldType, dimRange > GdtSpaceProviderType;
-
-  static constexpr auto st_gdt_grid_level = 0;
-  typedef GdtSpaceProviderType::Type GdtSpaceType;
-  typedef GdtSpaceType::GridViewType GridViewType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtMatrixType GdtMatrixType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorType GdtVectorType;
-  typedef GDT::DiscreteFunction< GdtSpaceType, GdtVectorType >      GdtDiscreteFunctionType;
-  typedef GDT::ConstDiscreteFunction< GdtSpaceType, GdtVectorType > GdtConstDiscreteFunctionType;
-  typedef ConstantFunctionBaseType GdtConstantFunctionType;
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>

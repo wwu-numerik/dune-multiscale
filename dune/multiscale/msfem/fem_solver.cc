@@ -2,10 +2,9 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
-#include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/fem/fem_traits.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/functions/norm.hh>
@@ -23,7 +22,6 @@
 #include <sstream>
 #include <string>
 
-#include "dune/multiscale/common/dirichletconstraints.hh"
 #include "fem_solver.hh"
 
 namespace Dune {
@@ -34,7 +32,7 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType &space
 
 void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
                                 const CommonTraits::SourceType& force,
-                                CommonTraits::GdtDiscreteFunctionType &solution) const {
+                                CommonTraits::DiscreteFunctionType &solution) const {
   DSC_LOG_DEBUG << "Solving linear problem with standard FEM\n";
   DSC_PROFILER.startTiming("fem.apply");
 
@@ -46,22 +44,22 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   const auto& dirichlet = Problem::getDirichletData();
 
   const auto& space = space_;
-  // elliptic operator (type only, for the sparsity pattern)
-  typedef GDT::Operators::EllipticCG< CommonTraits::DiffusionType, CommonTraits::GdtMatrixType, CommonTraits::GdtSpaceType > EllipticOperatorType;
+
   // container
-  CommonTraits::GdtMatrixType system_matrix(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
+  CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
+                                                 CommonTraits::EllipticOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
   CommonTraits::GdtVectorType dirichlet_shift_vector(space.mapper().size());
   auto& solution_vector = solution.vector();
   // left hand side (elliptic operator)
-  EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
+  CommonTraits::EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
   // right hand side
   GDT::Functionals::L2Volume< CommonTraits::SourceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType > force_functional(force, rhs_vector, space);
   GDT::Functionals::L2Face< CommonTraits::NeumannDataType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
       neumann_functional(*neumann, rhs_vector, space);
   // dirichlet boundary values
-  CommonTraits::GdtDiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector);
-  GDT::Operators::DirichletProjectionLocalizable< GridViewType, CommonTraits::DirichletDataType, CommonTraits::GdtDiscreteFunctionType >
+  CommonTraits::DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector);
+  GDT::Operators::DirichletProjectionLocalizable< GridViewType, CommonTraits::DirichletDataType, CommonTraits::DiscreteFunctionType >
       dirichlet_projection_operator(*(space.grid_view()),
                                     boundary_info,
                                     *dirichlet,
@@ -87,7 +85,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   system_assembler.assemble();
 
   // solve the system
-  const Stuff::LA::Solver< CommonTraits::GdtMatrixType > linear_solver(system_matrix);
+  const Stuff::LA::Solver< CommonTraits::LinearOperatorType > linear_solver(system_matrix);
   const auto linear_solver_type = linear_solver.options()[0];
   auto linear_solver_options = linear_solver.options(linear_solver_type);
   linear_solver_options.set("max_iter",                 "5000", true);

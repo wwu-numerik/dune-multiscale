@@ -17,24 +17,18 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)
   , petrovGalerkin_(false)
-  , global_matrix_("MsFEM stiffness matrix", coarseDiscreteFunctionSpace_, coarseDiscreteFunctionSpace_)
+  , global_matrix_(coarseDiscreteFunctionSpace.mapper().size(), coarseDiscreteFunctionSpace.mapper().size(),
+                   CommonTraits::EllipticOperatorType::pattern(coarseDiscreteFunctionSpace))
   , cached_(false) {
     DSC_PROFILER.startTiming("msfem.assembleMatrix");
 
-  //!TODO diagonal stencil reicht
-  global_matrix_.reserve(DSFe::diagonalAndNeighborStencil(global_matrix_));
-  global_matrix_.clear();
-
-  Fem::DomainDecomposedIteratorStorage<CommonTraits::GridPartType> threadIterators(
-      coarseDiscreteFunctionSpace_.gridPart());
-
   const bool is_simplex_grid = DSG::is_simplex_grid(coarseDiscreteFunctionSpace_);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
   {
-    for (const auto& coarse_grid_entity : threadIterators) {
+    for (const auto& coarse_grid_entity : DSC::viewRange(*coarseDiscreteFunctionSpace_.grid_view())) {
       int cacheCounter = 0;
       const auto& coarse_grid_geometry = coarse_grid_entity.geometry();
       assert(coarse_grid_entity.partitionType() == InteriorEntity);

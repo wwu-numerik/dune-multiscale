@@ -16,7 +16,7 @@ namespace FEM {
 void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out);
 //! write discrete function VTK Output
 void write_discrete_function(CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix);
-void write_discrete_function(CommonTraits::GdtDiscreteFunctionType& discrete_solution, const std::string prefix);
+void write_discrete_function(CommonTraits::DiscreteFunctionType& discrete_solution, const std::string prefix);
 
 } // namespace FEM {
 } // namespace Multiscale {

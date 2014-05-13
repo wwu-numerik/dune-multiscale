@@ -51,6 +51,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 
   OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
   const auto msfem_fname_s = std::string("msfem_solution_");
+  msfem_solution.visualize()
   outputparam.set_prefix(msfem_fname_s);
   OutputTraits::DataOutputType(grid, msfem_solution_series, outputparam).writeData(1.0 /*dummy*/, msfem_fname_s);
 
@@ -101,12 +102,9 @@ void algorithm() {
 
   auto grids = make_grids();
   CommonTraits::GridType& coarse_grid = *grids.first;
-  CommonTraits::GridPartType coarse_gridPart(coarse_grid);
   CommonTraits::GridType& fine_grid = *grids.second;
-  CommonTraits::GridPartType fine_gridPart(fine_grid);
-
-  CommonTraits::DiscreteFunctionSpaceType fine_discreteFunctionSpace(fine_gridPart);
-  CommonTraits::DiscreteFunctionSpaceType coarse_discreteFunctionSpace(coarse_gridPart);
+  CommonTraits::GridProviderType coarse_grid_provider(grids.first);
+  CommonTraits::GridProviderType fine_grid_provider(grids.second);
 
   const auto& diffusion_op = *Dune::Multiscale::Problem::getDiffusion();
   const auto& f = *Dune::Multiscale::Problem::getSource();
@@ -131,11 +129,11 @@ void algorithm() {
   Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(grids.second);
   const CommonTraits::GdtSpaceType space = CommonTraits::GdtSpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
   std::unique_ptr<CommonTraits::GdtVectorType> solution_vector(nullptr);
-  std::unique_ptr<CommonTraits::GdtDiscreteFunctionType> fem_solution(nullptr);
+  std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution(nullptr);
 
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     solution_vector = DSC::make_unique<CommonTraits::GdtVectorType>(space.mapper().size());
-    fem_solution = DSC::make_unique<CommonTraits::GdtDiscreteFunctionType>(space, *solution_vector);
+    fem_solution = DSC::make_unique<CommonTraits::DiscreteFunctionType>(space, *solution_vector);
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
     fem_solver.apply(diffusion_op, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {

@@ -11,7 +11,6 @@
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/fem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/fem/fem_traits.hh>
 
 int main(int argc, char** argv) {
   try {

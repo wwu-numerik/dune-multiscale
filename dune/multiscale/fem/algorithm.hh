@@ -11,7 +11,6 @@
 #include <dune/gdt/spaces/interface.hh>
 
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/fem/fem_traits.hh>
 
 namespace Dune {
 namespace Multiscale {

@@ -33,7 +33,7 @@ namespace MsFEM {
 
   
   std::vector<MsFEMTraits::CoarseBaseFunctionSetType::JacobianRangeType> LocalProblemOperator::coarseBaseJacs_;
-  std::vector<CommonTraits::BasisFunctionSetType::JacobianRangeType> LocalProblemOperator::dirichletJacs_;
+  std::vector<CommonTraits::BaseFunctionSetType::JacobianRangeType> LocalProblemOperator::dirichletJacs_;
   bool LocalProblemOperator::cached_;
   
 LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
@@ -57,9 +57,9 @@ void LocalProblemOperator::assemble_matrix()
   std::vector<RangeType> phi(subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // gradient of micro scale base function:
-  std::vector<typename BasisFunctionSetType::JacobianRangeType> gradient_phi(
+  std::vector<typename BaseFunctionSetType::JacobianRangeType> gradient_phi(
       subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
-  typename BasisFunctionSetType::JacobianRangeType diffusion_in_gradient_phi;
+  typename BaseFunctionSetType::JacobianRangeType diffusion_in_gradient_phi;
 
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
     const auto& sub_grid_geometry = sub_grid_entity.geometry();

@@ -8,9 +8,6 @@
 #include <assert.h>
 #include <boost/noncopyable.hpp>
 #include <dune/common/fmatrix.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/multiscale/common/dirichletconstraints.hh>
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
@@ -41,12 +38,11 @@ private:
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
   typedef CommonTraits::DiscreteFunctionType FineDiscreteFunction;
   typedef CommonTraits::LinearOperatorType MatrixType;
-  typedef typename CoarseDiscreteFunction::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
 
-  typedef typename FineDiscreteFunction::DiscreteFunctionSpaceType FineDiscreteFunctionSpace;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType FineDiscreteFunctionSpace;
   typedef typename FineDiscreteFunctionSpace::DomainType DomainType;
-  typedef typename FineDiscreteFunctionSpace::RangeType RangeType;
-  typedef typename FineDiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
+  typedef typename FineDiscreteFunctionSpace::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
 
 public:
   CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace, LocalGridList& subgrid_list,
