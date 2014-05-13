@@ -157,7 +157,7 @@ void copyDirichletValues(const CommonTraits::DiscreteFunctionSpaceType& coarseSp
     const auto& dirichletDataPtr = Problem::getDirichletData();
     const auto& dirichletData = *dirichletDataPtr;
 
-    const auto gf = DS::gridFunctionAdapter(dirichletData, coarseSpace.gridPart());
+    const Dune::Fem::GridFunctionAdapter<CommonTraits::DirichletDataType, CommonTraits::GridPartType> gf("", dirichletData, coarseSpace.gridPart());
     dirichletExtensionCoarse.clear();
     getConstraintsCoarse(coarseSpace)(gf, dirichletExtensionCoarse);
   }
