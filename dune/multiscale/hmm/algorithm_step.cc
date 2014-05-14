@@ -48,7 +48,7 @@ struct BoundaryTreatment {
         if (intersection.boundary() && (intersection.boundaryId() != 1))
           continue;
 
-        auto rhsLocal = rhs.localFunction(entity);
+        auto rhsLocal = rhs.local_function(entity);
         const auto face = intersection.indexInInside();
         for (auto point : DSC::lagrangePointSetRange<faceCodim>(rhs.space(), entity, face))
           rhsLocal[point] = 0;
@@ -70,7 +70,7 @@ void setDirichletValues(DirichletBC& dirichlet_func, DiscreteFunctionType& func)
       if (intersection.boundary() && (intersection.boundaryId() != 1))
         continue;
 
-      auto funcLocal = func.localFunction(entity);
+      auto funcLocal = func.local_function(entity);
       const auto face = intersection.indexInInside();
       for (auto loc_point : DSC::lagrangePointSetRange<faceCodim>(func.space(), entity, face)) {
         const auto& global_point =
@@ -555,10 +555,10 @@ void assemble_for_HMM_Newton_method(const CommonTraits::SourceType& f, const Com
   for (auto macro_grid_it = discreteFunctionSpace.begin(); macro_grid_it != macro_grid_endit; ++macro_grid_it) {
     // it* Pointer auf ein Element der Entity
     const auto& macro_grid_geometry = (*macro_grid_it).geometry(); // Referenz auf Geometrie
-    auto elementOfRHS = rhsVector.localFunction(*macro_grid_it);
+    auto elementOfRHS = rhsVector.local_function(*macro_grid_it);
 
     const auto macro_grid_baseSet = discreteFunctionSpace.basisFunctionSet(*macro_grid_it);
-    const auto old_u_H_loc = old_u_H.localFunction(*macro_grid_it);
+    const auto old_u_H_loc = old_u_H.local_function(*macro_grid_it);
     // for \int_{\Omega} f \Phi
     const auto macro_quadrature = DSFe::make_quadrature(*macro_grid_it, discreteFunctionSpace);
     // for - \int_{\Omega} \in_Y A^{\epsilon}( gradient reconstruction ) \nabla \Phi
@@ -566,7 +566,7 @@ void assemble_for_HMM_Newton_method(const CommonTraits::SourceType& f, const Com
     const auto macro_entity_barycenter = macro_grid_geometry.center();
     const auto barycenter_local = macro_grid_geometry.local(macro_entity_barycenter);
     const double macro_entity_volume = macro_grid_geometry.volume();
-    const auto numDofs = elementOfRHS.numDofs();
+    const auto numDofs = elementOfRHS.vector().size();
     // gradient of base function and gradient of old_u_H
     typedef CommonTraits::DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
     typedef CommonTraits::DiscreteFunctionSpaceType::RangeType RangeType;

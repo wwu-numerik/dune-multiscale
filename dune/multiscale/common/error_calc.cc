@@ -66,10 +66,10 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
 
     if (msfem_solution_) {
       const DifferenceType difference(u, *msfem_solution_);
-      GDT::Products::L2Localizable< CommonTraits::GridViewType, FemDifferenceType >
+      GDT::Products::L2Localizable< CommonTraits::GridViewType, DifferenceType >
           l2_error_product(*grid_view, difference, over_integrate);
       system_assembler.add(l2_error_product);
-      GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, FemDifferenceType >
+      GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
           h1_semi_error_product(*grid_view, difference, over_integrate);
       system_assembler.add(h1_semi_error_product);
       system_assembler.assemble();
@@ -85,7 +85,6 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
 
     if (fem_solution_) {
       const DifferenceType difference(u, *fem_solution_);
-
       GDT::Products::L2Localizable< CommonTraits::GridViewType, DifferenceType >
           l2_error_product(*grid_view, difference, over_integrate);
       system_assembler.add(l2_error_product);
@@ -105,9 +104,9 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   }
   if (msfem_solution_ && fem_solution_) {
 
-    FemAdapter fem_adapter(*msfem_solution_);
-    typedef Stuff::Functions::Difference< FemAdapter, CommonTraits::ConstDiscreteFunctionType > DiscreteDifferenceType;
-    const DiscreteDifferenceType difference(fem_adapter, *fem_solution_);
+    typedef Stuff::Functions::Difference< CommonTraits::ConstDiscreteFunctionType,
+        CommonTraits::ConstDiscreteFunctionType > DiscreteDifferenceType;
+    const DiscreteDifferenceType difference(*msfem_solution_, *fem_solution_);
 
     GDT::Products::L2Localizable< CommonTraits::GridViewType, DiscreteDifferenceType >
         l2_error_product(*grid_view, difference, over_integrate);

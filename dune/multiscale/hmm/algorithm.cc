@@ -202,7 +202,7 @@ bool adapt(const HMMResult& result, const int loop_cycle, const double error_tol
           }
         }
       }
-      discreteFunctionSpace.grid_view().grid().mark(additional_refinement, entity);
+      discreteFunctionSpace.grid_view()->grid().mark(additional_refinement, entity);
       element_number += 1;
     }
     adaptationManager.adapt();

@@ -30,7 +30,7 @@ private:
   typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
 
   typedef typename PeriodicDiscreteFunctionType::LocalFunctionType PeriodicLocalFunctionType;
-  typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpaceType;
+  typedef typename PeriodicDiscreteFunctionType::SpaceType PeriodicDiscreteFunctionSpaceType;
   typedef typename PeriodicDiscreteFunctionType::RangeType RangeType;
   typedef typename PeriodicDiscreteFunctionType::RangeFieldType TimeType;
   typedef typename PeriodicDiscreteFunctionType::DomainType DomainType;
@@ -39,7 +39,7 @@ private:
   typedef typename PeriodicDiscreteFunctionType::GridType::template Codim<0>::Entity PeriodicEntityType;
   typedef typename PeriodicDiscreteFunctionType::GridType::template Codim<0>::EntityPointer PeriodicEntityPointerType;
   typedef DiscreteFunctionImp DiscreteFunctionType;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef typename DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
 
@@ -121,7 +121,7 @@ public:
       difference[k] = 0.0;
 
     // \nabla u_H(x_T)
-    const auto u_H_local = u_H.localFunction(entity);
+    const auto u_H_local = u_H.local_function(entity);
     JacobianRangeType gradient_u_H(0.);
     u_H_local.jacobian(x_T_local, gradient_u_H);
 
@@ -131,7 +131,7 @@ public:
       const auto high_order_quadrature = DSFe::make_quadrature(micro_entity, periodicDiscreteFunctionSpace_);
 
       // Q_h(u_H)(x_T,y) on the micro entity:
-      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.local_function(micro_entity);
       JacobianRangeType gradient_Q_u_H_x_T(0.);
       loc_Q_u_H_x_T.jacobian(center_local, gradient_Q_u_H_x_T);
 
@@ -210,7 +210,7 @@ public:
       difference[k] = 0.0;
 
     // \nabla u_H(x_T)
-    const auto u_H_local = u_H.localFunction(entity);
+    const auto u_H_local = u_H.local_function(entity);
     JacobianRangeType gradient_u_H(0.);
     u_H_local.jacobian(x_T_local, gradient_u_H);
 
@@ -220,7 +220,7 @@ public:
       const auto high_order_quadrature = DSFe::make_quadrature(micro_entity, periodicDiscreteFunctionSpace_);
 
       // Q_h(u_H)(x_T,y) on the micro entity:
-      const auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+      const auto loc_Q_u_H_x_T = corrector_u_H_on_entity.local_function(micro_entity);
       JacobianRangeType gradient_Q_u_H_x_T(0.);
       loc_Q_u_H_x_T.jacobian(x_T_local, gradient_Q_u_H_x_T);
 
@@ -303,25 +303,25 @@ public:
     const auto& x_T_outer_local = globalOuterEntityGeometry.local(x_T_outer);
 
     // \nabla u_H(x_T) (on the inner element T)
-    auto inner_u_H_local = u_H.localFunction(inner_entity);
+    auto inner_u_H_local = u_H.local_function(inner_entity);
     JacobianRangeType gradient_inner_u_H(0.);
 
     inner_u_H_local.jacobian(x_T_inner_local, gradient_inner_u_H);
 
     // \nabla u_H(x_T) (on the outer element \bar{T})
-    auto outer_u_H_local = u_H.localFunction(outer_entity);
+    auto outer_u_H_local = u_H.local_function(outer_entity);
     JacobianRangeType gradient_outer_u_H(0.);
     outer_u_H_local.jacobian(x_T_outer_local, gradient_outer_u_H);
 
     for (const auto& micro_entity : periodicDiscreteFunctionSpace_) {
       const auto center_local = micro_entity.geometry().local(micro_entity.geometry().center());
       // Q_h(u_H)(x_T,y) on the micro entity:
-      auto loc_Q_u_H_x_T_inner = corrector_u_H_on_inner_entity.localFunction(micro_entity);
+      auto loc_Q_u_H_x_T_inner = corrector_u_H_on_inner_entity.local_function(micro_entity);
       JacobianRangeType gradient_Q_u_H_x_T_inner(0.);
       loc_Q_u_H_x_T_inner.jacobian(center_local, gradient_Q_u_H_x_T_inner);
 
       // Q_h(u_H)(x_{bar{T}},y) on the micro entity:
-      auto loc_Q_u_H_x_T_outer = corrector_u_H_on_outer_entity.localFunction(micro_entity);
+      auto loc_Q_u_H_x_T_outer = corrector_u_H_on_outer_entity.local_function(micro_entity);
       JacobianRangeType gradient_Q_u_H_x_T_outer(0.);
       loc_Q_u_H_x_T_outer.jacobian(center_local, gradient_Q_u_H_x_T_outer);
 
@@ -393,7 +393,7 @@ public:
     const auto entityVolume = globalEntityGeometry.volume();
 
     // \nabla u_H(x_T)
-    auto u_H_local = u_H.localFunction(entity);
+    auto u_H_local = u_H.local_function(entity);
     JacobianRangeType gradient_u_H(0.);
 
     u_H_local.jacobian(x_T_local, gradient_u_H);
@@ -442,7 +442,7 @@ public:
     for (const auto& micro_entity : auxiliaryDiscreteFunctionSpace_) {
       const auto center_local = micro_entity.geometry().local(micro_entity.geometry().center());
       // Q_h(u_H)(x_T,y) on the micro entity:
-      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.local_function(micro_entity);
       JacobianRangeType gradient_Q_u_H_x_T(0.);
       loc_Q_u_H_x_T.jacobian(center_local, gradient_Q_u_H_x_T);
 
@@ -484,7 +484,7 @@ public:
           const auto outer_y_S_local = outer_geometry_S.local(outer_y_S);
 
           // Q_h(u_H)(x_T,y) on the neighbor entity:
-          auto outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(outer_micro_entity);
+          auto outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.local_function(outer_micro_entity);
           JacobianRangeType gradient_outer_Q_u_H_x_T(0.);
           outer_loc_Q_u_H_x_T.jacobian(outer_y_S_local, gradient_outer_Q_u_H_x_T);
 
@@ -586,7 +586,7 @@ public:
     const auto& x_T_local = globalEntityGeometry.local(x_T);
     const auto entityVolume = globalEntityGeometry.volume();
     // \nabla u_H(x_T)
-    const auto u_H_local = u_H.localFunction(entity);
+    const auto u_H_local = u_H.local_function(entity);
     JacobianRangeType gradient_u_H(0.);
 
     u_H_local.jacobian(x_T_local, gradient_u_H);
@@ -638,7 +638,7 @@ public:
       const auto& y_S_local = geometry_S.local(y_S);
 
       // Q_h(u_H)(x_T,y) on the micro entity:
-      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.local_function(micro_entity);
       JacobianRangeType gradient_Q_u_H_x_T(0.);
       loc_Q_u_H_x_T.jacobian(y_S_local, gradient_Q_u_H_x_T);
 
@@ -729,7 +729,7 @@ public:
             const auto& outer_y_S_local = outer_geometry_S.local(outer_y_S);
 
             // Q_h(u_H)(x_T,y) on the neighbor entity:
-            const auto outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(outer_micro_entity);
+            const auto outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.local_function(outer_micro_entity);
             JacobianRangeType gradient_outer_Q_u_H_x_T(0.);
             outer_loc_Q_u_H_x_T.jacobian(outer_y_S_local, gradient_outer_Q_u_H_x_T);
 
@@ -792,7 +792,7 @@ public:
     const auto entityVolume = globalEntityGeometry.volume();
 
     // \nabla u_H(x_T)
-    auto u_H_local = u_H.localFunction(entity);
+    auto u_H_local = u_H.local_function(entity);
     JacobianRangeType gradient_u_H(0.);
 
     u_H_local.jacobian(x_T_local, gradient_u_H);
@@ -840,7 +840,7 @@ public:
       const auto& y_S = geometry_S.center();
       const auto& y_S_local = geometry_S.local(y_S);
       // Q_h(u_H)(x_T,y) on the micro entity:
-      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(micro_entity);
+      auto loc_Q_u_H_x_T = corrector_u_H_on_entity.local_function(micro_entity);
       JacobianRangeType gradient_Q_u_H_x_T(0.);
       loc_Q_u_H_x_T.jacobian(y_S_local, gradient_Q_u_H_x_T);
       // to evaluate A^{\epsilon}_h (in center of current inner entity):
@@ -930,7 +930,7 @@ public:
             const auto& outer_y_S_local = outer_geometry_S.local(outer_y_S);
 
             // Q_h(u_H)(x_T,y) on the neighbor entity:
-            auto outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.localFunction(outer_micro_entity);
+            auto outer_loc_Q_u_H_x_T = corrector_u_H_on_entity.local_function(outer_micro_entity);
             JacobianRangeType gradient_outer_Q_u_H_x_T(0.);
             outer_loc_Q_u_H_x_T.jacobian(outer_y_S_local, gradient_outer_Q_u_H_x_T);
 

@@ -137,10 +137,11 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
 void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
                                         CoarseScaleOperator::CoarseDiscreteFunction& solution) {
-  BOOST_ASSERT_MSG(rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
+  //! \todo re-enable
+//  BOOST_ASSERT_MSG(rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
   DSC_PROFILER.startTiming("msfem.solveCoarse");
   const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(
-      global_matrix_, 1e-8, 1e-8, DSC_CONFIG_GET("msfem.solver.iterations", rhs.size()),
+      global_matrix_, 1e-8, 1e-8, DSC_CONFIG_GET("msfem.solver.iterations", rhs.vector().size()),
       DSC_CONFIG_GET("msfem.solver.verbose", false), "bcgs",
       DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));
   inverse(rhs, solution);

@@ -27,7 +27,7 @@ struct BackendChooser {
   typedef DiscreteFunctionDataType GdtVectorType;
   typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
     Stuff::LA::ChooseBackend::istl_sparse >::MatrixType LinearOperatorType;
-  typedef GDT::DiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType >      DiscreteFunctionType;
+  typedef GDT::StoredDiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType >      DiscreteFunctionType;
   typedef GDT::ConstDiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType > ConstDiscreteFunctionType;
   typedef Stuff::LA::Solver< LinearOperatorType > InverseOperatorType;
 };

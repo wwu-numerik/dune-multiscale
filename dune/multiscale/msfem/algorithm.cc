@@ -57,7 +57,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
   outputparam.set_prefix("fine_part_msfem_solution_");
   fine_part_msfem_solution.visualize(outputparam.fullpath(fine_part_msfem_solution));
 
-  DSG::ElementVisualization::all(fine_part_msfem_solution.space().grid_view().grid(), outputparam.path());
+  DSG::ElementVisualization::all(fine_part_msfem_solution.space().grid_view()->grid(), outputparam.path());
 }
 
 //! \TODO docme
@@ -98,16 +98,9 @@ void algorithm() {
   const auto& diffusion_op = *Dune::Multiscale::Problem::getDiffusion();
   const auto& f = *Dune::Multiscale::Problem::getSource();
 
-  const auto fineSize = fineSpace.mapper().size();
-
-  CommonTraits::DiscreteFunctionDataType msfem_solution_data(fineSize);
-  CommonTraits::DiscreteFunctionType msfem_solution(fineSpace, msfem_solution_data, "MsFEM_Solution");
-
-  CommonTraits::DiscreteFunctionDataType coarse_part_msfem_solution_data(fineSize);
-  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution(fineSpace, coarse_part_msfem_solution_data, "Coarse_Part_MsFEM_Solution");
-
-  CommonTraits::DiscreteFunctionDataType fine_part_msfem_solution_data(fineSize);
-  CommonTraits::DiscreteFunctionType fine_part_msfem_solution(fineSpace, fine_part_msfem_solution_data, "Fine_Part_MsFEM_Solution" );
+  CommonTraits::DiscreteFunctionType msfem_solution(fineSpace, "MsFEM_Solution");
+  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution(fineSpace, "Coarse_Part_MsFEM_Solution");
+  CommonTraits::DiscreteFunctionType fine_part_msfem_solution(fineSpace, "Fine_Part_MsFEM_Solution" );
 
   Elliptic_MsFEM_Solver().apply(coarseSpace, diffusion_op, f, coarse_part_msfem_solution,
                                 fine_part_msfem_solution, msfem_solution);
@@ -118,14 +111,10 @@ void algorithm() {
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
   }
 
-  Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(grids.second);
-
-  std::unique_ptr<CommonTraits::GdtVectorType> solution_vector(nullptr);
   std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution(nullptr);
 
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    solution_vector = DSC::make_unique<CommonTraits::GdtVectorType>(fineSize);
-    fem_solution = DSC::make_unique<CommonTraits::DiscreteFunctionType>(fineSpace, *solution_vector);
+    fem_solution = DSC::make_unique<CommonTraits::DiscreteFunctionType>(fineSpace, "fem_solution");
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(fineSpace);
     fem_solver.apply(diffusion_op, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {

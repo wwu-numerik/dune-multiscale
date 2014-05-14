@@ -114,7 +114,7 @@ void DiscreteCellProblemOperator::assemble_jacobian_matrix(
 
     DSFe::LocalMatrixProxy<CellProblemSolver::CellLinearOperatorType> local_matrix(global_matrix, cell_grid_entity,
                                                                                    cell_grid_entity);
-    auto local_fine_function = old_fine_function.localFunction(cell_grid_entity);
+    auto local_fine_function = old_fine_function.local_function(cell_grid_entity);
 
     const auto& baseSet = local_matrix.domainBasisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -189,7 +189,7 @@ void DiscreteCellProblemOperator::assembleCellRHS_linear(const DomainType& x_T, 
     const auto& geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
-    auto elementOfRHS = cell_problem_RHS.localFunction(cell_grid_entity);
+    auto elementOfRHS = cell_problem_RHS.local_function(cell_grid_entity);
 
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -242,8 +242,8 @@ void DiscreteCellProblemOperator::assembleCellRHS_nonlinear(const DomainType& x_
     const auto& geometry = cell_grid_entity.geometry();
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
-    auto local_old_fine_function = old_fine_function.localFunction(cell_grid_entity);
-    auto elementOfRHS = cell_problem_RHS.localFunction(cell_grid_entity);
+    auto local_old_fine_function = old_fine_function.local_function(cell_grid_entity);
+    auto elementOfRHS = cell_problem_RHS.local_function(cell_grid_entity);
 
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();
@@ -309,8 +309,8 @@ void DiscreteCellProblemOperator::assemble_jacobian_corrector_cell_prob_RHS( // 
     assert(cell_grid_entity.partitionType() == InteriorEntity);
 
     // local Q_h(u_H^{(n-1)}):
-    const auto local_Q_old_u_H = corrector_of_old_coarse_function.localFunction(cell_grid_entity);
-    auto elementOfRHS = jac_corrector_cell_problem_RHS.localFunction(cell_grid_entity);
+    const auto local_Q_old_u_H = corrector_of_old_coarse_function.local_function(cell_grid_entity);
+    auto elementOfRHS = jac_corrector_cell_problem_RHS.local_function(cell_grid_entity);
 
     const auto& baseSet = elementOfRHS.basisFunctionSet();
     const auto numBaseFunctions = baseSet.size();

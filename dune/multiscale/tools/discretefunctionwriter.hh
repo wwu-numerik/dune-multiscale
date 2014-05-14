@@ -25,21 +25,11 @@
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/common/type_utils.hh>
-#include <dune/fem/io/streams/xdrstreams.hh>
 
 #include <boost/filesystem/path.hpp>
 
 namespace Dune {
 namespace Multiscale {
-
-//! tiny struct to ensure i/o type don't diverge
-struct IOTraits {
-#if HAVE_SIONLIB&& HAVE_MPI
-#define MULTISCALE_USE_SION
-  typedef Dune::Fem::SIONlibOutStream OutstreamType;
-  typedef Dune::Fem::SIONlibInStream InstreamType;
-#endif
-};
 
 template <class DiscreteFunctionType>
 class DiscreteFunctionIO : public boost::noncopyable {
@@ -47,9 +37,10 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
   typedef DiscreteFunctionIO<DiscreteFunctionType> ThisType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef std::vector<DiscreteFunction_ptr> Vector;
-  typedef typename DiscreteFunctionType::GridPartType GridPartType;
+  typedef typename DiscreteFunctionType::SpaceType::GridViewType GridViewType;
+  typedef std::shared_ptr<GridViewType> GridViewPtrType;
 
   DiscreteFunctionIO() = default;
 
@@ -74,24 +65,18 @@ class DiscreteFunctionIO : public boost::noncopyable {
     void append(const DiscreteFunction_ptr& df) {
       const std::string fn = (dir_ / DSC::toString(index_++)).string();
       DSC::testCreateDirectory(fn);
-#ifdef MULTISCALE_USE_SION
-      IOTraits::OutstreamType stream(fn);
-      df->write(stream);
-#else
+
       Fem::XDRFileOutStream ss(fn);
       df->write(ss);
-#endif
+
     }
 
     void read(const unsigned long index, DiscreteFunction_ptr& df) {
       const std::string fn = (dir_ / DSC::toString(index)).string();
-#ifdef MULTISCALE_USE_SION
-      IOTraits::InstreamType stream(fn);
-      df->read(stream);
-#else
+
       Fem::XDRFileInStream ss(fn);
       df->read(ss);
-#endif
+
     }
 
   private:
@@ -113,10 +98,9 @@ class DiscreteFunctionIO : public boost::noncopyable {
      *  filename may include additional path components
      * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
      */
-    MemoryBackend(typename GridPartType::GridType& grid, const std::string filename = "nonsense_default_for_map")
+    MemoryBackend(const GridViewPtrType& grid_view, const std::string filename = "nonsense_default_for_map")
       : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-      , grid_part_(grid)
-      , space_(grid_part_) {}
+      , space_(grid_view) {}
 
     void append(const DiscreteFunction_ptr& df) { functions_.push_back(df); }
 
@@ -128,12 +112,10 @@ class DiscreteFunctionIO : public boost::noncopyable {
       assert(df != nullptr);
     }
 
-    GridPartType& grid_part() { return grid_part_; }
     DiscreteFunctionSpaceType& space() { return space_; }
 
   private:
     const boost::filesystem::path dir_;
-    GridPartType grid_part_;
     DiscreteFunctionSpaceType space_;
     Vector functions_;
   };
@@ -157,13 +139,13 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
   DiskBackend& get_disk(const std::string filename) { return *get(disk_, filename, filename); }
 
-  MemoryBackend& get_memory(const std::string filename, typename GridPartType::GridType& grid) {
-    return *get(memory_, filename, grid, filename);
+  MemoryBackend& get_memory(const std::string filename,  const GridViewPtrType& grid_view) {
+    return *get(memory_, filename, grid_view, filename);
   }
 
 public:
-  static MemoryBackend& memory(const std::string filename, typename GridPartType::GridType& grid) {
-    return instance().get_memory(filename, grid);
+  static MemoryBackend& memory(const std::string filename, const GridViewPtrType& grid_view) {
+    return instance().get_memory(filename, grid_view);
   }
 
   static DiskBackend& disk(const std::string filename) { return instance().get_disk(filename); }

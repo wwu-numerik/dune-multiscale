@@ -42,8 +42,8 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
     for (const auto& coarse_grid_entity : threadIterators) {
       int cacheCounter = 0;
       const auto& coarseGeometry = coarse_grid_entity.geometry();
-      auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
-      const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
+      auto rhsLocalFunction = rhsVector.local_function(coarse_grid_entity);
+      const auto numLocalBaseFunctions = rhsLocalFunction.vector().size();
       const auto& coarseBaseSet = coarse_space.basisFunctionSet(coarse_grid_entity);
 
       // --------- add corrector contribution of right hand side --------------------------
@@ -64,7 +64,7 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
         if (subgrid_list.covers(coarse_grid_entity, localEntity)) {
           // higher order quadrature, since A^{\epsilon} is highly variable
           const auto localQuadrature = DSFe::make_quadrature(localEntity, localSolutionManager.space());
-          auto dirichletExtensionLF = dirichletExtension.localFunction(localEntity);
+          auto dirichletExtensionLF = dirichletExtension.local_function(localEntity);
 
           // evaluate all local solutions and their jacobians in all quadrature points
           std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(

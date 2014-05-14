@@ -56,7 +56,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
       const auto max = dimensions.coord_limits[i].max();
       auto localMin = coarse_dimensions.coord_limits[i].min();
       auto localMax = coarse_dimensions.coord_limits[i].max();
-      auto comm = MPIHelper::getCommunicator();
+      auto comm = MPIHelper::getCollectiveCommunication();
       const auto coarse_min = comm.min(localMin);
       const auto coarse_max = comm.max(localMax);
       const auto delta = (max - min) / double(micro_per_macro[i]);
