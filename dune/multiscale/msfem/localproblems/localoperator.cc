@@ -52,7 +52,7 @@ void LocalProblemOperator::assemble_matrix()
     // x_T is the barycenter of the macro grid element T
 {
   // local grid basis functions:
-  std::vector<RangeType> phi(subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
+  std::vector<CommonTraits::RangeType> phi(subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
 
   // gradient of micro scale base function:
   std::vector<typename BaseFunctionSetType::JacobianRangeType> gradient_phi(

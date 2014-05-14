@@ -75,8 +75,8 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   // right hand side vector of the algebraic local MsFEM problem
   MsFEMTraits::LocalSolutionVectorType allLocalRHS(allLocalSolutions.size());
   for (auto& it : allLocalRHS)
-    it = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>("rhs of local MsFEM problem",
-                                                                      subDiscreteFunctionSpace);
+    it = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(subDiscreteFunctionSpace,
+                                                                      "rhs of local MsFEM problem");
 
   localProblemOperator.assemble_all_local_rhs(coarseCell, allLocalRHS);
 
@@ -88,7 +88,8 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    if (DS::l2norm(current_rhs) < 1e-12) {
+    const auto norm = GDT::Products::L2< typename CommonTraits::GridViewType >(*current_rhs.space().grid_view()).induced_norm(current_rhs);
+    if (norm < 1e-12) {
       current_solution.vector() *= 0;
       DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
       continue;
@@ -117,7 +118,7 @@ void LocalProblemSolver::solve_for_all_cells() {
     }
 
   // number of coarse grid entities (of codim 0).
-  const auto coarseGridSize = coarse_space_.grid().size(0);
+  const auto coarseGridSize = coarse_space_.grid_view()->grid().size(0);
   if (Dune::Fem::MPIManager::size() > 0)
     DSC_LOG_DEBUG << "Rank " << Dune::Fem::MPIManager::rank() << " will solve local problems for " << coarseGridSize
                  << " coarse entities!" << std::endl;
@@ -130,7 +131,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   DSC::MinMaxAvg<double> solveTime;
 
   const auto& coarseGridLeafIndexSet = coarse_space_.grid_view()->grid().leafIndexSet();
-  for (const auto& coarseEntity : coarse_space_) {
+  for (const auto& coarseEntity : DSC::viewRange(*coarse_space_.grid_view())) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
     DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 

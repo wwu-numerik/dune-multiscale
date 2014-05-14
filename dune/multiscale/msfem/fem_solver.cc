@@ -74,7 +74,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   auto tmp = rhs_vector.copy();
-  system_matrix.mv(dirichlet_shift_vector, tmp);
+  system_matrix.mv(dirichlet_projection.vector(), tmp);
   rhs_vector -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Constraints::Dirichlet < typename GridViewType::Intersection, CommonTraits::RangeFieldType >
@@ -92,7 +92,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   linear_solver_options.set("post_check_solves_system", "0",    true);
   linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
   // add the dirichlet shift to obtain the solution in H^1
-  solution_vector += dirichlet_shift_vector;
+  solution_vector += dirichlet_projection.vector();
 
   DSC_PROFILER.stopTiming("fem.apply");
   DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms.\n";
