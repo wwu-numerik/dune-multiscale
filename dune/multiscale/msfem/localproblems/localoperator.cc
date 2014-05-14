@@ -25,7 +25,7 @@
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
-#include <dune/multiscale/common/dirichletconstraints.hh>
+
 
 namespace Dune {
 namespace Multiscale {
@@ -174,7 +174,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   if (!cached_) {
     // compute the number of quadrature points resulting from a standard quadrature on the current space
     const auto& numQuadPoints = getNumQuadPoints(discreteFunctionSpace);
-    const auto& gridSize = discreteFunctionSpace.gridPart().grid().size(0);
+    const auto& gridSize = discreteFunctionSpace.grid_view().grid().size(0);
     coarseBaseJacs_.reserve(gridSize * numQuadPoints * numInnerCorrectors);
     dirichletJacs_.reserve(gridSize * numQuadPoints);
   }
@@ -291,8 +291,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
 void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFunctionType& function) const {
   /*  // make sure, we are on a hexahedral element
-    BOOST_ASSERT_MSG(function.space().gridPart().grid().leafIndexSet().geomTypes(0).size()==1 &&
-           function.space().gridPart().grid().leafIndexSet().geomTypes(0)[0].isCube(),
+    BOOST_ASSERT_MSG(function.space().grid_view()->grid().leafIndexSet().geomTypes(0).size()==1 &&
+           function.space().grid_view()->grid().leafIndexSet().geomTypes(0)[0].isCube(),
            "This method only works for hexahedral elements at the moment!");*/
 
   const auto& gridPart = function.space().gridPart();

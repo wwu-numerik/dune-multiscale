@@ -64,7 +64,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 
   // clear return argument
   for (auto& localSol : allLocalSolutions)
-    localSol->clear();
+    localSol->vector() *= 0;
 
   const auto& subDiscreteFunctionSpace = allLocalSolutions[0]->space();
 
@@ -89,13 +89,13 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
     if (DS::l2norm(current_rhs) < 1e-12) {
-      current_solution.clear();
+      current_solution.vector() *= 0;
       DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
       continue;
     }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
-      current_solution.clear();
+      current_solution.vector() *= 0;
       DSC_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
       continue;
     }
@@ -129,7 +129,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> solveTime;
 
-  const auto& coarseGridLeafIndexSet = coarse_space_.gridPart().grid().leafIndexSet();
+  const auto& coarseGridLeafIndexSet = coarse_space_.grid_view().grid().leafIndexSet();
   for (const auto& coarseEntity : coarse_space_) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
     DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;

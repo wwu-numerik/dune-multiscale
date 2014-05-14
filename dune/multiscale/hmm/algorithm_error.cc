@@ -28,7 +28,7 @@ HMMResult estimate_error(const typename CommonTraits::GridPartType& gridPart,
                          const typename CommonTraits::DiscreteFunction_ptr& hmm_solution) {
   using namespace Dune::Stuff;
   // auxiliary grid part for the periodic function space, required for HMM-cell-problems
-  typename CommonTraits::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.gridPart().grid());
+  typename CommonTraits::GridPartType auxiliaryGridPart(periodicDiscreteFunctionSpace.grid_view().grid());
   // and the corresponding auxiliary one:
   typename CommonTraits::DiscreteFunctionSpaceType auxiliaryDiscreteFunctionSpace(auxiliaryGridPart);
   // auxiliaryGridPart for the error estimator (the auxiliaryGridPart yields an intersection iterator, which can not be

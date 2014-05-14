@@ -14,7 +14,6 @@
 #include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/common/output_traits.hh>
 #include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/fem/print_info.hh>
 #include <dune/multiscale/problems/selector.hh>

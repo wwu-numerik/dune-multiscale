@@ -10,6 +10,7 @@
 #include <dune/stuff/common/float_cmp.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <algorithm>
 #include <iterator>
 #include <ostream>
@@ -25,7 +26,7 @@ namespace MsFEM {
 
 LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
-  , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet()) {
+  , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
   BOOST_ASSERT_MSG(DSC_CONFIG.hasSub("grids"), "Parameter tree needs to have 'grids' subtree!");
   const int dim_world = LocalGridType::dimensionworld;
@@ -35,9 +36,9 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;
-  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(coarseSpace_.gridPart().grid());
+  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(coarseSpace_.grid_view()->grid());
 
-  for (const auto& coarse_entity : coarseSpace_) {
+  for (const auto& coarse_entity : DSC::viewRange(*coarseSpace_.grid_view())) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
     assert(coarse_entity.partitionType() == Dune::InteriorEntity);
@@ -55,8 +56,9 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
       const auto max = dimensions.coord_limits[i].max();
       auto localMin = coarse_dimensions.coord_limits[i].min();
       auto localMax = coarse_dimensions.coord_limits[i].max();
-      const auto coarse_min = coarseSpace.gridPart().grid().comm().min(localMin);
-      const auto coarse_max = coarseSpace.gridPart().grid().comm().max(localMax);
+      auto comm = MPIHelper::getCommunicator();
+      const auto coarse_min = comm.min(localMin);
+      const auto coarse_max = comm.max(localMax);
       const auto delta = (max - min) / double(micro_per_macro[i]);
       lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarse_min);
       upperRight[i] = std::min(max + (oversampling_layer * delta), coarse_max);

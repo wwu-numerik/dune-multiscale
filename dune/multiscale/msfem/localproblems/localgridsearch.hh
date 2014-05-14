@@ -23,7 +23,7 @@ class LocalGridSearch : public DSG::EntitySearchBase<GridViewImp> {
 
   typedef DSG::EntityInlevelSearch<LocalGridViewType> PerGridSearchType;
   typedef CommonTraits::DiscreteFunctionSpaceType CoarseGridSpaceType;
-  typedef typename CoarseGridSpaceType::GridType::Traits::LeafIndexSet::IndexType IndexType;
+  typedef typename CoarseGridSpaceType::GridViewType::Grid::Traits::LeafIndexSet::IndexType IndexType;
 
   typedef typename CoarseGridSpaceType::EntityType::EntityPointer CoarseEntityPointerType;
 
@@ -63,15 +63,15 @@ typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<G
 operator()(const PointContainerType& points) {
   const auto count_nulls = [&](const typename EntityPointerVectorType::value_type& ptr) { return ptr == nullptr; };
   //! \TODO potential speedup by caching last coarse_entity position instead fo restarting at front
-  const auto view = coarse_space_.grid().leafGridView();
+  const auto view = coarse_space_.grid_view();
 
-  static auto it = view.template begin< 0 >();
-  const auto end = view.template end< 0 >();
+  static auto it = view->template begin< 0 >();
+  const auto end = view->template end< 0 >();
   int steps = 0;
   while(true) {
     const auto& coarse_entity = *it;
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
-    const auto& index_set = coarse_space_.gridPart().grid().leafIndexSet();
+    const auto& index_set = view->grid().leafIndexSet();
     const auto index = index_set.index(coarse_entity);
     current_coarse_pointer_ = DSC::make_unique<CoarseEntityPointerType>(coarse_entity);
     auto& current_search_ptr = coarse_searches_[index];
@@ -84,8 +84,8 @@ operator()(const PointContainerType& points) {
         return entity_ptrs;
     }
     if (++it == end) {
-      if (++steps < view.size(0))
-        it = view.template begin< 0 >();
+      if (++steps < view->size(0))
+        it = view->template begin< 0 >();
       else
         DUNE_THROW(InvalidStateException, "local grid search failed");
     }

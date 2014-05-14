@@ -33,7 +33,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
       const auto& coarse_grid_geometry = coarse_grid_entity.geometry();
       assert(coarse_grid_entity.partitionType() == InteriorEntity);
 
-      DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix_, coarse_grid_entity, coarse_grid_entity);
+//      DSFe::LocalMatrixProxy<MatrixType> local_matrix(global_matrix_, coarse_grid_entity, coarse_grid_entity);
+      auto local_matrix = nullptr;
 
       const auto& coarse_grid_baseSet = local_matrix.domainBasisFunctionSet();
       const auto numMacroBaseFunctions = coarse_grid_baseSet.size();
@@ -45,7 +46,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
       const auto& localSolutions = localSolutionManager.getLocalSolutions();
       assert(localSolutions.size() > 0);
 
-      for (const auto& localGridEntity : localSolutionManager.space()) {
+      for (const auto& localGridEntity : DSC::viewRange(*localSolutionManager.space().grid_view())) {
         // ignore overlay elements
         if (subgrid_list_.covers(coarse_grid_entity, localGridEntity)) {
           const auto& local_grid_geometry = localGridEntity.geometry();
@@ -62,9 +63,9 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
           for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
             auto& sll = localSolutions[lsNum];
             assert(sll.get());
-            assert(sll->dofsValid());
-            assert(localSolutionManager.space().indexSet().contains(localGridEntity));
-            auto localFunction = sll->localFunction(localGridEntity);
+            //! \todo re-enable
+//            assert(localSolutionManager.space().indexSet().contains(localGridEntity));
+            auto localFunction = sll->local_function(localGridEntity);
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
           }
 

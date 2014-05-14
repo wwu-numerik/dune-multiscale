@@ -18,19 +18,11 @@ class LocalProblemOperator {
 
   static const int faceCodim = 1;
 
-  typedef typename LocalGridDiscreteFunctionType::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::GridPartType GridPartType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::GridType GridType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
   typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType EntityType;
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LocalLinearOperatorType;
-
-  static const int dimension = GridPartType::GridType::dimension;
 
   typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
