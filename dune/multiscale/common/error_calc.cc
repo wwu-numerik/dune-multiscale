@@ -111,8 +111,8 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     GDT::Products::L2Localizable< CommonTraits::GridViewType, DiscreteDifferenceType >
         l2_error_product(*grid_view, difference, over_integrate);
     system_assembler.add(l2_error_product);
-    GDT::Products::L2Localizable< CommonTraits::GridViewType, FemAdapter >
-        l2_msfem(*grid_view, fem_adapter, over_integrate);
+    GDT::Products::L2Localizable< CommonTraits::GridViewType, CommonTraits::ConstDiscreteFunctionType >
+        l2_msfem(*grid_view, *msfem_solution_, over_integrate);
     system_assembler.add(l2_msfem);
     GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, DiscreteDifferenceType >
         h1_semi_error_product(*grid_view, difference, over_integrate);

@@ -32,19 +32,18 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
   const auto& diffusion = *Problem::getDiffusion();
   const auto& neumannData = *Problem::getNeumannData();
 
-  rhsVector.clear();
+  rhsVector.vector() *= 0;
   RangeType f_x;
-  Fem::DomainDecomposedIteratorStorage<CommonTraits::GridPartType> threadIterators(rhsVector.space().gridPart());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
   {
-    for (const auto& coarse_grid_entity : threadIterators) {
+    for (const auto& coarse_grid_entity : DSC::viewRange(*rhsVector.space().grid_view())) {
       int cacheCounter = 0;
       const auto& coarseGeometry = coarse_grid_entity.geometry();
       auto rhsLocalFunction = rhsVector.local_function(coarse_grid_entity);
       const auto numLocalBaseFunctions = rhsLocalFunction.vector().size();
-      const auto& coarseBaseSet = coarse_space.basisFunctionSet(coarse_grid_entity);
+      const auto& coarseBaseSet = coarse_space.baseFunctionSet(coarse_grid_entity);
 
       // --------- add corrector contribution of right hand side --------------------------
       // Load local solutions

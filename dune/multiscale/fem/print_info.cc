@@ -27,12 +27,12 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
   outputparam.set_prefix((boost::format("%s_solution") % prefix).str());
-  discrete_solution->visualize(outputparam.prefix());
+  discrete_solution->visualize(outputparam.fullpath(discrete_solution));
 
   if (Problem::getModelData()->hasExactSolution()) {
     const auto& u = *Dune::Multiscale::Problem::getExactSolution();
     outputparam.set_prefix("exact_solution");
-    u.visualize(discrete_solution->space(), outputparam.prefix());
+    u.visualize(discrete_solution->space(), outputparam.fullpath(u));
   }
 }
 

@@ -81,7 +81,7 @@ Dune::Multiscale::make_grids() {
 
   // check whether grids match (may not match after load balancing if different refinements in different
   // spatial directions are used)
-  if (Dune::MPIHelper::size()>1) {
+  if (Dune::MPIHelper::getCollectiveCommunication().size()>1) {
     const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(*coarse_gridptr);
     const auto fine_dimensions = DSG::dimensions<CommonTraits::GridType>(*fine_gridptr);
     const auto eps = coarse_dimensions.entity_width.min();

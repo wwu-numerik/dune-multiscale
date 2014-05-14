@@ -15,10 +15,10 @@ class LocalsolutionProxy;
  * Fake DiscreteFunction that forwards localFunction calls to appropriate local_correction
  **/
 template <class SearchType>
-class LocalsolutionProxy : public CommonTraits::DiscreteFunctionBaseType
+class LocalsolutionProxy : public CommonTraits::ConstDiscreteFunctionType
 {
   typedef LocalsolutionProxy<SearchType> ThisType;
-  typedef CommonTraits::DiscreteFunctionBaseType BaseType;
+  typedef CommonTraits::ConstDiscreteFunctionType BaseType;
   typedef CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSetType;
   typedef typename BaseType::LocalfunctionType LocalFunctionType;
 
@@ -28,7 +28,8 @@ public:
 
   LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set,
                      SearchType& search)
-    : corrections_(corrections)
+    : BaseType(*corrections.begin()->second)
+    , corrections_(corrections)
     , index_set_(index_set)
     , search_(search) {}
 
