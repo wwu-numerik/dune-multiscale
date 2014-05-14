@@ -49,7 +49,6 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
                                                  CommonTraits::EllipticOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
-  CommonTraits::GdtVectorType dirichlet_shift_vector(space.mapper().size());
   auto& solution_vector = solution.vector();
   // left hand side (elliptic operator)
   CommonTraits::EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
@@ -58,7 +57,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   GDT::Functionals::L2Face< CommonTraits::NeumannDataType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
       neumann_functional(*neumann, rhs_vector, space);
   // dirichlet boundary values
-  CommonTraits::DiscreteFunctionType dirichlet_projection(space, dirichlet_shift_vector);
+  CommonTraits::DiscreteFunctionType dirichlet_projection(space);
   GDT::Operators::DirichletProjectionLocalizable< GridViewType, CommonTraits::DirichletDataType, CommonTraits::DiscreteFunctionType >
       dirichlet_projection_operator(*(space.grid_view()),
                                     boundary_info,

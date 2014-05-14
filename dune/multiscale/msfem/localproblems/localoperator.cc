@@ -37,12 +37,13 @@ namespace MsFEM {
   bool LocalProblemOperator::cached_;
   
 LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
-                                           const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
+                                           const LocalGridDiscreteFunctionSpaceType& space,
                                            const DiffusionOperatorType& diffusion_op)
-  : subDiscreteFunctionSpace_(subDiscreteFunctionSpace)
+  : subDiscreteFunctionSpace_(space)
   , diffusion_operator_(diffusion_op)
   , coarse_space_(coarse_space)
-  , system_matrix_("Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace)
+  , system_matrix_(space.mapper().size(), space.mapper().size(),
+                   CommonTraits::EllipticOperatorType::pattern(space))
 {
   assemble_matrix();
 }
@@ -50,9 +51,6 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
 void LocalProblemOperator::assemble_matrix()
     // x_T is the barycenter of the macro grid element T
 {
-  system_matrix_.reserve(DSFe::diagonalAndNeighborStencil(system_matrix_));
-  system_matrix_.clear();
-
   // local grid basis functions:
   std::vector<RangeType> phi(subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
 
@@ -174,7 +172,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   if (!cached_) {
     // compute the number of quadrature points resulting from a standard quadrature on the current space
     const auto& numQuadPoints = getNumQuadPoints(discreteFunctionSpace);
-    const auto& gridSize = discreteFunctionSpace.grid_view().grid().size(0);
+    const auto& gridSize = discreteFunctionSpace.grid_view()->grid().size(0);
     coarseBaseJacs_.reserve(gridSize * numQuadPoints * numInnerCorrectors);
     dirichletJacs_.reserve(gridSize * numQuadPoints);
   }
@@ -182,7 +180,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   for (auto& localGridCell : discreteFunctionSpace) {
     const auto& geometry = localGridCell.geometry();
     const bool hasBoundaryIntersection = localGridCell.hasBoundaryIntersections();
-    auto dirichletLF = dirichletExtension.localFunction(localGridCell);
+    auto dirichletLF = dirichletExtension.local_function(localGridCell);
 
     const auto quadrature = DSFe::make_quadrature(localGridCell, discreteFunctionSpace);
     const auto numQuadraturePoints = quadrature.nop();
@@ -306,7 +304,7 @@ void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFuncti
     if (localCell.hasBoundaryIntersections())
       for (const auto& intersection : DSC::intersectionRange(gridPart, localCell)) {
         if (DMP::is_dirichlet(intersection)) {
-          auto funcLocal = function.localFunction(localCell);
+          auto funcLocal = function.local_function(localCell);
           const auto& lagrangePointSet = function.space().lagrangePointSet(localCell);
           const auto faceNumber = intersection.indexInInside();
           for (auto lp : DSC::lagrangePointSetRange<1>(function.space(), localCell, faceNumber)) {

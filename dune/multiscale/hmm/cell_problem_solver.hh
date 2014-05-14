@@ -34,7 +34,7 @@ private:
   //! type of discrete functions
   typedef PeriodicDiscreteFunctionImp PeriodicDiscreteFunctionType;
   //! type of discrete function space
-  typedef typename PeriodicDiscreteFunctionType::DiscreteFunctionSpaceType PeriodicDiscreteFunctionSpaceType;
+  typedef typename PeriodicDiscreteFunctionType::SpaceType PeriodicDiscreteFunctionSpaceType;
   //! type of grid partition
   typedef typename PeriodicDiscreteFunctionSpaceType::GridPartType PeriodicGridPartType;
   //! type of grid
@@ -67,7 +67,7 @@ public:
 private:
   //! ----------- method: solve cell problem ------------------------------------------
   void solvecellproblem(
-      const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
+      const typename CommonTraits::DiscreteFunctionType::SpaceType::JacobianRangeType& gradient_PHI_H,
       // the barycenter x_T of a macro grid element 'T'
       const DomainType& globalQuadPoint, PeriodicDiscreteFunctionType& cell_problem_solution) const;
 
@@ -81,8 +81,8 @@ private:
    * \arg the barycenter x_T of a macro grid element 'T'
    **/
   void solve_jacobiancorrector_cellproblem(
-      const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
-      const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType&
+      const typename CommonTraits::DiscreteFunctionType::SpaceType::JacobianRangeType& gradient_PHI_H,
+      const typename CommonTraits::DiscreteFunctionType::SpaceType::JacobianRangeType&
           grad_old_coarse_function,
       const PeriodicDiscreteFunctionType& corrector_of_old_coarse_function, const DomainType& globalQuadPoint,
       PeriodicDiscreteFunctionType& jac_cor_cell_problem_solution) const;
@@ -112,7 +112,7 @@ public:
    * requires cell problem numbering manager
    **/
   void saveTheSolutions_baseSet(
-      const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType& discreteFunctionSpace,
+      const typename CommonTraits::DiscreteFunctionType::SpaceType& discreteFunctionSpace,
       const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
       ) const;
 

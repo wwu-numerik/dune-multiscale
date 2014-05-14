@@ -17,6 +17,7 @@ class LocalsolutionProxy;
 template <class SearchType>
 class LocalsolutionProxy : public CommonTraits::DiscreteFunctionBaseType
 {
+  typedef LocalsolutionProxy<SearchType> ThisType;
   typedef CommonTraits::DiscreteFunctionBaseType BaseType;
   typedef CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSetType;
   typedef typename BaseType::LocalfunctionType LocalFunctionType;
@@ -39,6 +40,10 @@ public:
     DUNE_THROW(InvalidStateException, "Coarse cell was not found!");
   }
 
+  virtual ThisType* copy() const
+  {
+    DUNE_THROW(NotImplemented, "");
+  }
 
 private:
   const CorrectionsMapType& corrections_;

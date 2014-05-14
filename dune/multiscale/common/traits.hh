@@ -68,8 +68,8 @@ struct CommonTraits {
   typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorType GdtVectorType;
   typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionDataType DiscreteFunctionDataType;
   typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionBaseType DiscreteFunctionBaseType;
-  typedef GDT::DiscreteFunction< GdtSpaceType, GdtVectorType >      DiscreteFunctionType;
-  typedef GDT::ConstDiscreteFunction< GdtSpaceType, GdtVectorType > ConstDiscreteFunctionType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::ConstDiscreteFunctionType ConstDiscreteFunctionType;
 
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain> DiffusionFunctionBaseType;
@@ -96,6 +96,7 @@ struct CommonTraits {
   //! type of exact solution (in general unknown)
   typedef FunctionBaseType ExactSolutionType;
 
+  typedef DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
   typedef DiscreteFunctionSpaceType::DomainType DomainType;
   typedef DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
   typedef FieldType TimeType;

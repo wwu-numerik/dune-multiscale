@@ -25,8 +25,8 @@ class CellProblemNumberingManager;
 const std::string CellProblemSolver::subdir_ = "cell_problems";
 
 void CellProblemSolver::solve_jacobiancorrector_cellproblem(
-    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
-    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType&
+    const typename CommonTraits::DiscreteFunctionType::SpaceType::JacobianRangeType& gradient_PHI_H,
+    const typename CommonTraits::DiscreteFunctionType::SpaceType::JacobianRangeType&
         grad_old_coarse_function,
     const PeriodicDiscreteFunctionType& corrector_of_old_coarse_function, const DomainType& globalQuadPoint,
     PeriodicDiscreteFunctionType& jac_cor_cell_problem_solution) const {
@@ -88,7 +88,7 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
 } // solve_jacobiancorrector_cellproblem
 
 void CellProblemSolver::solvecellproblem(
-    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::JacobianRangeType& gradient_PHI_H,
+    const typename CommonTraits::DiscreteFunctionType::SpaceType::JacobianRangeType& gradient_PHI_H,
     // the barycenter x_T of a macro grid element 'T'
     const DomainType& globalQuadPoint, PeriodicDiscreteFunctionType& cell_problem_solution) const {
   // set solution equal to zero:
@@ -222,10 +222,10 @@ void CellProblemSolver::solvecellproblem(
 } // solvecellproblem
 
 void CellProblemSolver::saveTheSolutions_baseSet(
-    const typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType& discreteFunctionSpace,
+    const typename CommonTraits::DiscreteFunctionType::SpaceType& discreteFunctionSpace,
     const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
     ) const {
-  typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename CommonTraits::DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   const std::string cell_solution_location = subdir_ + "/_cellSolutions_baseSet";
@@ -291,7 +291,7 @@ void CellProblemSolver::saveTheSolutions_baseSet(
 void
 CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctionType& macro_discrete_function) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
 
   std::string cell_solution_location = subdir_ + "/_cellSolutions_discFunc";
@@ -309,7 +309,7 @@ CellProblemSolver::saveTheSolutions_discFunc(const CommonTraits::DiscreteFunctio
     const auto& geometry = entity.geometry();
     const auto barycenter_of_entity = geometry.center();
     const auto barycenter_local = geometry.local(geometry.center());
-    const auto local_macro_disc = macro_discrete_function.localFunction(entity);
+    const auto local_macro_disc = macro_discrete_function.local_function(entity);
 
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
@@ -348,7 +348,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     const CellProblemNumberingManager& cp_num_manager // just to check, if we use the correct numeration
     ) const {
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpaceType;
+  typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef typename DiscreteFunctionSpaceType::GridType GridType;
   typedef typename DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
   typedef typename GridType::Codim<0>::Entity EntityType;
@@ -383,7 +383,7 @@ void CellProblemSolver::saveTheJacCorSolutions_baseSet_discFunc(
     const auto barycenter_of_entity = geometry.center();
     const auto barycenter_local = geometry.local(barycenter_of_entity);
 
-    auto local_macro_disc = macro_discrete_function.localFunction(entity);
+    auto local_macro_disc = macro_discrete_function.local_function(entity);
     JacobianRangeType grad_macro_discrete_function;
     local_macro_disc.jacobian(barycenter_local, grad_macro_discrete_function);
 

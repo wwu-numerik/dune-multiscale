@@ -203,7 +203,7 @@ void DiscreteEllipticHMMOperator::assemble_jacobian_matrix(DiscreteFunction& old
 
     DSFe::LocalMatrixProxy<CommonTraits::LinearOperatorType> local_matrix(global_matrix, macro_grid_entity,
                                                                           macro_grid_entity);
-    auto local_old_u_H = old_u_H.localFunction(macro_grid_entity);
+    auto local_old_u_H = old_u_H.local_function(macro_grid_entity);
 
     const auto& macro_grid_baseSet = local_matrix.domainBasisFunctionSet();
     const auto numMacroBaseFunctions = macro_grid_baseSet.size();

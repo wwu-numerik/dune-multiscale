@@ -25,19 +25,13 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-struct LocalOutputTraits {
-  //! --------- typedefs and classes for data output -----------------------------------------
-  typedef std::tuple<const MsFEMTraits::LocalGridDiscreteFunctionType*> IOTupleType;
-  typedef Dune::Fem::DataWriter<MsFEMTraits::LocalGridType, IOTupleType> DataOutputType;
-};
-
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
   DSC::Profiler::ScopedTiming st("msfem.idFine");
   fine_scale_part.vector() *= 0;
   const auto& coarse_space = coarse_msfem_solution.space();
-  auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
+  auto& coarse_indexset = coarse_space.grid_view()->grid().leafIndexSet();
 
   typedef DS::MsFEMProjection<LocalGridSearch> ProjectionType;
   typedef LocalGridSearch<typename MsFEMTraits::LocalGridType::LeafGridView> SearchType;
@@ -46,73 +40,72 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
 
-  for (auto& coarse_entity : coarse_space) {
+  for (auto& coarse_entity : DSC::viewRange(*coarse_space.grid_view())) {
     LocalSolutionManager localSolManager(coarse_space, coarse_entity, subgrid_list);
     localSolManager.load();
     auto& localSolutions = localSolManager.getLocalSolutions();
-    auto coarse_index = coarse_indexset.index(coarse_entity);
+    const auto coarse_index = coarse_indexset.index(coarse_entity);
     local_corrections[coarse_index] =
         DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>("", localSolManager.space());
 
     auto& local_correction = *local_corrections[coarse_index];
-    local_correction.clear();
-    auto coarseSolutionLF = coarse_msfem_solution.localFunction(coarse_entity);
+    local_correction.vector() *= 0;
+    auto coarseSolutionLF = coarse_msfem_solution.local_discrete_function(coarse_entity);
 
     if (is_simplex_grid) {
       BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
                        "We should have dim local solutions per coarse element on triangular meshes!");
 
-      JacobianRangeType grad_coarse_msfem_on_entity;
+      MsFEMTraits::LocalGridDiscreteFunctionType::JacobianRangeType grad_coarse_msfem_on_entity;
       // We only need the gradient of the coarse scale part on the element, which is a constant.
       coarseSolutionLF.jacobian(coarse_entity.geometry().center(), grad_coarse_msfem_on_entity);
 
       // get the coarse gradient on T, multiply it with the local correctors and sum it up.
       for (int spaceDimension = 0; spaceDimension < Dune::GridSelector::dimgrid; ++spaceDimension) {
-        *localSolutions[spaceDimension] *= grad_coarse_msfem_on_entity[0][spaceDimension];
-        local_correction += *localSolutions[spaceDimension];
+        localSolutions[spaceDimension]->vector() *= grad_coarse_msfem_on_entity[0][spaceDimension];
+        local_correction.vector() += localSolutions[spaceDimension]->vector();
       }
       BOOST_ASSERT_MSG(false, "no adding of the boundary correctors??");
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
       BOOST_ASSERT_MSG(
           static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
-              static_cast<long long>(coarseSolutionLF.numDofs()),
+              static_cast<long long>(coarseSolutionLF.size()),
           "The current implementation relies on having thesame types of elements on coarse and fine level!");
-      for (int dof = 0; dof < coarseSolutionLF.numDofs(); ++dof) {
-        *localSolutions[dof] *= coarseSolutionLF[dof];
-        local_correction += *localSolutions[dof];
+      for (int dof = 0; dof < coarseSolutionLF.size(); ++dof) {
+        localSolutions[dof]->vector() *= coarseSolutionLF.vector().get(dof);
+        local_correction.vector() += localSolutions[dof]->vector();
       }
 
       // oversampling : restrict the local correctors to the element T
       // ie set all dofs not "covered" by the coarse cell to 0
       if (DSC_CONFIG_GET("msfem.oversampling_layers", 0)) {
-        for (auto& local_entity : localSolManager.space()) {
-          const auto& lg_points = localSolManager.space().lagrangePointSet(local_entity);
-          const auto& reference_element = DSG::reference_element(coarse_entity);
-          const auto& coarse_geometry = coarse_entity.geometry();
-          auto entity_local_correction = local_correction.localFunction(local_entity);
+        for (auto& local_entity : DSC::viewRange(*localSolManager.space().grid_view())) {
+          DUNE_THROW(NotImplemented, "lg points in gdt?");
+//          const auto& lg_points = localSolManager.space().lagrangePointSet(local_entity);
+//          const auto& reference_element = DSG::reference_element(coarse_entity);
+//          const auto& coarse_geometry = coarse_entity.geometry();
+//          auto entity_local_correction = local_correction.local_function(local_entity);
 
-          for (const auto lg_i : DSC::valueRange(int(lg_points.size()))) {
-            const auto global_lg_point = local_entity.geometry().global(lg_points.point(lg_i));
-            const bool covered = reference_element.checkInside(coarse_geometry.local(global_lg_point));
-            entity_local_correction[lg_i] = covered ? entity_local_correction[lg_i] : RangeType::value_type(0);
-          }
+//          for (const auto lg_i : DSC::valueRange(int(lg_points.size()))) {
+//            const auto global_lg_point = local_entity.geometry().global(lg_points.point(lg_i));
+//            const bool covered = reference_element.checkInside(coarse_geometry.local(global_lg_point));
+//            entity_local_correction[lg_i] = covered ? entity_local_correction[lg_i] : RangeType::value_type(0);
+//          }
         }
       }
 
       // add dirichlet corrector
-      local_correction += *localSolutions[coarseSolutionLF.numDofs() + 1];
+      local_correction.vector() += localSolutions[coarseSolutionLF.vector().size() + 1]->vector();
       // substract neumann corrector
-      local_correction -= *localSolutions[coarseSolutionLF.numDofs()];
+      local_correction.vector() -= localSolutions[coarseSolutionLF.vector().size()]->vector();
 
       if (DSC_CONFIG_GET("msfem.local_corrections_vtk_output", false)) {
-        LocalOutputTraits::IOTupleType coarse_grid_series(&local_correction);
-        const auto elId = coarse_space.grid_view().grid().globalIdSet().id(coarse_entity);
+        const auto elId = coarse_space.grid_view()->grid().globalIdSet().id(coarse_entity);
         const std::string name = (boost::format("local_correction_%d_") % elId).str();
         Dune::Multiscale::OutputParameters outputparam;
         outputparam.set_prefix(name);
-        auto& grid = localSolManager.space().grid_view()->grid();
-        LocalOutputTraits::DataOutputType(grid, coarse_grid_series, outputparam).writeData(1.0 /*dummy*/, name);
+        local_correction.visualize(outputparam.fullpath(local_correction));
       }
     }
   }

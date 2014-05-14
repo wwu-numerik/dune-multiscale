@@ -129,7 +129,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> solveTime;
 
-  const auto& coarseGridLeafIndexSet = coarse_space_.grid_view().grid().leafIndexSet();
+  const auto& coarseGridLeafIndexSet = coarse_space_.grid_view()->grid().leafIndexSet();
   for (const auto& coarseEntity : coarse_space_) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
     DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
