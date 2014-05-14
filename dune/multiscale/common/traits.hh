@@ -111,7 +111,7 @@ struct CommonTraits {
   typedef GridType::Codim<0>::EntityPointer EntityPointerType;
   typedef GridType::Codim<0>::Geometry EntityGeometryType;
   typedef GridType::Codim<1>::Geometry FaceGeometryType;
-  //!TODO carry the rename over to the type def'ed name
+  //! \todo carry the rename over to the type def'ed name
   typedef DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
   typedef DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
