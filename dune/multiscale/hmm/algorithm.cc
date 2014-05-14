@@ -49,7 +49,7 @@ void load_reference(typename CommonTraits::DiscreteFunction_ptr& reference_solut
 template <class DiscreteFunctionSpaceType>
 typename DiscreteFunctionSpaceType::RangeType
 get_size_of_domain(const DiscreteFunctionSpaceType& discreteFunctionSpace) {
-  return DSG::dimensions(discreteFunctionSpace.gridPart().grid()).sum();
+  return DSG::dimensions(discreteFunctionSpace.grid_view().grid()).sum();
 } // get_size_of_domain
 
 //! outputs Problem info to output stream
@@ -202,7 +202,7 @@ bool adapt(const HMMResult& result, const int loop_cycle, const double error_tol
           }
         }
       }
-      discreteFunctionSpace.gridPart().grid().mark(additional_refinement, entity);
+      discreteFunctionSpace.grid_view().grid().mark(additional_refinement, entity);
       element_number += 1;
     }
     adaptationManager.adapt();

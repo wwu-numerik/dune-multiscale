@@ -22,10 +22,13 @@ struct BackendChooser {
                                                   typename DiscreteFunctionSpaceType::RangeFieldType, DiscreteFunctionSpaceType::dimRange,
      DiscreteFunctionSpaceType::dimRangeCols > DiscreteFunctionBaseType;
 
-  typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType, Stuff::LA::ChooseBackend::istl_sparse >::VectorType GdtVectorType;
-  typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType, Stuff::LA::ChooseBackend::istl_sparse >::MatrixType LinearOperatorType;
-  typedef GDT::DiscreteFunction< DiscreteFunctionSpaceType, GdtVectorType >      DiscreteFunctionType;
-  typedef GDT::ConstDiscreteFunction< DiscreteFunctionSpaceType, GdtVectorType > ConstDiscreteFunctionType;
+  typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
+    Stuff::LA::ChooseBackend::istl_sparse >::VectorType DiscreteFunctionDataType;
+  typedef DiscreteFunctionDataType GdtVectorType;
+  typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
+    Stuff::LA::ChooseBackend::istl_sparse >::MatrixType LinearOperatorType;
+  typedef GDT::DiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType >      DiscreteFunctionType;
+  typedef GDT::ConstDiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType > ConstDiscreteFunctionType;
   typedef Stuff::LA::Solver< LinearOperatorType > InverseOperatorType;
 };
 

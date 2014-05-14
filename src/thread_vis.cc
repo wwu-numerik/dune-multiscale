@@ -132,7 +132,7 @@ void subgrid_vis(const std::string& macroGridName, int total_refinement_level_,
   for(const auto& coarse_entity : discreteFunctionSpace_coarse)
   {
     const auto& subgrid = subgrid_list.getSubGrid(coarse_entity);
-    const auto& id_set = discreteFunctionSpace_coarse.gridPart().grid().globalIdSet();
+    const auto& id_set = discreteFunctionSpace_coarse.grid_view().grid().globalIdSet();
     const auto coarse_id = id_set.id(coarse_entity);
     auto& oversampled_function = (*oversampled_function_it++);
     oversampled_function = DSC::make_unique<FVFunc>(DSC::toString(coarse_id) + "_subgrid", fv_space);

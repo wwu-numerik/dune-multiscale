@@ -26,11 +26,6 @@ namespace MsFEM {
 class Elliptic_MsFEM_Solver {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
-  typedef typename DiscreteFunctionSpace::DomainType DomainType;
-  typedef typename DiscreteFunctionSpace::RangeType RangeType;
-  typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
   static const int faceCodim = 1;
 

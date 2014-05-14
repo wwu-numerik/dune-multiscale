@@ -30,7 +30,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature oder than needed
-  typedef DS::Functions::FemAdapter<CommonTraits::DiscreteFunctionType> FemAdapter;
+
   typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType > DifferenceType;
   /// TODO this should actually select the space from either non-null solution, once msfem is gdt too
   /// also only call assemble once
@@ -65,9 +65,7 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     #endif
 
     if (msfem_solution_) {
-      typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, FemAdapter > FemDifferenceType;
-      FemAdapter fem_adapter(*msfem_solution_);
-      const FemDifferenceType difference(u, fem_adapter);
+      const DifferenceType difference(u, *msfem_solution_);
       GDT::Products::L2Localizable< CommonTraits::GridViewType, FemDifferenceType >
           l2_error_product(*grid_view, difference, over_integrate);
       system_assembler.add(l2_error_product);

@@ -13,7 +13,7 @@
 #include <dune/multiscale/hmm/elliptic_hmm_matrix_assembler.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/common/output_traits.hh>
+
 
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/ranges.hh>
@@ -371,7 +371,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
     // create and initialize output class
     typename OutputTraits::IOTupleType hmm_solution_newton_step_series(hmm_solution.get());
     outputparam.set_prefix((boost::format("hmm_solution_%d_NewtonStep_%d") % loop_cycle % hmm_iteration_step).str());
-    typename OutputTraits::DataOutputType hmmsol_dataoutput(hmm_solution->space().gridPart().grid(),
+    typename OutputTraits::DataOutputType hmmsol_dataoutput(hmm_solution->space().grid_view()->grid(),
                                                             hmm_solution_newton_step_series, outputparam);
     // write data
     hmmsol_dataoutput.writeData(1.0 /*dummy*/, "hmm-solution-NewtonStep");

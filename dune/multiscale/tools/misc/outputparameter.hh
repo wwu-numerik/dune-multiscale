@@ -16,15 +16,16 @@ namespace Multiscale {
 struct OutputParameters : public Dune::Fem::DataWriterParameters {
 public:
   explicit OutputParameters(const std::string _path = DSC_CONFIG_GET("global.datadir", "data"));
-
+private:
   std::string my_prefix_;
   const std::string my_path_;
-
+public:
   void set_prefix(std::string my_prefix);
-  //! base of file name for data file
-  std::string prefix() const;
   //! path where the data is stored
   std::string path() const;
+private:
+  //! base of file name for data file
+  std::string prefix() const;
 
   /** format of output:
    *  0; // GRAPE (lossless format)
@@ -38,8 +39,8 @@ public:
   virtual bool separateRankPath() const;
 
   virtual std::string macroGridName(const int dim) const;
-
-  std::string fullname(const CommonTraits::DiscreteFunctionBaseType& function);
+public:
+  std::string fullpath(const CommonTraits::DiscreteFunctionBaseType& function);
 
 private:
   //! to avoid confusion path is only changeable in ctor

@@ -43,7 +43,7 @@ struct IOTraits {
 
 template <class DiscreteFunctionType>
 class DiscreteFunctionIO : public boost::noncopyable {
-  static_assert(std::is_base_of<Dune::Fem::IsDiscreteFunction, DiscreteFunctionType>::value, "");
+//  static_assert(std::is_base_of<Dune::Fem::IsDiscreteFunction, DiscreteFunctionType>::value, "");
 
   typedef DiscreteFunctionIO<DiscreteFunctionType> ThisType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;

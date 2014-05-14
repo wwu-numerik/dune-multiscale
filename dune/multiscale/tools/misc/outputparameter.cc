@@ -42,7 +42,7 @@ std::string OutputParameters::macroGridName(const int /*dim*/) const {
   return Problem::getModelData()->getMacroGridFile();
 }
 
-std::string OutputParameters::fullname(const CommonTraits::DiscreteFunctionBaseType &function)
+std::string OutputParameters::fullpath(const CommonTraits::DiscreteFunctionBaseType &function)
 {
   return (boost::format("%s/%s_%s") % path() % prefix() % function.name()).str();
 }

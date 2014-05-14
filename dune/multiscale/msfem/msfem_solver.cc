@@ -15,10 +15,9 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <sstream>
 
-#include "dune/multiscale/common/dirichletconstraints.hh"
-#include "dune/multiscale/common/traits.hh"
-#include "dune/multiscale/msfem/msfem_traits.hh"
-#include <dune/multiscale/common/output_traits.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+
 #include "msfem_solver.hh"
 #include "localsolution_proxy.hh"
 
@@ -36,9 +35,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      DiscreteFunctionType& fine_scale_part) const {
   DSC::Profiler::ScopedTiming st("msfem.idFine");
-  fine_scale_part.clear();
-  const DiscreteFunctionSpace& coarse_space = coarse_msfem_solution.space();
-  auto& coarse_indexset = coarse_space.gridPart().grid().leafIndexSet();
+  fine_scale_part.vector() *= 0;
+  const auto& coarse_space = coarse_msfem_solution.space();
+  auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
 
   typedef DS::MsFEMProjection<LocalGridSearch> ProjectionType;
   typedef LocalGridSearch<typename MsFEMTraits::LocalGridType::LeafGridView> SearchType;
@@ -108,11 +107,11 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
       if (DSC_CONFIG_GET("msfem.local_corrections_vtk_output", false)) {
         LocalOutputTraits::IOTupleType coarse_grid_series(&local_correction);
-        const auto elId = coarse_space.gridPart().grid().globalIdSet().id(coarse_entity);
+        const auto elId = coarse_space.grid_view().grid().globalIdSet().id(coarse_entity);
         const std::string name = (boost::format("local_correction_%d_") % elId).str();
         Dune::Multiscale::OutputParameters outputparam;
         outputparam.set_prefix(name);
-        auto& grid = localSolManager.space().gridPart().grid();
+        auto& grid = localSolManager.space().grid_view()->grid();
         LocalOutputTraits::DataOutputType(grid, coarse_grid_series, outputparam).writeData(1.0 /*dummy*/, name);
       }
     }

@@ -66,6 +66,7 @@ struct CommonTraits {
 
   typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
   typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorType GdtVectorType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionDataType DiscreteFunctionDataType;
   typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionBaseType DiscreteFunctionBaseType;
   typedef GDT::DiscreteFunction< GdtSpaceType, GdtVectorType >      DiscreteFunctionType;
   typedef GDT::ConstDiscreteFunction< GdtSpaceType, GdtVectorType > ConstDiscreteFunctionType;
