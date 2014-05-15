@@ -1,6 +1,8 @@
 #include <config.h>
 #include "grid_creation.hh"
 
+#include <dune/grid/common/gridenums.hh>
+
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
@@ -80,8 +82,9 @@ Dune::Multiscale::make_grids() {
   // check whether grids match (may not match after load balancing if different refinements in different
   // spatial directions are used)
   if (Dune::Fem::MPIManager::size()>1) {
-    const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(*coarse_gridptr);
-    const auto fine_dimensions = DSG::dimensions<CommonTraits::GridType>(*fine_gridptr);
+    typedef CommonTraits::GridType::Partition<PartitionIteratorType::Interior_Partition>::LeafGridView InteriorLeafViewType;
+    const auto coarse_dimensions = DSG::dimensions<InteriorLeafViewType>(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
+    const auto fine_dimensions = DSG::dimensions<InteriorLeafViewType>(fine_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
     const auto eps = coarse_dimensions.entity_width.min();
     for (const auto i : DSC::valueRange(dim_world)) {
       const bool match = (std::abs(coarse_dimensions.coord_limits[i].min()-fine_dimensions.coord_limits[i].min())
