@@ -17,6 +17,7 @@
 #include <unordered_map>
 
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
@@ -39,8 +40,8 @@ class DiscreteFunctionIO : public boost::noncopyable {
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
   typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef std::vector<DiscreteFunction_ptr> Vector;
-  typedef typename DiscreteFunctionType::SpaceType::GridViewType GridViewType;
-  typedef std::shared_ptr<GridViewType> GridViewPtrType;
+  typedef typename DiscreteFunctionSpaceType::GridViewType GridViewType;
+  typedef std::shared_ptr<const GridViewType> GridViewPtrType;
 
   DiscreteFunctionIO() = default;
 
@@ -100,7 +101,9 @@ class DiscreteFunctionIO : public boost::noncopyable {
      */
     MemoryBackend(const GridViewPtrType& grid_view, const std::string filename = "nonsense_default_for_map")
       : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-      , space_(grid_view) {}
+      , space_(DMM::MsFEMTraits::SpaceProviderType::create(DMM::MsFEMTraits::LocalGridProviderType(&grid_view->grid()),
+                                                           CommonTraits::st_gdt_grid_level))
+    {}
 
     void append(const DiscreteFunction_ptr& df) { functions_.push_back(df); }
 

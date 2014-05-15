@@ -35,7 +35,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   auto& coarse_indexset = coarse_space.grid_view()->grid().leafIndexSet();
 
   typedef DS::MsFEMProjection<LocalGridSearch> ProjectionType;
-  typedef LocalGridSearch<typename MsFEMTraits::LocalGridType::LeafGridView> SearchType;
+  typedef LocalGridSearch<typename MsFEMTraits::LocalGridViewType> SearchType;
   typedef LocalsolutionProxy<SearchType> ProxyType;
   typename ProxyType::CorrectionsMapType local_corrections;
 
@@ -47,7 +47,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     auto& localSolutions = localSolManager.getLocalSolutions();
     const auto coarse_index = coarse_indexset.index(coarse_entity);
     local_corrections[coarse_index] =
-        DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>("", localSolManager.space());
+        DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), " ");
 
     auto& local_correction = *local_corrections[coarse_index];
     local_correction.vector() *= 0;
@@ -83,16 +83,17 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       if (DSC_CONFIG_GET("msfem.oversampling_layers", 0)) {
         for (auto& local_entity : DSC::viewRange(*localSolManager.space().grid_view())) {
           DUNE_THROW(NotImplemented, "lg points in gdt?");
-//          const auto& lg_points = localSolManager.space().lagrangePointSet(local_entity);
-//          const auto& reference_element = DSG::reference_element(coarse_entity);
-//          const auto& coarse_geometry = coarse_entity.geometry();
-//          auto entity_local_correction = local_correction.local_function(local_entity);
+          const auto& lg_points = localSolManager.space().lagrange_points(local_entity);
+          const auto& reference_element = DSG::reference_element(coarse_entity);
+          const auto& coarse_geometry = coarse_entity.geometry();
+          auto entity_local_correction = local_correction.local_discrete_function(local_entity);
 
-//          for (const auto lg_i : DSC::valueRange(int(lg_points.size()))) {
-//            const auto global_lg_point = local_entity.geometry().global(lg_points.point(lg_i));
-//            const bool covered = reference_element.checkInside(coarse_geometry.local(global_lg_point));
-//            entity_local_correction[lg_i] = covered ? entity_local_correction[lg_i] : RangeType::value_type(0);
-//          }
+          for (const auto lg_i : DSC::valueRange(int(lg_points.size()))) {
+            const auto global_lg_point = local_entity.geometry().global(lg_points[lg_i]);
+            const bool covered = reference_element.checkInside(coarse_geometry.local(global_lg_point));
+            auto& vec = entity_local_correction.vector();
+            vec.set(lg_i, covered ? vec.get(lg_i) : 0);
+          }
         }
       }
 
@@ -114,7 +115,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   SearchType search(coarse_space, subgrid_list);
   ProxyType proxy(local_corrections, coarse_indexset, search);
   ProjectionType::project(proxy, fine_scale_part, search);
-  BOOST_ASSERT_MSG(fine_scale_part.dofsValid(), "Fine scale part DOFs need to be valid!");
+  BOOST_ASSERT_MSG(fine_scale_part.dofs_valid(), "Fine scale part DOFs need to be valid!");
   //backend storage no longer needed from here on
   DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
 }
@@ -124,7 +125,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
                                   const CommonTraits::SourceType& f, DiscreteFunctionType& coarse_scale_part,
                                   DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
-  BOOST_ASSERT_MSG(coarse_scale_part.dofsValid(), "Coarse scale part DOFs need to be valid!");
+  BOOST_ASSERT_MSG(coarse_scale_part.dofs_valid(), "Coarse scale part DOFs need to be valid!");
 
   DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");
   coarse_msfem_solution.vector() *= 0;

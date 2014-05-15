@@ -52,11 +52,11 @@ void LocalProblemOperator::assemble_matrix()
     // x_T is the barycenter of the macro grid element T
 {
   // local grid basis functions:
-  std::vector<CommonTraits::RangeType> phi(subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
+  std::vector<CommonTraits::RangeType> phi(subDiscreteFunctionSpace_.mapper().maxNumDofs());
 
   // gradient of micro scale base function:
   std::vector<typename BaseFunctionSetType::JacobianRangeType> gradient_phi(
-      subDiscreteFunctionSpace_.blockMapper().maxNumDofs());
+      subDiscreteFunctionSpace_.mapper().maxNumDofs());
   typename BaseFunctionSetType::JacobianRangeType diffusion_in_gradient_phi;
 
   for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
@@ -321,7 +321,7 @@ void LocalProblemOperator::project_dirichlet_values(CommonTraits::DiscreteFuncti
 
 void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType &current_rhs, MsFEMTraits::LocalGridDiscreteFunctionType &current_solution)
 {
-  if (!current_rhs.dofsValid())
+  if (!current_rhs.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 
   const auto solver =
@@ -332,7 +332,7 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
                                                DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);
   localProblemSolver->apply(current_rhs, current_solution);
 
-  if (!current_solution.dofsValid())
+  if (!current_solution.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
 }
 

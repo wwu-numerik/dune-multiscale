@@ -187,7 +187,7 @@ void solve_hmm_problem_nonlinear(
                                    hmm_newton_rhs);
     DSC_LOG_INFO << "Right hand side assembled!" << std::endl;
 
-    if (!(hmm_newton_rhs.dofsValid())) {
+    if (!(hmm_newton_rhs.dofs_valid())) {
       DSC_LOG_INFO << "Right hand side invalid!" << std::endl;
       DSC_LOG_INFO << "Right hand side invalid!" << std::endl;
       DUNE_THROW(Dune::InvalidStateException, "Right hand side invalid!");
@@ -341,7 +341,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
                                                                       20000, false);
 
     hmm_newton_biCGStab(hmm_newton_rhs, hmm_newton_residual);
-    hmm_solution_convenient = hmm_newton_residual.dofsValid();
+    hmm_solution_convenient = hmm_newton_residual.dofs_valid();
 
     if (hmm_biCG_tolerance > 1e-4) {
       DSC_LOG_INFO << "WARNING! Iteration step " << hmm_iteration_step << ". Invalid dofs in 'hmm_newton_residual'."
@@ -351,7 +351,7 @@ bool process_hmm_newton_residual(typename CommonTraits::RangeType& relative_newt
     hmm_biCG_tolerance *= 10.0;
   }
 
-  if (!hmm_newton_residual.dofsValid()) {
+  if (!hmm_newton_residual.dofs_valid()) {
     DSC_LOG_ERROR << "WARNING! Invalid dofs in 'hmm_newton_residual'." << std::endl;
     return false;
   }

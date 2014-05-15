@@ -41,8 +41,8 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
     for (const auto& coarse_grid_entity : DSC::viewRange(*rhsVector.space().grid_view())) {
       int cacheCounter = 0;
       const auto& coarseGeometry = coarse_grid_entity.geometry();
-      auto rhsLocalFunction = rhsVector.local_function(coarse_grid_entity);
-      const auto numLocalBaseFunctions = rhsLocalFunction.vector().size();
+      auto rhsLocalFunction = rhsVector.local_discrete_function(coarse_grid_entity);
+      const auto numLocalBaseFunctions = rhsLocalFunction->vector().size();
       const auto& coarseBaseSet = coarse_space.baseFunctionSet(coarse_grid_entity);
 
       // --------- add corrector contribution of right hand side --------------------------
@@ -72,15 +72,15 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
               localSolutions.size(), std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
           // add contributions for all inner correctors
           for (auto lsNum : DSC::valueRange(numLocalBaseFunctions)) {
-            auto localFunction = localSolutions[lsNum]->localFunction(localEntity);
+            auto localFunction = localSolutions[lsNum]->local_function(localEntity);
             // this evaluates the local solutions in all quadrature points...
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
             // while this automatically evaluates their jacobians.
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionJacobians[lsNum]);
 
             // assemble intersection-part
-            const auto& subGridPart = localSolutionManager.grid_part();
-            for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafGridView(), localEntity)) {
+            const auto& view = localSolutionManager.grid_view();
+            for (const auto& intersection : DSC::intersectionRange(view, localEntity)) {
               if (DMP::is_neumann(intersection)) {
                 const int orderOfIntegrand =
                     (CommonTraits::polynomial_order - 1) + 2 * (CommonTraits::polynomial_order + 1);

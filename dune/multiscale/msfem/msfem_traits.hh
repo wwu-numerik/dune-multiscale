@@ -22,13 +22,19 @@ struct MsFEMTraits {
   // change dirichletconstraints.cc bottom accordingly
   // typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
 
-  typedef CommonTraits::DiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-  typedef LocalGridType::LeafGridView LocalGridViewType;
+  typedef DSG::Providers::ConstDefault<LocalGridType> LocalGridProviderType;
+  typedef GDT::Spaces::ContinuousLagrangeProvider<LocalGridType, DSG::ChooseLayer::leaf,
+                                                  GDT::ChooseSpaceBackend::fem,
+                                                  st_lagrangespace_order, CommonTraits::FieldType,
+                                                  CommonTraits::dimRange > SpaceProviderType;
 
+  //! \todo not correct
+  typedef typename SpaceProviderType::Type LocalGridDiscreteFunctionSpaceType;
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
 
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType
-  LocalGridDiscreteFunctionType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::ConstDiscreteFunctionType LocalGridConstDiscreteFunctionType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::GridViewType LocalGridViewType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
   typedef typename CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;

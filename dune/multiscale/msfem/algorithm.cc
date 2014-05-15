@@ -91,9 +91,9 @@ void algorithm() {
   CommonTraits::GridProviderType coarse_grid_provider(grids.first);
   CommonTraits::GridProviderType fine_grid_provider(grids.second);
   const CommonTraits::GdtSpaceType coarseSpace =
-      CommonTraits::GdtSpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level);
+      CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level);
   const CommonTraits::GdtSpaceType fineSpace =
-      CommonTraits::GdtSpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
+      CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
 
   const auto& diffusion_op = *Dune::Multiscale::Problem::getDiffusion();
   const auto& f = *Dune::Multiscale::Problem::getSource();
