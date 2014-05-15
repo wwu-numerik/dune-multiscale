@@ -1,6 +1,8 @@
 #ifndef LOCALGRIDSEARCH_HH
 #define LOCALGRIDSEARCH_HH
 
+#include <dune/grid/common/gridenums.hh>
+
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/stuff/grid/search.hh>
@@ -63,7 +65,8 @@ typename LocalGridSearch<GridViewImp>::EntityPointerVectorType LocalGridSearch<G
 operator()(const PointContainerType& points) {
   const auto count_nulls = [&](const typename EntityPointerVectorType::value_type& ptr) { return ptr == nullptr; };
   //! \TODO potential speedup by caching last coarse_entity position instead fo restarting at front
-  const auto view = coarse_space_.grid().leafGridView();
+  // only iterate over inner (non-overlap) entities
+  const auto view = coarse_space_.grid().template leafGridView<PartitionIteratorType::Interior_Partition>();
 
   static auto it = view.template begin< 0 >();
   const auto end = view.template end< 0 >();
