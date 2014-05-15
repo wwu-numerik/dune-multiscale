@@ -43,6 +43,7 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
   , diffusion_operator_(diffusion_op)
   , coarse_space_(coarse_space)
   , system_matrix_("Local Problem System Matrix", subDiscreteFunctionSpace, subDiscreteFunctionSpace)
+  , msfemUsesOversampling_((DSC_CONFIG_GET("msfem.oversampling_layers", 0)>0))
 {
   assemble_matrix();
 }
@@ -140,6 +141,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   // get dirichlet and neumann data
   const auto& neumannData = *Dune::Multiscale::Problem::getNeumannData();
   const auto& discreteFunctionSpace = allLocalRHS[0]->space();
+  const bool switchOffCaching = coarseEntity.hasBoundaryIntersections() && msfemUsesOversampling_;
 
   //! @todo we should use the dirichlet constraints here somehow
   LocalGridDiscreteFunctionType dirichletExtension("dirichletExtension", discreteFunctionSpace);
@@ -214,16 +216,22 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
               diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
             else {
               const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
-              if (!cached_) {
+              if (switchOffCaching) {
+                coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
+                coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
+              } else if (!cached_) {
                 coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
                 coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
                 coarseBaseJacs_.push_back(coarseBaseJac);
-              } else
+              } else {
                 coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
+              }
               diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
             }
           } else {
-            if (!cached_) {
+            if (switchOffCaching) {
+                dirichletLF.jacobian(local_point, dirichletJac);
+            } else if (!cached_) {
               dirichletLF.jacobian(local_point, dirichletJac);
               dirichletJacs_.push_back(dirichletJac);
             }
@@ -279,7 +287,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   }
   
   // dirichlet jacobians and coarse base func jacobians were cached
-  cached_ = true;
+  if (!switchOffCaching)
+    cached_ = true;
 
   Stuff::GridboundaryAllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
   DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, discreteFunctionSpace);
