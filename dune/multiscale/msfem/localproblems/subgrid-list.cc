@@ -35,7 +35,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;
-  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(coarseSpace_.gridPart().grid());
+  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType::LeafGridView>(coarseSpace_.gridPart().grid().leafGridView());
 
   for (const auto& coarse_entity : coarseSpace_) {
     // make sure we only create subgrids for interior coarse elements, not
@@ -45,7 +45,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     // make sure we did not create a subgrid for the current coarse entity so far
     assert(subGridList_.find(coarse_index) == subGridList_.end());
 
-    const auto dimensions = DSG::dimensions<CommonTraits::GridType>(coarse_entity);
+    const auto dimensions = DSG::dimensions<CommonTraits::GridType::LeafGridView>(coarse_entity);
     typedef FieldVector<typename LocalGridType::ctype, dim_world> CoordType;
     CoordType lowerLeft(0);
     CoordType upperRight(0);
