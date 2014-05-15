@@ -54,13 +54,13 @@ struct CommonTraits {
   typedef GridType::Codim<0>::Entity EntityType;
   typedef double FieldType;
 
-  typedef DSG::Providers::ConstDefault< GridType > GridProviderType;
-  typedef GDT::Spaces::ContinuousLagrangeProvider< GridType, DSG::ChooseLayer::leaf,
-                                                   GDT::ChooseSpaceBackend::fem,
-                                                   st_lagrangespace_order, FieldType, dimRange > GdtSpaceProviderType;
+  typedef DSG::Providers::ConstDefault<GridType> GridProviderType;
+  typedef GDT::Spaces::ContinuousLagrangeProvider<GridType, DSG::ChooseLayer::leaf,
+                                                  GDT::ChooseSpaceBackend::fem,
+                                                   st_lagrangespace_order, FieldType, dimRange > SpaceProviderType;
 
   static constexpr auto st_gdt_grid_level = 0;
-  typedef GdtSpaceProviderType::Type GdtSpaceType;
+  typedef SpaceProviderType::Type GdtSpaceType;
   typedef GdtSpaceType DiscreteFunctionSpaceType;
   typedef GdtSpaceType::GridViewType GridViewType;
 
@@ -123,7 +123,7 @@ struct CommonTraits {
 
 template <class T = CommonTraits::DiscreteFunctionType>
 std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::DiscreteFunctionSpaceType& space) {
-  return std::make_shared<T>(name, space);
+  return std::make_shared<T>(space, name);
   //  return DSC::make_unique<T>(name, space);
 }
 

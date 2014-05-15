@@ -45,6 +45,7 @@ public:
 private:
   LocalGridList& subgridList_;
   MsFEMTraits::LocalGridType& subgrid_;
+  const std::shared_ptr<const LocalGridViewType> grid_view_ptr_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;
   MsFEMTraits::LocalSolutionVectorType localSolutions_;

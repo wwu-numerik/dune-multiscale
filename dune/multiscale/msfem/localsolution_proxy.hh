@@ -15,7 +15,7 @@ class LocalsolutionProxy;
  * Fake DiscreteFunction that forwards localFunction calls to appropriate local_correction
  **/
 template <class SearchType>
-class LocalsolutionProxy : public CommonTraits::ConstDiscreteFunctionType
+class LocalsolutionProxy : public MsFEMTraits::LocalGridConstDiscreteFunctionType
 {
   typedef LocalsolutionProxy<SearchType> ThisType;
   typedef CommonTraits::ConstDiscreteFunctionType BaseType;

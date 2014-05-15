@@ -69,7 +69,7 @@ void CellProblemSolver::solve_jacobiancorrector_cellproblem(
 
   const double norm_rhs = DS::l2norm(jac_cor_cell_problem_rhs);
 
-  if (!(jac_cor_cell_problem_rhs.dofsValid())) {
+  if (!(jac_cor_cell_problem_rhs.dofs_valid())) {
     DUNE_THROW(Dune::InvalidStateException, "Jacobian Corrector Cell Problem RHS invalid.");
   }
 
@@ -120,7 +120,7 @@ void CellProblemSolver::solvecellproblem(
     // assemble right hand side of algebraic cell problem
     cell_problem_op.assembleCellRHS_linear(globalQuadPoint, gradient_PHI_H, cell_problem_rhs);
     const double norm_rhs = DS::l2norm(cell_problem_rhs);
-    if (!(cell_problem_rhs.dofsValid())) {
+    if (!(cell_problem_rhs.dofs_valid())) {
       DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
     }
 
@@ -165,7 +165,7 @@ void CellProblemSolver::solvecellproblem(
                                                 cell_problem_rhs);
 
       const double norm_rhs = DS::l2norm(cell_problem_rhs);
-      if (!(cell_problem_rhs.dofsValid())) {
+      if (!(cell_problem_rhs.dofs_valid())) {
         DUNE_THROW(Dune::InvalidStateException, "Cell Problem RHS invalid.");
       }
       if ((norm_rhs < DSC_CONFIG_GET("max_norm_rhs", 1e-10))) {
@@ -180,7 +180,7 @@ void CellProblemSolver::solvecellproblem(
 
         cell_fem_newton_biCGStab.apply(cell_problem_rhs, cell_problem_residual);
 
-        if (cell_problem_residual.dofsValid()) {
+        if (cell_problem_residual.dofs_valid()) {
           cell_solution_convenient = true;
         }
 
@@ -216,7 +216,7 @@ void CellProblemSolver::solvecellproblem(
   }
   // end nonlinear case.
 
-  if (!(cell_problem_solution.dofsValid())) {
+  if (!(cell_problem_solution.dofs_valid())) {
     DUNE_THROW(Dune::InvalidStateException, "Current solution of the cell problem invalid!");
   }
 } // solvecellproblem

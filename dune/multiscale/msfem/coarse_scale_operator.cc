@@ -86,7 +86,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
             for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
               for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
-                RangeType local_integral(0.0);
+                CoarseDiscreteFunctionSpace::RangeType local_integral(0.0);
 
                 // Compute the gradients of the i'th and j'th local problem solutions
                 JacobianRangeType gradLocProbSoli(0.0), gradLocProbSolj(0.0);
@@ -137,7 +137,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
 void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
                                         CoarseScaleOperator::CoarseDiscreteFunction& solution) {
-  BOOST_ASSERT_MSG(rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
+  BOOST_ASSERT_MSG(rhs.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
 
   DSC_PROFILER.startTiming("msfem.solveCoarse");
   const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(global_matrix_);
@@ -145,9 +145,9 @@ void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscret
   auto inverse_options = inverse.options(linear_solver_type);
   inverse_options.set("precision", 1e-8);
   inverse_options.set("max_iter", DSC_CONFIG_GET("msfem.solver.iterations", rhs.vector().size()));
-  inverse.apply(rhs, solution, inverse_options);
+  inverse.apply(rhs.vector(), solution.vector(), inverse_options);
 
-  if (!solution.dofsValid())
+  if (!solution.dofs_valid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
   DSC_PROFILER.stopTiming("msfem.solveCoarse");
   DSC_LOG_DEBUG << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.solveCoarse") << "ms."
