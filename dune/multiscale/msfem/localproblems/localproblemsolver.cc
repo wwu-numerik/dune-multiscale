@@ -117,7 +117,7 @@ void LocalProblemSolver::solve_for_all_cells() {
     }
 
   // number of coarse grid entities (of codim 0).
-  const auto coarseGridSize = coarse_space_.grid().size(0);
+  const auto coarseGridSize = coarse_space_.grid().size(0) - coarse_space_.grid().overlapSize(0);
   if (Dune::Fem::MPIManager::size() > 0)
     DSC_LOG_DEBUG << "Rank " << Dune::Fem::MPIManager::rank() << " will solve local problems for " << coarseGridSize
                  << " coarse entities!" << std::endl;
