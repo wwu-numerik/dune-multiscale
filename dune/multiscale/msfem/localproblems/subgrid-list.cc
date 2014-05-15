@@ -83,11 +83,13 @@ const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(IndexType coarseCell
 } // getSubGrid
 
 const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const CoarseEntityType& entity) const {
+  BOOST_ASSERT_MSG((entity.partitionType() == Dune::InteriorEntity), "Subgrids exist only for interior entities!");
   const auto index = coarseGridLeafIndexSet_.index(entity);
   return getSubGrid(index);
 } // getSubGrid
 
 MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const CoarseEntityType& entity) {
+  BOOST_ASSERT_MSG((entity.partitionType() == Dune::InteriorEntity), "Subgrids exist only for interior entities!");
   const auto index = coarseGridLeafIndexSet_.index(entity);
   return getSubGrid(index);
 } // getSubGrid
