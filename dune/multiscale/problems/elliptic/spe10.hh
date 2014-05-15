@@ -94,4 +94,4 @@ MSNULLFUNCTION(ExactSolution)
 } // namespace Multiscale {
 } // namespace Dune {
 
-#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE
+#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SPE10
