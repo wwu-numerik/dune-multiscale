@@ -25,7 +25,8 @@
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
-
+#include <dune/gdt/operators/projections.hh>
+#include <dune/gdt/spaces/constraints.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -43,7 +44,10 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
   , diffusion_operator_(diffusion_op)
   , coarse_space_(coarse_space)
   , system_matrix_(space.mapper().size(), space.mapper().size(),
-                   CommonTraits::EllipticOperatorType::pattern(space))
+                   EllipticOperatorType::pattern(space))
+  , system_assembler_(subDiscreteFunctionSpace_)
+  , elliptic_operator_(diffusion_operator_, system_matrix_, subDiscreteFunctionSpace_)
+  , constraints_(Problem::getModelData()->subBoundaryInfo(), space.mapper().maxNumDofs(), space.mapper().maxNumDofs())
   , msfemUsesOversampling_((DSC_CONFIG_GET("msfem.oversampling_layers", 0)>0))
 {
   assemble_matrix();
@@ -52,58 +56,23 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
 void LocalProblemOperator::assemble_matrix()
     // x_T is the barycenter of the macro grid element T
 {
-  // local grid basis functions:
-  std::vector<CommonTraits::RangeType> phi(subDiscreteFunctionSpace_.mapper().maxNumDofs());
+  system_assembler_.add(elliptic_operator_);
 
-  // gradient of micro scale base function:
-  std::vector<typename BaseFunctionSetType::JacobianRangeType> gradient_phi(
-      subDiscreteFunctionSpace_.mapper().maxNumDofs());
-  typename BaseFunctionSetType::JacobianRangeType diffusion_in_gradient_phi;
+  LocalGridDiscreteFunctionType dirichletProjection(subDiscreteFunctionSpace_);
 
-  for (const auto& sub_grid_entity : subDiscreteFunctionSpace_) {
-    const auto& sub_grid_geometry = sub_grid_entity.geometry();
-
-    DSFe::LocalMatrixProxy<LocalProblemSolver::LinearOperatorType> local_matrix(system_matrix_, sub_grid_entity,
-                                                                                sub_grid_entity);
-
-    const auto& baseSet = local_matrix.domainBasisFunctionSet();
-    const auto numBaseFunctions = baseSet.size();
-
-    // for constant diffusion "2*discreteFunctionSpace_.order()" is sufficient, for the general case, it is better to
-    // use a higher order quadrature:
-    const auto quadrature = DSFe::make_quadrature(sub_grid_entity, subDiscreteFunctionSpace_);
-
-    const auto numQuadraturePoints = quadrature.nop();
-    for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
-      // local (barycentric) coordinates (with respect to local grid entity)
-      const auto& local_point = quadrature.point(quadraturePoint);
-      const auto global_point = sub_grid_geometry.global(local_point);
-
-      const double weight = quadrature.weight(quadraturePoint) * sub_grid_geometry.integrationElement(local_point);
-
-      baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
-      baseSet.evaluateAll(quadrature[quadraturePoint], phi);
-
-      for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-        // A( x, \nabla \phi(x) )
-        diffusion_operator_.diffusiveFlux(global_point, gradient_phi[i], diffusion_in_gradient_phi);
-        for (unsigned int j = 0; j < numBaseFunctions; ++j) {
-          // stiffness contribution
-          local_matrix.add(j, i, weight * (diffusion_in_gradient_phi[0] * gradient_phi[j][0]));
-          // mass contribution (just for stabilization!)
-          // local_matrix.add( j, i, 0.00000001 * weight * (phi[ i ][ 0 ] * phi[ j ][ 0 ]) );
-        }
-      }
-    }
-  }
-  DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
-  DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, subDiscreteFunctionSpace_);
-  constraints.applyToOperator(system_matrix_);
-  system_matrix_.communicate();
+  GDT::Operators::DirichletProjectionLocalizable< MsFEMTraits::LocalGridViewType,
+      CommonTraits::DirichletDataType, LocalGridDiscreteFunctionType >
+      dirichletProjectionOperator(*subDiscreteFunctionSpace_.grid_view(),
+                                    Problem::getModelData()->boundaryInfo(),
+                                    dirichlet_,
+                                    dirichletProjection);
+  system_assembler_.add(dirichletProjectionOperator,
+                       new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+//  system_matrix_.communicate();
 } // assemble_matrix
 
 long LocalProblemOperator::getNumQuadPoints(const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& discreteFunctionSpace) const {
-  const auto quadOrder = (2*discreteFunctionSpace.order()+2);
+  const auto quadOrder = (2*CommonTraits::st_lagrangespace_order+2);
   int m = 0;
   while ((2*m-1 < quadOrder) && m < quadOrder)
     ++m;

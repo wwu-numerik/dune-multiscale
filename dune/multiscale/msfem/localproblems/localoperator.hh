@@ -6,6 +6,7 @@
 #define LOCALOPERATOR_HH
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/gdt/assembler/system.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -28,6 +29,11 @@ class LocalProblemOperator {
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
   typedef CommonTraits::DiscreteFunctionSpaceType CoarseSpaceType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
+  typedef GDT::Operators::EllipticCG< CommonTraits::DiffusionType,
+    LocalLinearOperatorType, LocalGridDiscreteFunctionSpaceType > EllipticOperatorType;
+  typedef GDT::Constraints::Dirichlet < typename MsFEMTraits::LocalGridViewType::Intersection, CommonTraits::RangeFieldType >
+    ConstraintsType;
+  typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
 
 public:
   LocalProblemOperator(const CoarseSpaceType& coarse_space,
@@ -65,6 +71,11 @@ private:
   const DiffusionOperatorType& diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
+  GDT::SystemAssembler<LocalGridDiscreteFunctionSpaceType> system_assembler_;
+  EllipticOperatorType elliptic_operator_;
+  BoundaryInfoType boundaryInfo_;
+  ConstraintsType constraints_;
+  DMP::ZeroDirichletData dirichlet_;
   static bool cached_;
   static std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseJacs_;
   static std::vector<BaseFunctionSetType::JacobianRangeType> dirichletJacs_;
