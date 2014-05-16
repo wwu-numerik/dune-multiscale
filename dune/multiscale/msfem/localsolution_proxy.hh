@@ -18,7 +18,7 @@ template <class SearchType>
 class LocalsolutionProxy : public MsFEMTraits::LocalGridConstDiscreteFunctionType
 {
   typedef LocalsolutionProxy<SearchType> ThisType;
-  typedef CommonTraits::ConstDiscreteFunctionType BaseType;
+  typedef MsFEMTraits::LocalGridConstDiscreteFunctionType BaseType;
   typedef CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSetType;
   typedef typename BaseType::LocalfunctionType LocalFunctionType;
 

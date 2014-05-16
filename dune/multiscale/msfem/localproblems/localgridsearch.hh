@@ -25,7 +25,7 @@ class LocalGridSearch : public DSG::EntitySearchBase<GridViewImp> {
 
   typedef DSG::EntityInlevelSearch<LocalGridViewType> PerGridSearchType;
   typedef CommonTraits::DiscreteFunctionSpaceType CoarseGridSpaceType;
-  typedef typename CoarseGridSpaceType::GridType::Traits::LeafIndexSet::IndexType IndexType;
+  typedef typename CoarseGridSpaceType::GridViewType::Grid::Traits::LeafIndexSet::IndexType IndexType;
 
   typedef typename CoarseGridSpaceType::EntityType::EntityPointer CoarseEntityPointerType;
 
