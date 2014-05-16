@@ -88,7 +88,8 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    const auto norm = GDT::Products::L2< typename CommonTraits::GridViewType >(*current_rhs.space().grid_view()).induced_norm(current_rhs);
+    const auto norm = GDT::Products::L2< typename MsFEMTraits::LocalGridViewType >
+                      (*current_rhs.space().grid_view()).induced_norm(current_rhs);
     if (norm < 1e-12) {
       current_solution.vector() *= 0;
       DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;

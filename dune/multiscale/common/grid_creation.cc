@@ -84,8 +84,8 @@ Dune::Multiscale::make_grids() {
   // spatial directions are used)
   if (Dune::MPIHelper::getCollectiveCommunication().size()>1) {
     typedef CommonTraits::GridType::Partition<PartitionIteratorType::Interior_Partition>::LeafGridView InteriorLeafViewType;
-    const auto coarse_dimensions = DSG::dimensions<InteriorLeafViewType>(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
-    const auto fine_dimensions = DSG::dimensions<InteriorLeafViewType>(fine_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
+    const auto coarse_dimensions = DSG::dimensions(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
+    const auto fine_dimensions = DSG::dimensions(fine_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
     const auto eps = coarse_dimensions.entity_width.min();
     for (const auto i : DSC::valueRange(dim_world)) {
       const bool match = (std::abs(coarse_dimensions.coord_limits[i].min()-fine_dimensions.coord_limits[i].min())
