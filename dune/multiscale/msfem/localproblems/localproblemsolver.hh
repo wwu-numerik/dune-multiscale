@@ -7,12 +7,6 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
-#include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/fem/solver/cginverseoperator.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/istl/matrix.hh>
 #include <dune/istl/operators.hh>

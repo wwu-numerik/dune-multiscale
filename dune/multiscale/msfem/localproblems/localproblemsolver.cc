@@ -3,8 +3,6 @@
 #include <boost/concept/usage.hpp>
 #include <boost/format.hpp>
 #include <dune/common/exceptions.hh>
-#include <dune/fem/io/file/dataoutput.hh>
-#include <dune/fem/io/parameter.hh>
 #include <dune/istl/scalarproducts.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>

@@ -2,7 +2,6 @@
 #define DUNEMS_ENTITY_COMPARE_HH
 
 #include <utility>
-#include <dune/fem/quadrature/cachingquadrature.hh>
 
 namespace Dune {
 

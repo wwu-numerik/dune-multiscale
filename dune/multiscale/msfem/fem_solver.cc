@@ -85,8 +85,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
 
   // solve the system
   const Stuff::LA::Solver< CommonTraits::LinearOperatorType > linear_solver(system_matrix);
-  const auto linear_solver_type = linear_solver.options()[0];
-  auto linear_solver_options = linear_solver.options(linear_solver_type);
+  auto linear_solver_options = linear_solver.options("parallel.ssor.bicg");
   linear_solver_options.set("max_iter",                 "5000", true);
   linear_solver_options.set("precision",                "1e-8", true);
   linear_solver_options.set("post_check_solves_system", "0",    true);

@@ -10,11 +10,6 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-//#include <dune/fem/function/adaptivefunction.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/fem/space/lagrange.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/grid/entity.hh>
 

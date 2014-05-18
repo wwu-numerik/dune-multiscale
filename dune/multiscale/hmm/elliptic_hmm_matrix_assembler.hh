@@ -10,9 +10,6 @@
 
 #include <dune/multiscale/hmm/hmm_traits.hh>
 #include <dune/common/fmatrix.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/operator/2order/lagrangematrixsetup.hh>
 
 namespace Dune {
 namespace Multiscale {
