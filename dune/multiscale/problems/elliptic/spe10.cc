@@ -110,7 +110,7 @@ Diffusion::~Diffusion() {
   permeability_ = nullptr;
 }
 
-void Diffusion::evaluate(const DomainType &x, Diffusion::RangeType &y) const
+void Diffusion::evaluate(const DomainType &/*x*/, Diffusion::RangeType &/*y*/) const
 {
   DUNE_THROW(NotImplemented, "");
 }

@@ -7,7 +7,6 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/hmm/cell_problem_solver.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>
-#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
 #include <dune/multiscale/problems/selector.hh>
 
 #include <dune/stuff/grid/information.hh>
