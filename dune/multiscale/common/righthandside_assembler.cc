@@ -5,7 +5,6 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/functions/femadapter.hh>
 #include <dune/stuff/common/profiler.hh>
-#include <dune/fem/misc/threads/domainthreaditerator.hh>
 #include <memory>
 
 #include <dune/stuff/fem/functions/integrals.hh>

@@ -17,10 +17,6 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/common/fmatrix.hh>
-#include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/stuff/common/filesystem.hh>

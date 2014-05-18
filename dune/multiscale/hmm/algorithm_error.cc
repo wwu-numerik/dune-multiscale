@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include <dune/fem/function/common/discretefunction.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>

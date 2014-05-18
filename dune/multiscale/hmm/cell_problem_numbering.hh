@@ -5,7 +5,6 @@
 #ifndef DUNEMS_HMM_CELL_NUMBERING_HH
 #define DUNEMS_HMM_CELL_NUMBERING_HH
 
-#include <dune/fem/quadrature/cachingquadrature.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/hmm/entity_compare.hh>
 #include <cstddef>

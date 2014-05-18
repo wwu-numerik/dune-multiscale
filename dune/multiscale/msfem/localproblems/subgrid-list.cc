@@ -3,7 +3,6 @@
 #include <boost/assert.hpp>
 #include <boost/multi_array/multi_array_ref.hpp>
 #include <dune/common/exceptions.hh>
-#include <dune/fem/misc/mpimanager.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>

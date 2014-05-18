@@ -5,7 +5,6 @@
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SPE10
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SPE10
 
-#include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/base.hh>
 
 #include <string>

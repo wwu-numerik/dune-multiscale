@@ -37,7 +37,6 @@
 #include <dune/gdt/spaces/continuouslagrange.hh>
 #include <dune/gdt/discretefunction/default.hh>
 
-#include "fem_traits.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -55,6 +54,7 @@ void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid
   CommonTraits::DiscreteFunctionType solution(space, solution_vector);
   Elliptic_FEM_Solver(space).apply(*diffusion, *source, solution);
 
+  solution.visualize("solution.vtk");
   ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO);
 } // ... algorithm(...)
 

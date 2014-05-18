@@ -7,9 +7,6 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
-#include <dune/fem/operator/discreteoperatorimp.hh>
-#include <dune/fem/solver/oemsolver/oemsolver.hh>
-#include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>

@@ -5,7 +5,6 @@
 
 #include <assert.h>
 #include <boost/format.hpp>
-#include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/grid/io/file/dgfparser/gridptr.hh>
 #include <dune/multiscale/common/error_calc.hh>
 

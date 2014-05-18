@@ -7,15 +7,15 @@
 
 #include <string>
 
-#include <dune/fem/io/file/datawriter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
 namespace Dune {
 namespace Multiscale {
 //! define output parameters for \ref Dune::DataOutput
-struct OutputParameters : public Dune::Fem::DataWriterParameters {
+struct OutputParameters {
 public:
   explicit OutputParameters(const std::string _path = DSC_CONFIG_GET("global.datadir", "data"));
+  virtual ~OutputParameters() {}
 private:
   std::string my_prefix_;
   const std::string my_path_;
