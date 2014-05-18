@@ -53,7 +53,7 @@ public:
   ~Diffusion();
 
   //! currently used in gdt assembler
-  virtual void evaluate(const DomainType& x, RangeType& y) const;
+  virtual void evaluate(const DomainType&, RangeType&) const;
 
   void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,

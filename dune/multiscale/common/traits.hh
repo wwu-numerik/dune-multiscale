@@ -15,7 +15,8 @@
 #include <dune/stuff/la/container.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
-#include <dune/stuff/functions/global.hh>
+#include <dune/stuff/functions/interfaces.hh>
+#include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/grid/provider.hh>
 
 namespace Dune {
