@@ -3,7 +3,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/functions/time.hh>
 #include <dune/stuff/functions/norm.hh>
 #include <dune/stuff/functions/femadapter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>

@@ -9,9 +9,8 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
-#include <dune/stuff/functions/global.hh>
 #include <dune/stuff/functions/interfaces.hh>
-#include <dune/stuff/functions/global.hh>
+#include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
 #include <memory>
 #include <string>

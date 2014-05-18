@@ -11,16 +11,12 @@
 
 #include <dune/common/timer.hh>
 
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/fem/print_info.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
-
-#define DUNE_STUFF_FUNCTIONS_DISABLE_CHECKS 1
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
@@ -31,7 +27,7 @@
 #include <dune/stuff/la/solver.hh>
 #include <dune/stuff/functions/combined.hh>
 #include <dune/stuff/functions/constant.hh>
-#include <dune/stuff/functions/global.hh>
+#include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/grid/provider.hh>
 
 #include <dune/gdt/spaces/continuouslagrange.hh>
