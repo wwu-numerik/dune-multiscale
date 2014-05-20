@@ -84,8 +84,9 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   system_assembler.assemble();
 
   // solve the system
-  const Stuff::LA::Solver< CommonTraits::LinearOperatorType > linear_solver(system_matrix);
-  auto linear_solver_options = linear_solver.options("parallel.ssor.bicg");
+  const Stuff::LA::Solver< CommonTraits::LinearOperatorType, typename CommonTraits::GdtSpaceType::CommunicatorType >
+      linear_solver(system_matrix, space.communicator());
+  auto linear_solver_options = linear_solver.options("bicgstab.amg.ilu0");
   linear_solver_options.set("max_iter",                 "5000", true);
   linear_solver_options.set("precision",                "1e-8", true);
   linear_solver_options.set("post_check_solves_system", "0",    true);
