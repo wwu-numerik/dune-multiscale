@@ -36,6 +36,13 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;
   const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType::LeafGridView>(coarseSpace_.gridPart().grid().leafGridView());
+  DomainType coarseMin, coarseMax;
+  for (const auto i : DSC::valueRange(dim_world)) {
+    auto localMin = coarse_dimensions.coord_limits[i].min();
+    auto localMax = coarse_dimensions.coord_limits[i].max();
+    coarseMin[i] = coarseSpace.gridPart().grid().comm().min(localMin);
+    coarseMax[i] = coarseSpace.gridPart().grid().comm().max(localMax);
+  }
 
   for (const auto& coarse_entity : coarseSpace_) {
     // make sure we only create subgrids for interior coarse elements, not
@@ -53,15 +60,12 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     for (const auto i : DSC::valueRange(dim_world)) {
       const auto min = dimensions.coord_limits[i].min();
       const auto max = dimensions.coord_limits[i].max();
-      auto localMin = coarse_dimensions.coord_limits[i].min();
-      auto localMax = coarse_dimensions.coord_limits[i].max();
-      const auto coarse_min = coarseSpace.gridPart().grid().comm().min(localMin);
-      const auto coarse_max = coarseSpace.gridPart().grid().comm().max(localMax);
+
       const auto delta = (max - min) / double(micro_per_macro[i]);
-      lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarse_min);
-      upperRight[i] = std::min(max + (oversampling_layer * delta), coarse_max);
-      int smaller = ((min - (oversampling_layer * delta)) < coarse_min);
-      int bigger = ((max + (oversampling_layer * delta)) > coarse_max);
+      lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarseMin[i]);
+      upperRight[i] = std::min(max + (oversampling_layer * delta), coarseMax[i]);
+      int smaller = ((min - (oversampling_layer * delta)) < coarseMin[i]);
+      int bigger = ((max + (oversampling_layer * delta)) > coarseMax[i]);
       elemens[i] = micro_per_macro[i] + ((!smaller + !bigger) * oversampling_layer);
     }
     subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
