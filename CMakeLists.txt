@@ -59,17 +59,13 @@ set( COMMON_SOURCES
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
         dune/multiscale/common/newton_rhs.cc
-        dune/multiscale/msfem/coarse_scale_operator.cc
-        dune/multiscale/msfem/localproblems/subgrid-list.cc
-        dune/multiscale/msfem/localproblems/localoperator.cc
-        dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc
         dune/multiscale/common/grid_creation.cc
         dune/multiscale/common/righthandside_assembler.cc
         dune/multiscale/fem/print_info.cc
         dune/multiscale/fem/elliptic_fem_matrix_assembler.cc
         dune/multiscale/common/dirichletconstraints.cc
-        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
+
     )
 
 set( PROBLEM_SOURCES
@@ -107,6 +103,11 @@ set( HMM_SOURCES
 set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
         dune/multiscale/msfem/msfem_solver.cc
+        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
+        dune/multiscale/msfem/coarse_scale_operator.cc
+        dune/multiscale/msfem/localproblems/subgrid-list.cc
+        dune/multiscale/msfem/localproblems/localoperator.cc
+        dune/multiscale/msfem/localproblems/localproblemsolver.cc
     )
 
 set( FEM_SOURCES
@@ -121,7 +122,7 @@ EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
 
-add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
+add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 -DENABLE_MPI=1)
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})

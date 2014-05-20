@@ -17,7 +17,6 @@
 #include <memory>
 #include <dune/multiscale/tools/misc.hh>
 
-#include <Eigen/Core>
 
 #include "subgrid-list.hh"
 

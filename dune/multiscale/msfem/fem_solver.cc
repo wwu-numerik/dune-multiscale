@@ -16,7 +16,7 @@
 #include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/backend/istlsolverbackend.hh>
+
 #include <dune/pdelab/stationary/linearproblem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/backend/seqistlsolverbackend.hh>
@@ -68,9 +68,11 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 //  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
 //  LinearSolverType ls(space_, 5000);
 
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
-  LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-
+  solution *= 0;
+//  typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<CommonTraits::GridFunctionSpaceType, CC> LinearSolverType;
+//  LinearSolverType ls(space_, constraints_container, 5000 /*iter*/, 5 /*steps*/, DSC_CONFIG_GET("global.cgsolver_verbose", false));
+  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
+  LinearSolverType ls(space_, 5000 /*iter*/, DSC_CONFIG_GET("global.cgsolver_verbose", false));
   typedef Dune::PDELab::StationaryLinearProblemSolver<GridOperatorType,LinearSolverType,CommonTraits::PdelabVectorType> SLP;
   SLP slp(global_operator,ls,solution,1e-10);
   slp.apply();

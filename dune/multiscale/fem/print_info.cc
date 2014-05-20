@@ -76,9 +76,13 @@ void write_discrete_function(CommonTraits::PdelabVectorType &discrete_solution, 
 {
   typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
   const auto& gfs = discrete_solution.gridFunctionSpace();
-  SubsamplingVTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView(), CommonTraits::polynomial_order);
-  PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);
-  PDELab::addSolutionToVTKWriter(vtkwriter,gfs,discrete_solution, nn);
+  DGF dgf(gfs,discrete_solution);
+//  SubsamplingVTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView(), CommonTraits::polynomial_order);
+//  PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);
+//  PDELab::addSolutionToVTKWriter(vtkwriter,gfs,discrete_solution, nn);
+//  vtkwriter.write(prefix,Dune::VTK::appendedraw);
+  Dune::VTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView(),Dune::VTK::conforming);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
   vtkwriter.write(prefix,Dune::VTK::appendedraw);
 }
 
