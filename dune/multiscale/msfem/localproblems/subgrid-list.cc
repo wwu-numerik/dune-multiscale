@@ -16,6 +16,7 @@
 #include <utility>
 #include <memory>
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 #include "subgrid-list.hh"
 
@@ -35,15 +36,10 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;
-  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType::LeafGridView>(coarseSpace_.gridPart().grid().leafGridView());
-  DomainType coarseMin, coarseMax;
-  for (const auto i : DSC::valueRange(dim_world)) {
-    auto localMin = coarse_dimensions.coord_limits[i].min();
-    auto localMax = coarse_dimensions.coord_limits[i].max();
-    coarseMin[i] = coarseSpace.gridPart().grid().comm().min(localMin);
-    coarseMax[i] = coarseSpace.gridPart().grid().comm().max(localMax);
-  }
-
+  const auto& gridCorners = Problem::getModelData()->gridCorners();
+  auto globalLowerLeft = gridCorners.first;
+  auto globalUpperRight = gridCorners.second;
+    
   for (const auto& coarse_entity : coarseSpace_) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
@@ -62,10 +58,10 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
       const auto max = dimensions.coord_limits[i].max();
 
       const auto delta = (max - min) / double(micro_per_macro[i]);
-      lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarseMin[i]);
-      upperRight[i] = std::min(max + (oversampling_layer * delta), coarseMax[i]);
-      int smaller = ((min - (oversampling_layer * delta)) < coarseMin[i]);
-      int bigger = ((max + (oversampling_layer * delta)) > coarseMax[i]);
+      lowerLeft[i] = std::max(min - (oversampling_layer * delta), globalLowerLeft[i]);
+      upperRight[i] = std::min(max + (oversampling_layer * delta), globalUpperRight[i]);
+      int smaller = ((min - (oversampling_layer * delta)) < globalLowerLeft[i]);
+      int bigger = ((max + (oversampling_layer * delta)) > globalUpperRight[i]);
       elemens[i] = micro_per_macro[i] + ((!smaller + !bigger) * oversampling_layer);
     }
     subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
