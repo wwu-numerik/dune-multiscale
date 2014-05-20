@@ -56,6 +56,8 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
 
   const int magic_number_stencil = 9;
   typedef BackendChooser<CommonTraits::DiscreteFunctionSpaceType>::MatrixBackendType MatrixBackendType;
+
+
   MatrixBackendType fem_matrix(magic_number_stencil);
 
   typedef Dune::PDELab::GridOperator<GFS,GFS,FEM::Local_CG_FEM_Operator,
@@ -65,17 +67,53 @@ void Elliptic_FEM_Solver::solve_linear(const CommonTraits::DiffusionType& diffus
   DSC_LOG_DEBUG << GridOperatorType::Traits::Jacobian(global_operator).patternStatistics() << std::endl;
 
   Dune::PDELab::interpolate(DS::pdelabAdapted(*Problem::getDirichletData(), space_.gridView()), space_, solution);
-//  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
-//  LinearSolverType ls(space_, 5000);
 
   solution *= 0;
-//  typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<CommonTraits::GridFunctionSpaceType, CC> LinearSolverType;
-//  LinearSolverType ls(space_, constraints_container, 5000 /*iter*/, 5 /*steps*/, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
-  LinearSolverType ls(space_, 5000 /*iter*/, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-  typedef Dune::PDELab::StationaryLinearProblemSolver<GridOperatorType,LinearSolverType,CommonTraits::PdelabVectorType> SLP;
-  SLP slp(global_operator,ls,solution,1e-10);
-  slp.apply();
+
+  typedef typename GridOperatorType::Traits::TrialGridFunctionSpace GFS;
+  typedef PDELab::istl::ParallelHelper<GFS> PHELPER;
+  typedef typename GridOperatorType::Traits::Jacobian M;
+  typedef typename M::BaseT MatrixType;
+  typedef typename GridOperatorType::Traits::Domain V;
+  typedef typename V::BaseT VectorType;
+  typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
+  Dune::Amg::FirstDiagonal> > Criterion;
+  typedef SeqILU0<MatrixType,VectorType,VectorType,1> Smoother;
+  static constexpr int s = 96;
+  typedef typename PDELab::istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+  typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;
+  typedef Dune::OverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
+  typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
+  typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
+
+  Timer watch;
+  Comm oocc(space_.gridView().comm());
+  M mat(global_operator);
+  global_operator.jacobian(solution, mat);
+  PHELPER phelper(space_);
+  phelper.createIndexSetAndProjectForAMG(mat, oocc);
+  Operator oop(mat.base(), oocc);
+  Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
+
+  SmootherArgs smootherArgs;
+  smootherArgs.iterations = 1;
+  smootherArgs.relaxationFactor = 1;
+  Dune::Amg::Parameters params(15,2000);
+  params.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
+  params.setDebugLevel(4);
+  Criterion criterion(params);
+
+  AMG amg(oop, criterion, smootherArgs, oocc);
+
+  watch.reset();
+  Dune::BiCGSTABSolver<VectorType> solver(oop, sp, amg, 1e-8/*reduction*/, 5000/*maxiter*/, 1 /*verb*/);
+  Dune::InverseOperatorResult stat;
+
+  auto rhs = solution;
+  global_operator.residual(solution, rhs);
+  rhs *= -1;
+  solver.apply(solution,rhs, stat);
+
 
   DSC_LOG_INFO << "---------------------------------------------------------------------------------" << std::endl;
   DSC_LOG_INFO << "Standard FEM problem solved in " << timer.elapsed() << "s." << std::endl << std::endl
