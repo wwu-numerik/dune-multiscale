@@ -24,7 +24,7 @@ struct MsFEMTraits {
 
   typedef DSG::Providers::ConstDefault<LocalGridType> LocalGridProviderType;
   typedef GDT::Spaces::ContinuousLagrangeProvider<LocalGridType, DSG::ChooseLayer::leaf,
-                                                  GDT::ChooseSpaceBackend::fem,
+                                                  GDT::ChooseSpaceBackend::pdelab,
                                                   st_lagrangespace_order, CommonTraits::FieldType,
                                                   CommonTraits::dimRange > SpaceProviderType;
 
