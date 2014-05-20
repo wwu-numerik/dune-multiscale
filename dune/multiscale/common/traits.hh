@@ -57,7 +57,7 @@ struct CommonTraits {
 
   typedef DSG::Providers::ConstDefault<GridType> GridProviderType;
   typedef GDT::Spaces::ContinuousLagrangeProvider<GridType, DSG::ChooseLayer::leaf,
-                                                  GDT::ChooseSpaceBackend::fem,
+                                                  GDT::ChooseSpaceBackend::pdelab,
                                                    st_lagrangespace_order, FieldType, dimRange > SpaceProviderType;
 
   static constexpr auto st_gdt_grid_level = 0;
