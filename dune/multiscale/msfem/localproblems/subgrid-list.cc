@@ -3,13 +3,13 @@
 #include <boost/assert.hpp>
 #include <boost/multi_array/multi_array_ref.hpp>
 #include <dune/common/exceptions.hh>
+#include <dune/fem/misc/mpimanager.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/float_cmp.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
-#include <dune/common/parallel/mpihelper.hh>
 #include <algorithm>
 #include <iterator>
 #include <ostream>
@@ -25,7 +25,7 @@ namespace MsFEM {
 
 LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
-  , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
+  , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
   BOOST_ASSERT_MSG(DSC_CONFIG.hasSub("grids"), "Parameter tree needs to have 'grids' subtree!");
   const int dim_world = LocalGridType::dimensionworld;
@@ -35,7 +35,14 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;
-  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType>(coarseSpace_.grid_view()->grid());
+  const auto coarse_dimensions = DSG::dimensions<CommonTraits::GridType::LeafGridView>(coarseSpace_.gridPart().grid().leafGridView());
+  DomainType coarseMin, coarseMax;
+  for (const auto i : DSC::valueRange(dim_world)) {
+    auto localMin = coarse_dimensions.coord_limits[i].min();
+    auto localMax = coarse_dimensions.coord_limits[i].max();
+    coarseMin[i] = coarseSpace.gridPart().grid().comm().min(localMin);
+    coarseMax[i] = coarseSpace.gridPart().grid().comm().max(localMax);
+  }
 
   for (const auto& coarse_entity : DSC::viewRange(*coarseSpace_.grid_view())) {
     // make sure we only create subgrids for interior coarse elements, not
@@ -45,7 +52,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     // make sure we did not create a subgrid for the current coarse entity so far
     assert(subGridList_.find(coarse_index) == subGridList_.end());
 
-    const auto dimensions = DSG::dimensions<CommonTraits::GridType>(coarse_entity);
+    const auto dimensions = DSG::dimensions<CommonTraits::GridType::LeafGridView>(coarse_entity);
     typedef FieldVector<typename LocalGridType::ctype, dim_world> CoordType;
     CoordType lowerLeft(0);
     CoordType upperRight(0);
@@ -53,16 +60,12 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
     for (const auto i : DSC::valueRange(dim_world)) {
       const auto min = dimensions.coord_limits[i].min();
       const auto max = dimensions.coord_limits[i].max();
-      auto localMin = coarse_dimensions.coord_limits[i].min();
-      auto localMax = coarse_dimensions.coord_limits[i].max();
-      auto comm = MPIHelper::getCollectiveCommunication();
-      const auto coarse_min = comm.min(localMin);
-      const auto coarse_max = comm.max(localMax);
+
       const auto delta = (max - min) / double(micro_per_macro[i]);
-      lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarse_min);
-      upperRight[i] = std::min(max + (oversampling_layer * delta), coarse_max);
-      int smaller = ((min - (oversampling_layer * delta)) < coarse_min);
-      int bigger = ((max + (oversampling_layer * delta)) > coarse_max);
+      lowerLeft[i] = std::max(min - (oversampling_layer * delta), coarseMin[i]);
+      upperRight[i] = std::min(max + (oversampling_layer * delta), coarseMax[i]);
+      int smaller = ((min - (oversampling_layer * delta)) < coarseMin[i]);
+      int bigger = ((max + (oversampling_layer * delta)) > coarseMax[i]);
       elemens[i] = micro_per_macro[i] + ((!smaller + !bigger) * oversampling_layer);
     }
     subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
