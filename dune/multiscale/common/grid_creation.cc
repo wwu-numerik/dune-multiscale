@@ -67,9 +67,11 @@ Dune::Multiscale::make_grids() {
   const std::vector<int> coarse_cells = gridParameterTree.getVector("macro_cells_per_dim", 8, dim_world);
   array<unsigned int, dim_world> elements;
   array<unsigned int, dim_world> overCoarse;
+  array<unsigned int, dim_world> overFine;
   for (const auto i : DSC::valueRange(dim_world)) {
     elements[i] = coarse_cells[i];
     overCoarse[i] = std::ceil(double(oversamplingLayers)/double(microPerMacro[i]));
+    overFine[i] = DSC_CONFIG_GET("grids.overlap", 1);
   }
   auto coarse_gridptr =
       MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
@@ -78,7 +80,7 @@ Dune::Multiscale::make_grids() {
   for (const auto i : DSC::valueRange(dim_world)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
-  auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements);
+  auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overFine);
 
   // check whether grids match (may not match after load balancing if different refinements in different
   // spatial directions are used)
