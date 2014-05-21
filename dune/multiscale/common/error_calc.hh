@@ -13,7 +13,7 @@ public:
   ErrorCalculator(const CommonTraits::DiscreteFunctionType* const msfem_solution,
                   const CommonTraits::PdelabVectorType* const fem_solution);
 
-  void print(std::ostream& out);
+  std::map<std::string, double> print(std::ostream& out);
 
 private:
   const CommonTraits::DiscreteFunctionType* const msfem_solution_;

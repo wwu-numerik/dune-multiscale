@@ -29,7 +29,7 @@ void data_output(const CommonTraits::GridPartType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse);
 
 //! \TODO docme
-void algorithm();
+std::map<std::string, double> algorithm();
 
 } // namespace MsFEM {
 } // namespace Multiscale {
