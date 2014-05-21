@@ -83,7 +83,7 @@ void data_output(const CommonTraits::GridViewType &gridPart,
 }
 
 //! algorithm
-void algorithm() {
+std::map<std::string, double> algorithm() {
   using namespace Dune;
 
   auto grids = make_grids();
@@ -121,10 +121,8 @@ void algorithm() {
     }
   }
 
-  ErrorCalculator(&msfem_solution, fem_solution.get()).print(DSC_LOG_INFO_0);
-
-  if (DSC_CONFIG_GET("adaptive", false))
-    DSC_LOG_INFO_0 << "\n\n---------------------------------------------" << std::endl;
+  return ErrorCalculator(&msfem_solution, fem_solution.get()).print(DSC_LOG_INFO_0);
+  
 } // function algorithm
 
 } // namespace MsFEM {
