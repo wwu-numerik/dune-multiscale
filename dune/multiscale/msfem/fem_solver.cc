@@ -79,8 +79,8 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Constraints::Dirichlet < typename GridViewType::Intersection, CommonTraits::RangeFieldType >
       dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
-  system_assembler.add(dirichlet_constraints, system_matrix, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
-  system_assembler.add(dirichlet_constraints, rhs_vector, new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler.add(dirichlet_constraints, system_matrix/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  system_assembler.add(dirichlet_constraints, rhs_vector/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.assemble();
 
   // solve the system
