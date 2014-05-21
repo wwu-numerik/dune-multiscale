@@ -24,7 +24,29 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteF
   : msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution) {}
 
-void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
+
+/** Compute and print errors between exact, msfem and fem solution
+ *
+ *  This computes the errors between the exact solution, the msfem solution
+ *  and the fem solution (if they exist respectively). The results are printed
+ *  to the given ostream and returned in a std::map.
+ *
+ *  \param[in] out The ostream for error printing
+ *  \return Returns the computed errors as std::map with the following entries:
+ *          - "msfem_exact_L2" The L2 error between the msfem solution and the
+ *            exact solution
+ *          - "msfem_exact_H1" The H1 error between the msfem solution and the
+ *            exact solution
+ *          - "fem_exact_L2" The L2 error between the fem solution and the
+ *            exact solution
+ *          - "fem_exact_H1" The H1 error between the fem solution and the
+ *            exact solution
+ *          - "msfem_fem_L2" The L2 error between the msfem solution and the
+ *            fem solution
+ *          Here, each entry will only be present if the corresponding error was 
+ *          computed.
+ */
+std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   assert(msfem_solution_ || fem_solution_);
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 
@@ -143,4 +165,6 @@ void Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
     *csvfile << key_val.second << sep;
   }
   *csvfile << std::endl;
+  
+  return csv;
 }
