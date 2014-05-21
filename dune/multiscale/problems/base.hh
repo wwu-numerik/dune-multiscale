@@ -45,6 +45,7 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
   //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
   virtual void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
                                      const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
+  virtual size_t order() const { return 3; }
 };
 
 struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
@@ -77,21 +78,25 @@ public:
 class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
+  virtual size_t order() const { return 3; }
 };
 
 class ZeroDirichletData : public DirichletDataBase {
 public:
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual size_t order() const { return 0; }
 };
 
 class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
+  virtual size_t order() const { return 3; }
 };
 
 class ZeroNeumannData : public NeumannDataBase {
 public:
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual size_t order() const { return 0; }
 };
 
 /**

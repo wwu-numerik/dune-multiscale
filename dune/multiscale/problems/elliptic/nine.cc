@@ -170,11 +170,6 @@ PURE HOT  void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& g
 
 }
 
-size_t ExactSolution::order() const
-{
-  return 4;
-}
-
 PURE  void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 PURE  void DirichletData::jacobian(const DomainType& /*x*/, JacobianRangeType& y) const { y[0] = 0.0; } // jacobian

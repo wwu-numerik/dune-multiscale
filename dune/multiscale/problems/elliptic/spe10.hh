@@ -44,6 +44,7 @@ public:
   Source();
 
   void evaluate(const DomainType& x, RangeType& y) const;
+  virtual size_t order() const { return 3; }
 };
 
 class Diffusion : public DiffusionBase {
