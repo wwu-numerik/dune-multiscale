@@ -12,7 +12,7 @@
 
 #include <dune/gdt/spaces/continuouslagrange.hh>
 #include <dune/gdt/discretefunction/default.hh>
-#include <dune/gdt/operators/elliptic.hh>
+#include <dune/gdt/operators/elliptic-cg.hh>
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/assembler/system.hh>
