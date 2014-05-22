@@ -34,26 +34,12 @@ TEST(MSFEM, All) {
   using namespace Dune::Multiscale;
   using namespace Dune::Multiscale::MsFEM;
 
-  int coarse_grid_level_ = 3;
-  int number_of_layers_ = 4;
-  int total_refinement_level_ = 5;
-  const std::string macroGridName = prepend_test_dir("compare_msfem.dgf");
   set_param();
 
-  //! ---------------------- local error indicators --------------------------------
-  // ----- local error indicators (for each coarse grid element T) -------------
-  const int max_loop_number = 10;
-  ErrorContainer errors(max_loop_number);
-  unsigned int loop_number = 0;
-  while (algorithm(macroGridName, loop_number++, total_refinement_level_, coarse_grid_level_, number_of_layers_,
-                   errors.locals, errors.totals, errors.total_estimated_H1_error_)) {
-  }
-
-  for (const auto total : errors.totals) {
-    for (auto error : *total) {
-      // fails iff 1e-2 <= error
-      EXPECT_GT(double(1e-2), error);
-    }
+  const auto errors = algorithm();
+  for (const auto& err : errors) {
+    // fails iff 1e-2 <= error
+    EXPECT_GT(double(1e-2), err.second);
   }
 }
 
@@ -62,4 +48,10 @@ int main(int argc, char** argv) {
   return RUN_ALL_TESTS();
 }
 
-void set_param() {}
+void set_param() {
+  DSC_CONFIG.set("grids.macro_cells_per_dim", "[20;20;20]");
+  DSC_CONFIG.set("micro_cells_per_macrocell_dim", "[40;40;40]");
+  DSC_CONFIG.set("msfem.oversampling_layers", 4);
+  DSC_CONFIG.set("global.vtk_output", 0);
+  DSC_CONFIG.set("problem.name", "Nine");
+}
