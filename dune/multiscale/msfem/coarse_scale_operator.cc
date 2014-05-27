@@ -18,7 +18,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   , diffusion_operator_(diffusion_op)
   , petrovGalerkin_(false)
   , global_matrix_("MsFEM stiffness matrix", coarseDiscreteFunctionSpace_, coarseDiscreteFunctionSpace_)
-  , cached_(false) {
+  , cached_(false)
+  , enableCaching_(true) {
     DSC_PROFILER.startTiming("msfem.assembleMatrix");
 
   //!TODO diagonal stencil reicht
@@ -84,8 +85,12 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
             // evaluate the jacobian of the coarse grid base set
             const auto& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
-            if (!cached_) {
+            if (enableCaching_ && !cached_) {
               coarseBaseJacs_.push_back(std::vector<JacobianRangeType>(numMacroBaseFunctions, 0.0));
+              coarse_grid_baseSet.jacobianAll(local_coarse_point, coarseBaseJacs_[cacheCounter]);
+            } else if (!enableCaching_) {
+              coarseBaseJacs_.resize(1, std::vector<JacobianRangeType>(numMacroBaseFunctions, 0.0));
+              cacheCounter = 0;
               coarse_grid_baseSet.jacobianAll(local_coarse_point, coarseBaseJacs_[cacheCounter]);
             }
 
@@ -123,7 +128,6 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
                 local_matrix.add(j, i, local_integral);
               }
             }
-
             ++cacheCounter;
           }
         }

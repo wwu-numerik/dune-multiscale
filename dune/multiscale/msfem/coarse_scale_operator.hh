@@ -62,6 +62,7 @@ private:
   MatrixType global_matrix_;
   bool cached_;
   std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
+  bool enableCaching_;
 };
 
 } // namespace MsFEM {
