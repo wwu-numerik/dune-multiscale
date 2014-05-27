@@ -23,7 +23,8 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
     const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
   DSC_PROFILER.startTiming("msfem.assembleRHS");
-  cached_ = false;
+  bool cached = false;
+  bool enableCaching_ = true;
   
   // cache grid variable
   const bool isSimplexGrid = DSG::is_simplex_grid(coarse_space);
@@ -130,9 +131,16 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
             const auto quadPointLocalInCoarse = coarseGeometry.local(quadPointGlobal);
 
 
-            if (!cached_) {
+            if (enableCaching_ && !cached) {
               coarseBaseEvals_.push_back(std::vector<RangeType>(numLocalBaseFunctions, 0.0));
               coarseBaseJacs_.push_back(std::vector<JacobianRangeType>(numLocalBaseFunctions, 0.0));
+              coarseBaseSet.evaluateAll(quadPointLocalInCoarse, coarseBaseEvals_[cacheCounter]);
+              coarseBaseSet.jacobianAll(quadPointLocalInCoarse, coarseBaseJacs_[cacheCounter]);
+            } else if (!enableCaching_) { // if caching was disabled, just evaluate in every coarse cell
+              // resize vectors to correct size. This will do nothing if vector has correct size already
+              coarseBaseEvals_.resize(1, std::vector<RangeType>(numLocalBaseFunctions, 0.0));
+              coarseBaseJacs_.resize(1, std::vector<JacobianRangeType>(numLocalBaseFunctions, 0.0));
+              cacheCounter = 0;
               coarseBaseSet.evaluateAll(quadPointLocalInCoarse, coarseBaseEvals_[cacheCounter]);
               coarseBaseSet.jacobianAll(quadPointLocalInCoarse, coarseBaseJacs_[cacheCounter]);
             }
@@ -167,11 +175,13 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
               rhsLocalFunction[coarseBF] += quadWeight * (f_x * reconstructionPhi);
               rhsLocalFunction[coarseBF] -= quadWeight * (diffusive_flux[0] * reconstructionGradPhi[0]);
             }
+            // increase cache counter. This will only take effect if caching is enabled
             ++cacheCounter;
           }
         }
       }
-      cached_ = true;
+      // caching is done
+      cached = true;
     } // for
   }   // omp region
 
