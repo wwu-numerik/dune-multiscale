@@ -1,8 +1,8 @@
-#PBS -l walltime=00:06:00,nodes=1:westmere:ppn=12
+#PBS -l walltime=00:06:00,nodes=1:ppn=12
 #PBS -A o0num
 #PBS -M s_kaul01@uni-muenster.de
 #PBS -m ae
-#PBS -q default
+#PBS -q math
 #PBS -N build_parallel
 #PBS -j oe
 #PBS -o output_build.txt
@@ -12,4 +12,4 @@ cd $PBS_O_WORKDIR
 # export LD_LIBRARY_PATH=/Applic.PALMA/compiler/gcc/4.7.2/lib64:$LD_LIBRARY_PATH
 # source ../../BOOST_PATH.sh
 make -j 12 elliptic_msfem
-/scratch/tmp/s_kaul01/external/bin/hpcstruct ./elliptic_msfem
+# /scratch/tmp/s_kaul01/external/bin/hpcstruct ./elliptic_msfem
