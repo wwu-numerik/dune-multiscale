@@ -24,7 +24,7 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
   DSC_PROFILER.startTiming("msfem.assembleRHS");
   bool cached = false;
-  bool enableCaching_ = true;
+
   
   // cache grid variable
   const bool isSimplexGrid = DSG::is_simplex_grid(coarse_space);

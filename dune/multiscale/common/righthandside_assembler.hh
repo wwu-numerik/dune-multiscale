@@ -34,7 +34,7 @@ public:
 private:
   std::vector<std::vector<RangeType>> coarseBaseEvals_;
   std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
-
+  bool enableCaching_ = true;
 }; // end class
 } // namespace MsFEM
 } // end namespace Multiscale
