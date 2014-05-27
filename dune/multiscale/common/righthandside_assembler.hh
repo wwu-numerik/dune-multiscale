@@ -34,7 +34,6 @@ public:
 private:
   std::vector<std::vector<RangeType>> coarseBaseEvals_;
   std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
-  bool cached_;
 
 }; // end class
 } // namespace MsFEM
