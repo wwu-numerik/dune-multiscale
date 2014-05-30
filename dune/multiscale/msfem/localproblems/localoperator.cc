@@ -44,7 +44,7 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
   , system_assembler_(subDiscreteFunctionSpace_)
   , elliptic_operator_(diffusion_operator_, system_matrix_, subDiscreteFunctionSpace_)
   , constraints_(Problem::getModelData()->subBoundaryInfo(), space.mapper().maxNumDofs(), space.mapper().maxNumDofs())
-  , msfemUsesOversampling_((DSC_CONFIG_GET("msfem.oversampling_layers", 0)>0))
+
 {
   assemble_matrix();
 }
@@ -179,22 +179,16 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
               diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
             else {
               const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
-              if (switchOffCaching) {
-                coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
-                coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
-              } else if (!cached_) {
+              if (!cached_) {
                 coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
                 coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
                 coarseBaseJacs_.push_back(coarseBaseJac);
-              } else {
+              } else
                 coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
-              }
               diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
             }
           } else {
-            if (switchOffCaching) {
-                dirichletLF.jacobian(local_point, dirichletJac);
-            } else if (!cached_) {
+            if (!cached_) {
               dirichletLF.jacobian(local_point, dirichletJac);
               dirichletJacs_.push_back(dirichletJac);
             }
@@ -250,8 +244,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   }
   
   // dirichlet jacobians and coarse base func jacobians were cached
-  if (!switchOffCaching)
-    cached_ = true;
+  cached_ = true;
 
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
   DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, discreteFunctionSpace);
