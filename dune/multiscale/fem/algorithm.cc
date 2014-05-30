@@ -51,7 +51,7 @@ void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid
   Elliptic_FEM_Solver(space).apply(*diffusion, *source, solution);
 
   solution.visualize("solution.vtk");
-  ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO);
+  ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO_0);
 } // ... algorithm(...)
 
 } // namespace FEM {
