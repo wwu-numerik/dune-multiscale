@@ -55,10 +55,6 @@ public:
   void apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
 private:
-  //! Compute the number of quadrature points needed for a standard quadrature (needed for
-  //! memory reservation for caches
-  long getNumQuadPoints(const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& discreteFunctionSpace) const;
-
   /** Set the dirichlet values to a given discrete function on the sub mesh
   *
   * @param[in, out] function The function in which the values will be set.
