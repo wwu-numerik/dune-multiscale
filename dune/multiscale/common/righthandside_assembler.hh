@@ -28,14 +28,9 @@ public:
    *  assemble-method for MsFEM in symmetric (non-Petrov-Galerkin) formulation
    *  rhsVector is the output parameter (kind of return value)
    **/
-  void assemble(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                      const CommonTraits::SourceType& f, MsFEM::LocalGridList& subgrid_list,
-                      CommonTraits::DiscreteFunctionType& rhsVector);
-private:
-  static std::vector<std::vector<RangeType>> coarseBaseEvals_;
-  static std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
-  static bool cached_;
-
+  static void assemble_msfem(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+                             const CommonTraits::SourceType& f, MsFEM::LocalGridList& subgrid_list,
+                             CommonTraits::DiscreteFunctionType& rhsVector);
 }; // end class
 } // namespace MsFEM
 } // end namespace Multiscale
