@@ -72,10 +72,7 @@ private:
   EllipticOperatorType elliptic_operator_;
   BoundaryInfoType boundaryInfo_;
   ConstraintsType constraints_;
-  DMP::ZeroDirichletData dirichlet_;
-  static bool cached_;
-  static std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseJacs_;
-  static std::vector<BasisFunctionSetType::JacobianRangeType> dirichletJacs_;
+  DMP::ZeroDirichletData dirichlet_; 
 };
 
 } // namespace MsFEM {

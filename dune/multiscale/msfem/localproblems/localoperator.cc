@@ -27,11 +27,6 @@
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
-
-  
-  std::vector<MsFEMTraits::CoarseBaseFunctionSetType::JacobianRangeType> LocalProblemOperator::coarseBaseJacs_;
-  std::vector<CommonTraits::BaseFunctionSetType::JacobianRangeType> LocalProblemOperator::dirichletJacs_;
-  bool LocalProblemOperator::cached_;
   
 LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
                                            const LocalGridDiscreteFunctionSpaceType& space,
@@ -67,14 +62,6 @@ void LocalProblemOperator::assemble_matrix()
 //  system_matrix_.communicate();
 } // assemble_matrix
 
-long LocalProblemOperator::getNumQuadPoints(const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& discreteFunctionSpace) const {
-  const auto quadOrder = (2*CommonTraits::st_lagrangespace_order+2);
-  int m = 0;
-  while ((2*m-1 < quadOrder) && m < quadOrder)
-    ++m;
-  return std::pow(m, CommonTraits::GridType::dimension);
-}
-  
 void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
                                                   MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
@@ -124,39 +111,31 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseFuncJacs(coarseBaseSet.size());
 
   // gradient of micro scale base function:
+  std::vector<JacobianRangeType> gradient_phi(discreteFunctionSpace.blockMapper().maxNumDofs());
   std::vector<RangeType> phi(discreteFunctionSpace.blockMapper().maxNumDofs());
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
-  int coarseJacCacheCounter = 0;
-  int dirichletJacCacheCounter = 0;
-  JacobianRangeType dirichletJac(0.0);
-  CoarseBaseFunctionSetType::JacobianRangeType coarseBaseJac;
-  
   for (auto& localGridCell : discreteFunctionSpace) {
     const auto& geometry = localGridCell.geometry();
     const bool hasBoundaryIntersection = localGridCell.hasBoundaryIntersections();
-    auto dirichletLF = dirichletExtension.local_function(localGridCell);
+    auto dirichletLF = dirichletExtension.localFunction(localGridCell);
+    JacobianRangeType dirichletJac(0.0);
 
-    const auto quadrature = DSFe::make_quadrature(localGridCell, discreteFunctionSpace);
-    const auto numQuadraturePoints = quadrature.nop();
-    std::vector<std::vector<JacobianRangeType>> gradient_phi(numQuadraturePoints,
-                                                             std::vector<JacobianRangeType>(discreteFunctionSpace.blockMapper().maxNumDofs()));
-
-    const auto& baseSet = discreteFunctionSpace.basisFunctionSet(localGridCell);
-    const auto numBaseFunctions = baseSet.size();
-    for (const auto& qp : DSC::valueRange(numQuadraturePoints))
-      baseSet.jacobianAll(quadrature[qp], gradient_phi[qp]);
-    
     for (std::size_t coarseBaseFunc = 0; coarseBaseFunc < allLocalRHS.size(); ++coarseBaseFunc) {
       auto rhsLocalFunction = allLocalRHS[coarseBaseFunc]->localFunction(localGridCell);
+
+      const auto& baseSet = rhsLocalFunction.basisFunctionSet();
+      const auto numBaseFunctions = baseSet.size();
 
       // correctors with index < numInnerCorrectors are for the basis functions, corrector at
       // position numInnerCorrectors is for the neumann values, corrector at position numInnerCorrectors+1
       // for the dirichlet values.
       if (coarseBaseFunc < numInnerCorrectors || coarseBaseFunc == numInnerCorrectors + 1) {
+        const auto quadrature = DSFe::make_quadrature(localGridCell, discreteFunctionSpace);
+        const auto numQuadraturePoints = quadrature.nop();
         for (size_t quadraturePoint = 0; quadraturePoint < numQuadraturePoints; ++quadraturePoint) {
           const auto& local_point = quadrature.point(quadraturePoint);
           // global point in the subgrid
@@ -170,26 +149,16 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
               diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
             else {
               const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
-            if (!cached_) {
               coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
-              coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
-              coarseBaseJacs_.push_back(coarseBaseJac);
-            } else
-              coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
-            diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
+              diffusion_operator_.diffusiveFlux(global_point, coarseBaseFuncJacs[coarseBaseFunc], diffusion);
             }
           } else {
-            if (!cached_) {
-              dirichletLF.jacobian(local_point, dirichletJac);
-              dirichletJacs_.push_back(dirichletJac);
-            }
-            else
-              dirichletJac = dirichletJacs_.at(dirichletJacCacheCounter++);
+            dirichletLF.jacobian(local_point, dirichletJac);
             diffusion_operator_.diffusiveFlux(global_point, dirichletJac, diffusion);
           }
-          
+          baseSet.jacobianAll(quadrature[quadraturePoint], gradient_phi);
           for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-            rhsLocalFunction[i] -= weight * (diffusion[0] * gradient_phi[quadraturePoint][i][0]);
+            rhsLocalFunction[i] -= weight * (diffusion[0] * gradient_phi[i][0]);
           }
         }
       }
@@ -233,9 +202,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
       }
     }
   }
-  
-  // dirichlet jacobians and coarse base func jacobians were cached
-  cached_ = true;
 
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> boundaryInfo;
   DirichletConstraints<MsFEMTraits::LocalGridDiscreteFunctionType> constraints(boundaryInfo, discreteFunctionSpace);
