@@ -104,7 +104,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   // get dirichlet and neumann data
   const auto& neumannData = *Dune::Multiscale::Problem::getNeumannData();
   const auto& discreteFunctionSpace = allLocalRHS[0]->space();
-  const bool switchOffCaching = coarseEntity.hasBoundaryIntersections() && msfemUsesOversampling_;
 
   //! @todo we should use the dirichlet constraints here somehow
   LocalGridDiscreteFunctionType dirichletExtension("dirichletExtension", discreteFunctionSpace);
@@ -135,14 +134,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   int dirichletJacCacheCounter = 0;
   JacobianRangeType dirichletJac(0.0);
   CoarseBaseFunctionSetType::JacobianRangeType coarseBaseJac;
-  // reserve memory for the jacobian caches
-  if (!cached_) {
-    // compute the number of quadrature points resulting from a standard quadrature on the current space
-    const auto& numQuadPoints = getNumQuadPoints(discreteFunctionSpace);
-    const auto& gridSize = discreteFunctionSpace.grid_view()->grid().size(0);
-    coarseBaseJacs_.reserve(gridSize * numQuadPoints * numInnerCorrectors);
-    dirichletJacs_.reserve(gridSize * numQuadPoints);
-  }
   
   for (auto& localGridCell : discreteFunctionSpace) {
     const auto& geometry = localGridCell.geometry();
@@ -179,13 +170,13 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
               diffusion_operator_.diffusiveFlux(global_point, unitVectors[coarseBaseFunc], diffusion);
             else {
               const DomainType quadInCoarseLocal = coarseEntity.geometry().local(global_point);
-              if (!cached_) {
-                coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
-                coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
-                coarseBaseJacs_.push_back(coarseBaseJac);
-              } else
-                coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
-              diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
+            if (!cached_) {
+              coarseBaseSet.jacobianAll(quadInCoarseLocal, coarseBaseFuncJacs);
+              coarseBaseJac = coarseBaseFuncJacs[coarseBaseFunc];
+              coarseBaseJacs_.push_back(coarseBaseJac);
+            } else
+              coarseBaseJac = coarseBaseJacs_.at(coarseJacCacheCounter++);
+            diffusion_operator_.diffusiveFlux(global_point, coarseBaseJac, diffusion);
             }
           } else {
             if (!cached_) {
