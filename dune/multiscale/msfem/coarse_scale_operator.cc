@@ -18,8 +18,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   , diffusion_operator_(diffusion_op)
   , petrovGalerkin_(false)
   , global_matrix_(coarseDiscreteFunctionSpace.mapper().size(), coarseDiscreteFunctionSpace.mapper().size(),
-                   CommonTraits::EllipticOperatorType::pattern(coarseDiscreteFunctionSpace))
-  , cached_(false) {
+                   CommonTraits::EllipticOperatorType::pattern(coarseDiscreteFunctionSpace)) 
+{
     DSC_PROFILER.startTiming("msfem.assembleMatrix");
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarseDiscreteFunctionSpace_);
@@ -79,10 +79,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
             // evaluate the jacobian of the coarse grid base set
             const auto& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
-            if (!cached_) {
-              coarseBaseJacs_.push_back(std::vector<JacobianRangeType>(numMacroBaseFunctions, 0.0));
-              coarse_grid_baseSet.jacobianAll(local_coarse_point, coarseBaseJacs_[cacheCounter]);
-            }
+            coarse_grid_baseSet.jacobianAll(local_coarse_point, gradientPhi);
 
             for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
               for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
@@ -94,8 +91,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
                   assert(allLocalSolutionEvaluations.size() == CommonTraits::GridType::dimension);
                   // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
                   for (int k = 0; k < CommonTraits::GridType::dimension; ++k) {
-                    gradLocProbSoli.axpy(coarseBaseJacs_[cacheCounter][i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
-                    gradLocProbSolj.axpy(coarseBaseJacs_[cacheCounter][j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
+                    gradLocProbSoli.axpy(gradientPhi[i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
+                    gradLocProbSolj.axpy(gradientPhi[j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                   }
                 } else {
                   assert(allLocalSolutionEvaluations.size() == numMacroBaseFunctions);
@@ -118,13 +115,9 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
                 local_matrix.add(j, i, local_integral);
               }
             }
-
-            ++cacheCounter;
           }
         }
       }
-      // cache was filled;
-      cached_ = true;
     } // for
   }   // omp region
 
