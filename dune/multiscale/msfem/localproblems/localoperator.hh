@@ -79,8 +79,7 @@ private:
   DMP::ZeroDirichletData dirichlet_;
   static bool cached_;
   static std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseJacs_;
-  static std::vector<BaseFunctionSetType::JacobianRangeType> dirichletJacs_;
-  const bool msfemUsesOversampling_;
+  static std::vector<BasisFunctionSetType::JacobianRangeType> dirichletJacs_;
 };
 
 } // namespace MsFEM {
