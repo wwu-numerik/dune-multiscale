@@ -21,13 +21,12 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
     const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
-  DSC_PROFILER.startTiming("msfem.assembleRHS");
-  cached_ = false;
-  
+
   // cache grid variable
   const bool isSimplexGrid = DSG::is_simplex_grid(coarse_space);
   
   static constexpr int dimension = CommonTraits::GridType::dimension;
+  DSC_PROFILER.startTiming("msfem.assembleRHS");
   const auto& diffusion = *Problem::getDiffusion();
   const auto& neumannData = *Problem::getNeumannData();
 
