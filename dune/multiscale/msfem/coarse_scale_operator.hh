@@ -56,8 +56,6 @@ private:
   const CommonTraits::DiffusionType& diffusion_operator_;
   const bool petrovGalerkin_;
   MatrixType global_matrix_;
-  bool cached_;
-  std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
 };
 
 } // namespace MsFEM {
