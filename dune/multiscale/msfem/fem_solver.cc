@@ -73,7 +73,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   system_assembler.assemble();
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
-  auto tmp = rhs_vector.copy();
+  CommonTraits::GdtVectorType tmp(space.mapper().size());
   system_matrix.mv(dirichlet_projection.vector(), tmp);
   rhs_vector -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0

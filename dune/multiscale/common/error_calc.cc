@@ -47,6 +47,7 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteF
  *          computed.
  */
 std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
+  using Dune::GDT::Products;
   assert(msfem_solution_ || fem_solution_);
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 
@@ -87,10 +88,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
     if (msfem_solution_) {
       const DifferenceType difference(u, *msfem_solution_);
-      GDT::Products::L2Localizable< CommonTraits::GridViewType, DifferenceType >
+      L2Localizable< CommonTraits::GridViewType, DifferenceType >
           l2_error_product(*grid_view, difference, over_integrate);
       system_assembler.add(l2_error_product);
-      GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
+      H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
           h1_semi_error_product(*grid_view, difference, over_integrate);
       system_assembler.add(h1_semi_error_product);
       system_assembler.assemble();
@@ -106,10 +107,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
     if (fem_solution_) {
       const DifferenceType difference(u, *fem_solution_);
-      GDT::Products::L2Localizable< CommonTraits::GridViewType, DifferenceType >
+      L2Localizable< CommonTraits::GridViewType, DifferenceType >
           l2_error_product(*grid_view, difference, over_integrate);
       system_assembler.add(l2_error_product);
-      GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
+      H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
           h1_semi_error_product(*grid_view, difference, over_integrate);
       system_assembler.add(h1_semi_error_product);
       system_assembler.assemble();
@@ -129,13 +130,13 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
         CommonTraits::ConstDiscreteFunctionType > DiscreteDifferenceType;
     const DiscreteDifferenceType difference(*msfem_solution_, *fem_solution_);
 
-    GDT::Products::L2Localizable< CommonTraits::GridViewType, DiscreteDifferenceType >
+    L2Localizable< CommonTraits::GridViewType, DiscreteDifferenceType >
         l2_error_product(*grid_view, difference, over_integrate);
     system_assembler.add(l2_error_product);
-    GDT::Products::L2Localizable< CommonTraits::GridViewType, CommonTraits::ConstDiscreteFunctionType >
+    L2Localizable< CommonTraits::GridViewType, CommonTraits::ConstDiscreteFunctionType >
         l2_msfem(*grid_view, *msfem_solution_, over_integrate);
     system_assembler.add(l2_msfem);
-    GDT::Products::H1SemiLocalizable< CommonTraits::GridViewType, DiscreteDifferenceType >
+    H1SemiLocalizable< CommonTraits::GridViewType, DiscreteDifferenceType >
         h1_semi_error_product(*grid_view, difference, over_integrate);
     system_assembler.add(h1_semi_error_product);
     system_assembler.assemble();
