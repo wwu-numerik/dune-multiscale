@@ -47,7 +47,7 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteF
  *          computed.
  */
 std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
-  using Dune::GDT::Products;
+  using namespace Dune::GDT::Products;
   assert(msfem_solution_ || fem_solution_);
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 

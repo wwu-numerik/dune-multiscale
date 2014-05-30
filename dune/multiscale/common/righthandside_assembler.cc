@@ -11,7 +11,6 @@
 #include <dune/stuff/functions/femadapter.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/common/dirichletconstraints.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
@@ -169,7 +168,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
 
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
-  rhsVector.communicate();
+  
   DSC_PROFILER.stopTiming("msfem.assembleRHS");
   DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.getTiming("msfem.assembleRHS") << "ms"
                << std::endl;

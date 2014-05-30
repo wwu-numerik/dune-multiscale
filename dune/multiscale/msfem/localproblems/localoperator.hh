@@ -50,7 +50,7 @@ public:
   * functions. The discrete functions in allLocalRHS will be cleared in this function.
   */
   void assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
-                              MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
+                              MsFEMTraits::LocalSolutionVectorType& allLocalRHS) ;
 
   void apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
@@ -64,7 +64,7 @@ private:
   //! assemble stiffness matrix for local problems
   void assemble_matrix();
 
-  const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
+  const LocalGridDiscreteFunctionSpaceType& localSpace_;
   const DiffusionOperatorType& diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
@@ -72,7 +72,8 @@ private:
   EllipticOperatorType elliptic_operator_;
   BoundaryInfoType boundaryInfo_;
   ConstraintsType constraints_;
-  DMP::ZeroDirichletData dirichlet_; 
+  DMP::ZeroDirichletData dirichletZero_;
+  DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
 };
 
 } // namespace MsFEM {

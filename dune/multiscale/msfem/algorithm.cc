@@ -48,27 +48,27 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 
   Dune::Multiscale::OutputParameters outputparam;
   outputparam.set_prefix("msfem_solution_");
-  msfem_solution.visualize(outputparam.fullpath(msfem_solution));
+  msfem_solution.visualize(outputparam.fullpath(msfem_solution.name()));
 
   outputparam.set_prefix("coarse_part_msfem_solution_");
-  coarse_part_msfem_solution.visualize(outputparam.fullpath(coarse_part_msfem_solution));
+  coarse_part_msfem_solution.visualize(outputparam.fullpath(coarse_part_msfem_solution.name()));
 
   outputparam.set_prefix("fine_part_msfem_solution_");
-  fine_part_msfem_solution.visualize(outputparam.fullpath(fine_part_msfem_solution));
+  fine_part_msfem_solution.visualize(outputparam.fullpath(fine_part_msfem_solution.name()));
 
   DSG::ElementVisualization::all(fine_part_msfem_solution.space().grid_view()->grid(), outputparam.path());
 }
 
 //! \TODO docme
 void data_output(const CommonTraits::GridViewType &gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& coarseSpace) {
+                 const CommonTraits::DiscreteFunctionSpaceType& /*coarseSpace*/) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
 
   if (Problem::getModelData()->hasExactSolution()) {
     const auto& u = Dune::Multiscale::Problem::getExactSolution();
     outputparam.set_prefix("exact_solution");
-    u->visualize(gridPart, outputparam.fullpath(*u));
+    u->visualize(gridPart, outputparam.fullpath(u->name()));
   }
 
   //! \todo re-enable
