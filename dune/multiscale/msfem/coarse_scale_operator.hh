@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <boost/noncopyable.hpp>
 #include <dune/common/fmatrix.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>

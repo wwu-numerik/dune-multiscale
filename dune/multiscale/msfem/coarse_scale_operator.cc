@@ -137,7 +137,7 @@ void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscret
       DSC_CONFIG_GET("msfem.solver.verbose", false), "bcgs",
       DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));
   inverse(rhs, solution);
-  if (!solution.dofsValid())
+  if (!solution.dofs_valid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
   DSC_PROFILER.stopTiming("msfem.solveCoarse");
   DSC_LOG_DEBUG << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.solveCoarse") << "ms."
