@@ -11,6 +11,16 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+template <class MatrixObject, template <class,class> class StencilType = Dune::Fem::DiagonalAndNeighborStencil>
+StencilType<typename MatrixObject::DomainSpaceType,
+                           typename MatrixObject::DomainSpaceType>
+  diagonalAndNeighborStencil(const MatrixObject& object)
+{
+  return StencilType<typename MatrixObject::DomainSpaceType,
+                      typename MatrixObject::RangeSpaceType>(object.domainSpace(), object.rangeSpace());
+}
+
+
 CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
                                          LocalGridList& subgrid_list, const CommonTraits::DiffusionType& diffusion_op)
   : coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
@@ -22,8 +32,9 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   , enableCaching_(true) {
     DSC_PROFILER.startTiming("msfem.assembleMatrix");
 
+
   //!TODO diagonal stencil reicht
-  global_matrix_.reserve(DSFe::diagonalAndNeighborStencil(global_matrix_));
+  global_matrix_.reserve(diagonalAndNeighborStencil(global_matrix_));
   global_matrix_.clear();
 
   Fem::DomainDecomposedIteratorStorage<CommonTraits::GridPartType> threadIterators(
