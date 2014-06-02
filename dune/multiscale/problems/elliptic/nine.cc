@@ -100,38 +100,28 @@ PURE HOT  void Source::evaluate(const DomainType& x, RangeType& y) const {
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
 } // evaluate
 
-void Diffusion::evaluate(const DomainType &xx, Diffusion::RangeType &ret) const
+void Diffusion::evaluate(const DomainType &x, Diffusion::RangeType &ret) const
 {
-//  assert(ret.N() == 2);
-//  assert(ret.M() == 2);
-  ret *= 0.0;
-//  Diffusion d = ret;
-  ret[0][0] =
-        2.0 * (1.0 / (8.0 * M_PI * M_PI)) * (1.0 / (2.0 + cos(2.0 * M_PI * (xx[0] / epsilon))));
-  ret[1][1] = (1.0 / (8.0 * M_PI * M_PI)) * (1.0 + (0.5 * cos(2.0 * M_PI * (xx[0] / epsilon))));
-}
-
-PURE HOT  void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
   const double x0_eps = (x[0] / epsilon);
   constexpr double inv_pi8pi = 1. / (8.0 * M_PI * M_PI);
   const double cos_eval = cos(2.0 * M_PI * x0_eps);
-  const double coefficient_0 = 2.0 * inv_pi8pi * (1.0 / (2.0 + cos_eval));
-  const double coefficient_1 =       inv_pi8pi * (1.0 + (0.5 * cos_eval));
+  ret[0][0] = 2.0 * inv_pi8pi * (1.0 / (2.0 + cos_eval));
+  ret[1][1] = inv_pi8pi * (1.0 + (0.5 * cos_eval));
+}
 
-  flux[0][0] = coefficient_0 * direction[0][0];
-  flux[0][1] = coefficient_1 * direction[0][1];
+PURE HOT  void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
+  Diffusion::RangeType eval;
+  evaluate(x, eval);
+  flux[0][0] = eval[0][0] * direction[0][0];
+  flux[0][1] = eval[1][1] * direction[0][1];
 } // diffusiveFlux
 
 PURE  void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
                                       const Problem::JacobianRangeType& /*direction_gradient*/, Problem::JacobianRangeType& flux) const {
-  const double x0_eps = (x[0] / epsilon);
-  constexpr double inv_pi8pi = 1. / (8.0 * M_PI * M_PI);
-  const double cos_eval = cos(2.0 * M_PI * x0_eps);
-  const double coefficient_0 = 2.0 * inv_pi8pi * (1.0 / (2.0 + cos_eval));
-  const double coefficient_1 =       inv_pi8pi * (1.0 + (0.5 * cos_eval));
-
-  flux[0][0] = coefficient_0 * direction[0][0];
-  flux[0][1] = coefficient_1 * direction[0][1];
+  Diffusion::RangeType eval;
+  evaluate(x, eval);
+  flux[0][0] = eval[0][0] * direction[0][0];
+  flux[0][1] = eval[1][1] * direction[0][1];
 } // jacobianDiffusiveFlux
 
 PURE HOT  void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
