@@ -22,6 +22,7 @@
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/gdt/operators/projections.hh>
+#include <dune/gdt/operators/prolongations.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/functionals/l2.hh>
 
@@ -83,16 +84,17 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   LocalGridDiscreteFunctionType dirichletExtension(localSpace_, "dirichletExtension");
   CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
 
+  GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarse_space_);
   GDT::Operators::DirichletProjectionLocalizable< CommonTraits::GridViewType, CommonTraits::DirichletDataType,
       CommonTraits::DiscreteFunctionType >
       coarse_dirichlet_projection_operator(*(coarse_space_.grid_view()),
-                                    DMP::getModelData().boundaryInfo(),
+                                    DMP::getModelData()->boundaryInfo(),
                                     *DMP::getDirichletData(),
                                     dirichletExtensionCoarse);
-  system_assembler_.add(coarse_dirichlet_projection_operator);
-  system_assembler_.assemble();
-  Dune::Stuff::HeterogenousProjection<> projection;
-  projection.project(dirichletExtensionCoarse, dirichletExtension);
+  global_system_assembler_.add(coarse_dirichlet_projection_operator, new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+  global_system_assembler_.assemble();
+  GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> projection(*coarse_space_.grid_view());
+  projection.apply(dirichletExtensionCoarse, dirichletExtension);
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
@@ -119,7 +121,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   //neumann correktor
   GDT::Functionals::L2Face< CommonTraits::NeumannDataType, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType >
       neumann_functional(*Dune::Multiscale::Problem::getNeumannData(),
-                         allLocalRHS[coarseBaseFunc], localSpace_);
+                         allLocalRHS[coarseBaseFunc]->vector(), localSpace_);
   system_assembler_.add(neumann_functional);
 
 
@@ -135,20 +137,19 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   }
 
   //dirichlet-0 for all rhs
-  
+  typedef GDT::ApplyOn::BoundaryEntities< MsFEMTraits::LocalGridViewType > OnLocalBoundaryEntities;
   LocalGridDiscreteFunctionType dirichlet_projection(localSpace_);
-  GDT::Operators::DirichletProjectionLocalizable< CommonTraits::GridViewType, CommonTraits::DirichletDataType, CommonTraits::DiscreteFunctionType >
-      dirichlet_projection_operator(*(space.grid_view()),
+  GDT::Operators::DirichletProjectionLocalizable< MsFEMTraits::LocalGridViewType, CommonTraits::DirichletDataType,
+                                                  MsFEMTraits::LocalGridDiscreteFunctionType >
+      dirichlet_projection_operator(*(localSpace_.grid_view()),
                                     allLocalDirichletInfo_,
-                                    *dirichletZero_,
+                                    dirichletZero_,
                                     dirichlet_projection);
-  system_assembler_.add(dirichlet_projection_operator,
-                       new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler_.add(dirichlet_projection_operator, new OnLocalBoundaryEntities());
 
-
-  system_assembler_.add(constraints_, system_matrix_, new GDT::ApplyOn::BoundaryEntities< MsFEMTraits::LocalGridViewType>());
+  system_assembler_.add(constraints_, system_matrix_, new OnLocalBoundaryEntities());
   for (auto& rhs : allLocalRHS )
-    system_assembler_.add(constraints_, rhs, new GDT::ApplyOn::BoundaryEntities< MsFEMTraits::GridViewType >());
+    system_assembler_.add(constraints_, rhs->vector(), new OnLocalBoundaryEntities());
   system_assembler_.assemble();
 
   //!*********** ende neu gdt
@@ -260,10 +261,11 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   const auto solver =
       Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
   typedef BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType LocalInverseOperatorType;
-  const auto localProblemSolver = DSC::make_unique<LocalInverseOperatorType>(system_matrix_, 1e-8, 1e-8, 20000,
+  const auto localProblemSolver = DSC::make_unique<LocalInverseOperatorType>(system_matrix_, current_rhs.vector());
+                                                                             /*1e-8, 1e-8, 20000,
                                                DSC_CONFIG_GET("msfem.localproblemsolver_verbose", false), solver,
-                                               DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);
-  localProblemSolver->apply(current_rhs, current_solution);
+                                               DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);*/
+  localProblemSolver->apply(current_rhs.vector(), current_solution.vector());
 
   if (!current_solution.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
