@@ -10,7 +10,6 @@
 #include <dune/fem/misc/threads/domainthreaditerator.hh>
 
 #include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/fem/matrix_object.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/multiscale/common/righthandside_assembler.hh>

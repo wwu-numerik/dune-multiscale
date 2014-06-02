@@ -10,7 +10,6 @@
 #include <dune/common/exceptions.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
-#include <dune/stuff/fem/matrix_object.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
@@ -32,6 +31,16 @@ namespace Multiscale {
 namespace MsFEM {
 
   
+template <class MatrixObject, template <class,class> class StencilType = Dune::Fem::DiagonalAndNeighborStencil>
+StencilType<typename MatrixObject::DomainSpaceType,
+                           typename MatrixObject::DomainSpaceType>
+  diagonalAndNeighborStencil(const MatrixObject& object)
+{
+  return StencilType<typename MatrixObject::DomainSpaceType,
+                      typename MatrixObject::RangeSpaceType>(object.domainSpace(), object.rangeSpace());
+}
+
+
   std::vector<MsFEMTraits::CoarseBaseFunctionSetType::JacobianRangeType> LocalProblemOperator::coarseBaseJacs_;
   std::vector<CommonTraits::BasisFunctionSetType::JacobianRangeType> LocalProblemOperator::dirichletJacs_;
   bool LocalProblemOperator::cached_;
@@ -51,7 +60,7 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
 void LocalProblemOperator::assemble_matrix()
     // x_T is the barycenter of the macro grid element T
 {
-  system_matrix_.reserve(DSFe::diagonalAndNeighborStencil(system_matrix_));
+  system_matrix_.reserve(diagonalAndNeighborStencil(system_matrix_));
   system_matrix_.clear();
 
   // local grid basis functions:
