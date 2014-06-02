@@ -19,7 +19,7 @@
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
-#include <dune/stuff/fem/matrix_object.hh>
+
 #include <dune/stuff/fem/functions/integrals.hh>
 #include <ostream>
 #include <type_traits>
