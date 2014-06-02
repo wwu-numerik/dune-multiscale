@@ -123,7 +123,7 @@ struct CommonTraits {
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>
-std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::DiscreteFunctionSpaceType& space) {
+std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::SpaceType& space) {
   return std::make_shared<T>(space, name);
   //  return DSC::make_unique<T>(name, space);
 }

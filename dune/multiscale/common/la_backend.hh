@@ -29,7 +29,7 @@ struct BackendChooser {
     Stuff::LA::ChooseBackend::istl_sparse >::MatrixType LinearOperatorType;
   typedef GDT::DiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType >      DiscreteFunctionType;
   typedef GDT::ConstDiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType > ConstDiscreteFunctionType;
-  typedef Stuff::LA::Solver< LinearOperatorType > InverseOperatorType;
+  typedef Stuff::LA::Solver< LinearOperatorType, typename DiscreteFunctionSpaceType::CommunicatorType > InverseOperatorType;
 };
 
 } // namespace Multiscale

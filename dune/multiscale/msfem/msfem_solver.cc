@@ -7,7 +7,6 @@
 #include <dune/multiscale/msfem/coarse_scale_operator.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
-
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/profiler.hh>
@@ -17,7 +16,7 @@
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/gdt/operators/projections.hh>
+#include <dune/gdt/operators/prolongations.hh>
 
 #include "msfem_solver.hh"
 #include "localsolution_proxy.hh"
@@ -150,7 +149,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(subgrid_list, coarse_msfem_solution, fine_scale_part);
 
-  GDT::Operators::Projection< CommonTraits::GridViewType > projection(*coarse_msfem_solution.space().grid_view());
+  GDT::Operators::LagrangeProlongation< CommonTraits::GridViewType > projection(*coarse_msfem_solution.space().grid_view());
   projection.apply(coarse_msfem_solution, coarse_scale_part);
   // add coarse and fine scale part to solution
   solution.vector() += coarse_scale_part.vector();
