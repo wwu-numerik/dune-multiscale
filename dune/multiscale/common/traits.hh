@@ -11,7 +11,7 @@
 #include <dune/grid/sgrid.hh>
 #include <dune/gdt/spaces/continuouslagrange.hh>
 #include <dune/gdt/discretefunction/default.hh>
-#include <dune/gdt/operators/elliptic.hh>
+#include <dune/gdt/operators/elliptic-cg.hh>
 #include <dune/stuff/la/container.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
