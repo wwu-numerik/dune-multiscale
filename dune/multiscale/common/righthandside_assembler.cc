@@ -11,38 +11,37 @@
 #include <dune/stuff/functions/femadapter.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc.hh>
-
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
 #include "righthandside_assembler.hh"
 
-void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
+void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
     const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
-  DSC_PROFILER.startTiming("msfem.assembleRHS");
-  cached_ = false;
-  
+
   // cache grid variable
   const bool isSimplexGrid = DSG::is_simplex_grid(coarse_space);
   
   static constexpr int dimension = CommonTraits::GridType::dimension;
+  DSC_PROFILER.startTiming("msfem.assembleRHS");
   const auto& diffusion = *Problem::getDiffusion();
   const auto& neumannData = *Problem::getNeumannData();
 
-  rhsVector.vector() *= 0;
+  rhsVector.clear();
   RangeType f_x;
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
+  Fem::DomainDecomposedIteratorStorage<CommonTraits::GridPartType> threadIterators(rhsVector.space().gridPart());
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
   {
-    for (const auto& coarse_grid_entity : DSC::viewRange(*rhsVector.space().grid_view())) {
-      int cacheCounter = 0;
+    for (const auto& coarse_grid_entity : threadIterators) {
       const auto& coarseGeometry = coarse_grid_entity.geometry();
-      auto rhsLocalFunction = rhsVector.local_discrete_function(coarse_grid_entity);
-      const auto numLocalBaseFunctions = rhsLocalFunction->vector().size();
-      const auto& coarseBaseSet = coarse_space.baseFunctionSet(coarse_grid_entity);
+      auto rhsLocalFunction = rhsVector.localFunction(coarse_grid_entity);
+      const auto numLocalBaseFunctions = rhsLocalFunction.numDofs();
+      const auto& coarseBaseSet = coarse_space.basisFunctionSet(coarse_grid_entity);
 
       // --------- add corrector contribution of right hand side --------------------------
       // Load local solutions
@@ -62,7 +61,7 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
         if (subgrid_list.covers(coarse_grid_entity, localEntity)) {
           // higher order quadrature, since A^{\epsilon} is highly variable
           const auto localQuadrature = DSFe::make_quadrature(localEntity, localSolutionManager.space());
-          auto dirichletExtensionLF = dirichletExtension.local_function(localEntity);
+          auto dirichletExtensionLF = dirichletExtension.localFunction(localEntity);
 
           // evaluate all local solutions and their jacobians in all quadrature points
           std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
@@ -71,15 +70,15 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
               localSolutions.size(), std::vector<JacobianRangeType>(localQuadrature.nop(), JacobianRangeType(0.0)));
           // add contributions for all inner correctors
           for (auto lsNum : DSC::valueRange(numLocalBaseFunctions)) {
-            auto localFunction = localSolutions[lsNum]->local_function(localEntity);
+            auto localFunction = localSolutions[lsNum]->localFunction(localEntity);
             // this evaluates the local solutions in all quadrature points...
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionEvaluations[lsNum]);
             // while this automatically evaluates their jacobians.
             localFunction.evaluateQuadrature(localQuadrature, allLocalSolutionJacobians[lsNum]);
 
             // assemble intersection-part
-            const auto& view = localSolutionManager.grid_view();
-            for (const auto& intersection : DSC::intersectionRange(view, localEntity)) {
+            const auto& subGridPart = localSolutionManager.grid_part();
+            for (const auto& intersection : DSC::intersectionRange(subGridPart.grid().leafGridView(), localEntity)) {
               if (DMP::is_neumann(intersection)) {
                 const int orderOfIntegrand =
                     (CommonTraits::polynomial_order - 1) + 2 * (CommonTraits::polynomial_order + 1);
@@ -111,10 +110,6 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
             }
           }
 
-          // element part of boundary conditions
-          std::vector<JacobianRangeType> dirichletVals(localQuadrature.nop(), 0.0);
-          dirichletExtensionLF.evaluateQuadrature(localQuadrature, dirichletVals);
-
           // assemble element-part
           const auto& localGeometry = localEntity.geometry();
           for (size_t qP = 0; qP < localQuadrature.nop(); ++qP) {
@@ -126,32 +121,32 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
 
             // evaluate gradient of basis function
             const auto quadPointLocalInCoarse = coarseGeometry.local(quadPointGlobal);
-
-
-            if (!cached_) {
-              coarseBaseEvals_.push_back(std::vector<RangeType>(numLocalBaseFunctions, 0.0));
-              coarseBaseJacs_.push_back(std::vector<JacobianRangeType>(numLocalBaseFunctions, 0.0));
-              coarseBaseSet.evaluateAll(quadPointLocalInCoarse, coarseBaseEvals_[cacheCounter]);
-              coarseBaseSet.jacobianAll(quadPointLocalInCoarse, coarseBaseJacs_[cacheCounter]);
-            }
+            std::vector<RangeType> coarseBaseEvals(numLocalBaseFunctions);
+            std::vector<JacobianRangeType> coarseBaseJacs(numLocalBaseFunctions);
+            coarseBaseSet.evaluateAll(quadPointLocalInCoarse, coarseBaseEvals);
+            coarseBaseSet.jacobianAll(quadPointLocalInCoarse, coarseBaseJacs);
 
             for (int coarseBF = 0; coarseBF < numLocalBaseFunctions; ++coarseBF) {
               JacobianRangeType diffusive_flux(0.0);
 
-              JacobianRangeType reconstructionGradPhi(coarseBaseJacs_[cacheCounter][coarseBF]);
-              RangeType reconstructionPhi(coarseBaseEvals_[cacheCounter][coarseBF]);
+              JacobianRangeType reconstructionGradPhi(coarseBaseJacs[coarseBF]);
+              RangeType reconstructionPhi(coarseBaseEvals[coarseBF]);
 
               if (isSimplexGrid) {
                 assert(localSolutions.size() == dimension + localSolutionManager.numBoundaryCorrectors());
                 for (const auto& i : DSC::valueRange(dimension))
-                  reconstructionPhi += coarseBaseJacs_[cacheCounter][coarseBF][0][i] * allLocalSolutionEvaluations[i][qP];
+                  reconstructionPhi += coarseBaseJacs[coarseBF][0][i] * allLocalSolutionEvaluations[i][qP];
                 //! @todo add the dirichlet and neumann-correctors!
               } else {
                 assert(localSolutions.size() == numLocalBaseFunctions + localSolutionManager.numBoundaryCorrectors());
                 // local corrector for coarse base func
                 reconstructionPhi += allLocalSolutionEvaluations[coarseBF][qP];
                 // element part of boundary conditions
-                JacobianRangeType directionOfFlux = dirichletVals[qP];
+                JacobianRangeType directionOfFlux(0.0);
+                //! @attention At this point we assume, that the quadrature points on the subgrid and hostgrid
+                //! are the same (dirichletExtensionLF is a localfunction on the hostgrid, quadPoint stems from
+                //! a quadrature on the subgrid)!!
+                dirichletExtensionLF.jacobian(quadPoint, directionOfFlux);
                 // add dirichlet-corrector
                 directionOfFlux += allLocalSolutionJacobians[numLocalBaseFunctions + 1][qP];
                 // subtract neumann-corrector
@@ -165,17 +160,16 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble(
               rhsLocalFunction[coarseBF] += quadWeight * (f_x * reconstructionPhi);
               rhsLocalFunction[coarseBF] -= quadWeight * (diffusive_flux[0] * reconstructionGradPhi[0]);
             }
-            ++cacheCounter;
           }
         }
       }
-      cached_ = true;
     } // for
   }   // omp region
 
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
-  rhsVector.communicate();
+  
   DSC_PROFILER.stopTiming("msfem.assembleRHS");
-  DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.getTiming("msfem.assembleRHS") << "ms\n";
+  DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.getTiming("msfem.assembleRHS") << "ms"
+               << std::endl;
 }

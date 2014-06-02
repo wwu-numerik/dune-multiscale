@@ -50,15 +50,11 @@ public:
   * functions. The discrete functions in allLocalRHS will be cleared in this function.
   */
   void assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
-                              MsFEMTraits::LocalSolutionVectorType& allLocalRHS) const;
+                              MsFEMTraits::LocalSolutionVectorType& allLocalRHS) ;
 
   void apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
 private:
-  //! Compute the number of quadrature points needed for a standard quadrature (needed for
-  //! memory reservation for caches
-  long getNumQuadPoints(const MsFEMTraits::LocalGridDiscreteFunctionSpaceType& discreteFunctionSpace) const;
-
   /** Set the dirichlet values to a given discrete function on the sub mesh
   *
   * @param[in, out] function The function in which the values will be set.
@@ -68,7 +64,7 @@ private:
   //! assemble stiffness matrix for local problems
   void assemble_matrix();
 
-  const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace_;
+  const LocalGridDiscreteFunctionSpaceType& localSpace_;
   const DiffusionOperatorType& diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
@@ -76,11 +72,8 @@ private:
   EllipticOperatorType elliptic_operator_;
   BoundaryInfoType boundaryInfo_;
   ConstraintsType constraints_;
-  DMP::ZeroDirichletData dirichlet_;
-  static bool cached_;
-  static std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseJacs_;
-  static std::vector<BaseFunctionSetType::JacobianRangeType> dirichletJacs_;
-  const bool msfemUsesOversampling_;
+  DMP::ZeroDirichletData dirichletZero_;
+  DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
 };
 
 } // namespace MsFEM {

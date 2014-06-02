@@ -107,7 +107,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
         const std::string name = (boost::format("local_correction_%d_") % elId).str();
         Dune::Multiscale::OutputParameters outputparam;
         outputparam.set_prefix(name);
-        local_correction.visualize(outputparam.fullpath(local_correction));
+        local_correction.visualize(outputparam.fullpath(local_correction.name()));
       }
     }
   }
@@ -137,7 +137,8 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   DiscreteFunctionType msfem_rhs(coarse_space, "MsFEM right hand side");
   msfem_rhs.vector() *= 0;
   RightHandSideAssembler rhsAss;
-  rhsAss.assemble(coarse_space, f, subgrid_list, msfem_rhs);
+  DUNE_THROW(NotImplemented, "RHSASS");
+//  rhsAss.assemble(coarse_space, f, subgrid_list, msfem_rhs);
   //! define the discrete (elliptic) operator that describes our problem
   CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list, diffusion_op);
   elliptic_msfem_op.apply_inverse(msfem_rhs, coarse_msfem_solution);
@@ -148,8 +149,6 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(subgrid_list, coarse_msfem_solution, fine_scale_part);
-
-//  fine_scale_part.communicate();
 
   GDT::Operators::Projection< CommonTraits::GridViewType > projection(*coarse_msfem_solution.space().grid_view());
   projection.apply(coarse_msfem_solution, coarse_scale_part);
