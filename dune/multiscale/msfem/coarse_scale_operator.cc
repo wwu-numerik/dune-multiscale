@@ -18,8 +18,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   , diffusion_operator_(diffusion_op)
   , petrovGalerkin_(false)
   , global_matrix_(coarseDiscreteFunctionSpace.mapper().size(), coarseDiscreteFunctionSpace.mapper().size(),
-                   CommonTraits::EllipticOperatorType::pattern(coarseDiscreteFunctionSpace))
-  , cached_(false) {
+                   CommonTraits::EllipticOperatorType::pattern(coarseDiscreteFunctionSpace)) 
+{
     DSC_PROFILER.startTiming("msfem.assembleMatrix");
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarseDiscreteFunctionSpace_);
@@ -79,10 +79,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
             // evaluate the jacobian of the coarse grid base set
             const auto& local_coarse_point = coarse_grid_geometry.local(global_point_in_U_T);
-            if (!cached_) {
-              coarseBaseJacs_.push_back(std::vector<JacobianRangeType>(numMacroBaseFunctions, 0.0));
-              coarse_grid_baseSet.jacobianAll(local_coarse_point, coarseBaseJacs_[cacheCounter]);
-            }
+            coarse_grid_baseSet.jacobianAll(local_coarse_point, gradientPhi);
 
             for (unsigned int i = 0; i < numMacroBaseFunctions; ++i) {
               for (unsigned int j = 0; j < numMacroBaseFunctions; ++j) {
@@ -94,8 +91,8 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
                   assert(allLocalSolutionEvaluations.size() == CommonTraits::GridType::dimension);
                   // ∇ Phi_H + ∇ Q( Phi_H ) = ∇ Phi_H + ∂_x1 Phi_H ∇Q( e_1 ) + ∂_x2 Phi_H ∇Q( e_2 )
                   for (int k = 0; k < CommonTraits::GridType::dimension; ++k) {
-                    gradLocProbSoli.axpy(coarseBaseJacs_[cacheCounter][i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
-                    gradLocProbSolj.axpy(coarseBaseJacs_[cacheCounter][j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
+                    gradLocProbSoli.axpy(gradientPhi[i][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
+                    gradLocProbSolj.axpy(gradientPhi[j][0][k], allLocalSolutionEvaluations[k][localQuadraturePoint]);
                   }
                 } else {
                   assert(allLocalSolutionEvaluations.size() == numMacroBaseFunctions);
@@ -118,13 +115,9 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
                 local_matrix.add(j, i, local_integral);
               }
             }
-
-            ++cacheCounter;
           }
         }
       }
-      // cache was filled;
-      cached_ = true;
     } // for
   }   // omp region
 
@@ -137,16 +130,13 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
 
 void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
                                         CoarseScaleOperator::CoarseDiscreteFunction& solution) {
-  BOOST_ASSERT_MSG(rhs.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
-
+  BOOST_ASSERT_MSG(rhs.dofsValid(), "Coarse scale RHS DOFs need to be valid!");
   DSC_PROFILER.startTiming("msfem.solveCoarse");
-  const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(global_matrix_);
-  const auto linear_solver_type = inverse.options()[0];
-  auto inverse_options = inverse.options(linear_solver_type);
-  inverse_options.set("precision", 1e-8);
-  inverse_options.set("max_iter", DSC_CONFIG_GET("msfem.solver.iterations", rhs.vector().size()));
-  inverse.apply(rhs.vector(), solution.vector(), inverse_options);
-
+  const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(
+      global_matrix_, 1e-8, 1e-8, DSC_CONFIG_GET("msfem.solver.iterations", rhs.size()),
+      DSC_CONFIG_GET("msfem.solver.verbose", false), "bcgs",
+      DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));
+  inverse(rhs, solution);
   if (!solution.dofs_valid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
   DSC_PROFILER.stopTiming("msfem.solveCoarse");

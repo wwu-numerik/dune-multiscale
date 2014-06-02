@@ -40,7 +40,7 @@ private:
 
   virtual std::string macroGridName(const int dim) const;
 public:
-  std::string fullpath(const CommonTraits::DiscreteFunctionBaseType& function);
+  std::string fullpath(const std::string function);
 
 private:
   //! to avoid confusion path is only changeable in ctor

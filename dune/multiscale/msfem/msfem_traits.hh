@@ -30,6 +30,7 @@ struct MsFEMTraits {
 
   //! \todo not correct
   typedef typename SpaceProviderType::Type LocalGridDiscreteFunctionSpaceType;
+  typedef LocalGridDiscreteFunctionSpaceType LocalSpaceType;
   typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
 
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;

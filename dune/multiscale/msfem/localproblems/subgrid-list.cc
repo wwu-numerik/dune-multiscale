@@ -16,6 +16,7 @@
 #include <utility>
 #include <memory>
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/problems/selector.hh>
 
 #include "subgrid-list.hh"
 
@@ -25,7 +26,7 @@ namespace MsFEM {
 
 LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
-  , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet()) {
+  , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
   BOOST_ASSERT_MSG(DSC_CONFIG.hasSub("grids"), "Parameter tree needs to have 'grids' subtree!");
   const int dim_world = LocalGridType::dimensionworld;
