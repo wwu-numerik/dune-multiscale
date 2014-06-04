@@ -10,11 +10,13 @@
 
 #include <dune/grid/spgrid.hh>
 #include <dune/grid/sgrid.hh>
+#include <dune/stuff/functions/constant.hh>
 #include <vector>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+
 
 //! type construction for the MSFEM code
 struct MsFEMTraits {
@@ -35,12 +37,26 @@ struct MsFEMTraits {
 
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::ConstDiscreteFunctionType LocalGridConstDiscreteFunctionType;
+  typedef Stuff::Functions::Constant< LocalEntityType, CommonTraits::FieldType, CommonTraits::dimDomain,
+                                      CommonTraits::FieldType, CommonTraits::dimRange > LocalConstantFunctionType;
   typedef typename LocalGridDiscreteFunctionSpaceType::GridViewType LocalGridViewType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
   typedef typename CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;
 
   typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
+};
+
+template <class FunctionImp>
+struct CoarseToLocalAdapter : public Stuff::LocalizableFunctionInterface< MsFEMTraits::LocalEntityType,
+    typename FunctionImp::DomainFieldType, FunctionImp::dimDomain, typename FunctionImp::RangeFieldType,
+    FunctionImp::dimRange, FunctionImp::dimRangeCols> {
+
+  CoarseToLocalAdapter(const FunctionImp& function)
+    : function_(function)
+  {}
+
+  const FunctionImp& function_;
 };
 
 } // namespace MsFEM {

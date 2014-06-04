@@ -2,8 +2,8 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
-#define DUNE_RIGHT_HAND_SIDE_ASSEMBLER_HH
+#ifndef DUNE_MSFEM_RIGHT_HAND_SIDE_ASSEMBLER_HH
+#define DUNE_MSFEM_RIGHT_HAND_SIDE_ASSEMBLER_HH
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
@@ -32,8 +32,9 @@ public:
                              const CommonTraits::SourceType& f, MsFEM::LocalGridList& subgrid_list,
                              CommonTraits::DiscreteFunctionType& rhsVector);
 }; // end class
+
 } // namespace MsFEM
 } // end namespace Multiscale
 } // end namespace Dune
 
-#endif
+#endif //DUNE_MSFEM_RIGHT_HAND_SIDE_ASSEMBLER_HH

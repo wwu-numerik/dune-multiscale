@@ -34,12 +34,14 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
                                            const DiffusionOperatorType& diffusion_op)
   : localSpace_(space)
   , diffusion_operator_(diffusion_op)
+  , local_diffusion_operator_(diffusion_operator_)
   , coarse_space_(coarse_space)
   , system_matrix_(space.mapper().size(), space.mapper().size(),
                    EllipticOperatorType::pattern(space))
   , system_assembler_(localSpace_)
-  , elliptic_operator_(diffusion_operator_, system_matrix_, localSpace_)
+  , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
   , constraints_(Problem::getModelData()->subBoundaryInfo(), space.mapper().maxNumDofs(), space.mapper().maxNumDofs())
+  , dirichletZero_(0)
 
 {
   assemble_matrix();
@@ -92,7 +94,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
                                     dirichletExtensionCoarse);
   global_system_assembler_.add(coarse_dirichlet_projection_operator, new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
   global_system_assembler_.assemble();
-  GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> projection(*coarse_space_.grid_view());
+  GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(*localSpace_.grid_view());
   projection.apply(dirichletExtensionCoarse, dirichletExtension);
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
@@ -118,8 +120,10 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
   coarseBaseFunc++; // coarseBaseFunc == numInnerCorrectors
   //neumann correktor
-  GDT::Functionals::L2Face< CommonTraits::NeumannDataType, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType >
-      neumann_functional(*Dune::Multiscale::Problem::getNeumannData(),
+  typedef typename CommonTraits::NeumannDataType::template Transfer<MsFEMTraits::LocalEntityType>::Type LocalNeumannType;
+//  LocalNeumannType local_neumann()
+  GDT::Functionals::L2Face< LocalNeumannType, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType >
+      neumann_functional(Dune::Multiscale::Problem::getNeumannData()->transfer<MsFEMTraits::LocalEntityType>(),
                          allLocalRHS[coarseBaseFunc]->vector(), localSpace_);
   system_assembler_.add(neumann_functional);
 
@@ -138,7 +142,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   //dirichlet-0 for all rhs
   typedef GDT::ApplyOn::BoundaryEntities< MsFEMTraits::LocalGridViewType > OnLocalBoundaryEntities;
   LocalGridDiscreteFunctionType dirichlet_projection(localSpace_);
-  GDT::Operators::DirichletProjectionLocalizable< MsFEMTraits::LocalGridViewType, CommonTraits::DirichletDataType,
+  GDT::Operators::DirichletProjectionLocalizable< MsFEMTraits::LocalGridViewType, MsFEMTraits::LocalConstantFunctionType,
                                                   MsFEMTraits::LocalGridDiscreteFunctionType >
       dirichlet_projection_operator(*(localSpace_.grid_view()),
                                     allLocalDirichletInfo_,
@@ -252,7 +256,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 }
 
 
-void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType &current_rhs, MsFEMTraits::LocalGridDiscreteFunctionType &current_solution)
+void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType &current_rhs,
+                                         MsFEMTraits::LocalGridDiscreteFunctionType &current_solution)
 {
   if (!current_rhs.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
@@ -260,7 +265,8 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   const auto solver =
       Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
   typedef BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType LocalInverseOperatorType;
-  const auto localProblemSolver = DSC::make_unique<LocalInverseOperatorType>(system_matrix_, current_rhs.vector());
+  const auto localProblemSolver = DSC::make_unique<LocalInverseOperatorType>(system_matrix_,
+                                                                             current_rhs.space().communicator());
                                                                              /*1e-8, 1e-8, 20000,
                                                DSC_CONFIG_GET("msfem.localproblemsolver_verbose", false), solver,
                                                DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);*/

@@ -30,7 +30,8 @@ class LocalProblemOperator {
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
   typedef CommonTraits::DiscreteFunctionSpaceType CoarseSpaceType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-  typedef GDT::Operators::EllipticCG< CommonTraits::DiffusionType,
+  typedef CommonTraits::DiffusionType::template Transfer<LocalEntityType>::Type LocalDiffusionType;
+  typedef GDT::Operators::EllipticCG< LocalDiffusionType,
     LocalLinearOperatorType, LocalGridDiscreteFunctionSpaceType > EllipticOperatorType;
   typedef GDT::Constraints::Dirichlet < typename MsFEMTraits::LocalGridViewType::Intersection, CommonTraits::RangeFieldType >
     ConstraintsType;
@@ -66,13 +67,14 @@ private:
 
   const LocalGridDiscreteFunctionSpaceType& localSpace_;
   const DiffusionOperatorType& diffusion_operator_;
+  const LocalDiffusionType local_diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
   GDT::SystemAssembler<LocalGridDiscreteFunctionSpaceType> system_assembler_;
   EllipticOperatorType elliptic_operator_;
   BoundaryInfoType boundaryInfo_;
   ConstraintsType constraints_;
-  DMP::ZeroDirichletData dirichletZero_;
+  const MsFEMTraits::LocalConstantFunctionType dirichletZero_;
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
 };
 
