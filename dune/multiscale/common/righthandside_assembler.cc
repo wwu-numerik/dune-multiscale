@@ -16,7 +16,7 @@
 
 #include "righthandside_assembler.hh"
 
-void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
+void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble_msfem(
     const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
     const Dune::Multiscale::CommonTraits::SourceType& f, DMM::LocalGridList& subgrid_list,
     Dune::Multiscale::CommonTraits::DiscreteFunctionType& rhsVector) {
@@ -28,7 +28,8 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
   DSC_PROFILER.startTiming("msfem.assembleRHS");
   const auto& diffusion = *Problem::getDiffusion();
   const auto& neumannData = *Problem::getNeumannData();
-
+  DUNE_THROW(InvalidStateException, "NotIMplenetd");
+#if 0
   rhsVector.clear();
   RangeType f_x;
   Fem::DomainDecomposedIteratorStorage<CommonTraits::GridPartType> threadIterators(rhsVector.space().gridPart());
@@ -168,7 +169,7 @@ void Dune::Multiscale::RightHandSideAssembler::assemble_msfem(
 
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
-  
+#endif
   DSC_PROFILER.stopTiming("msfem.assembleRHS");
   DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.getTiming("msfem.assembleRHS") << "ms"
                << std::endl;
