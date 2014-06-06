@@ -157,7 +157,36 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
   //!*********** ende neu gdt
 
+}
+
+
+void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType &current_rhs,
+                                         MsFEMTraits::LocalGridDiscreteFunctionType &current_solution)
+{
+  if (!current_rhs.dofs_valid())
+    DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
+
+  const auto solver =
+      Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
+  typedef BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType LocalInverseOperatorType;
+  const auto localProblemSolver = DSC::make_unique<LocalInverseOperatorType>(system_matrix_,
+                                                                             current_rhs.space().communicator());
+                                                                             /*1e-8, 1e-8, 20000,
+                                               DSC_CONFIG_GET("msfem.localproblemsolver_verbose", false), solver,
+                                               DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);*/
+  localProblemSolver->apply(current_rhs.vector(), current_solution.vector());
+
+  if (!current_solution.dofs_valid())
+    DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
+}
+
+} // namespace MsFEM {
+} // namespace Multiscale {
+} // namespace Dune {
+
+
 #if 0 // alter dune-fem code
+LocalProblemOperator::assemble_all_local_rhs
   // get the base function set of the coarse space for the given coarse entity
   const auto& coarseBaseSet = coarse_space_.basisFunctionSet(coarseEntity);
   std::vector<CoarseBaseFunctionSetType::JacobianRangeType> coarseBaseFuncJacs(coarseBaseSet.size());
@@ -252,30 +281,3 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     }
   }
 #endif
-
-}
-
-
-void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType &current_rhs,
-                                         MsFEMTraits::LocalGridDiscreteFunctionType &current_solution)
-{
-  if (!current_rhs.dofs_valid())
-    DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
-
-  const auto solver =
-      Dune::Multiscale::Problem::getModelData()->symmetricDiffusion() ? std::string("cg") : std::string("bcgs");
-  typedef BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType LocalInverseOperatorType;
-  const auto localProblemSolver = DSC::make_unique<LocalInverseOperatorType>(system_matrix_,
-                                                                             current_rhs.space().communicator());
-                                                                             /*1e-8, 1e-8, 20000,
-                                               DSC_CONFIG_GET("msfem.localproblemsolver_verbose", false), solver,
-                                               DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);*/
-  localProblemSolver->apply(current_rhs.vector(), current_solution.vector());
-
-  if (!current_solution.dofs_valid())
-    DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
-}
-
-} // namespace MsFEM {
-} // namespace Multiscale {
-} // namespace Dune {
