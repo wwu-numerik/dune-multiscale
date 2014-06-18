@@ -216,16 +216,17 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   if (is_simplex_grid)
       DUNE_THROW(NotImplemented, "special treatment for simplicial grids missing");
 
+  typedef CoarseBasisProduct<LocalDiffusionType> EvaluationType;
+  typedef GDT::Functionals::L2Volume< LocalDiffusionType, CommonTraits::GdtVectorType,
+      MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
+      EvaluationType > RhsFunctionalType;
+  std::vector<std::unique_ptr<RhsFunctionalType>> rhs_functionals(numInnerCorrectors);
   std::size_t coarseBaseFunc = 0;
   for (; coarseBaseFunc < numInnerCorrectors; ++coarseBaseFunc)
   {
-    typedef CoarseBasisProduct<LocalDiffusionType> EvaluationType;
     auto& rhs_vector = allLocalRHS[coarseBaseFunc]->vector();
-    GDT::Functionals::L2Volume< LocalDiffusionType, CommonTraits::GdtVectorType,
-        MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
-        EvaluationType > rhs_functional(local_diffusion_operator_, rhs_vector, localSpace_);
-    system_assembler_.add(rhs_functional);
-
+    rhs_functionals[coarseBaseFunc] = DSC::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector, localSpace_);
+    system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 
   coarseBaseFunc++; // coarseBaseFunc == numInnerCorrectors
