@@ -15,15 +15,96 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-template <class MatrixObject, template <class,class> class StencilType = Dune::Fem::DiagonalAndNeighborStencil>
-StencilType<typename MatrixObject::DomainSpaceType,
-                           typename MatrixObject::DomainSpaceType>
-  diagonalAndNeighborStencil(const MatrixObject& object)
-{
-  return StencilType<typename MatrixObject::DomainSpaceType,
-                      typename MatrixObject::RangeSpaceType>(object.domainSpace(), object.rangeSpace());
-}
+// forward, to be used in the traits
+template< class LocalOperatorImp >
+class MsFemCodim0Matrix;
 
+
+template< class LocalOperatorImp >
+class MsFemCodim0MatrixTraits
+{
+public:
+  typedef MsFemCodim0Matrix< LocalOperatorImp > derived_type;
+  typedef GDT::LocalOperator::Codim0Interface< typename LocalOperatorImp::Traits > LocalOperatorType;
+}; // class LocalAssemblerCodim0MatrixTraits
+
+
+template< class LocalOperatorImp >
+class MsFemCodim0Matrix
+{
+public:
+  typedef MsFemCodim0MatrixTraits< LocalOperatorImp > Traits;
+  typedef typename Traits::LocalOperatorType LocalOperatorType;
+
+  MsFemCodim0Matrix(const LocalOperatorType& op)
+    : localOperator_(op)
+  {}
+
+  const LocalOperatorType& localOperator() const
+  {
+    return localOperator_;
+  }
+
+private:
+  static const size_t numTmpObjectsRequired_ = 1;
+
+public:
+  std::vector< size_t > numTmpObjectsRequired() const
+  {
+    return { numTmpObjectsRequired_, localOperator_.numTmpObjectsRequired() };
+  }
+
+  /**
+   *  \tparam T           Traits of the SpaceInterface implementation, representing the type of testSpace
+   *  \tparam A           Traits of the SpaceInterface implementation, representing the type of ansatzSpace
+   *  \tparam EntityType  A model of Dune::Entity< 0 >
+   *  \tparam M           Traits of the Dune::Stuff::LA::Container::MatrixInterface implementation, representing the type of systemMatrix
+   *  \tparam R           RangeFieldType, i.e. double
+   */
+  template< class T, class A, class EntityType, class M, class R >
+  void assembleLocal(const GDT::SpaceInterface< T >& testSpace,
+                     const GDT::SpaceInterface< A >& ansatzSpace,
+                     const EntityType& entity,
+                     Dune::Stuff::LA::MatrixInterface< M >& systemMatrix,
+                     std::vector< std::vector< Dune::DynamicMatrix< R > > >& tmpLocalMatricesContainer,
+                     std::vector< Dune::DynamicVector< size_t > >& tmpIndicesContainer) const
+  {
+    // check
+    assert(tmpLocalMatricesContainer.size() >= 1);
+    assert(tmpLocalMatricesContainer[0].size() >= numTmpObjectsRequired_);
+    assert(tmpLocalMatricesContainer[1].size() >= localOperator_.numTmpObjectsRequired());
+    assert(tmpIndicesContainer.size() >= 2);
+    // get and clear matrix
+    Dune::DynamicMatrix< R >& localMatrix = tmpLocalMatricesContainer[0][0];
+    Dune::Stuff::Common::clear(localMatrix);
+    auto& tmpOperatorMatrices = tmpLocalMatricesContainer[1];
+    // apply local operator (result is in localMatrix)
+    localOperator_.apply(testSpace.base_function_set(entity),
+                         ansatzSpace.base_function_set(entity),
+                         localMatrix,
+                         tmpOperatorMatrices);
+    // write local matrix to global
+    Dune::DynamicVector< size_t >& globalRows = tmpIndicesContainer[0];
+    Dune::DynamicVector< size_t >& globalCols = tmpIndicesContainer[1];
+    const size_t rows = testSpace.mapper().numDofs(entity);
+    const size_t cols = ansatzSpace.mapper().numDofs(entity);
+    assert(globalRows.size() >= rows);
+    assert(globalCols.size() >= cols);
+    testSpace.mapper().globalIndices(entity, globalRows);
+    ansatzSpace.mapper().globalIndices(entity, globalCols);
+    for (size_t ii = 0; ii < rows; ++ii) {
+      const auto& localRow = localMatrix[ii];
+      const size_t globalII = globalRows[ii];
+      for (size_t jj = 0; jj < cols; ++jj) {
+        const size_t globalJJ = globalCols[jj];
+        systemMatrix.add_to_entry(globalII, globalJJ, localRow[jj]);
+      }
+    } // write local matrix to global
+  } // ... assembleLocal(...)
+
+private:
+  const LocalOperatorType& localOperator_;
+}; // class LocalAssemblerCodim0Matrix
 
 class EllipticCGMsFEM;
 
@@ -40,14 +121,15 @@ public:
 class EllipticCGMsFEM
   : public GDT::Operators::MatrixBased< EllipticCGMsFEMTraits >
   , public GDT::SystemAssembler< EllipticCGMsFEMTraits::RangeSpaceType, EllipticCGMsFEMTraits::GridViewType,
-                                 EllipticCGMsFEMTraits::SourceSpaceType>
+                                 EllipticCGMsFEMTraits::SourceSpaceType, MsFemCodim0Matrix>
 {
-  typedef GDT::SystemAssembler< EllipticCGMsFEMTraits::RangeSpaceType, EllipticCGMsFEMTraits::GridViewType,
-  EllipticCGMsFEMTraits::SourceSpaceType > AssemblerBaseType;
+
   typedef GDT::Operators::MatrixBased< EllipticCGMsFEMTraits > OperatorBaseType;
   typedef GDT::LocalOperator::Codim0Integral<
             GDT::LocalEvaluation::Elliptic< CommonTraits::DiffusionType > > LocalOperatorType;
-  typedef GDT::LocalAssembler::Codim0Matrix< LocalOperatorType > LocalAssemblerType;
+  typedef MsFemCodim0Matrix< LocalOperatorType > LocalAssemblerType;
+  typedef GDT::SystemAssembler< EllipticCGMsFEMTraits::RangeSpaceType, EllipticCGMsFEMTraits::GridViewType,
+  EllipticCGMsFEMTraits::SourceSpaceType, MsFemCodim0Matrix> AssemblerBaseType;
 public:
   typedef EllipticCGMsFEMTraits Traits;
 
