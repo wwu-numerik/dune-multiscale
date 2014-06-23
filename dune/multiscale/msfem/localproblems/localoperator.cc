@@ -7,24 +7,25 @@
 
 #include <assert.h>
 #include <boost/assert.hpp>
+#include <dune/common/fmatrix.hh>
 #include <dune/common/exceptions.hh>
-#include <dune/multiscale/problems/selector.hh>
+#include <dune/stuff/common/filesystem.hh>
+#include <dune/stuff/fem/functions/checks.hh>
+#include <dune/stuff/common/exceptions.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
-#include <dune/common/fmatrix.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
-#include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/fem/functions/checks.hh>
 #include <dune/gdt/operators/projections.hh>
 #include <dune/gdt/operators/prolongations.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/functionals/l2.hh>
-#include <dune/stuff/common/exceptions.hh>
 
 namespace Dune {
 
@@ -55,8 +56,12 @@ public:
   typedef CoarseBasisProductTraits< LocalizableFunctionImp >   Traits;
   typedef typename Traits::LocalizableFunctionType  LocalizableFunctionType;
 
-  CoarseBasisProduct(const LocalizableFunctionType& inducingFunction)
+  CoarseBasisProduct(const Multiscale::CommonTraits::BaseFunctionSetType& coarse_base,
+                     const LocalizableFunctionType& inducingFunction,
+                     const std::size_t coarseBaseFunc)
     : inducingFunction_(inducingFunction)
+    , coarse_base_set_(coarse_base)
+    , coarseBaseFunc_(coarseBaseFunc)
   {}
 
   template< class EntityType >
@@ -116,22 +121,34 @@ public:
   {
     typedef Dune::FieldVector< R, 1 > RangeType;
     // evaluate local function
-    DUNE_THROW(NotImplemented, "wrong eval still");
-    const auto functionValue = localFunction.evaluate(localPoint);
+    const auto& entity = testBase.entity();
+    const auto global_point = entity.geometry().global(localPoint);
+    const auto& coarse_entity = coarse_base_set_.entity();
+    const auto quadInCoarseLocal = coarse_entity.geometry().local(global_point);
+    const auto coarseBaseFuncJacs = coarse_base_set_.jacobian(quadInCoarseLocal);
+    const auto direction = coarseBaseFuncJacs[coarseBaseFunc_];
+    DMP::DiffusionBase::RangeType functionValue;
+    localFunction.evaluate(localPoint, functionValue);
+    functionValue[0][0] = functionValue[0][0] * direction[0][0];
+    functionValue[0][1] = functionValue[1][1] * direction[0][1];
     // evaluate test base
-    const size_t size = testBase.size();
-    std::vector< RangeType > testValues(size, RangeType(0));
-    testBase.evaluate(localPoint, testValues);
+    const std::size_t size = testBase.size();
+    std::vector< RangeType > testValues = testBase.evaluate(localPoint);
     // compute product
     assert(ret.size() >= size);
+
     for (size_t ii = 0; ii < size; ++ii) {
-      ret[ii] = functionValue[0] * testValues[ii];
+      auto fo = functionValue[0];
+      fo *=testValues[ii][0];
+      ret[ii] =  fo[ii];
     }
   }
 
 
 private:
   const LocalizableFunctionType& inducingFunction_;
+  const Multiscale::CommonTraits::BaseFunctionSetType& coarse_base_set_;
+  const std::size_t coarseBaseFunc_;
 }; // class Product
 
 
@@ -224,8 +241,12 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   std::size_t coarseBaseFunc = 0;
   for (; coarseBaseFunc < numInnerCorrectors; ++coarseBaseFunc)
   {
+    const auto& fu = coarse_space_.base_function_set(coarseEntity);
+    EvaluationType eval(fu, local_diffusion_operator_, coarseBaseFunc);
+    GDT::LocalFunctional::Codim0Integral<EvaluationType> local_rhs_functional(eval);
     auto& rhs_vector = allLocalRHS[coarseBaseFunc]->vector();
-    rhs_functionals[coarseBaseFunc] = DSC::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector, localSpace_);
+    rhs_functionals[coarseBaseFunc] = DSC::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector,
+                                                                          localSpace_, local_rhs_functional);
     system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 

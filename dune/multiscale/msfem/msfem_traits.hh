@@ -47,18 +47,6 @@ struct MsFEMTraits {
   typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 };
 
-template <class FunctionImp>
-struct CoarseToLocalAdapter : public Stuff::LocalizableFunctionInterface< MsFEMTraits::LocalEntityType,
-    typename FunctionImp::DomainFieldType, FunctionImp::dimDomain, typename FunctionImp::RangeFieldType,
-    FunctionImp::dimRange, FunctionImp::dimRangeCols> {
-
-  CoarseToLocalAdapter(const FunctionImp& function)
-    : function_(function)
-  {}
-
-  const FunctionImp& function_;
-};
-
 } // namespace MsFEM {
 } // namespace Multiscale {
 } // namespace Dune {}
