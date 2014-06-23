@@ -15,6 +15,155 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+// forwards
+class MsFemEvaluation;
+
+struct MsFemEvaluationEllipticTraits {
+  typedef MsFemEvaluation derived_type;
+};
+
+/**
+ *  \brief  Computes an elliptic evaluation.
+ */
+class MsFemEvaluation
+  : public GDT::LocalEvaluation::Codim0Interface< MsFemEvaluationEllipticTraits, 2 >
+{
+  typedef CommonTraits::DiffusionType LocalizableFunctionType;
+  typedef typename LocalizableFunctionType::EntityType EntityType;
+public:
+  typedef MsFemEvaluationEllipticTraits Traits;
+
+  MsFemEvaluation(const LocalizableFunctionType& inducingFunction)
+    : inducingFunction_(inducingFunction)
+  {}
+
+
+  class LocalfunctionTuple
+  {
+    typedef typename LocalizableFunctionType::LocalfunctionType LocalfunctionType;
+  public:
+    typedef std::tuple< std::shared_ptr< LocalfunctionType > > Type;
+  };
+
+
+  typename LocalfunctionTuple::Type localFunctions(const EntityType& entity) const
+  {
+    return std::make_tuple(inducingFunction_.local_function(entity));
+  }
+
+  /**
+   * \brief extracts the local functions and calls the correct order() method
+   */
+  template< class E, class D, int d, class R, int rT, int rCT, int rA, int rCA >
+  size_t order(const typename LocalfunctionTuple::Type& localFuncs,
+               const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
+               const Stuff::LocalfunctionSetInterface< E, D, d, R, rA, rCA >& ansatzBase) const
+  {
+    const auto localFunction = std::get< 0 >(localFuncs);
+    return order(*localFunction, testBase, ansatzBase);
+  }
+
+  /**
+   *  \todo add copydoc
+   *  \return localFunction.order() + (testBase.order() - 1) + (ansatzBase.order() - 1)
+   */
+  template< class E, class D, int d, class R, int rL, int rCL, int rT, int rCT, int rA, int rCA >
+  size_t order(const Stuff::LocalfunctionInterface< E, D, d, R, rL, rCL >& localFunction,
+               const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
+               const Stuff::LocalfunctionSetInterface< E, D, d, R, rA, rCA >& ansatzBase) const
+  {
+    return localFunction.order()
+        + std::max(ssize_t(testBase.order()) - 1, ssize_t(0))
+        + std::max(ssize_t(ansatzBase.order()) - 1, ssize_t(0));
+  }
+
+  /**
+   * \brief extracts the local functions and calls the correct evaluate() method
+   */
+  template< class E, class D, int d, class R, int rT, int rCT, int rA, int rCA >
+  void evaluate(const typename LocalfunctionTuple::Type& localFuncs,
+                const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
+                const Stuff::LocalfunctionSetInterface< E, D, d, R, rA, rCA >& ansatzBase,
+                const Dune::FieldVector< D, d >& localPoint,
+                Dune::DynamicMatrix< R >& ret) const
+  {
+    const auto localFunction = std::get< 0 >(localFuncs);
+    evaluate(*localFunction, testBase, ansatzBase, localPoint, ret);
+  }
+
+  /**
+   *  \brief  Computes an elliptic evaluation for a 2x2 matrix-valued local function and matrix-valued basefunctionsets.
+   *  \tparam E EntityType
+   *  \tparam D DomainFieldType
+   *  \tparam d dimDomain
+   *  \tparam R RangeFieldType
+   *  \note   Unfortunately we need this explicit specialization, otherwise the compiler will complain for 1d grids.
+   */
+  template< class E, class D, int d, class R >
+  void evaluate(const Stuff::LocalfunctionInterface< E, D, d, R, 2, 2 >& localFunction,
+                const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& testBase,
+                const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& ansatzBase,
+                const Dune::FieldVector< D, d >& localPoint,
+                Dune::DynamicMatrix< R >& ret) const
+  {
+    evaluate_matrix_valued_(localFunction, testBase, ansatzBase, localPoint, ret);
+  }
+
+  /**
+   *  \brief  Computes an elliptic evaluation for a 3x3 matrix-valued local function and matrix-valued basefunctionsets.
+   *  \tparam E EntityType
+   *  \tparam D DomainFieldType
+   *  \tparam d dimDomain
+   *  \tparam R RangeFieldType
+   *  \note   Unfortunately we need this explicit specialization, otherwise the compiler will complain for 1d grids.
+   */
+  template< class E, class D, int d, class R >
+  void evaluate(const Stuff::LocalfunctionInterface< E, D, d, R, 3, 3 >& localFunction,
+                const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& testBase,
+                const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& ansatzBase,
+                const Dune::FieldVector< D, d >& localPoint,
+                Dune::DynamicMatrix< R >& ret) const
+  {
+    evaluate_matrix_valued_(localFunction, testBase, ansatzBase, localPoint, ret);
+  }
+
+private:
+  template< class E, class D, int d, class R >
+  void evaluate_matrix_valued_(const Stuff::LocalfunctionInterface< E, D, d, R, d, d >& localFunction,
+                               const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& testBase,
+                               const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& ansatzBase,
+                               const Dune::FieldVector< D, d >& localPoint,
+                               Dune::DynamicMatrix< R >& ret) const
+  {
+    typedef typename Stuff::LocalfunctionInterface< E, D, d, R, d, d >::RangeType             DiffusionRangeType;
+    typedef typename Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >::JacobianRangeType  JacobianRangeType;
+    // evaluate local function
+    const DiffusionRangeType functionValue = localFunction.evaluate(localPoint);
+    // evaluate test gradient
+    const size_t rows = testBase.size();
+    std::vector< JacobianRangeType > testGradients(rows, JacobianRangeType(0));
+    testBase.jacobian(localPoint, testGradients);
+    // evaluate ansatz gradient
+    const size_t cols = ansatzBase.size();
+    std::vector< JacobianRangeType > ansatzGradients(cols, JacobianRangeType(0));
+    ansatzBase.jacobian(localPoint, ansatzGradients);
+    // compute products
+    assert(ret.rows() >= rows);
+    assert(ret.cols() >= cols);
+    FieldVector< D, d > product(0.0);
+    for (size_t ii = 0; ii < rows; ++ii) {
+      auto& retRow = ret[ii];
+      for (size_t jj = 0; jj < cols; ++jj) {
+        functionValue.mv(ansatzGradients[jj][0], product);
+        retRow[jj] = product * testGradients[ii][0];
+      }
+    }
+  } // ... evaluate_matrix_valued_(...)
+
+  const LocalizableFunctionType& inducingFunction_;
+}; // class LocalElliptic
+
+
 // forward, to be used in the traits
 template< class LocalOperatorImp >
 class MsFemCodim0Matrix;
@@ -36,8 +185,9 @@ public:
   typedef MsFemCodim0MatrixTraits< LocalOperatorImp > Traits;
   typedef typename Traits::LocalOperatorType LocalOperatorType;
 
-  MsFemCodim0Matrix(const LocalOperatorType& op)
+  MsFemCodim0Matrix(const LocalOperatorType& op, LocalGridList& localGridList)
     : localOperator_(op)
+    , localGridList_(localGridList)
   {}
 
   const LocalOperatorType& localOperator() const
@@ -61,10 +211,10 @@ public:
    *  \tparam M           Traits of the Dune::Stuff::LA::Container::MatrixInterface implementation, representing the type of systemMatrix
    *  \tparam R           RangeFieldType, i.e. double
    */
-  template< class T, class A, class EntityType, class M, class R >
-  void assembleLocal(const GDT::SpaceInterface< T >& testSpace,
-                     const GDT::SpaceInterface< A >& ansatzSpace,
-                     const EntityType& entity,
+  template< class EntityType, class M, class R >
+  void assembleLocal(const CommonTraits::GdtSpaceType& testSpace,
+                     const CommonTraits::GdtSpaceType& ansatzSpace,
+                     const EntityType& coarse_grid_entity,
                      Dune::Stuff::LA::MatrixInterface< M >& systemMatrix,
                      std::vector< std::vector< Dune::DynamicMatrix< R > > >& tmpLocalMatricesContainer,
                      std::vector< Dune::DynamicVector< size_t > >& tmpIndicesContainer) const
@@ -75,35 +225,53 @@ public:
     assert(tmpLocalMatricesContainer[1].size() >= localOperator_.numTmpObjectsRequired());
     assert(tmpIndicesContainer.size() >= 2);
     // get and clear matrix
-    Dune::DynamicMatrix< R >& localMatrix = tmpLocalMatricesContainer[0][0];
-    Dune::Stuff::Common::clear(localMatrix);
-    auto& tmpOperatorMatrices = tmpLocalMatricesContainer[1];
-    // apply local operator (result is in localMatrix)
-    localOperator_.apply(testSpace.base_function_set(entity),
-                         ansatzSpace.base_function_set(entity),
-                         localMatrix,
-                         tmpOperatorMatrices);
-    // write local matrix to global
-    Dune::DynamicVector< size_t >& globalRows = tmpIndicesContainer[0];
-    Dune::DynamicVector< size_t >& globalCols = tmpIndicesContainer[1];
-    const size_t rows = testSpace.mapper().numDofs(entity);
-    const size_t cols = ansatzSpace.mapper().numDofs(entity);
-    assert(globalRows.size() >= rows);
-    assert(globalCols.size() >= cols);
-    testSpace.mapper().globalIndices(entity, globalRows);
-    ansatzSpace.mapper().globalIndices(entity, globalCols);
-    for (size_t ii = 0; ii < rows; ++ii) {
-      const auto& localRow = localMatrix[ii];
-      const size_t globalII = globalRows[ii];
-      for (size_t jj = 0; jj < cols; ++jj) {
-        const size_t globalJJ = globalCols[jj];
-        systemMatrix.add_to_entry(globalII, globalJJ, localRow[jj]);
-      }
-    } // write local matrix to global
+
+    Multiscale::MsFEM::LocalSolutionManager localSolutionManager(testSpace,
+                                                                 coarse_grid_entity,
+                                                                 localGridList_);
+    localSolutionManager.load();
+    const auto& localSolutions = localSolutionManager.getLocalSolutions();
+    assert(localSolutions.size() > 0);
+
+    for (const auto& localGridEntity : DSC::viewRange(*localSolutionManager.space().grid_view())) {
+      // ignore overlay elements
+      if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
+        continue;
+      const auto& local_grid_geometry = localGridEntity.geometry();
+
+
+      ////// ************************
+      Dune::DynamicMatrix< R >& localMatrix = tmpLocalMatricesContainer[0][0];
+      Dune::Stuff::Common::clear(localMatrix);
+      auto& tmpOperatorMatrices = tmpLocalMatricesContainer[1];
+      // apply local operator (result is in localMatrix)
+      localOperator_.apply(testSpace.base_function_set(coarse_grid_entity),
+                           ansatzSpace.base_function_set(coarse_grid_entity),
+                           localMatrix,
+                           tmpOperatorMatrices);
+      // write local matrix to global
+      Dune::DynamicVector< size_t >& globalRows = tmpIndicesContainer[0];
+      Dune::DynamicVector< size_t >& globalCols = tmpIndicesContainer[1];
+      const size_t rows = testSpace.mapper().numDofs(coarse_grid_entity);
+      const size_t cols = ansatzSpace.mapper().numDofs(coarse_grid_entity);
+      assert(globalRows.size() >= rows);
+      assert(globalCols.size() >= cols);
+      testSpace.mapper().globalIndices(coarse_grid_entity, globalRows);
+      ansatzSpace.mapper().globalIndices(coarse_grid_entity, globalCols);
+      for (size_t ii = 0; ii < rows; ++ii) {
+        const auto& localRow = localMatrix[ii];
+        const size_t globalII = globalRows[ii];
+        for (size_t jj = 0; jj < cols; ++jj) {
+          const size_t globalJJ = globalCols[jj];
+          systemMatrix.add_to_entry(globalII, globalJJ, localRow[jj]);
+        }
+      } // write local matrix to global
+    }
   } // ... assembleLocal(...)
 
 private:
   const LocalOperatorType& localOperator_;
+  LocalGridList& localGridList_;
 }; // class LocalAssemblerCodim0Matrix
 
 class EllipticCGMsFEM;
@@ -125,8 +293,7 @@ class EllipticCGMsFEM
 {
 
   typedef GDT::Operators::MatrixBased< EllipticCGMsFEMTraits > OperatorBaseType;
-  typedef GDT::LocalOperator::Codim0Integral<
-            GDT::LocalEvaluation::Elliptic< CommonTraits::DiffusionType > > LocalOperatorType;
+  typedef GDT::LocalOperator::Codim0Integral<MsFemEvaluation> LocalOperatorType;
   typedef MsFemCodim0Matrix< LocalOperatorType > LocalAssemblerType;
   typedef GDT::SystemAssembler< EllipticCGMsFEMTraits::RangeSpaceType, EllipticCGMsFEMTraits::GridViewType,
   EllipticCGMsFEMTraits::SourceSpaceType, MsFemCodim0Matrix> AssemblerBaseType;
@@ -150,12 +317,13 @@ public:
 
   EllipticCGMsFEM(const CommonTraits::DiffusionType& diffusion,
              MatrixType& mtrx,
-             const SourceSpaceType& src_spc)
+             const SourceSpaceType& src_spc,
+             LocalGridList& localGridList)
     : OperatorBaseType(mtrx, src_spc)
     , AssemblerBaseType(src_spc)
     , diffusion_(diffusion)
     , local_operator_(diffusion_)
-    , local_assembler_(local_operator_)
+    , local_assembler_(local_operator_, localGridList)
   {
     this->add(local_assembler_, this->matrix());
   }
@@ -187,7 +355,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
   const bool is_simplex_grid = DSG::is_simplex_grid(coarseDiscreteFunctionSpace_);
 
   GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarseDiscreteFunctionSpace_);
-  EllipticCGMsFEM elliptic_operator(diffusion_operator_, global_matrix_, coarseDiscreteFunctionSpace_);
+  EllipticCGMsFEM elliptic_operator(diffusion_operator_, global_matrix_, coarseDiscreteFunctionSpace_, subgrid_list);
   global_system_assembler_.add(elliptic_operator);
   global_system_assembler_.assemble();
 
