@@ -156,7 +156,7 @@ const auto& grid = coarse_space_.grid_view()->grid();
   DSC_LOG_DEBUG << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n";
   DSC_LOG_DEBUG << "Average time for solving a local problem = " << solveTime.average() << "s.\n";
   DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = "
-                << totalTime << "s on rank" << Dune::Fem::MPIManager::rank() << std::endl;
+                << totalTime << "s on rank" << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
 } // assemble_all
 
 } // namespace MsFEM {
