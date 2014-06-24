@@ -1,24 +1,36 @@
 #include <config.h>
+
+#include "msfem_solver.hh"
+
+#include <sstream>
 #include <assert.h>
 #include <boost/assert.hpp>
+
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
+
 #include <dune/multiscale/common/righthandside_assembler.hh>
 #include <dune/multiscale/msfem/coarse_scale_operator.hh>
+#include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
+#include <dune/multiscale/tools/misc.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
+#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
-#include <sstream>
 
-#include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/gdt/operators/prolongations.hh>
 
-#include "msfem_solver.hh"
+
 #include "localsolution_proxy.hh"
 
 namespace Dune {
@@ -139,7 +151,14 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
 //  rhsAss.assemble(coarse_space, f, subgrid_list, msfem_rhs);
   //! define the discrete (elliptic) operator that describes our problem
-  CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list, diffusion_op);
+
+  GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarse_space);
+
+  CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list);
+  // this calls GridWalker::add(Gridwalker&)
+  global_system_assembler_.add(elliptic_msfem_op);
+  global_system_assembler_.assemble();
+
   elliptic_msfem_op.apply_inverse(msfem_rhs, coarse_msfem_solution);
 
   solution.vector() *= 0;
