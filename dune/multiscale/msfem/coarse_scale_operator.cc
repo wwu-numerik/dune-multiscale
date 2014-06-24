@@ -6,6 +6,7 @@
 #include <dune/gdt/operators/prolongations.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/functionals/l2.hh>
+#include <dune/multiscale/msfem/diffusion_evaluation.hh>
 #include <sstream>
 
 #include "dune/multiscale/msfem/msfem_traits.hh"
@@ -14,65 +15,29 @@
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
-template< class BinaryEvaluationImp >
+
 class MsFEMCodim0Integral;
 
-template< class BinaryEvaluationImp >
 class MsFEMCodim0IntegralTraits
 {
-  static_assert(std::is_base_of<  GDT::LocalEvaluation::Codim0Interface< typename BinaryEvaluationImp::Traits, 2 >,
-                                  BinaryEvaluationImp >::value,
-                "BinaryEvaluationImp has to be derived from LocalEvaluation::Codim0Interface< ..., 2 >!");
 public:
-  typedef MsFEMCodim0Integral< BinaryEvaluationImp > derived_type;
-  typedef GDT::LocalEvaluation::Codim0Interface< typename BinaryEvaluationImp::Traits, 2 > BinaryEvaluationType;
+  typedef MsFEMCodim0Integral derived_type;
 };
 
-
-template< class BinaryEvaluationImp >
 class MsFEMCodim0Integral
-  : public GDT::LocalOperator::Codim0Interface< MsFEMCodim0IntegralTraits< BinaryEvaluationImp > >
+  : public GDT::LocalOperator::Codim0Interface< MsFEMCodim0IntegralTraits >
 {
 public:
-  typedef MsFEMCodim0IntegralTraits< BinaryEvaluationImp > Traits;
-  typedef typename Traits::BinaryEvaluationType       BinaryEvaluationType;
+  typedef MsFEMCodim0IntegralTraits Traits;
 
 private:
   static const size_t numTmpObjectsRequired_ = 1;
 
 public:
-  MsFEMCodim0Integral(const BinaryEvaluationImp eval, const size_t over_integrate = 0)
-    : evaluation_(eval)
-    , over_integrate_(over_integrate)
+  explicit MsFEMCodim0Integral(const size_t over_integrate = 0)
+    : over_integrate_(over_integrate)
   {}
 
-  MsFEMCodim0Integral(const size_t over_integrate, const BinaryEvaluationImp eval)
-    : evaluation_(eval)
-    , over_integrate_(over_integrate)
-  {}
-
-  template< class... Args >
-  explicit MsFEMCodim0Integral(Args&& ...args)
-    : evaluation_(std::forward< Args >(args)...)
-    , over_integrate_(0)
-  {}
-
-  template< class... Args >
-  MsFEMCodim0Integral(const int over_integrate, Args&& ...args)
-    : evaluation_(std::forward< Args >(args)...)
-    , over_integrate_(over_integrate)
-  {}
-
-  template< class... Args >
-  MsFEMCodim0Integral(const size_t over_integrate, Args&& ...args)
-    : evaluation_(std::forward< Args >(args)...)
-    , over_integrate_(over_integrate)
-  {}
-
-  const BinaryEvaluationType& inducingEvaluation() const
-  {
-    return evaluation_;
-  }
 
   size_t numTmpObjectsRequired() const
   {
@@ -87,12 +52,13 @@ public:
              Dune::DynamicMatrix< R >& ret,
              std::vector< Dune::DynamicMatrix< R > >& tmpLocalMatrices) const
   {
+    auto& diffusion_operator = DMP::getDiffusion();
     const auto& coarse_scale_entity = ansatzBase.entity();
-    const auto localFunctions = evaluation_.localFunctions(coarse_scale_entity);
+
     // quadrature
     typedef Dune::QuadratureRules< D, d > VolumeQuadratureRules;
     typedef Dune::QuadratureRule< D, d > VolumeQuadratureType;
-    const size_t integrand_order = evaluation().order(localFunctions, ansatzBase, testBase) + over_integrate_;
+    const size_t integrand_order = diffusion_operator->order() + ansatzBase.order() + testBase.order() + over_integrate_;
     assert(integrand_order < std::numeric_limits< int >::max());
     const VolumeQuadratureType& volumeQuadrature = VolumeQuadratureRules::rule(coarse_scale_entity.type(), int(integrand_order));
     // check matrix and tmp storage
@@ -102,201 +68,61 @@ public:
     assert(ret.rows() >= rows);
     assert(ret.cols() >= cols);
     assert(tmpLocalMatrices.size() >= numTmpObjectsRequired_);
-    auto& evaluationResult = tmpLocalMatrices[0];
 
-    const auto& local_grid_geometry = localGridEntity.geometry();
 
     const auto numQuadraturePoints = volumeQuadrature.size();
     const auto& localSolutions = localSolutionManager.getLocalSolutions();
     // number of local solutions without the boundary correctors. Those are only needed for the right hand side
     const auto numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
     typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
+    typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
     // evaluate the jacobians of all local solutions in all quadrature points
-    std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
-          numLocalSolutions, std::vector<RangeType>(numQuadraturePoints, RangeType(0.0)));
+    std::vector<std::vector<JacobianRangeType>> allLocalSolutionEvaluations(
+          numLocalSolutions, std::vector<JacobianRangeType>(numQuadraturePoints, RangeType(0.0)));
     for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
       const auto localFunction = localSolutions[lsNum]->local_function(localGridEntity);
 //      assert(localSolutionManager.space().indexSet().contains(localGridEntity));
-      localFunction->evaluate(volumeQuadrature, allLocalSolutionEvaluations[lsNum]);
+      localFunction->jacobian(volumeQuadrature, allLocalSolutionEvaluations[lsNum]);
     }
 
     // loop over all quadrature points
     const auto quadPointEndIt = volumeQuadrature.end();
-    for (auto quadPointIt = volumeQuadrature.begin(); quadPointIt != quadPointEndIt; ++quadPointIt) {
+    std::size_t localQuadraturePoint = 0;
+    for (auto quadPointIt = volumeQuadrature.begin(); quadPointIt != quadPointEndIt; ++quadPointIt, ++localQuadraturePoint) {
       const Dune::FieldVector< D, d > x = quadPointIt->position();
+      const auto coarseBaseJacs_ = testBase.jacobian(x);
       // integration factors
       const double integrationFactor = coarse_scale_entity.geometry().integrationElement(x);
       const double quadratureWeight = quadPointIt->weight();
-      // evaluate the local operation
-      evaluation().evaluate(localFunctions, ansatzBase, testBase, x, evaluationResult);
+      const auto global_point_in_U_T = coarse_scale_entity.geometry().global(x);
+
       // compute integral
       for (size_t ii = 0; ii < rows; ++ii) {
         auto& retRow = ret[ii];
-        const auto& evaluationResultRow = evaluationResult[ii];
-        for (size_t jj = 0; jj < cols; ++jj)
-          retRow[jj] += evaluationResultRow[jj] * integrationFactor * quadratureWeight;
+        for (size_t jj = 0; jj < cols; ++jj) {
+          RangeType local_integral(0.0);
+
+          // Compute the gradients of the i'th and j'th local problem solutions
+          assert(allLocalSolutionEvaluations.size() == rows /*numMacroBaseFunctions*/);
+          const auto gradLocProbSoli = allLocalSolutionEvaluations[ii][localQuadraturePoint];
+          const auto gradLocProbSolj = allLocalSolutionEvaluations[jj][localQuadraturePoint];
+
+          auto reconstructionGradPhii = coarseBaseJacs_[ii];
+          reconstructionGradPhii += gradLocProbSoli;
+          auto reconstructionGradPhij = coarseBaseJacs_[jj];
+          reconstructionGradPhij += gradLocProbSolj;
+          JacobianRangeType diffusive_flux(0.0);
+          diffusion_operator->diffusiveFlux(global_point_in_U_T, reconstructionGradPhii, diffusive_flux);
+          local_integral += diffusive_flux[0] * reconstructionGradPhij[0];
+          retRow[jj] += local_integral * integrationFactor * quadratureWeight;
+        }
       } // compute integral
     } // loop over all quadrature points
   } // ... apply(...)
 
 private:
-  const BinaryEvaluationType& evaluation() const
-  {
-    return static_cast< const BinaryEvaluationType& >(evaluation_);
-  }
-
-  const BinaryEvaluationImp evaluation_;
   const size_t over_integrate_;
 }; // class Codim0Integral
-
-// forwards
-class MsFemEvaluation;
-
-struct MsFemEvaluationEllipticTraits {
-  typedef MsFemEvaluation derived_type;
-};
-
-/**
- *  \brief  Computes an elliptic evaluation.
- */
-class MsFemEvaluation
-  : public GDT::LocalEvaluation::Codim0Interface< MsFemEvaluationEllipticTraits, 2 >
-{
-  typedef CommonTraits::DiffusionType LocalizableFunctionType;
-  typedef typename LocalizableFunctionType::EntityType EntityType;
-public:
-  typedef MsFemEvaluationEllipticTraits Traits;
-
-  MsFemEvaluation(const LocalizableFunctionType& inducingFunction
-                  )
-    : inducingFunction_(inducingFunction)
-  {}
-
-
-  class LocalfunctionTuple
-  {
-    typedef typename LocalizableFunctionType::LocalfunctionType LocalfunctionType;
-  public:
-    typedef std::tuple< std::shared_ptr< LocalfunctionType > > Type;
-  };
-
-
-  typename LocalfunctionTuple::Type localFunctions(const EntityType& entity) const
-  {
-    return std::make_tuple(inducingFunction_.local_function(entity));
-  }
-
-  /**
-   * \brief extracts the local functions and calls the correct order() method
-   */
-  template< class E, class D, int d, class R, int rT, int rCT, int rA, int rCA >
-  size_t order(const typename LocalfunctionTuple::Type& localFuncs,
-               const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
-               const Stuff::LocalfunctionSetInterface< E, D, d, R, rA, rCA >& ansatzBase) const
-  {
-    const auto localFunction = std::get< 0 >(localFuncs);
-    return order(*localFunction, testBase, ansatzBase);
-  }
-
-  /**
-   *  \todo add copydoc
-   *  \return localFunction.order() + (testBase.order() - 1) + (ansatzBase.order() - 1)
-   */
-  template< class E, class D, int d, class R, int rL, int rCL, int rT, int rCT, int rA, int rCA >
-  size_t order(const Stuff::LocalfunctionInterface< E, D, d, R, rL, rCL >& localFunction,
-               const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
-               const Stuff::LocalfunctionSetInterface< E, D, d, R, rA, rCA >& ansatzBase) const
-  {
-    return localFunction.order()
-        + std::max(ssize_t(testBase.order()) - 1, ssize_t(0))
-        + std::max(ssize_t(ansatzBase.order()) - 1, ssize_t(0));
-  }
-
-  /**
-   * \brief extracts the local functions and calls the correct evaluate() method
-   */
-  template< class E, class D, int d, class R, int rT, int rCT, int rA, int rCA >
-  void evaluate(const typename LocalfunctionTuple::Type& localFuncs,
-                const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
-                const Stuff::LocalfunctionSetInterface< E, D, d, R, rA, rCA >& ansatzBase,
-                const Dune::FieldVector< D, d >& localPoint,
-                Dune::DynamicMatrix< R >& ret) const
-  {
-    const auto localFunction = std::get< 0 >(localFuncs);
-    evaluate(*localFunction, testBase, ansatzBase, localPoint, ret);
-  }
-
-  /**
-   *  \brief  Computes an elliptic evaluation for a 2x2 matrix-valued local function and matrix-valued basefunctionsets.
-   *  \tparam E EntityType
-   *  \tparam D DomainFieldType
-   *  \tparam d dimDomain
-   *  \tparam R RangeFieldType
-   *  \note   Unfortunately we need this explicit specialization, otherwise the compiler will complain for 1d grids.
-   */
-  template< class E, class D, int d, class R >
-  void evaluate(const Stuff::LocalfunctionInterface< E, D, d, R, 2, 2 >& localFunction,
-                const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& testBase,
-                const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& ansatzBase,
-                const Dune::FieldVector< D, d >& localPoint,
-                Dune::DynamicMatrix< R >& ret) const
-  {
-    evaluate_matrix_valued_(localFunction, testBase, ansatzBase, localPoint, ret);
-  }
-
-  /**
-   *  \brief  Computes an elliptic evaluation for a 3x3 matrix-valued local function and matrix-valued basefunctionsets.
-   *  \tparam E EntityType
-   *  \tparam D DomainFieldType
-   *  \tparam d dimDomain
-   *  \tparam R RangeFieldType
-   *  \note   Unfortunately we need this explicit specialization, otherwise the compiler will complain for 1d grids.
-   */
-  template< class E, class D, int d, class R >
-  void evaluate(const Stuff::LocalfunctionInterface< E, D, d, R, 3, 3 >& localFunction,
-                const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& testBase,
-                const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& ansatzBase,
-                const Dune::FieldVector< D, d >& localPoint,
-                Dune::DynamicMatrix< R >& ret) const
-  {
-    evaluate_matrix_valued_(localFunction, testBase, ansatzBase, localPoint, ret);
-  }
-
-private:
-  template< class E, class D, int d, class R >
-  void evaluate_matrix_valued_(const Stuff::LocalfunctionInterface< E, D, d, R, d, d >& localFunction,
-                               const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& testBase,
-                               const Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >& ansatzBase,
-                               const Dune::FieldVector< D, d >& localPoint,
-                               Dune::DynamicMatrix< R >& ret) const
-  {
-    typedef typename Stuff::LocalfunctionInterface< E, D, d, R, d, d >::RangeType             DiffusionRangeType;
-    typedef typename Stuff::LocalfunctionSetInterface< E, D, d, R, 1, 1 >::JacobianRangeType  JacobianRangeType;
-    // evaluate local function
-    const DiffusionRangeType functionValue = localFunction.evaluate(localPoint);
-    // evaluate test gradient
-    const size_t rows = testBase.size();
-    std::vector< JacobianRangeType > testGradients(rows, JacobianRangeType(0));
-    testBase.jacobian(localPoint, testGradients);
-    // evaluate ansatz gradient
-    const size_t cols = ansatzBase.size();
-    std::vector< JacobianRangeType > ansatzGradients(cols, JacobianRangeType(0));
-    ansatzBase.jacobian(localPoint, ansatzGradients);
-    // compute products
-    assert(ret.rows() >= rows);
-    assert(ret.cols() >= cols);
-    FieldVector< D, d > product(0.0);
-    for (size_t ii = 0; ii < rows; ++ii) {
-      auto& retRow = ret[ii];
-      for (size_t jj = 0; jj < cols; ++jj) {
-        functionValue.mv(ansatzGradients[jj][0], product);
-        retRow[jj] = product * testGradients[ii][0];
-      }
-    }
-  } // ... evaluate_matrix_valued_(...)
-
-  const LocalizableFunctionType& inducingFunction_;
-}; // class LocalElliptic
 
 
 // forward, to be used in the traits
@@ -306,7 +132,7 @@ class MsFemCodim0Matrix;
 class MsFemCodim0MatrixTraits
 {
 public:
-  typedef MsFEMCodim0Integral<MsFemEvaluation> LocalOperatorType;
+  typedef MsFEMCodim0Integral LocalOperatorType;
   typedef MsFemCodim0Matrix<LocalOperatorType> derived_type;
 }; // class LocalAssemblerCodim0MatrixTraits
 
@@ -371,7 +197,6 @@ public:
       if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
         continue;
 
-      ////// ************************
       Dune::DynamicMatrix< R >& localMatrix = tmpLocalMatricesContainer[0][0];
       Dune::Stuff::Common::clear(localMatrix);
       auto& tmpOperatorMatrices = tmpLocalMatricesContainer[1];
@@ -425,7 +250,7 @@ class EllipticCGMsFEM
 {
 
   typedef GDT::Operators::MatrixBased< EllipticCGMsFEMTraits > OperatorBaseType;
-  typedef MsFEMCodim0Integral<MsFemEvaluation> LocalOperatorType;
+  typedef MsFEMCodim0Integral LocalOperatorType;
   typedef MsFemCodim0Matrix< LocalOperatorType > LocalAssemblerType;
   typedef GDT::SystemAssembler< EllipticCGMsFEMTraits::RangeSpaceType, EllipticCGMsFEMTraits::GridViewType,
   EllipticCGMsFEMTraits::SourceSpaceType, MsFemCodim0Matrix> AssemblerBaseType;
@@ -447,14 +272,11 @@ public:
   }
 
 
-  EllipticCGMsFEM(const CommonTraits::DiffusionType& diffusion,
-             MatrixType& mtrx,
+  EllipticCGMsFEM(MatrixType& mtrx,
              const SourceSpaceType& src_spc,
              LocalGridList& localGridList)
     : OperatorBaseType(mtrx, src_spc)
     , AssemblerBaseType(src_spc)
-    , diffusion_(diffusion)
-    , local_operator_(diffusion_)
     , local_assembler_(local_operator_, localGridList)
   {
     this->add(local_assembler_, this->matrix());
@@ -468,7 +290,6 @@ public:
   }
 
 private:
-  const CommonTraits::DiffusionType& diffusion_;
   const LocalOperatorType local_operator_;
   const LocalAssemblerType local_assembler_;
 }; // class EllipticCG
@@ -485,9 +306,10 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coar
     DSC_PROFILER.startTiming("msfem.assembleMatrix");
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarseDiscreteFunctionSpace_);
+  assert(!is_simplex_grid); //special casing isn't ported yet.
 
   GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarseDiscreteFunctionSpace_);
-  EllipticCGMsFEM elliptic_operator(diffusion_operator_, global_matrix_, coarseDiscreteFunctionSpace_, subgrid_list);
+  EllipticCGMsFEM elliptic_operator(global_matrix_, coarseDiscreteFunctionSpace_, subgrid_list);
   global_system_assembler_.add(elliptic_operator);
   global_system_assembler_.assemble();
 

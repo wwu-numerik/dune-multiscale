@@ -8,6 +8,7 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/gdt/assembler/system.hh>
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/msfem/diffusion_evaluation.hh>
 
 namespace Dune {
 namespace Multiscale {
