@@ -30,6 +30,11 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble_msfem(
   const auto& neumannData = *Problem::getNeumannData();
   DUNE_THROW(InvalidStateException, "NotIMplenetd");
 
+  DSC_PROFILER.stopTiming("msfem.assembleRHS");
+  DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.getTiming("msfem.assembleRHS") << "ms"
+               << std::endl;
+}
+
 #if 0 //alter referenzcde
   rhsVector.clear();
   RangeType f_x;
@@ -166,8 +171,3 @@ void Dune::Multiscale::MsFEM::RightHandSideAssembler::assemble_msfem(
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
 #endif 0 //alter referenzcde
-
-  DSC_PROFILER.stopTiming("msfem.assembleRHS");
-  DSC_LOG_DEBUG << "Time to assemble and communicate MsFEM rhs: " << DSC_PROFILER.getTiming("msfem.assembleRHS") << "ms"
-               << std::endl;
-}
