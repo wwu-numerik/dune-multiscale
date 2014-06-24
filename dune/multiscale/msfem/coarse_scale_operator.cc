@@ -14,6 +14,140 @@
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
+template< class BinaryEvaluationImp >
+class MsFEMCodim0Integral;
+
+template< class BinaryEvaluationImp >
+class MsFEMCodim0IntegralTraits
+{
+  static_assert(std::is_base_of<  GDT::LocalEvaluation::Codim0Interface< typename BinaryEvaluationImp::Traits, 2 >,
+                                  BinaryEvaluationImp >::value,
+                "BinaryEvaluationImp has to be derived from LocalEvaluation::Codim0Interface< ..., 2 >!");
+public:
+  typedef MsFEMCodim0Integral< BinaryEvaluationImp > derived_type;
+  typedef GDT::LocalEvaluation::Codim0Interface< typename BinaryEvaluationImp::Traits, 2 > BinaryEvaluationType;
+};
+
+
+template< class BinaryEvaluationImp >
+class MsFEMCodim0Integral
+  : public GDT::LocalOperator::Codim0Interface< MsFEMCodim0IntegralTraits< BinaryEvaluationImp > >
+{
+public:
+  typedef MsFEMCodim0IntegralTraits< BinaryEvaluationImp > Traits;
+  typedef typename Traits::BinaryEvaluationType       BinaryEvaluationType;
+
+private:
+  static const size_t numTmpObjectsRequired_ = 1;
+
+public:
+  MsFEMCodim0Integral(const BinaryEvaluationImp eval, const size_t over_integrate = 0)
+    : evaluation_(eval)
+    , over_integrate_(over_integrate)
+  {}
+
+  MsFEMCodim0Integral(const size_t over_integrate, const BinaryEvaluationImp eval)
+    : evaluation_(eval)
+    , over_integrate_(over_integrate)
+  {}
+
+  template< class... Args >
+  explicit MsFEMCodim0Integral(Args&& ...args)
+    : evaluation_(std::forward< Args >(args)...)
+    , over_integrate_(0)
+  {}
+
+  template< class... Args >
+  MsFEMCodim0Integral(const int over_integrate, Args&& ...args)
+    : evaluation_(std::forward< Args >(args)...)
+    , over_integrate_(over_integrate)
+  {}
+
+  template< class... Args >
+  MsFEMCodim0Integral(const size_t over_integrate, Args&& ...args)
+    : evaluation_(std::forward< Args >(args)...)
+    , over_integrate_(over_integrate)
+  {}
+
+  const BinaryEvaluationType& inducingEvaluation() const
+  {
+    return evaluation_;
+  }
+
+  size_t numTmpObjectsRequired() const
+  {
+    return numTmpObjectsRequired_;
+  }
+
+  template< class E, class D, int d, class R, int rT, int rCT, int rA, int rCA >
+  void apply(Multiscale::MsFEM::LocalSolutionManager& localSolutionManager,
+             const MsFEMTraits::LocalEntityType& localGridEntity,
+             const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
+             const Stuff::LocalfunctionSetInterface< E, D, d, R, rA, rCA >& ansatzBase,
+             Dune::DynamicMatrix< R >& ret,
+             std::vector< Dune::DynamicMatrix< R > >& tmpLocalMatrices) const
+  {
+    const auto& coarse_scale_entity = ansatzBase.entity();
+    const auto localFunctions = evaluation_.localFunctions(coarse_scale_entity);
+    // quadrature
+    typedef Dune::QuadratureRules< D, d > VolumeQuadratureRules;
+    typedef Dune::QuadratureRule< D, d > VolumeQuadratureType;
+    const size_t integrand_order = evaluation().order(localFunctions, ansatzBase, testBase) + over_integrate_;
+    assert(integrand_order < std::numeric_limits< int >::max());
+    const VolumeQuadratureType& volumeQuadrature = VolumeQuadratureRules::rule(coarse_scale_entity.type(), int(integrand_order));
+    // check matrix and tmp storage
+    const size_t rows = testBase.size();
+    const size_t cols = ansatzBase.size();
+    Dune::Stuff::Common::clear(ret);
+    assert(ret.rows() >= rows);
+    assert(ret.cols() >= cols);
+    assert(tmpLocalMatrices.size() >= numTmpObjectsRequired_);
+    auto& evaluationResult = tmpLocalMatrices[0];
+
+    const auto& local_grid_geometry = localGridEntity.geometry();
+
+    const auto numQuadraturePoints = volumeQuadrature.size();
+    const auto& localSolutions = localSolutionManager.getLocalSolutions();
+    // number of local solutions without the boundary correctors. Those are only needed for the right hand side
+    const auto numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
+    typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
+    // evaluate the jacobians of all local solutions in all quadrature points
+    std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
+          numLocalSolutions, std::vector<RangeType>(numQuadraturePoints, RangeType(0.0)));
+    for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
+      const auto localFunction = localSolutions[lsNum]->local_function(localGridEntity);
+//      assert(localSolutionManager.space().indexSet().contains(localGridEntity));
+      localFunction->evaluate(volumeQuadrature, allLocalSolutionEvaluations[lsNum]);
+    }
+
+    // loop over all quadrature points
+    const auto quadPointEndIt = volumeQuadrature.end();
+    for (auto quadPointIt = volumeQuadrature.begin(); quadPointIt != quadPointEndIt; ++quadPointIt) {
+      const Dune::FieldVector< D, d > x = quadPointIt->position();
+      // integration factors
+      const double integrationFactor = coarse_scale_entity.geometry().integrationElement(x);
+      const double quadratureWeight = quadPointIt->weight();
+      // evaluate the local operation
+      evaluation().evaluate(localFunctions, ansatzBase, testBase, x, evaluationResult);
+      // compute integral
+      for (size_t ii = 0; ii < rows; ++ii) {
+        auto& retRow = ret[ii];
+        const auto& evaluationResultRow = evaluationResult[ii];
+        for (size_t jj = 0; jj < cols; ++jj)
+          retRow[jj] += evaluationResultRow[jj] * integrationFactor * quadratureWeight;
+      } // compute integral
+    } // loop over all quadrature points
+  } // ... apply(...)
+
+private:
+  const BinaryEvaluationType& evaluation() const
+  {
+    return static_cast< const BinaryEvaluationType& >(evaluation_);
+  }
+
+  const BinaryEvaluationImp evaluation_;
+  const size_t over_integrate_;
+}; // class Codim0Integral
 
 // forwards
 class MsFemEvaluation;
@@ -33,7 +167,8 @@ class MsFemEvaluation
 public:
   typedef MsFemEvaluationEllipticTraits Traits;
 
-  MsFemEvaluation(const LocalizableFunctionType& inducingFunction)
+  MsFemEvaluation(const LocalizableFunctionType& inducingFunction
+                  )
     : inducingFunction_(inducingFunction)
   {}
 
@@ -165,24 +300,22 @@ private:
 
 
 // forward, to be used in the traits
-template< class LocalOperatorImp >
+template <class>
 class MsFemCodim0Matrix;
 
-
-template< class LocalOperatorImp >
 class MsFemCodim0MatrixTraits
 {
 public:
-  typedef MsFemCodim0Matrix< LocalOperatorImp > derived_type;
-  typedef GDT::LocalOperator::Codim0Interface< typename LocalOperatorImp::Traits > LocalOperatorType;
+  typedef MsFEMCodim0Integral<MsFemEvaluation> LocalOperatorType;
+  typedef MsFemCodim0Matrix<LocalOperatorType> derived_type;
 }; // class LocalAssemblerCodim0MatrixTraits
 
 
-template< class LocalOperatorImp >
+template< class /*TYpe necessary for system assmebler usage only*/>
 class MsFemCodim0Matrix
 {
 public:
-  typedef MsFemCodim0MatrixTraits< LocalOperatorImp > Traits;
+  typedef MsFemCodim0MatrixTraits Traits;
   typedef typename Traits::LocalOperatorType LocalOperatorType;
 
   MsFemCodim0Matrix(const LocalOperatorType& op, LocalGridList& localGridList)
@@ -237,15 +370,14 @@ public:
       // ignore overlay elements
       if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
         continue;
-      const auto& local_grid_geometry = localGridEntity.geometry();
-
 
       ////// ************************
       Dune::DynamicMatrix< R >& localMatrix = tmpLocalMatricesContainer[0][0];
       Dune::Stuff::Common::clear(localMatrix);
       auto& tmpOperatorMatrices = tmpLocalMatricesContainer[1];
       // apply local operator (result is in localMatrix)
-      localOperator_.apply(testSpace.base_function_set(coarse_grid_entity),
+      localOperator_.apply(localSolutionManager, localGridEntity,
+                           testSpace.base_function_set(coarse_grid_entity),
                            ansatzSpace.base_function_set(coarse_grid_entity),
                            localMatrix,
                            tmpOperatorMatrices);
@@ -293,7 +425,7 @@ class EllipticCGMsFEM
 {
 
   typedef GDT::Operators::MatrixBased< EllipticCGMsFEMTraits > OperatorBaseType;
-  typedef GDT::LocalOperator::Codim0Integral<MsFemEvaluation> LocalOperatorType;
+  typedef MsFEMCodim0Integral<MsFemEvaluation> LocalOperatorType;
   typedef MsFemCodim0Matrix< LocalOperatorType > LocalAssemblerType;
   typedef GDT::SystemAssembler< EllipticCGMsFEMTraits::RangeSpaceType, EllipticCGMsFEMTraits::GridViewType,
   EllipticCGMsFEMTraits::SourceSpaceType, MsFemCodim0Matrix> AssemblerBaseType;
