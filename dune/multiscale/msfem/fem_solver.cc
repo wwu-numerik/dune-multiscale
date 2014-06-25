@@ -2,7 +2,7 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
-#include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/msfem/coarse_rhs_functional.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/logging.hh>
