@@ -81,6 +81,7 @@ set( MSFEM_SOURCES
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
         dune/multiscale/msfem/localproblems/localgridsearch.cc
         dune/multiscale/msfem/localsolution_proxy.cc
+        dune/multiscale/msfem/coarse_scale_assembler.cc
         dune/multiscale/common/righthandside_assembler.cc
     )
 
