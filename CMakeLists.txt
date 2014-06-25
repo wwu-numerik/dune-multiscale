@@ -79,6 +79,8 @@ set( MSFEM_SOURCES
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
+        dune/multiscale/msfem/localproblems/localgridsearch.cc
+        dune/multiscale/msfem/localsolution_proxy.cc
         dune/multiscale/common/righthandside_assembler.cc
     )
 
