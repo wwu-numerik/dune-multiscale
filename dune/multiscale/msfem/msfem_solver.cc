@@ -45,10 +45,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   const auto& coarse_space = coarse_msfem_solution.space();
   auto& coarse_indexset = coarse_space.grid_view()->grid().leafIndexSet();
 
-  typedef DS::MsFEMProjection<LocalGridSearch> ProjectionType;
-  typedef LocalGridSearch<typename MsFEMTraits::LocalGridViewType> SearchType;
-  typedef LocalsolutionProxy<SearchType> ProxyType;
-  typename ProxyType::CorrectionsMapType local_corrections;
+  typedef DS::MsFEMProjection ProjectionType;
+  typedef LocalGridSearch SearchType;
+  typedef LocalsolutionProxy ProxyType;
+  ProxyType::CorrectionsMapType local_corrections;
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
 
