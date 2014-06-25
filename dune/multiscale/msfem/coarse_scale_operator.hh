@@ -77,6 +77,8 @@ public:
   void apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
                                           CoarseScaleOperator::CoarseDiscreteFunction& solution);
 
+  MatrixType& system_matrix();
+  const MatrixType& system_matrix() const;
 private:
   MatrixType global_matrix_;
   const LocalOperatorType local_operator_;

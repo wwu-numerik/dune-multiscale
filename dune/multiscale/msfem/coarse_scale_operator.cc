@@ -61,6 +61,10 @@ void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscret
                << std::endl;
 }
 
+CoarseScaleOperator::MatrixType &CoarseScaleOperator::system_matrix() { return global_matrix_; }
+
+const CoarseScaleOperator::MatrixType &CoarseScaleOperator::system_matrix() const { return global_matrix_; }
+
 // constructor
 
 } // namespace MsFEM {
