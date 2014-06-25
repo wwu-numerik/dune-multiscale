@@ -36,7 +36,7 @@ public:
   typedef MsFemCodim0Matrix derived_type;
 };
 
-class MsFEMCodim0Integral
+class MsFEMCodim0Integral // LocalOperatorType
   : public GDT::LocalOperator::Codim0Interface< MsFEMCodim0IntegralTraits >
 {
 public:
@@ -68,7 +68,7 @@ private:
   const size_t over_integrate_;
 };
 
-class MsFemCodim0Matrix
+class MsFemCodim0Matrix // LocalAssemblerType
 {
 public:
   typedef MsFemCodim0MatrixTraits Traits;
