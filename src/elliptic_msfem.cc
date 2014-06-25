@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     long totalPeakMemConsumption = comm.sum(peakMemConsumption);
     long meanPeakMemConsumption = totalPeakMemConsumption / comm.size();
     // write output on rank zero
-    if (Dune::Fem::MPIManager::rank() == 0) {
+    if (comm.rank() == 0) {
       std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(
           DSC::make_ofstream(DSC_CONFIG_GET("global.datadir", "data") + "/memory.csv"));
       *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
