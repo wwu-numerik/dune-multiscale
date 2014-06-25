@@ -52,8 +52,8 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
 
   const auto numQuadraturePoints = volumeQuadrature.size();
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
-  // number of local solutions without the boundary correctors. Those are only needed for the right hand side
-  const auto numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
+
+  const auto numLocalSolutions = localSolutions.size();
   typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
   typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
   // evaluate the jacobians of all local solutions in all quadrature points

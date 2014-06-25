@@ -80,10 +80,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       BOOST_ASSERT_MSG(false, "no adding of the boundary correctors??");
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-      BOOST_ASSERT_MSG(
-          static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
-              static_cast<long long>(coarseSolutionLF.size()),
-          "The current implementation relies on having thesame types of elements on coarse and fine level!");
+//      BOOST_ASSERT_MSG(
+//          static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
+//              static_cast<long long>(coarseSolutionLF.size()),
+//          "The current implementation relies on having thesame types of elements on coarse and fine level!");
       for (int dof = 0; dof < coarseSolutionLF.size(); ++dof) {
         localSolutions[dof]->vector() *= coarseSolutionLF.vector().get(dof);
         local_correction.vector() += localSolutions[dof]->vector();
@@ -128,7 +128,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   ProjectionType::project(proxy, fine_scale_part, search);
   BOOST_ASSERT_MSG(fine_scale_part.dofs_valid(), "Fine scale part DOFs need to be valid!");
   //backend storage no longer needed from here on
-  DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
+//  DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
@@ -162,12 +162,12 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
   solution.vector() *= 0;
 //  Dune::Multiscale::copyDirichletValues(coarse_space, solution);
-  DUNE_THROW(NotImplemented, "dirichlet ");
+//  DUNE_THROW(NotImplemented, "dirichlet ");
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(subgrid_list, coarse_msfem_solution, fine_scale_part);
 
-  GDT::Operators::LagrangeProlongation< CommonTraits::GridViewType > projection(*coarse_msfem_solution.space().grid_view());
+  GDT::Operators::LagrangeProlongation< CommonTraits::GridViewType > projection(*coarse_scale_part.space().grid_view());
   projection.apply(coarse_msfem_solution, coarse_scale_part);
   // add coarse and fine scale part to solution
   solution.vector() += coarse_scale_part.vector();
