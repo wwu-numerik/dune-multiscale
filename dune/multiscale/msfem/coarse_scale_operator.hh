@@ -2,8 +2,8 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
-#define MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
+#ifndef DUNE_MULTISCALE_MSFEM_COARSESCALE_OPERATOR_HH
+#define DUNE_MULTISCALE_MSFEM_COARSESCALE_OPERATOR_HH
 
 #include <ostream>
 #include <type_traits>
@@ -17,6 +17,7 @@
 #include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/msfem/coarse_scale_assembler.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -26,90 +27,6 @@ class MsFEMCodim0Integral;
 class MsFemCodim0Matrix;
 class LocalSolutionManager;
 class LocalGridList;
-
-class MsFEMCodim0IntegralTraits
-{
-public:
-  typedef MsFEMCodim0Integral derived_type;
-};
-
-class MsFemCodim0MatrixTraits
-{
-public:
-  typedef MsFEMCodim0Integral LocalOperatorType;
-  typedef MsFemCodim0Matrix derived_type;
-};
-
-class MsFEMCodim0Integral
-  : public GDT::LocalOperator::Codim0Interface< MsFEMCodim0IntegralTraits >
-{
-public:
-  typedef MsFEMCodim0IntegralTraits Traits;
-
-private:
-  static const size_t numTmpObjectsRequired_ = 1;
-  typedef Stuff::LocalfunctionSetInterface< CommonTraits::EntityType, CommonTraits::DomainFieldType,
-                                    CommonTraits::dimDomain, CommonTraits::RangeFieldType,
-                                    CommonTraits::dimRange, 1 > AnsatzLocalfunctionSetInterfaceType;
-  typedef AnsatzLocalfunctionSetInterfaceType TestLocalfunctionSetInterfaceType;
-
-public:
-  explicit MsFEMCodim0Integral(const size_t over_integrate = 0)
-    : over_integrate_(over_integrate)
-  {}
-
-
-  size_t numTmpObjectsRequired() const
-  {
-    return numTmpObjectsRequired_;
-  }
-
-  void apply(Multiscale::MsFEM::LocalSolutionManager& localSolutionManager,
-             const MsFEMTraits::LocalEntityType& localGridEntity,
-             const TestLocalfunctionSetInterfaceType& testBase,
-             const AnsatzLocalfunctionSetInterfaceType& ansatzBase,
-             Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
-             std::vector< Dune::DynamicMatrix<CommonTraits::RangeFieldType> >& tmpLocalMatrices) const;
-
-private:
-  const size_t over_integrate_;
-};
-
-class MsFemCodim0Matrix
-{
-public:
-  typedef MsFemCodim0MatrixTraits Traits;
-  typedef typename Traits::LocalOperatorType LocalOperatorType;
-
-  MsFemCodim0Matrix(const LocalOperatorType& op, LocalGridList& localGridList)
-    : localOperator_(op)
-    , localGridList_(localGridList)
-  {}
-
-  const LocalOperatorType& localOperator() const
-  {
-    return localOperator_;
-  }
-
-private:
-  static const size_t numTmpObjectsRequired_ = 1;
-
-public:
-  std::vector< size_t > numTmpObjectsRequired() const;
-
-  void assembleLocal(const CommonTraits::GdtSpaceType& testSpace,
-                     const CommonTraits::GdtSpaceType& ansatzSpace,
-                     const CommonTraits::EntityType& coarse_grid_entity,
-                     CommonTraits::LinearOperatorType& systemMatrix,
-                     std::vector<std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>>& tmpLocalMatricesContainer,
-                     std::vector<Dune::DynamicVector<size_t>>& tmpIndicesContainer) const; // ... assembleLocal(...)
-
-private:
-  const LocalOperatorType& localOperator_;
-  LocalGridList& localGridList_;
-}; // class LocalAssemblerCodim0Matrix
-
-
 class CoarseScaleOperator;
 
 class CoarseScaleOperatorTraits
@@ -170,4 +87,4 @@ private:
 } // namespace Multiscale {
 } // namespace Dune {
 
-#endif // #ifndef MSFEM_ELLIPTIC_DiscreteElliptic_HH
+#endif // #ifndef DUNE_MULTISCALE_MSFEM_COARSESCALE_OPERATOR_HH
