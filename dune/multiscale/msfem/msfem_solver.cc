@@ -14,6 +14,7 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
@@ -29,6 +30,12 @@
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 
 #include <dune/gdt/operators/prolongations.hh>
+#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/discretefunction/default.hh>
+#include <dune/gdt/functionals/l2.hh>
+#include <dune/gdt/spaces/constraints.hh>
+#include <dune/gdt/assembler/system.hh>
+#include <dune/gdt/operators/projections.hh>
 
 
 #include "localsolution_proxy.hh"
@@ -150,19 +157,41 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   CoarseRhsFunctional<CommonTraits::DiffusionType, CommonTraits::GdtVectorType,CommonTraits::DiscreteFunctionSpaceType
       > rhsAss(diffusion_op, msfem_rhs.vector(), coarse_space, subgrid_list);
 
+  const auto& dirichlet = DMP::getDirichletData();
+  const auto& boundary_info = Problem::getModelData()->boundaryInfo();
+  const auto& neumann = Problem::getNeumannData();
+  CommonTraits::DiscreteFunctionType dirichlet_projection(coarse_space);
+  GDT::Operators::DirichletProjectionLocalizable< CommonTraits::GridViewType, CommonTraits::DirichletDataType, CommonTraits::DiscreteFunctionType >
+      dirichlet_projection_operator(*(coarse_space.grid_view()),
+                                    boundary_info,
+                                    *dirichlet,
+                                    dirichlet_projection);
+
   GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarse_space);
 
   CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list);
   // this calls GridWalker::add(Gridwalker&)
   global_system_assembler_.add(elliptic_msfem_op);
   global_system_assembler_.add(rhsAss);
+  global_system_assembler_.add(dirichlet_projection_operator,
+                       new GDT::ApplyOn::BoundaryEntities< CommonTraits::GridViewType >());
+  global_system_assembler_.assemble();
+
+  // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
+  CommonTraits::GdtVectorType tmp(coarse_space.mapper().size());
+  elliptic_msfem_op.matrix().mv(dirichlet_projection.vector(), tmp);
+  rhsAss.vector() -= tmp;
+  // apply the dirichlet zero constraints to restrict the system to H^1_0
+  GDT::Constraints::Dirichlet < typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType >
+      dirichlet_constraints(boundary_info, coarse_space.mapper().maxNumDofs(), coarse_space.mapper().maxNumDofs());
+  global_system_assembler_.add(dirichlet_constraints, elliptic_msfem_op.matrix()/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  global_system_assembler_.add(dirichlet_constraints, rhsAss.vector()/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   global_system_assembler_.assemble();
 
   elliptic_msfem_op.apply_inverse(msfem_rhs, coarse_msfem_solution);
+  coarse_msfem_solution.vector() += dirichlet_projection.vector();
 
   solution.vector() *= 0;
-//  Dune::Multiscale::copyDirichletValues(coarse_space, solution);
-//  DUNE_THROW(NotImplemented, "dirichlet ");
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(subgrid_list, coarse_msfem_solution, fine_scale_part);
