@@ -33,7 +33,8 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType &space
 void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
                                 const CommonTraits::SourceType& force,
                                 CommonTraits::DiscreteFunctionType &solution) const {
-  DSC_LOG_DEBUG << "Solving linear problem with standard FEM" << std::endl;
+  DSC_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
+
   DSC_PROFILER.startTiming("fem.apply");
 
   typedef CommonTraits::GridViewType GridViewType;
@@ -63,6 +64,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
                                     boundary_info,
                                     *dirichlet,
                                     dirichlet_projection);
+  DSC_PROFILER.startTiming("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(space);
   system_assembler.add(elliptic_operator);
@@ -71,7 +73,9 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   system_assembler.add(dirichlet_projection_operator,
                        new GDT::ApplyOn::BoundaryEntities< GridViewType >());
   system_assembler.assemble();
+  DSC_PROFILER.stopTiming("fem.assemble");
 
+  DSC_PROFILER.startTiming("fem.constraints");
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(space.mapper().size());
   system_matrix.mv(dirichlet_projection.vector(), tmp);
@@ -82,8 +86,10 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   system_assembler.add(dirichlet_constraints, system_matrix/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.add(dirichlet_constraints, rhs_vector/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.assemble();
+  DSC_PROFILER.stopTiming("fem.constraints");
 
   // solve the system
+  DSC_PROFILER.startTiming("fem.solve");
   const Stuff::LA::Solver< CommonTraits::LinearOperatorType, typename CommonTraits::GdtSpaceType::CommunicatorType >
       linear_solver(system_matrix, space.communicator());
   auto linear_solver_options = linear_solver.options("bicgstab.amg.ilu0");
@@ -92,10 +98,11 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   linear_solver_options.set("post_check_solves_system", "0",    true);
   linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
   // add the dirichlet shift to obtain the solution in H^1
+  DSC_PROFILER.stopTiming("fem.solve");
+
   solution_vector += dirichlet_projection.vector();
 
   DSC_PROFILER.stopTiming("fem.apply");
-  DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms." << std::endl;
 }
 
 } // namespace Multiscale
