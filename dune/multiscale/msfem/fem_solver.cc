@@ -33,7 +33,7 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType &space
 void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
                                 const CommonTraits::SourceType& force,
                                 CommonTraits::DiscreteFunctionType &solution) const {
-  DSC_LOG_DEBUG << "Solving linear problem with standard FEM\n";
+  DSC_LOG_DEBUG << "Solving linear problem with standard FEM" << std::endl;
   DSC_PROFILER.startTiming("fem.apply");
 
   typedef CommonTraits::GridViewType GridViewType;
@@ -95,7 +95,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   solution_vector += dirichlet_projection.vector();
 
   DSC_PROFILER.stopTiming("fem.apply");
-  DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms.\n";
+  DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms." << std::endl;
 }
 
 } // namespace Multiscale
