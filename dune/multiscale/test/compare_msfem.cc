@@ -49,8 +49,8 @@ int main(int argc, char** argv) {
 }
 
 void set_param() {
-  DSC_CONFIG.set("grids.macro_cells_per_dim", "[20;20;20]");
-  DSC_CONFIG.set("micro_cells_per_macrocell_dim", "[40;40;40]");
+  DSC_CONFIG.set("grids.macro_cells_per_dim", "[5;5;5]");
+  DSC_CONFIG.set("micro_cells_per_macrocell_dim", "[10;10;10]");
   DSC_CONFIG.set("msfem.oversampling_layers", 4);
   DSC_CONFIG.set("global.vtk_output", 0);
   DSC_CONFIG.set("problem.name", "Nine");
