@@ -109,6 +109,8 @@ PURE HOT  void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRange
 
   flux[0][0] = coefficient_0 * direction[0][0];
   flux[0][1] = coefficient_1 * direction[0][1];
+  //! todo: we should set the third diagonal entry if used in 3D! (also we should consider setting the off-diagonal
+  //! elements to zero just to be sure...
 } // diffusiveFlux
 
 PURE  void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& direction,
