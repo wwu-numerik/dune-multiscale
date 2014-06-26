@@ -2,11 +2,11 @@
 # directory to save the data output
 datadir = data
 output_walltime = 1
-vtk_output = 0
+vtk_output = 1
 
 [grids]
-macro_cells_per_dim = [16;16;16]
-micro_cells_per_macrocell_dim = [16;16;16]
+macro_cells_per_dim = [10;10;5]
+micro_cells_per_macrocell_dim = [6;22;7]
 
 [msfem]
 # number of oversampling layers (layers of fine grid elements)
@@ -19,7 +19,7 @@ local_corrections_vtk_output = 0
 petrov_galerkin = 0
 
 # compute the errors between MsFEM and (standard) FEM approximations?
-fem_comparison = 0
+fem_comparison = 1
 
 localproblemsolver_verbose = 0
 
@@ -39,7 +39,7 @@ stochastic_variance = 0.01
 # LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
 # # --> LOG_ERR | LOG_INFO | LOG_DEBUG | LOG_FILE = 46
 # # ANY odd number will disable ALL logging
-level = 54
+level = 62
 file = ms.log
 
 # logging directory relative to datadir
