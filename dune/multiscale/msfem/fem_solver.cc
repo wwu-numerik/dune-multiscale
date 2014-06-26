@@ -75,7 +75,7 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
   SLP slp(global_operator,ls,solution,1e-10);
   slp.apply();
   DSC_PROFILER.stopTiming("fem.apply");
-  DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms.\n";
+  DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms." << std::endl;
 }
 
 } // namespace Multiscale
