@@ -97,7 +97,7 @@ EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
 
-add_definitions("-DSPGRID" "-DGRIDDIM=3" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 "-DENABLE_PARMETIS=1")
+add_definitions("-DSPGRID" "-DGRIDDIM=3" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
@@ -111,8 +111,8 @@ add_dune_parmetis_flags(multiscale_common)
 
 set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
 
-include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} ${PARMETIS_INCLUDE_DIR} )
-set(ALL_MULTISCALE_LIBS multiscale_msfem ${COMMON_LIBS} )
+include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
+set(ALL_MULTISCALE_LIBS multiscale_msfem  ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
