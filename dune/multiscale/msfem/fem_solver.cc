@@ -98,6 +98,17 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   linear_solver_options.set("post_check_solves_system", "0",    true);
   linear_solver_options.set("preconditioner.anisotropy_dim", GRIDDIM, true);
   linear_solver_options.set("preconditioner.isotropy_dim", GRIDDIM, true);
+  linear_solver_options.set("smoother.iterations", "1", true);
+  linear_solver_options.set("smoother.relaxation_factor", "0.5", true);
+  linear_solver_options.set("criterion.max_level", "100", true);
+  linear_solver_options.set("criterion.coarse_target", "1000", true);
+  linear_solver_options.set("criterion.min_coarse_rate", "1.2", true);
+  linear_solver_options.set("criterion.prolong_damp", "1.6", true);
+  linear_solver_options.set("criterion.anisotropy_dim", GRIDDIM, true);
+  linear_solver_options.set("criterion.verbose", "1", true);
+  linear_solver_options.set("smoother.verbose", "1", true);
+
+
   linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
   // add the dirichlet shift to obtain the solution in H^1
   DSC_PROFILER.stopTiming("fem.solve");
