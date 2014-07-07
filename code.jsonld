@@ -1,0 +1,24 @@
+{
+"@context": "http://schema.org",
+"@type": "Code",
+"name": "dune-multiscale",
+"codeRepository": "https://github.com/wwu-numerik/DUNE-Multiscale.git",
+"programmingLanguage": "C++",
+"runtime": "None",
+"softwareVersion": "1",
+"license": "http://opensource.org/licenses/BSD-2-Clause",
+"about": "Multiscale Finite Element Methods",
+"url": "https://github.com/wwu-numerik/DUNE-Multiscale",
+"image": "http://wwwmath.uni-muenster.de/num/ohlberger/research/software/figures/multiscale.png",
+"keywords": "msfem, multiscale",
+"author": [
+    {
+    "@type": "Person",
+    "name": "Rene Milk",
+    "@id": "http://orcid.org/0000-0002-9548-2238"
+    },
+    {
+    "@type": "Person",
+    "name": "Sven Kaulmann"
+    }]
+} 
