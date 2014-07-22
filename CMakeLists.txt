@@ -37,7 +37,7 @@ include(DuneUtils)
 include(DuneMPI)
 
 find_package(METIS)
-find_package(ParMETIS)
+find_package(ParMETIS REQUIRED)
 include(cmake/modules/AddMETISFlags.cmake)
 include(AddParMETISFlags)
 include(FindTBB)
@@ -97,7 +97,7 @@ EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
 
-add_definitions("-DSPGRID" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
+add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
@@ -106,8 +106,8 @@ add_dune_mpi_flags(OBJECT multiscale_common)
 add_dune_mpi_flags(OBJECT multiscale_problem)
 add_dune_mpi_flags(OBJECT multiscale_msfem)
 
-add_dune_metis_flags(multiscale_common)
-add_dune_parmetis_flags(multiscale_common)
+add_dune_metis_flags(multiscale_common multiscale_problem multiscale_msfem)
+add_dune_parmetis_flags(multiscale_common multiscale_problem multiscale_msfem)
 
 set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
 
@@ -130,6 +130,7 @@ ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
 # TARGET_LINK_LIBRARIES(fail ${COMMON_LIBS} )
 add_dune_mpi_flags(fail)
 
+add_dune_parmetis_flags(elliptic_msfem elliptic_fem fail)
 
 ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
