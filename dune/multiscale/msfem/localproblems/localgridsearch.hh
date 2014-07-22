@@ -15,8 +15,6 @@ class LocalGridList;
 class LocalGridSearch : public DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType> {
   typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
   typedef DSG::EntitySearchBase<LocalGridViewType> BaseType;
-  typedef GenericReferenceElements<typename BaseType::LocalCoordinateType::value_type,
-                                   BaseType::LocalCoordinateType::dimension> RefElementType;
   typedef typename LocalGridViewType::template Codim<0>::Iterator IteratorType;
 
   typedef typename BaseType::EntityType::EntityPointer EntityPointer;
