@@ -5,17 +5,16 @@
 #ifndef DUNE_MS__TOOLS_MISC_HH
 #define DUNE_MS__TOOLS_MISC_HH
 
-#include <dune/fem/space/common/discretefunctionspace.hh>
+#include <dune/gdt/spaces/interface.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 namespace Stuff {
 namespace Grid {
 
-template <class TraitsImp>
-bool is_simplex_grid(const Dune::Fem::DiscreteFunctionSpaceInterface<TraitsImp>& space) {
-  return space.grid_part().grid().leafIndexSet().geomTypes(0).size() == 1 &&
-         space.grid_part().grid().leafIndexSet().geomTypes(0)[0].isSimplex();
+inline bool is_simplex_grid(const Multiscale::CommonTraits::DiscreteFunctionSpaceType& space) {
+  return space.grid_view()->grid().leafIndexSet().geomTypes(0).size() == 1 &&
+         space.grid_view()->grid().leafIndexSet().geomTypes(0)[0].isSimplex();
 }
 
 } // namespace Grid

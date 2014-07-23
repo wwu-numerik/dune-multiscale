@@ -25,7 +25,7 @@ void solution_output(const CommonTraits::DiscreteFunction_ptr& msfem_solution,
                      const CommonTraits::DiscreteFunction_ptr& fine_part_msfem_solution);
 
 //! \TODO docme
-void data_output(const CommonTraits::GridPartType& gridPart,
+void data_output(const CommonTraits::GridViewType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse);
 
 //! \TODO docme

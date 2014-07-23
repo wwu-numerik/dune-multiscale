@@ -34,26 +34,26 @@ const std::unique_ptr<const CommonTraits::NeumannDataType>& getNeumannData();
 const std::string& name();
 
 template <class IntersectionType>
-typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value, bool>::type
+typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
 is_neumann(const IntersectionType& face) {
   return getModelData()->boundaryInfo().neumann(face);
 }
 
 template <class IntersectionType>
-typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,
+typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value,
                         bool>::type
 is_neumann(const IntersectionType& face) {
   return getModelData()->subBoundaryInfo().neumann(face);
 }
 
 template <class IntersectionType>
-typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value, bool>::type
+typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
 is_dirichlet(const IntersectionType& face) {
   return getModelData()->boundaryInfo().dirichlet(face);
 }
 
 template <class IntersectionType>
-typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridPartType::IntersectionType>::value,
+typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value,
                         bool>::type
 is_dirichlet(const IntersectionType& face) {
   return getModelData()->subBoundaryInfo().dirichlet(face);

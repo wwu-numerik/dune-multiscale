@@ -5,7 +5,6 @@
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SPE10
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SPE10
 
-#include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/base.hh>
 
 #include <string>
@@ -45,6 +44,7 @@ public:
   Source();
 
   void evaluate(const DomainType& x, RangeType& y) const;
+  virtual size_t order() const { return 3; }
 };
 
 class Diffusion : public DiffusionBase {
@@ -52,9 +52,12 @@ public:
   Diffusion();
   ~Diffusion();
 
-  void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const;
-  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
+  //! currently used in gdt assembler
+  virtual void evaluate(const DomainType&, RangeType&) const;
+
+  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const;
+  void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
+                             const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
 
 private:
   void readPermeability();

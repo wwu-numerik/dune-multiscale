@@ -7,9 +7,6 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
-#include <dune/fem/operator/discreteoperatorimp.hh>
-#include <dune/fem/solver/oemsolver/oemsolver.hh>
-#include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
@@ -26,11 +23,6 @@ namespace MsFEM {
 class Elliptic_MsFEM_Solver {
 private:
   typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-  typedef typename DiscreteFunctionType::DiscreteFunctionSpaceType DiscreteFunctionSpace;
-
-  typedef typename DiscreteFunctionSpace::DomainType DomainType;
-  typedef typename DiscreteFunctionSpace::RangeType RangeType;
-  typedef typename DiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
 
   static const int faceCodim = 1;
 

@@ -10,31 +10,39 @@
 
 #include <dune/grid/spgrid.hh>
 #include <dune/grid/sgrid.hh>
-#include <dune/fem/space/lagrange.hh>
+#include <dune/stuff/functions/constant.hh>
 #include <vector>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
+
 //! type construction for the MSFEM code
 struct MsFEMTraits {
-  typedef typename CommonTraits::DiscreteFunctionType::DiscreteFunctionSpaceType::FunctionSpaceType FunctionSpaceType;
   typedef Dune::SPGrid<double, CommonTraits::GridType::dimension, SPIsotropicRefinement, No_Comm> LocalGridType;
   // change dirichletconstraints.cc bottom accordingly
   // typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
 
-  typedef Fem::AdaptiveLeafGridPart<LocalGridType> LocalGridPartType;
-  typedef Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, LocalGridPartType, st_lagrangespace_order>
-  LocalGridDiscreteFunctionSpaceType;
+  typedef DSG::Providers::ConstDefault<LocalGridType> LocalGridProviderType;
+  typedef GDT::Spaces::ContinuousLagrangeProvider<LocalGridType, DSG::ChooseLayer::leaf,
+                                                  GDT::ChooseSpaceBackend::pdelab,
+                                                  st_lagrangespace_order, CommonTraits::FieldType,
+                                                  CommonTraits::dimRange > SpaceProviderType;
 
-  typedef typename LocalGridDiscreteFunctionSpaceType::IteratorType::Entity LocalEntityType;
+  //! \todo not correct
+  typedef typename SpaceProviderType::Type LocalGridDiscreteFunctionSpaceType;
+  typedef LocalGridDiscreteFunctionSpaceType LocalSpaceType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
 
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType
-  LocalGridDiscreteFunctionType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::ConstDiscreteFunctionType LocalGridConstDiscreteFunctionType;
+  typedef Stuff::Functions::Constant< LocalEntityType, CommonTraits::FieldType, CommonTraits::dimDomain,
+                                      CommonTraits::FieldType, CommonTraits::dimRange > LocalConstantFunctionType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::GridViewType LocalGridViewType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
-  typedef typename CommonTraits::DiscreteFunctionSpaceType::BasisFunctionSetType CoarseBaseFunctionSetType;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;
 
   typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 };

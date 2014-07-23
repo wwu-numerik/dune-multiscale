@@ -2,71 +2,91 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
-#define MSFEM_ELLIPTIC_DiscreteEllipticMSFEMOperator_HH
+#ifndef DUNE_MULTISCALE_MSFEM_COARSESCALE_OPERATOR_HH
+#define DUNE_MULTISCALE_MSFEM_COARSESCALE_OPERATOR_HH
 
+#include <ostream>
+#include <type_traits>
 #include <assert.h>
 #include <boost/noncopyable.hpp>
+
 #include <dune/common/fmatrix.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/multiscale/common/dirichletconstraints.hh>
-#include <dune/multiscale/hmm/cell_problem_numbering.hh>
-#include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
-#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/problems/base.hh>
-#include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/multiscale/tools/misc.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
-
 #include <dune/stuff/fem/functions/integrals.hh>
-#include <ostream>
-#include <type_traits>
-
-#include "dune/multiscale/common/traits.hh"
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/msfem/coarse_scale_assembler.hh>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
-/**
- * \todo docme
- */
-class CoarseScaleOperator : boost::noncopyable {
-private:
-  typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
-  typedef CommonTraits::DiscreteFunctionType FineDiscreteFunction;
-  typedef CommonTraits::LinearOperatorType MatrixType;
-  typedef typename CoarseDiscreteFunction::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
 
-  typedef typename FineDiscreteFunction::DiscreteFunctionSpaceType FineDiscreteFunctionSpace;
-  typedef typename FineDiscreteFunctionSpace::DomainType DomainType;
-  typedef typename FineDiscreteFunctionSpace::RangeType RangeType;
-  typedef typename FineDiscreteFunctionSpace::JacobianRangeType JacobianRangeType;
+class MsFEMCodim0Integral;
+class MsFemCodim0Matrix;
+class LocalSolutionManager;
+class LocalGridList;
+class CoarseScaleOperator;
 
+class CoarseScaleOperatorTraits
+{
 public:
-  CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace, LocalGridList& subgrid_list,
-                      const CommonTraits::DiffusionType& diffusion_op);
+  typedef CoarseScaleOperator derived_type;
+  typedef CommonTraits::LinearOperatorType MatrixType;
+  typedef CommonTraits::GdtSpaceType SourceSpaceType;
+  typedef CommonTraits::GdtSpaceType RangeSpaceType;
+  typedef CommonTraits::GridViewType GridViewType;
+}; // class EllipticCGTraits
 
-  void apply_inverse(const CoarseDiscreteFunction& b, CoarseDiscreteFunction& x);
+class CoarseScaleOperator
+  : public GDT::Operators::MatrixBased< CoarseScaleOperatorTraits >
+  , public GDT::SystemAssembler< CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
+                                 CoarseScaleOperatorTraits::SourceSpaceType>
+{
 
+  typedef GDT::Operators::MatrixBased< CoarseScaleOperatorTraits > OperatorBaseType;
+  typedef MsFEMCodim0Integral LocalOperatorType;
+  typedef MsFemCodim0Matrix LocalAssemblerType;
+  typedef GDT::SystemAssembler< CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
+  CoarseScaleOperatorTraits::SourceSpaceType> AssemblerBaseType;
+  typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
+  typedef typename CommonTraits::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
+public:
+  typedef CoarseScaleOperatorTraits Traits;
+
+  typedef typename Traits::MatrixType       MatrixType;
+  typedef typename Traits::SourceSpaceType  SourceSpaceType;
+  typedef typename Traits::RangeSpaceType   RangeSpaceType;
+  typedef typename Traits::GridViewType     GridViewType;
+
+  using OperatorBaseType::pattern;
+
+  static Stuff::LA::SparsityPatternDefault pattern(const RangeSpaceType& range_space,
+                                                   const SourceSpaceType& source_space,
+                                                   const GridViewType& grid_view);
+
+  CoarseScaleOperator(
+             const SourceSpaceType& src_spc,
+             LocalGridList& localGridList);
+
+  virtual ~CoarseScaleOperator() {}
+
+  virtual void assemble() DS_OVERRIDE DS_FINAL;
+
+  void apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
+                                          CoarseScaleOperator::CoarseDiscreteFunction& solution);
+
+  MatrixType& system_matrix();
+  const MatrixType& system_matrix() const;
 private:
-  const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace_;
-  LocalGridList& subgrid_list_;
-  const CommonTraits::DiffusionType& diffusion_operator_;
-  const bool petrovGalerkin_;
   MatrixType global_matrix_;
-  bool cached_;
-  std::vector<std::vector<JacobianRangeType>> coarseBaseJacs_;
-  bool enableCaching_;
-};
+  const LocalOperatorType local_operator_;
+  const LocalAssemblerType local_assembler_;
+}; // class CoarseScaleOperator
 
 } // namespace MsFEM {
 } // namespace Multiscale {
 } // namespace Dune {
 
-#endif // #ifndef MSFEM_ELLIPTIC_DiscreteElliptic_HH
+#endif // #ifndef DUNE_MULTISCALE_MSFEM_COARSESCALE_OPERATOR_HH

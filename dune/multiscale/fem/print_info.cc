@@ -1,18 +1,22 @@
 #include <config.h>
+
+#include "print_info.hh"
+
 #include <boost/format.hpp>
 #include <boost/optional/optional.hpp>
-#include <dune/multiscale/common/output_traits.hh>
+
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/selector.hh>
+#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/discretefunction/default.hh>
+
 #include <memory>
 #include <sstream>
 
-#include "dune/multiscale/common/traits.hh"
-#include "dune/multiscale/problems/base.hh"
-#include "dune/multiscale/problems/selector.hh"
-#include "print_info.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -22,27 +26,13 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   // writing paraview data output
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
-
-  // create and initialize output class
-  typename OutputTraits::IOTupleType fem_solution_series(discrete_solution.get());
   outputparam.set_prefix((boost::format("%s_solution") % prefix).str());
-  typename OutputTraits::DataOutputType femsol_dataoutput(discrete_solution->space().gridPart().grid(),
-                                                          fem_solution_series, outputparam);
+  discrete_solution->visualize(outputparam.fullpath(discrete_solution->name()));
 
-  femsol_dataoutput.writeData(1.0 /*dummy*/, (boost::format("%s_solution") % prefix).str());
-
-  //! -------------------------- writing data output Exact Solution ------------------------
   if (Problem::getModelData()->hasExactSolution()) {
     const auto& u = *Dune::Multiscale::Problem::getExactSolution();
-    const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u,
-                                                                          discrete_solution->space().gridPart());
-    // create and initialize output class
-    OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
     outputparam.set_prefix("exact_solution");
-    OutputTraits::ExSolDataOutputType exactsol_dataoutput(discrete_solution->space().gridPart().grid(),
-                                                          exact_solution_series, outputparam);
-    // write data
-    exactsol_dataoutput.writeData(1.0 /*dummy*/, "exact-solution");
+    u.visualize(*discrete_solution->space().grid_view(), outputparam.fullpath(u.name()));
   }
 }
 
@@ -68,14 +58,9 @@ void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& ou
   out << "Epsilon = " << epsilon_ << std::endl << std::endl;
 }
 
-void write_discrete_function(CommonTraits::PdelabVectorType &discrete_solution, const std::string prefix)
+void write_discrete_function(CommonTraits::DiscreteFunctionType &discrete_solution, const std::string prefix)
 {
-  typedef PDELab::DiscreteGridFunction<CommonTraits::GridFunctionSpaceType,CommonTraits::PdelabVectorType> DGF;
-  const auto& gfs = discrete_solution.gridFunctionSpace();
-  VTKWriter<CommonTraits::GridFunctionSpaceType::Traits::GridView> vtkwriter(gfs.gridView());
-  PDELab::vtk::DefaultFunctionNameGenerator nn(prefix);
-  PDELab::addSolutionToVTKWriter(vtkwriter,gfs,discrete_solution, nn);
-  vtkwriter.write(prefix,Dune::VTK::appendedraw);
+  discrete_solution.visualize(prefix, true, Dune::VTK::appendedbase64);
 }
 
 } // namespace FEM {

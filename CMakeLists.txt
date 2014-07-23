@@ -37,7 +37,7 @@ include(DuneUtils)
 include(DuneMPI)
 
 find_package(METIS)
-find_package(ParMETIS)
+find_package(ParMETIS REQUIRED)
 include(cmake/modules/AddMETISFlags.cmake)
 include(AddParMETISFlags)
 include(FindTBB)
@@ -58,17 +58,9 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
-        dune/multiscale/msfem/coarse_scale_operator.cc
-        dune/multiscale/msfem/localproblems/subgrid-list.cc
-        dune/multiscale/msfem/localproblems/localoperator.cc
-        dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/common/error_calc.cc
         dune/multiscale/common/grid_creation.cc
-        dune/multiscale/common/righthandside_assembler.cc
         dune/multiscale/fem/print_info.cc
-        dune/multiscale/fem/elliptic_fem_matrix_assembler.cc
-        dune/multiscale/common/dirichletconstraints.cc
-        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
     )
 
 set( PROBLEM_SOURCES
@@ -79,19 +71,18 @@ set( PROBLEM_SOURCES
     dune/multiscale/problems/base.cc
 )
 
-set( HMM_SOURCES  
-        dune/multiscale/hmm/algorithm.cc
-        dune/multiscale/hmm/algorithm_error.cc
-        dune/multiscale/hmm/algorithm_step.cc
-        dune/multiscale/hmm/elliptic_hmm_matrix_assembler.cc
-        dune/multiscale/hmm/cell_problem_solver.cc
-        dune/multiscale/hmm/cell_problem_numbering.cc
-        dune/multiscale/hmm/discrete_cell_operator.cc
-    )
-
 set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
         dune/multiscale/msfem/msfem_solver.cc
+        dune/multiscale/msfem/coarse_scale_operator.cc
+        dune/multiscale/msfem/localproblems/subgrid-list.cc
+        dune/multiscale/msfem/localproblems/localoperator.cc
+        dune/multiscale/msfem/localproblems/localproblemsolver.cc
+        dune/multiscale/msfem/localproblems/localsolutionmanager.cc
+        dune/multiscale/msfem/localproblems/localgridsearch.cc
+        dune/multiscale/msfem/localsolution_proxy.cc
+        dune/multiscale/msfem/coarse_scale_assembler.cc
+        dune/multiscale/msfem/coarse_rhs_functional.cc
     )
 
 set( FEM_SOURCES
@@ -106,28 +97,22 @@ EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
 
-add_definitions("-DSPGRID" "-DGRIDDIM=3" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
+add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
-ADD_LIBRARY(multiscale_hmm STATIC ${HMM_SOURCES})
 
 add_dune_mpi_flags(OBJECT multiscale_common)
 add_dune_mpi_flags(OBJECT multiscale_problem)
 add_dune_mpi_flags(OBJECT multiscale_msfem)
-add_dune_mpi_flags(OBJECT multiscale_hmm)
 
-add_dune_metis_flags(multiscale_common)
-add_dune_parmetis_flags(multiscale_common)
+add_dune_metis_flags(multiscale_common multiscale_problem multiscale_msfem)
+add_dune_parmetis_flags(multiscale_common multiscale_problem multiscale_msfem)
 
-set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
+set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
 
 include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
-set(ALL_MULTISCALE_LIBS multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
-
-ADD_EXECUTABLE(elliptic_hmm EXCLUDE_FROM_ALL src/elliptic_hmm.cc ${COMMON_HEADER})
-TARGET_LINK_LIBRARIES(elliptic_hmm multiscale_hmm ${COMMON_LIBS} )
-add_dune_mpi_flags(elliptic_hmm)
+set(ALL_MULTISCALE_LIBS multiscale_msfem  ${COMMON_LIBS} )
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
@@ -145,6 +130,7 @@ ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
 # TARGET_LINK_LIBRARIES(fail ${COMMON_LIBS} )
 add_dune_mpi_flags(fail)
 
+add_dune_parmetis_flags(elliptic_msfem elliptic_fem fail)
 
 ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
@@ -153,8 +139,6 @@ add_dune_mpi_flags(thread_vis)
 add_dune_alugrid_flags(OBJECT multiscale_common)
 add_dune_alugrid_flags(OBJECT multiscale_problem)
 add_dune_alugrid_flags(OBJECT multiscale_msfem)
-add_dune_alugrid_flags(OBJECT multiscale_hmm)
-add_dune_alugrid_flags(elliptic_hmm)
 add_dune_alugrid_flags(elliptic_msfem)
 add_dune_alugrid_flags(elliptic_fem)
 add_dune_alugrid_flags(msfem-1d)
@@ -176,15 +160,14 @@ foreach(_mod ${ALL_DEPENDENCIES})
       endif(${_mod}_INCLUDE_DIRS)
 endforeach(_mod DEPENDENCIES)
   
-ADD_CPPCHECK( ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_hmm.cc 
-             ${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
+ADD_CPPCHECK(${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
              ${dune} ${header})
 add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
             ${HOM_FEM_SOURCES} ${FEM_SOURCES}
-            src/elliptic_hmm.cc src/elliptic_msfem.cc )
+            src/elliptic_msfem.cc )
 add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
            ${HOM_FEM_SOURCES} ${FEM_SOURCES}
-           src/elliptic_hmm.cc src/elliptic_msfem.cc
+           src/elliptic_msfem.cc
            ${header} ${dune})
 
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
