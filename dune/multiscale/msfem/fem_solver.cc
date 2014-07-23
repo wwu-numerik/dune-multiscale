@@ -2,80 +2,120 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
-#include <dune/fem/function/common/function.hh>
-#include <dune/multiscale/common/righthandside_assembler.hh>
+#include <dune/multiscale/msfem/coarse_rhs_functional.hh>
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/fem/elliptic_fem_matrix_assembler.hh>
-#include <dune/multiscale/fem/fem_traits.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/functions/norm.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/backend/istlsolverbackend.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/backend/seqistlsolverbackend.hh>
-#include <dune/pdelab/backend/ovlpistlsolverbackend.hh>
+
+#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/discretefunction/default.hh>
+#include <dune/gdt/operators/elliptic-cg.hh>
+#include <dune/gdt/functionals/l2.hh>
+#include <dune/gdt/spaces/constraints.hh>
+#include <dune/gdt/assembler/system.hh>
+#include <dune/gdt/operators/projections.hh>
 
 #include <limits>
 #include <sstream>
 #include <string>
 
-#include "dune/multiscale/common/dirichletconstraints.hh"
 #include "fem_solver.hh"
 
 namespace Dune {
 namespace Multiscale {
 
-Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GridFunctionSpaceType &space)
+Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType &space)
   : space_(space) {}
 
-void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion_op,
-                                const CommonTraits::SourceType& f,
-                                CommonTraits::PdelabVectorType& solution) const {
-  DSC_LOG_DEBUG << "Solving linear problem with standard FEM\n";
+void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
+                                const CommonTraits::SourceType& force,
+                                CommonTraits::DiscreteFunctionType &solution) const {
+  DSC_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
+
   DSC_PROFILER.startTiming("fem.apply");
 
-  typedef CommonTraits::FieldType Real;
-  typedef CommonTraits::GridFunctionSpaceType GFS;
-  typedef typename GFS::ConstraintsContainer<Real>::Type CC;
-  CC constraints_container;
-  constraints_container.clear();
-  const auto& bc_type = Problem::getModelData()->boundaryInfo();
-  Dune::PDELab::constraints(bc_type, space_, constraints_container);
+  typedef CommonTraits::GridViewType GridViewType;
+  typedef typename GridViewType::Intersection IntersectionType;
 
-  FEM::Local_CG_FEM_Operator local_operator(diffusion_op, f);
+  const auto& boundary_info = Problem::getModelData()->boundaryInfo();
+  const auto& neumann = Problem::getNeumannData();
+  const auto& dirichlet = Problem::getDirichletData();
 
-  const int magic_number_stencil = 9;
-  typedef BackendChooser<CommonTraits::DiscreteFunctionSpaceType>::MatrixBackendType MatrixBackendType;
-  MatrixBackendType fem_matrix(magic_number_stencil);
+  const auto& space = space_;
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,FEM::Local_CG_FEM_Operator,
-                                      MatrixBackendType,Real,Real,Real,CC,CC> GridOperatorType;
-  GridOperatorType global_operator(space_, constraints_container, space_, constraints_container, local_operator, fem_matrix);
+  // container
+  CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
+                                                 CommonTraits::EllipticOperatorType::pattern(space));
+  CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
+  auto& solution_vector = solution.vector();
+  // left hand side (elliptic operator)
+  CommonTraits::EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
+  // right hand side
+  GDT::Functionals::L2Volume< CommonTraits::SourceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType > force_functional(force, rhs_vector, space);
+  GDT::Functionals::L2Face< CommonTraits::NeumannDataType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
+      neumann_functional(*neumann, rhs_vector, space);
+  // dirichlet boundary values
+  CommonTraits::DiscreteFunctionType dirichlet_projection(space);
+  GDT::Operators::DirichletProjectionLocalizable< GridViewType, CommonTraits::DirichletDataType, CommonTraits::DiscreteFunctionType >
+      dirichlet_projection_operator(*(space.grid_view()),
+                                    boundary_info,
+                                    *dirichlet,
+                                    dirichlet_projection);
+  DSC_PROFILER.startTiming("fem.assemble");
+  // now assemble everything in one grid walk
+  GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(space);
+  system_assembler.add(elliptic_operator);
+  system_assembler.add(force_functional);
+  system_assembler.add(neumann_functional, new GDT::ApplyOn::NeumannIntersections< GridViewType >(boundary_info));
+  system_assembler.add(dirichlet_projection_operator,
+                       new GDT::ApplyOn::BoundaryEntities< GridViewType >());
+  system_assembler.assemble();
+  DSC_PROFILER.stopTiming("fem.assemble");
 
-  DSC_LOG_DEBUG << GridOperatorType::Traits::Jacobian(global_operator).patternStatistics() << std::endl;
+  DSC_PROFILER.startTiming("fem.constraints");
+  // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
+  CommonTraits::GdtVectorType tmp(space.mapper().size());
+  system_matrix.mv(dirichlet_projection.vector(), tmp);
+  rhs_vector -= tmp;
+  // apply the dirichlet zero constraints to restrict the system to H^1_0
+  GDT::Constraints::Dirichlet < typename GridViewType::Intersection, CommonTraits::RangeFieldType >
+      dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
+  system_assembler.add(dirichlet_constraints, system_matrix/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  system_assembler.add(dirichlet_constraints, rhs_vector/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  system_assembler.assemble();
+  DSC_PROFILER.stopTiming("fem.constraints");
 
-  Dune::PDELab::interpolate(DS::pdelabAdapted(*Problem::getDirichletData(), space_.gridView()), space_, solution);
-//  typedef Dune::PDELab::ISTLBackend_BCGS_AMG_ILU0<GridOperatorType> LinearSolverType;
-//  LinearSolverType ls(space_, 5000);
+  // solve the system
+  DSC_PROFILER.startTiming("fem.solve");
+  const Stuff::LA::Solver< CommonTraits::LinearOperatorType, typename CommonTraits::GdtSpaceType::CommunicatorType >
+      linear_solver(system_matrix, space.communicator());
+  auto linear_solver_options = linear_solver.options("bicgstab.amg.ilu0");
+  linear_solver_options.set("max_iter",                 "5000", true);
+  linear_solver_options.set("precision",                "1e-8", true);
+  linear_solver_options.set("post_check_solves_system", "0",    true);
+  linear_solver_options.set("preconditioner.anisotropy_dim", GRIDDIM, true);
+  linear_solver_options.set("preconditioner.isotropy_dim", GRIDDIM, true);
+  linear_solver_options.set("smoother.iterations", "1", true);
+  linear_solver_options.set("smoother.relaxation_factor", "0.5", true);
+  linear_solver_options.set("criterion.max_level", "100", true);
+  linear_solver_options.set("criterion.coarse_target", "1000", true);
+  linear_solver_options.set("criterion.min_coarse_rate", "1.2", true);
+  linear_solver_options.set("criterion.prolong_damp", "1.6", true);
+  linear_solver_options.set("criterion.anisotropy_dim", GRIDDIM, true);
+  linear_solver_options.set("criterion.verbose", "1", true);
+  linear_solver_options.set("smoother.verbose", "1", true);
 
-//  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LinearSolverType;
-//  LinearSolverType ls(5000, DSC_CONFIG_GET("global.cgsolver_verbose", false));
-  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LinearSolverType;
-  LinearSolverType ls(space_,constraints_container,5000,2);
-  
-  
-  typedef Dune::PDELab::StationaryLinearProblemSolver<GridOperatorType,LinearSolverType,CommonTraits::PdelabVectorType> SLP;
-  SLP slp(global_operator,ls,solution,1e-10);
-  slp.apply();
+
+  linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
+  // add the dirichlet shift to obtain the solution in H^1
+  DSC_PROFILER.stopTiming("fem.solve");
+
+  solution_vector += dirichlet_projection.vector();
+
   DSC_PROFILER.stopTiming("fem.apply");
-  DSC_LOG_DEBUG << "Standard FEM problem solved in " << DSC_PROFILER.getTiming("fem.apply") << "ms." << std::endl;
 }
 
 } // namespace Multiscale

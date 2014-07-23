@@ -17,7 +17,7 @@ namespace Nine {
 
 ModelProblemData::ModelProblemData()
   : IModelProblemData()
-  , boundaryInfo_(Stuff::GridboundaryNormalBased<typename View::Intersection>::create(boundary_settings()))
+  , boundaryInfo_(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_()
 {}
 
@@ -57,8 +57,8 @@ ParameterTree ModelProblemData::boundary_settings() const {
     case 2:
       break;
     case 3:
-      boundarySettings["neumann.0"] = "[0.0; 0.0; 1.0]";
-      boundarySettings["neumann.1"] = "[0.0; 0.0; -1.0]";
+      boundarySettings["neumann.0"] = "[0.0 0.0 1.0]";
+      boundarySettings["neumann.1"] = "[0.0 0.0 -1.0]";
     }
   }
   return boundarySettings;
@@ -100,29 +100,28 @@ PURE HOT  void Source::evaluate(const DomainType& x, RangeType& y) const {
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
 } // evaluate
 
-PURE HOT  void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const {
+void Diffusion::evaluate(const DomainType &x, Diffusion::RangeType &ret) const
+{
   const double x0_eps = (x[0] / epsilon);
   constexpr double inv_pi8pi = 1. / (8.0 * M_PI * M_PI);
   const double cos_eval = cos(2.0 * M_PI * x0_eps);
-  const double coefficient_0 = 2.0 * inv_pi8pi * (1.0 / (2.0 + cos_eval));
-  const double coefficient_1 =       inv_pi8pi * (1.0 + (0.5 * cos_eval));
+  ret[0][0] = 2.0 * inv_pi8pi * (1.0 / (2.0 + cos_eval));
+  ret[1][1] = inv_pi8pi * (1.0 + (0.5 * cos_eval));
+}
 
-  flux[0][0] = coefficient_0 * direction[0][0];
-  flux[0][1] = coefficient_1 * direction[0][1];
-  //! todo: we should set the third diagonal entry if used in 3D! (also we should consider setting the off-diagonal
-  //! elements to zero just to be sure...
+PURE HOT  void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
+  Diffusion::RangeType eval;
+  evaluate(x, eval);
+  flux[0][0] = eval[0][0] * direction[0][0];
+  flux[0][1] = eval[1][1] * direction[0][1];
 } // diffusiveFlux
 
-PURE  void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& direction,
-                                      const JacobianRangeType& /*direction_gradient*/, JacobianRangeType& flux) const {
-  const double x0_eps = (x[0] / epsilon);
-  constexpr double inv_pi8pi = 1. / (8.0 * M_PI * M_PI);
-  const double cos_eval = cos(2.0 * M_PI * x0_eps);
-  const double coefficient_0 = 2.0 * inv_pi8pi * (1.0 / (2.0 + cos_eval));
-  const double coefficient_1 =       inv_pi8pi * (1.0 + (0.5 * cos_eval));
-
-  flux[0][0] = coefficient_0 * direction[0][0];
-  flux[0][1] = coefficient_1 * direction[0][1];
+PURE  void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                                      const Problem::JacobianRangeType& /*direction_gradient*/, Problem::JacobianRangeType& flux) const {
+  Diffusion::RangeType eval;
+  evaluate(x, eval);
+  flux[0][0] = eval[0][0] * direction[0][0];
+  flux[0][1] = eval[1][1] * direction[0][1];
 } // jacobianDiffusiveFlux
 
 PURE HOT  void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
@@ -159,7 +158,7 @@ PURE HOT  void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& g
   grad_u[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1) - (eps_pi_sin_2_pi_x0_eps * sin_2_pi_x0 * sin_2_pi_x1 ) +
                  (M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
-} // jacobian
+}
 
 PURE  void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 

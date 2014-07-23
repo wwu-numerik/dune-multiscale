@@ -9,6 +9,7 @@
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/common/parallel/mpihelper.hh>
 
 // for rusage
 #include <sys/resource.h>
@@ -32,8 +33,9 @@ int main(int argc, char** argv) {
 
     algorithm();
 
+    auto comm = Dune::MPIHelper::getCollectiveCommunication();
     auto cpu_time = DSC_PROFILER.stopTiming("msfem.all", DSC_CONFIG_GET("global.output_walltime", false));
-    auto max_cpu_time = Dune::Fem::MPIManager::comm().max(cpu_time);
+    auto max_cpu_time = comm.max(cpu_time);
     DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
 
@@ -43,11 +45,11 @@ int main(int argc, char** argv) {
     getrusage(who, &usage);
     long peakMemConsumption = usage.ru_maxrss;
     // compute the maximum and mean peak memory consumption over all processes
-    long maxPeakMemConsumption = Dune::Fem::MPIManager::comm().max(peakMemConsumption);
-    long totalPeakMemConsumption = Dune::Fem::MPIManager::comm().sum(peakMemConsumption);
-    long meanPeakMemConsumption = totalPeakMemConsumption / Dune::Fem::MPIManager::size();
+    long maxPeakMemConsumption = comm.max(peakMemConsumption);
+    long totalPeakMemConsumption = comm.sum(peakMemConsumption);
+    long meanPeakMemConsumption = totalPeakMemConsumption / comm.size();
     // write output on rank zero
-    if (Dune::Fem::MPIManager::rank() == 0) {
+    if (comm.rank() == 0) {
       std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(
           DSC::make_ofstream(DSC_CONFIG_GET("global.datadir", "data") + "/memory.csv"));
       *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption

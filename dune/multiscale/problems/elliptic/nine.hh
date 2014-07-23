@@ -5,7 +5,6 @@
 #ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE
 
-#include <dune/fem/function/common/function.hh>
 #include <dune/multiscale/problems/base.hh>
 
 #include <memory>
@@ -52,8 +51,8 @@ struct ModelProblemData : public IModelProblemData {
 
 private:
   Dune::ParameterTree boundary_settings() const;
-  std::unique_ptr<Stuff::GridboundaryNormalBased<typename View::Intersection>> boundaryInfo_;
-  Stuff::GridboundaryAllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
+  std::unique_ptr<DSG::BoundaryInfos::NormalBased<typename View::Intersection>> boundaryInfo_;
+  DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
 };
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
@@ -61,15 +60,20 @@ public:
   Source();
 
   PURE HOT  void evaluate(const DomainType& x, RangeType& y) const;
+  virtual size_t order() const { return 3; }
 };
 
 class Diffusion : public DiffusionBase {
 public:
   Diffusion();
 
-  PURE HOT  void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const;
-  PURE  void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
-                             const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
+  //! currently used in gdt assembler
+  virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const;
+  PURE HOT  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const;
+
+  //! HMM-only
+  PURE  void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
+                             const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
 };
 
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
@@ -78,6 +82,7 @@ public:
 
   PURE HOT  void evaluate(const DomainType& x, RangeType& y) const;
   PURE HOT  void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
+  virtual size_t order() const { return 3; }
 };
 
 class DirichletData : public DirichletDataBase {

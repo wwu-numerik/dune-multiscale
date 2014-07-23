@@ -8,6 +8,7 @@
 #include <dune/stuff/grid/information.hh>
 #include <dune/stuff/common/parameter/tree.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/common/parallel/mpihelper.hh>
 
 // Helper struct to make overlap for SPGrid possible
 // Declared in unnamed namespace to avoid naming conflicts
@@ -66,9 +67,11 @@ Dune::Multiscale::make_grids() {
   const std::vector<int> coarse_cells = gridParameterTree.getVector("macro_cells_per_dim", 8, dim_world);
   array<unsigned int, dim_world> elements;
   array<unsigned int, dim_world> overCoarse;
+  array<unsigned int, dim_world> overFine;
   for (const auto i : DSC::valueRange(dim_world)) {
     elements[i] = coarse_cells[i];
     overCoarse[i] = std::ceil(double(oversamplingLayers)/double(microPerMacro[i]));
+    overFine[i] = DSC_CONFIG_GET("grids.overlap", 1);
   }
   auto coarse_gridptr =
       MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
@@ -77,14 +80,14 @@ Dune::Multiscale::make_grids() {
   for (const auto i : DSC::valueRange(dim_world)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
-  auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements);
+  auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overFine);
 
   // check whether grids match (may not match after load balancing if different refinements in different
   // spatial directions are used)
-  if (Dune::Fem::MPIManager::size()>1) {
+  if (Dune::MPIHelper::getCollectiveCommunication().size()>1) {
     typedef CommonTraits::GridType::Partition<PartitionIteratorType::Interior_Partition>::LeafGridView InteriorLeafViewType;
-    const auto coarse_dimensions = DSG::dimensions<InteriorLeafViewType>(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
-    const auto fine_dimensions = DSG::dimensions<InteriorLeafViewType>(fine_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
+    const auto coarse_dimensions = DSG::dimensions(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
+    const auto fine_dimensions = DSG::dimensions(fine_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
     const auto eps = coarse_dimensions.entity_width.min();
     for (const auto i : DSC::valueRange(dim_world)) {
       const bool match = (std::abs(coarse_dimensions.coord_limits[i].min()-fine_dimensions.coord_limits[i].min())

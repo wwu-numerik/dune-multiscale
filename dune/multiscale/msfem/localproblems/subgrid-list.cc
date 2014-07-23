@@ -3,7 +3,6 @@
 #include <boost/assert.hpp>
 #include <boost/multi_array/multi_array_ref.hpp>
 #include <dune/common/exceptions.hh>
-#include <dune/fem/misc/mpimanager.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
@@ -26,7 +25,7 @@ namespace MsFEM {
 
 LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
-  , coarseGridLeafIndexSet_(coarseSpace_.gridPart().grid().leafIndexSet()) {
+  , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
   BOOST_ASSERT_MSG(DSC_CONFIG.hasSub("grids"), "Parameter tree needs to have 'grids' subtree!");
   const int dim_world = LocalGridType::dimensionworld;
@@ -40,7 +39,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
     
-  for (const auto& coarse_entity : coarseSpace_) {
+  for (const auto& coarse_entity : DSC::viewRange(*coarseSpace_.grid_view())) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
     assert(coarse_entity.partitionType() == Dune::InteriorEntity);
@@ -96,8 +95,6 @@ MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const CoarseEntityType& en
 
 // get number of sub grids
 std::size_t LocalGridList::size() const { return subGridList_.size(); }
-
-MsFEM::MsFEMTraits::LocalGridPartType LocalGridList::gridPart(IndexType i) { return LocalGridPartType(getSubGrid(i)); }
 
 bool LocalGridList::covers_strict(const CoarseEntityType& coarse_entity,
                                   const MsFEMTraits::LocalEntityType& local_entity) {

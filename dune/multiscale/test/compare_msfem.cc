@@ -1,4 +1,5 @@
 #include <config.h>
+#include <config.h>
 
 #include <dune/stuff/test/test_common.hh>
 #include <gtest.h>

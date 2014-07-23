@@ -7,16 +7,8 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/msfem/msfem_grid_specifier.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-
-#include <dune/fem/space/finitevolume.hh>
-#include <dune/fem/space/lagrange.hh>
-#include <dune/fem/function/adaptivefunction.hh>
-#include <dune/fem/misc/threads/threadmanager.hh>
-#include <dune/fem/misc/threads/domainthreaditerator.hh>
-#include <dune/fem/io/file/vtkio.hh>
 
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/ranges.hh>
@@ -132,7 +124,7 @@ void subgrid_vis(const std::string& macroGridName, int total_refinement_level_,
   for(const auto& coarse_entity : discreteFunctionSpace_coarse)
   {
     const auto& subgrid = subgrid_list.getSubGrid(coarse_entity);
-    const auto& id_set = discreteFunctionSpace_coarse.gridPart().grid().globalIdSet();
+    const auto& id_set = discreteFunctionSpace_coarse.grid_view()->grid().globalIdSet();
     const auto coarse_id = id_set.id(coarse_entity);
     auto& oversampled_function = (*oversampled_function_it++);
     oversampled_function = DSC::make_unique<FVFunc>(DSC::toString(coarse_id) + "_subgrid", fv_space);

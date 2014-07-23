@@ -3,8 +3,6 @@
 #include <boost/concept/usage.hpp>
 #include <boost/format.hpp>
 #include <dune/common/exceptions.hh>
-#include <dune/fem/io/file/dataoutput.hh>
-#include <dune/fem/io/parameter.hh>
 #include <dune/istl/scalarproducts.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
@@ -64,7 +62,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 
   // clear return argument
   for (auto& localSol : allLocalSolutions)
-    localSol->clear();
+    localSol->vector() *= 0;
 
   const auto& subDiscreteFunctionSpace = allLocalSolutions[0]->space();
 
@@ -75,8 +73,8 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   // right hand side vector of the algebraic local MsFEM problem
   MsFEMTraits::LocalSolutionVectorType allLocalRHS(allLocalSolutions.size());
   for (auto& it : allLocalRHS)
-    it = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>("rhs of local MsFEM problem",
-                                                                      subDiscreteFunctionSpace);
+    it = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(subDiscreteFunctionSpace,
+                                                                      "rhs of local MsFEM problem");
 
   localProblemOperator.assemble_all_local_rhs(coarseCell, allLocalRHS);
 
@@ -88,14 +86,16 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    if (DS::l2norm(current_rhs) < 1e-12) {
-      current_solution.clear();
+    const auto norm = GDT::Products::L2< typename MsFEMTraits::LocalGridViewType >
+                      (*current_rhs.space().grid_view()).induced_norm(current_rhs);
+    if (norm < 1e-12) {
+      current_solution.vector() *= 0;
       DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
       continue;
     }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
-      current_solution.clear();
+      current_solution.vector() *= 0;
       DSC_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
       continue;
     }
@@ -117,9 +117,11 @@ void LocalProblemSolver::solve_for_all_cells() {
     }
 
   // number of coarse grid entities (of codim 0).
-  const auto coarseGridSize = coarse_space_.grid().size(0) - coarse_space_.grid().overlapSize(0);
-  if (Dune::Fem::MPIManager::size() > 0)
-    DSC_LOG_DEBUG << "Rank " << Dune::Fem::MPIManager::rank() << " will solve local problems for " << coarseGridSize
+const auto& grid = coarse_space_.grid_view()->grid();
+  const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
+
+  if (grid.comm().size() > 0)
+    DSC_LOG_DEBUG << "Rank " << grid.comm().rank() << " will solve local problems for " << coarseGridSize
                  << " coarse entities!" << std::endl;
   else {
     DSC_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
@@ -129,8 +131,8 @@ void LocalProblemSolver::solve_for_all_cells() {
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> solveTime;
 
-  const auto& coarseGridLeafIndexSet = coarse_space_.gridPart().grid().leafIndexSet();
-  for (const auto& coarseEntity : coarse_space_) {
+  const auto& coarseGridLeafIndexSet = coarse_space_.grid_view()->grid().leafIndexSet();
+  for (const auto& coarseEntity : DSC::viewRange(*coarse_space_.grid_view())) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
     DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
@@ -154,7 +156,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   DSC_LOG_DEBUG << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n";
   DSC_LOG_DEBUG << "Average time for solving a local problem = " << solveTime.average() << "s.\n";
   DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = "
-                << totalTime << "s on rank" << Dune::Fem::MPIManager::rank() << std::endl;
+                << totalTime << "s on rank" << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
 } // assemble_all
 
 } // namespace MsFEM {

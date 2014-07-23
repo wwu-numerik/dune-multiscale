@@ -9,9 +9,8 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/fem/functions/analytical.hh>
-#include <dune/stuff/functions/global.hh>
 #include <dune/stuff/functions/interfaces.hh>
-#include <dune/stuff/functions/global.hh>
+#include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
 #include <memory>
 #include <string>
@@ -22,11 +21,14 @@ namespace Dune {
 namespace Multiscale {
 namespace Problem {
 
-typedef CommonTraits::FunctionSpaceType::DomainType DomainType;
-typedef CommonTraits::FunctionSpaceType::RangeType RangeType;
-typedef CommonTraits::FunctionSpaceType::JacobianRangeType JacobianRangeType;
+typedef CommonTraits::DomainType DomainType;
+typedef CommonTraits::RangeType RangeType;
+typedef CommonTraits::JacobianRangeType JacobianRangeType;
 
-struct DiffusionBase {
+struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
+
+  //! currently used in gdt assembler
+  virtual void evaluate(const DomainType& x, CommonTraits::DiffusionFunctionBaseType::RangeType& y) const = 0;
 
   virtual ~DiffusionBase() {}
 
@@ -34,15 +36,16 @@ struct DiffusionBase {
   //! A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
   //! (diffusive) flux = A^{\epsilon}( x , direction )
   //! (typically direction is some 'gradient_of_a_function')
-  virtual void diffusiveFlux(const DomainType& x, const JacobianRangeType& direction,
-                             JacobianRangeType& flux) const = 0;
+  virtual void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                             Problem::JacobianRangeType& flux) const = 0;
 
   //! the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
   //! "nabla w", i.e.
   //! jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
   //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  virtual void jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
-                                     const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const;
+  virtual void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
+                                     const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
+  virtual size_t order() const { return 3; }
 };
 
 struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
@@ -75,21 +78,25 @@ public:
 class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
+  virtual size_t order() const { return 3; }
 };
 
 class ZeroDirichletData : public DirichletDataBase {
 public:
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual size_t order() const { return 0; }
 };
 
 class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
+  virtual size_t order() const { return 3; }
 };
 
 class ZeroNeumannData : public NeumannDataBase {
 public:
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual size_t order() const { return 0; }
 };
 
 /**
@@ -126,9 +133,19 @@ public:
  *   evaluate DA^{\epsilon}( x , position ) direction  --> jacobianDiffusiveFlux
 
 
- * class Source -> describes f
+ * class MassTerm -> describes m^{\epsilon}
+ * methods:
+ *   evaluate m^{\epsilon}( x )         --> evaluate
+ *
+
+ * class FirstSource -> describes f
  * methods:
  *   evaluate f( x )                    --> evaluate
+
+
+ * class SecondSource -> describes G
+ * methods:
+ *   evaluate G( x )                    --> evaluate
 
 
  ! See 'elliptic_problems/example.hh' for details
@@ -147,7 +164,7 @@ public:
  * The second source term G is constantly zero:
  * ! G(x) := 0
 
- * !Source defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
+ * !FirstSource defines the right hand side (RHS) of the governing problem (i.e. it defines 'f').
  * The value of the right hand side (i.e. the value of 'f') at 'x' is accessed by the method 'evaluate'. That means 'y
  * := f(x)' and 'y' is returned. It is only important that 'RHSFunction' knows the function space ('FuncSpace') that it
  * is part from. (f \in FunctionSpace)
@@ -156,10 +173,10 @@ public:
 **/
 class IModelProblemData {
 protected:
-  typedef CommonTraits::GridType::LeafGridView View;
-  typedef Dune::Stuff::GridboundaryInterface<typename View::Intersection> BoundaryInfoType;
+  typedef CommonTraits::GridViewType View;
+  typedef DSG::BoundaryInfoInterface<typename View::Intersection> BoundaryInfoType;
   typedef MsFEM::MsFEMTraits::LocalGridType::LeafGridView SubView;
-  typedef Dune::Stuff::GridboundaryInterface<typename SubView::Intersection> SubBoundaryInfoType;
+  typedef DSG::BoundaryInfoInterface<typename SubView::Intersection> SubBoundaryInfoType;
 
 public:
   //! Constructor for ModelProblemData
@@ -215,8 +232,6 @@ namespace DMP = Dune::Multiscale::Problem;
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
   public:                                                                                                              \
     classname() : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                     \
-    classname(const Dune::Multiscale::CommonTraits::FunctionSpaceType&)                                                \
-      : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                               \
   };
 
 #endif // DUNE_MS_PROBLEMS_BASE_HH

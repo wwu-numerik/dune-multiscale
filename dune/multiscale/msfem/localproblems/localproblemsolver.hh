@@ -7,12 +7,6 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
-#include <dune/fem/gridpart/common/gridpart.hh>
-#include <dune/fem/operator/common/operator.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/operator/matrix/spmatrix.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/fem/solver/cginverseoperator.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/istl/matrix.hh>
 #include <dune/istl/operators.hh>
@@ -43,8 +37,8 @@ namespace MsFEM {
 class LocalProblemSolver {
 
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::RangeType RangeType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
+  typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
   typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
 
 public:

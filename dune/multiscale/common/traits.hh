@@ -9,43 +9,27 @@
 #include <dune/common/tuples.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
-#include <dune/fem/space/common/functionspace.hh>
-#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
-#include <dune/fem/space/lagrange.hh>
-#include <dune/fem/quadrature/cachingquadrature.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-
+#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/discretefunction/default.hh>
+#include <dune/gdt/operators/elliptic-cg.hh>
+#include <dune/stuff/la/container.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
-#include <dune/stuff/functions/global.hh>
+#include <dune/stuff/functions/interfaces.hh>
+#include <dune/stuff/functions/constant.hh>
+#include <dune/stuff/grid/provider.hh>
 
 namespace Dune {
 
 template <class T>
 struct GridPtr;
 
-namespace PDELab {
-
-class NoConstraints;
-//class ConformingDirichletConstraints;
-
-} //namespace PDELab
-
-namespace Fem {
+namespace GDT {
 template <class T, class R>
-class GridFunctionAdapter;
+class DiscreteFunction;
 template <class T, class R>
-class DataOutput;
-template <class T, class R>
-class DataWriter;
-template <class T, class R>
-class AdaptationManager;
-} // namespace Fem
-
+class ConstDiscreteFunction;
+}
 namespace Multiscale {
 namespace Problem {
 
@@ -57,24 +41,41 @@ class IModelProblemData;
 
 } // namespace Problem
 
-//! type construction for the HMM algorithm
+//! Common Types, duh
 struct CommonTraits {
-  static constexpr int world_dim = 2;
+
   typedef Dune::GridSelector::GridType GridType;
+  static constexpr int dimRange = 1;
+  static constexpr int dimDomain = GridType::dimension;
+  static constexpr int world_dim = dimDomain;
+  static constexpr unsigned int exact_solution_space_order = 3 * st_lagrangespace_order;
+
 //  typedef Dune::SGrid<world_dim, world_dim> GridType;
 //  typedef Dune::YaspGrid<world_dim> GridType;
   typedef GridType::Codim<0>::Entity EntityType;
-  typedef Dune::Fem::AdaptiveLeafGridPart<GridType> GridPartType;
-  typedef Dune::GridPtr<GridType> GridPointerType;
   typedef double FieldType;
-  typedef Dune::Fem::FunctionSpace<FieldType, FieldType, GridType::dimension, 1> FunctionSpaceType;
 
-  typedef Dune::Stuff::GlobalFunction<EntityType, FunctionSpaceType::DomainFieldType, FunctionSpaceType::dimDomain,
-                                      FunctionSpaceType::RangeFieldType, FunctionSpaceType::dimRange> FunctionBaseType;
+  typedef DSG::Providers::ConstDefault<GridType> GridProviderType;
+  typedef GDT::Spaces::ContinuousLagrangeProvider<GridType, DSG::ChooseLayer::leaf,
+                                                  GDT::ChooseSpaceBackend::pdelab,
+                                                   st_lagrangespace_order, FieldType, dimRange > SpaceProviderType;
 
-  typedef Dune::Stuff::GlobalConstantFunction<EntityType, FunctionSpaceType::DomainFieldType,
-                                              FunctionSpaceType::dimDomain, FunctionSpaceType::RangeFieldType,
-                                              FunctionSpaceType::dimRange> ConstantFunctionBaseType;
+  static constexpr auto st_gdt_grid_level = 0;
+  typedef SpaceProviderType::Type GdtSpaceType;
+  typedef GdtSpaceType DiscreteFunctionSpaceType;
+  typedef GdtSpaceType::GridViewType GridViewType;
+
+  typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorType GdtVectorType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionDataType DiscreteFunctionDataType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionBaseType DiscreteFunctionBaseType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
+  typedef BackendChooser<DiscreteFunctionSpaceType>::ConstDiscreteFunctionType ConstDiscreteFunctionType;
+
+  typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
+  typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain> DiffusionFunctionBaseType;
+  typedef Stuff::Functions::Constant< EntityType, FieldType, dimDomain, FieldType, dimRange > ConstantFunctionBaseType;
+  typedef ConstantFunctionBaseType GdtConstantFunctionType;
 
   typedef Problem::IModelProblemData ModelProblemDataType;
   //! type of first source term (right hand side of differential equation or type of 'f')
@@ -95,48 +96,35 @@ struct CommonTraits {
 
   //! type of exact solution (in general unknown)
   typedef FunctionBaseType ExactSolutionType;
-  static constexpr unsigned int exact_solution_space_order = 3 * st_lagrangespace_order;
 
-  typedef FunctionSpaceType::DomainType DomainType;
-  //! define the type of elements of the codomain v(\Omega) (typically a subset of \R)
-  typedef FunctionSpaceType::RangeType RangeType;
-  //! defines the function space to which the numerical solution belongs to
-  //! see dune/fem/lagrangebase.hh
-  typedef Dune::Fem::LagrangeDiscreteFunctionSpace<FunctionSpaceType, GridPartType, st_lagrangespace_order>
-  DiscreteFunctionSpaceType;
-  typedef DiscreteFunctionSpaceType::DomainFieldType TimeType;
-  typedef DiscreteFunctionSpaceType::JacobianRangeType JacobianRangeType;
+  typedef DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
+  typedef DiscreteFunctionSpaceType::DomainType DomainType;
+  typedef DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
+  typedef FieldType TimeType;
+  typedef DiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
 
-  typedef GridPartType::IntersectionType FaceType;
   typedef GridType::Codim<0>::EntityPointer EntityPointerType;
   typedef GridType::Codim<0>::Geometry EntityGeometryType;
   typedef GridType::Codim<1>::Geometry FaceGeometryType;
-  //! \todo carry the rename over to the type def'ed name
-  typedef DiscreteFunctionSpaceType::BasisFunctionSetType BasisFunctionSetType;
-  typedef DiscreteFunctionSpaceType::RangeFieldType RangeFieldType;
 
-  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
+  typedef FieldType RangeFieldType;
+  typedef FieldType DomainFieldType;
+
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
 
   typedef std::vector<RangeType> RangeVector;
   typedef std::vector<RangeVector> RangeVectorVector;
 
-  static constexpr int polynomial_order = DiscreteFunctionSpaceType::polynomialOrder;
+  static constexpr int polynomial_order = DiscreteFunctionSpaceType::polOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
 
-  typedef PDELab::QkLocalFiniteElementMap<GridType::LeafGridView,GridType::ctype,FieldType,polynomial_order>
-  FEMapType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::VectorBackendType VectorBackendType;
-  typedef PDELab::GridFunctionSpace<GridType::LeafGridView,FEMapType,PDELab::OverlappingConformingDirichletConstraints,
-            VectorBackendType> GridFunctionSpaceType;
-  typedef typename PDELab::BackendVectorSelector<GridFunctionSpaceType,FieldType>::Type PdelabVectorType;
+  typedef GDT::Operators::EllipticCG< DiffusionType, LinearOperatorType, GdtSpaceType > EllipticOperatorType;
 
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>
-std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::DiscreteFunctionSpaceType& space) {
-  return std::make_shared<T>(name, space);
+std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::SpaceType& space) {
+  return std::make_shared<T>(space, name);
   //  return DSC::make_unique<T>(name, space);
 }
 

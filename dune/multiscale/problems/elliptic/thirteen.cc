@@ -35,7 +35,7 @@ void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeT
 
 Diffusion::Diffusion() {}
 
-void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& direction, JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
 
   double conductor_thickness = 0.05;
   double conductivity = 20.0;
@@ -115,8 +115,8 @@ void Diffusion::diffusiveFlux(const DomainType& x, const JacobianRangeType& dire
   flux[0][1] = a_1_0 * direction[0][0] + a_1_1 * direction[0][1];
 } // diffusiveFlux
 
-void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const JacobianRangeType& /*position_gradient*/,
-                                      const JacobianRangeType& direction_gradient, JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
+                                      const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const {
 
   double conductor_thickness = 0.05;
   double conductivity = 100.0;

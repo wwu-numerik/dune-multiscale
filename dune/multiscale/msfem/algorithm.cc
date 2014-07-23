@@ -5,10 +5,9 @@
 
 #include <assert.h>
 #include <boost/format.hpp>
-#include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/grid/io/file/dgfparser/gridptr.hh>
 #include <dune/multiscale/common/error_calc.hh>
-#include <dune/multiscale/common/output_traits.hh>
+
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/fem/print_info.hh>
@@ -25,6 +24,8 @@
 #include <dune/stuff/grid/output/entity_visualization.hh>
 #include <dune/stuff/grid/information.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
+#include <dune/stuff/grid/provider.hh>
+#include <dune/gdt/discretefunction/default.hh>
 
 #include <cmath>
 #include <iterator>
@@ -44,53 +45,41 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
                      const CommonTraits::DiscreteFunctionType& coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution) {
   using namespace Dune;
-  const auto& grid = msfem_solution.space().gridPart().grid();
+
   Dune::Multiscale::OutputParameters outputparam;
+  outputparam.set_prefix("msfem_solution_");
+  msfem_solution.visualize(outputparam.fullpath(msfem_solution.name()));
 
-  OutputTraits::IOTupleType msfem_solution_series(&msfem_solution);
-  const auto msfem_fname_s = std::string("msfem_solution_");
-  outputparam.set_prefix(msfem_fname_s);
-  OutputTraits::DataOutputType(grid, msfem_solution_series, outputparam).writeData(1.0 /*dummy*/, msfem_fname_s);
+  outputparam.set_prefix("coarse_part_msfem_solution_");
+  coarse_part_msfem_solution.visualize(outputparam.fullpath(coarse_part_msfem_solution.name()));
 
-  OutputTraits::IOTupleType coarse_msfem_solution_series(&coarse_part_msfem_solution);
-  const auto coarse_msfem_fname_s = std::string("coarse_part_msfem_solution_");
-  outputparam.set_prefix(coarse_msfem_fname_s);
-  OutputTraits::DataOutputType(grid, coarse_msfem_solution_series, outputparam)
-      .writeData(1.0 /*dummy*/, coarse_msfem_fname_s);
+  outputparam.set_prefix("fine_part_msfem_solution_");
+  fine_part_msfem_solution.visualize(outputparam.fullpath(fine_part_msfem_solution.name()));
 
-  OutputTraits::IOTupleType fine_msfem_solution_series(&fine_part_msfem_solution);
-  const auto fine_msfem_fname_s = std::string("fine_part_msfem_solution_");
-  outputparam.set_prefix(fine_msfem_fname_s);
-  OutputTraits::DataOutputType(grid, fine_msfem_solution_series, outputparam)
-      .writeData(1.0 /*dummy*/, fine_msfem_fname_s);
-
-  DSG::ElementVisualization::all(fine_part_msfem_solution.gridPart().grid(), outputparam.path());
+  DSG::ElementVisualization::all(fine_part_msfem_solution.space().grid_view()->grid(), outputparam.path());
 }
 
 //! \TODO docme
-void data_output(const CommonTraits::GridPartType& gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& coarse_discreteFunctionSpace) {
+void data_output(const CommonTraits::GridViewType &gridPart,
+                 const CommonTraits::DiscreteFunctionSpaceType& /*coarseSpace*/) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
 
   if (Problem::getModelData()->hasExactSolution()) {
-    const auto& u_ptr = Dune::Multiscale::Problem::getExactSolution();
-    const auto& u = *u_ptr;
-    const OutputTraits::DiscreteExactSolutionType discrete_exact_solution("discrete exact solution ", u, gridPart);
-    OutputTraits::ExSolIOTupleType exact_solution_series(&discrete_exact_solution);
+    const auto& u = Dune::Multiscale::Problem::getExactSolution();
     outputparam.set_prefix("exact_solution");
-    OutputTraits::ExSolDataOutputType(gridPart.grid(), exact_solution_series, outputparam)
-        .writeData(1.0 /*dummy*/, "exact-solution");
+    u->visualize(gridPart, outputparam.fullpath(u->name()));
   }
 
-  CommonTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
-                                                               coarse_discreteFunctionSpace);
-  coarse_grid_visualization.clear();
-  OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
-  const std::string coarse_grid_name("coarse_grid_visualization_");
-  outputparam.set_prefix(coarse_grid_name);
-  OutputTraits::DataOutputType(coarse_discreteFunctionSpace.gridPart().grid(), coarse_grid_series, outputparam)
-      .writeData(1.0 /*dummy*/, coarse_grid_name);
+  //! \todo re-enable
+//  CommonTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
+//                                                               coarseSpace);
+//  coarse_grid_visualization.clear();
+//  OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
+//  const std::string coarse_grid_name("coarse_grid_visualization_");
+//  outputparam.set_prefix(coarse_grid_name);
+//  OutputTraits::DataOutputType(coarseSpace.grid_view().grid(), coarse_grid_series, outputparam)
+//      .writeData(1.0 /*dummy*/, coarse_grid_name);
 }
 
 //! algorithm
@@ -98,41 +87,34 @@ std::map<std::string, double> algorithm() {
   using namespace Dune;
 
   auto grids = make_grids();
-  CommonTraits::GridType& coarse_grid = *grids.first;
-  CommonTraits::GridPartType coarse_gridPart(coarse_grid);
-  CommonTraits::GridType& fine_grid = *grids.second;
-  CommonTraits::GridPartType fine_gridPart(fine_grid);
-
-  CommonTraits::DiscreteFunctionSpaceType fine_discreteFunctionSpace(fine_gridPart);
-  CommonTraits::DiscreteFunctionSpaceType coarse_discreteFunctionSpace(coarse_gridPart);
+  CommonTraits::GridProviderType coarse_grid_provider(grids.first);
+  CommonTraits::GridProviderType fine_grid_provider(grids.second);
+  const CommonTraits::GdtSpaceType coarseSpace =
+      CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level);
+  const CommonTraits::GdtSpaceType fineSpace =
+      CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
 
   const auto& diffusion_op = *Dune::Multiscale::Problem::getDiffusion();
   const auto& f = *Dune::Multiscale::Problem::getSource();
 
-  CommonTraits::DiscreteFunctionType msfem_solution("MsFEM Solution", fine_discreteFunctionSpace);
-  msfem_solution.clear();
-  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution("Coarse Part MsFEM Solution",
-                                                                fine_discreteFunctionSpace);
-  coarse_part_msfem_solution.clear();
-  CommonTraits::DiscreteFunctionType fine_part_msfem_solution("Fine Part MsFEM Solution", fine_discreteFunctionSpace);
-  fine_part_msfem_solution.clear();
+  CommonTraits::DiscreteFunctionType msfem_solution(fineSpace, "MsFEM_Solution");
+  CommonTraits::DiscreteFunctionType coarse_part_msfem_solution(fineSpace, "Coarse_Part_MsFEM_Solution");
+  CommonTraits::DiscreteFunctionType fine_part_msfem_solution(fineSpace, "Fine_Part_MsFEM_Solution" );
 
-  Elliptic_MsFEM_Solver().apply(coarse_discreteFunctionSpace, diffusion_op, f, coarse_part_msfem_solution,
+  Elliptic_MsFEM_Solver().apply(coarseSpace, diffusion_op, f, coarse_part_msfem_solution,
                                 fine_part_msfem_solution, msfem_solution);
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-    data_output(fine_gridPart, coarse_discreteFunctionSpace);
+    data_output(*fineSpace.grid_view(), coarseSpace);
     solution_output(msfem_solution, coarse_part_msfem_solution, fine_part_msfem_solution);
   }
 
-  const auto& grid_view = fine_grid.leafGridView();
-  CommonTraits::FEMapType fe_map(grid_view);
-  CommonTraits::GridFunctionSpaceType space(grid_view, fe_map);
-  std::unique_ptr<CommonTraits::PdelabVectorType> fem_solution(nullptr);
+  std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution(nullptr);
+
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    fem_solution = DSC::make_unique<CommonTraits::PdelabVectorType>(space, 0.0);
-    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(space);
+    fem_solution = DSC::make_unique<CommonTraits::DiscreteFunctionType>(fineSpace, "fem_solution");
+    const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(fineSpace);
     fem_solver.apply(diffusion_op, f, *fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       Dune::Multiscale::FEM::write_discrete_function(*fem_solution, "fem_solution");
