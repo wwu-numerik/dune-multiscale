@@ -18,8 +18,8 @@
 #include "dune/multiscale/problems/base.hh"
 #include "error_calc.hh"
 
-Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType* const msfem_solution,
-                                                   const CommonTraits::PdelabVectorType * const fem_solution)
+Dune::Multiscale:: ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType* const msfem_solution,
+                                    const CommonTraits::ConstDiscreteFunctionType* const fem_solution)
   : msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution) {}
 
