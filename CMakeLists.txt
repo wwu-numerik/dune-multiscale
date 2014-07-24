@@ -96,8 +96,9 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
+set(GRIDDIM 3 CACHE STRING "")
 
-add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=2" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
+add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=${GRIDDIM}" ${PETSC_DEFINITIONS} -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=1 )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
@@ -162,12 +163,10 @@ endforeach(_mod DEPENDENCIES)
   
 ADD_CPPCHECK(${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
              ${dune} ${header})
-add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
-            ${HOM_FEM_SOURCES} ${FEM_SOURCES}
-            src/elliptic_msfem.cc )
-add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${HMM_SOURCES} ${MSFEM_SOURCES} 
-           ${HOM_FEM_SOURCES} ${FEM_SOURCES}
-           src/elliptic_msfem.cc
+add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES} 
+            ${FEM_SOURCES} src/elliptic_msfem.cc )
+add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES} 
+           ${FEM_SOURCES} src/elliptic_msfem.cc
            ${header} ${dune})
 
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
