@@ -21,7 +21,6 @@
 #define COMMIT "@COMMIT@"
 
 #define ALBERTA_DIM WORLDDIM
-#define ALBERTA_DEBUG 1
 #cmakedefine @ENABLE_ALUGRID@ 
 #cmakedefine @ENABLE_PETSC@ 
 #cmakedefine @ENABLE_ABERTA@
@@ -36,12 +35,6 @@
 #define HAVE_PETSC ENABLE_PETSC
 #ifdef NDEBUG
   #define DNDEBUG
-#endif
-
-//compiler quirks workarounds
-#ifdef __clang__
-  class type_info;
-  #define BOOST_HAS_RVALUE_REFS 1
 #endif
 
 #endif  /* DUNE_MULTISCALE_CONFIG_H */
