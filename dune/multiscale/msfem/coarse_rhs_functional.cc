@@ -301,4 +301,4 @@ for (const auto& coarse_grid_entity : threadIterators) {
 
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
-#endif 0 //alter referenzcde
+#endif //0 //alter referenzcde

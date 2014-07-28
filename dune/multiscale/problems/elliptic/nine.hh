@@ -26,8 +26,6 @@
 
 #endif
 
-const double epsilon = 0.05;
-
 namespace Dune {
 namespace Multiscale {
 namespace Problem {
