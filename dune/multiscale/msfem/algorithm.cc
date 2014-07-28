@@ -101,7 +101,7 @@ std::map<std::string, double> algorithm() {
   CommonTraits::DiscreteFunctionType coarse_part_msfem_solution(fineSpace, "Coarse_Part_MsFEM_Solution");
   CommonTraits::DiscreteFunctionType fine_part_msfem_solution(fineSpace, "Fine_Part_MsFEM_Solution" );
 
-  Elliptic_MsFEM_Solver().apply(coarseSpace, diffusion_op, f, coarse_part_msfem_solution,
+  Elliptic_MsFEM_Solver().apply(coarseSpace, diffusion_op, coarse_part_msfem_solution,
                                 fine_part_msfem_solution, msfem_solution);
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {

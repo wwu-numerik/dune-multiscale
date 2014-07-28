@@ -3,7 +3,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/functions/norm.hh>
+#include <dune/stuff/playground/functions/pdelabadapter.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <iostream>
 #include <map>

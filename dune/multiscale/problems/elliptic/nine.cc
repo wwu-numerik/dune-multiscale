@@ -14,6 +14,7 @@ namespace Multiscale {
 namespace Problem {
 namespace Nine {
 
+static constexpr double epsilon = 0.05;
 
 ModelProblemData::ModelProblemData()
   : IModelProblemData()

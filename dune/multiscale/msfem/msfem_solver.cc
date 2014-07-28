@@ -140,7 +140,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
                                   const CommonTraits::DiffusionType& diffusion_op,
-                                  const CommonTraits::SourceType& f, DiscreteFunctionType& coarse_scale_part,
+                                  DiscreteFunctionType& coarse_scale_part,
                                   DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   BOOST_ASSERT_MSG(coarse_scale_part.dofs_valid(), "Coarse scale part DOFs need to be valid!");
