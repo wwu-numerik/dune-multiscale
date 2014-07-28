@@ -7,7 +7,7 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/functions/norm.hh>
+#include <dune/stuff/playground/functions/norm.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
 #include <dune/gdt/spaces/continuouslagrange.hh>
@@ -38,7 +38,6 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   DSC_PROFILER.startTiming("fem.apply");
 
   typedef CommonTraits::GridViewType GridViewType;
-  typedef typename GridViewType::Intersection IntersectionType;
 
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
@@ -96,15 +95,15 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
   linear_solver_options.set("max_iter",                 "5000", true);
   linear_solver_options.set("precision",                "1e-8", true);
   linear_solver_options.set("post_check_solves_system", "0",    true);
-  linear_solver_options.set("preconditioner.anisotropy_dim", GRIDDIM, true);
-  linear_solver_options.set("preconditioner.isotropy_dim", GRIDDIM, true);
+  linear_solver_options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, true);
+  linear_solver_options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, true);
   linear_solver_options.set("smoother.iterations", "1", true);
   linear_solver_options.set("smoother.relaxation_factor", "0.5", true);
   linear_solver_options.set("criterion.max_level", "100", true);
   linear_solver_options.set("criterion.coarse_target", "1000", true);
   linear_solver_options.set("criterion.min_coarse_rate", "1.2", true);
   linear_solver_options.set("criterion.prolong_damp", "1.6", true);
-  linear_solver_options.set("criterion.anisotropy_dim", GRIDDIM, true);
+  linear_solver_options.set("criterion.anisotropy_dim", CommonTraits::world_dim, true);
   linear_solver_options.set("criterion.verbose", "1", true);
   linear_solver_options.set("smoother.verbose", "1", true);
 
