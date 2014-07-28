@@ -60,6 +60,7 @@ set( COMMON_SOURCES
         dune/multiscale/msfem/fem_solver.cc
         dune/multiscale/common/error_calc.cc
         dune/multiscale/common/grid_creation.cc
+        dune/multiscale/common/traits.cc
         dune/multiscale/fem/print_info.cc
     )
 
