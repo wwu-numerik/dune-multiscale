@@ -5,8 +5,8 @@
 #ifndef DUNE_MULTISCALE_SRC_COMMON_HH
 #define DUNE_MULTISCALE_SRC_COMMON_HH
 
-#include <dune/common/mpihelper.hh>  // An initializer of MPI
-#include <dune/common/exceptions.hh> // We use exceptions
+#include <dune/common/mpihelper.hh>
+#include <dune/common/exceptions.hh>
 
 #if HAVE_DUNE_SPGRID
 #include <dune/grid/spgrid/capabilities.hh>
@@ -16,7 +16,7 @@
 #include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/threadmanager.hh>
+#include <dune/stuff/common/parallel/threadmanager.hh>
 
 #include <dune/multiscale/common/traits.hh>
 

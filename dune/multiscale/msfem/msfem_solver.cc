@@ -91,7 +91,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 //          static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
 //              static_cast<long long>(coarseSolutionLF.size()),
 //          "The current implementation relies on having thesame types of elements on coarse and fine level!");
-      for (int dof = 0; dof < coarseSolutionLF.size(); ++dof) {
+      for (std::size_t dof = 0; dof < coarseSolutionLF.size(); ++dof) {
         localSolutions[dof]->vector() *= coarseSolutionLF.vector().get(dof);
         local_correction.vector() += localSolutions[dof]->vector();
       }
