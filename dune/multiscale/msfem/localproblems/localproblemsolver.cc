@@ -17,7 +17,7 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
-#include <dune/stuff/playground/functions/norm.hh>
+#include <dune/gdt/products/l2.hh>
 #include <iterator>
 #include <memory>
 #include <sstream>
