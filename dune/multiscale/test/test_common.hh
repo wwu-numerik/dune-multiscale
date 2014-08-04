@@ -74,5 +74,8 @@ static const map<string, string> p_huge  = {{"grids.macro_cells_per_dim", "[40;4
                                            ,{"micro_cells_per_macrocell_dim", "[120;120;120]"}
                                            ,{"msfem.oversampling_layers", "0"}
                                            };
-
+static const map<string, string> p_fail  = {{"grids.macro_cells_per_dim", "[12;15;10]"}
+                                           ,{"micro_cells_per_macrocell_dim", "[6;7;10]"}
+                                           ,{"msfem.oversampling_layers", "0"}
+                                           };
 #endif // DUNE_MULTISCALE_TEST_COMMON_HH
