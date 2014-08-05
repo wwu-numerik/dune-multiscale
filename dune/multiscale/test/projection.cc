@@ -4,6 +4,7 @@
 #include <dune/stuff/common/float_cmp.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
@@ -30,6 +31,88 @@ std::vector<typename T::GlobalCoordinate> cornersA(const T& geo) {
   return ret;
 }
 
+struct GridAndSpaces : public GridTestBase {
+public:
+
+ GridAndSpaces()
+   : GridTestBase()
+   , coarse_grid_provider(grids_.first)
+   , fine_grid_provider(grids_.second)
+   , coarseSpace(CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level))
+   , fineSpace(CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level))
+ {}
+
+
+  void check_lagrange_points() {
+    for(auto& grid : {grids_.first, grids_.second}) {
+      CommonTraits::GridProviderType grid_provider(grid);
+      const CommonTraits::GdtSpaceType space =
+          CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
+
+      for (const auto& ent : DSC::viewRange(grid->leafGridView())) {
+        const auto& geo = ent.geometry();
+        const auto cor = corners(geo);
+        const auto lp = DS::global_evaluation_points(space, ent);
+        EXPECT_EQ(cor, lp);
+      }
+    }
+  }
+
+  void check_fine_lp_in_coarse() {
+    MsFEM::LocalGridList subgrid_list(coarseSpace);
+    MsFEM::LocalGridSearch search(coarseSpace, subgrid_list);
+
+    for (const auto& ent : fineSpace) {
+      const auto lg_points = DS::global_evaluation_points(fineSpace, ent);
+      for(auto  lg : lg_points) {
+        bool found = false;
+        for (const auto& coarse_ent : DSC::viewRange(grids_.first->leafGridView())) {
+          found = found || DSG::reference_element(coarse_ent).checkInside(ent.geometry().local(lg));
+        }
+        EXPECT_TRUE(found);
+      }
+    }
+  }
+
+  void check_search() {
+    MsFEM::LocalGridList subgrid_list(coarseSpace);
+    MsFEM::LocalGridSearch search(coarseSpace, subgrid_list);
+
+    for (const auto& ent : fineSpace) {
+      const auto lg_points = DS::global_evaluation_points(fineSpace, ent);
+      const auto evaluation_entity_ptrs = search(lg_points);
+      EXPECT_GE(evaluation_entity_ptrs.size(), lg_points.size());
+    }
+  }
+
+
+  void check_local_grids() {
+    MsFEM::LocalGridList subgrid_list(coarseSpace);
+    EXPECT_EQ(subgrid_list.size(), grids_.first->size(0));
+  }
+
+  void project() {
+    using namespace Dune::Multiscale::MsFEM;
+
+    LocalGridList subgrid_list(coarseSpace);
+    LocalsolutionProxy::CorrectionsMapType local_corrections;
+    LocalGridSearch search(coarseSpace, subgrid_list);
+    auto& coarse_indexset = coarseSpace.grid_view()->grid().leafIndexSet();
+    LocalsolutionProxy proxy(local_corrections, coarse_indexset, search);
+
+    CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
+    DS::MsFEMProjection::project(proxy, fine_scale_part, search);
+
+  }
+
+
+protected:
+  CommonTraits::GridProviderType coarse_grid_provider;
+  CommonTraits::GridProviderType fine_grid_provider;
+  const CommonTraits::GdtSpaceType coarseSpace;
+  const CommonTraits::GdtSpaceType fineSpace;
+};
+
 struct GridMatch : public GridTestBase {
 
   void check_dimensions() {
@@ -43,6 +126,23 @@ struct GridMatch : public GridTestBase {
     EXPECT_GT(dimensions.first.entity_volume.max(), dimensions.second.entity_volume.max());
     // second max not a typo
     EXPECT_GT(dimensions.first.entity_volume.min(), dimensions.second.entity_volume.max());
+    const auto dim_world = CommonTraits::GridType::dimensionworld;
+    const DSC::ExtendedParameterTree sub(DSC_CONFIG.sub("grids"));
+    const std::vector<int> microPerMacro = sub.getVector("micro_cells_per_macrocell_dim", -1, dim_world);
+    const std::vector<int> coarse_cells = sub.getVector("macro_cells_per_dim", -1, dim_world);
+    for(auto c: coarse_cells)
+      EXPECT_GT(c, 0);
+    for(auto c: microPerMacro)
+      EXPECT_GT(c, 0);
+    long expected_coarse = 1;
+    for(auto i : DSC::valueRange(dim_world))
+      expected_coarse *= coarse_cells[i];
+    auto expected_fine = expected_coarse;
+    for(auto i : DSC::valueRange(dim_world))
+      expected_fine *= microPerMacro[i];
+    EXPECT_EQ(grids_.first->leafGridView().size(0), expected_coarse);
+    EXPECT_EQ(grids_.second->leafGridView().size(0), expected_fine);
+
   }
 
   void check_unique_corners() {
@@ -66,65 +166,14 @@ struct GridMatch : public GridTestBase {
     }
   }
 
-//  void project() {
-//    using namespace Dune::Multiscale::MsFEM;
-//    CommonTraits::GdtSpaceType coarse_space(grids_.first->leafGridView());
-//    LocalGridList subgrid_list(coarse_space);
-//    LocalsolutionProxy::CorrectionsMapType local_corrections;
-//    LocalGridSearch search(coarse_space, subgrid_list);
-//    auto& coarse_indexset = coarse_space.grid_view()->grid().leafIndexSet();
-//    LocalsolutionProxy proxy(local_corrections, coarse_indexset, search);
-
-//    CommonTraits::DiscreteFunctionType fine_scale_part;
-//    DS::MsFEMProjection::project(proxy, fine_scale_part, search);
-
-//  }
-
   void check_inside() {
     for (const auto& ent : DSC::viewRange(grids_.second->leafGridView())) {
-      const auto& geo = ent.geometry();
       for(auto corner : corners(ent.geometry())) {
         bool found = false;
         for (const auto& coarse_ent : DSC::viewRange(grids_.first->leafGridView())) {
-          found = found || DSG::reference_element(coarse_ent).checkInside(geo.local(corner));
+          found = found || DSG::reference_element(coarse_ent).checkInside(coarse_ent.geometry().local(corner));
         }
         EXPECT_TRUE(found);
-      }
-    }
-  }
-
-  void check_lagrange_points() {
-
-    for(auto& grid : {grids_.first, grids_.second}) {
-      CommonTraits::GridProviderType grid_provider(grid);
-      const CommonTraits::GdtSpaceType space =
-          CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
-
-      for (const auto& ent : DSC::viewRange(grid->leafGridView())) {
-        const auto& geo = ent.geometry();
-        const auto cor = corners(geo);
-        const auto lp = DS::global_evaluation_points(space, ent);
-        EXPECT_EQ(cor, lp);
-      }
-    }
-  }
-
-  void check_fine_lp_in_coarse() {
-
-    for(auto& grid : {grids_.second}) {
-      CommonTraits::GridProviderType grid_provider(grid);
-      const CommonTraits::GdtSpaceType space =
-          CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
-
-      for (const auto& ent : DSC::viewRange(grid->leafGridView())) {
-        const auto lg_points = DS::global_evaluation_points(space, ent);
-        for(auto  lg : lg_points) {
-          bool found = false;
-          for (const auto& coarse_ent : DSC::viewRange(grids_.first->leafGridView())) {
-            found = found || DSG::reference_element(coarse_ent).checkInside(ent.geometry().local(lg));
-          }
-          EXPECT_TRUE(found);
-        }
       }
     }
   }
@@ -135,15 +184,20 @@ TEST_P(GridMatch, Match) {
   this->check_dimensions();
   this->check_unique_corners();
   this->check_inside();
-  this->check_lagrange_points();
-  this->check_fine_lp_in_coarse();
 }
 
+TEST_P(GridAndSpaces, LP) {
+  this->check_lagrange_points();
+  this->check_fine_lp_in_coarse();
+  this->check_local_grids();
+  this->check_search();
+}
 
-INSTANTIATE_TEST_CASE_P(
-    TestName,
-    GridMatch,
-    testing::Values(p_small, p_large, p_aniso, p_wover, p_huge));
+static const auto common_values = testing::Values(p_small, p_large, p_aniso, p_wover, /*p_huge,*/ p_fail);
+//static const auto common_values = testing::Values(p_large);
+
+INSTANTIATE_TEST_CASE_P( TestNameA, GridMatch, common_values);
+INSTANTIATE_TEST_CASE_P( TestNameB, GridAndSpaces, common_values);
 
 int main(int argc, char** argv) {
   test_init(argc, argv);
