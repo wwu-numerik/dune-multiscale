@@ -4,7 +4,7 @@
 
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 
-Dune::Multiscale::MsFEM::LocalsolutionProxy::LocalsolutionProxy(const Dune::Multiscale::MsFEM::LocalsolutionProxy::CorrectionsMapType &corrections, const Dune::Multiscale::MsFEM::LocalsolutionProxy::LeafIndexSetType &index_set, Dune::Multiscale::MsFEM::LocalGridSearch &search)
+Dune::Multiscale::MsFEM::LocalsolutionProxy::LocalsolutionProxy(const Dune::Multiscale::MsFEM::LocalsolutionProxy::CorrectionsMapType &corrections, const Dune::Multiscale::MsFEM::LocalsolutionProxy::LeafIndexSetType &index_set, const LocalGridSearch & search)
   : BaseType(*corrections.begin()->second)
   , corrections_(corrections)
   , index_set_(index_set)
