@@ -25,7 +25,7 @@ public:
                    std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
 
   LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set,
-                     LocalGridSearch& search);
+                     const LocalGridSearch& search);
 
   std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;
 
@@ -37,7 +37,7 @@ public:
 private:
   const CorrectionsMapType& corrections_;
   const LeafIndexSetType& index_set_;
-  LocalGridSearch& search_;
+  const LocalGridSearch& search_;
 };
 
 } // namespace MsFEM {

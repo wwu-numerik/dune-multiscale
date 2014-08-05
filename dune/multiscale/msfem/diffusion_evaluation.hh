@@ -89,7 +89,7 @@ public:
                  const Dune::FieldVector< D, d >& localPoint,
                  Dune::DynamicVector< R >& ret) const
   {
-    const auto localFunction = std::get< 0 >(localFuncs);
+    const auto& localFunction = std::get< 0 >(localFuncs);
     evaluate(*localFunction, testBase, localPoint, ret);
   }
 
