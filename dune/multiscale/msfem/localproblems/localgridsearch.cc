@@ -4,18 +4,25 @@
 
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/stuff/common/memory.hh>
+#include <dune/stuff/common/algorithm.hh>
 #include <dune/grid/common/gridenums.hh>
 
 Dune::Multiscale::MsFEM::LocalGridSearch::EntityPointerVectorType Dune::Multiscale::MsFEM::LocalGridSearch::operator()(const PointContainerType &points) {
-  const auto count_nulls = [&](const typename EntityPointerVectorType::value_type& ptr) { return ptr == nullptr; };
-  //! \TODO potential speedup by caching last coarse_entity position instead fo restarting at front
+  typedef typename EntityPointerVectorType::value_type EPV;
+  const auto is_null = [&](const EPV& ptr) { return ptr == nullptr; };
+  const auto not_null = [&](const EPV& ptr) { return ptr != nullptr; };
+
   // only iterate over inner (non-overlap) entities
-  const auto view = coarse_space_.grid_view()->grid().template leafGridView<PartitionIteratorType::Interior_Partition>();
+  static const auto view = coarse_space_.grid_view()->grid().template leafGridView<PartitionIteratorType::Interior_Partition>();
 
   static auto it = view.template begin< 0 >();
   const auto end = view.template end< 0 >();
+  EntityPointerVectorType ret_entities(points.size());
   int steps = 0;
-  while(true) {
+  bool did_cover = false;
+  auto null_count = points.size();
+  while(null_count) {
+    assert(it!=end);
     const auto& coarse_entity = *it;
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
     const auto& index_set = view.grid().leafIndexSet();
@@ -24,11 +31,12 @@ Dune::Multiscale::MsFEM::LocalGridSearch::EntityPointerVectorType Dune::Multisca
     auto& current_search_ptr = coarse_searches_[index];
     if (current_search_ptr == nullptr)
       current_search_ptr = DSC::make_unique<PerGridSearchType>(localgrid.leafGridView());
-    if (covers_strict(coarse_entity, points.begin(), points.end())) {
+    did_cover = covers_strict(coarse_entity, points.begin(), points.end());
+    if (did_cover) {
+      auto first_null = std::find(ret_entities.begin(), ret_entities.end(), nullptr);
       auto entity_ptrs = current_search_ptr->operator()(points);
-      const auto null_count = std::count_if(entity_ptrs.begin(), entity_ptrs.end(), count_nulls);
-      if (null_count == 0)
-        return entity_ptrs;
+      DSC::move_if(entity_ptrs.begin(), entity_ptrs.end(), first_null, not_null);
+      null_count = std::count_if(ret_entities.begin(), ret_entities.end(), is_null);
     }
     if (++it == end) {
       if (++steps < view.size(0))
@@ -37,10 +45,13 @@ Dune::Multiscale::MsFEM::LocalGridSearch::EntityPointerVectorType Dune::Multisca
         DUNE_THROW(InvalidStateException, "local grid search failed");
     }
   }
+  return ret_entities;
 }
 
 
-bool Dune::Multiscale::MsFEM::LocalGridSearch::covers_strict(const CoarseGridSpaceType::EntityType &coarse_entity, const Dune::Multiscale::MsFEM::LocalGridSearch::PointIterator first, const Dune::Multiscale::MsFEM::LocalGridSearch::PointIterator last) {
+bool Dune::Multiscale::MsFEM::LocalGridSearch::covers_strict(const CoarseGridSpaceType::EntityType &coarse_entity,
+                                                             const Dune::Multiscale::MsFEM::LocalGridSearch::PointIterator first,
+                                                             const Dune::Multiscale::MsFEM::LocalGridSearch::PointIterator last) {
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
   for (auto it = first; it != last; ++it) {
