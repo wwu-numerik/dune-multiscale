@@ -114,10 +114,11 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
       EvaluationType > RhsFunctionalType;
   std::vector<std::unique_ptr<RhsFunctionalType>> rhs_functionals(numInnerCorrectors);
   std::size_t coarseBaseFunc = 0;
+  const auto coarseBaseFunctionSet = coarse_space_.base_function_set(coarseEntity);
   for (; coarseBaseFunc < numInnerCorrectors; ++coarseBaseFunc)
   {
-    const auto& fu = coarse_space_.base_function_set(coarseEntity);
-    EvaluationType eval(fu, local_diffusion_operator_, coarseBaseFunc);
+    assert(allLocalRHS[coarseBaseFunc]);
+    EvaluationType eval(coarseBaseFunctionSet, local_diffusion_operator_, coarseBaseFunc);
     GDT::LocalFunctional::Codim0Integral<EvaluationType> local_rhs_functional(eval);
     auto& rhs_vector = allLocalRHS[coarseBaseFunc]->vector();
     rhs_functionals[coarseBaseFunc] = DSC::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector,
