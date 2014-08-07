@@ -49,13 +49,13 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   assert(msfem_solution_ || fem_solution_);
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 
-  const size_t over_integrate = 0; // <- would let the product use a higher quadrature oder than needed
+  const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
 
   typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType > DifferenceType;
-  /// TODO this should actually select the space from either non-null solution, once msfem is gdt too
-  /// also only call assemble once
-  GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(fem_solution_->space());
-  const auto& grid_view = fem_solution_->space().grid_view();
+  /// TODO only call assemble once
+  auto& space = fem_solution_ ? fem_solution_->space() : msfem_solution_->space();
+  GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(space);
+  const auto& grid_view = space.grid_view();
 
   std::map<std::string, double> csv;
 
