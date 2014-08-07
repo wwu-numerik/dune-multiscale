@@ -100,6 +100,7 @@ public:
                 Dune::DynamicVector< R >& ret) const
   {
     typedef Dune::FieldVector< R, 1 > RangeType;
+
     // evaluate local function
     const auto& entity = testBase.entity();
     const auto global_point = entity.geometry().global(localPoint);
@@ -107,20 +108,20 @@ public:
     const auto quadInCoarseLocal = coarse_entity.geometry().local(global_point);
     const auto coarseBaseFuncJacs = coarse_base_set_.jacobian(quadInCoarseLocal);
     const auto direction = coarseBaseFuncJacs[coarseBaseFunc_];
-    DMP::DiffusionBase::RangeType functionValue;
-    localFunction.evaluate(localPoint, functionValue);
-    functionValue[0][0] = functionValue[0][0] * direction[0][0];
-    functionValue[0][1] = functionValue[1][1] * direction[0][1];
+    DMP::DiffusionBase::RangeType diffMatrix;
+    localFunction.evaluate(localPoint, diffMatrix);
+    Dune::FieldVector< R, rL > ansatz;
+    diffMatrix.mv(direction[0], ansatz);
     // evaluate test base
     const std::size_t size = testBase.size();
     std::vector< RangeType > testValues = testBase.evaluate(localPoint);
     // compute product
     assert(ret.size() >= size);
+    assert(testValues.size() >= size);
 
+    //! \TODO WTF muss hier eigentlich hin
     for (size_t ii = 0; ii < size; ++ii) {
-      auto fo = functionValue[0];
-      fo *=testValues[ii][0];
-      ret[ii] =  fo[ii];
+      ret[ii] = ansatz[0] * testValues[ii];
     }
   }
 
