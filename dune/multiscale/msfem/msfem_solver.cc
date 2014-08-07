@@ -38,7 +38,7 @@
 #include <dune/gdt/operators/projections.hh>
 
 
-#include "localsolution_proxy.hh"
+#include <dune/multiscale/msfem/localsolution_proxy.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -100,7 +100,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       // ie set all dofs not "covered" by the coarse cell to 0
       if (DSC_CONFIG_GET("msfem.oversampling_layers", 0)) {
         for (auto& local_entity : DSC::viewRange(*localSolManager.space().grid_view())) {
-          DUNE_THROW(NotImplemented, "lg points in gdt?");
           const auto& lg_points = localSolManager.space().lagrange_points(local_entity);
           const auto& reference_element = DSG::reference_element(coarse_entity);
           const auto& coarse_geometry = coarse_entity.geometry();

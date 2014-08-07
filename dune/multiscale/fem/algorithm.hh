@@ -5,7 +5,7 @@
 #ifndef DUNE_FEM_ALGORITHM_HH
 #define DUNE_FEM_ALGORITHM_HH
 
-#include <dune/stuff/grid/partview.hh>
+#include <dune/stuff/grid/layers.hh>
 #include <dune/stuff/la/container.hh>
 
 #include <dune/gdt/spaces/interface.hh>
