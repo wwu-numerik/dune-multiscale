@@ -110,18 +110,21 @@ public:
     const auto direction = coarseBaseFuncJacs[coarseBaseFunc_];
     DMP::DiffusionBase::RangeType diffMatrix;
     localFunction.evaluate(localPoint, diffMatrix);
-    Dune::FieldVector< R, rL > ansatz;
-    diffMatrix.mv(direction[0], ansatz);
+
+    Dune::FieldVector< R, rL > flux;
+    diffMatrix.mv(direction[0], flux);
     // evaluate test base
     const std::size_t size = testBase.size();
-    std::vector< RangeType > testValues = testBase.evaluate(localPoint);
+    typedef  typename Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >::JacobianRangeType JR;
+    const std::vector< JR > grad_phi_s = testBase.jacobian(localPoint);
     // compute product
     assert(ret.size() >= size);
-    assert(testValues.size() >= size);
+    assert(grad_phi_s.size() >= size);
 
     //! \TODO WTF muss hier eigentlich hin
     for (size_t ii = 0; ii < size; ++ii) {
-      ret[ii] = ansatz[0] * testValues[ii];
+      // grad_phi_s[ii] is FieldMatrix<double, 1, 2> --> grad_phi_s[ii][0] is FieldVector<double,2>
+      ret[ii] = flux * grad_phi_s[ii][0];
     }
   }
 
