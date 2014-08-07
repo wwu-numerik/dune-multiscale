@@ -61,7 +61,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 
 //! \TODO docme
 void data_output(const CommonTraits::GridViewType &gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& /*coarseSpace*/) {
+                 const CommonTraits::DiscreteFunctionSpaceType& coarseSpace) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
 
@@ -71,15 +71,8 @@ void data_output(const CommonTraits::GridViewType &gridPart,
     u->visualize(gridPart, outputparam.fullpath(u->name()));
   }
 
-  //! \todo re-enable
-//  CommonTraits::DiscreteFunctionType coarse_grid_visualization("Visualization of the coarse grid",
-//                                                               coarseSpace);
-//  coarse_grid_visualization.clear();
-//  OutputTraits::IOTupleType coarse_grid_series(&coarse_grid_visualization);
-//  const std::string coarse_grid_name("coarse_grid_visualization_");
-//  outputparam.set_prefix(coarse_grid_name);
-//  OutputTraits::DataOutputType(coarseSpace.grid_view().grid(), coarse_grid_series, outputparam)
-//      .writeData(1.0 /*dummy*/, coarse_grid_name);
+  CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
+  coarse_grid_visualization.visualize(outputparam.fullpath(coarse_grid_visualization.name()));
 }
 
 //! algorithm
