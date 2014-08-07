@@ -52,7 +52,7 @@ public:
 std::pair<std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>,
           std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>>
 Dune::Multiscale::make_grids() {
-  BOOST_ASSERT_MSG(DSC_CONFIG.hasSub("grids"), "Parameter tree needs to have 'grids' subtree!");
+  BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   
   const DSC::ExtendedParameterTree gridParameterTree(DSC_CONFIG.sub("grids"));
   const int dim_world = CommonTraits::GridType::dimensionworld;

@@ -27,7 +27,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
-  BOOST_ASSERT_MSG(DSC_CONFIG.hasSub("grids"), "Parameter tree needs to have 'grids' subtree!");
+  BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   const int dim_world = LocalGridType::dimensionworld;
 
   const DSC::ExtendedParameterTree gridParameterTree(DSC_CONFIG.sub("grids"));

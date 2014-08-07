@@ -47,7 +47,7 @@ const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo()
 
 ParameterTree ModelProblemData::boundary_settings() const {
   Dune::ParameterTree boundarySettings;
-  if (DSC_CONFIG.hasSub("problem.boundaryInfo")) {
+  if (DSC_CONFIG.has_sub("problem.boundaryInfo")) {
     boundarySettings = DSC_CONFIG.sub("problem.boundaryInfo");
   } else {
     boundarySettings["default"] = "dirichlet";

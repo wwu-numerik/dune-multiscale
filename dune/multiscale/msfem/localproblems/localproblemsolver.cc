@@ -42,7 +42,7 @@ public:
 };
 
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
-  : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + "/local_problems/") {}
+  : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + std::string("/local_problems/")) {}
 
 LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
                                        LocalGridList& subgrid_list,
