@@ -12,16 +12,6 @@ namespace Multiscale {
 template <class DiscreteFunctionSpaceType>
 struct BackendChooser {
 
-  //! \todo gdt base
-//  static_assert(std::is_base_of<GDT::Spaces::ContinuousLagrangeBase<
-//                , GridPartImp::dimension, RangeFieldImp, 1, 1 >
-//                                DiscreteFunctionSpaceType>::value, "");
-
-  typedef DS::LocalizableFunctionInterface< typename DiscreteFunctionSpaceType::EntityType,
-                                                  typename DiscreteFunctionSpaceType::DomainFieldType, DiscreteFunctionSpaceType::dimDomain,
-                                                  typename DiscreteFunctionSpaceType::RangeFieldType, DiscreteFunctionSpaceType::dimRange,
-     DiscreteFunctionSpaceType::dimRangeCols > DiscreteFunctionBaseType;
-
   typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
     Stuff::LA::ChooseBackend::istl_sparse >::VectorType DiscreteFunctionDataType;
   typedef DiscreteFunctionDataType GdtVectorType;
