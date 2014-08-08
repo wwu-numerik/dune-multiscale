@@ -15,13 +15,22 @@
 #include <dune/stuff/grid/information.hh>
 #include <dune/stuff/common/parameter/configcontainer.hh>
 
+#include <unordered_set>
+#include <dune/multiscale/msfem/msfem_solver.hh>
+#include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
+#include <dune/multiscale/msfem/localsolution_proxy.hh>
+#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/common/grid_creation.hh>
+#include <dune/stuff/common/float_cmp.hh>
+#include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/stuff/common/parameter/configcontainer.hh>
 
 #include <boost/filesystem.hpp>
 
 
 using namespace Dune::Stuff::Common;
 using namespace Dune::Multiscale;
+using namespace Dune::Multiscale::MsFEM;
 using namespace std;
 
 
@@ -52,6 +61,26 @@ public:
 
 protected:
  decltype(make_grids()) grids_;
+};
+
+
+struct GridAndSpaces : public GridTestBase {
+public:
+
+ GridAndSpaces()
+   : GridTestBase()
+   , coarse_grid_provider(grids_.first)
+   , fine_grid_provider(grids_.second)
+   , coarseSpace(CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level))
+   , fineSpace(CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level))
+ {}
+
+
+protected:
+  CommonTraits::GridProviderType coarse_grid_provider;
+  CommonTraits::GridProviderType fine_grid_provider;
+  const CommonTraits::GdtSpaceType coarseSpace;
+  const CommonTraits::GdtSpaceType fineSpace;
 };
 
 static const map<string, string> p_small = {{"grids.macro_cells_per_dim", "[4;4;4]"}
