@@ -25,7 +25,6 @@ struct ModelProblemData : public IModelProblemData {
 
   std::string getMacroGridFile() const;
   bool problemIsPeriodic() const;
-  bool problemAllowsStochastics() const;
 };
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {

@@ -27,8 +27,6 @@ std::string ModelProblemData::getMacroGridFile() const {
 
 bool ModelProblemData::problemIsPeriodic() const { return false; }
 
-bool ModelProblemData::problemAllowsStochastics() const { return false; }
-
 void FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
