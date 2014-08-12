@@ -126,7 +126,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 
-  coarseBaseFunc++; // coarseBaseFunc == numInnerCorrectors
+  coarseBaseFunc; // coarseBaseFunc == numInnerCorrectors
   //neumann correktor
   typedef typename CommonTraits::NeumannDataType::template Transfer<MsFEMTraits::LocalEntityType>::Type LocalNeumannType;
 //  LocalNeumannType local_neumann()
@@ -138,14 +138,16 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
   coarseBaseFunc++;// coarseBaseFunc == 1 + numInnerCorrectors
   //dirichlet correktor
-  {
-//    const auto dirichletLF = dirichletExtension.local_function(entity);
-//    dirichletLF.jacobian(local_point, dirichletJac);
-//    diffusion_operator_.diffusiveFlux(global_point, dirichletJac, diffusion);
-//    for (unsigned int i = 0; i < numBaseFunctions; ++i) {
-//      rhsLocalFunction[i] -= weight * (diffusion[0] * gradient_phi[i][0]);
-//    }
-  }
+  typedef DirichletProduct<LocalDiffusionType> DirichletEvaluationType;
+  typedef GDT::Functionals::L2Volume< LocalDiffusionType, CommonTraits::GdtVectorType,
+      MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
+      DirichletEvaluationType > DirichletCorrectorFunctionalType;
+  DirichletEvaluationType eval(dirichletExtension, local_diffusion_operator_);
+  GDT::LocalFunctional::Codim0Integral<DirichletEvaluationType> dl_corrector_functional(eval);
+  auto& dl_vector = allLocalRHS[coarseBaseFunc]->vector();
+  DirichletCorrectorFunctionalType dl_func(local_diffusion_operator_, dl_vector,
+                                           localSpace_, dl_corrector_functional);
+  system_assembler_.add(dl_func);
 
   //dirichlet-0 for all rhs
   typedef GDT::ApplyOn::BoundaryEntities< MsFEMTraits::LocalGridViewType > OnLocalBoundaryEntities;
