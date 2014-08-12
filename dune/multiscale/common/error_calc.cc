@@ -154,7 +154,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   }
 
   std::unique_ptr<boost::filesystem::ofstream> csvfile(
-      DSC::make_ofstream(DSC_CONFIG_GET("global.datadir", "data") + std::string("/errors.csv")));
+      DSC::make_ofstream(std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/errors.csv")));
   const std::string sep(",");
   for (const auto& key_val : csv) {
     *csvfile << key_val.first << sep;
