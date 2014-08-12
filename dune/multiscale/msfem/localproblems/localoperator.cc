@@ -126,8 +126,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 
-  coarseBaseFunc; // coarseBaseFunc == numInnerCorrectors
-  //neumann correktor
+  // coarseBaseFunc == numInnerCorrectors
+  //neumann corrector
   typedef typename CommonTraits::NeumannDataType::template Transfer<MsFEMTraits::LocalEntityType>::Type LocalNeumannType;
 //  LocalNeumannType local_neumann()
   GDT::Functionals::L2Face< LocalNeumannType, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType >
@@ -137,7 +137,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
 
   coarseBaseFunc++;// coarseBaseFunc == 1 + numInnerCorrectors
-  //dirichlet correktor
+  //dirichlet corrector
   typedef DirichletProduct<LocalDiffusionType> DirichletEvaluationType;
   typedef GDT::Functionals::L2Volume< LocalDiffusionType, CommonTraits::GdtVectorType,
       MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
