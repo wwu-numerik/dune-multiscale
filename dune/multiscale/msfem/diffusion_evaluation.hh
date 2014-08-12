@@ -124,7 +124,7 @@ public:
     //! \TODO WTF muss hier eigentlich hin
     for (size_t ii = 0; ii < size; ++ii) {
       // grad_phi_s[ii] is FieldMatrix<double, 1, 2> --> grad_phi_s[ii][0] is FieldVector<double,2>
-      ret[ii] = flux * grad_phi_s[ii][0];
+      ret[ii] = -1 * (flux * grad_phi_s[ii][0]);
     }
   }
 
@@ -247,7 +247,7 @@ public:
     //! \TODO WTF muss hier eigentlich hin
     for (size_t ii = 0; ii < size; ++ii) {
       // grad_phi_s[ii] is FieldMatrix<double, 1, 2> --> grad_phi_s[ii][0] is FieldVector<double,2>
-      ret[ii] = flux * grad_phi_s[ii][0];
+      ret[ii] = -1 * (flux * grad_phi_s[ii][0]);
     }
   }
 
