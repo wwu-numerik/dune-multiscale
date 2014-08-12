@@ -30,10 +30,6 @@ name = "Nine"
 # characteristic size of the micro structure
 epsilon = 0.05
 
-# (note that not every model problem allows stochastic perturbations)
-stochastic_pertubation = 0
-# if stochastic perturbation is activated, what is the stochastic variance?
-stochastic_variance = 0.01
 
 [logging]
 # LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
@@ -53,16 +49,4 @@ fem.threads.partitioningmethod = recursive
 [threading]
 max_count = 1
 
-[hmm]
-error_tolerance = 1e-8
-# do we have a precomputed reference solution?
-reference_solution = 0
-# TODO: works only for HMM! MsFEM Variante noch nicht implementiert!
 
-# file where the reference solution is stored
-# (momentan ausgehend Pfad 'global.datadir')
-rs_file = ../../../../dune/multiscale/problems/elliptic_problems/three/fem_eps_0.05_refLevel_16
-
-# a saved/precomputed solution located at 'rs_file' is must be computed with the following refinement level:
-#   (grid refinement level for which the reference was computed)
-rs_grid_level = 16

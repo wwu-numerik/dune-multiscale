@@ -194,9 +194,6 @@ public:
   //! this method is only relevant if you want to use a standard homogenizer
   virtual bool problemIsPeriodic() const = 0;
 
-  //! does the problem allow a stochastic perturbation of the coefficients?
-  virtual bool problemAllowsStochastics() const = 0;
-
   //! does the problem implement an exact solution?
   virtual bool hasExactSolution() const { return false; }
 
