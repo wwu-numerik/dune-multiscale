@@ -117,7 +117,7 @@ void LocalProblemSolver::solve_for_all_cells() {
     }
 
   // number of coarse grid entities (of codim 0).
-const auto& grid = coarse_space_.grid_view()->grid();
+  const auto& grid = coarse_space_.grid_view()->grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
   if (grid.comm().size() > 0)
