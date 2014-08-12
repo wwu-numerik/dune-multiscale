@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     // write output on rank zero
     if (comm.rank() == 0) {
       std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(
-          DSC::make_ofstream(DSC_CONFIG_GET("global.datadir", "data") + std::string("/memory.csv")));
+          DSC::make_ofstream(std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/memory.csv")));
       *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                       << "," << meanPeakMemConsumption << std::endl;
     }
