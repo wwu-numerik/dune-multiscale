@@ -24,7 +24,6 @@ struct ModelProblemData : public IModelProblemData {
   ModelProblemData();
 
   std::string getMacroGridFile() const;
-  bool problemIsPeriodic() const;
 };
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {

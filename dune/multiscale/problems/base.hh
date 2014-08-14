@@ -190,10 +190,6 @@ public:
    */
   virtual std::string getMacroGridFile() const = 0;
 
-  //! are the coefficients periodic? (e.g. A=A(x/eps))
-  //! this method is only relevant if you want to use a standard homogenizer
-  virtual bool problemIsPeriodic() const = 0;
-
   //! does the problem implement an exact solution?
   virtual bool hasExactSolution() const { return false; }
 

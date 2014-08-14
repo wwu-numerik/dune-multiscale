@@ -41,8 +41,6 @@ struct ModelProblemData : public IModelProblemData {
   ModelProblemData();
 
   std::string getMacroGridFile() const;
-  bool problemIsPeriodic() const;
-  bool problemAllowsStochastics() const;
   const BoundaryInfoType& boundaryInfo() const;
   const SubBoundaryInfoType& subBoundaryInfo() const;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
@@ -72,6 +70,7 @@ public:
   //! HMM-only
   PURE  void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
                              const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
+  virtual size_t order() const;
 };
 
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {

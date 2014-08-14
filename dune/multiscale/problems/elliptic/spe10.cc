@@ -27,10 +27,6 @@ std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/spe10.dgf");
 }
 
-bool ModelProblemData::problemIsPeriodic() const { return false; }
-
-bool ModelProblemData::problemAllowsStochastics() const { return false; }
-
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType>
 ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);

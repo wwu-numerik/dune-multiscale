@@ -27,8 +27,6 @@ struct ModelProblemData : public IModelProblemData {
   ModelProblemData();
 
   std::string getMacroGridFile() const;
-  bool problemIsPeriodic() const;
-  bool problemAllowsStochastics() const;
   const BoundaryInfoType& boundaryInfo() const;
   const SubBoundaryInfoType& subBoundaryInfo() const;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
