@@ -16,8 +16,8 @@ namespace MsFEM {
 
 class LocalProblemOperator {
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
-  typedef CommonTraits::DiffusionType DiffusionOperatorType;
-  typedef CommonTraits::NeumannBCType NeumannBoundaryType;
+  typedef Problem::DiffusionBase DiffusionOperatorType;
+  typedef Problem::NeumannBCType NeumannBoundaryType;
 
   static const int faceCodim = 1;
 
@@ -31,8 +31,8 @@ class LocalProblemOperator {
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
   typedef CommonTraits::DiscreteFunctionSpaceType CoarseSpaceType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-  typedef CommonTraits::DiffusionType::template Transfer<LocalEntityType>::Type LocalDiffusionType;
-  typedef GDT::Operators::EllipticCG< LocalDiffusionType,
+
+  typedef GDT::Operators::EllipticCG< Problem::LocalDiffusionType,
     LocalLinearOperatorType, LocalGridDiscreteFunctionSpaceType > EllipticOperatorType;
   typedef GDT::Constraints::Dirichlet < typename MsFEMTraits::LocalGridViewType::Intersection, CommonTraits::RangeFieldType >
     ConstraintsType;
@@ -68,7 +68,7 @@ private:
 
   const LocalGridDiscreteFunctionSpaceType& localSpace_;
   const DiffusionOperatorType& diffusion_operator_;
-  const LocalDiffusionType local_diffusion_operator_;
+  const Problem::LocalDiffusionType local_diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
   GDT::SystemAssembler<LocalGridDiscreteFunctionSpaceType> system_assembler_;

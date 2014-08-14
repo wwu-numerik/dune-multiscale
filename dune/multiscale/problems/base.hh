@@ -15,8 +15,6 @@
 #include <memory>
 #include <string>
 
-#include "config.h"
-
 namespace Dune {
 namespace Multiscale {
 namespace Problem {
@@ -24,6 +22,14 @@ namespace Problem {
 typedef CommonTraits::DomainType DomainType;
 typedef CommonTraits::RangeType RangeType;
 typedef CommonTraits::JacobianRangeType JacobianRangeType;
+//! type of first source term (right hand side of differential equation or type of 'f')
+typedef CommonTraits::FunctionBaseType SourceType;
+//! type of inhomogeneous Dirichlet boundary condition
+typedef CommonTraits::FunctionBaseType DirichletBCType;
+//! type of inhomogeneous Neumann boundary condition
+typedef CommonTraits::FunctionBaseType NeumannBCType;
+//! type of exact solution (in general unknown)
+typedef CommonTraits::FunctionBaseType ExactSolutionType;
 
 struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
 
@@ -45,8 +51,10 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
   //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
   virtual void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
                                      const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
-  virtual size_t order() const { return 3; }
+  virtual size_t order() const { return 2; }
 };
+
+typedef DiffusionBase::template Transfer<MsFEM::MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
 
 struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 

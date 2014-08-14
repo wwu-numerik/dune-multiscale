@@ -45,7 +45,7 @@ void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager, cons
   // check matrix and tmp storage
   const size_t rows = testBase.size();
   const size_t cols = ansatzBase.size();
-  Dune::Stuff::Common::clear(ret);
+  ret *= 0.0;
   assert(ret.rows() >= rows);
   assert(ret.cols() >= cols);
   assert(tmpLocalMatrices.size() >= numTmpObjectsRequired_);
@@ -137,7 +137,7 @@ void MsFemCodim0Matrix::assembleLocal(const CommonTraits::GdtSpaceType &testSpac
       continue;
 
     auto& localMatrix = tmpLocalMatricesContainer[0][0];
-    Dune::Stuff::Common::clear(localMatrix);
+    localMatrix *= 0.0;
     auto& tmpOperatorMatrices = tmpLocalMatricesContainer[1];
     // apply local operator (result is in localMatrix)
     localOperator_.apply(localSolutionManager, localGridEntity,

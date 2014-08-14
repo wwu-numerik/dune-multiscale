@@ -46,7 +46,7 @@ LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
 
 LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
                                        LocalGridList& subgrid_list,
-                                       const CommonTraits::DiffusionType& diffusion_operator)
+                                       const Problem::DiffusionBase& diffusion_operator)
   : diffusion_(diffusion_operator)
   , subgrid_list_(subgrid_list)
   , coarse_space_(coarse_space) {}

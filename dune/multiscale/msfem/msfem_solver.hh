@@ -13,11 +13,16 @@
 #include <dune/stuff/fem/functions/checks.hh>
 
 #include <dune/multiscale/common/la_backend.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 
 namespace Dune {
 namespace Multiscale {
+
+namespace Problem {
+struct DiffusionBase;
+}
 namespace MsFEM {
+
+class LocalGridList;
 
 //! \TODO needs a better name
 class Elliptic_MsFEM_Solver {
@@ -43,7 +48,7 @@ public:
    homogenous Dirchilet boundary condition!:
    **/
   void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-             const CommonTraits::DiffusionType& diffusion_op,
+             const Problem::DiffusionBase& diffusion_op,
              DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
              DiscreteFunctionType& solution) const;
 };

@@ -36,7 +36,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   }
 }
 
-void print_info(const CommonTraits::ModelProblemDataType& info, std::ostream& out) {
+void print_info(const Problem::IModelProblemData &info, std::ostream& out) {
   // epsilon is specified in the parameter file
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
   const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);

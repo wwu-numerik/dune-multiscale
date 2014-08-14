@@ -88,33 +88,33 @@ const Problem::BasePtr& Dune::Multiscale::Problem::getExactSolution() {
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const CommonTraits::ModelProblemDataType>& Dune::Multiscale::Problem::getModelData() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::ModelProblemDataType>, ModelProblemData);
+const std::unique_ptr<const Problem::IModelProblemData> &Dune::Multiscale::Problem::getModelData() {
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::IModelProblemData>, ModelProblemData);
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const CommonTraits::DiffusionType>& Dune::Multiscale::Problem::getDiffusion() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::DiffusionType>, Diffusion);
+const std::unique_ptr<const Problem::DiffusionBase> &Dune::Multiscale::Problem::getDiffusion() {
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::DiffusionBase>, Diffusion);
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const CommonTraits::DirichletDataType>& Dune::Multiscale::Problem::getDirichletData() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::DirichletDataType>, DirichletData);
+const std::unique_ptr<const Problem::DirichletDataBase>& Dune::Multiscale::Problem::getDirichletData() {
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::DirichletDataBase>, DirichletData);
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const CommonTraits::NeumannDataType>& Dune::Multiscale::Problem::getNeumannData() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::NeumannDataType>, NeumannData);
+const std::unique_ptr<const Problem::NeumannDataBase> &Dune::Multiscale::Problem::getNeumannData() {
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::NeumannDataBase>, NeumannData);
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const CommonTraits::DirichletBCType>& Dune::Multiscale::Problem::getDirichletBC() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::DirichletBCType>, DirichletBoundaryCondition);
+const std::unique_ptr<const Problem::DirichletBCType>& Dune::Multiscale::Problem::getDirichletBC() {
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::DirichletBCType>, DirichletBoundaryCondition);
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const CommonTraits::NeumannBCType>& Dune::Multiscale::Problem::getNeumannBC() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const CommonTraits::NeumannBCType>, NeumannBoundaryCondition);
+const std::unique_ptr<const Problem::NeumannBCType>& Dune::Multiscale::Problem::getNeumannBC() {
+  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::NeumannBCType>, NeumannBoundaryCondition);
   return find_and_call_item(funcs);
 }
 
