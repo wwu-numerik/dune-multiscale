@@ -34,7 +34,7 @@ Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScale
 CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceType &src_spc, LocalGridList &localGridList)
   : OperatorBaseType(global_matrix_, src_spc)
   , AssemblerBaseType(src_spc)
-  , global_matrix_(src_spc.mapper().size(), src_spc.mapper().size(), CommonTraits::EllipticOperatorType::pattern(src_spc))
+  , global_matrix_(src_spc.mapper().size(), src_spc.mapper().size(), EllipticOperatorType::pattern(src_spc))
   , local_assembler_(local_operator_, localGridList)
 {
   this->add_codim0_assembler(local_assembler_, this->matrix());
@@ -73,7 +73,7 @@ const CoarseScaleOperator::MatrixType &CoarseScaleOperator::system_matrix() cons
 
 #if 0 //alter referenzcode
 CoarseScaleOperator::CoarseScaleOperator(const CoarseDiscreteFunctionSpace& coarseDiscreteFunctionSpace,
-                                         LocalGridList& subgrid_list, const CommonTraits::DiffusionType& diffusion_op)
+                                         LocalGridList& subgrid_list, const Problem::DiffusionBase& diffusion_op)
   : coarseDiscreteFunctionSpace_(coarseDiscreteFunctionSpace)
   , subgrid_list_(subgrid_list)
   , diffusion_operator_(diffusion_op)

@@ -12,11 +12,14 @@ namespace Multiscale {
 template <class DiscreteFunctionSpaceType>
 struct BackendChooser {
 
+//  static constexpr auto backend_type = Stuff::LA::ChooseBackend::eigen_sparse;
+  static constexpr auto backend_type = Stuff::LA::ChooseBackend::istl_sparse;
+
   typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
-    Stuff::LA::ChooseBackend::istl_sparse >::VectorType DiscreteFunctionDataType;
+    backend_type >::VectorType DiscreteFunctionDataType;
   typedef DiscreteFunctionDataType GdtVectorType;
   typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
-    Stuff::LA::ChooseBackend::istl_sparse >::MatrixType LinearOperatorType;
+    backend_type >::MatrixType LinearOperatorType;
   typedef GDT::DiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType >      DiscreteFunctionType;
   typedef GDT::ConstDiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType > ConstDiscreteFunctionType;
   typedef Stuff::LA::Solver< LinearOperatorType, typename DiscreteFunctionSpaceType::CommunicatorType > InverseOperatorType;

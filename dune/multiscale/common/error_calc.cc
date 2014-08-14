@@ -51,7 +51,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
 
-  typedef Stuff::Functions::Difference< CommonTraits::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType > DifferenceType;
+  typedef Stuff::Functions::Difference< Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType > DifferenceType;
   /// TODO only call assemble once
   auto& space = fem_solution_ ? fem_solution_->space() : msfem_solution_->space();
   GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(space);
@@ -71,7 +71,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       ExactSpaceType;
       typedef BackendChooser<ExactSpaceType>::DiscreteFunctionType ExactDiscreteFunctionType;
       const int experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit = 6;
-      const Dune::Fem::GridFunctionAdapter<CommonTraits::ExactSolutionType, CommonTraits::GridPartType> u_disc_adapter(
+      const Dune::Fem::GridFunctionAdapter<Problem::ExactSolutionType, CommonTraits::GridPartType> u_disc_adapter(
           "", u, gridPart, experimentally_determined_maximum_order_for_GridFunctionAdapter_bullshit);
 
       const auto ana_error = DS::l2distance(u_disc_adapter, u_disc);

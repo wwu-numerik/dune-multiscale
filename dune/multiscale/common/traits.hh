@@ -12,7 +12,6 @@
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/operators/elliptic-cg.hh>
 #include <dune/stuff/la/container.hh>
-#include <dune/stuff/common/memory.hh>
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/functions/constant.hh>
@@ -77,26 +76,6 @@ struct CommonTraits {
   typedef Stuff::Functions::Constant< EntityType, FieldType, dimDomain, FieldType, dimRange > ConstantFunctionBaseType;
   typedef ConstantFunctionBaseType GdtConstantFunctionType;
 
-  typedef Problem::IModelProblemData ModelProblemDataType;
-  //! type of first source term (right hand side of differential equation or type of 'f')
-  typedef FunctionBaseType SourceType;
-
-  //! type of (possibly non-linear) diffusion term (i.e. 'A^{\epsilon}')
-  typedef Problem::DiffusionBase DiffusionType;
-  //! type of (possibly non-linear) lower order term F( x, u(x), grad u(x) )
-  typedef Problem::LowerOrderBase LowerOrderTermType;
-  //! type of inhomogeneous Dirichlet boundary condition
-  typedef FunctionBaseType DirichletBCType;
-  //! type of inhomogeneous Neumann boundary condition
-  typedef FunctionBaseType NeumannBCType;
-  //! type of dirichlet data
-  typedef Problem::DirichletDataBase DirichletDataType;
-  //! type of neumann data
-  typedef Problem::NeumannDataBase NeumannDataType;
-
-  //! type of exact solution (in general unknown)
-  typedef FunctionBaseType ExactSolutionType;
-
   typedef DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
   typedef DiscreteFunctionSpaceType::DomainType DomainType;
   typedef DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
@@ -117,8 +96,6 @@ struct CommonTraits {
 
   static constexpr int polynomial_order = DiscreteFunctionSpaceType::polOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
-
-  typedef GDT::Operators::EllipticCG< DiffusionType, LinearOperatorType, GdtSpaceType > EllipticOperatorType;
 
 };
 

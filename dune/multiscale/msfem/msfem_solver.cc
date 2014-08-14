@@ -137,7 +137,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                  const CommonTraits::DiffusionType& diffusion_op,
+                                  const DMP::DiffusionBase &diffusion_op,
                                   DiscreteFunctionType& coarse_scale_part,
                                   DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
@@ -152,14 +152,14 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
   DiscreteFunctionType msfem_rhs(coarse_space, "MsFEM right hand side");
   msfem_rhs.vector() *= 0;
-  CoarseRhsFunctional<CommonTraits::DiffusionType, CommonTraits::GdtVectorType,CommonTraits::DiscreteFunctionSpaceType
+  CoarseRhsFunctional<Problem::DiffusionBase, CommonTraits::GdtVectorType,CommonTraits::DiscreteFunctionSpaceType
       > rhsAss(diffusion_op, msfem_rhs.vector(), coarse_space, subgrid_list);
 
   const auto& dirichlet = DMP::getDirichletData();
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
   CommonTraits::DiscreteFunctionType dirichlet_projection(coarse_space);
-  GDT::Operators::DirichletProjectionLocalizable< CommonTraits::GridViewType, CommonTraits::DirichletDataType, CommonTraits::DiscreteFunctionType >
+  GDT::Operators::DirichletProjectionLocalizable< CommonTraits::GridViewType, Problem::DirichletDataBase, CommonTraits::DiscreteFunctionType >
       dirichlet_projection_operator(*(coarse_space.grid_view()),
                                     boundary_info,
                                     *dirichlet,

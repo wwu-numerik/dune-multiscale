@@ -29,8 +29,8 @@ namespace Multiscale {
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType &space)
   : space_(space) {}
 
-void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
-                                const CommonTraits::SourceType& force,
+void Elliptic_FEM_Solver::apply(const Problem::DiffusionBase &diffusion,
+                                const Problem::SourceType& force,
                                 CommonTraits::DiscreteFunctionType &solution) const {
   DSC_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
 
@@ -44,20 +44,21 @@ void Elliptic_FEM_Solver::apply(const CommonTraits::DiffusionType& diffusion,
 
   const auto& space = space_;
 
-  // container
+  typedef GDT::Operators::EllipticCG< Problem::DiffusionBase, CommonTraits::LinearOperatorType,
+                                      CommonTraits::GdtSpaceType > EllipticOperatorType;
   CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
-                                                 CommonTraits::EllipticOperatorType::pattern(space));
+                                                 EllipticOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
   auto& solution_vector = solution.vector();
   // left hand side (elliptic operator)
-  CommonTraits::EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
+  EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
   // right hand side
-  GDT::Functionals::L2Volume< CommonTraits::SourceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType > force_functional(force, rhs_vector, space);
-  GDT::Functionals::L2Face< CommonTraits::NeumannDataType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
+  GDT::Functionals::L2Volume< Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType > force_functional(force, rhs_vector, space);
+  GDT::Functionals::L2Face< Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
       neumann_functional(*neumann, rhs_vector, space);
   // dirichlet boundary values
   CommonTraits::DiscreteFunctionType dirichlet_projection(space);
-  GDT::Operators::DirichletProjectionLocalizable< GridViewType, CommonTraits::DirichletDataType, CommonTraits::DiscreteFunctionType >
+  GDT::Operators::DirichletProjectionLocalizable< GridViewType, Problem::DirichletDataBase, CommonTraits::DiscreteFunctionType >
       dirichlet_projection_operator(*(space.grid_view()),
                                     boundary_info,
                                     *dirichlet,

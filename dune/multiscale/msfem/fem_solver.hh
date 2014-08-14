@@ -6,7 +6,7 @@
 #define MS_Elliptic_FEM_Solver_HH
 
 #include <dune/multiscale/common/traits.hh>
-#include <memory>
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -26,8 +26,8 @@ public:
   //! b --> advective part ('AdvectionTermType')
   //! c --> reaction part ('ReactionTermType')
   //! f --> 'first' source term, scalar ('SourceTermType')
-  void apply(const CommonTraits::DiffusionType& diffusion_op,
-             const CommonTraits::SourceType& f, CommonTraits::DiscreteFunctionType &solution) const;
+  void apply(const Problem::DiffusionBase& diffusion_op,
+             const Problem::SourceType& f, CommonTraits::DiscreteFunctionType &solution) const;
 };
 
 } // namespace Multiscale

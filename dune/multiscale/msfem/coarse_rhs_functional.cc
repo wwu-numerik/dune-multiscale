@@ -47,7 +47,7 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
   // check matrix and tmp storage
   const size_t numLocalBaseFunctions = testBase.size();
 
-  Dune::Stuff::Common::clear(ret);
+  ret *= 0.0;
   assert(tmpLocalVectors.size() >= numTmpObjectsRequired_);
 
   const auto numQuadraturePoints = volumeQuadrature.size();
@@ -144,7 +144,7 @@ void RhsCodim0Vector::assembleLocal(const CommonTraits::GdtSpaceType &testSpace,
 
     // get and clear vector
     auto& localVector = tmpLocalVectorContainer[0][0];
-    Dune::Stuff::Common::clear(localVector);
+    localVector *= 0.0;
     auto& tmpFunctionalVectors = tmpLocalVectorContainer[1];
     // apply local functional (result is in localVector)
     localFunctional_.apply(dirichletExtension, localSolutionManager, localGridEntity,
