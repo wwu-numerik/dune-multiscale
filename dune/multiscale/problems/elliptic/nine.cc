@@ -26,10 +26,6 @@ std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/msfem_cube_three.dgf");
 }
 
-bool ModelProblemData::problemIsPeriodic() const { return true; }
-
-bool ModelProblemData::problemAllowsStochastics() const { return false; }
-
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType>
 ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
@@ -123,7 +119,9 @@ PURE  void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::
   evaluate(x, eval);
   flux[0][0] = eval[0][0] * direction[0][0];
   flux[0][1] = eval[1][1] * direction[0][1];
-} // jacobianDiffusiveFlux
+}
+
+size_t Diffusion::order() const { return 5; }
 
 PURE HOT  void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   // approximation obtained by homogenized solution + first corrector
