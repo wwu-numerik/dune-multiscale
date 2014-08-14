@@ -140,7 +140,7 @@ set( COMMON_LIBS multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_
 include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
 set(ALL_MULTISCALE_LIBS multiscale_msfem multiscale_hmm ${COMMON_LIBS} )
 
-ADD_EXECUTABLE(elliptic_hmm src/elliptic_hmm.cc ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_hmm EXCLUDE_FROM_ALL src/elliptic_hmm.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_hmm multiscale_hmm ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_hmm)
 
