@@ -40,6 +40,7 @@
 #endif  /* DUNE_MULTISCALE_CONFIG_H */
 
 #ifndef HAVE_DUNE_MULTISCALE_STATIC_DATA
+#include <string>
 static const std::string st_testdata_directory = "${CMAKE_CURRENT_SOURCE_DIR}/dune/multiscale/test";
 static constexpr unsigned int st_lagrangespace_order = 1;
 #define HAVE_DUNE_MULTISCALE_STATIC_DATA
@@ -48,4 +49,5 @@ static constexpr unsigned int st_lagrangespace_order = 1;
 #if defined(ENABLE_PETSC) && not HAVE_MPI
 # error "you'll get weird errors in dune-fem with petsc enabled, but no mpi"
 #endif
+
 /* end dune-multiscale */
