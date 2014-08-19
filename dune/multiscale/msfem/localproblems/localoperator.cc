@@ -12,7 +12,7 @@
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/common/exceptions.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/fem/functions/integrals.hh>

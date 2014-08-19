@@ -13,7 +13,7 @@
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/math.hh>
 #include <dune/stuff/common/memory.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>

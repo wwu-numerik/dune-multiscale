@@ -3,7 +3,7 @@
 #include <dune/stuff/common/fixed_map.hh>
 #include <dune/stuff/common/string.hh>
 #include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/common/error_container.hh>

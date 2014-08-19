@@ -1,7 +1,7 @@
 #include <config.h>
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/memory.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 #include <functional>
 #include <unordered_map>
 #include <map>
