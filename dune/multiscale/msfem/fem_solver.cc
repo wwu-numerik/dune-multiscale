@@ -7,7 +7,7 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 
 #include <dune/gdt/spaces/continuouslagrange.hh>
 #include <dune/gdt/discretefunction/default.hh>

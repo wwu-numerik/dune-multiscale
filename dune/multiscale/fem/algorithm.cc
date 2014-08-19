@@ -21,7 +21,7 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
 #include <dune/stuff/la/container.hh>
 #include <dune/stuff/la/solver.hh>

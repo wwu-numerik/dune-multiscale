@@ -13,7 +13,7 @@
 #endif
 
 
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/parallel/threadmanager.hh>

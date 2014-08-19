@@ -20,7 +20,7 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/aliases.hh>

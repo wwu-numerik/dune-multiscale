@@ -13,7 +13,7 @@
 
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/information.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 
 #include <unordered_set>
 #include <dune/multiscale/msfem/msfem_solver.hh>
@@ -23,7 +23,7 @@
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/stuff/common/float_cmp.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 
 #include <boost/filesystem.hpp>
 

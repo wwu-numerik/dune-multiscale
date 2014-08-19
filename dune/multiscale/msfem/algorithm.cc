@@ -19,7 +19,7 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
 #include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
 #include <dune/stuff/grid/information.hh>

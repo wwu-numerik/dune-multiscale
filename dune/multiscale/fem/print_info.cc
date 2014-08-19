@@ -7,7 +7,7 @@
 
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/stuff/common/parameter/configcontainer.hh>
+#include <dune/stuff/common/configuration.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
