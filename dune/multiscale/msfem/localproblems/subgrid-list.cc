@@ -30,8 +30,9 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   const int dim_world = LocalGridType::dimensionworld;
 
-  const DSC::ExtendedParameterTree gridParameterTree(DSC_CONFIG.sub("grids"));
-  std::vector<int> micro_per_macro = gridParameterTree.getVector("micro_cells_per_macrocell_dim", 8, dim_world);
+  const auto gridParameterTree = DSC_CONFIG.sub("grids");
+  const auto micro_per_macro = gridParameterTree.get<CommonTraits::DomainType>("micro_cells_per_macrocell_dim",
+                                                                               8, dim_world);
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;

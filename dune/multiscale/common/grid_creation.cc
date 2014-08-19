@@ -54,7 +54,7 @@ std::pair<std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>,
 Dune::Multiscale::make_grids() {
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   
-  const DSC::ExtendedParameterTree gridParameterTree(DSC_CONFIG.sub("grids"));
+  const auto gridParameterTree = DSC_CONFIG.sub("grids");
   const int dim_world = CommonTraits::GridType::dimensionworld;
   typedef FieldVector<typename CommonTraits::GridType::ctype, dim_world> CoordType;
   const auto& gridCorners = Problem::getModelData()->gridCorners();
@@ -62,9 +62,9 @@ Dune::Multiscale::make_grids() {
   CoordType upperRight = gridCorners.second;
 
   const auto oversamplingLayers = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
-  std::vector<int> microPerMacro = gridParameterTree.getVector("micro_cells_per_macrocell_dim", 8, dim_world);
+  const auto microPerMacro = gridParameterTree.get<CoordType>("micro_cells_per_macrocell_dim", 8, dim_world);
 
-  const std::vector<int> coarse_cells = gridParameterTree.getVector("macro_cells_per_dim", 8, dim_world);
+  const auto coarse_cells = gridParameterTree.get<CoordType>("macro_cells_per_dim", 8, dim_world);
   array<unsigned int, dim_world> elements;
   array<unsigned int, dim_world> overCoarse;
   array<unsigned int, dim_world> overFine;
