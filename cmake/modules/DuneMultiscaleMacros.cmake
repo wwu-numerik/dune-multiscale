@@ -7,3 +7,5 @@ find_package(ParMETIS)
 include(cmake/modules/AddMETISFlags.cmake)
 include(AddParMETISFlags)
 include(CheckEmplace)
+
+find_package(Eigen3 REQUIRED)
