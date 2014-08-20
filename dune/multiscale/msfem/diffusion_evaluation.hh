@@ -91,7 +91,7 @@ public:
   }
 
   template< class E, class D, int d, class R, int rL, int rCL, int rT, int rCT >
-  void evaluate(const Stuff::LocalfunctionInterface< E, D, d, R, rL, rCL >& localFunction,
+  void evaluate(const Stuff::LocalfunctionInterface< E, D, d, R, rL, rCL >& /*localFunction*/,
                 const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
                 const Dune::FieldVector< D, d >& localPoint,
                 Dune::DynamicVector< R >& ret) const
@@ -103,9 +103,6 @@ public:
     const auto quadInCoarseLocal = coarse_entity.geometry().local(global_point);
     const auto coarseBaseFuncJacs = coarse_base_set_.jacobian(quadInCoarseLocal);
     const auto direction = coarseBaseFuncJacs[coarseBaseFunc_];
-
-    DMP::DiffusionBase::RangeType diffMatrix;
-    localFunction.evaluate(localPoint, diffMatrix);
 
     DMP::JacobianRangeType flux;
     DMP::getDiffusion()->diffusiveFlux(global_point, direction, flux);
@@ -211,7 +208,7 @@ public:
   }
 
   template< class E, class D, int d, class R, int rL, int rCL, int rT, int rCT >
-  void evaluate(const Stuff::LocalfunctionInterface< E, D, d, R, rL, rCL >& localFunction,
+  void evaluate(const Stuff::LocalfunctionInterface< E, D, d, R, rL, rCL >& /*localFunction*/,
                 const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase,
                 const Dune::FieldVector< D, d >& localPoint,
                 Dune::DynamicVector< R >& ret) const
@@ -220,9 +217,6 @@ public:
     const auto& entity = testBase.entity();
     const auto dirichlet_lf = dirichlet_extension_.local_function(entity);
     const auto direction = dirichlet_lf->jacobian(localPoint);
-
-    DMP::DiffusionBase::RangeType diffMatrix;
-    localFunction.evaluate(localPoint, diffMatrix);
 
     DMP::JacobianRangeType flux;
     const auto global_point = entity.geometry().global(localPoint);

@@ -32,7 +32,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
 
   const auto gridParameterTree = DSC_CONFIG.sub("grids");
   const auto micro_per_macro = gridParameterTree.get<CommonTraits::DomainType>("micro_cells_per_macrocell_dim",
-                                                                               8, dim_world);
+                                                                               CommonTraits::DomainType(8), dim_world);
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;
