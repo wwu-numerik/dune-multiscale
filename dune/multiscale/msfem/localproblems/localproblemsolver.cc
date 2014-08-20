@@ -90,7 +90,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
                       (*current_rhs.space().grid_view()).induced_norm(current_rhs);
     if (norm < 1e-12) {
       current_solution.vector() *= 0;
-      DSC_LOG_DEBUG << "Local MsFEM problem with solution zero." << std::endl;
+      DSC_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
       continue;
     }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
@@ -104,19 +104,6 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 }
 
 void LocalProblemSolver::solve_for_all_cells() {
-  static const int dimension = CommonTraits::GridType::dimension;
-
-  JacobianRangeType unitVectors[dimension];
-  for (int i = 0; i < dimension; ++i)
-    for (int j = 0; j < dimension; ++j) {
-      if (i == j) {
-        unitVectors[i][0][j] = 1.0;
-      } else {
-        unitVectors[i][0][j] = 0.0;
-      }
-    }
-
-  // number of coarse grid entities (of codim 0).
   const auto& grid = coarse_space_.grid_view()->grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 

@@ -45,22 +45,14 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
   , dirichletConstraints_(Problem::getModelData()->subBoundaryInfo(), space.mapper().maxNumDofs(), space.mapper().maxNumDofs())
 {
-  assemble_matrix();
-}
-
-void LocalProblemOperator::assemble_matrix()
-    // x_T is the barycenter of the macro grid element T
-{
   system_assembler_.add(elliptic_operator_);
-
-
-} // assemble_matrix
+}
 
 void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
                                                   MsFEMTraits::LocalSolutionVectorType& allLocalRHS) {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
 
-  //! @todo correct the error message below (+1 for simplecial, +2 for arbitrary), as there's no finespace any longer
+  //! @todo correct the error message below (+1 for simplicial, +2 for arbitrary), as there's no finespace any longer
   //  BOOST_ASSERT_MSG(
   //      (DSG::is_simplex_grid(coarse_space_) && allLocalRHS.size() == GridType::dimension + 1) ||
   //          (!(DSG::is_simplex_grid(coarse_space_)) &&
@@ -68,20 +60,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   //               static_cast<long long>(specifier.fineSpace().mapper().maxNumDofs() + 2)),
   //      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
   //      " and the dirichlet- and neuman corrector");
-
-  // build unit vectors (needed for cases where rhs is assembled for unit vectors instead of coarse
-  // base functions)
-  constexpr auto dimension = CommonTraits::GridType::dimension;
-  CommonTraits::JacobianRangeType unitVectors[dimension];
-  for (int i = 0; i < dimension; ++i) {
-    for (int j = 0; j < dimension; ++j) {
-      if (i == j) {
-        unitVectors[i][0][j] = 1.0;
-      } else {
-        unitVectors[i][0][j] = 0.0;
-      }
-    }
-  }
 
   LocalGridDiscreteFunctionType dirichletExtensionLocal(localSpace_, "dirichletExtension");
   CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
@@ -132,7 +110,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
                          allLocalRHS[coarseBaseFunc]->vector(), localSpace_);
   system_assembler_.add(neumann_functional);
 
-
   coarseBaseFunc++;// coarseBaseFunc == 1 + numInnerCorrectors
   //dirichlet corrector
   typedef DirichletProduct DirichletEvaluationType;
@@ -151,10 +128,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   system_assembler_.add(dirichletConstraints_, system_matrix_, new OnLocalBoundaryEntities());
   for (auto& rhs : allLocalRHS )
     system_assembler_.add(dirichletConstraints_, rhs->vector(), new OnLocalBoundaryEntities());
+
   system_assembler_.assemble();
-
-  //!*********** ende neu gdt
-
 }
 
 

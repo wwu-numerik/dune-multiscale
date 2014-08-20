@@ -57,15 +57,6 @@ public:
   void apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
 private:
-  /** Set the dirichlet values to a given discrete function on the sub mesh
-  *
-  * @param[in, out] function The function in which the values will be set.
-  */
-  void project_dirichlet_values(CommonTraits::DiscreteFunctionType& function) const;
-
-  //! assemble stiffness matrix for local problems
-  void assemble_matrix();
-
   const LocalGridDiscreteFunctionSpaceType& localSpace_;
   const DiffusionOperatorType& diffusion_operator_;
   const Problem::LocalDiffusionType local_diffusion_operator_;
