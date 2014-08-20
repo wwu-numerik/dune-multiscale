@@ -62,9 +62,9 @@ Dune::Multiscale::make_grids() {
   CoordType upperRight = gridCorners.second;
 
   const auto oversamplingLayers = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
-  const auto microPerMacro = gridParameterTree.get<CoordType>("micro_cells_per_macrocell_dim", 8, dim_world);
+  const auto microPerMacro = gridParameterTree.get<CoordType>("micro_cells_per_macrocell_dim", CoordType(8), dim_world);
 
-  const auto coarse_cells = gridParameterTree.get<CoordType>("macro_cells_per_dim", 8, dim_world);
+  const auto coarse_cells = gridParameterTree.get<CoordType>("macro_cells_per_dim", CoordType(8), dim_world);
   array<unsigned int, dim_world> elements;
   array<unsigned int, dim_world> overCoarse;
   array<unsigned int, dim_world> overFine;

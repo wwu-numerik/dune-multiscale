@@ -5,8 +5,8 @@ output_walltime = 1
 vtk_output = 1
 
 [grids]
-macro_cells_per_dim = [10;10;10]
-micro_cells_per_macrocell_dim = [10;10;10]
+macro_cells_per_dim = [16 16 10]
+micro_cells_per_macrocell_dim = [16 16 10]
 
 [msfem]
 # number of oversampling layers (layers of fine grid elements)
