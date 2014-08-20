@@ -54,7 +54,7 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
   virtual size_t order() const { return 2; }
 };
 
-typedef DiffusionBase::template Transfer<MsFEM::MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
+typedef DiffusionBase::Transfer<MsFEM::MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
 
 struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 
