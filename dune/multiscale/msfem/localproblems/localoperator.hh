@@ -35,7 +35,7 @@ class LocalProblemOperator {
   typedef GDT::Operators::EllipticCG< Problem::LocalDiffusionType,
     LocalLinearOperatorType, LocalGridDiscreteFunctionSpaceType > EllipticOperatorType;
   typedef GDT::Constraints::Dirichlet < typename MsFEMTraits::LocalGridViewType::Intersection, CommonTraits::RangeFieldType >
-    ConstraintsType;
+    DirichletConstraintsType;
   typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
 
 public:
@@ -74,8 +74,7 @@ private:
   GDT::SystemAssembler<LocalGridDiscreteFunctionSpaceType> system_assembler_;
   EllipticOperatorType elliptic_operator_;
   BoundaryInfoType boundaryInfo_;
-  ConstraintsType constraints_;
-  const MsFEMTraits::LocalConstantFunctionType dirichletZero_;
+  DirichletConstraintsType dirichletConstraints_;
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
 };
 

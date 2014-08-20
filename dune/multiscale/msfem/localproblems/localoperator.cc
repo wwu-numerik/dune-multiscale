@@ -43,9 +43,7 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
                    EllipticOperatorType::pattern(space))
   , system_assembler_(localSpace_)
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
-  , constraints_(Problem::getModelData()->subBoundaryInfo(), space.mapper().maxNumDofs(), space.mapper().maxNumDofs())
-  , dirichletZero_(0)
-
+  , dirichletConstraints_(Problem::getModelData()->subBoundaryInfo(), space.mapper().maxNumDofs(), space.mapper().maxNumDofs())
 {
   assemble_matrix();
 }
@@ -85,7 +83,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     }
   }
 
-  LocalGridDiscreteFunctionType dirichletExtension(localSpace_, "dirichletExtension");
+  LocalGridDiscreteFunctionType dirichletExtensionLocal(localSpace_, "dirichletExtension");
   CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
 
   GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarse_space_);
@@ -98,7 +96,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   global_system_assembler_.add(coarse_dirichlet_projection_operator, new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
   global_system_assembler_.assemble();
   GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(*localSpace_.grid_view());
-  projection.apply(dirichletExtensionCoarse, dirichletExtension);
+  projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
@@ -141,7 +139,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
       MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
       DirichletEvaluationType > DirichletCorrectorFunctionalType;
-  DirichletEvaluationType eval(dirichletExtension, local_diffusion_operator_);
+  DirichletEvaluationType eval(dirichletExtensionLocal, local_diffusion_operator_);
   GDT::LocalFunctional::Codim0Integral<DirichletEvaluationType> dl_corrector_functional(eval);
   auto& dl_vector = allLocalRHS[coarseBaseFunc]->vector();
   DirichletCorrectorFunctionalType dl_func(local_diffusion_operator_, dl_vector,
@@ -150,18 +148,9 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
   //dirichlet-0 for all rhs
   typedef GDT::ApplyOn::BoundaryEntities< MsFEMTraits::LocalGridViewType > OnLocalBoundaryEntities;
-  LocalGridDiscreteFunctionType dirichlet_projection(localSpace_);
-  GDT::Operators::DirichletProjectionLocalizable< MsFEMTraits::LocalGridViewType, MsFEMTraits::LocalConstantFunctionType,
-                                                  MsFEMTraits::LocalGridDiscreteFunctionType >
-      dirichlet_projection_operator(*(localSpace_.grid_view()),
-                                    allLocalDirichletInfo_,
-                                    dirichletZero_,
-                                    dirichlet_projection);
-  system_assembler_.add(dirichlet_projection_operator, new OnLocalBoundaryEntities());
-
-  system_assembler_.add(constraints_, system_matrix_, new OnLocalBoundaryEntities());
+  system_assembler_.add(dirichletConstraints_, system_matrix_, new OnLocalBoundaryEntities());
   for (auto& rhs : allLocalRHS )
-    system_assembler_.add(constraints_, rhs->vector(), new OnLocalBoundaryEntities());
+    system_assembler_.add(dirichletConstraints_, rhs->vector(), new OnLocalBoundaryEntities());
   system_assembler_.assemble();
 
   //!*********** ende neu gdt
