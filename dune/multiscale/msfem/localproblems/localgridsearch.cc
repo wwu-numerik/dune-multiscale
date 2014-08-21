@@ -62,12 +62,14 @@ bool Dune::Multiscale::MsFEM::LocalGridSearch::covers_strict(const CoarseGridSpa
 }
 
 
-Dune::Multiscale::MsFEM::LocalGridSearch::LocalGridSearch(const CoarseGridSpaceType &coarse_space, const Dune::Multiscale::MsFEM::LocalGridList &gridlist)
+Dune::Multiscale::MsFEM::LocalGridSearch::LocalGridSearch(const CoarseGridSpaceType &coarse_space,
+                                                          const Dune::Multiscale::MsFEM::LocalGridList &gridlist)
   : coarse_space_(coarse_space)
   , gridlist_(gridlist) {}
 
 
-const Dune::Multiscale::MsFEM::LocalGridSearch::CoarseEntityPointerType &Dune::Multiscale::MsFEM::LocalGridSearch::current_coarse_pointer() const {
+const Dune::Multiscale::MsFEM::LocalGridSearch::CoarseEntityPointerType&
+Dune::Multiscale::MsFEM::LocalGridSearch::current_coarse_pointer() const {
   assert(current_coarse_pointer_);
   return *current_coarse_pointer_;
 }
