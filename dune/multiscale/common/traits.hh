@@ -56,7 +56,14 @@ struct CommonTraits {
   typedef double FieldType;
 
   typedef DSG::Providers::ConstDefault<GridType> GridProviderType;
-  static constexpr auto gdt_backend_type = GDT::ChooseSpaceBackend::fem;
+
+  static constexpr auto gdt_backend_type =
+#if DUNE_MULTISCALE_WITH_DUNE_FEM
+      GDT::ChooseSpaceBackend::fem;
+#else
+      GDT::ChooseSpaceBackend::pdelab;
+#endif
+
   typedef GDT::Spaces::ContinuousLagrangeProvider<GridType, DSG::ChooseLayer::leaf,
                                                   gdt_backend_type, st_lagrangespace_order,
                                                   FieldType, dimRange > SpaceProviderType;
