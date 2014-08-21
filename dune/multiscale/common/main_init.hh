@@ -26,6 +26,9 @@ namespace Multiscale {
 //! setup code common to fem/msfem/hmm
 void init(int argc, char** argv) {
   namespace DSC = Dune::Stuff::Common;
+#if DUNE_MULTISCALE_WITH_DUNE_FEM
+  Dune::Fem::MPIManager::initialize(argc, argv);
+#endif
   auto& helper = Dune::MPIHelper::instance(argc, argv);
   if (helper.size() > 1 &&
       !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v)) {
