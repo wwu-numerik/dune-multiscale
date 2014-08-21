@@ -31,7 +31,12 @@ size_t MsFEMCodim0Integral::numTmpObjectsRequired() const
   return numTmpObjectsRequired_;
 }
 
-void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager, const MsFEMTraits::LocalEntityType &localGridEntity, const MsFEMCodim0Integral::TestLocalfunctionSetInterfaceType &testBase, const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType &ansatzBase, Dune::DynamicMatrix<CommonTraits::RangeFieldType> &ret, std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType> > &tmpLocalMatrices) const
+void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager,
+                                const MsFEMTraits::LocalEntityType &localGridEntity,
+                                const MsFEMCodim0Integral::TestLocalfunctionSetInterfaceType &testBase,
+                                const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType &ansatzBase,
+                                Dune::DynamicMatrix<CommonTraits::RangeFieldType> &ret,
+                                std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType> > &tmpLocalMatrices) const
 {
   auto& diffusion_operator = DMP::getDiffusion();
   const auto& coarse_scale_entity = ansatzBase.entity();
