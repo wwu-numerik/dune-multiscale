@@ -75,7 +75,7 @@ void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager,
   std::size_t localQuadraturePoint = 0;
   for (auto quadPointIt = volumeQuadrature.begin(); quadPointIt != quadPointEndIt; ++quadPointIt, ++localQuadraturePoint) {
     const auto x = quadPointIt->position();
-    const auto coarseBaseJacs_ = testBase.jacobian(x);
+    const auto coarseBaseJacs = testBase.jacobian(x);
     // integration factors
     const double integrationFactor = localGridEntity.geometry().integrationElement(x);
     const double quadratureWeight = quadPointIt->weight();
@@ -83,7 +83,6 @@ void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager,
 
     // compute integral
     for (size_t ii = 0; ii < rows; ++ii) {
-      auto& retRow = ret[ii];
       for (size_t jj = 0; jj < cols; ++jj) {
         RangeType local_integral(0.0);
 
@@ -92,14 +91,15 @@ void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager,
         const auto gradLocProbSoli = allLocalSolutionEvaluations[ii][localQuadraturePoint];
         const auto gradLocProbSolj = allLocalSolutionEvaluations[jj][localQuadraturePoint];
 
-        auto reconstructionGradPhii = coarseBaseJacs_[ii];
+        auto reconstructionGradPhii = coarseBaseJacs[ii];
         reconstructionGradPhii += gradLocProbSoli;
-        auto reconstructionGradPhij = coarseBaseJacs_[jj];
+        auto reconstructionGradPhij = coarseBaseJacs[jj];
         reconstructionGradPhij += gradLocProbSolj;
         JacobianRangeType diffusive_flux(0.0);
         diffusion_operator->diffusiveFlux(global_point_in_U_T, reconstructionGradPhii, diffusive_flux);
         local_integral += diffusive_flux[0] * reconstructionGradPhij[0];
-        retRow[jj] += local_integral * integrationFactor * quadratureWeight;
+        //! TODO check indexing. Correct wrt pre-gdt, but still
+        ret[jj][ii] += local_integral * integrationFactor * quadratureWeight;
       }
     } // compute integral
   } // loop over all quadrature points
@@ -120,7 +120,12 @@ std::vector<size_t> MsFemCodim0Matrix::numTmpObjectsRequired() const
   return { numTmpObjectsRequired_, localOperator_.numTmpObjectsRequired() };
 }
 
-void MsFemCodim0Matrix::assembleLocal(const CommonTraits::GdtSpaceType &testSpace, const CommonTraits::GdtSpaceType &ansatzSpace, const CommonTraits::EntityType &coarse_grid_entity, CommonTraits::LinearOperatorType &systemMatrix, std::vector<std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType> > > &tmpLocalMatricesContainer, std::vector<Dune::DynamicVector<size_t> > &tmpIndicesContainer) const
+void MsFemCodim0Matrix::assembleLocal(const CommonTraits::GdtSpaceType &testSpace,
+                                      const CommonTraits::GdtSpaceType &ansatzSpace,
+                                      const CommonTraits::EntityType &coarse_grid_entity,
+                                      CommonTraits::LinearOperatorType &systemMatrix,
+                                      std::vector<std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType> > > &tmpLocalMatricesContainer,
+                                      std::vector<Dune::DynamicVector<size_t> > &tmpIndicesContainer) const
 {
   // check
   assert(tmpLocalMatricesContainer.size() >= 1);
