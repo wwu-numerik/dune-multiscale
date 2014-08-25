@@ -6,7 +6,6 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
-#include <dune/stuff/common/parameter/tree.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
