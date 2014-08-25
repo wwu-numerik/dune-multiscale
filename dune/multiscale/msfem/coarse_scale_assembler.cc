@@ -46,7 +46,7 @@ void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager,
   typedef Dune::QuadratureRule<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureType;
   const size_t integrand_order = diffusion_operator->order() + ansatzBase.order() + testBase.order() + over_integrate_;
   assert(integrand_order < std::numeric_limits< int >::max());
-  const VolumeQuadratureType& volumeQuadrature = VolumeQuadratureRules::rule(coarse_scale_entity.type(), int(integrand_order));
+  const VolumeQuadratureType& volumeQuadrature = VolumeQuadratureRules::rule(localGridEntity.type(), int(integrand_order));
   // check matrix and tmp storage
   const size_t rows = testBase.size();
   const size_t cols = ansatzBase.size();
@@ -77,9 +77,9 @@ void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager,
     const auto x = quadPointIt->position();
     const auto coarseBaseJacs_ = testBase.jacobian(x);
     // integration factors
-    const double integrationFactor = coarse_scale_entity.geometry().integrationElement(x);
+    const double integrationFactor = localGridEntity.geometry().integrationElement(x);
     const double quadratureWeight = quadPointIt->weight();
-    const auto global_point_in_U_T = coarse_scale_entity.geometry().global(x);
+    const auto global_point_in_U_T = localGridEntity.geometry().global(x);
 
     // compute integral
     for (size_t ii = 0; ii < rows; ++ii) {
