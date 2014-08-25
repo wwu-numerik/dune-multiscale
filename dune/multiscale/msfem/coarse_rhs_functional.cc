@@ -120,7 +120,11 @@ std::vector<size_t> RhsCodim0Vector::numTmpObjectsRequired() const
   return { numTmpObjectsRequired_, localFunctional_.numTmpObjectsRequired() };
 }
 
-void RhsCodim0Vector::assembleLocal(const CommonTraits::GdtSpaceType &testSpace, const CommonTraits::EntityType &coarse_grid_entity, CommonTraits::GdtVectorType &systemVector, std::vector<std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType> > > &tmpLocalVectorContainer, Dune::DynamicVector<size_t> &tmpIndices) const
+void RhsCodim0Vector::assembleLocal(const CommonTraits::GdtSpaceType &testSpace,
+                                    const CommonTraits::EntityType &coarse_grid_entity,
+                                    CommonTraits::GdtVectorType &systemVector,
+                                    std::vector<std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType> > > &tmpLocalVectorContainer,
+                                    Dune::DynamicVector<size_t> &tmpIndices) const
 {
   // check
   assert(tmpLocalVectorContainer.size() >= 2);
@@ -159,6 +163,20 @@ void RhsCodim0Vector::assembleLocal(const CommonTraits::GdtSpaceType &testSpace,
       systemVector.add_to_entry(tmpIndices[ii], localVector[ii]);
     } // write local matrix to global
   }
+}
+
+CoarseRhsFunctional::CoarseRhsFunctional(const CoarseRhsFunctionalTraits::FunctionType &, CoarseRhsFunctional::VectorType &vec, const CoarseRhsFunctional::SpaceType &spc, LocalGridList &localGridList)
+  : FunctionalBaseType(vec, spc)
+  , AssemblerBaseType(spc)
+  , local_assembler_(local_functional_, localGridList)
+{
+  this->add_codim0_assembler(local_assembler_, this->vector());
+}
+
+
+void CoarseRhsFunctional::assemble()
+{
+  AssemblerBaseType::assemble();
 }
 
 } // namespace MsFEM {

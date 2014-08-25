@@ -152,8 +152,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
   DiscreteFunctionType msfem_rhs(coarse_space, "MsFEM right hand side");
   msfem_rhs.vector() *= 0;
-  CoarseRhsFunctional<Problem::DiffusionBase, CommonTraits::GdtVectorType,CommonTraits::DiscreteFunctionSpaceType
-      > rhsAss(diffusion_op, msfem_rhs.vector(), coarse_space, subgrid_list);
+  CoarseRhsFunctional rhsAss(diffusion_op, msfem_rhs.vector(), coarse_space, subgrid_list);
 
   const auto& dirichlet = DMP::getDirichletData();
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
