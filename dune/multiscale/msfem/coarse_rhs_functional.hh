@@ -7,6 +7,7 @@
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/problems/base.hh>
 
 #include <dune/gdt/functionals/base.hh>
 #include <dune/gdt/localfunctional/codim0.hh>
@@ -21,7 +22,6 @@ namespace MsFEM {
 class LocalGridList;
 class LocalSolutionManager;
 class RhsCodim0Integral;
-template< class FunctionType, class VectorImp, class SpaceImp, class GridViewImp = typename SpaceImp::GridViewType >
 class CoarseRhsFunctional;
 class RhsCodim0Vector;
 
@@ -105,9 +105,14 @@ private:
 }; // class RhsCodim0Vector
 
 
-template< class FunctionType, class VectorImp, class SpaceImp, class GridViewImp >
 class CoarseRhsFunctionalTraits
 {
+  typedef CommonTraits::GdtVectorType VectorImp;
+  typedef CommonTraits::DiscreteFunctionSpaceType SpaceImp;
+  typedef typename SpaceImp::GridViewType GridViewImp ;
+ public:
+  typedef Problem::DiffusionBase FunctionType;
+
   static_assert(std::is_base_of< Stuff::LocalizableFunctionInterface< typename FunctionType::EntityType
                                                                     , typename FunctionType::DomainFieldType
                                                                     , FunctionType::dimDomain
@@ -118,8 +123,9 @@ class CoarseRhsFunctionalTraits
                 "FunctionType has to be derived from Stuff::LocalizableFunctionInterface!");
   static_assert(std::is_base_of< GDT::SpaceInterface< typename SpaceImp::Traits >, SpaceImp >::value,
                 "SpaceImp has to be derived from SpaceInterface!");
-public:
-  typedef CoarseRhsFunctional< FunctionType, VectorImp, SpaceImp, GridViewImp> derived_type;
+
+  typedef GDT::SystemAssembler< SpaceImp, GridViewImp, SpaceImp > SystemAssemblerType;
+  typedef CoarseRhsFunctional derived_type;
   typedef VectorImp   VectorType;
   typedef SpaceImp    SpaceType;
   typedef GridViewImp GridViewType;
@@ -127,47 +133,31 @@ public:
 }; // class CoarseRhsFunctionalTraits
 
 
-template< class FunctionType, class VectorImp, class SpaceImp, class GridViewImp >
 class CoarseRhsFunctional
-  : public GDT::Functionals::VectorBased< CoarseRhsFunctionalTraits< FunctionType, VectorImp, SpaceImp, GridViewImp> >
-  , public GDT::SystemAssembler< SpaceImp, GridViewImp, SpaceImp >
+  : public GDT::Functionals::VectorBased< CoarseRhsFunctionalTraits >
+  , public CoarseRhsFunctionalTraits::SystemAssemblerType
 {
-  typedef GDT::Functionals::VectorBased< CoarseRhsFunctionalTraits< FunctionType, VectorImp, SpaceImp, GridViewImp> >
+  typedef GDT::Functionals::VectorBased< CoarseRhsFunctionalTraits >
       FunctionalBaseType;
-  typedef GDT::SystemAssembler< SpaceImp, GridViewImp, SpaceImp > AssemblerBaseType;
+  typedef CoarseRhsFunctionalTraits::SystemAssemblerType AssemblerBaseType;
 
   typedef RhsCodim0Integral LocalFunctionalType;
   typedef RhsCodim0Vector LocalAssemblerType;
 
 public:
-  typedef CoarseRhsFunctionalTraits< FunctionType, VectorImp, SpaceImp, GridViewImp > Traits;
+  typedef CoarseRhsFunctionalTraits Traits;
   typedef typename Traits::VectorType VectorType;
   typedef typename Traits::SpaceType  SpaceType;
   typedef typename Traits::GridViewType GridViewType;
 
 
-  CoarseRhsFunctional(const FunctionType& function, VectorType& vec, const SpaceType& spc, LocalGridList& localGridList)
-    : FunctionalBaseType(vec, spc)
-    , AssemblerBaseType(spc)
-    , function_(function)
-    , local_assembler_(local_functional_, localGridList)
-  {
-    setup();
-  }
+  CoarseRhsFunctional(const typename Traits::FunctionType& /*function*/, VectorType& vec,
+                      const SpaceType& spc, LocalGridList& localGridList);
 
 
-  virtual void assemble() DS_OVERRIDE DS_FINAL
-  {
-    AssemblerBaseType::assemble();
-  }
+  virtual void assemble() DS_OVERRIDE DS_FINAL;
 
 private:
-  void setup()
-  {
-    this->add_codim0_assembler(local_assembler_, this->vector());
-  }
-
-  const FunctionType& function_;
   const LocalFunctionalType local_functional_;
   const LocalAssemblerType local_assembler_;
 }; // class CoarseRhsFunctional
