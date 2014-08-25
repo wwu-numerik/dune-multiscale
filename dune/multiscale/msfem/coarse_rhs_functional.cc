@@ -43,7 +43,7 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
   typedef Dune::QuadratureRule<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureType;
   const size_t integrand_order = diffusion_operator->order() + testBase.order() + over_integrate_;
   assert(integrand_order < std::numeric_limits< int >::max());
-  const VolumeQuadratureType& volumeQuadrature = VolumeQuadratureRules::rule(coarse_scale_entity.type(), int(integrand_order));
+  const VolumeQuadratureType& volumeQuadrature = VolumeQuadratureRules::rule(localGridEntity.type(), int(integrand_order));
   // check matrix and tmp storage
   const size_t numLocalBaseFunctions = testBase.size();
 
@@ -78,9 +78,9 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
     const auto coarseBaseJacs = testBase.jacobian(x);
     const auto coarseBaseEvals = testBase.evaluate(x);
     // integration factors
-    const double integrationFactor = coarse_scale_entity.geometry().integrationElement(x);
+    const double integrationFactor = localGridEntity.geometry().integrationElement(x);
     const double quadratureWeight = quadPointIt->weight();
-    const auto quadPointGlobal = coarse_scale_entity.geometry().global(x);
+    const auto quadPointGlobal = localGridEntity.geometry().global(x);
 
     // compute integral
     for (size_t ii = 0; ii < numLocalBaseFunctions; ++ii) {
