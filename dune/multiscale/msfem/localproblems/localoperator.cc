@@ -103,10 +103,9 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
   // coarseBaseFunc == numInnerCorrectors
   //neumann corrector
-  typedef typename Problem::NeumannDataBase::template Transfer<MsFEMTraits::LocalEntityType>::Type LocalNeumannType;
-//  LocalNeumannType local_neumann()
-  GDT::Functionals::L2Face< LocalNeumannType, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType >
-      neumann_functional(Dune::Multiscale::Problem::getNeumannData()->transfer<MsFEMTraits::LocalEntityType>(),
+  const auto local_neumann = DMP::getNeumannData()->transfer<MsFEMTraits::LocalEntityType>();
+  GDT::Functionals::L2Face< decltype(local_neumann), CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType >
+      neumann_functional(local_neumann,
                          allLocalRHS[coarseBaseFunc]->vector(), localSpace_);
   system_assembler_.add(neumann_functional);
 
