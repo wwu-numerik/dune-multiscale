@@ -98,8 +98,10 @@ EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
 set(GRIDDIM 3 CACHE STRING "")
+set(USE_ISTL_BACKEND 1 CACHE BOOLEAN "use dune-istl as the la-backend. Disable to use Eigen3 instead.")
+set(USE_FEM_BACKEND 0 CACHE BOOLEAN "use dune-fem as the discretization-backend. Disable to use dune-pdelab instead.")
 
-add_definitions("-DSPGRID" "-DDUNE_MULTISCALE_WITH_DUNE_FEM=0" "-DENABLE_PARMETIS=1" "-DGRIDDIM=${GRIDDIM}" ${PETSC_DEFINITIONS} -DMETISNAMEL )
+add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=${GRIDDIM}" ${PETSC_DEFINITIONS} -DMETISNAMEL )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
