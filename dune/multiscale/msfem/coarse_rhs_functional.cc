@@ -33,15 +33,13 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
                               Dune::DynamicVector<CommonTraits::RangeFieldType> &ret,
                               std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType> > &tmpLocalVectors) const
 {
-  auto& diffusion_operator = DMP::getDiffusion();
-  const auto& coarse_scale_entity = testBase.entity();
   const auto& f = DMP::getSource();
   const auto& diffusion = DMP::getDiffusion();
 
   // quadrature
   typedef Dune::QuadratureRules<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureRules;
   typedef Dune::QuadratureRule<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureType;
-  const size_t integrand_order = diffusion_operator->order() + testBase.order() + over_integrate_;
+  const size_t integrand_order = diffusion->order() + testBase.order() + over_integrate_;
   assert(integrand_order < std::numeric_limits< int >::max());
   const VolumeQuadratureType& volumeQuadrature = VolumeQuadratureRules::rule(localGridEntity.type(), int(integrand_order));
   // check matrix and tmp storage
@@ -69,7 +67,7 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
   }
 
   RangeType f_x;
-  auto dirichletExtensionLF = dirichletExtension.local_function(localGridEntity);
+  const auto dirichletExtensionLF = dirichletExtension.local_function(localGridEntity);
   // loop over all quadrature points
   const auto quadPointEndIt = volumeQuadrature.end();
   std::size_t localQuadraturePoint = 0;
