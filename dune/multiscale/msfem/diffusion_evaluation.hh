@@ -63,7 +63,7 @@ public:
                const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase) const
   {
     const auto localFunction = std::get< 0 >(localFuncs);
-    return CommonTraits::quadrature_order;//order(*localFunction, testBase);
+    return order(*localFunction, testBase);
   }
 
   /**
@@ -74,7 +74,7 @@ public:
   size_t order(const Stuff::LocalfunctionInterface< E, D, d, R, rL, rCL >& localFunction,
                const Stuff::LocalfunctionSetInterface< E, D, d, R, rT, rCT >& testBase) const
   {
-    return CommonTraits::quadrature_order;//localFunction.order() + testBase.order();
+    return localFunction.order() + testBase.order();
   } // int order(...)
 
   /**
