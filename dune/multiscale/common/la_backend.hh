@@ -12,8 +12,11 @@ namespace Multiscale {
 template <class DiscreteFunctionSpaceType>
 struct BackendChooser {
 
-//  static constexpr auto backend_type = Stuff::LA::ChooseBackend::eigen_sparse;
+#if DUNE_MULTISCALE_USE_ISTL
   static constexpr auto backend_type = Stuff::LA::ChooseBackend::istl_sparse;
+#else
+  static constexpr auto backend_type = Stuff::LA::ChooseBackend::eigen_sparse;
+#endif
 
   typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
     backend_type >::VectorType DiscreteFunctionDataType;
