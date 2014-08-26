@@ -79,7 +79,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
-  //!*********** anfang neu gdt
 
   if (is_simplex_grid)
       DUNE_THROW(NotImplemented, "special treatment for simplicial grids missing");
@@ -118,9 +117,9 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   DirichletEvaluationType eval(dirichletExtensionLocal, local_diffusion_operator_);
   GDT::LocalFunctional::Codim0Integral<DirichletEvaluationType> dl_corrector_functional(eval);
   auto& dl_vector = allLocalRHS[coarseBaseFunc]->vector();
-  DirichletCorrectorFunctionalType dl_func(local_diffusion_operator_, dl_vector,
+  DirichletCorrectorFunctionalType dirichlet_corrector(local_diffusion_operator_, dl_vector,
                                            localSpace_, dl_corrector_functional);
-  system_assembler_.add(dl_func);
+  system_assembler_.add(dirichlet_corrector);
 
   //dirichlet-0 for all rhs
   typedef GDT::ApplyOn::BoundaryEntities< MsFEMTraits::LocalGridViewType > OnLocalBoundaryEntities;
