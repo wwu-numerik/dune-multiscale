@@ -43,7 +43,7 @@ string prepend_test_dir(string fn)
 
 void set_param(map<string, string> params) {
   for( auto vp : params) {
-    DSC_CONFIG.set(vp.first, vp.second);
+    DSC_CONFIG.set(vp.first, vp.second, true);
   }
 }
 
@@ -69,8 +69,8 @@ public:
 
  GridAndSpaces()
    : GridTestBase()
-   , coarse_grid_provider(grids_.first)
-   , fine_grid_provider(grids_.second)
+   , coarse_grid_provider(*grids_.first)
+   , fine_grid_provider(*grids_.second)
    , coarseSpace(CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level))
    , fineSpace(CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level))
  {}
@@ -83,28 +83,28 @@ protected:
   const CommonTraits::GdtSpaceType fineSpace;
 };
 
-static const map<string, string> p_small = {{"grids.macro_cells_per_dim", "[4;4;4]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[8;8;8]"}
+static const map<string, string> p_small = {{"grids.macro_cells_per_dim", "[4 4 4]"}
+                                           ,{"grids.micro_cells_per_macrocell_dim", "[8 8 8]"}
                                            ,{"msfem.oversampling_layers", "0"}
                                            };
-static const map<string, string> p_large = {{"grids.macro_cells_per_dim", "[20;20;20]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[40;40;40]"}
+static const map<string, string> p_large = {{"grids.macro_cells_per_dim", "[20 20 20]"}
+                                           ,{"grids.micro_cells_per_macrocell_dim", "[40 40 40]"}
                                            ,{"msfem.oversampling_layers", "0"}
                                            };
-static const map<string, string> p_aniso = {{"grids.macro_cells_per_dim", "[14;4;6]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[3;32;8]"}
+static const map<string, string> p_aniso = {{"grids.macro_cells_per_dim", "[14 4 6]"}
+                                           ,{"grids.micro_cells_per_macrocell_dim", "[3 32 8]"}
                                            ,{"msfem.oversampling_layers", "0"}
                                            };
-static const map<string, string> p_wover = {{"grids.macro_cells_per_dim", "[14;14;14]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[18;18;18]"}
+static const map<string, string> p_wover = {{"grids.macro_cells_per_dim", "[14 14 14]"}
+                                           ,{"grids.micro_cells_per_macrocell_dim", "[18 18 18]"}
                                            ,{"msfem.oversampling_layers", "6"}
                                            };
-static const map<string, string> p_huge  = {{"grids.macro_cells_per_dim", "[40;40;40]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[120;120;120]"}
+static const map<string, string> p_huge  = {{"grids.macro_cells_per_dim", "[40 40 40]"}
+                                           ,{"grids.micro_cells_per_macrocell_dim", "[120 120 120]"}
                                            ,{"msfem.oversampling_layers", "0"}
                                            };
-static const map<string, string> p_fail  = {{"grids.macro_cells_per_dim", "[12;15;10]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[6;7;10]"}
+static const map<string, string> p_fail  = {{"grids.macro_cells_per_dim", "[12 15 10]"}
+                                           ,{"grids.micro_cells_per_macrocell_dim", "[6 7 10]"}
                                            ,{"msfem.oversampling_layers", "0"}
                                            };
 #endif // DUNE_MULTISCALE_TEST_COMMON_HH
