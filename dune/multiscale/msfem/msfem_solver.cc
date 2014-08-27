@@ -152,37 +152,41 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
   DiscreteFunctionType msfem_rhs(coarse_space, "MsFEM right hand side");
   msfem_rhs.vector() *= 0;
-  CoarseRhsFunctional rhsAss(diffusion_op, msfem_rhs.vector(), coarse_space, subgrid_list);
+  CoarseRhsFunctional force_functional(diffusion_op, msfem_rhs.vector(), coarse_space, subgrid_list);
 
   const auto& dirichlet = DMP::getDirichletData();
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
+
   CommonTraits::DiscreteFunctionType dirichlet_projection(coarse_space);
   GDT::Operators::DirichletProjectionLocalizable< CommonTraits::GridViewType, Problem::DirichletDataBase, CommonTraits::DiscreteFunctionType >
       dirichlet_projection_operator(*(coarse_space.grid_view()),
                                     boundary_info,
                                     *dirichlet,
                                     dirichlet_projection);
-
+  GDT::Functionals::L2Face< Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
+      neumann_functional(*neumann, msfem_rhs.vector(), coarse_space);
   GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarse_space);
 
   CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list);
   // this calls GridWalker::add(Gridwalker&)
   global_system_assembler_.add(elliptic_msfem_op);
-  global_system_assembler_.add(rhsAss);
+  global_system_assembler_.add(force_functional);
   global_system_assembler_.add(dirichlet_projection_operator,
-                       new GDT::ApplyOn::BoundaryEntities< CommonTraits::GridViewType >());
+                       new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+  global_system_assembler_.add(neumann_functional,
+                               new GDT::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
   global_system_assembler_.assemble();
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(coarse_space.mapper().size());
   elliptic_msfem_op.matrix().mv(dirichlet_projection.vector(), tmp);
-  rhsAss.vector() -= tmp;
+  force_functional.vector() -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Constraints::Dirichlet < typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType >
       dirichlet_constraints(boundary_info, coarse_space.mapper().maxNumDofs(), coarse_space.mapper().maxNumDofs());
   global_system_assembler_.add(dirichlet_constraints, elliptic_msfem_op.matrix()/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  global_system_assembler_.add(dirichlet_constraints, rhsAss.vector()/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  global_system_assembler_.add(dirichlet_constraints, force_functional.vector()/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   global_system_assembler_.assemble();
 
   elliptic_msfem_op.apply_inverse(msfem_rhs, coarse_msfem_solution);

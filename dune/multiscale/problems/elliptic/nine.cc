@@ -159,9 +159,13 @@ PURE HOT  void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& g
 
 }
 
-PURE  void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
+PURE  void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
+  solution_.evaluate(x, y);
+} // evaluate
 
-PURE  void DirichletData::jacobian(const DomainType& /*x*/, JacobianRangeType& y) const { y[0] = 0.0; } // jacobian
+PURE  void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y) const {
+  solution_.jacobian(x, y);
+} // jacobian
 
 PURE  void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
