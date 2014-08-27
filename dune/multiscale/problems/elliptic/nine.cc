@@ -48,7 +48,7 @@ ParameterTree ModelProblemData::boundary_settings() const {
   } else {
     boundarySettings["default"] = "dirichlet";
     boundarySettings["compare_tolerance"] = "1e-10";
-    switch (View::dimension /*View is defined in IModelProblemData*/) {
+    switch (CommonTraits::world_dim) {
     case 1:
       break;
     case 2:

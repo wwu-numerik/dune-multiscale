@@ -44,7 +44,7 @@ void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid
   const auto& source = Problem::getSource();
   const auto& diffusion = Problem::getDiffusion();
 
-  Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(macro_grid_pointer);
+  Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(*macro_grid_pointer);
   const CommonTraits::GdtSpaceType space = CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
   CommonTraits::GdtVectorType solution_vector(space.mapper().size());
   CommonTraits::DiscreteFunctionType solution(space, solution_vector);

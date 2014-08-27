@@ -39,7 +39,6 @@ void MsFEMCodim0Integral::apply(LocalSolutionManager &localSolutionManager,
                                 std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType> > &tmpLocalMatrices) const
 {
   auto& diffusion_operator = DMP::getDiffusion();
-  const auto& coarse_scale_entity = ansatzBase.entity();
 
   // quadrature
   typedef Dune::QuadratureRules<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureRules;

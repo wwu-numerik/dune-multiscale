@@ -14,9 +14,6 @@
 
 #undef COMMIT
 
-#ifndef DUNE_MULTISCALE_CONFIG_H
-#define DUNE_MULTISCALE_CONFIG_H
-
 /* the git tag / commit we build from */
 #define COMMIT "@COMMIT@"
 
@@ -35,12 +32,10 @@
     #define HAVE_SIONLIB 0
 #endif
 
-#define HAVE_PETSC ENABLE_PETSC
 #ifdef NDEBUG
   #define DNDEBUG
 #endif
 
-#endif  /* DUNE_MULTISCALE_CONFIG_H */
 
 #ifndef HAVE_DUNE_MULTISCALE_STATIC_DATA
 #include <string>
@@ -49,8 +44,6 @@ static constexpr unsigned int st_lagrangespace_order = 1;
 #define HAVE_DUNE_MULTISCALE_STATIC_DATA
 #endif
 
-#if defined(ENABLE_PETSC) && not HAVE_MPI
-# error "you'll get weird errors in dune-fem with petsc enabled, but no mpi"
-#endif
+
 
 /* end dune-multiscale */

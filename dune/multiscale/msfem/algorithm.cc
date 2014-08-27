@@ -80,8 +80,8 @@ std::map<std::string, double> algorithm() {
   using namespace Dune;
 
   auto grids = make_grids();
-  CommonTraits::GridProviderType coarse_grid_provider(grids.first);
-  CommonTraits::GridProviderType fine_grid_provider(grids.second);
+  CommonTraits::GridProviderType coarse_grid_provider(*grids.first);
+  CommonTraits::GridProviderType fine_grid_provider(*grids.second);
   const CommonTraits::GdtSpaceType coarseSpace =
       CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level);
   const CommonTraits::GdtSpaceType fineSpace =
