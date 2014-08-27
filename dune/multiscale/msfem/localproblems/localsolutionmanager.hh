@@ -30,7 +30,7 @@ private:
 
 public:
   LocalSolutionManager(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                       const CoarseEntityType& coarseEntity, LocalGridList& subgridList);
+                       const CoarseEntityType& coarseEntity, const LocalGridList& subgridList);
 
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
@@ -43,8 +43,8 @@ public:
   std::size_t numBoundaryCorrectors() const;
 
 private:
-  LocalGridList& subgridList_;
-  MsFEMTraits::LocalGridType& subgrid_;
+  const LocalGridList& subgridList_;
+  const MsFEMTraits::LocalGridType& subgrid_;
   const std::shared_ptr<const LocalGridViewType> grid_view_ptr_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;

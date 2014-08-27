@@ -4,6 +4,7 @@
 #include <dune/stuff/functions.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <unordered_map>
 
 namespace Dune {
 namespace Multiscale {
@@ -21,18 +22,13 @@ class LocalsolutionProxy : public MsFEMTraits::LocalGridConstDiscreteFunctionTyp
   typedef typename BaseType::LocalfunctionType LocalFunctionType;
 
 public:
-  typedef std::map<typename LeafIndexSetType::IndexType,
+  typedef std::unordered_map<typename LeafIndexSetType::IndexType,
                    std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
 
   LocalsolutionProxy(const CorrectionsMapType& corrections, const LeafIndexSetType& index_set,
                      const LocalGridSearch& search);
 
   std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;
-
-  virtual ThisType* copy() const
-  {
-    DUNE_THROW(NotImplemented, "");
-  }
 
 private:
   const CorrectionsMapType& corrections_;
