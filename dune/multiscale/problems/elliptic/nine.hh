@@ -88,6 +88,8 @@ public:
 
   PURE  void evaluate(const DomainType& x, RangeType& y) const;
   PURE  void jacobian(const DomainType& x, JacobianRangeType& y) const;
+private:
+  ExactSolution solution_;
 };
 
 class NeumannData : public NeumannDataBase {
