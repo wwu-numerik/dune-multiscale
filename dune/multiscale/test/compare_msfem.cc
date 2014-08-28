@@ -53,8 +53,4 @@ static const auto test_values = CommonTraits::world_dim > 2
                                     : testing::Values(m_small, m_large);
 INSTANTIATE_TEST_CASE_P( MsFemComparisons, MsFemCompare, test_values);
 
-int main(int argc, char** argv) {
-  test_init(argc, argv);
-  return RUN_ALL_TESTS();
-}
 

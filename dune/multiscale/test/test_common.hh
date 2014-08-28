@@ -3,7 +3,7 @@
 
 #include <config.h>
 
-#include <dune/stuff/test/test_common.hh>
+#include <dune/stuff/test/main.hxx>
 #include <gtest.h>
 
 #include <string>

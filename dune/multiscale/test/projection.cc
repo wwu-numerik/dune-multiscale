@@ -58,7 +58,3 @@ static const auto common_values = CommonTraits::world_dim < 3
 
 INSTANTIATE_TEST_CASE_P( TestNameB, Projection, common_values);
 
-int main(int argc, char** argv) {
-  test_init(argc, argv);
-  return RUN_ALL_TESTS();
-}
