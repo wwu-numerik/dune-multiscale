@@ -122,7 +122,7 @@ struct GridMatch : public GridTestBase {
         const auto& geo = ent.geometry();
         const auto cor = corners(geo);
         EXPECT_EQ(cor.size(), geo.corners());
-        EXPECT_EQ(cor.size(), 4);
+        EXPECT_EQ(cor.size(), std::pow(2, CommonTraits::world_dim));
 //        EXPECT_EQ(cor, cornersA(geo));
          for (auto i : DSC::valueRange(geo.corners()))
            for (auto j : DSC::valueRange(geo.corners()))
@@ -164,8 +164,10 @@ TEST_P(PointsAndStuff, LP) {
   this->check_search();
 }
 
-static const auto common_values = testing::Values(p_small, p_large, p_aniso, p_wover, /*p_huge,*/ p_fail);
-//static const auto common_values = testing::Values(p_large);
+static const auto common_values = CommonTraits::world_dim < 3
+                                  // Values need to have number of elements
+                                  ? testing::Values(p_small/*, p_large, p_aniso, p_wover, p_fail*/)
+                                  : testing::Values(p_small/*, p_minimal, p_minimal, p_minimal, p_minimal*/);
 
 INSTANTIATE_TEST_CASE_P( TestNameA, GridMatch, common_values);
 INSTANTIATE_TEST_CASE_P( TestNameB, PointsAndStuff, common_values);

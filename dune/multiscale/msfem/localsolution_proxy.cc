@@ -10,7 +10,9 @@ Dune::Multiscale::MsFEM::LocalsolutionProxy::LocalsolutionProxy(const Correction
   : BaseType(*corrections.begin()->second)
   , corrections_(corrections)
   , index_set_(index_set)
-  , search_(search) {}
+  , search_(search) {
+  assert(corrections.size() == index_set.size(0));
+}
 
 
 std::unique_ptr<Dune::Multiscale::MsFEM::LocalsolutionProxy::LocalFunctionType>

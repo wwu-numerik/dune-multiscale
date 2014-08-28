@@ -5,17 +5,23 @@
 #include <dune/gdt/operators/projections.hh>
 #include <dune/gdt/products/l2.hh>
 #include <functional>
+#include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
 using namespace Dune::GDT;
 
 struct Projection : public GridAndSpaces {
   typedef DS::FunctionTypeGenerator<MsFEMTraits::LocalConstantFunctionType, DS::GlobalLambdaFunction>::type Lambda;
 
-  LocalsolutionProxy::CorrectionsMapType fill_local_corrections(const Lambda& lambda) {
+  LocalsolutionProxy::CorrectionsMapType fill_local_corrections(const Lambda& lambda,
+                                                                const LocalGridList& subgrid_list) {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
-    for(auto& lc_pair : local_corrections) {
-      auto& lc = *lc_pair.second;
-      Operators::apply_projection(lambda, lc);
+    for (auto& coarse_entity : DSC::viewRange(*coarseSpace.grid_view())) {
+      LocalSolutionManager localSolManager(coarseSpace, coarse_entity, subgrid_list);
+      auto& coarse_indexset = coarseSpace.grid_view()->grid().leafIndexSet();
+      const auto coarse_index = coarse_indexset.index(coarse_entity);
+      local_corrections[coarse_index] =
+          DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), " ");
+      Operators::apply_projection(lambda, *local_corrections[coarse_index]);
     }
     return local_corrections;
   }
@@ -26,7 +32,7 @@ struct Projection : public GridAndSpaces {
     LocalGridList subgrid_list(coarseSpace);
     const double constant(1);
     Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );
-    auto local_corrections = fill_local_corrections(lambda);
+    auto local_corrections = fill_local_corrections(lambda, subgrid_list);
     LocalGridSearch search(coarseSpace, subgrid_list);
     auto& coarse_indexset = coarseSpace.grid_view()->grid().leafIndexSet();
     LocalsolutionProxy proxy(local_corrections, coarse_indexset, search);
@@ -44,8 +50,11 @@ TEST_P(Projection, Project) {
   this->project();
 }
 
-static const auto common_values = testing::Values(p_small, p_large, p_aniso, p_wover, /*p_huge,*/ p_fail);
-//static const auto common_values = testing::Values(p_large);
+
+static const auto common_values = CommonTraits::world_dim < 3
+                                  // Values need to have number of elements
+                                  ? testing::Values(p_small/*, p_large, p_aniso, p_wover, p_fail*/)
+                                  : testing::Values(p_small/*, p_minimal, p_minimal, p_minimal, p_minimal*/);
 
 INSTANTIATE_TEST_CASE_P( TestNameB, Projection, common_values);
 

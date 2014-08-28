@@ -19,6 +19,7 @@ typedef pair< map<string,string>, FixedMap<string,double,2>> TestArgs;
 
 const TestArgs m_small{p_small, {{"msfem_exact_L2", 0.14}, {"msfem_exact_H1", 2.3}}};
 const TestArgs m_large{p_large, {{"msfem_exact_L2", 0.07}, {"msfem_exact_H1", 1.15}}};
+const TestArgs m_minimal{p_minimal, {{"msfem_exact_L2", 0.14}, {"msfem_exact_H1", 2.3}}};
 
 struct MsFemCompare : public ::testing::TestWithParam<TestArgs> {
 
@@ -47,7 +48,10 @@ TEST_P(MsFemCompare, All) {
 
 }
 
-INSTANTIATE_TEST_CASE_P( MsFemComparisons, MsFemCompare, testing::Values(m_small, m_large));
+static const auto test_values = CommonTraits::world_dim > 2
+                                    ? testing::Values(m_small, m_minimal)
+                                    : testing::Values(m_small, m_large);
+INSTANTIATE_TEST_CASE_P( MsFemComparisons, MsFemCompare, test_values);
 
 int main(int argc, char** argv) {
   test_init(argc, argv);
