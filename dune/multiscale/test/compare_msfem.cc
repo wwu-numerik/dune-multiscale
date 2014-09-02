@@ -19,7 +19,7 @@ typedef pair< map<string,string>, FixedMap<string,double,2>> TestArgs;
 
 const TestArgs m_small{p_small, {{"msfem_exact_L2", 0.251}, {"msfem_exact_H1s", 2.67}}};
 const TestArgs m_large{p_large, {{"msfem_exact_L2", 0.07}, {"msfem_exact_H1s", 1.15}}};
-const TestArgs m_minimal{p_minimal, {{"msfem_exact_L2", 0.14}, {"msfem_exact_H1s", 2.3}}};
+const TestArgs m_minimal{p_minimal, {{"msfem_exact_L2", 0.57}, {"msfem_exact_H1s", 2.3}}};
 
 struct MsFemCompare : public ::testing::TestWithParam<TestArgs> {
 
@@ -48,9 +48,20 @@ TEST_P(MsFemCompare, All) {
   EXPECT_GT(expected_errors["msfem_exact_H1s"], found->second);
 }
 
-static const auto test_values = CommonTraits::world_dim > 2
-                                    ? testing::Values(m_small/*, m_minimal*/)
-                                    : testing::Values(m_small/*, m_small*/);
-INSTANTIATE_TEST_CASE_P( MsFemComparisons, MsFemCompare, test_values);
+template < int foo >
+struct VC {
+  static auto values() -> decltype(testing::Values(m_small, m_large)) {
+    return testing::Values(m_small, m_large);
+  }
+};
+
+template <>
+struct VC<3> {
+  static auto values() -> decltype(testing::Values(m_small)) {
+    return testing::Values(m_small);
+  }
+};
+
+INSTANTIATE_TEST_CASE_P( MsFemComparisons, MsFemCompare, VC<CommonTraits::world_dim>::values());
 
 
