@@ -6,7 +6,7 @@
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE
 
 #include <dune/multiscale/problems/base.hh>
-
+#include <dune/stuff/grid/boundaryinfo.hh>
 #include <memory>
 #include <string>
 

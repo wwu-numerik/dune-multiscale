@@ -1,12 +1,8 @@
-#include <config.h>
-#include <config.h>
 // dune-multiscale
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-// The following FEM code requires an access to the 'ModelProblemData' class,
-// which provides us with information about f, A, \Omega, etc.
-
+#include <config.h>
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/fem/algorithm.hh>
