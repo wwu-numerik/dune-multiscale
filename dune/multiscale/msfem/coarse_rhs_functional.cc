@@ -21,18 +21,14 @@ namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
-size_t RhsCodim0Integral::numTmpObjectsRequired() const
-{
-  return numTmpObjectsRequired_;
-}
+size_t RhsCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
 void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
-                              LocalSolutionManager &localSolutionManager,
-                              const MsFEMTraits::LocalEntityType &localGridEntity,
-                              const RhsCodim0Integral::TestLocalfunctionSetInterfaceType &testBase,
-                              Dune::DynamicVector<CommonTraits::RangeFieldType> &ret,
-                              std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType> > &tmpLocalVectors) const
-{
+                              LocalSolutionManager& localSolutionManager,
+                              const MsFEMTraits::LocalEntityType& localGridEntity,
+                              const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
+                              Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
+                              std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& tmpLocalVectors) const {
   const auto& f = DMP::getSource();
   const auto& diffusion = DMP::getDiffusion();
 
@@ -40,8 +36,9 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
   typedef Dune::QuadratureRules<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureRules;
   typedef Dune::QuadratureRule<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureType;
   const size_t integrand_order = diffusion->order() + testBase.order() + over_integrate_;
-  assert(integrand_order < std::numeric_limits< int >::max());
-  const VolumeQuadratureType& volumeQuadrature = VolumeQuadratureRules::rule(localGridEntity.type(), int(integrand_order));
+  assert(integrand_order < std::numeric_limits<int>::max());
+  const VolumeQuadratureType& volumeQuadrature =
+      VolumeQuadratureRules::rule(localGridEntity.type(), int(integrand_order));
   // check matrix and tmp storage
   const size_t numLocalBaseFunctions = testBase.size();
 
@@ -56,9 +53,9 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
   typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
   // evaluate the jacobians of all local solutions in all quadrature points
   std::vector<std::vector<JacobianRangeType>> allLocalSolutionJacobians(
-        numLocalSolutions, std::vector<JacobianRangeType>(numQuadraturePoints, JacobianRangeType(0.0)));
+      numLocalSolutions, std::vector<JacobianRangeType>(numQuadraturePoints, JacobianRangeType(0.0)));
   std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
-        numLocalSolutions, std::vector<RangeType>(numQuadraturePoints, RangeType(0.0)));
+      numLocalSolutions, std::vector<RangeType>(numQuadraturePoints, RangeType(0.0)));
   for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
     const auto localFunction = localSolutions[lsNum]->local_function(localGridEntity);
     //      assert(localSolutionManager.space().indexSet().contains(localGridEntity));
@@ -71,7 +68,8 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
   // loop over all quadrature points
   const auto quadPointEndIt = volumeQuadrature.end();
   std::size_t localQuadraturePoint = 0;
-  for (auto quadPointIt = volumeQuadrature.begin(); quadPointIt != quadPointEndIt; ++quadPointIt, ++localQuadraturePoint) {
+  for (auto quadPointIt = volumeQuadrature.begin(); quadPointIt != quadPointEndIt;
+       ++quadPointIt, ++localQuadraturePoint) {
     const auto x = quadPointIt->position();
     const auto coarseBaseJacs = testBase.jacobian(x);
     const auto coarseBaseEvals = testBase.evaluate(x);
@@ -110,33 +108,30 @@ void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType&
       retRow += integrationFactor * quadratureWeight * (f_x * reconstructionPhi);
       retRow -= integrationFactor * quadratureWeight * (diffusive_flux[0] * reconstructionGradPhi[0]);
     } // compute integral
-  } // loop over all quadrature points
+  }   // loop over all quadrature points
 }
 
-std::vector<size_t> RhsCodim0Vector::numTmpObjectsRequired() const
-{
-  return { numTmpObjectsRequired_, localFunctional_.numTmpObjectsRequired() };
+std::vector<size_t> RhsCodim0Vector::numTmpObjectsRequired() const {
+  return {numTmpObjectsRequired_, localFunctional_.numTmpObjectsRequired()};
 }
 
-void RhsCodim0Vector::assembleLocal(const CommonTraits::GdtSpaceType &testSpace,
-                                    const CommonTraits::EntityType &coarse_grid_entity,
-                                    CommonTraits::GdtVectorType &systemVector,
-                                    std::vector<std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType> > > &tmpLocalVectorContainer,
-                                    Dune::DynamicVector<size_t> &tmpIndices) const
-{
+void RhsCodim0Vector::assembleLocal(
+    const CommonTraits::GdtSpaceType& testSpace, const CommonTraits::EntityType& coarse_grid_entity,
+    CommonTraits::GdtVectorType& systemVector,
+    std::vector<std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>>& tmpLocalVectorContainer,
+    Dune::DynamicVector<size_t>& tmpIndices) const {
   // check
   assert(tmpLocalVectorContainer.size() >= 2);
   assert(tmpLocalVectorContainer[0].size() >= numTmpObjectsRequired_);
   assert(tmpLocalVectorContainer[1].size() >= localFunctional_.numTmpObjectsRequired());
 
-  Multiscale::MsFEM::LocalSolutionManager localSolutionManager(testSpace,
-                                                               coarse_grid_entity,
-                                                               localGridList_);
+  Multiscale::MsFEM::LocalSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
   localSolutionManager.load();
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);
 
-  MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension(localSolutionManager.space(), "Dirichlet Extension");
+  MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension(localSolutionManager.space(),
+                                                                       "Dirichlet Extension");
   //! \todo fill with actual values
 
   for (const auto& localGridEntity : DSC::viewRange(*localSolutionManager.space().grid_view())) {
@@ -150,9 +145,7 @@ void RhsCodim0Vector::assembleLocal(const CommonTraits::GdtSpaceType &testSpace,
     auto& tmpFunctionalVectors = tmpLocalVectorContainer[1];
     // apply local functional (result is in localVector)
     localFunctional_.apply(dirichletExtension, localSolutionManager, localGridEntity,
-                           testSpace.base_function_set(coarse_grid_entity),
-                           localVector,
-                           tmpFunctionalVectors);
+                           testSpace.base_function_set(coarse_grid_entity), localVector, tmpFunctionalVectors);
     // write local vector to global
     const size_t size = testSpace.mapper().numDofs(coarse_grid_entity);
     assert(tmpIndices.size() >= size);
@@ -163,25 +156,22 @@ void RhsCodim0Vector::assembleLocal(const CommonTraits::GdtSpaceType &testSpace,
   }
 }
 
-CoarseRhsFunctional::CoarseRhsFunctional(const CoarseRhsFunctionalTraits::FunctionType &, CoarseRhsFunctional::VectorType &vec, const CoarseRhsFunctional::SpaceType &spc, LocalGridList &localGridList)
+CoarseRhsFunctional::CoarseRhsFunctional(const CoarseRhsFunctionalTraits::FunctionType&,
+                                         CoarseRhsFunctional::VectorType& vec,
+                                         const CoarseRhsFunctional::SpaceType& spc, LocalGridList& localGridList)
   : FunctionalBaseType(vec, spc)
   , AssemblerBaseType(spc)
-  , local_assembler_(local_functional_, localGridList)
-{
+  , local_assembler_(local_functional_, localGridList) {
   this->add_codim0_assembler(local_assembler_, this->vector());
 }
 
-
-void CoarseRhsFunctional::assemble()
-{
-  AssemblerBaseType::assemble();
-}
+void CoarseRhsFunctional::assemble() { AssemblerBaseType::assemble(); }
 
 } // namespace MsFEM {
 } // namespace Multiscale {
 } // namespace Dune {
 
-#if 0 //alter referenzcde
+#if 0 // alter referenzcde
 rhsVector.clear();
 RangeType f_x;
 
@@ -317,4 +307,4 @@ for (const auto& coarse_grid_entity : threadIterators) {
 
   // set dirichlet dofs to zero
   Dune::Multiscale::getConstraintsCoarse(rhsVector.space()).setValue(0.0, rhsVector);
-#endif //0 //alter referenzcde
+#endif // 0 //alter referenzcde

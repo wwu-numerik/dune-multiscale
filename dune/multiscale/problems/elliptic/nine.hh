@@ -14,15 +14,15 @@
 
 #ifdef __GNUC__
 
-  #define PURE        __attribute__((const))
-  #define HOT         __attribute__((hot))
-  #define ALWAYS_INLINE __attribute__((always_inline)) inline
+#define PURE __attribute__((const))
+#define HOT __attribute__((hot))
+#define ALWAYS_INLINE __attribute__((always_inline)) inline
 
 #else
 
-  #define PURE
-  #define HOT
-  #define ALWAYS_INLINE inline
+#define PURE
+#define HOT
+#define ALWAYS_INLINE inline
 
 #endif
 
@@ -55,7 +55,7 @@ class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   Source();
 
-  PURE HOT  void evaluate(const DomainType& x, RangeType& y) const;
+  PURE HOT void evaluate(const DomainType& x, RangeType& y) const;
   virtual size_t order() const { return 3; }
 };
 
@@ -65,11 +65,13 @@ public:
 
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const;
-  PURE HOT  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const;
+  PURE HOT void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                              Problem::JacobianRangeType& flux) const;
 
   //! HMM-only
-  PURE  void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                             const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
+  PURE void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
+                                  const Problem::JacobianRangeType& direction_gradient,
+                                  Problem::JacobianRangeType& flux) const;
   virtual size_t order() const;
 };
 
@@ -77,8 +79,8 @@ class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   ExactSolution();
 
-  PURE HOT  void evaluate(const DomainType& x, RangeType& y) const;
-  PURE HOT  void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
+  PURE HOT void evaluate(const DomainType& x, RangeType& y) const;
+  PURE HOT void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
   virtual size_t order() const { return 3; }
 };
 
@@ -86,8 +88,9 @@ class DirichletData : public DirichletDataBase {
 public:
   DirichletData() {}
 
-  PURE  void evaluate(const DomainType& x, RangeType& y) const;
-  PURE  void jacobian(const DomainType& x, JacobianRangeType& y) const;
+  PURE void evaluate(const DomainType& x, RangeType& y) const;
+  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const;
+
 private:
   ExactSolution solution_;
 };
@@ -96,7 +99,7 @@ class NeumannData : public NeumannDataBase {
 public:
   NeumannData() {}
 
-  PURE  void evaluate(const DomainType& x, RangeType& y) const;
+  PURE void evaluate(const DomainType& x, RangeType& y) const;
 };
 
 class LowerOrderTerm : public ZeroLowerOrder {};

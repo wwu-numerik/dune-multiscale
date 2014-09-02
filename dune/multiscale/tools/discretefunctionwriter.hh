@@ -34,7 +34,7 @@ namespace Multiscale {
 
 template <class DiscreteFunctionType>
 class DiscreteFunctionIO : public boost::noncopyable {
-//  static_assert(std::is_base_of<Dune::Fem::IsDiscreteFunction, DiscreteFunctionType>::value, "");
+  //  static_assert(std::is_base_of<Dune::Fem::IsDiscreteFunction, DiscreteFunctionType>::value, "");
 
   typedef DiscreteFunctionIO<DiscreteFunctionType> ThisType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
@@ -69,7 +69,6 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
       Fem::XDRFileOutStream ss(fn);
       df->write(ss);
-
     }
 
     void read(const unsigned long index, DiscreteFunction_ptr& df) {
@@ -77,7 +76,6 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
       Fem::XDRFileInStream ss(fn);
       df->read(ss);
-
     }
 
   private:
@@ -102,8 +100,7 @@ class DiscreteFunctionIO : public boost::noncopyable {
     MemoryBackend(const GridViewPtrType& grid_view, const std::string filename = "nonsense_default_for_map")
       : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
       , local_grid_provider_(grid_view->grid())
-      , space_(DMM::MsFEMTraits::SpaceProviderType::create(local_grid_provider_, CommonTraits::st_gdt_grid_level))
-    {}
+      , space_(DMM::MsFEMTraits::SpaceProviderType::create(local_grid_provider_, CommonTraits::st_gdt_grid_level)) {}
 
     void append(const DiscreteFunction_ptr& df) { functions_.push_back(df); }
 
@@ -138,7 +135,7 @@ class DiscreteFunctionIO : public boost::noncopyable {
     auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
 #if HAVE_EMPLACE
     auto ret = map.emplace(filename, std::move(ptr));
-#else 
+#else
     auto ret = map.insert(std::make_pair(filename, std::move(ptr)));
 #endif
     assert(ret.second);
@@ -147,7 +144,7 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
   DiskBackend& get_disk(const std::string filename) { return *get(disk_, filename, filename); }
 
-  MemoryBackend& get_memory(const std::string filename,  const GridViewPtrType& grid_view) {
+  MemoryBackend& get_memory(const std::string filename, const GridViewPtrType& grid_view) {
     return *get(memory_, filename, grid_view, filename);
   }
 
@@ -161,8 +158,8 @@ public:
   //! this needs to be called before global de-init or else dune fem fails
   static void clear() {
     auto& th = instance();
-    DSC_LOG_DEBUG << (boost::format("cleared %d in-memory functions\ncleared %d on-disk   functions\nfor %s\n")
-                      % th.memory_.size() % th.disk_.size() % DSC::getTypename(th)).str();
+    DSC_LOG_DEBUG << (boost::format("cleared %d in-memory functions\ncleared %d on-disk   functions\nfor %s\n") %
+                      th.memory_.size() % th.disk_.size() % DSC::getTypename(th)).str();
     th.memory_.clear();
     th.disk_.clear();
   }

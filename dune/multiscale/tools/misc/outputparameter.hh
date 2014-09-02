@@ -16,13 +16,16 @@ struct OutputParameters {
 public:
   explicit OutputParameters(const std::string _path = DSC_CONFIG_GET("global.datadir", "data"));
   virtual ~OutputParameters() {}
+
 private:
   std::string my_prefix_;
   const std::string my_path_;
+
 public:
   void set_prefix(std::string my_prefix);
   //! path where the data is stored
   std::string path() const;
+
 private:
   //! base of file name for data file
   std::string prefix() const;
@@ -39,6 +42,7 @@ private:
   virtual bool separateRankPath() const;
 
   virtual std::string macroGridName(const int dim) const;
+
 public:
   std::string fullpath(const std::string function);
 

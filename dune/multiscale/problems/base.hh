@@ -50,7 +50,8 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
   //! jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
   //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
   virtual void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                                     const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
+                                     const Problem::JacobianRangeType& direction_gradient,
+                                     Problem::JacobianRangeType& flux) const;
   virtual size_t order() const { return 2; }
 };
 
@@ -73,8 +74,8 @@ public:
   virtual void evaluate(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const DS_FINAL {
     y = RangeType(0);
   }
-  virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const
-      DS_FINAL {
+  virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&,
+                                   RangeType& y) const DS_FINAL {
     y = RangeType(0);
   }
   virtual void direction_derivative(const DomainType&, const RangeType&, const JacobianRangeType&,
@@ -208,10 +209,9 @@ public:
   virtual bool linear() const { return true; }
 
   virtual const BoundaryInfoType& boundaryInfo() const = 0;
-  
+
   virtual const SubBoundaryInfoType& subBoundaryInfo() const = 0;
-  
-  
+
   virtual std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const {
     return {CommonTraits::DomainType(0.0), CommonTraits::DomainType(1.0)};
   }
@@ -226,13 +226,15 @@ namespace DMP = Dune::Multiscale::Problem;
 #define MSCONSTANTFUNCTION(classname, constant)                                                                        \
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
   public:                                                                                                              \
-    classname() : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(constant) {}                                \
+    classname()                                                                                                        \
+      : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(constant) {}                                          \
   };
 
 #define MSNULLFUNCTION(classname)                                                                                      \
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
   public:                                                                                                              \
-    classname() : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                     \
+    classname()                                                                                                        \
+      : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                               \
   };
 
 #endif // DUNE_MS_PROBLEMS_BASE_HH

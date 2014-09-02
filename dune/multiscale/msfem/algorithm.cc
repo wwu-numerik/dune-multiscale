@@ -60,7 +60,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
 }
 
 //! \TODO docme
-void data_output(const CommonTraits::GridViewType &gridPart,
+void data_output(const CommonTraits::GridViewType& gridPart,
                  const CommonTraits::DiscreteFunctionSpaceType& coarseSpace) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
@@ -92,10 +92,10 @@ std::map<std::string, double> algorithm() {
 
   CommonTraits::DiscreteFunctionType msfem_solution(fineSpace, "MsFEM_Solution");
   CommonTraits::DiscreteFunctionType coarse_part_msfem_solution(fineSpace, "Coarse_Part_MsFEM_Solution");
-  CommonTraits::DiscreteFunctionType fine_part_msfem_solution(fineSpace, "Fine_Part_MsFEM_Solution" );
+  CommonTraits::DiscreteFunctionType fine_part_msfem_solution(fineSpace, "Fine_Part_MsFEM_Solution");
 
-  Elliptic_MsFEM_Solver().apply(coarseSpace, diffusion_op, coarse_part_msfem_solution,
-                                fine_part_msfem_solution, msfem_solution);
+  Elliptic_MsFEM_Solver().apply(coarseSpace, diffusion_op, coarse_part_msfem_solution, fine_part_msfem_solution,
+                                msfem_solution);
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
@@ -115,7 +115,7 @@ std::map<std::string, double> algorithm() {
   }
 
   return ErrorCalculator(&msfem_solution, fem_solution.get()).print(DSC_LOG_INFO_0);
-  
+
 } // function algorithm
 
 } // namespace MsFEM {

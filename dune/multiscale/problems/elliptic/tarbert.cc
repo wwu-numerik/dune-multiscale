@@ -9,27 +9,25 @@
 #include "dune/multiscale/problems/base.hh"
 #include "tarbert.hh"
 
-
 namespace Dune {
 namespace Multiscale {
 namespace Problem {
 namespace Tarbert {
 
-
 ModelProblemData::ModelProblemData()
   : IModelProblemData()
-  , subBoundaryInfo_()
-{
-  boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
-  subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
+  , subBoundaryInfo_() {
+  boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(
+      DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
+  subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
+      DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
 std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/spe10.dgf");
 }
 
-std::pair<CommonTraits::DomainType, CommonTraits::DomainType>
-ModelProblemData::gridCorners() const {
+std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(0.0);
   switch (View::dimension /*View is defined in IModelProblemData*/) {
@@ -48,13 +46,9 @@ ModelProblemData::gridCorners() const {
   return {lowerLeft, upperRight};
 }
 
-const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const {
-  return *boundaryInfo_;
-}
+const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const { return *boundaryInfo_; }
 
-const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const {
-  return *subBoundaryInfo_;
-}
+const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const { return *subBoundaryInfo_; }
 
 ParameterTree ModelProblemData::boundary_settings() const {
   Dune::ParameterTree boundarySettings;
@@ -72,18 +66,16 @@ ParameterTree ModelProblemData::boundary_settings() const {
         break;
       case 3:
         boundarySettings["dirichlet.0"] = "[0.0 1.0 0.0]";
-//        boundarySettings["dirichlet.1"] = "[0.0 1.0 0.0]";
+        //        boundarySettings["dirichlet.1"] = "[0.0 1.0 0.0]";
     }
   }
   return boundarySettings;
 }
 
-void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const {
-  y = 0.0;
-} // evaluate
+void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
-  if (std::abs(x[1])<1e-6)
+  if (std::abs(x[1]) < 1e-6)
     y = -1.0;
   else
     y = 0.0;
@@ -107,12 +99,10 @@ Diffusion::~Diffusion() {
   permeability_ = nullptr;
 }
 
-void Diffusion::evaluate(const DomainType &/*x*/, Diffusion::RangeType &/*y*/) const
-{
-  DUNE_THROW(NotImplemented, "");
-}
+void Diffusion::evaluate(const DomainType& /*x*/, Diffusion::RangeType& /*y*/) const { DUNE_THROW(NotImplemented, ""); }
 
-void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                              Problem::JacobianRangeType& flux) const {
   BOOST_ASSERT_MSG(x.size() <= 3, "Tarbert model is only defined for up to three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
 
@@ -139,7 +129,7 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
   }
 
   permMatrix_.mv(direction[0], flux[0]);
-//  flux[0]=direction[0];
+  //  flux[0]=direction[0];
 } // diffusiveFlux
 
 void Diffusion::jacobianDiffusiveFlux(const DomainType& /*x*/, const Problem::JacobianRangeType& /*position_gradient*/,
@@ -172,13 +162,13 @@ void Diffusion::readPermeability() {
   file.close();
   return;
 } /* readPermeability */
-  
+
 //  void Diffusion::visualizePermeability(const CommonTraits::GridType& grid) const
 //  {
 //    typedef typename CommonTraits::GridType::LeafGridView::template Codim< 0 >::Iterator IteratorType;
 //    typedef typename CommonTraits::GridType::LeafGridView::template Codim< 0 >::Entity   EntityType;
 //    const int dimDomain = DomainType::dimension;
-//    
+//
 //    Eigen::MatrixXd perm(grid.size(0), dimDomain);
 ////    Eigen::VectorXd perm_x(grid.size(0));
 ////    Eigen::VectorXd perm_y(grid.size(0));
@@ -199,14 +189,14 @@ void Diffusion::readPermeability() {
 ////      perm_y(index) = permeabilityMatrix(1, 1);
 ////      perm_z(index) = permeabilityMatrix(2, 2);
 //    }
-//    
+//
 //    VTKWriter< typename CommonTraits::GridType::LeafGridView > vtkwriter(grid.leafView());
 //    for (const auto& dim : DSC::valueRange(dimDomain))
 //      vtkwriter.addCellData(perm.col(dim), "perm_" + DSC::toString(dim));
 ////    vtkwriter.addCellData(perm_y, "perm_y");
 ////    vtkwriter.addCellData(perm_z, "perm_z");
 //    vtkwriter.write("data/Permeability");
-//    
+//
 //    return;
 //  }         // visualizePermeability
 

@@ -4,7 +4,6 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/grid/search.hh>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
@@ -44,7 +43,6 @@ private:
   std::map<IndexType, std::unique_ptr<PerGridSearchType>> coarse_searches_;
   std::unique_ptr<CoarseEntityPointerType> current_coarse_pointer_;
 };
-
 
 } // namespace MsFEM {
 } // namespace Multiscale {

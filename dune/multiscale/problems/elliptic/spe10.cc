@@ -14,21 +14,20 @@ namespace Multiscale {
 namespace Problem {
 namespace SPE10 {
 
-
 ModelProblemData::ModelProblemData()
   : IModelProblemData()
-  , subBoundaryInfo_()
-{
-  boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
-  subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
+  , subBoundaryInfo_() {
+  boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(
+      DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
+  subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
+      DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
 std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/spe10.dgf");
 }
 
-std::pair<CommonTraits::DomainType, CommonTraits::DomainType>
-ModelProblemData::gridCorners() const {
+std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(0.0);
   switch (View::dimension /*View is defined in IModelProblemData*/) {
@@ -47,13 +46,9 @@ ModelProblemData::gridCorners() const {
   return {lowerLeft, upperRight};
 }
 
-const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const {
-  return *boundaryInfo_;
-}
+const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const { return *boundaryInfo_; }
 
-const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const {
-  return *subBoundaryInfo_;
-}
+const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const { return *subBoundaryInfo_; }
 
 ParameterTree ModelProblemData::boundary_settings() const {
   Dune::ParameterTree boundarySettings;
@@ -77,12 +72,10 @@ ParameterTree ModelProblemData::boundary_settings() const {
   return boundarySettings;
 }
 
-void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const {
-  y = 1.0;
-} // evaluate
+void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 1.0; } // evaluate
 
 void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
-  if (std::abs(x[1]-670.56)<1e-6)
+  if (std::abs(x[1] - 670.56) < 1e-6)
     y = 1.0e-3;
   else
     y = 0.0;
@@ -106,12 +99,10 @@ Diffusion::~Diffusion() {
   permeability_ = nullptr;
 }
 
-void Diffusion::evaluate(const DomainType &/*x*/, Diffusion::RangeType &/*y*/) const
-{
-  DUNE_THROW(NotImplemented, "");
-}
+void Diffusion::evaluate(const DomainType& /*x*/, Diffusion::RangeType& /*y*/) const { DUNE_THROW(NotImplemented, ""); }
 
-void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                              Problem::JacobianRangeType& flux) const {
   BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
 

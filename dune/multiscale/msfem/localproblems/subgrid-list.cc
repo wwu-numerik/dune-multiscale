@@ -39,7 +39,7 @@ LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coar
   const auto& gridCorners = Problem::getModelData()->gridCorners();
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
-    
+
   for (const auto& coarse_entity : DSC::viewRange(*coarseSpace_.grid_view())) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements

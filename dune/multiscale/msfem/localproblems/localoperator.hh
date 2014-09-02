@@ -32,10 +32,10 @@ class LocalProblemOperator {
   typedef CommonTraits::DiscreteFunctionSpaceType CoarseSpaceType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
-  typedef GDT::Operators::EllipticCG< Problem::LocalDiffusionType,
-    LocalLinearOperatorType, LocalGridDiscreteFunctionSpaceType > EllipticOperatorType;
-  typedef GDT::Constraints::Dirichlet < typename MsFEMTraits::LocalGridViewType::Intersection, CommonTraits::RangeFieldType >
-    DirichletConstraintsType;
+  typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType,
+                                     LocalGridDiscreteFunctionSpaceType> EllipticOperatorType;
+  typedef GDT::Constraints::Dirichlet<typename MsFEMTraits::LocalGridViewType::Intersection,
+                                      CommonTraits::RangeFieldType> DirichletConstraintsType;
   typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
 
 public:
@@ -51,11 +51,11 @@ public:
   * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
   * functions. The discrete functions in allLocalRHS will be cleared in this function.
   */
-  void assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
-                              MsFEMTraits::LocalSolutionVectorType& allLocalRHS) ;
+  void assemble_all_local_rhs(const CoarseEntityType& coarseEntity, MsFEMTraits::LocalSolutionVectorType& allLocalRHS);
 
   void apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
+
 private:
   const LocalGridDiscreteFunctionSpaceType& localSpace_;
   const DiffusionOperatorType& diffusion_operator_;

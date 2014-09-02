@@ -23,9 +23,9 @@ struct ErrorContainer {
     , total_approximation_error_(max_loop_number)
     , total_fine_grid_jumps_(max_loop_number)
     , total_estimated_H1_error_(max_loop_number)
-    , locals({{&loc_coarse_residual_,         &loc_coarse_grid_jumps_,   &loc_projection_error_,
-               &loc_conservative_flux_jumps_, &loc_approximation_error_, &loc_fine_grid_jumps_}})
-    , totals({{&total_coarse_residual_,         &total_projection_error_,    &total_coarse_grid_jumps_,
+    , locals({{&loc_coarse_residual_, &loc_coarse_grid_jumps_, &loc_projection_error_, &loc_conservative_flux_jumps_,
+               &loc_approximation_error_, &loc_fine_grid_jumps_}})
+    , totals({{&total_coarse_residual_, &total_projection_error_, &total_coarse_grid_jumps_,
                &total_conservative_flux_jumps_, &total_approximation_error_, &total_fine_grid_jumps_}}) {}
 
   // local coarse residual, i.e. H ||f||_{L^2(T)}

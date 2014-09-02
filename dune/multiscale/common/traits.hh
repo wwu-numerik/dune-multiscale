@@ -47,8 +47,8 @@ struct CommonTraits {
   static constexpr int world_dim = GridSelector::dimworld;
   static_assert(dimDomain == world_dim, "we really don't want to use an embedded grid");
   typedef Dune::SPGrid<double, world_dim> GridType;
-//    typedef Dune::SGrid<world_dim, world_dim> GridType;
-//    typedef Dune::YaspGrid<world_dim> GridType;
+  //    typedef Dune::SGrid<world_dim, world_dim> GridType;
+  //    typedef Dune::YaspGrid<world_dim> GridType;
 
   static constexpr unsigned int exact_solution_space_order = 3 * st_lagrangespace_order;
 
@@ -64,9 +64,8 @@ struct CommonTraits {
       GDT::ChooseSpaceBackend::pdelab;
 #endif
 
-  typedef GDT::Spaces::ContinuousLagrangeProvider<GridType, DSG::ChooseLayer::leaf,
-                                                  gdt_backend_type, st_lagrangespace_order,
-                                                  FieldType, dimRange > SpaceProviderType;
+  typedef GDT::Spaces::ContinuousLagrangeProvider<GridType, DSG::ChooseLayer::leaf, gdt_backend_type,
+                                                  st_lagrangespace_order, FieldType, dimRange> SpaceProviderType;
 
   static constexpr auto st_gdt_grid_level = 0;
   typedef SpaceProviderType::Type GdtSpaceType;
@@ -80,8 +79,9 @@ struct CommonTraits {
   typedef BackendChooser<DiscreteFunctionSpaceType>::ConstDiscreteFunctionType ConstDiscreteFunctionType;
 
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
-  typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain> DiffusionFunctionBaseType;
-  typedef Stuff::Functions::Constant< EntityType, FieldType, dimDomain, FieldType, dimRange > ConstantFunctionBaseType;
+  typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain>
+  DiffusionFunctionBaseType;
+  typedef Stuff::Functions::Constant<EntityType, FieldType, dimDomain, FieldType, dimRange> ConstantFunctionBaseType;
   typedef ConstantFunctionBaseType GdtConstantFunctionType;
 
   typedef DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
@@ -104,7 +104,6 @@ struct CommonTraits {
 
   static constexpr int polynomial_order = DiscreteFunctionSpaceType::polOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
-
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>

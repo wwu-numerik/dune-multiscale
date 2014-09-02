@@ -17,7 +17,6 @@
 #include <memory>
 #include <sstream>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace FEM {
@@ -36,7 +35,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   }
 }
 
-void print_info(const Problem::IModelProblemData &info, std::ostream& out) {
+void print_info(const Problem::IModelProblemData& info, std::ostream& out) {
   // epsilon is specified in the parameter file
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
   const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);
@@ -58,8 +57,7 @@ void print_info(const Problem::IModelProblemData &info, std::ostream& out) {
   out << "Epsilon = " << epsilon_ << std::endl << std::endl;
 }
 
-void write_discrete_function(CommonTraits::DiscreteFunctionType &discrete_solution, const std::string prefix)
-{
+void write_discrete_function(CommonTraits::DiscreteFunctionType& discrete_solution, const std::string prefix) {
   discrete_solution.visualize(prefix, true, Dune::VTK::appendedbase64);
 }
 

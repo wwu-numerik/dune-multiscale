@@ -18,14 +18,15 @@ struct BackendChooser {
   static constexpr auto backend_type = Stuff::LA::ChooseBackend::eigen_sparse;
 #endif
 
-  typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
-    backend_type >::VectorType DiscreteFunctionDataType;
+  typedef typename Stuff::LA::Container<typename DiscreteFunctionSpaceType::RangeFieldType, backend_type>::VectorType
+  DiscreteFunctionDataType;
   typedef DiscreteFunctionDataType GdtVectorType;
-  typedef typename Stuff::LA::Container< typename DiscreteFunctionSpaceType::RangeFieldType,
-    backend_type >::MatrixType LinearOperatorType;
-  typedef GDT::DiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType >      DiscreteFunctionType;
-  typedef GDT::ConstDiscreteFunction< DiscreteFunctionSpaceType, DiscreteFunctionDataType > ConstDiscreteFunctionType;
-  typedef Stuff::LA::Solver< LinearOperatorType, typename DiscreteFunctionSpaceType::CommunicatorType > InverseOperatorType;
+  typedef typename Stuff::LA::Container<typename DiscreteFunctionSpaceType::RangeFieldType, backend_type>::MatrixType
+  LinearOperatorType;
+  typedef GDT::DiscreteFunction<DiscreteFunctionSpaceType, DiscreteFunctionDataType> DiscreteFunctionType;
+  typedef GDT::ConstDiscreteFunction<DiscreteFunctionSpaceType, DiscreteFunctionDataType> ConstDiscreteFunctionType;
+  typedef Stuff::LA::Solver<LinearOperatorType, typename DiscreteFunctionSpaceType::CommunicatorType>
+  InverseOperatorType;
 };
 
 } // namespace Multiscale

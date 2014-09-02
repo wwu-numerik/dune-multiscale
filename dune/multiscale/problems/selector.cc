@@ -19,21 +19,19 @@ template <class GridImp, class IntersectionImp>
 class Intersection;
 } // namespace Dune
 
-
 using namespace Dune::Multiscale;
 
-template< class ReturnType>
+template <class ReturnType>
 struct AutoInitBase {
 
-  virtual ~AutoInitBase(){}
+  virtual ~AutoInitBase() {}
 
   AutoInitBase()
-    : ptr(nullptr)
-  {}
+    : ptr(nullptr) {}
 
   virtual ReturnType make() const = 0;
   const ReturnType& call() {
-    if(ptr==nullptr)
+    if (ptr == nullptr)
       ptr = make();
     return ptr;
   }
@@ -41,36 +39,34 @@ struct AutoInitBase {
   ReturnType ptr;
 };
 
-template< class ReturnType, class Function>
+template <class ReturnType, class Function>
 struct AutoInit : public AutoInitBase<ReturnType> {
 
   AutoInit()
     : AutoInitBase<ReturnType>()
-    , maker([]() { return static_cast<ReturnType>(DSC::make_unique<Function>());})
-  {}
+    , maker([]() { return static_cast<ReturnType>(DSC::make_unique<Function>()); }) {}
 
-  virtual ReturnType make() const {
-    return maker.operator()();
-  }
+  virtual ReturnType make() const { return maker.operator()(); }
   const std::function<ReturnType()> maker;
 };
 
-#define MAP_ITEM(ProblemName, ReturnType, FunctionName) \
+#define MAP_ITEM(ProblemName, ReturnType, FunctionName)                                                                \
   {                                                                                                                    \
-      #ProblemName, std::shared_ptr<AutoInitBase<ReturnType>>(new AutoInit<ReturnType, Problem::ProblemName::FunctionName>()) \
+    #ProblemName, std::shared_ptr < AutoInitBase < ReturnType >> (new AutoInit < ReturnType,                           \
+                                                                  Problem::ProblemName::FunctionName > ())             \
   }
 
-# define FUNCTION_MAP(ReturnType, FunctionName)                                                                        \
-    std::map<std::string, std::shared_ptr<AutoInitBase<ReturnType>>>(                              \
-        {MAP_ITEM(Nine, ReturnType, FunctionName), MAP_ITEM(SPE10, ReturnType, FunctionName), MAP_ITEM(Tarbert, ReturnType, FunctionName)})
+#define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
+  std::map<std::string, std::shared_ptr<AutoInitBase<ReturnType>>>({MAP_ITEM(Nine, ReturnType, FunctionName),          \
+                                                                    MAP_ITEM(SPE10, ReturnType, FunctionName),         \
+                                                                    MAP_ITEM(Tarbert, ReturnType, FunctionName)})
 
 /* to add a new problem a line like this above
  * MAP_ITEM(NewProblemName, ReturnType, FunctionName), \
 */
 
 template <class FunctionType>
-const FunctionType& find_and_call_item(
-    std::map<std::string, std::shared_ptr<AutoInitBase<FunctionType>>>& rets) {
+const FunctionType& find_and_call_item(std::map<std::string, std::shared_ptr<AutoInitBase<FunctionType>>>& rets) {
   auto it = rets.find(Dune::Multiscale::Problem::name());
   if (it == rets.end())
     DUNE_THROW(Dune::InvalidStateException, "no data for Problem. (toggle PROBLEM_NINE_ONLY?)");
@@ -88,12 +84,12 @@ const Problem::BasePtr& Dune::Multiscale::Problem::getExactSolution() {
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const Problem::IModelProblemData> &Dune::Multiscale::Problem::getModelData() {
+const std::unique_ptr<const Problem::IModelProblemData>& Dune::Multiscale::Problem::getModelData() {
   static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::IModelProblemData>, ModelProblemData);
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const Problem::DiffusionBase> &Dune::Multiscale::Problem::getDiffusion() {
+const std::unique_ptr<const Problem::DiffusionBase>& Dune::Multiscale::Problem::getDiffusion() {
   static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::DiffusionBase>, Diffusion);
   return find_and_call_item(funcs);
 }
@@ -103,7 +99,7 @@ const std::unique_ptr<const Problem::DirichletDataBase>& Dune::Multiscale::Probl
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const Problem::NeumannDataBase> &Dune::Multiscale::Problem::getNeumannData() {
+const std::unique_ptr<const Problem::NeumannDataBase>& Dune::Multiscale::Problem::getNeumannData() {
   static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::NeumannDataBase>, NeumannData);
   return find_and_call_item(funcs);
 }

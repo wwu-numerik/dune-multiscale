@@ -12,7 +12,6 @@
 #include <dune/grid/spgrid/capabilities.hh>
 #endif
 
-
 #include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
@@ -30,8 +29,7 @@ void init(int argc, char** argv) {
   Dune::Fem::MPIManager::initialize(argc, argv);
 #endif
   auto& helper = Dune::MPIHelper::instance(argc, argv);
-  if (helper.size() > 1 &&
-      !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v)) {
+  if (helper.size() > 1 && !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v)) {
     DUNE_THROW(Dune::InvalidStateException, "mpi enabled + serial grid = bad idea");
   }
   DSC::Config().read_command_line(argc, argv);
