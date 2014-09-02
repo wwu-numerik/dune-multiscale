@@ -53,11 +53,13 @@ public:
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType& x, RangeType& y) const;
 
-  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const;
+  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                     Problem::JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                             const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
-  
-//  void visualizePermeability(const CommonTraits::GridType& grid) const;
+                             const Problem::JacobianRangeType& direction_gradient,
+                             Problem::JacobianRangeType& flux) const;
+
+  //  void visualizePermeability(const CommonTraits::GridType& grid) const;
 private:
   void readPermeability();
 
@@ -84,7 +86,6 @@ public:
 
   void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
 };
-
 
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)

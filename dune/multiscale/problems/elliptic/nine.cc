@@ -19,27 +19,21 @@ static constexpr double epsilon = 0.05;
 ModelProblemData::ModelProblemData()
   : IModelProblemData()
   , boundaryInfo_(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
-  , subBoundaryInfo_()
-{}
+  , subBoundaryInfo_() {}
 
 std::string ModelProblemData::getMacroGridFile() const {
   return ("../dune/multiscale/grids/macro_grids/elliptic/msfem_cube_three.dgf");
 }
 
-std::pair<CommonTraits::DomainType, CommonTraits::DomainType>
-ModelProblemData::gridCorners() const {
+std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(1.0);
   return {lowerLeft, upperRight};
 }
 
-const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const {
-  return *boundaryInfo_;
-}
+const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const { return *boundaryInfo_; }
 
-const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const {
-  return subBoundaryInfo_;
-}
+const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const { return subBoundaryInfo_; }
 
 ParameterTree ModelProblemData::boundary_settings() const {
   Dune::ParameterTree boundarySettings;
@@ -49,25 +43,23 @@ ParameterTree ModelProblemData::boundary_settings() const {
     boundarySettings["default"] = "dirichlet";
     boundarySettings["compare_tolerance"] = "1e-10";
     switch (CommonTraits::world_dim) {
-    case 1:
-      break;
-    case 2:
-      break;
-    case 3:
-      boundarySettings["neumann.0"] = "[0.0 0.0 1.0]";
-      boundarySettings["neumann.1"] = "[0.0 0.0 -1.0]";
+      case 1:
+        break;
+      case 2:
+        break;
+      case 3:
+        boundarySettings["neumann.0"] = "[0.0 0.0 1.0]";
+        boundarySettings["neumann.1"] = "[0.0 0.0 -1.0]";
     }
   }
   return boundarySettings;
 }
 
-
 Source::Source() {}
 Diffusion::Diffusion() {}
 ExactSolution::ExactSolution() {}
 
-
-PURE HOT  void Source::evaluate(const DomainType& x, RangeType& y) const {
+PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
   constexpr double pi_square = M_PI * M_PI;
   const double x0_eps = (x[0] / epsilon);
   const double cos_2_pi_x0_eps = cos(2.0 * M_PI * x0_eps);
@@ -82,7 +74,8 @@ PURE HOT  void Source::evaluate(const DomainType& x, RangeType& y) const {
       pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (2.0 * M_PI)) * (1.0 / epsilon) * sin_2_pi_x0_eps;
 
   const typename FunctionSpaceType::RangeType grad_u =
-      (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) + ((-1.0) * epsilon * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
+      (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) +
+      ((-1.0) * epsilon * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
       (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
 
   const typename FunctionSpaceType::RangeType d_x0_x0_u =
@@ -97,8 +90,7 @@ PURE HOT  void Source::evaluate(const DomainType& x, RangeType& y) const {
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
 } // evaluate
 
-void Diffusion::evaluate(const DomainType &x, Diffusion::RangeType &ret) const
-{
+void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
   const double x0_eps = (x[0] / epsilon);
   constexpr double inv_pi8pi = 1. / (8.0 * M_PI * M_PI);
   const double cos_eval = cos(2.0 * M_PI * x0_eps);
@@ -106,15 +98,17 @@ void Diffusion::evaluate(const DomainType &x, Diffusion::RangeType &ret) const
   ret[1][1] = inv_pi8pi * (1.0 + (0.5 * cos_eval));
 }
 
-PURE HOT  void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
+PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                                       Problem::JacobianRangeType& flux) const {
   Diffusion::RangeType eval;
   evaluate(x, eval);
   flux[0][0] = eval[0][0] * direction[0][0];
   flux[0][1] = eval[1][1] * direction[0][1];
 } // diffusiveFlux
 
-PURE  void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
-                                      const Problem::JacobianRangeType& /*direction_gradient*/, Problem::JacobianRangeType& flux) const {
+PURE void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                                           const Problem::JacobianRangeType& /*direction_gradient*/,
+                                           Problem::JacobianRangeType& flux) const {
   Diffusion::RangeType eval;
   evaluate(x, eval);
   flux[0][0] = eval[0][0] * direction[0][0];
@@ -123,7 +117,7 @@ PURE  void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::
 
 size_t Diffusion::order() const { return 5; }
 
-PURE HOT  void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
+PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   // approximation obtained by homogenized solution + first corrector
 
   constexpr double M_TWOPI = M_PI * 2.0;
@@ -135,11 +129,10 @@ PURE HOT  void ExactSolution::evaluate(const DomainType& x, RangeType& y) const 
   const double cos_2_pi_x0 = cos(x0_2_pi);
   const double sin_2_pi_x1 = sin(x1_2_pi);
 
-  y = sin_2_pi_x0 * sin_2_pi_x1
-      + (0.5 * epsilon * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+  y = sin_2_pi_x0 * sin_2_pi_x1 + (0.5 * epsilon * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 } // evaluate
 
-PURE HOT  void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
+PURE HOT void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
   constexpr double M_TWOPI = M_PI * 2.0;
   const double x0_eps = (x[0] / epsilon);
   const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
@@ -152,22 +145,19 @@ PURE HOT  void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& g
   const double cos_2_pi_x1 = cos(x1_2_pi);
   const double eps_pi_sin_2_pi_x0_eps = epsilon * M_PI * sin_2_pi_x0_eps;
 
-  grad_u[0][1] = (M_TWOPI * sin_2_pi_x0 * cos_2_pi_x1) + (eps_pi_sin_2_pi_x0_eps * cos_2_pi_x0 * cos_2_pi_x1 );
+  grad_u[0][1] = (M_TWOPI * sin_2_pi_x0 * cos_2_pi_x1) + (eps_pi_sin_2_pi_x0_eps * cos_2_pi_x0 * cos_2_pi_x1);
 
-  grad_u[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1) - (eps_pi_sin_2_pi_x0_eps * sin_2_pi_x0 * sin_2_pi_x1 ) +
+  grad_u[0][0] = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1) - (eps_pi_sin_2_pi_x0_eps * sin_2_pi_x0 * sin_2_pi_x1) +
                  (M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
-
 }
 
-PURE  void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
-  solution_.evaluate(x, y);
-} // evaluate
+PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const { solution_.evaluate(x, y); } // evaluate
 
-PURE  void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y) const {
+PURE void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y) const {
   solution_.jacobian(x, y);
 } // jacobian
 
-PURE  void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
+PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 } // namespace Nine
 } // namespace Problem

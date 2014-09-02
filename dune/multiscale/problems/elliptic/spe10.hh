@@ -53,9 +53,11 @@ public:
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType&, RangeType&) const;
 
-  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const;
+  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+                     Problem::JacobianRangeType& flux) const;
   void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                             const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const;
+                             const Problem::JacobianRangeType& direction_gradient,
+                             Problem::JacobianRangeType& flux) const;
 
 private:
   void readPermeability();

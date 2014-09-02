@@ -13,7 +13,7 @@ namespace MsFEM {
 typedef DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType> IOType;
 
 LocalSolutionManager::LocalSolutionManager(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                           const CoarseEntityType& coarseEntity, const LocalGridList &subgridList)
+                                           const CoarseEntityType& coarseEntity, const LocalGridList& subgridList)
   : subgridList_(subgridList)
   , subgrid_(subgridList_.getSubGrid(coarseEntity))
   , grid_view_ptr_(std::make_shared<MsFEMTraits::LocalGridViewType>(subgrid_.leafGridView()))

@@ -33,19 +33,20 @@
 #include <dune/gdt/spaces/continuouslagrange.hh>
 #include <dune/gdt/discretefunction/default.hh>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
 //! the main FEM computation
-void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid_pointer, const std::string /*filename*/) {
+void algorithm(const std::shared_ptr<const CommonTraits::GridType>& macro_grid_pointer,
+               const std::string /*filename*/) {
 
   const auto& source = Problem::getSource();
   const auto& diffusion = Problem::getDiffusion();
 
-  Stuff::Grid::Providers::ConstDefault< CommonTraits::GridType > grid_provider(*macro_grid_pointer);
-  const CommonTraits::GdtSpaceType space = CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
+  Stuff::Grid::Providers::ConstDefault<CommonTraits::GridType> grid_provider(*macro_grid_pointer);
+  const CommonTraits::GdtSpaceType space =
+      CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
   CommonTraits::GdtVectorType solution_vector(space.mapper().size());
   CommonTraits::DiscreteFunctionType solution(space, solution_vector);
   Elliptic_FEM_Solver(space).apply(*diffusion, *source, solution);

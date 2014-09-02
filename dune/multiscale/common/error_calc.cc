@@ -17,11 +17,10 @@
 #include "dune/multiscale/problems/base.hh"
 #include "error_calc.hh"
 
-Dune::Multiscale:: ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType* const msfem_solution,
-                                    const CommonTraits::ConstDiscreteFunctionType* const fem_solution)
+Dune::Multiscale::ErrorCalculator::ErrorCalculator(const CommonTraits::DiscreteFunctionType* const msfem_solution,
+                                                   const CommonTraits::ConstDiscreteFunctionType* const fem_solution)
   : msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution) {}
-
 
 /** Compute and print errors between exact, msfem and fem solution
  *
@@ -41,7 +40,7 @@ Dune::Multiscale:: ErrorCalculator::ErrorCalculator(const CommonTraits::Discrete
  *            exact solution
  *          - "msfem_fem_L2" The L2 error between the msfem solution and the
  *            fem solution
- *          Here, each entry will only be present if the corresponding error was 
+ *          Here, each entry will only be present if the corresponding error was
  *          computed.
  */
 std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
@@ -51,10 +50,11 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
 
-  typedef Stuff::Functions::Difference< Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType > DifferenceType;
+  typedef Stuff::Functions::Difference<Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType>
+  DifferenceType;
   /// TODO only call assemble once
   auto& space = fem_solution_ ? fem_solution_->space() : msfem_solution_->space();
-  GDT::SystemAssembler< CommonTraits::GdtSpaceType > system_assembler(space);
+  GDT::SystemAssembler<CommonTraits::GdtSpaceType> system_assembler(space);
   const auto& grid_view = space.grid_view();
 
   std::map<std::string, double> csv;
@@ -63,8 +63,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   if (Problem::getModelData()->hasExactSolution()) {
     const auto& u = *Dune::Multiscale::Problem::getExactSolution();
 
-
-    #if 0 // "quality assurance" for discrete exact solution
+#if 0 // "quality assurance" for discrete exact solution
     {
       typedef Dune::Fem::LagrangeDiscreteFunctionSpace<CommonTraits::FunctionSpaceType,
           CommonTraits::GridPartType, CommonTraits::exact_solution_space_order>
@@ -82,15 +81,15 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       csv["msfem_exact_L2"] = ana_error;
       csv["msfem_exact_H1"] = h1_ana_error;
     }
-    #endif
+#endif
 
     if (msfem_solution_) {
       const DifferenceType difference(u, *msfem_solution_);
-      L2Localizable< CommonTraits::GridViewType, DifferenceType >
-          l2_error_product(*grid_view, difference, over_integrate);
+      L2Localizable<CommonTraits::GridViewType, DifferenceType> l2_error_product(*grid_view, difference,
+                                                                                 over_integrate);
       system_assembler.add(l2_error_product);
-      H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
-          h1_semi_error_product(*grid_view, difference, over_integrate);
+      H1SemiLocalizable<CommonTraits::GridViewType, DifferenceType> h1_semi_error_product(*grid_view, difference,
+                                                                                          over_integrate);
       system_assembler.add(h1_semi_error_product);
       system_assembler.assemble();
 
@@ -105,11 +104,11 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
     if (fem_solution_) {
       const DifferenceType difference(u, *fem_solution_);
-      L2Localizable< CommonTraits::GridViewType, DifferenceType >
-          l2_error_product(*grid_view, difference, over_integrate);
+      L2Localizable<CommonTraits::GridViewType, DifferenceType> l2_error_product(*grid_view, difference,
+                                                                                 over_integrate);
       system_assembler.add(l2_error_product);
-      H1SemiLocalizable< CommonTraits::GridViewType, DifferenceType >
-          h1_semi_error_product(*grid_view, difference, over_integrate);
+      H1SemiLocalizable<CommonTraits::GridViewType, DifferenceType> h1_semi_error_product(*grid_view, difference,
+                                                                                          over_integrate);
       system_assembler.add(h1_semi_error_product);
       system_assembler.assemble();
 
@@ -124,25 +123,25 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   }
   if (msfem_solution_ && fem_solution_) {
 
-    typedef Stuff::Functions::Difference< CommonTraits::ConstDiscreteFunctionType,
-        CommonTraits::ConstDiscreteFunctionType > DiscreteDifferenceType;
+    typedef Stuff::Functions::Difference<CommonTraits::ConstDiscreteFunctionType,
+                                         CommonTraits::ConstDiscreteFunctionType> DiscreteDifferenceType;
     const DiscreteDifferenceType difference(*msfem_solution_, *fem_solution_);
 
-    L2Localizable< CommonTraits::GridViewType, DiscreteDifferenceType >
-        l2_error_product(*grid_view, difference, over_integrate);
+    L2Localizable<CommonTraits::GridViewType, DiscreteDifferenceType> l2_error_product(*grid_view, difference,
+                                                                                       over_integrate);
     system_assembler.add(l2_error_product);
-    L2Localizable< CommonTraits::GridViewType, CommonTraits::ConstDiscreteFunctionType >
-        l2_msfem(*grid_view, *msfem_solution_, over_integrate);
+    L2Localizable<CommonTraits::GridViewType, CommonTraits::ConstDiscreteFunctionType> l2_msfem(
+        *grid_view, *msfem_solution_, over_integrate);
     system_assembler.add(l2_msfem);
-    H1SemiLocalizable< CommonTraits::GridViewType, DiscreteDifferenceType >
-        h1_semi_error_product(*grid_view, difference, over_integrate);
+    H1SemiLocalizable<CommonTraits::GridViewType, DiscreteDifferenceType> h1_semi_error_product(*grid_view, difference,
+                                                                                                over_integrate);
     system_assembler.add(h1_semi_error_product);
     system_assembler.assemble();
 
     const auto approx_msfem_error = std::sqrt(l2_error_product.apply2());
     const auto no = std::sqrt(l2_msfem.apply2());
-    if (std::abs(no)>1e-12)
-      out << "|| u_msfem - u_fem ||_L2 / || u_msfem ||_L2 =  " << approx_msfem_error/no << std::endl;
+    if (std::abs(no) > 1e-12)
+      out << "|| u_msfem - u_fem ||_L2 / || u_msfem ||_L2 =  " << approx_msfem_error / no << std::endl;
     else
       out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
 
@@ -164,6 +163,6 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     *csvfile << key_val.second << sep;
   }
   *csvfile << std::endl;
-  
+
   return csv;
 }

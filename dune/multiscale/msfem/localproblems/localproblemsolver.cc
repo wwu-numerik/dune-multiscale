@@ -45,12 +45,10 @@ LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + std::string("/local_problems/")) {}
 
 LocalProblemSolver::LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                       LocalGridList& subgrid_list,
-                                       const Problem::DiffusionBase& diffusion_operator)
+                                       LocalGridList& subgrid_list, const Problem::DiffusionBase& diffusion_operator)
   : diffusion_(diffusion_operator)
   , subgrid_list_(subgrid_list)
   , coarse_space_(coarse_space) {}
-
 
 void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
                                                   MsFEMTraits::LocalSolutionVectorType& allLocalSolutions) const {
@@ -86,8 +84,8 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    const auto norm = GDT::Products::L2< typename MsFEMTraits::LocalGridViewType >
-                      (*current_rhs.space().grid_view()).induced_norm(current_rhs);
+    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(*current_rhs.space().grid_view())
+                          .induced_norm(current_rhs);
     if (norm < 1e-12) {
       current_solution.vector() *= 0;
       DSC_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
@@ -109,7 +107,7 @@ void LocalProblemSolver::solve_for_all_cells() {
 
   if (grid.comm().size() > 0)
     DSC_LOG_DEBUG << "Rank " << grid.comm().rank() << " will solve local problems for " << coarseGridSize
-                 << " coarse entities!" << std::endl;
+                  << " coarse entities!" << std::endl;
   else {
     DSC_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
   }
@@ -142,8 +140,8 @@ void LocalProblemSolver::solve_for_all_cells() {
   DSC_LOG_DEBUG << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n";
   DSC_LOG_DEBUG << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n";
   DSC_LOG_DEBUG << "Average time for solving a local problem = " << solveTime.average() << "s.\n";
-  DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = "
-                << totalTime << "s on rank" << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
+  DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
+                << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
 } // assemble_all
 
 } // namespace MsFEM {

@@ -16,29 +16,28 @@ namespace Dune {
 namespace Multiscale {
 namespace FEM {
 
-template< class GridViewType >
+template <class GridViewType>
 class ProblemNineDiffusion;
 
-template< class GridViewType >
+template <class GridViewType>
 class ProblemNineForce;
 
-template< class GridViewType >
+template <class GridViewType>
 class ProblemNineDirichlet;
 
-template< class GridViewType >
+template <class GridViewType>
 class ProblemNineNeumann;
 
-template< class GridViewType >
+template <class GridViewType>
 class ProblemNineExactSolution;
 
-template< class GridType,
-          Stuff::Grid::ChooseLayer grid_layer = Stuff::Grid::ChooseLayer::leaf,
+template <class GridType, Stuff::Grid::ChooseLayer grid_layer = Stuff::Grid::ChooseLayer::leaf,
           GDT::ChooseSpaceBackend space_backend = GDT::ChooseSpaceBackend::pdelab,
-          Stuff::LA::ChooseBackend la_backend = Stuff::LA::ChooseBackend::istl_sparse >
+          Stuff::LA::ChooseBackend la_backend = Stuff::LA::ChooseBackend::istl_sparse>
 class EllipticDuneGdtDiscretization;
 
 //! the main FEM computation
-void algorithm(const std::shared_ptr< const CommonTraits::GridType >& macro_grid_pointer, const std::string filename);
+void algorithm(const std::shared_ptr<const CommonTraits::GridType>& macro_grid_pointer, const std::string filename);
 
 } // namespace FEM {
 } // namespace Multiscale {

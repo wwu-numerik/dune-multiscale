@@ -29,8 +29,7 @@ class LocalSolutionManager;
 class LocalGridList;
 class CoarseScaleOperator;
 
-class CoarseScaleOperatorTraits
-{
+class CoarseScaleOperatorTraits {
 public:
   typedef CoarseScaleOperator derived_type;
   typedef CommonTraits::LinearOperatorType MatrixType;
@@ -40,46 +39,44 @@ public:
 }; // class EllipticCGTraits
 
 class CoarseScaleOperator
-  : public GDT::Operators::MatrixBased< CoarseScaleOperatorTraits >
-  , public GDT::SystemAssembler< CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
-                                 CoarseScaleOperatorTraits::SourceSpaceType>
-{
-  typedef GDT::Operators::EllipticCG< Problem::DiffusionBase, CommonTraits::LinearOperatorType,
-                                      CommonTraits::GdtSpaceType > EllipticOperatorType;
-  typedef GDT::Operators::MatrixBased< CoarseScaleOperatorTraits > OperatorBaseType;
+    : public GDT::Operators::MatrixBased<CoarseScaleOperatorTraits>,
+      public GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
+                                  CoarseScaleOperatorTraits::SourceSpaceType> {
+  typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
+                                     CommonTraits::GdtSpaceType> EllipticOperatorType;
+  typedef GDT::Operators::MatrixBased<CoarseScaleOperatorTraits> OperatorBaseType;
   typedef MsFEMCodim0Integral LocalOperatorType;
   typedef MsFemCodim0Matrix LocalAssemblerType;
-  typedef GDT::SystemAssembler< CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
-  CoarseScaleOperatorTraits::SourceSpaceType> AssemblerBaseType;
+  typedef GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
+                               CoarseScaleOperatorTraits::SourceSpaceType> AssemblerBaseType;
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
   typedef typename CommonTraits::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
+
 public:
   typedef CoarseScaleOperatorTraits Traits;
 
-  typedef typename Traits::MatrixType       MatrixType;
-  typedef typename Traits::SourceSpaceType  SourceSpaceType;
-  typedef typename Traits::RangeSpaceType   RangeSpaceType;
-  typedef typename Traits::GridViewType     GridViewType;
+  typedef typename Traits::MatrixType MatrixType;
+  typedef typename Traits::SourceSpaceType SourceSpaceType;
+  typedef typename Traits::RangeSpaceType RangeSpaceType;
+  typedef typename Traits::GridViewType GridViewType;
 
   using OperatorBaseType::pattern;
 
   static Stuff::LA::SparsityPatternDefault pattern(const RangeSpaceType& range_space,
-                                                   const SourceSpaceType& source_space,
-                                                   const GridViewType& grid_view);
+                                                   const SourceSpaceType& source_space, const GridViewType& grid_view);
 
-  CoarseScaleOperator(
-             const SourceSpaceType& src_spc,
-             LocalGridList& localGridList);
+  CoarseScaleOperator(const SourceSpaceType& src_spc, LocalGridList& localGridList);
 
   virtual ~CoarseScaleOperator() {}
 
   virtual void assemble() DS_OVERRIDE DS_FINAL;
 
   void apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
-                                          CoarseScaleOperator::CoarseDiscreteFunction& solution);
+                     CoarseScaleOperator::CoarseDiscreteFunction& solution);
 
   MatrixType& system_matrix();
   const MatrixType& system_matrix() const;
+
 private:
   MatrixType global_matrix_;
   const LocalOperatorType local_operator_;

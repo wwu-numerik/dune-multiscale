@@ -37,7 +37,6 @@
 #include <dune/gdt/assembler/system.hh>
 #include <dune/gdt/operators/projections.hh>
 
-
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 
 namespace Dune {
@@ -87,10 +86,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       BOOST_ASSERT_MSG(false, "no adding of the boundary correctors??");
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-//      BOOST_ASSERT_MSG(
-//          static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
-//              static_cast<long long>(coarseSolutionLF.size()),
-//          "The current implementation relies on having thesame types of elements on coarse and fine level!");
+      //      BOOST_ASSERT_MSG(
+      //          static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
+      //              static_cast<long long>(coarseSolutionLF.size()),
+      //          "The current implementation relies on having thesame types of elements on coarse and fine level!");
       for (std::size_t dof = 0; dof < coarseSolutionLF.vector().size(); ++dof) {
         localSolutions[dof]->vector() *= coarseSolutionLF.vector().get(dof);
         local_correction.vector() += localSolutions[dof]->vector();
@@ -132,13 +131,12 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   ProxyType proxy(local_corrections, coarse_indexset, search);
   ProjectionType::project(proxy, fine_scale_part, search);
   BOOST_ASSERT_MSG(fine_scale_part.dofs_valid(), "Fine scale part DOFs need to be valid!");
-  //backend storage no longer needed from here on
+  // backend storage no longer needed from here on
   DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                  const DMP::DiffusionBase &diffusion_op,
-                                  DiscreteFunctionType& coarse_scale_part,
+                                  const DMP::DiffusionBase& diffusion_op, DiscreteFunctionType& coarse_scale_part,
                                   DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   BOOST_ASSERT_MSG(coarse_scale_part.dofs_valid(), "Coarse scale part DOFs need to be valid!");
@@ -159,13 +157,11 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   const auto& neumann = Problem::getNeumannData();
 
   CommonTraits::DiscreteFunctionType dirichlet_projection(coarse_space);
-  GDT::Operators::DirichletProjectionLocalizable< CommonTraits::GridViewType, Problem::DirichletDataBase, CommonTraits::DiscreteFunctionType >
-      dirichlet_projection_operator(*(coarse_space.grid_view()),
-                                    boundary_info,
-                                    *dirichlet,
-                                    dirichlet_projection);
-  GDT::Functionals::L2Face< Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType >
-      neumann_functional(*neumann, msfem_rhs.vector(), coarse_space);
+  GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
+                                                 CommonTraits::DiscreteFunctionType>
+  dirichlet_projection_operator(*(coarse_space.grid_view()), boundary_info, *dirichlet, dirichlet_projection);
+  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType>
+  neumann_functional(*neumann, msfem_rhs.vector(), coarse_space);
   GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarse_space);
 
   CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list);
@@ -173,7 +169,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   global_system_assembler_.add(elliptic_msfem_op);
   global_system_assembler_.add(force_functional);
   global_system_assembler_.add(dirichlet_projection_operator,
-                       new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+                               new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
   global_system_assembler_.add(neumann_functional,
                                new GDT::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
   global_system_assembler_.assemble();
@@ -183,10 +179,12 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   elliptic_msfem_op.matrix().mv(dirichlet_projection.vector(), tmp);
   force_functional.vector() -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Constraints::Dirichlet < typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType >
-      dirichlet_constraints(boundary_info, coarse_space.mapper().maxNumDofs(), coarse_space.mapper().maxNumDofs());
-  global_system_assembler_.add(dirichlet_constraints, elliptic_msfem_op.matrix()/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  global_system_assembler_.add(dirichlet_constraints, force_functional.vector()/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  GDT::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
+  dirichlet_constraints(boundary_info, coarse_space.mapper().maxNumDofs(), coarse_space.mapper().maxNumDofs());
+  global_system_assembler_.add(dirichlet_constraints,
+                               elliptic_msfem_op.matrix() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  global_system_assembler_.add(dirichlet_constraints,
+                               force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   global_system_assembler_.assemble();
 
   elliptic_msfem_op.apply_inverse(msfem_rhs, coarse_msfem_solution);
@@ -197,7 +195,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(subgrid_list, coarse_msfem_solution, fine_scale_part);
 
-  GDT::Operators::LagrangeProlongation< CommonTraits::GridViewType > projection(*coarse_scale_part.space().grid_view());
+  GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> projection(*coarse_scale_part.space().grid_view());
   projection.apply(coarse_msfem_solution, coarse_scale_part);
   // add coarse and fine scale part to solution
   solution.vector() += coarse_scale_part.vector();
