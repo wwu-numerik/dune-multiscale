@@ -4,7 +4,7 @@
 #include <config.h>
 
 #include <dune/stuff/test/main.hxx>
-#include <gtest.h>
+#include <dune/stuff/test/gtest/gtest.h>
 
 #include <string>
 #include <array>
