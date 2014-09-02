@@ -1,4 +1,4 @@
-#include <dune/multiscale/test/test_common.hh>
+#include <dune/multiscale/test/test_common.hxx>
 
 #include <dune/stuff/functions/global.hh>
 #include <dune/stuff/common/float_cmp.hh>
