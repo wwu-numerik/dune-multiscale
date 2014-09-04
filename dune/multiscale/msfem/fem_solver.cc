@@ -29,8 +29,7 @@ namespace Multiscale {
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType& space)
   : space_(space) {}
 
-void Elliptic_FEM_Solver::apply(const Problem::SourceType& force,
-                                CommonTraits::DiscreteFunctionType& solution) const {
+void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) const {
   DSC_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
 
   DSC_PROFILER.startTiming("fem.apply");
@@ -52,7 +51,7 @@ void Elliptic_FEM_Solver::apply(const Problem::SourceType& force,
   EllipticOperatorType elliptic_operator(*Problem::getDiffusion(), system_matrix, space);
   // right hand side
   GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType>
-  force_functional(force, rhs_vector, space);
+  force_functional(*DMP::getSource(), rhs_vector, space);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType>
   neumann_functional(*neumann, rhs_vector, space);
   // dirichlet boundary values
