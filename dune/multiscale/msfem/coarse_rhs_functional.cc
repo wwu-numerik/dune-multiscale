@@ -156,8 +156,7 @@ void RhsCodim0Vector::assembleLocal(
   }
 }
 
-CoarseRhsFunctional::CoarseRhsFunctional(const CoarseRhsFunctionalTraits::FunctionType&,
-                                         CoarseRhsFunctional::VectorType& vec,
+CoarseRhsFunctional::CoarseRhsFunctional(CoarseRhsFunctional::VectorType& vec,
                                          const CoarseRhsFunctional::SpaceType& spc, LocalGridList& localGridList)
   : FunctionalBaseType(vec, spc)
   , AssemblerBaseType(spc)

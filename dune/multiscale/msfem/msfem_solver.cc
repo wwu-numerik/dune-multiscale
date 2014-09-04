@@ -136,7 +136,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                  const DMP::DiffusionBase& diffusion_op, DiscreteFunctionType& coarse_scale_part,
+                                  DiscreteFunctionType& coarse_scale_part,
                                   DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   BOOST_ASSERT_MSG(coarse_scale_part.dofs_valid(), "Coarse scale part DOFs need to be valid!");
@@ -146,11 +146,11 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
   LocalGridList subgrid_list(coarse_space);
   //! Solutions are kept in-memory via DiscreteFunctionIO::MemoryBackend by LocalsolutionManagers
-  LocalProblemSolver(coarse_space, subgrid_list, diffusion_op).solve_for_all_cells();
+  LocalProblemSolver(coarse_space, subgrid_list).solve_for_all_cells();
 
   DiscreteFunctionType msfem_rhs(coarse_space, "MsFEM right hand side");
   msfem_rhs.vector() *= 0;
-  CoarseRhsFunctional force_functional(diffusion_op, msfem_rhs.vector(), coarse_space, subgrid_list);
+  CoarseRhsFunctional force_functional( msfem_rhs.vector(), coarse_space, subgrid_list);
 
   const auto& dirichlet = DMP::getDirichletData();
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();

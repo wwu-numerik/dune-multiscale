@@ -42,14 +42,13 @@ void algorithm(const std::shared_ptr<const CommonTraits::GridType>& macro_grid_p
                const std::string /*filename*/) {
 
   const auto& source = Problem::getSource();
-  const auto& diffusion = Problem::getDiffusion();
 
   Stuff::Grid::Providers::ConstDefault<CommonTraits::GridType> grid_provider(*macro_grid_pointer);
   const CommonTraits::GdtSpaceType space =
       CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
   CommonTraits::GdtVectorType solution_vector(space.mapper().size());
   CommonTraits::DiscreteFunctionType solution(space, solution_vector);
-  Elliptic_FEM_Solver(space).apply(*diffusion, *source, solution);
+  Elliptic_FEM_Solver(space).apply(*source, solution);
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;

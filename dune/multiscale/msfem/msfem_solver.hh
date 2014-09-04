@@ -9,17 +9,12 @@
 #include <dune/common/typetraits.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/fem/functions/checks.hh>
 
 #include <dune/multiscale/common/la_backend.hh>
 
 namespace Dune {
 namespace Multiscale {
-
-namespace Problem {
-struct DiffusionBase;
-}
 namespace MsFEM {
 
 class LocalGridList;
@@ -47,7 +42,7 @@ public:
    f --> 'first' source term, scalar ('SourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
-  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, const Problem::DiffusionBase& diffusion_op,
+  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
              DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
              DiscreteFunctionType& solution) const;
 };

@@ -40,8 +40,7 @@ class LocalProblemOperator {
 
 public:
   LocalProblemOperator(const CoarseSpaceType& coarse_space,
-                       const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace,
-                       const DiffusionOperatorType& diffusion_op);
+                       const LocalGridDiscreteFunctionSpaceType& subDiscreteFunctionSpace);
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
@@ -58,7 +57,6 @@ public:
 
 private:
   const LocalGridDiscreteFunctionSpaceType& localSpace_;
-  const DiffusionOperatorType& diffusion_operator_;
   const Problem::LocalDiffusionType local_diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
