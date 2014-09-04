@@ -87,8 +87,6 @@ std::map<std::string, double> algorithm() {
   const CommonTraits::GdtSpaceType fineSpace =
       CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
 
-   const auto& f = *Dune::Multiscale::Problem::getSource();
-
   CommonTraits::DiscreteFunctionType msfem_solution(fineSpace, "MsFEM_Solution");
   CommonTraits::DiscreteFunctionType coarse_part_msfem_solution(fineSpace, "Coarse_Part_MsFEM_Solution");
   CommonTraits::DiscreteFunctionType fine_part_msfem_solution(fineSpace, "Fine_Part_MsFEM_Solution");
@@ -106,7 +104,7 @@ std::map<std::string, double> algorithm() {
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     fem_solution = DSC::make_unique<CommonTraits::DiscreteFunctionType>(fineSpace, "fem_solution");
     const Dune::Multiscale::Elliptic_FEM_Solver fem_solver(fineSpace);
-    fem_solver.apply(f, *fem_solution);
+    fem_solver.apply(*fem_solution);
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       Dune::Multiscale::FEM::write_discrete_function(*fem_solution, "fem_solution");
     }

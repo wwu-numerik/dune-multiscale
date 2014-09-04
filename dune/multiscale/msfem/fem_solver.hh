@@ -26,8 +26,7 @@ public:
   //! b --> advective part ('AdvectionTermType')
   //! c --> reaction part ('ReactionTermType')
   //! f --> 'first' source term, scalar ('SourceTermType')
-  void apply(const Problem::SourceType& f,
-             CommonTraits::DiscreteFunctionType& solution) const;
+  void apply(CommonTraits::DiscreteFunctionType& solution) const;
 };
 
 } // namespace Multiscale
