@@ -7,11 +7,7 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
-#include <dune/istl/bvector.hh>
-#include <dune/istl/matrix.hh>
-#include <dune/istl/operators.hh>
-#include <dune/istl/preconditioners.hh>
-#include <dune/istl/solver.hh>
+
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
@@ -20,9 +16,8 @@
 #include <memory>
 #include <vector>
 
-#include "dune/multiscale/common/la_backend.hh"
-#include "dune/multiscale/msfem/msfem_traits.hh"
-#include "dune/multiscale/problems/base.hh"
+#include <dune/multiscale/common/la_backend.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
 template <class K, int SIZE>
@@ -47,7 +42,6 @@ public:
 private:
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType InverseOperatorType;
 
-  const Problem::DiffusionBase& diffusion_;
   LocalGridList& subgrid_list_;
   const CommonTraits::DiscreteFunctionSpaceType& coarse_space_;
 
@@ -55,8 +49,7 @@ public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
-  LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, LocalGridList& subgrid_list,
-                     const Problem::DiffusionBase& diffusion_operator);
+  LocalProblemSolver(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, LocalGridList& subgrid_list);
 
 private:
   //! Solve all local MsFEM problems for one coarse entity at once.

@@ -29,7 +29,7 @@ namespace Multiscale {
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType& space)
   : space_(space) {}
 
-void Elliptic_FEM_Solver::apply(const Problem::DiffusionBase& diffusion, const Problem::SourceType& force,
+void Elliptic_FEM_Solver::apply(const Problem::SourceType& force,
                                 CommonTraits::DiscreteFunctionType& solution) const {
   DSC_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
 
@@ -40,7 +40,6 @@ void Elliptic_FEM_Solver::apply(const Problem::DiffusionBase& diffusion, const P
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
   const auto& dirichlet = Problem::getDirichletData();
-
   const auto& space = space_;
 
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
@@ -50,7 +49,7 @@ void Elliptic_FEM_Solver::apply(const Problem::DiffusionBase& diffusion, const P
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
   auto& solution_vector = solution.vector();
   // left hand side (elliptic operator)
-  EllipticOperatorType elliptic_operator(diffusion, system_matrix, space);
+  EllipticOperatorType elliptic_operator(*Problem::getDiffusion(), system_matrix, space);
   // right hand side
   GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType>
   force_functional(force, rhs_vector, space);

@@ -32,11 +32,9 @@ namespace Multiscale {
 namespace MsFEM {
 
 LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
-                                           const LocalGridDiscreteFunctionSpaceType& space,
-                                           const DiffusionOperatorType& diffusion_op)
+                                           const LocalGridDiscreteFunctionSpaceType& space)
   : localSpace_(space)
-  , diffusion_operator_(diffusion_op)
-  , local_diffusion_operator_(diffusion_operator_)
+  , local_diffusion_operator_(*DMP::getDiffusion())
   , coarse_space_(coarse_space)
   , system_matrix_(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space))
   , system_assembler_(localSpace_)

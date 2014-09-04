@@ -131,7 +131,7 @@ public:
   typedef typename Traits::SpaceType SpaceType;
   typedef typename Traits::GridViewType GridViewType;
 
-  CoarseRhsFunctional(const typename Traits::FunctionType& /*function*/, VectorType& vec, const SpaceType& spc,
+  CoarseRhsFunctional(VectorType& vec, const SpaceType& spc,
                       LocalGridList& localGridList);
 
   virtual void assemble() DS_OVERRIDE DS_FINAL;
