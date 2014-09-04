@@ -110,7 +110,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   else {
     DSC_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
   }
-  DSC_PROFILER.startTiming("msfem.localProblemSolver.solveAndSaveAll");
+  DSC_PROFILER.startTiming("msfem.local.solve_for_all_cells");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> solveTime;
@@ -121,20 +121,20 @@ void LocalProblemSolver::solve_for_all_cells() {
     DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time
-    DSC_PROFILER.startTiming("msfem.localProblemSolver.solve");
+    DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
     LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
     // solve the problems
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
-    solveTime(DSC_PROFILER.stopTiming("msfem.localProblemSolver.solve") / 1000.f);
+    solveTime(DSC_PROFILER.stopTiming("msfem.local.solve_all_on_single_cell") / 1000.f);
 
     // save the local solutions to disk/mem
     localSolutionManager.save();
 
-    DSC_PROFILER.resetTiming("msfem.localProblemSolver.solve");
+    DSC_PROFILER.resetTiming("msfem.local.solve_all_on_single_cell");
   } // for
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
-  const auto totalTime = DSC_PROFILER.stopTiming("msfem.localProblemSolver.solveAndSaveAll") / 1000.f;
+  const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;
   DSC_LOG_DEBUG << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n";
   DSC_LOG_DEBUG << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n";
   DSC_LOG_DEBUG << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n";
