@@ -38,12 +38,15 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add_codim0_assembler(local_assembler_, this->matrix());
 }
 
-void CoarseScaleOperator::assemble() { AssemblerBaseType::assemble(); }
+void CoarseScaleOperator::assemble() {
+  DSC::Profiler::ScopedTiming st("msfem.coarse.assemble");
+  AssemblerBaseType::assemble();
+}
 
 void CoarseScaleOperator::apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
                                         CoarseScaleOperator::CoarseDiscreteFunction& solution) {
   BOOST_ASSERT_MSG(rhs.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
-  DSC_PROFILER.startTiming("msfem.solveCoarse");
+  DSC_PROFILER.startTiming("msfem.coarse.linearSolver");
   const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(
       global_matrix_,
       rhs.space().communicator()); /*, 1e-8, 1e-8, DSC_CONFIG_GET("msfem.solver.iterations", rhs.size()),
@@ -52,8 +55,9 @@ DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));*/
   inverse.apply(rhs.vector(), solution.vector());
   if (!solution.dofs_valid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
-  DSC_PROFILER.stopTiming("msfem.solveCoarse");
-  DSC_LOG_DEBUG << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.solveCoarse") << "ms."
+  DSC_PROFILER.stopTiming("msfem.coarse.linearSolver");
+  DSC_LOG_DEBUG << "Time to solve coarse MsFEM problem: "
+                << DSC_PROFILER.getTiming("msfem.coarse.linearSolver") << "ms."
                 << std::endl;
 }
 
