@@ -17,7 +17,7 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/problems/selector.hh>
 
-#include "subgrid-list.hh"
+#include "localgridlist.hh"
 
 namespace Dune {
 namespace Multiscale {

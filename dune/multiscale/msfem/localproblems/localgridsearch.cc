@@ -2,7 +2,7 @@
 
 #include "localgridsearch.hh"
 
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/common/algorithm.hh>
 #include <dune/grid/common/gridenums.hh>

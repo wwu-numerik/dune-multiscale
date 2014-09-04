@@ -7,7 +7,7 @@
 #include <dune/stuff/common/configuration.hh>
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 
 template <typename T>
 std::vector<typename T::GlobalCoordinate> corners(const T& geo) {
