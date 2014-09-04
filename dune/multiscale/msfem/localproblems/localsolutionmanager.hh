@@ -6,7 +6,7 @@
 #define LOCALSOLUTIONMANAGER_HEADERGUARD
 
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
 #include <cstddef>

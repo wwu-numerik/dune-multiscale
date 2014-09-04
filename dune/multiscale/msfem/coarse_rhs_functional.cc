@@ -14,7 +14,7 @@
 #include <dune/stuff/functions/femadapter.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 
 namespace Dune {

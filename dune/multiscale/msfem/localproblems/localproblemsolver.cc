@@ -25,8 +25,8 @@
 #include <tuple>
 #include <vector>
 
-#include "dune/multiscale/msfem/localproblems/subgrid-list.hh"
-#include "dune/multiscale/tools/misc/outputparameter.hh"
+#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 #include "localproblemsolver.hh"
 
 namespace Dune {
@@ -83,6 +83,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
+    //!TODO calculating the norm seems to have a bad perf impact, is the instability actually still there?
     const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(*current_rhs.space().grid_view())
                           .induced_norm(current_rhs);
     if (norm < 1e-12) {

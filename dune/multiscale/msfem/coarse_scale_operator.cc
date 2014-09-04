@@ -12,7 +12,7 @@
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
-#include <dune/multiscale/msfem/localproblems/subgrid-list.hh>
+#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
@@ -41,6 +41,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   , msfem_rhs_(coarse_space(), "MsFEM right hand side")
   , dirichlet_projection_(coarse_space())
 {
+  DSC::Profiler::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
   CoarseRhsFunctional force_functional( msfem_rhs_.vector(), coarse_space(), localGridList);
 
@@ -60,7 +61,6 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
                                new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
   this->add(neumann_functional,
                                new GDT::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
-  DSC::Profiler::ScopedTiming st("msfem.coarse.assemble");
   AssemblerBaseType::assemble();
 
   // apply the dirichlet zero constraints to restrict the system to H^1_0
@@ -69,6 +69,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints, force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   AssemblerBaseType::assemble();
+
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(coarse_space().mapper().size());
   global_matrix_.mv(dirichlet_projection_.vector(), tmp);
@@ -80,6 +81,8 @@ void CoarseScaleOperator::assemble() {
 }
 
 void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
+
+  DSC::Profiler::ScopedTiming st("msfem.coarse.solve");
 
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
   DSC_PROFILER.startTiming("msfem.coarse.linearSolver");
