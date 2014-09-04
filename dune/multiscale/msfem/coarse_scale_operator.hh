@@ -15,6 +15,7 @@
 #include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
+#include <dune/gdt/assembler/system.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/coarse_scale_assembler.hh>
@@ -65,22 +66,26 @@ public:
   static Stuff::LA::SparsityPatternDefault pattern(const RangeSpaceType& range_space,
                                                    const SourceSpaceType& source_space, const GridViewType& grid_view);
 
-  CoarseScaleOperator(const SourceSpaceType& src_spc, LocalGridList& localGridList);
+  CoarseScaleOperator(const SourceSpaceType& coarse_space, LocalGridList& localGridList);
 
   virtual ~CoarseScaleOperator() {}
 
   virtual void assemble() DS_OVERRIDE DS_FINAL;
 
-  void apply_inverse(const CoarseScaleOperator::CoarseDiscreteFunction& rhs,
-                     CoarseScaleOperator::CoarseDiscreteFunction& solution);
+  void apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution);
 
   MatrixType& system_matrix();
   const MatrixType& system_matrix() const;
 
+
 private:
+  const SourceSpaceType& coarse_space() const;
+
   MatrixType global_matrix_;
   const LocalOperatorType local_operator_;
   const LocalAssemblerType local_assembler_;
+  CommonTraits::DiscreteFunctionType msfem_rhs_;
+  CommonTraits::DiscreteFunctionType dirichlet_projection_;
 }; // class CoarseScaleOperator
 
 } // namespace MsFEM {

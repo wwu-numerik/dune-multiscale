@@ -26,7 +26,7 @@ namespace MsFEM {
 LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
-  DSC::Profiler::ScopedTiming st("msfem.subgrid_list.ctor");
+  DSC::Profiler::ScopedTiming st("msfem.LocalGridList.ctor");
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   const int dim_world = LocalGridType::dimensionworld;
 
