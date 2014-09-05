@@ -43,8 +43,9 @@ operator()(const PointContainerType& points) {
     if (++it == end) {
       if (++steps < view.size(0))
         it = view.template begin<0>();
-      else
-        DUNE_THROW(InvalidStateException, "local grid search failed");
+      else {
+        DUNE_THROW(InvalidStateException, "local grid search failed ");
+      }
     }
   }
   return ret_entities;
