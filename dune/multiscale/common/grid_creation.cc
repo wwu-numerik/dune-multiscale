@@ -53,7 +53,7 @@ Dune::Multiscale::make_grids() {
 
   const auto gridParameterTree = DSC_CONFIG.sub("grids");
   const int dim_world = CommonTraits::GridType::dimensionworld;
-  typedef FieldVector<typename CommonTraits::GridType::ctype, dim_world> CoordType;
+  typedef CommonTraits::DomainType CoordType;
   const auto& gridCorners = Problem::getModelData()->gridCorners();
   CoordType lowerLeft = gridCorners.first;
   CoordType upperRight = gridCorners.second;
@@ -72,6 +72,10 @@ Dune::Multiscale::make_grids() {
   }
   auto coarse_gridptr =
       MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
+  const auto expected_elements = std::accumulate(elements.begin(), elements.end(), 1u, std::multiplies<unsigned int>());
+  auto actual_elements = coarse_gridptr->size(0);
+  if (int(expected_elements) != coarse_gridptr->comm().sum(actual_elements))
+    DUNE_THROW(InvalidStateException, "Wonky grid distribution");
 
   for (const auto i : DSC::valueRange(dim_world)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
