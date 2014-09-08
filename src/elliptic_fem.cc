@@ -7,6 +7,7 @@
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/fem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/stuff/common/parallel/helper.hh>
 
 int main(int argc, char** argv) {
   try {
@@ -39,5 +40,5 @@ int main(int argc, char** argv) {
   catch (Dune::Exception& e) {
     std::cerr << e.what() << std::endl;
   }
-  return 1;
+  return Dune::Stuff::abort_all_mpi_processes();
 } // main
