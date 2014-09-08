@@ -8,6 +8,7 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/common/parallel/mpihelper.hh>
+#include <dune/stuff/common/parallel/helper.hh>
 
 // for rusage
 #include <sys/resource.h>
@@ -67,5 +68,5 @@ int main(int argc, char** argv) {
   catch (...) {
     std::cerr << "Exception of non-known type thrown!\n";
   }
-  return 1;
+  return Dune::Stuff::abort_all_mpi_processes();
 } // main
