@@ -14,6 +14,7 @@
 #include <dune/stuff/aliases.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/common/parallel/threadmanager.hh>
+#include <dune/stuff/grid/output/entity_visualization.hh>
 
 #include <dune/gdt/playground/spaces/finitevolume/default.hh>
 
@@ -28,11 +29,12 @@ void output_all(std::vector<std::unique_ptr<FunctionType>>& functions, CommonTra
 
   for(auto& f : functions)
   {
-    vtkio.addCellData(*f,f->name());
+    auto adapter = std::make_shared< DSFu::VisualizationAdapter< CommonTraits::GridViewType, 1, 1 > >(*f);
+    vtkio.addCellData(adapter);
   }
-  boost::filesystem::path out_filename(DSC_CONFIG_GET("global.datadir", "data"));
-  out_filename /= name;
-  vtkio.write(out_filename.string());
+  const std::string datadir = DSC_CONFIG_GET("global.datadir", "./data/");
+  DSC::testCreateDirectory(datadir + "/piecefiles/" + name);
+  vtkio.pwrite(name, datadir, "piecefiles");
 }
 
 void partition_vis_single(CommonTraits::GridType& grid, std::string function_name)
@@ -51,10 +53,10 @@ void partition_vis_single(CommonTraits::GridType& grid, std::string function_nam
   for (auto thread : DSC::valueRange(threadnum))
   {
     const auto fn = function_name + "_thread_" + DSC::toString(thread);
-    functions[thread] = DSC::make_unique<FVFunc>(fn, fv_space);
+    functions[thread] = DSC::make_unique<FVFunc>(fv_space, fn);
   }
   auto& combined = functions.back();
-  combined = DSC::make_unique<FVFunc>(function_name + "_combined", fv_space);
+  combined = DSC::make_unique<FVFunc>(fv_space, function_name + "_combined");
   combined->vector() *= 0;
 
 //  #ifdef _OPENMP
@@ -89,10 +91,10 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
 
   MsFEM::LocalGridList subgrid_list(coarseSpace);
 
-  auto view_ptr = std::make_shared<CommonTraits::GridViewType> (coarse_grid.leafGridView());
+  auto fine_view_ptr = std::make_shared<CommonTraits::GridViewType> (fine_grid.leafGridView());
   typedef GDT::Spaces::FiniteVolume::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
   typedef BackendChooser<FVSpace>::DiscreteFunctionType FVFunc;
-  FVSpace fv_space(view_ptr);
+  FVSpace fv_space(fine_view_ptr);
 
   std::vector<std::unique_ptr<FVFunc>> oversampled_functions(subgrid_list.size());
   std::vector<std::unique_ptr<FVFunc>> functions(subgrid_list.size());
@@ -131,8 +133,8 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
     }
   }
 
-  output_all(oversampled_functions, *view_ptr, "subgrids");
-  output_all(functions, *view_ptr, "coarse_cells");
+  output_all(oversampled_functions, *fine_view_ptr, "subgrids");
+  output_all(functions, *fine_view_ptr, "coarse_cells");
 }
 
 void partition_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fine_grid) {
@@ -169,6 +171,8 @@ int main(int argc, char** argv) {
     auto grids = Dune::Multiscale::make_grids();
     partition_vis(*grids.first, *grids.second);
     subgrid_vis(*grids.first, *grids.second);
+    DSG::ElementVisualization::all(*grids.second, datadir + "/fine_element_visualization");
+    DSG::ElementVisualization::all(*grids.first, datadir + "/coarse_element_visualization");
     return 0;
   }
   catch (Dune::Exception& e) {
