@@ -99,13 +99,7 @@ std::size_t LocalGridList::size() const { return subGridList_.size(); }
 
 bool LocalGridList::covers_strict(const CoarseEntityType& coarse_entity,
                                   const MsFEMTraits::LocalEntityType& local_entity) {
-  const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
-  const auto& coarse_geometry = coarse_entity.geometry();
-  for (const auto i : DSC::valueRange(local_entity.geometry().corners())) {
-    if (!reference_element.checkInside(coarse_geometry.local(local_entity.geometry().corner(i))))
-      return false;
-  }
-  return true;
+  return covers_strict(coarse_entity, local_entity.geometry());
 }
 
 bool LocalGridList::covers(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity) {
