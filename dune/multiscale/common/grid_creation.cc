@@ -48,7 +48,7 @@ public:
 
 std::pair<std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>,
           std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>>
-Dune::Multiscale::make_grids() {
+Dune::Multiscale::make_grids(const bool check_partitioning) {
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
 
   const auto gridParameterTree = DSC_CONFIG.sub("grids");
@@ -85,7 +85,7 @@ Dune::Multiscale::make_grids() {
 
   // check whether grids match (may not match after load balancing if different refinements in different
   // spatial directions are used)
-  if (Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
+  if (check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
     const auto coarse_dimensions =
         DSG::dimensions(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
     const auto fine_dimensions =

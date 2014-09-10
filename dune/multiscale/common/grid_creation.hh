@@ -7,7 +7,7 @@ namespace Dune {
 namespace Multiscale {
 
 //! abstraction for creating coarse and fine grid instances. shared across msfem/fem codes.
-std::pair<std::shared_ptr<CommonTraits::GridType>, std::shared_ptr<CommonTraits::GridType>> make_grids();
+std::pair<std::shared_ptr<CommonTraits::GridType>, std::shared_ptr<CommonTraits::GridType>> make_grids(const bool check_partitioning = true);
 
 } // namespace Multiscale {
 } // namespace Dune {
