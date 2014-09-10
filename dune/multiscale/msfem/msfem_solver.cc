@@ -92,6 +92,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       // oversampling : restrict the local correctors to the element T
       // ie set all dofs not "covered" by the coarse cell to 0
       // also adds lg-prolongation of coarse_solution to local_correction
+      const auto cut_overlay = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
       for (auto& local_entity : DSC::viewRange(*localSolManager.space().grid_view())) {
         const auto& lg_points = localSolManager.space().lagrange_points(local_entity);
         const auto& reference_element = DSG::reference_element(coarse_entity);
@@ -102,10 +103,13 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
           const auto local_point = lg_points[lg_i];
           const auto global_lg_point = local_entity.geometry().global(local_point);
           const auto local_coarse_point = coarse_geometry.local(global_lg_point);
-          const auto coarse_value = coarseSolutionLF.evaluate(local_coarse_point);
-          const bool covered = reference_element.checkInside(local_coarse_point);
+          const auto coarse_value = coarseSolutionLF.evaluate(local_coarse_point) / double(lg_points.size());
           auto& vec = entity_local_correction.vector();
-          vec.set(lg_i, covered ? vec.get(lg_i) + coarse_value : CommonTraits::RangeType(0));
+          if (cut_overlay) {
+            const bool covered = reference_element.checkInside(local_coarse_point);
+            vec.set(lg_i, covered ? vec.get(lg_i) : 0);
+          }
+          vec.add(lg_i, coarse_value);
         }
       }
 
