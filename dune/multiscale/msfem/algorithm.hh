@@ -21,7 +21,6 @@ class LocalGridList;
 
 //! \TODO docme
 void solution_output(const CommonTraits::DiscreteFunction_ptr& msfem_solution,
-                     const CommonTraits::DiscreteFunction_ptr& coarse_part_msfem_solution,
                      const CommonTraits::DiscreteFunction_ptr& fine_part_msfem_solution);
 
 //! \TODO docme

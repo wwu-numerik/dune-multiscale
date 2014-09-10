@@ -49,14 +49,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   fine_scale_part.vector() *= 0;
   const auto& coarse_space = coarse_msfem_solution.space();
   auto& coarse_indexset = coarse_space.grid_view()->grid().leafIndexSet();
-
-  typedef DS::MsFEMProjection ProjectionType;
-  typedef LocalGridSearch SearchType;
-  typedef LocalsolutionProxy ProxyType;
-  ProxyType::CorrectionsMapType local_corrections;
-
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
 
+  LocalsolutionProxy::CorrectionsMapType local_corrections;
   for (auto& coarse_entity : DSC::viewRange(*coarse_space.grid_view())) {
     LocalSolutionManager localSolManager(coarse_space, coarse_entity, subgrid_list);
     localSolManager.load();
@@ -85,10 +80,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       BOOST_ASSERT_MSG(false, "no adding of the boundary correctors??");
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-      //      BOOST_ASSERT_MSG(
-      //          static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
-      //              static_cast<long long>(coarseSolutionLF.size()),
-      //          "The current implementation relies on having thesame types of elements on coarse and fine level!");
+            BOOST_ASSERT_MSG(
+                static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
+                    static_cast<long long>(coarseSolutionLF.size()),
+                "The current implementation relies on having thesame types of elements on coarse and fine level!");
       for (std::size_t dof = 0; dof < coarseSolutionLF.vector().size(); ++dof) {
         localSolutions[dof]->vector() *= coarseSolutionLF.vector().get(dof);
         local_correction.vector() += localSolutions[dof]->vector();
@@ -96,19 +91,21 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
       // oversampling : restrict the local correctors to the element T
       // ie set all dofs not "covered" by the coarse cell to 0
-      if (DSC_CONFIG_GET("msfem.oversampling_layers", 0)) {
-        for (auto& local_entity : DSC::viewRange(*localSolManager.space().grid_view())) {
-          const auto& lg_points = localSolManager.space().lagrange_points(local_entity);
-          const auto& reference_element = DSG::reference_element(coarse_entity);
-          const auto& coarse_geometry = coarse_entity.geometry();
-          auto entity_local_correction = local_correction.local_discrete_function(local_entity);
+      // also adds lg-prolongation of coarse_solution to local_correction
+      for (auto& local_entity : DSC::viewRange(*localSolManager.space().grid_view())) {
+        const auto& lg_points = localSolManager.space().lagrange_points(local_entity);
+        const auto& reference_element = DSG::reference_element(coarse_entity);
+        const auto& coarse_geometry = coarse_entity.geometry();
+        auto entity_local_correction = local_correction.local_discrete_function(local_entity);
 
-          for (const auto lg_i : DSC::valueRange(int(lg_points.size()))) {
-            const auto global_lg_point = local_entity.geometry().global(lg_points[lg_i]);
-            const bool covered = reference_element.checkInside(coarse_geometry.local(global_lg_point));
-            auto& vec = entity_local_correction.vector();
-            vec.set(lg_i, covered ? vec.get(lg_i) : 0);
-          }
+        for (const auto lg_i : DSC::valueRange(int(lg_points.size()))) {
+          const auto local_point = lg_points[lg_i];
+          const auto global_lg_point = local_entity.geometry().global(local_point);
+          const auto local_coarse_point = coarse_geometry.local(global_lg_point);
+          const auto coarse_value = coarseSolutionLF.evaluate(local_coarse_point);
+          const bool covered = reference_element.checkInside(local_coarse_point);
+          auto& vec = entity_local_correction.vector();
+          vec.set(lg_i, covered ? vec.get(lg_i) + coarse_value : CommonTraits::RangeType(0));
         }
       }
 
@@ -126,19 +123,17 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     }
   }
 
-  SearchType search(coarse_space, subgrid_list);
-  ProxyType proxy(local_corrections, coarse_indexset, search);
-  ProjectionType::project(proxy, fine_scale_part, search);
+  LocalGridSearch search(coarse_space, subgrid_list);
+  LocalsolutionProxy proxy(local_corrections, coarse_indexset, search);
+  DS::MsFEMProjection::project(proxy, fine_scale_part, search);
   BOOST_ASSERT_MSG(fine_scale_part.dofs_valid(), "Fine scale part DOFs need to be valid!");
   // backend storage no longer needed from here on
   DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                  DiscreteFunctionType& coarse_scale_part,
                                   DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
-  BOOST_ASSERT_MSG(coarse_scale_part.dofs_valid(), "Coarse scale part DOFs need to be valid!");
 
   DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");
   coarse_msfem_solution.vector() *= 0;
@@ -153,11 +148,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(subgrid_list, coarse_msfem_solution, fine_scale_part);
 
-  GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> projection(*coarse_scale_part.space().grid_view());
-  projection.apply(coarse_msfem_solution, coarse_scale_part);
-  // add coarse and fine scale part to solution
   solution.vector() *= 0;
-  solution.vector() += coarse_scale_part.vector();
   solution.vector() += fine_scale_part.vector();
 } // solve_dirichlet_zero
 
