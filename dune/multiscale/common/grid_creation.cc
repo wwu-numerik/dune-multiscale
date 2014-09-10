@@ -90,11 +90,10 @@ Dune::Multiscale::make_grids() {
         DSG::dimensions(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
     const auto fine_dimensions =
         DSG::dimensions(fine_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
-    const auto eps = coarse_dimensions.entity_width.min();
     for (const auto i : DSC::valueRange(dim_world)) {
       const bool match =
-          (std::abs(coarse_dimensions.coord_limits[i].min() - fine_dimensions.coord_limits[i].min()) < eps) &&
-          (std::abs(coarse_dimensions.coord_limits[i].max() - fine_dimensions.coord_limits[i].max()) < eps);
+          DSC::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&
+          DSC::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
       if (!match)
         DUNE_THROW(InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
                        you use different refinements in different spatial dimensions?");
