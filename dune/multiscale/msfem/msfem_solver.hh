@@ -42,8 +42,7 @@ public:
    f --> 'first' source term, scalar ('SourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
-  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-             DiscreteFunctionType& coarse_scale_part, DiscreteFunctionType& fine_scale_part,
+  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, DiscreteFunctionType& fine_scale_part,
              DiscreteFunctionType& solution) const;
 };
 
