@@ -44,9 +44,9 @@ namespace MsFEM {
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
-                                                     DiscreteFunctionType& fine_scale_part) const {
+                                                     std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {
   DSC::Profiler::ScopedTiming st("msfem.idFine");
-  fine_scale_part.vector() *= 0;
+
   const auto& coarse_space = coarse_msfem_solution.space();
   auto& coarse_indexset = coarse_space.grid_view()->grid().leafIndexSet();
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
@@ -127,16 +127,14 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     }
   }
 
-  LocalGridSearch search(coarse_space, subgrid_list);
-  LocalsolutionProxy proxy(local_corrections, coarse_indexset, search);
-  DS::MsFEMProjection::project(proxy, fine_scale_part, search);
-  BOOST_ASSERT_MSG(fine_scale_part.dofs_valid(), "Fine scale part DOFs need to be valid!");
+  msfem_solution = DSC::make_unique<LocalsolutionProxy>(local_corrections, coarse_space, subgrid_list);
+
   // backend storage no longer needed from here on
   DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                  DiscreteFunctionType& fine_scale_part, DiscreteFunctionType& solution) const {
+                                  std::unique_ptr<MsFEM::LocalsolutionProxy>& solution) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
 
   DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");
@@ -150,10 +148,10 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   elliptic_msfem_op.apply_inverse(coarse_msfem_solution);
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  identify_fine_scale_part(subgrid_list, coarse_msfem_solution, fine_scale_part);
+  identify_fine_scale_part(subgrid_list, coarse_msfem_solution, solution);
 
-  solution.vector() *= 0;
-  solution.vector() += fine_scale_part.vector();
+//  solution.vector() *= 0;
+//  solution.vector() += fine_scale_part.vector();
 } // solve_dirichlet_zero
 
 } // namespace MsFEM {
