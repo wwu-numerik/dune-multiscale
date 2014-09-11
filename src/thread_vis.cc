@@ -168,9 +168,9 @@ int main(int argc, char** argv) {
     }
 
     // name of the grid file that describes the macro-grid:
-    partition_vis(*grids.first, *grids.second);
-    subgrid_vis(*grids.first, *grids.second);
     auto grids = Dune::Multiscale::make_grids(false);
+//    partition_vis(*grids.first, *grids.second);
+//    subgrid_vis(*grids.first, *grids.second);
     DSG::ElementVisualization::all(*grids.second, datadir + "/fine_element_visualization");
     DSG::ElementVisualization::all(*grids.first, datadir + "/coarse_element_visualization");
     return 0;

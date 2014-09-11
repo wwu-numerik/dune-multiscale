@@ -5,12 +5,14 @@
 #ifndef SUBGRIDLIST_HH
 #define SUBGRIDLIST_HH
 
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+
 #include <boost/noncopyable.hpp>
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/grid/entity.hh>
 
 #include <cstddef>
@@ -18,7 +20,6 @@
 #include <memory>
 #include <vector>
 
-#include "dune/multiscale/common/traits.hh"
 
 namespace Dune {
 namespace Multiscale {
@@ -43,7 +44,7 @@ public:
 
   LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace);
 
-private:
+//private:
   LocalGridType& getSubGrid(IndexType i);
   const LocalGridType& getSubGrid(IndexType i) const;
 

@@ -35,24 +35,19 @@
 #include "algorithm.hh"
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/common/grid_creation.hh>
+#include <dune/multiscale/msfem/localsolution_proxy.hh>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
 
 //! \TODO docme
-void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution,
-                     const CommonTraits::DiscreteFunctionType& fine_part_msfem_solution) {
+void solution_output(const std::unique_ptr<LocalsolutionProxy>& msfem_solution) {
   using namespace Dune;
 
   Dune::Multiscale::OutputParameters outputparam;
   outputparam.set_prefix("msfem_solution_");
-  msfem_solution.visualize(outputparam.fullpath(msfem_solution.name()));
-
-  outputparam.set_prefix("fine_part_msfem_solution_");
-  fine_part_msfem_solution.visualize(outputparam.fullpath(fine_part_msfem_solution.name()));
-
-  DSG::ElementVisualization::all(fine_part_msfem_solution.space().grid_view()->grid(), outputparam.path());
+  msfem_solution->visualize(outputparam.fullpath(msfem_solution->name()));
 }
 
 //! \TODO docme
@@ -83,15 +78,14 @@ std::map<std::string, double> algorithm() {
   const CommonTraits::GdtSpaceType fineSpace =
       CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
 
-  CommonTraits::DiscreteFunctionType msfem_solution(fineSpace, "MsFEM_Solution");
-  CommonTraits::DiscreteFunctionType fine_part_msfem_solution(fineSpace, "Fine_Part_MsFEM_Solution");
+  std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 
-  Elliptic_MsFEM_Solver().apply(coarseSpace, fine_part_msfem_solution,msfem_solution);
+  Elliptic_MsFEM_Solver().apply(coarseSpace, msfem_solution);
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
     data_output(*fineSpace.grid_view(), coarseSpace);
-    solution_output(msfem_solution, fine_part_msfem_solution);
+    solution_output(msfem_solution);
   }
 
   std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution(nullptr);
@@ -105,7 +99,7 @@ std::map<std::string, double> algorithm() {
     }
   }
 
-  return ErrorCalculator(&msfem_solution, fem_solution.get()).print(DSC_LOG_INFO_0);
+  return ErrorCalculator(msfem_solution, fem_solution.get()).print(DSC_LOG_INFO_0);
 
 } // function algorithm
 

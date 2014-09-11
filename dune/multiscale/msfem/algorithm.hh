@@ -13,6 +13,10 @@
 namespace Dune {
 namespace Multiscale {
 
+namespace MsFEM {
+  class LocalsolutionProxy;
+}
+
 struct OutputParameters;
 
 namespace MsFEM {
@@ -20,8 +24,7 @@ namespace MsFEM {
 class LocalGridList;
 
 //! \TODO docme
-void solution_output(const CommonTraits::DiscreteFunction_ptr& msfem_solution,
-                     const CommonTraits::DiscreteFunction_ptr& fine_part_msfem_solution);
+void solution_output(const std::unique_ptr<LocalsolutionProxy>& msfem_solution);
 
 //! \TODO docme
 void data_output(const CommonTraits::GridViewType& gridPart,

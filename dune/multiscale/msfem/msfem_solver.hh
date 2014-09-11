@@ -18,6 +18,7 @@ namespace Multiscale {
 namespace MsFEM {
 
 class LocalGridList;
+class LocalsolutionProxy;
 
 //! \TODO needs a better name
 class Elliptic_MsFEM_Solver {
@@ -30,8 +31,9 @@ private:
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  void identify_fine_scale_part(LocalGridList& subgrid_list, const DiscreteFunctionType& coarse_msfem_solution,
-                                DiscreteFunctionType& fine_scale_part) const;
+  void identify_fine_scale_part(LocalGridList& subgrid_list,
+                                const DiscreteFunctionType& coarse_msfem_solution,
+                                std::unique_ptr<LocalsolutionProxy>& msfem_solution) const;
 
 public:
   /** - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
@@ -42,8 +44,8 @@ public:
    f --> 'first' source term, scalar ('SourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
-  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space, DiscreteFunctionType& fine_scale_part,
-             DiscreteFunctionType& solution) const;
+  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+             std::unique_ptr<LocalsolutionProxy>& msfem_solution) const;
 };
 
 } // namespace MsFEM {

@@ -58,10 +58,16 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
-        dune/multiscale/common/error_calc.cc
         dune/multiscale/common/grid_creation.cc
         dune/multiscale/common/traits.cc
         dune/multiscale/fem/print_info.cc
+        # error_calc
+        dune/multiscale/common/error_calc.cc
+        dune/multiscale/msfem/localsolution_proxy.cc
+        dune/multiscale/msfem/localproblems/localgridsearch.cc
+        # 
+        dune/multiscale/msfem/proxygridview.cc
+        dune/multiscale/msfem/localproblems/localgridlist.cc
     )
 
 set( PROBLEM_SOURCES
@@ -76,12 +82,11 @@ set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
         dune/multiscale/msfem/msfem_solver.cc
         dune/multiscale/msfem/coarse_scale_operator.cc
-        dune/multiscale/msfem/localproblems/localgridlist.cc
+        
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
-        dune/multiscale/msfem/localproblems/localgridsearch.cc
-        dune/multiscale/msfem/localsolution_proxy.cc
+        
         dune/multiscale/msfem/coarse_scale_assembler.cc
         dune/multiscale/msfem/coarse_rhs_functional.cc
     )
