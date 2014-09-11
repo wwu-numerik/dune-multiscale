@@ -131,10 +131,6 @@ ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
 add_dune_mpi_flags(elliptic_fem)
 
-ADD_EXECUTABLE(msfem-1d EXCLUDE_FROM_ALL src/msfem-1d.cc ${COMMON_HEADER})
-TARGET_LINK_LIBRARIES(msfem-1d ${COMMON_LIBS} )
-add_dune_mpi_flags(msfem-1d)
-
 ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
 # TARGET_LINK_LIBRARIES(fail ${COMMON_LIBS} )
 add_dune_mpi_flags(fail)
@@ -150,7 +146,6 @@ add_dune_alugrid_flags(OBJECT multiscale_problem)
 add_dune_alugrid_flags(OBJECT multiscale_msfem)
 add_dune_alugrid_flags(elliptic_msfem)
 add_dune_alugrid_flags(elliptic_fem)
-add_dune_alugrid_flags(msfem-1d)
 add_dune_alugrid_flags(thread_vis)
 
 # HEADERCHECK( ${header} ${dune} )
