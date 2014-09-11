@@ -10,6 +10,11 @@ namespace Multiscale {
 std::pair<std::shared_ptr<CommonTraits::GridType>, std::shared_ptr<CommonTraits::GridType>>
 make_grids(const bool check_partitioning = true);
 
+std::shared_ptr<CommonTraits::GridType> make_fine_grid(std::shared_ptr<CommonTraits::GridType> coarse_gridptr = nullptr,
+                                                       bool check_partitioning = true);
+
+std::shared_ptr<CommonTraits::GridType> make_coarse_grid();
+
 } // namespace Multiscale {
 } // namespace Dune {
 

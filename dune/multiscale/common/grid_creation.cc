@@ -46,38 +46,68 @@ public:
 };
 }
 
-std::pair<std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>,
-          std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>>
-Dune::Multiscale::make_grids(const bool check_partitioning) {
+using namespace Dune::Multiscale;
+using namespace std;
+
+typedef tuple<CommonTraits::DomainType, CommonTraits::DomainType,
+  array<unsigned int, CommonTraits::world_dim>, array<unsigned int, CommonTraits::world_dim>,
+  array<unsigned int, CommonTraits::world_dim>> SetupReturnType;
+
+SetupReturnType setup() {
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
 
-  const auto gridParameterTree = DSC_CONFIG.sub("grids");
-  const int dim_world = CommonTraits::GridType::dimensionworld;
+  const auto world_dim = CommonTraits::world_dim;
   typedef CommonTraits::DomainType CoordType;
   const auto& gridCorners = Problem::getModelData()->gridCorners();
   CoordType lowerLeft = gridCorners.first;
   CoordType upperRight = gridCorners.second;
 
   const auto oversamplingLayers = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
-  const auto microPerMacro = gridParameterTree.get<CoordType>("micro_cells_per_macrocell_dim", CoordType(8), dim_world);
+  const auto microPerMacro = DSC_CONFIG.get<CoordType>("grids.micro_cells_per_macrocell_dim", CoordType(8), world_dim);
+  const auto coarse_cells = DSC_CONFIG.get<CoordType>("grids.macro_cells_per_dim", CoordType(8), world_dim);
 
-  const auto coarse_cells = gridParameterTree.get<CoordType>("macro_cells_per_dim", CoordType(8), dim_world);
-  array<unsigned int, dim_world> elements;
-  array<unsigned int, dim_world> overCoarse;
-  array<unsigned int, dim_world> overFine;
-  for (const auto i : DSC::valueRange(dim_world)) {
+  array<unsigned int, world_dim> elements, overCoarse, overFine;
+
+  for (const auto i : DSC::valueRange(world_dim)) {
     elements[i] = coarse_cells[i];
     overCoarse[i] = std::ceil(double(oversamplingLayers) / double(microPerMacro[i]));
     overFine[i] = DSC_CONFIG_GET("grids.overlap", 1);
   }
+  return std::make_tuple(lowerLeft, upperRight, elements, overCoarse, overFine);
+}
+
+std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid()
+{
+  CommonTraits::DomainType lowerLeft, upperRight;
+  array<unsigned int, CommonTraits::world_dim> elements, overCoarse;
+  std::tie(lowerLeft, upperRight, elements, overCoarse, std::ignore) = setup();
   auto coarse_gridptr =
       MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
   const auto expected_elements = std::accumulate(elements.begin(), elements.end(), 1u, std::multiplies<unsigned int>());
   auto actual_elements = coarse_gridptr->size(0);
   if (int(expected_elements) != coarse_gridptr->comm().sum(actual_elements))
     DUNE_THROW(InvalidStateException, "Wonky grid distribution");
+  return coarse_gridptr;
+}
 
-  for (const auto i : DSC::valueRange(dim_world)) {
+pair<shared_ptr<CommonTraits::GridType>, shared_ptr<CommonTraits::GridType>>
+Dune::Multiscale::make_grids(const bool check_partitioning)
+{
+  auto coarse_grid = make_coarse_grid();
+  return { coarse_grid, make_fine_grid(coarse_grid, check_partitioning)};
+}
+
+std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> Dune::Multiscale::make_fine_grid(
+    std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr, const bool check_partitioning)
+{
+  const auto world_dim = CommonTraits::world_dim;
+  CommonTraits::DomainType lowerLeft, upperRight;
+  array<unsigned int, world_dim> elements, overFine;
+  std::tie(lowerLeft, upperRight, elements, std::ignore, overFine) = setup();
+  const auto coarse_cells = DSC_CONFIG.get<CommonTraits::DomainType>("grids.macro_cells_per_dim", CommonTraits::DomainType(8), world_dim);
+  const auto microPerMacro = DSC_CONFIG.get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim", CommonTraits::DomainType(8), world_dim);
+
+  for (const auto i : DSC::valueRange(CommonTraits::world_dim)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
   auto fine_gridptr =
@@ -87,12 +117,12 @@ Dune::Multiscale::make_grids(const bool check_partitioning) {
   // spatial directions are used)
   DSC_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n") %
                        coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0) << std::endl;
-  if (check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
+  if (coarse_gridptr && check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
     const auto coarse_dimensions =
         DSG::dimensions(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
     const auto fine_dimensions =
         DSG::dimensions(fine_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
-    for (const auto i : DSC::valueRange(dim_world)) {
+    for (const auto i : DSC::valueRange(world_dim)) {
       const bool match =
           DSC::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&
           DSC::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
@@ -101,6 +131,5 @@ Dune::Multiscale::make_grids(const bool check_partitioning) {
                        you use different refinements in different spatial dimensions?");
     }
   }
-
-  return {coarse_gridptr, fine_gridptr};
+  return fine_gridptr;
 }
