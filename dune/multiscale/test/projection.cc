@@ -34,8 +34,7 @@ struct Projection : public GridAndSpaces {
     Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );
     auto local_corrections = fill_local_corrections(lambda, subgrid_list);
     LocalGridSearch search(coarseSpace, subgrid_list);
-    auto& coarse_indexset = coarseSpace.grid_view()->grid().leafIndexSet();
-    LocalsolutionProxy proxy(local_corrections, coarse_indexset, search);
+    LocalsolutionProxy proxy(std::move(local_corrections), coarseSpace, subgrid_list);
 
     CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
     DS::MsFEMProjection::project(proxy, fine_scale_part, search);
