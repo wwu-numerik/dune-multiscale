@@ -6,7 +6,6 @@
 #include <dune/stuff/common/configuration.hh>
 
 #include <dune/multiscale/common/main_init.hh>
-#include <dune/multiscale/common/error_container.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/fixed_map.hh>
