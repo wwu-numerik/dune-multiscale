@@ -14,7 +14,7 @@ class ProxyGridview;
 
 namespace MsFEM {
 
-//class LocalGridSearch;
+// class LocalGridSearch;
 class LocalGridList;
 
 /**
@@ -30,7 +30,7 @@ public:
   typedef std::unordered_map<typename LeafIndexSetType::IndexType,
                              std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
 
-  LocalsolutionProxy(CorrectionsMapType &&corrections, const CommonTraits::DiscreteFunctionSpaceType &coarseSpace,
+  LocalsolutionProxy(CorrectionsMapType&& corrections, const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
                      const LocalGridList& gridlist);
 
   std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;

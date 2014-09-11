@@ -39,11 +39,10 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
                    EllipticOperatorType::pattern(coarse_space()))
   , local_assembler_(local_operator_, localGridList)
   , msfem_rhs_(coarse_space(), "MsFEM right hand side")
-  , dirichlet_projection_(coarse_space())
-{
+  , dirichlet_projection_(coarse_space()) {
   DSC::Profiler::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
-  CoarseRhsFunctional force_functional( msfem_rhs_.vector(), coarse_space(), localGridList);
+  CoarseRhsFunctional force_functional(msfem_rhs_.vector(), coarse_space(), localGridList);
 
   const auto& dirichlet = DMP::getDirichletData();
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
@@ -57,17 +56,16 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
 
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);
-  this->add(dirichlet_projection_operator,
-                               new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
-  this->add(neumann_functional,
-                               new GDT::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
+  this->add(dirichlet_projection_operator, new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+  this->add(neumann_functional, new GDT::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
   AssemblerBaseType::assemble();
 
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
   dirichlet_constraints(boundary_info, coarse_space().mapper().maxNumDofs(), coarse_space().mapper().maxNumDofs());
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  this->add(dirichlet_constraints, force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  this->add(dirichlet_constraints,
+            force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   AssemblerBaseType::assemble();
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
@@ -76,9 +74,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   force_functional.vector() -= tmp;
 }
 
-void CoarseScaleOperator::assemble() {
-  DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this");
-}
+void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this"); }
 
 void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
 
@@ -98,16 +94,15 @@ DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));*/
   solution.vector() += dirichlet_projection_.vector();
 
   DSC_PROFILER.stopTiming("msfem.coarse.linearSolver");
-  DSC_LOG_DEBUG << "Time to solve coarse MsFEM problem: "
-                << DSC_PROFILER.getTiming("msfem.coarse.linearSolver") << "ms."
-                << std::endl;
+  DSC_LOG_DEBUG << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver")
+                << "ms." << std::endl;
 }
 
 CoarseScaleOperator::MatrixType& CoarseScaleOperator::system_matrix() { return global_matrix_; }
 
 const CoarseScaleOperator::MatrixType& CoarseScaleOperator::system_matrix() const { return global_matrix_; }
 
-const CoarseScaleOperator::SourceSpaceType &CoarseScaleOperator::coarse_space() const { return test_space(); }
+const CoarseScaleOperator::SourceSpaceType& CoarseScaleOperator::coarse_space() const { return test_space(); }
 
 } // namespace MsFEM {
 } // namespace Multiscale {

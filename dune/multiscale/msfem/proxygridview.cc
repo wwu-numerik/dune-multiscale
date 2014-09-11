@@ -6,13 +6,9 @@
 namespace Dune {
 namespace Multiscale {
 
-
-ProxyGridview::ProxyGridview(const MsFEM::LocalGridList &localGrids)
+ProxyGridview::ProxyGridview(const MsFEM::LocalGridList& localGrids)
   : BaseType(localGrids.getSubGrid(0))
-  , localGrids_(localGrids)
-{
-}
-
+  , localGrids_(localGrids) {}
 
 } // namespace Dune
 } // namespace Multiscale

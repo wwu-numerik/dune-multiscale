@@ -14,7 +14,7 @@ namespace Dune {
 namespace Multiscale {
 
 namespace MsFEM {
-  class LocalsolutionProxy;
+class LocalsolutionProxy;
 }
 
 struct OutputParameters;

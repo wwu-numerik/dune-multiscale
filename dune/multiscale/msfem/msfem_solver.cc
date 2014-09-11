@@ -80,10 +80,11 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       BOOST_ASSERT_MSG(false, "no adding of the boundary correctors??");
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-//            BOOST_ASSERT_MSG(
-//                static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
-//                    static_cast<long long>(coarseSolutionLF.size()),
-//                "The current implementation relies on having thesame types of elements on coarse and fine level!");
+      //            BOOST_ASSERT_MSG(
+      //                static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
+      //                    static_cast<long long>(coarseSolutionLF.size()),
+      //                "The current implementation relies on having thesame types of elements on coarse and fine
+      // level!");
       for (std::size_t dof = 0; dof < coarseSolutionLF.vector().size(); ++dof) {
         localSolutions[dof]->vector() *= coarseSolutionLF.vector().get(dof);
         local_correction.vector() += localSolutions[dof]->vector();
