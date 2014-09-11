@@ -77,7 +77,6 @@ public:
   MatrixType& system_matrix();
   const MatrixType& system_matrix() const;
 
-
 private:
   const SourceSpaceType& coarse_space() const;
 

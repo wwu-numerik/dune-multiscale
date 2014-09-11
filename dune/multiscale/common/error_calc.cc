@@ -53,11 +53,11 @@ void data_output(const CommonTraits::GridViewType& gridPart,
 }
 
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution,
-                                                   const CommonTraits::ConstDiscreteFunctionType* const fem_solution, const CommonTraits::DiscreteFunctionSpaceType &coarse_space)
+                                                   const CommonTraits::ConstDiscreteFunctionType* const fem_solution,
+                                                   const CommonTraits::DiscreteFunctionSpaceType& coarse_space)
   : msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution)
-  , coarse_space_(coarse_space)
-{}
+  , coarse_space_(coarse_space) {}
 
 std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   using namespace Dune::GDT::Products;
@@ -67,9 +67,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
 
   typedef Stuff::Functions::Difference<Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType>
-      DifferenceType;
+  DifferenceType;
   /// TODO only call assemble once
-//  auto& space = fem_solution_ ? fem_solution_->space() : msfem_solution_->space();
   const auto fine_grid = make_grids().second;
   CommonTraits::GridProviderType fine_grid_provider(*fine_grid);
   const CommonTraits::GdtSpaceType fine_space =
@@ -81,8 +80,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   std::map<std::string, double> csv;
 
   CommonTraits::DiscreteFunctionType fine_msfem_solution(fine_space, "MsFEM_Solution");
-  if(msfem_solution_) {
-    DS::MsFEMProjection::project(*msfem_solution_, fine_msfem_solution,msfem_solution_->search());
+  if (msfem_solution_) {
+    DS::MsFEMProjection::project(*msfem_solution_, fine_msfem_solution, msfem_solution_->search());
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
       data_output(*fine_space.grid_view(), coarse_space_);
@@ -131,7 +130,6 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       csv["fem_exact_L2"] = fem_error;
       csv["fem_exact_H1s"] = h1_fem_error;
     }
-
   }
 
   if (msfem_solution_ && fem_solution_) {

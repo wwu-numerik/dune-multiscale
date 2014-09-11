@@ -20,7 +20,6 @@
 #include <memory>
 #include <vector>
 
-
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
@@ -44,7 +43,7 @@ public:
 
   LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace);
 
-//private:
+  // private:
   LocalGridType& getSubGrid(IndexType i);
   const LocalGridType& getSubGrid(IndexType i) const;
 
@@ -61,9 +60,10 @@ public:
 
   //! returns true iff all corners of local_entity are inside coarse_entity
   static bool covers_strict(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity);
-  template <class GridImp, template< int, int, class > class GeometryImp>
-  static bool covers_strict(const CoarseEntityType& coarse_entity,
-                            const Dune::Geometry< CommonTraits::world_dim, CommonTraits::world_dim, GridImp, GeometryImp >& local_geometry);
+  template <class GridImp, template <int, int, class> class GeometryImp>
+  static bool covers_strict(
+      const CoarseEntityType& coarse_entity,
+      const Dune::Geometry<CommonTraits::world_dim, CommonTraits::world_dim, GridImp, GeometryImp>& local_geometry);
   //! returns true if local_entity's center is inside coarse_entity
   bool covers(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity);
 
@@ -75,10 +75,10 @@ private:
   const LeafIndexSet& coarseGridLeafIndexSet_;
 };
 
-template <class GridImp, template< int, int, class > class GeometryImp>
-bool LocalGridList::covers_strict(const CoarseEntityType& coarse_entity,
-                          const Dune::Geometry< CommonTraits::world_dim, CommonTraits::world_dim, GridImp, GeometryImp >& local_geometry)
-{
+template <class GridImp, template <int, int, class> class GeometryImp>
+bool LocalGridList::covers_strict(
+    const CoarseEntityType& coarse_entity,
+    const Dune::Geometry<CommonTraits::world_dim, CommonTraits::world_dim, GridImp, GeometryImp>& local_geometry) {
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
   for (const auto i : DSC::valueRange(local_geometry.corners())) {
