@@ -21,38 +21,44 @@
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/proxygridview.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 
+using namespace Dune::Multiscale;
+
+void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution) {
+  using namespace Dune;
+
+  Dune::Multiscale::OutputParameters outputparam;
+  outputparam.set_prefix("msfem_solution_");
+  msfem_solution.visualize(outputparam.fullpath(msfem_solution.name()));
+}
+
+void data_output(const CommonTraits::GridViewType& gridPart,
+                 const CommonTraits::DiscreteFunctionSpaceType& coarseSpace) {
+  using namespace Dune;
+  Dune::Multiscale::OutputParameters outputparam;
+
+  if (Problem::getModelData()->hasExactSolution()) {
+    const auto& u = Dune::Multiscale::Problem::getExactSolution();
+    outputparam.set_prefix("exact_solution");
+    u->visualize(gridPart, outputparam.fullpath(u->name()));
+  }
+
+  CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
+  coarse_grid_visualization.visualize(outputparam.fullpath(coarse_grid_visualization.name()));
+}
 
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution,
-                                                   const CommonTraits::ConstDiscreteFunctionType* const fem_solution)
+                                                   const CommonTraits::ConstDiscreteFunctionType* const fem_solution, const CommonTraits::DiscreteFunctionSpaceType &coarse_space)
   : msfem_solution_(msfem_solution)
-  , fem_solution_(fem_solution) {}
+  , fem_solution_(fem_solution)
+  , coarse_space_(coarse_space)
+{}
 
-/** Compute and print errors between exact, msfem and fem solution
- *
- *  This computes the errors between the exact solution, the msfem solution
- *  and the fem solution (if they exist respectively). The results are printed
- *  to the given ostream and returned in a std::map.
- *
- *  \param[in] out The ostream for error printing
- *  \return Returns the computed errors as std::map with the following entries:
- *          - "msfem_exact_L2" The L2 error between the msfem solution and the
- *            exact solution
- *          - "msfem_exact_H1" The H1 error between the msfem solution and the
- *            exact solution
- *          - "fem_exact_L2" The L2 error between the fem solution and the
- *            exact solution
- *          - "fem_exact_H1" The H1 error between the fem solution and the
- *            exact solution
- *          - "msfem_fem_L2" The L2 error between the msfem solution and the
- *            fem solution
- *          Here, each entry will only be present if the corresponding error was
- *          computed.
- */
 std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   using namespace Dune::GDT::Products;
   assert(msfem_solution_ || fem_solution_);
@@ -75,8 +81,14 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   std::map<std::string, double> csv;
 
   CommonTraits::DiscreteFunctionType fine_msfem_solution(fine_space, "MsFEM_Solution");
-  if(msfem_solution_)
+  if(msfem_solution_) {
     DS::MsFEMProjection::project(*msfem_solution_, fine_msfem_solution,msfem_solution_->search());
+    if (DSC_CONFIG_GET("global.vtk_output", false)) {
+      DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
+      data_output(*fine_space.grid_view(), coarse_space_);
+      solution_output(fine_msfem_solution);
+    }
+  }
 
   //! ----------------- compute L2- and H1- errors -------------------
   if (Problem::getModelData()->hasExactSolution()) {

@@ -24,13 +24,6 @@ namespace MsFEM {
 class LocalGridList;
 
 //! \TODO docme
-void solution_output(const std::unique_ptr<LocalsolutionProxy>& msfem_solution);
-
-//! \TODO docme
-void data_output(const CommonTraits::GridViewType& gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& discreteFunctionSpace_coarse);
-
-//! \TODO docme
 std::map<std::string, double> algorithm();
 
 } // namespace MsFEM {

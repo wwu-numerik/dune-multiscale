@@ -17,13 +17,36 @@ class ErrorCalculator {
 
 public:
   ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution,
-                  const CommonTraits::ConstDiscreteFunctionType* const fem_solution);
+                  const CommonTraits::ConstDiscreteFunctionType* const fem_solution,
+                  const CommonTraits::DiscreteFunctionSpaceType& coarse_space);
 
+  /** Compute and print errors between exact, msfem and fem solution
+   *
+   *  This computes the errors between the exact solution, the msfem solution
+   *  and the fem solution (if they exist respectively). The results are printed
+   *  to the given ostream and returned in a std::map.
+   *
+   *  \param[in] out The ostream for error printing
+   *  \return Returns the computed errors as std::map with the following entries:
+   *          - "msfem_exact_L2" The L2 error between the msfem solution and the
+   *            exact solution
+   *          - "msfem_exact_H1" The H1 error between the msfem solution and the
+   *            exact solution
+   *          - "fem_exact_L2" The L2 error between the fem solution and the
+   *            exact solution
+   *          - "fem_exact_H1" The H1 error between the fem solution and the
+   *            exact solution
+   *          - "msfem_fem_L2" The L2 error between the msfem solution and the
+   *            fem solution
+   *          Here, each entry will only be present if the corresponding error was
+   *          computed.
+   */
   std::map<std::string, double> print(std::ostream& out);
 
 private:
   const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution_;
   const CommonTraits::ConstDiscreteFunctionType* const fem_solution_;
+  const CommonTraits::DiscreteFunctionSpaceType& coarse_space_;
 };
 
 } // namespace Multiscale

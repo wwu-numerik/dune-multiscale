@@ -45,7 +45,7 @@ public:
    homogenous Dirchilet boundary condition!:
    **/
   void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-             std::unique_ptr<LocalsolutionProxy>& msfem_solution) const;
+             std::unique_ptr<LocalsolutionProxy>& msfem_solution, LocalGridList &subgrid_list) const;
 };
 
 } // namespace MsFEM {

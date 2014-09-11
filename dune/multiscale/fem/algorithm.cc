@@ -51,7 +51,7 @@ void algorithm(const std::shared_ptr<const CommonTraits::GridType>& macro_grid_p
     DSC_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
     solution.visualize("solution.vtk");
   }
-  ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO_0);
+  ErrorCalculator(nullptr, &solution, space).print(DSC_LOG_INFO_0);
 } // ... algorithm(...)
 
 } // namespace FEM {
