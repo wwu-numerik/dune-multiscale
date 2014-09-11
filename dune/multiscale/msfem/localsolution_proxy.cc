@@ -6,16 +6,16 @@
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/proxygridview.hh>
 
-Dune::Multiscale::MsFEM::LocalsolutionProxy::LocalsolutionProxy(const CorrectionsMapType& corrections,
+Dune::Multiscale::MsFEM::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& corrections,
                                                                 const CommonTraits::DiscreteFunctionSpaceType &coarseSpace,
                                                                 const LocalGridList &gridlist)
   : BaseType(*corrections.begin()->second)
-  , corrections_(corrections)
+  , corrections_(std::move(corrections))
   , index_set_(coarseSpace.grid_view()->grid().leafIndexSet())
   , search_(DSC::make_unique<LocalGridSearch>(coarseSpace, gridlist))
   , gridlist_(gridlist)
 {
-  assert(corrections.size() == index_set_.size(0));
+  assert(corrections_.size() == index_set_.size(0));
 }
 
 std::unique_ptr<Dune::Multiscale::MsFEM::LocalsolutionProxy::LocalFunctionType>

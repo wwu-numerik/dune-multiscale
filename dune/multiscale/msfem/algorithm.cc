@@ -16,7 +16,6 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
-#include <dune/multiscale/tools/misc/outputparameter.hh>
 
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/configuration.hh>
@@ -36,35 +35,11 @@
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
+#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 
 namespace Dune {
 namespace Multiscale {
 namespace MsFEM {
-
-//! \TODO docme
-void solution_output(const std::unique_ptr<LocalsolutionProxy>& msfem_solution) {
-  using namespace Dune;
-
-  Dune::Multiscale::OutputParameters outputparam;
-  outputparam.set_prefix("msfem_solution_");
-  msfem_solution->visualize(outputparam.fullpath(msfem_solution->name()));
-}
-
-//! \TODO docme
-void data_output(const CommonTraits::GridViewType& gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& coarseSpace) {
-  using namespace Dune;
-  Dune::Multiscale::OutputParameters outputparam;
-
-  if (Problem::getModelData()->hasExactSolution()) {
-    const auto& u = Dune::Multiscale::Problem::getExactSolution();
-    outputparam.set_prefix("exact_solution");
-    u->visualize(gridPart, outputparam.fullpath(u->name()));
-  }
-
-  CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
-  coarse_grid_visualization.visualize(outputparam.fullpath(coarse_grid_visualization.name()));
-}
 
 //! algorithm
 std::map<std::string, double> algorithm() {
@@ -80,13 +55,8 @@ std::map<std::string, double> algorithm() {
 
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 
-  Elliptic_MsFEM_Solver().apply(coarseSpace, msfem_solution);
-
-  if (DSC_CONFIG_GET("global.vtk_output", false)) {
-    DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-    data_output(*fineSpace.grid_view(), coarseSpace);
-    solution_output(msfem_solution);
-  }
+  LocalGridList subgrid_list(coarseSpace);
+  Elliptic_MsFEM_Solver().apply(coarseSpace, msfem_solution, subgrid_list);
 
   std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution(nullptr);
 
@@ -99,7 +69,7 @@ std::map<std::string, double> algorithm() {
     }
   }
 
-  return ErrorCalculator(msfem_solution, fem_solution.get()).print(DSC_LOG_INFO_0);
+  return ErrorCalculator(msfem_solution, fem_solution.get(), coarseSpace).print(DSC_LOG_INFO_0);
 
 } // function algorithm
 

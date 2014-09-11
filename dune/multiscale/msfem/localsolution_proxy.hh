@@ -30,7 +30,7 @@ public:
   typedef std::unordered_map<typename LeafIndexSetType::IndexType,
                              std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
 
-  LocalsolutionProxy(const CorrectionsMapType& corrections, const CommonTraits::DiscreteFunctionSpaceType &coarseSpace,
+  LocalsolutionProxy(CorrectionsMapType &&corrections, const CommonTraits::DiscreteFunctionSpaceType &coarseSpace,
                      const LocalGridList& gridlist);
 
   std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;
@@ -40,7 +40,7 @@ public:
   LocalGridSearch& search() const;
 
 private:
-  const CorrectionsMapType& corrections_;
+  const CorrectionsMapType corrections_;
   const LeafIndexSetType& index_set_;
   const std::unique_ptr<LocalGridSearch> search_;
   const LocalGridList& gridlist_;

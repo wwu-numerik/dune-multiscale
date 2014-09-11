@@ -80,10 +80,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       BOOST_ASSERT_MSG(false, "no adding of the boundary correctors??");
     } else {
       //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-            BOOST_ASSERT_MSG(
-                static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
-                    static_cast<long long>(coarseSolutionLF.size()),
-                "The current implementation relies on having thesame types of elements on coarse and fine level!");
+//            BOOST_ASSERT_MSG(
+//                static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
+//                    static_cast<long long>(coarseSolutionLF.size()),
+//                "The current implementation relies on having thesame types of elements on coarse and fine level!");
       for (std::size_t dof = 0; dof < coarseSolutionLF.vector().size(); ++dof) {
         localSolutions[dof]->vector() *= coarseSolutionLF.vector().get(dof);
         local_correction.vector() += localSolutions[dof]->vector();
@@ -125,22 +125,20 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
         local_correction.visualize(outputparam.fullpath(local_correction.name()));
       }
     }
+    localSolutions.clear();
   }
 
-  msfem_solution = DSC::make_unique<LocalsolutionProxy>(local_corrections, coarse_space, subgrid_list);
-
-  // backend storage no longer needed from here on
-  DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType>::clear();
+  msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, subgrid_list);
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                  std::unique_ptr<MsFEM::LocalsolutionProxy>& solution) const {
+                                  std::unique_ptr<MsFEM::LocalsolutionProxy>& solution,
+                                  LocalGridList& subgrid_list) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
 
   DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");
   coarse_msfem_solution.vector() *= 0;
 
-  LocalGridList subgrid_list(coarse_space);
   //! Solutions are kept in-memory via DiscreteFunctionIO::MemoryBackend by LocalsolutionManagers
   LocalProblemSolver(coarse_space, subgrid_list).solve_for_all_cells();
 
@@ -149,10 +147,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(subgrid_list, coarse_msfem_solution, solution);
-
-//  solution.vector() *= 0;
-//  solution.vector() += fine_scale_part.vector();
-} // solve_dirichlet_zero
+}
 
 } // namespace MsFEM {
 } // namespace Multiscale {
