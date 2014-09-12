@@ -31,7 +31,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 /** \brief define output parameters for local problems
  *  appends "local_problems" for path
@@ -144,6 +144,6 @@ void LocalProblemSolver::solve_for_all_cells() {
                 << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
 } // assemble_all
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {

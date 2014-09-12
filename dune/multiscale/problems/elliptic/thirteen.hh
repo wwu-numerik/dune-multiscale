@@ -47,7 +47,6 @@ public:
   void evaluate(const DomainType& x, RangeType& y) const;
 };
 
-class LowerOrderTerm : public ZeroLowerOrder {};
 class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
 

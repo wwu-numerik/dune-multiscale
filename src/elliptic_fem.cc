@@ -11,12 +11,11 @@
 int main(int argc, char** argv) {
   try {
     using namespace Dune::Multiscale;
-    using namespace Dune::Multiscale::FEM;
     init(argc, argv);
 
     DSC_PROFILER.startTiming("total_cpu");
 
-    algorithm();
+    cgfem_algorithm();
 
     const auto cpu_time =
         DSC_PROFILER.stopTiming("total_cpu", DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;

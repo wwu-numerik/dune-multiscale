@@ -22,7 +22,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 //! container for cell problem subgrids
 class LocalGridList : public boost::noncopyable {
@@ -88,7 +88,7 @@ bool LocalGridList::covers_strict(
   return true;
 }
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

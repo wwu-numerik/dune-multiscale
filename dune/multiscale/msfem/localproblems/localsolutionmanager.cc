@@ -8,7 +8,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 typedef DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType> IOType;
 
@@ -51,6 +51,6 @@ void LocalSolutionManager::save() const {
 
 std::size_t LocalSolutionManager::numBoundaryCorrectors() const { return numBoundaryCorrectors_; }
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {

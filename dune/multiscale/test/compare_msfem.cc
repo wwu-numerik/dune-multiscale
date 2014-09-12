@@ -33,9 +33,7 @@ struct MsFemCompare : public ::testing::TestWithParam<TestArgs> {
 
 TEST_P(MsFemCompare, All) {
   using namespace Dune::Multiscale;
-  using namespace Dune::Multiscale::MsFEM;
-
-  const auto errorsMap = algorithm();
+  const auto errorsMap = msfem_algorithm();
   
   const auto expected_errors = this->GetParam().second;
   const auto found = errorsMap.find("msfem_exact_L2");

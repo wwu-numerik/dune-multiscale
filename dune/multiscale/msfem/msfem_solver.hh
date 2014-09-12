@@ -15,7 +15,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 class LocalGridList;
 class LocalsolutionProxy;
@@ -47,7 +47,7 @@ public:
              std::unique_ptr<LocalsolutionProxy>& msfem_solution, LocalGridList& subgrid_list) const;
 };
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

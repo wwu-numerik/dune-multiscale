@@ -8,7 +8,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 // forward, to be used in the traits
 class CoarseBasisProduct;
@@ -215,7 +215,7 @@ private:
   const MsFEMTraits::LocalGridDiscreteFunctionType& dirichlet_extension_;
 }; // class Product
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

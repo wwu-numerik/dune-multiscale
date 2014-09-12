@@ -17,7 +17,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 class LocalGridList;
 class LocalSolutionManager;
@@ -54,7 +54,7 @@ public:
   size_t numTmpObjectsRequired() const;
 
   void apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
-             Multiscale::MsFEM::LocalSolutionManager& localSolutionManager,
+             Multiscale::LocalSolutionManager& localSolutionManager,
              const MsFEMTraits::LocalEntityType& localGridEntity, const TestLocalfunctionSetInterfaceType& testBase,
              Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
              std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& tmpLocalVectors) const;
@@ -140,7 +140,7 @@ private:
   const LocalAssemblerType local_assembler_;
 }; // class CoarseRhsFunctional
 
-} // namespace MsFEM
+
 } // end namespace Multiscale
 } // end namespace Dune
 

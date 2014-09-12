@@ -17,10 +17,9 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace FEM {
 
 //! the main FEM computation
-void algorithm() {
+void cgfem_algorithm() {
   Elliptic_FEM_Solver solver;
   auto& solution = solver.solve();
 
@@ -31,6 +30,5 @@ void algorithm() {
   ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO_0);
 } // ... algorithm(...)
 
-} // namespace FEM {
 } // namespace Multiscale {
 } // namespace Dune {

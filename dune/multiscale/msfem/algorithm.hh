@@ -13,20 +13,14 @@
 namespace Dune {
 namespace Multiscale {
 
-namespace MsFEM {
 class LocalsolutionProxy;
-}
-
 struct OutputParameters;
-
-namespace MsFEM {
-
 class LocalGridList;
 
 //! \TODO docme
-std::map<std::string, double> algorithm();
+std::map<std::string, double> msfem_algorithm();
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

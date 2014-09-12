@@ -13,8 +13,8 @@
 struct PointsAndStuff : public GridAndSpaces {
 
   void check_fine_lp_in_coarse() {
-    MsFEM::LocalGridList subgrid_list(coarseSpace);
-    MsFEM::LocalGridSearch search(coarseSpace, subgrid_list);
+    LocalGridList subgrid_list(coarseSpace);
+    LocalGridSearch search(coarseSpace, subgrid_list);
 //    auto proxy_view = msfem_solution_->grid_view();
   }
 

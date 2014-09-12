@@ -40,10 +40,10 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 //! algorithm
-std::map<std::string, double> algorithm() {
+std::map<std::string, double> msfem_algorithm() {
   using namespace Dune;
 
   auto grid = make_coarse_grid();
@@ -61,7 +61,7 @@ std::map<std::string, double> algorithm() {
   return ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0);
 } // function algorithm
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

@@ -49,8 +49,8 @@ struct PointsAndStuff : public GridAndSpaces {
   }
 
   void check_fine_lp_in_coarse() {
-    MsFEM::LocalGridList subgrid_list(coarseSpace);
-    MsFEM::LocalGridSearch search(coarseSpace, subgrid_list);
+    LocalGridList subgrid_list(coarseSpace);
+    LocalGridSearch search(coarseSpace, subgrid_list);
 
     for (const auto& ent : fineSpace) {
       const auto lg_points = DS::global_evaluation_points(fineSpace, ent);
@@ -65,8 +65,8 @@ struct PointsAndStuff : public GridAndSpaces {
   }
 
   void check_search() {
-    MsFEM::LocalGridList subgrid_list(coarseSpace);
-    MsFEM::LocalGridSearch search(coarseSpace, subgrid_list);
+    LocalGridList subgrid_list(coarseSpace);
+    LocalGridSearch search(coarseSpace, subgrid_list);
 
     for (const auto& ent : fineSpace) {
       const auto lg_points = DS::global_evaluation_points(fineSpace, ent);
@@ -77,7 +77,7 @@ struct PointsAndStuff : public GridAndSpaces {
 
 
   void check_local_grids() {
-    MsFEM::LocalGridList subgrid_list(coarseSpace);
+    LocalGridList subgrid_list(coarseSpace);
     EXPECT_EQ(subgrid_list.size(), grids_.first->size(0));
   }
 

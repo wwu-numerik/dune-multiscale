@@ -13,7 +13,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 class MsFEMCodim0Integral;
 class MsFemCodim0Matrix;
@@ -49,7 +49,7 @@ public:
 
   size_t numTmpObjectsRequired() const;
 
-  void apply(Multiscale::MsFEM::LocalSolutionManager& localSolutionManager,
+  void apply(Multiscale::LocalSolutionManager& localSolutionManager,
              const MsFEMTraits::LocalEntityType& localGridEntity, const TestLocalfunctionSetInterfaceType& testBase,
              const AnsatzLocalfunctionSetInterfaceType& ansatzBase,
              Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
@@ -86,7 +86,7 @@ private:
   LocalGridList& localGridList_;
 }; // class LocalAssemblerCodim0Matrix
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

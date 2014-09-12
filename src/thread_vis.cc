@@ -89,7 +89,7 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
   const CommonTraits::GdtSpaceType fineSpace =
       CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
 
-  MsFEM::LocalGridList subgrid_list(coarseSpace);
+  LocalGridList subgrid_list(coarseSpace);
 
   auto fine_view_ptr = std::make_shared<CommonTraits::GridViewType> (fine_grid.leafGridView());
   typedef GDT::Spaces::FiniteVolume::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
@@ -149,7 +149,6 @@ void partition_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& 
 int main(int argc, char** argv) {
   try {
     using namespace Dune::Multiscale;
-    using namespace Dune::Multiscale::MsFEM;
     init(argc, argv);
 
     assert(DS::ThreadManager::max_threads() == DSC_CONFIG_GET("threading.max_count", 1));

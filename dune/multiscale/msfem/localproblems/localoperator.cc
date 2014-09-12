@@ -29,7 +29,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
                                            const LocalGridDiscreteFunctionSpaceType& space)
@@ -140,6 +140,6 @@ DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);*/
     DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
 }
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {

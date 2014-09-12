@@ -16,7 +16,6 @@ int main(int argc, char** argv) {
 
   try {
     using namespace Dune::Multiscale;
-    using namespace Dune::Multiscale::MsFEM;
     init(argc, argv);
 
     //!TODO include base in config
@@ -29,7 +28,7 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n") %
                           datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
 
-    algorithm();
+    msfem_algorithm();
 
     auto comm = Dune::MPIHelper::getCollectiveCommunication();
     auto cpu_time = DSC_PROFILER.stopTiming("msfem.all", DSC_CONFIG_GET("global.output_walltime", false));

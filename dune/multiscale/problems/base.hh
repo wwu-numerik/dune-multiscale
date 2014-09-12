@@ -55,34 +55,8 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
   virtual size_t order() const { return 2; }
 };
 
-typedef DiffusionBase::Transfer<MsFEM::MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
+typedef DiffusionBase::Transfer<MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
 
-struct LowerOrderBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-
-  virtual void evaluate(const DomainType& x, RangeType& ret) const = 0;
-  virtual void evaluate(const DomainType& x, const RangeType& position, const JacobianRangeType& direction_gradient,
-                        RangeType& y) const = 0;
-  virtual void position_derivative(const DomainType& x, const RangeType& position,
-                                   const JacobianRangeType& direction_gradient, RangeType& y) const = 0;
-  virtual void direction_derivative(const DomainType& x, const RangeType& position,
-                                    const JacobianRangeType& direction_gradient, JacobianRangeType& y) const = 0;
-};
-
-struct ZeroLowerOrder : public LowerOrderBase {
-public:
-  virtual void evaluate(const DomainType&, RangeType& y) const DS_FINAL { y = RangeType(0); }
-  virtual void evaluate(const DomainType&, const RangeType&, const JacobianRangeType&, RangeType& y) const DS_FINAL {
-    y = RangeType(0);
-  }
-  virtual void position_derivative(const DomainType&, const RangeType&, const JacobianRangeType&,
-                                   RangeType& y) const DS_FINAL {
-    y = RangeType(0);
-  }
-  virtual void direction_derivative(const DomainType&, const RangeType&, const JacobianRangeType&,
-                                    JacobianRangeType& y) const DS_FINAL {
-    y = JacobianRangeType(0);
-  }
-};
 
 class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
@@ -184,7 +158,7 @@ class IModelProblemData {
 protected:
   typedef CommonTraits::GridViewType View;
   typedef DSG::BoundaryInfoInterface<typename View::Intersection> BoundaryInfoType;
-  typedef MsFEM::MsFEMTraits::LocalGridType::LeafGridView SubView;
+  typedef MsFEMTraits::LocalGridType::LeafGridView SubView;
   typedef DSG::BoundaryInfoInterface<typename SubView::Intersection> SubBoundaryInfoType;
 
 public:
