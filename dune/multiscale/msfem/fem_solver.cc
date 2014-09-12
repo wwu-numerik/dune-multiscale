@@ -4,6 +4,7 @@
 #include <dune/common/timer.hh>
 #include <dune/multiscale/msfem/coarse_rhs_functional.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
@@ -26,8 +27,18 @@
 namespace Dune {
 namespace Multiscale {
 
-Elliptic_FEM_Solver::Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType& space)
-  : space_(space) {}
+Elliptic_FEM_Solver::Elliptic_FEM_Solver()
+  : grid_(make_fine_grid(nullptr, false))
+  , space_(CommonTraits::SpaceProviderType::create(CommonTraits::GridProviderType(*grid_), CommonTraits::st_gdt_grid_level))
+  , solution_(space_, "fem_solution")
+{
+}
+
+CommonTraits::ConstDiscreteFunctionType &Elliptic_FEM_Solver::solve()
+{
+  apply(solution_);
+  return solution_;
+}
 
 void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) const {
   DSC_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;

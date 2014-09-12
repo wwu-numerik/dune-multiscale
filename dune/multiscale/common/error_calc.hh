@@ -8,6 +8,7 @@
 
 namespace Dune {
 namespace Multiscale {
+class Elliptic_FEM_Solver;
 
 namespace MsFEM {
 class LocalsolutionProxy;
@@ -17,8 +18,10 @@ class ErrorCalculator {
 
 public:
   ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution,
-                  const CommonTraits::ConstDiscreteFunctionType* const fem_solution,
-                  const CommonTraits::DiscreteFunctionSpaceType& coarse_space);
+                  CommonTraits::ConstDiscreteFunctionType *fem_solution);
+
+  //! this one runs cg-fem sim if mandated by config
+  ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution);
 
   /** Compute and print errors between exact, msfem and fem solution
    *
@@ -45,8 +48,9 @@ public:
 
 private:
   const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution_;
-  const CommonTraits::ConstDiscreteFunctionType* const fem_solution_;
-  const CommonTraits::DiscreteFunctionSpaceType& coarse_space_;
+  std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution_ptr_;
+  CommonTraits::ConstDiscreteFunctionType* fem_solution_;
+  std::unique_ptr<Elliptic_FEM_Solver> fem_solver_;
 };
 
 } // namespace Multiscale

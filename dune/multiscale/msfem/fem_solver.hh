@@ -15,10 +15,11 @@ namespace Multiscale {
 class Elliptic_FEM_Solver {
 
   static const int faceCodim = 1;
-  const CommonTraits::GdtSpaceType& space_;
+
+  typedef std::shared_ptr<CommonTraits::GridType> GridPtrType;
 
 public:
-  Elliptic_FEM_Solver(const CommonTraits::GdtSpaceType& space);
+  Elliptic_FEM_Solver();
 
   //! - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   //! then:
@@ -26,7 +27,15 @@ public:
   //! b --> advective part ('AdvectionTermType')
   //! c --> reaction part ('ReactionTermType')
   //! f --> 'first' source term, scalar ('SourceTermType')
+  CommonTraits::ConstDiscreteFunctionType& solve();
+
+private:
   void apply(CommonTraits::DiscreteFunctionType& solution) const;
+
+  GridPtrType grid_;
+  const CommonTraits::GdtSpaceType space_;
+  CommonTraits::DiscreteFunctionType solution_;
+
 };
 
 } // namespace Multiscale

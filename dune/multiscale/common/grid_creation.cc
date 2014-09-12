@@ -113,11 +113,12 @@ Dune::Multiscale::make_fine_grid(std::shared_ptr<Dune::Multiscale::CommonTraits:
   auto fine_gridptr =
       StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overFine);
 
-  // check whether grids match (may not match after load balancing if different refinements in different
-  // spatial directions are used)
-  DSC_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n") %
-                       coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0) << std::endl;
+
   if (coarse_gridptr && check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
+    // check whether grids match (may not match after load balancing if different refinements in different
+    // spatial directions are used)
+    DSC_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n") %
+                         coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0) << std::endl;
     const auto coarse_dimensions =
         DSG::dimensions(coarse_gridptr->leafGridView<PartitionIteratorType::Interior_Partition>());
     const auto fine_dimensions =
