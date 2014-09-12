@@ -21,7 +21,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 size_t MsFEMCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
@@ -122,7 +122,7 @@ void MsFemCodim0Matrix::assembleLocal(
   assert(tmpIndicesContainer.size() >= 2);
   // get and clear matrix
 
-  Multiscale::MsFEM::LocalSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
+  Multiscale::LocalSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
   localSolutionManager.load();
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);
@@ -160,6 +160,6 @@ void MsFemCodim0Matrix::assembleLocal(
 
 // constructor
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {

@@ -102,8 +102,6 @@ public:
   PURE void evaluate(const DomainType& x, RangeType& y) const;
 };
 
-class LowerOrderTerm : public ZeroLowerOrder {};
-
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 

@@ -10,7 +10,6 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace FEM {
 
 //! outputs Problem info to output stream
 void print_info(const Problem::IModelProblemData& info, std::ostream& out);
@@ -18,7 +17,6 @@ void print_info(const Problem::IModelProblemData& info, std::ostream& out);
 void write_discrete_function(CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix);
 void write_discrete_function(CommonTraits::DiscreteFunctionType& discrete_solution, const std::string prefix);
 
-} // namespace FEM {
 } // namespace Multiscale {
 } // namespace Dune {
 

@@ -23,7 +23,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScaleOperator::RangeSpaceType& range_space,
                                                                const CoarseScaleOperator::SourceSpaceType& source_space,
@@ -104,6 +104,6 @@ const CoarseScaleOperator::MatrixType& CoarseScaleOperator::system_matrix() cons
 
 const CoarseScaleOperator::SourceSpaceType& CoarseScaleOperator::coarse_space() const { return test_space(); }
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {

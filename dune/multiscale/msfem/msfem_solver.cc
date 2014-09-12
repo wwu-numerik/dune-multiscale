@@ -40,7 +40,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
@@ -133,7 +133,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-                                  std::unique_ptr<MsFEM::LocalsolutionProxy>& solution,
+                                  std::unique_ptr<LocalsolutionProxy>& solution,
                                   LocalGridList& subgrid_list) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
 
@@ -150,6 +150,6 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType&
   identify_fine_scale_part(subgrid_list, coarse_msfem_solution, solution);
 }
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {

@@ -14,12 +14,10 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace FEM {
 
 //! the main FEM computation
-void algorithm();
+void cgfem_algorithm();
 
-} // namespace FEM {
 } // namespace Multiscale {
 } // namespace Dune {
 

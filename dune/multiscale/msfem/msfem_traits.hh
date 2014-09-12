@@ -15,7 +15,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 //! type construction for the MSFEM code
 struct MsFEMTraits {
@@ -47,10 +47,8 @@ struct MsFEMTraits {
   typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 };
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {}
-
-namespace DMM = Dune::Multiscale::MsFEM;
 
 #endif // DUNE_MSFEM_TRAITS_HH

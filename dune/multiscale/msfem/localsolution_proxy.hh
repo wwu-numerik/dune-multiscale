@@ -12,7 +12,7 @@ namespace Multiscale {
 
 class ProxyGridview;
 
-namespace MsFEM {
+
 
 // class LocalGridSearch;
 class LocalGridList;
@@ -28,7 +28,7 @@ class LocalsolutionProxy : public MsFEMTraits::LocalGridConstDiscreteFunctionTyp
 
 public:
   typedef std::unordered_map<typename LeafIndexSetType::IndexType,
-                             std::unique_ptr<DMM::MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
+                             std::unique_ptr<MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
 
   LocalsolutionProxy(CorrectionsMapType&& corrections, const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
                      const LocalGridList& gridlist);
@@ -46,7 +46,7 @@ private:
   const LocalGridList& gridlist_;
 };
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

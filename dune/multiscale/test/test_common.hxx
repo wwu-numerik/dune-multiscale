@@ -30,7 +30,6 @@
 
 using namespace Dune::Stuff::Common;
 using namespace Dune::Multiscale;
-using namespace Dune::Multiscale::MsFEM;
 using namespace std;
 
 

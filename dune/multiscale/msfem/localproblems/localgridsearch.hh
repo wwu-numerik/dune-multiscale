@@ -6,7 +6,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 class LocalGridList;
 
@@ -44,7 +44,7 @@ private:
   std::unique_ptr<CoarseEntityPointerType> current_coarse_pointer_;
 };
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

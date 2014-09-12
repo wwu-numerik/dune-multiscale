@@ -49,7 +49,7 @@ void data_output(const CommonTraits::GridViewType& gridPart) {
   }
 }
 
-Dune::Multiscale::ErrorCalculator::ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution,
+Dune::Multiscale::ErrorCalculator::ErrorCalculator(const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
                                                    CommonTraits::ConstDiscreteFunctionType* fem_solution)
   : msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution)
@@ -57,7 +57,7 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(const std::unique_ptr<MsFEM::
   assert(fem_solution_);
 }
 
-ErrorCalculator::ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy> &msfem_solution)
+ErrorCalculator::ErrorCalculator(const std::unique_ptr<LocalsolutionProxy> &msfem_solution)
   : msfem_solution_(msfem_solution)
   , fem_solution_(nullptr)
 {

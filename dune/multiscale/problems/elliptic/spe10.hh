@@ -86,8 +86,6 @@ public:
   void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
 };
 
-class LowerOrderTerm : public ZeroLowerOrder {};
-
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 MSNULLFUNCTION(ExactSolution)

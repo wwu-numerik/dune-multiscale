@@ -100,7 +100,7 @@ class DiscreteFunctionIO : public boost::noncopyable {
     MemoryBackend(const GridViewPtrType& grid_view, const std::string filename = "nonsense_default_for_map")
       : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
       , local_grid_provider_(grid_view->grid())
-      , space_(DMM::MsFEMTraits::SpaceProviderType::create(local_grid_provider_, CommonTraits::st_gdt_grid_level)) {}
+      , space_(MsFEMTraits::SpaceProviderType::create(local_grid_provider_, CommonTraits::st_gdt_grid_level)) {}
 
     void append(const DiscreteFunction_ptr& df) { functions_.push_back(df); }
 
@@ -116,7 +116,7 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
   private:
     const boost::filesystem::path dir_;
-    const DMM::MsFEMTraits::LocalGridProviderType local_grid_provider_;
+    const MsFEMTraits::LocalGridProviderType local_grid_provider_;
     DiscreteFunctionSpaceType space_;
     Vector functions_;
   };

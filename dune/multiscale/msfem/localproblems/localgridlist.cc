@@ -21,7 +21,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
@@ -108,6 +108,6 @@ bool LocalGridList::covers(const CoarseEntityType& coarse_entity, const MsFEMTra
   return reference_element.checkInside(coarse_entity.geometry().local(center));
 }
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {

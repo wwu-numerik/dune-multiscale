@@ -19,7 +19,6 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace FEM {
 
 void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix) {
   // writing paraview data output
@@ -61,6 +60,5 @@ void write_discrete_function(CommonTraits::DiscreteFunctionType& discrete_soluti
   discrete_solution.visualize(prefix, true, Dune::VTK::appendedbase64);
 }
 
-} // namespace FEM {
 } // namespace Multiscale {
 } // namespace Dune {

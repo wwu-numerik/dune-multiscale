@@ -26,7 +26,7 @@ class FieldVector;
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
 class LocalProblemSolver {
@@ -66,7 +66,7 @@ public:
 
 }; // end class
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

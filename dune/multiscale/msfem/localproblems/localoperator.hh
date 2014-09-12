@@ -12,7 +12,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 class LocalProblemOperator {
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
@@ -67,7 +67,7 @@ private:
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
 };
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 

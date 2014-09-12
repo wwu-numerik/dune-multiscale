@@ -19,11 +19,11 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 size_t RhsCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
-void RhsCodim0Integral::apply(MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
+void RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
                               LocalSolutionManager& localSolutionManager,
                               const MsFEMTraits::LocalEntityType& localGridEntity,
                               const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
@@ -125,12 +125,12 @@ void RhsCodim0Vector::assembleLocal(
   assert(tmpLocalVectorContainer[0].size() >= numTmpObjectsRequired_);
   assert(tmpLocalVectorContainer[1].size() >= localFunctional_.numTmpObjectsRequired());
 
-  Multiscale::MsFEM::LocalSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
+  Multiscale::LocalSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
   localSolutionManager.load();
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);
 
-  MsFEM::MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension(localSolutionManager.space(),
+  MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension(localSolutionManager.space(),
                                                                        "Dirichlet Extension");
   //! \todo fill with actual values
 
@@ -166,6 +166,6 @@ CoarseRhsFunctional::CoarseRhsFunctional(CoarseRhsFunctional::VectorType& vec,
 
 void CoarseRhsFunctional::assemble() { AssemblerBaseType::assemble(); }
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {

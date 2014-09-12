@@ -27,8 +27,6 @@ struct Projection : public GridAndSpaces {
   }
 
   void project() {
-    using namespace Dune::Multiscale::MsFEM;
-
     LocalGridList subgrid_list(coarseSpace);
     const double constant(1);
     Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );

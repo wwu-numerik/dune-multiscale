@@ -7,7 +7,7 @@
 #include <dune/stuff/common/algorithm.hh>
 #include <dune/grid/common/gridenums.hh>
 
-Dune::Multiscale::MsFEM::LocalGridSearch::EntityPointerVectorType Dune::Multiscale::MsFEM::LocalGridSearch::
+Dune::Multiscale::LocalGridSearch::EntityPointerVectorType Dune::Multiscale::LocalGridSearch::
 operator()(const PointContainerType& points) {
   typedef typename EntityPointerVectorType::value_type EPV;
   const auto is_null = [&](const EPV& ptr) { return ptr == nullptr; };
@@ -51,10 +51,10 @@ operator()(const PointContainerType& points) {
   return ret_entities;
 }
 
-bool Dune::Multiscale::MsFEM::LocalGridSearch::covers_strict(
+bool Dune::Multiscale::LocalGridSearch::covers_strict(
     const CoarseGridSpaceType::EntityType& coarse_entity,
-    const Dune::Multiscale::MsFEM::LocalGridSearch::PointIterator first,
-    const Dune::Multiscale::MsFEM::LocalGridSearch::PointIterator last) {
+    const Dune::Multiscale::LocalGridSearch::PointIterator first,
+    const Dune::Multiscale::LocalGridSearch::PointIterator last) {
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
   for (auto it = first; it != last; ++it) {
@@ -64,13 +64,13 @@ bool Dune::Multiscale::MsFEM::LocalGridSearch::covers_strict(
   return true;
 }
 
-Dune::Multiscale::MsFEM::LocalGridSearch::LocalGridSearch(const CoarseGridSpaceType& coarse_space,
-                                                          const Dune::Multiscale::MsFEM::LocalGridList& gridlist)
+Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CoarseGridSpaceType& coarse_space,
+                                                          const Dune::Multiscale::LocalGridList& gridlist)
   : coarse_space_(coarse_space)
   , gridlist_(gridlist) {}
 
-const Dune::Multiscale::MsFEM::LocalGridSearch::CoarseEntityPointerType&
-Dune::Multiscale::MsFEM::LocalGridSearch::current_coarse_pointer() const {
+const Dune::Multiscale::LocalGridSearch::CoarseEntityPointerType&
+Dune::Multiscale::LocalGridSearch::current_coarse_pointer() const {
   assert(current_coarse_pointer_);
   return *current_coarse_pointer_;
 }

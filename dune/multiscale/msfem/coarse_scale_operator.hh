@@ -22,7 +22,7 @@
 
 namespace Dune {
 namespace Multiscale {
-namespace MsFEM {
+
 
 class MsFEMCodim0Integral;
 class MsFemCodim0Matrix;
@@ -87,7 +87,7 @@ private:
   CommonTraits::DiscreteFunctionType dirichlet_projection_;
 }; // class CoarseScaleOperator
 
-} // namespace MsFEM {
+
 } // namespace Multiscale {
 } // namespace Dune {
 
