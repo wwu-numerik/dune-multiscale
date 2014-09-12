@@ -20,6 +20,7 @@
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/proxygridview.hh>
+#include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
@@ -37,8 +38,7 @@ void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution) {
   msfem_solution.visualize(outputparam.fullpath(msfem_solution.name()));
 }
 
-void data_output(const CommonTraits::GridViewType& gridPart,
-                 const CommonTraits::DiscreteFunctionSpaceType& coarseSpace) {
+void data_output(const CommonTraits::GridViewType& gridPart) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
 
@@ -47,21 +47,29 @@ void data_output(const CommonTraits::GridViewType& gridPart,
     outputparam.set_prefix("exact_solution");
     u->visualize(gridPart, outputparam.fullpath(u->name()));
   }
-
-  CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
-  coarse_grid_visualization.visualize(outputparam.fullpath(coarse_grid_visualization.name()));
 }
 
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy>& msfem_solution,
-                                                   const CommonTraits::ConstDiscreteFunctionType* const fem_solution,
-                                                   const CommonTraits::DiscreteFunctionSpaceType& coarse_space)
+                                                   CommonTraits::ConstDiscreteFunctionType* fem_solution)
   : msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution)
-  , coarse_space_(coarse_space) {}
+{
+  assert(fem_solution_);
+}
+
+ErrorCalculator::ErrorCalculator(const std::unique_ptr<MsFEM::LocalsolutionProxy> &msfem_solution)
+  : msfem_solution_(msfem_solution)
+  , fem_solution_(nullptr)
+{
+  assert(msfem_solution_);
+  if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
+    fem_solver_ = DSC::make_unique<Elliptic_FEM_Solver>();
+    fem_solution_ = &fem_solver_->solve();
+  }
+}
 
 std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   using namespace Dune::GDT::Products;
-  assert(msfem_solution_ || fem_solution_);
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
@@ -84,7 +92,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     DS::MsFEMProjection::project(*msfem_solution_, fine_msfem_solution, msfem_solution_->search());
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-      data_output(*fine_space.grid_view(), coarse_space_);
+      data_output(*fine_space.grid_view());
       solution_output(fine_msfem_solution);
     }
   }

@@ -5,10 +5,9 @@
 #include <config.h>
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
-#include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/stuff/common/parallel/helper.hh>
+#include <dune/stuff/common/profiler.hh>
 
 // for rusage
 #include <sys/resource.h>

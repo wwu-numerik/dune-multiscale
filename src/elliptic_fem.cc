@@ -4,10 +4,9 @@
 
 #include <config.h>
 #include <dune/multiscale/common/main_init.hh>
-#include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/fem/algorithm.hh>
-#include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/parallel/helper.hh>
+#include <dune/stuff/common/profiler.hh>
 
 int main(int argc, char** argv) {
   try {
@@ -17,18 +16,7 @@ int main(int argc, char** argv) {
 
     DSC_PROFILER.startTiming("total_cpu");
 
-    const std::string path = DSC_CONFIG_GET("global.datadir", "data/");
-
-    // generate directories for data output
-    DSC::testCreateDirectory(path);
-
-    // name of the error file in which the data will be saved
-    std::string filename_;
-    const auto save_filename = std::string(path + "/logdata/ms.log.log");
-    DSC_LOG_INFO_0 << "Data will be saved under: " << save_filename << std::endl;
-
-    auto grids = Dune::Multiscale::make_grids();
-    algorithm(grids.second, filename_);
+    algorithm();
 
     const auto cpu_time =
         DSC_PROFILER.stopTiming("total_cpu", DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
