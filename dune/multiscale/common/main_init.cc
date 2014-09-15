@@ -15,7 +15,6 @@
 
 #include <dune/multiscale/common/traits.hh>
 
-
 void Dune::Multiscale::init(int argc, char **argv) {
 #if DUNE_MULTISCALE_WITH_DUNE_FEM
   Dune::Fem::MPIManager::initialize(argc, argv);

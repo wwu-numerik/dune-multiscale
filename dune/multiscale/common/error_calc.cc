@@ -109,7 +109,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       H1SemiLocalizable<CommonTraits::GridViewType, DifferenceType> h1_semi_error_product(*grid_view, difference,
                                                                                           over_integrate);
       system_assembler.add(h1_semi_error_product);
-      system_assembler.assemble();
+      system_assembler.tbb_assemble();
 
       const auto msfem_error = std::sqrt(l2_error_product.apply2());
       out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
@@ -128,7 +128,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       H1SemiLocalizable<CommonTraits::GridViewType, DifferenceType> h1_semi_error_product(*grid_view, difference,
                                                                                           over_integrate);
       system_assembler.add(h1_semi_error_product);
-      system_assembler.assemble();
+      system_assembler.tbb_assemble();
 
       const auto fem_error = std::sqrt(l2_error_product.apply2());
       out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
@@ -155,7 +155,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     H1SemiLocalizable<CommonTraits::GridViewType, DiscreteDifferenceType> h1_semi_error_product(*grid_view, difference,
                                                                                                 over_integrate);
     system_assembler.add(h1_semi_error_product);
-    system_assembler.assemble();
+    system_assembler.tbb_assemble();
 
     const auto approx_msfem_error = std::sqrt(l2_error_product.apply2());
     const auto no = std::sqrt(l2_msfem.apply2());
