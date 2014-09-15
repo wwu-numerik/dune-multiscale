@@ -11,12 +11,14 @@
 
 // for rusage
 #include <sys/resource.h>
+#include <tbb/task_scheduler_init.h>
 
 int main(int argc, char** argv) {
 
   try {
     using namespace Dune::Multiscale;
     init(argc, argv);
+    tbb::task_scheduler_init tbb_init(DSC_CONFIG_GET("threading.max_count", 1));
 
     //!TODO include base in config
     DSC_PROFILER.startTiming("msfem.all");

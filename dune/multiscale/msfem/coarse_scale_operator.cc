@@ -66,7 +66,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  AssemblerBaseType::assemble();
+  AssemblerBaseType::tbb_assemble();
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(coarse_space().mapper().size());
