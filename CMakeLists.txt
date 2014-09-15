@@ -41,7 +41,7 @@ find_package(ParMETIS REQUIRED)
 include(cmake/modules/AddMETISFlags.cmake)
 include(AddParMETISFlags)
 include(FindTBB)
-find_package(TBB )
+find_package(TBB REQUIRED)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
@@ -119,7 +119,7 @@ add_dune_mpi_flags(OBJECT multiscale_msfem)
 add_dune_metis_flags(multiscale_common multiscale_problem multiscale_msfem)
 add_dune_parmetis_flags(multiscale_common multiscale_problem multiscale_msfem)
 
-set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS})
+set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES})
 
 include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
 set(ALL_MULTISCALE_LIBS multiscale_msfem  ${COMMON_LIBS} )
