@@ -104,16 +104,6 @@ const std::unique_ptr<const Problem::NeumannDataBase>& Dune::Multiscale::Problem
   return find_and_call_item(funcs);
 }
 
-const std::unique_ptr<const Problem::DirichletBCType>& Dune::Multiscale::Problem::getDirichletBC() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::DirichletBCType>, DirichletBoundaryCondition);
-  return find_and_call_item(funcs);
-}
-
-const std::unique_ptr<const Problem::NeumannBCType>& Dune::Multiscale::Problem::getNeumannBC() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::NeumannBCType>, NeumannBoundaryCondition);
-  return find_and_call_item(funcs);
-}
-
 const std::string& Dune::Multiscale::Problem::name() {
   static std::string myName = DSC_CONFIG_GET("problem.name", "Nine");
   return myName;
