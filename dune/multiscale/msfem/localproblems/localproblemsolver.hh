@@ -27,6 +27,7 @@ class FieldVector;
 namespace Dune {
 namespace Multiscale {
 
+struct LocalFunctor;
 
 //! --------------------- the essential local msfem problem solver class ---------------------------
 class LocalProblemSolver {
@@ -35,6 +36,8 @@ class LocalProblemSolver {
   typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
   typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
   typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
+
+  friend struct LocalFunctor;
 
 public:
   typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
