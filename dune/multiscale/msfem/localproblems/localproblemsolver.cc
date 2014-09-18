@@ -103,36 +103,6 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   }
 }
 
-struct LocalFunctor : DSG::Functor::Codim0<CommonTraits::GridViewType> {
-  LocalFunctor(const CommonTraits::GridViewType::IndexSet& indexSet,
-               const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
-               const LocalGridList& subgrid_list,LocalProblemSolver& solver)
-    : coarseGridLeafIndexSet_(indexSet), coarse_space_(coarse_space),
-      subgrid_list_(subgrid_list), solver_(solver)
-  {}
-
-  virtual void apply_local(const EntityType& coarseEntity) {
-    const int coarse_index = coarseGridLeafIndexSet_.index(coarseEntity);
-    DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
-
-    // take time
-    DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
-    LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
-    // solve the problems
-    solver_.solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
-//    solveTime(DSC_PROFILER.stopTiming("msfem.local.solve_all_on_single_cell") / 1000.f);
-
-    // save the local solutions to disk/mem
-    localSolutionManager.save();
-
-    DSC_PROFILER.resetTiming("msfem.local.solve_all_on_single_cell");
-  }
-  const CommonTraits::GridViewType::IndexSet& coarseGridLeafIndexSet_;
-  const CommonTraits::DiscreteFunctionSpaceType& coarse_space_;
-  const LocalGridList& subgrid_list_;
-  LocalProblemSolver& solver_;
-};
-
 void LocalProblemSolver::solve_for_all_cells() {
   const auto& grid = coarse_space_.grid_view()->grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
@@ -154,18 +124,35 @@ void LocalProblemSolver::solve_for_all_cells() {
                                                                                   partitioner);
 
   DSG::Walker<CommonTraits::GridViewType> walker(*coarse_space_.grid_view());
-  LocalFunctor lf(coarseGridLeafIndexSet, coarse_space_, subgrid_list_, *this);
-  walker.add(lf);
+
+  auto func = [&](const CommonTraits::EntityType& coarseEntity) {
+    const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
+    DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
+
+    // take time
+    DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
+    LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
+    // solve the problems
+    solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
+    solveTime(DSC_PROFILER.stopTiming("msfem.local.solve_all_on_single_cell") / 1000.f);
+
+    // save the local solutions to disk/mem
+    localSolutionManager.save();
+
+    DSC_PROFILER.resetTiming("msfem.local.solve_all_on_single_cell");
+  };
+
+  walker.add(func);
   walker.tbb_walk(partitioning);
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;
-  DSC_LOG_DEBUG << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n";
-  DSC_LOG_DEBUG << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n";
-  DSC_LOG_DEBUG << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n";
-  DSC_LOG_DEBUG << "Average time for solving a local problem = " << solveTime.average() << "s.\n";
-  DSC_LOG_DEBUG << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
-                << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
+  DSC_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n"
+               << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
+               << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
+               << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
+               << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
+               << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
 } // assemble_all
 
 
