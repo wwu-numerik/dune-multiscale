@@ -66,7 +66,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   coarse_dirichlet_projection_operator(*(coarse_space_.grid_view()), DMP::getModelData()->boundaryInfo(),
                                        *DMP::getDirichletData(), dirichletExtensionCoarse);
   global_system_assembler_.add(coarse_dirichlet_projection_operator,
-                               new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+                               new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
   global_system_assembler_.assemble();
   GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(*localSpace_.grid_view());
   projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
@@ -115,7 +115,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   system_assembler_.add(dirichlet_corrector);
 
   // dirichlet-0 for all rhs
-  typedef GDT::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
+  typedef DSG::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
   system_assembler_.add(dirichletConstraints_, system_matrix_, new OnLocalBoundaryEntities());
   for (auto& rhs : allLocalRHS)
     system_assembler_.add(dirichletConstraints_, rhs->vector(), new OnLocalBoundaryEntities());

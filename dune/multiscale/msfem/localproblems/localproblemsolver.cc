@@ -18,8 +18,8 @@
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
 #include <dune/gdt/products/l2.hh>
-#include <dune/gdt/assembler/gridwalker.hh>
-#include <dune/gdt/assembler/functors.hh>
+#include <dune/stuff/grid/walker.hh>
+#include <dune/stuff/grid/walker/functors.hh>
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -103,7 +103,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   }
 }
 
-struct LocalFunctor : GDT::Functor::Codim0<CommonTraits::GridViewType> {
+struct LocalFunctor : DSG::Functor::Codim0<CommonTraits::GridViewType> {
   LocalFunctor(const CommonTraits::GridViewType::IndexSet& indexSet,
                const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
                const LocalGridList& subgrid_list,LocalProblemSolver& solver)
@@ -150,9 +150,10 @@ void LocalProblemSolver::solve_for_all_cells() {
 
   const auto& coarseGridLeafIndexSet = coarse_space_.grid_view()->grid().leafIndexSet();
   Stuff::IndexSetPartitioner<CommonTraits::GridViewType> partitioner(coarseGridLeafIndexSet);
-  SeedListPartitioning<typename CommonTraits::GridViewType::Grid, 0> partitioning(*coarse_space_.grid_view(), partitioner);
+  SeedListPartitioning<typename CommonTraits::GridViewType::Grid, 0> partitioning(*coarse_space_.grid_view(),
+                                                                                  partitioner);
 
-  GDT::GridWalker<CommonTraits::GridViewType> walker(*coarse_space_.grid_view());
+  DSG::Walker<CommonTraits::GridViewType> walker(*coarse_space_.grid_view());
   LocalFunctor lf(coarseGridLeafIndexSet, coarse_space_, subgrid_list_, *this);
   walker.add(lf);
   walker.tbb_walk(partitioning);

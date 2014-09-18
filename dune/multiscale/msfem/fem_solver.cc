@@ -75,8 +75,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   GDT::SystemAssembler<CommonTraits::GdtSpaceType> system_assembler(space);
   system_assembler.add(elliptic_operator);
   system_assembler.add(force_functional);
-  system_assembler.add(neumann_functional, new GDT::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
-  system_assembler.add(dirichlet_projection_operator, new GDT::ApplyOn::BoundaryEntities<GridViewType>());
+  system_assembler.add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
+  system_assembler.add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.assemble();
   DSC_PROFILER.stopTiming("fem.assemble");
 
@@ -86,7 +86,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   system_matrix.mv(dirichlet_projection.vector(), tmp);
   rhs_vector -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Constraints::Dirichlet<typename GridViewType::Intersection, CommonTraits::RangeFieldType> dirichlet_constraints(
+  GDT::Spaces::Constraints::Dirichlet<typename GridViewType::Intersection, CommonTraits::RangeFieldType> dirichlet_constraints(
       boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
   system_assembler.add(dirichlet_constraints, system_matrix /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.add(dirichlet_constraints, rhs_vector /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);

@@ -6,6 +6,7 @@
 #include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/grid/walker.hh>
 #include <dune/gdt/operators/projections.hh>
 #include <dune/gdt/operators/prolongations.hh>
 #include <dune/gdt/spaces/constraints.hh>
@@ -56,17 +57,17 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
 
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);
-  this->add(dirichlet_projection_operator, new GDT::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
-  this->add(neumann_functional, new GDT::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
+  this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+  this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
   AssemblerBaseType::assemble();
 
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
+  GDT::Spaces::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
   dirichlet_constraints(boundary_info, coarse_space().mapper().maxNumDofs(), coarse_space().mapper().maxNumDofs());
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  AssemblerBaseType::tbb_assemble();
+  AssemblerBaseType::assemble();
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(coarse_space().mapper().size());
