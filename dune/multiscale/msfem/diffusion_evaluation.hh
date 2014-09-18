@@ -16,12 +16,21 @@ class CoarseBasisProduct;
 /**
  *  \brief Traits for the Product evaluation.
  */
-class CoarseBasisProductTraits {
+class ProductTraitsBase {
 public:
-  typedef CoarseBasisProduct derived_type;
   typedef Problem::LocalDiffusionType LocalizableFunctionType;
+  typedef LocalizableFunctionType::EntityType EntityType;
+  typedef typename LocalizableFunctionType::LocalfunctionType LocalfunctionType;
+  typedef std::tuple<std::shared_ptr<LocalfunctionType>> LocalfunctionTupleType;
+  static constexpr auto dimDomain = CommonTraits::dimDomain;
+  static constexpr auto dimRange = CommonTraits::dimRange;
+  typedef CommonTraits::DomainFieldType DomainFieldType;
   static_assert(std::is_base_of<Dune::Stuff::IsLocalizableFunction, LocalizableFunctionType>::value,
                 "LocalizableFunctionImp has to be derived from Stuff::IsLocalizableFunction.");
+};
+
+struct CoarseBasisProductTraits : public ProductTraitsBase {
+typedef CoarseBasisProduct derived_type;
 };
 
 class CoarseBasisProduct : public GDT::LocalEvaluation::Codim0Interface<CoarseBasisProductTraits, 1> {
@@ -37,14 +46,8 @@ public:
     , coarse_base_set_(coarse_base)
     , coarseBaseFunc_(coarseBaseFunc) {}
 
-  class LocalfunctionTuple {
-    typedef typename LocalizableFunctionType::LocalfunctionType LocalfunctionType;
 
-  public:
-    typedef std::tuple<std::shared_ptr<LocalfunctionType>> Type;
-  };
-
-  typename LocalfunctionTuple::Type localFunctions(const EntityType& entity) const {
+  typename Traits::LocalfunctionTupleType localFunctions(const EntityType& entity) const {
     return std::make_tuple(inducingFunction_.local_function(entity));
   }
 
@@ -52,7 +55,7 @@ public:
    * \brief extracts the local functions and calls the correct order() method
    */
   template <class E, class D, int d, class R, int rT, int rCT>
-  size_t order(const typename LocalfunctionTuple::Type& localFuncs,
+  size_t order(const typename Traits::LocalfunctionTupleType& localFuncs,
                const Stuff::LocalfunctionSetInterface<E, D, d, R, rT, rCT>& testBase) const {
     const auto localFunction = std::get<0>(localFuncs);
     return order(*localFunction, testBase);
@@ -72,7 +75,7 @@ public:
    * \brief extracts the local functions and calls the correct evaluate() method
    */
   template <class D, int d, class R, int rT, int rCT>
-  void evaluate(const typename LocalfunctionTuple::Type& localFuncs,
+  void evaluate(const typename Traits::LocalfunctionTupleType& localFuncs,
                 const Stuff::LocalfunctionSetInterface<EntityType, D, d, R, rT, rCT>& testBase,
                 const Dune::FieldVector<D, d>& localPoint, Dune::DynamicVector<R>& ret) const {
     const auto& localFunction = std::get<0>(localFuncs);
@@ -120,12 +123,8 @@ class DirichletProduct;
 /**
  *  \brief Traits for the Product evaluation.
  */
-class DirichletProductTraits {
-public:
+struct DirichletProductTraits : public ProductTraitsBase {
   typedef DirichletProduct derived_type;
-  typedef Problem::LocalDiffusionType LocalizableFunctionType;
-  static_assert(std::is_base_of<Dune::Stuff::IsLocalizableFunction, LocalizableFunctionType>::value,
-                "LocalizableFunctionImp has to be derived from Stuff::IsLocalizableFunction.");
 };
 
 class DirichletProduct : public GDT::LocalEvaluation::Codim0Interface<DirichletProductTraits, 1> {
