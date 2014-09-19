@@ -74,10 +74,8 @@ public:
 
   void apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution);
 
-  MatrixType& system_matrix();
-  const MatrixType& system_matrix() const;
-
 private:
+  //! used as an alias to test_space()
   const SourceSpaceType& coarse_space() const;
 
   MatrixType global_matrix_;

@@ -85,23 +85,19 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   DSC_PROFILER.startTiming("msfem.coarse.linearSolver");
   const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(
       global_matrix_,
-      msfem_rhs_.space().communicator()); /*, 1e-8, 1e-8, DSC_CONFIG_GET("msfem.solver.iterations", rhs.size()),
-DSC_CONFIG_GET("msfem.solver.verbose", false), "bcgs",
-DSC_CONFIG_GET("msfem.solver.preconditioner_type", std::string("sor")));*/
+      msfem_rhs_.space().communicator());
+
   inverse.apply(msfem_rhs_.vector(), solution.vector());
+
   if (!solution.dofs_valid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
 
   solution.vector() += dirichlet_projection_.vector();
 
   DSC_PROFILER.stopTiming("msfem.coarse.linearSolver");
-  DSC_LOG_DEBUG << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver")
+  DSC_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver")
                 << "ms." << std::endl;
 }
-
-CoarseScaleOperator::MatrixType& CoarseScaleOperator::system_matrix() { return global_matrix_; }
-
-const CoarseScaleOperator::MatrixType& CoarseScaleOperator::system_matrix() const { return global_matrix_; }
 
 const CoarseScaleOperator::SourceSpaceType& CoarseScaleOperator::coarse_space() const { return test_space(); }
 
