@@ -70,7 +70,6 @@ struct CommonTraits {
   static constexpr auto st_gdt_grid_level = 0;
   typedef SpaceProviderType::Type SpaceType;
   typedef SpaceType::GridViewType GridViewType;
-  typedef SpaceType DiscreteFunctionSpaceType;
 
   typedef BackendChooser<SpaceType>::LinearOperatorType LinearOperatorType;
   typedef BackendChooser<SpaceType>::GdtVectorType GdtVectorType;

@@ -12,7 +12,7 @@ namespace Dune {
 namespace Stuff {
 namespace Grid {
 
-inline bool is_simplex_grid(const Multiscale::CommonTraits::DiscreteFunctionSpaceType& space) {
+inline bool is_simplex_grid(const Multiscale::CommonTraits::SpaceType& space) {
   return space.grid_view()->grid().leafIndexSet().geomTypes(0).size() == 1 &&
          space.grid_view()->grid().leafIndexSet().geomTypes(0)[0].isSimplex();
 }

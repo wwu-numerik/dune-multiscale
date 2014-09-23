@@ -29,7 +29,7 @@ class LocalProblemOperator {
 
   typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
-  typedef CommonTraits::DiscreteFunctionSpaceType CoarseSpaceType;
+  typedef CommonTraits::SpaceType CoarseSpaceType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
   typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType,

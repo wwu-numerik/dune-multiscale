@@ -132,7 +132,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, subgrid_list);
 }
 
-void Elliptic_MsFEM_Solver::apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
                                   std::unique_ptr<LocalsolutionProxy>& solution,
                                   LocalGridList& subgrid_list) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");

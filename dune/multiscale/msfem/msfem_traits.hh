@@ -42,7 +42,7 @@ struct MsFEMTraits {
   typedef typename LocalGridDiscreteFunctionSpaceType::GridViewType LocalGridViewType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
-  typedef typename CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;
+  typedef typename CommonTraits::SpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;
 
   typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 };

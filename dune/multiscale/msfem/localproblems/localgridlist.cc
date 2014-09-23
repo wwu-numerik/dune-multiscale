@@ -23,7 +23,7 @@ namespace Dune {
 namespace Multiscale {
 
 
-LocalGridList::LocalGridList(const CommonTraits::DiscreteFunctionSpaceType& coarseSpace)
+LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.LocalGridList.ctor");

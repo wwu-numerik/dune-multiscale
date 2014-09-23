@@ -7,7 +7,7 @@
 #include <dune/multiscale/msfem/proxygridview.hh>
 
 Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(
-    CorrectionsMapType&& corrections, const CommonTraits::DiscreteFunctionSpaceType& coarseSpace,
+    CorrectionsMapType&& corrections, const CommonTraits::SpaceType& coarseSpace,
     const LocalGridList& gridlist)
   : BaseType(*corrections.begin()->second)
   , corrections_(std::move(corrections))

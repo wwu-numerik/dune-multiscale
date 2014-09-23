@@ -19,7 +19,7 @@ class LocalGridSearch : public DSG::EntitySearchBase<MsFEMTraits::LocalGridViewT
   typedef typename BaseType::EntityType::EntityPointer EntityPointer;
 
   typedef DSG::EntityInlevelSearch<LocalGridViewType> PerGridSearchType;
-  typedef CommonTraits::DiscreteFunctionSpaceType CoarseGridSpaceType;
+  typedef CommonTraits::SpaceType CoarseGridSpaceType;
   typedef typename CoarseGridSpaceType::GridViewType::Grid::Traits::LeafIndexSet::IndexType IndexType;
   typedef typename CoarseGridSpaceType::EntityType::EntityPointer CoarseEntityPointerType;
   typedef std::vector<CoarseGridSpaceType::DomainType> PointContainerType;

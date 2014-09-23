@@ -60,7 +60,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   LocalGridDiscreteFunctionType dirichletExtensionLocal(localSpace_, "dirichletExtension");
   CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
 
-  GDT::SystemAssembler<CommonTraits::DiscreteFunctionSpaceType> global_system_assembler_(coarse_space_);
+  GDT::SystemAssembler<CommonTraits::SpaceType> global_system_assembler_(coarse_space_);
   GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
   coarse_dirichlet_projection_operator(*(coarse_space_.grid_view()), DMP::getModelData()->boundaryInfo(),

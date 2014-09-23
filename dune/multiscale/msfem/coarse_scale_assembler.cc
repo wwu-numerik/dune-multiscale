@@ -53,8 +53,8 @@ MsFEMCodim0Integral::apply(LocalSolutionManager& localSolutionManager,
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   // number of local solutions without the boundary correctors. Those are only needed for the right hand side
   const auto numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
-  typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
-  typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
+  typedef CommonTraits::SpaceType::BaseFunctionSetType::RangeType RangeType;
+  typedef CommonTraits::SpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
   // evaluate the jacobians of all local solutions in all quadrature points
   std::vector<std::vector<JacobianRangeType>> allLocalSolutionEvaluations(
       numLocalSolutions, std::vector<JacobianRangeType>(numQuadraturePoints, RangeType(0.0)));
