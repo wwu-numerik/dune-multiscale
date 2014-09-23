@@ -27,7 +27,7 @@ private:
 
   static const int faceCodim = 1;
 
-  typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef MsFEMTraits::LocalSpaceType LocalSpaceType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)

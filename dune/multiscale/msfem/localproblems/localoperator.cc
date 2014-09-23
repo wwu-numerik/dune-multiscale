@@ -32,7 +32,7 @@ namespace Multiscale {
 
 
 LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space,
-                                           const LocalGridDiscreteFunctionSpaceType& space)
+                                           const LocalSpaceType& space)
   : localSpace_(space)
   , local_diffusion_operator_(*DMP::getDiffusion())
   , coarse_space_(coarse_space)
@@ -128,7 +128,7 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   if (!current_rhs.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 
-  typedef BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType LocalInverseOperatorType;
+  typedef BackendChooser<LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
   const auto localProblemSolver =
       DSC::make_unique<LocalInverseOperatorType>(system_matrix_, current_rhs.space().communicator());
   /*1e-8, 1e-8, 20000,

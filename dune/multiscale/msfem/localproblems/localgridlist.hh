@@ -27,7 +27,7 @@ namespace Multiscale {
 //! container for cell problem subgrids
 class LocalGridList : public boost::noncopyable {
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
-  typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef typename MsFEMTraits::LocalSpaceType LocalSpaceType;
   typedef typename MsFEMTraits::LocalGridType LocalGridType;
 
   typedef typename CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSet;
