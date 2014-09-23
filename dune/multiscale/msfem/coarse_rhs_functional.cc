@@ -49,8 +49,8 @@ void RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirich
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
 
   const auto numLocalSolutions = localSolutions.size();
-  typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
-  typedef CommonTraits::DiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
+  typedef CommonTraits::SpaceType::BaseFunctionSetType::RangeType RangeType;
+  typedef CommonTraits::SpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
   // evaluate the jacobians of all local solutions in all quadrature points
   std::vector<std::vector<JacobianRangeType>> allLocalSolutionJacobians(
       numLocalSolutions, std::vector<JacobianRangeType>(numQuadraturePoints, JacobianRangeType(0.0)));

@@ -93,7 +93,7 @@ private:
 
 class CoarseRhsFunctionalTraits {
   typedef CommonTraits::GdtVectorType VectorImp;
-  typedef CommonTraits::DiscreteFunctionSpaceType SpaceImp;
+  typedef CommonTraits::SpaceType SpaceImp;
   typedef typename SpaceImp::GridViewType GridViewImp;
 
 public:

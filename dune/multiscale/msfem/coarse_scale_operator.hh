@@ -51,7 +51,7 @@ class CoarseScaleOperator
   typedef GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
                                CoarseScaleOperatorTraits::SourceSpaceType> AssemblerBaseType;
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
-  typedef typename CommonTraits::DiscreteFunctionSpaceType CoarseDiscreteFunctionSpace;
+  typedef typename CommonTraits::SpaceType CoarseDiscreteFunctionSpace;
 
 public:
   typedef CoarseScaleOperatorTraits Traits;

@@ -43,7 +43,7 @@ public:
    f --> 'first' source term, scalar ('SourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
-  void apply(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+  void apply(const CommonTraits::SpaceType& coarse_space,
              std::unique_ptr<LocalsolutionProxy>& msfem_solution, LocalGridList& subgrid_list) const;
 };
 

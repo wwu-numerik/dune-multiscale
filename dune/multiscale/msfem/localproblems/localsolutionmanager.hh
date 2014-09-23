@@ -29,7 +29,7 @@ private:
   typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
 
 public:
-  LocalSolutionManager(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+  LocalSolutionManager(const CommonTraits::SpaceType& coarse_space,
                        const CoarseEntityType& coarseEntity, const LocalGridList& subgridList);
 
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();

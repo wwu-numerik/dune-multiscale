@@ -12,7 +12,7 @@ namespace Multiscale {
 
 typedef DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType> IOType;
 
-LocalSolutionManager::LocalSolutionManager(const CommonTraits::DiscreteFunctionSpaceType& coarse_space,
+LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse_space,
                                            const CoarseEntityType& coarseEntity, const LocalGridList& subgridList)
   : subgridList_(subgridList)
   , subgrid_(subgridList_.getSubGrid(coarseEntity))
