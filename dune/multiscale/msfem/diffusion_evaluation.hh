@@ -46,6 +46,7 @@ public:
     , coarse_base_set_(coarse_base)
     , coarseBaseFunc_(coarseBaseFunc) {}
 
+  CoarseBasisProduct(const CoarseBasisProduct& ) = default;
 
   typename Traits::LocalfunctionTupleType localFunctions(const EntityType& entity) const {
     return std::make_tuple(inducingFunction_.local_function(entity));

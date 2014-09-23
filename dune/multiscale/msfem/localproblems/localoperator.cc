@@ -86,8 +86,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   const auto coarseBaseFunctionSet = coarse_space_.base_function_set(coarseEntity);
   for (; coarseBaseFunc < numInnerCorrectors; ++coarseBaseFunc) {
     assert(allLocalRHS[coarseBaseFunc]);
-    CoarseBasisProduct eval(coarseBaseFunctionSet, local_diffusion_operator_, coarseBaseFunc);
-    GDT::LocalFunctional::Codim0Integral<CoarseBasisProduct> local_rhs_functional(eval);
+    GDT::LocalFunctional::Codim0Integral<CoarseBasisProduct> local_rhs_functional(coarseBaseFunctionSet, local_diffusion_operator_, coarseBaseFunc);
     auto& rhs_vector = allLocalRHS[coarseBaseFunc]->vector();
     rhs_functionals[coarseBaseFunc] =
         DSC::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector, localSpace_, local_rhs_functional);
@@ -107,8 +106,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
                                      MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
                                      DirichletEvaluationType> DirichletCorrectorFunctionalType;
-  DirichletEvaluationType eval(dirichletExtensionLocal, local_diffusion_operator_);
-  GDT::LocalFunctional::Codim0Integral<DirichletEvaluationType> dl_corrector_functional(eval);
+  GDT::LocalFunctional::Codim0Integral<DirichletEvaluationType> dl_corrector_functional(dirichletExtensionLocal, local_diffusion_operator_);
   auto& dl_vector = allLocalRHS[coarseBaseFunc]->vector();
   DirichletCorrectorFunctionalType dirichlet_corrector(local_diffusion_operator_, dl_vector, localSpace_,
                                                        dl_corrector_functional);
