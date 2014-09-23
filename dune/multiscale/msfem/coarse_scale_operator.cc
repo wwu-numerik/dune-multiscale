@@ -52,7 +52,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
   dirichlet_projection_operator(*(coarse_space().grid_view()), boundary_info, *dirichlet, dirichlet_projection_);
-  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType>
+  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
   neumann_functional(*neumann, msfem_rhs_.vector(), coarse_space());
 
   this->add_codim0_assembler(local_assembler_, this->matrix());

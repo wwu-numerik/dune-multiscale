@@ -116,7 +116,7 @@ std::vector<size_t> RhsCodim0Vector::numTmpObjectsRequired() const {
 }
 
 void RhsCodim0Vector::assembleLocal(
-    const CommonTraits::GdtSpaceType& testSpace, const CommonTraits::EntityType& coarse_grid_entity,
+    const CommonTraits::SpaceType& testSpace, const CommonTraits::EntityType& coarse_grid_entity,
     CommonTraits::GdtVectorType& systemVector,
     std::vector<std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>>& tmpLocalVectorContainer,
     Dune::DynamicVector<size_t>& tmpIndices) const {

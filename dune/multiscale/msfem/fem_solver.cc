@@ -53,7 +53,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   const auto& space = space_;
 
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
-                                     CommonTraits::GdtSpaceType> EllipticOperatorType;
+                                     CommonTraits::SpaceType> EllipticOperatorType;
   CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
                                                  EllipticOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
@@ -61,9 +61,9 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   // left hand side (elliptic operator)
   EllipticOperatorType elliptic_operator(*Problem::getDiffusion(), system_matrix, space);
   // right hand side
-  GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType>
+  GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
   force_functional(*DMP::getSource(), rhs_vector, space);
-  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::GdtSpaceType>
+  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
   neumann_functional(*neumann, rhs_vector, space);
   // dirichlet boundary values
   CommonTraits::DiscreteFunctionType dirichlet_projection(space);
@@ -72,7 +72,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   dirichlet_projection_operator(*(space.grid_view()), boundary_info, *dirichlet, dirichlet_projection);
   DSC_PROFILER.startTiming("fem.assemble");
   // now assemble everything in one grid walk
-  GDT::SystemAssembler<CommonTraits::GdtSpaceType> system_assembler(space);
+  GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space);
   system_assembler.add(elliptic_operator);
   system_assembler.add(force_functional);
   system_assembler.add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
@@ -95,7 +95,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
 
   // solve the system
   DSC_PROFILER.startTiming("fem.solve");
-  const Stuff::LA::Solver<CommonTraits::LinearOperatorType, typename CommonTraits::GdtSpaceType::CommunicatorType>
+  const Stuff::LA::Solver<CommonTraits::LinearOperatorType, typename CommonTraits::SpaceType::CommunicatorType>
   linear_solver(system_matrix, space.communicator());
   auto linear_solver_options = linear_solver.options("bicgstab.amg.ilu0");
   linear_solver_options.set("max_iter", "5000", true);
