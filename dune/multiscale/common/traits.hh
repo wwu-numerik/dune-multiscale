@@ -68,15 +68,15 @@ struct CommonTraits {
                                                   st_lagrangespace_order, FieldType, dimRange> SpaceProviderType;
 
   static constexpr auto st_gdt_grid_level = 0;
-  typedef SpaceProviderType::Type GdtSpaceType;
-  typedef GdtSpaceType DiscreteFunctionSpaceType;
-  typedef GdtSpaceType::GridViewType GridViewType;
+  typedef SpaceProviderType::Type SpaceType;
+  typedef SpaceType::GridViewType GridViewType;
+  typedef SpaceType DiscreteFunctionSpaceType;
 
-  typedef BackendChooser<DiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::GdtVectorType GdtVectorType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionDataType DiscreteFunctionDataType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::DiscreteFunctionType DiscreteFunctionType;
-  typedef BackendChooser<DiscreteFunctionSpaceType>::ConstDiscreteFunctionType ConstDiscreteFunctionType;
+  typedef BackendChooser<SpaceType>::LinearOperatorType LinearOperatorType;
+  typedef BackendChooser<SpaceType>::GdtVectorType GdtVectorType;
+  typedef BackendChooser<SpaceType>::DiscreteFunctionDataType DiscreteFunctionDataType;
+  typedef BackendChooser<SpaceType>::DiscreteFunctionType DiscreteFunctionType;
+  typedef BackendChooser<SpaceType>::ConstDiscreteFunctionType ConstDiscreteFunctionType;
 
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain>
@@ -84,11 +84,11 @@ struct CommonTraits {
   typedef Stuff::Functions::Constant<EntityType, FieldType, dimDomain, FieldType, dimRange> ConstantFunctionBaseType;
   typedef ConstantFunctionBaseType GdtConstantFunctionType;
 
-  typedef DiscreteFunctionSpaceType::BaseFunctionSetType BaseFunctionSetType;
-  typedef DiscreteFunctionSpaceType::DomainType DomainType;
-  typedef DiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
+  typedef SpaceType::BaseFunctionSetType BaseFunctionSetType;
+  typedef SpaceType::DomainType DomainType;
+  typedef SpaceType::BaseFunctionSetType::RangeType RangeType;
   typedef FieldType TimeType;
-  typedef DiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
+  typedef SpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
 
   typedef GridType::Codim<0>::EntityPointer EntityPointerType;
   typedef GridType::Codim<0>::Geometry EntityGeometryType;
@@ -102,7 +102,7 @@ struct CommonTraits {
   typedef std::vector<RangeType> RangeVector;
   typedef std::vector<RangeVector> RangeVectorVector;
 
-  static constexpr int polynomial_order = DiscreteFunctionSpaceType::polOrder;
+  static constexpr int polynomial_order = SpaceType::polOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
 };
 

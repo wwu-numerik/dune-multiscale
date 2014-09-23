@@ -34,8 +34,8 @@ class CoarseScaleOperatorTraits {
 public:
   typedef CoarseScaleOperator derived_type;
   typedef CommonTraits::LinearOperatorType MatrixType;
-  typedef CommonTraits::GdtSpaceType SourceSpaceType;
-  typedef CommonTraits::GdtSpaceType RangeSpaceType;
+  typedef CommonTraits::SpaceType SourceSpaceType;
+  typedef CommonTraits::SpaceType RangeSpaceType;
   typedef CommonTraits::GridViewType GridViewType;
 }; // class EllipticCGTraits
 
@@ -44,7 +44,7 @@ class CoarseScaleOperator
       public GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
                                   CoarseScaleOperatorTraits::SourceSpaceType> {
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
-                                     CommonTraits::GdtSpaceType> EllipticOperatorType;
+                                     CommonTraits::SpaceType> EllipticOperatorType;
   typedef GDT::Operators::MatrixBased<CoarseScaleOperatorTraits> OperatorBaseType;
   typedef MsFEMCodim0Integral LocalOperatorType;
   typedef MsFemCodim0Matrix LocalAssemblerType;

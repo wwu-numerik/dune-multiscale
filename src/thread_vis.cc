@@ -84,9 +84,9 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
 {
   CommonTraits::GridProviderType coarse_grid_provider(coarse_grid);
   CommonTraits::GridProviderType fine_grid_provider(fine_grid);
-  const CommonTraits::GdtSpaceType coarseSpace =
+  const CommonTraits::SpaceType coarseSpace =
       CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level);
-  const CommonTraits::GdtSpaceType fineSpace =
+  const CommonTraits::SpaceType fineSpace =
       CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
 
   LocalGridList subgrid_list(coarseSpace);

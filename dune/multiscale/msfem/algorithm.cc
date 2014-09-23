@@ -48,7 +48,7 @@ std::map<std::string, double> msfem_algorithm() {
 
   auto grid = make_coarse_grid();
   CommonTraits::GridProviderType coarse_grid_provider(*grid);
-  const CommonTraits::GdtSpaceType coarseSpace =
+  const CommonTraits::SpaceType coarseSpace =
       CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level);
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 

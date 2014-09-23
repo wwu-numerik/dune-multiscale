@@ -81,7 +81,7 @@ public:
   std::vector<size_t> numTmpObjectsRequired() const;
 
   void
-  assembleLocal(const CommonTraits::GdtSpaceType& testSpace, const CommonTraits::EntityType& coarse_grid_entity,
+  assembleLocal(const CommonTraits::SpaceType& testSpace, const CommonTraits::EntityType& coarse_grid_entity,
                 CommonTraits::GdtVectorType& systemVector,
                 std::vector<std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>>& tmpLocalVectorContainer,
                 Dune::DynamicVector<size_t>& tmpIndices) const; // ... assembleLocal(...)

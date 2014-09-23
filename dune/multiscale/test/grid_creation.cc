@@ -36,7 +36,7 @@ struct PointsAndStuff : public GridAndSpaces {
   void check_lagrange_points() {
     for(auto& grid : {grids_.first, grids_.second}) {
       CommonTraits::GridProviderType grid_provider(grid);
-      const CommonTraits::GdtSpaceType space =
+      const CommonTraits::SpaceType space =
           CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
 
       for (const auto& ent : DSC::viewRange(grid->leafGridView())) {
