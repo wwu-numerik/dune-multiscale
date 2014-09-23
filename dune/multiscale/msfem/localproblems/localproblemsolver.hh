@@ -32,18 +32,18 @@ struct LocalFunctor;
 //! --------------------- the essential local msfem problem solver class ---------------------------
 class LocalProblemSolver {
 
-  typedef typename MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType::RangeType RangeType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::DomainType DomainType;
+  typedef typename MsFEMTraits::LocalSpaceType LocalSpaceType;
+  typedef typename LocalSpaceType::BaseFunctionSetType::RangeType RangeType;
+  typedef typename LocalSpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
+  typedef typename LocalSpaceType::DomainType DomainType;
 
   friend struct LocalFunctor;
 
 public:
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::LinearOperatorType LinearOperatorType;
+  typedef typename BackendChooser<LocalSpaceType>::LinearOperatorType LinearOperatorType;
 
 private:
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::InverseOperatorType InverseOperatorType;
+  typedef typename BackendChooser<LocalSpaceType>::InverseOperatorType InverseOperatorType;
 
   LocalGridList& subgrid_list_;
   const CommonTraits::SpaceType& coarse_space_;

@@ -29,17 +29,16 @@ struct MsFEMTraits {
                                                   CommonTraits::dimRange> SpaceProviderType;
 
   //! \todo not correct
-  typedef typename SpaceProviderType::Type LocalGridDiscreteFunctionSpaceType;
-  typedef LocalGridDiscreteFunctionSpaceType LocalSpaceType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::EntityType LocalEntityType;
+  typedef typename SpaceProviderType::Type LocalSpaceType;
+  typedef typename LocalSpaceType::EntityType LocalEntityType;
 
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::DiscreteFunctionType
+  typedef typename BackendChooser<LocalSpaceType>::DiscreteFunctionType
   LocalGridDiscreteFunctionType;
-  typedef typename BackendChooser<LocalGridDiscreteFunctionSpaceType>::ConstDiscreteFunctionType
+  typedef typename BackendChooser<LocalSpaceType>::ConstDiscreteFunctionType
   LocalGridConstDiscreteFunctionType;
   typedef Stuff::Functions::Constant<LocalEntityType, CommonTraits::FieldType, CommonTraits::dimDomain,
                                      CommonTraits::FieldType, CommonTraits::dimRange> LocalConstantFunctionType;
-  typedef typename LocalGridDiscreteFunctionSpaceType::GridViewType LocalGridViewType;
+  typedef typename LocalSpaceType::GridViewType LocalGridViewType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
   typedef typename CommonTraits::SpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;

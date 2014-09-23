@@ -31,7 +31,7 @@ LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse
 
 MsFEMTraits::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
 
-const LocalSolutionManager::LocalGridDiscreteFunctionSpaceType& LocalSolutionManager::space() const {
+const LocalSolutionManager::LocalSpaceType& LocalSolutionManager::space() const {
   return IOType::memory(localSolutionLocation_, grid_view_ptr_).space();
 }
 

@@ -26,7 +26,7 @@ private:
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
   typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
-  typedef MsFEMTraits::LocalGridDiscreteFunctionSpaceType LocalGridDiscreteFunctionSpaceType;
+  typedef MsFEMTraits::LocalSpaceType LocalSpaceType;
 
 public:
   LocalSolutionManager(const CommonTraits::SpaceType& coarse_space,
@@ -34,7 +34,7 @@ public:
 
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
-  const LocalGridDiscreteFunctionSpaceType& space() const;
+  const LocalSpaceType& space() const;
   const LocalGridViewType& grid_view() const;
 
   void load();
