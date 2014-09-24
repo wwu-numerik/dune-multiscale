@@ -3,6 +3,7 @@
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
 #include <config.h>
+#include <thread>
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/common/parallel/mpihelper.hh>

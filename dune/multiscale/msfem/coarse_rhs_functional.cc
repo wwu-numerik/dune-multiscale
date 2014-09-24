@@ -134,7 +134,7 @@ void RhsCodim0Vector::assembleLocal(
                                                                        "Dirichlet Extension");
   //! \todo fill with actual values
 
-  for (const auto& localGridEntity : DSC::viewRange(*localSolutionManager.space().grid_view())) {
+  for (const auto& localGridEntity : DSC::entityRange(*localSolutionManager.space().grid_view())) {
     // ignore overlay elements
     if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
       continue;
