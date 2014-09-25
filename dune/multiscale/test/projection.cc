@@ -15,9 +15,9 @@ struct Projection : public GridAndSpaces {
   LocalsolutionProxy::CorrectionsMapType fill_local_corrections(const Lambda& lambda,
                                                                 const LocalGridList& subgrid_list) {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
-    for (auto& coarse_entity : DSC::viewRange(*coarseSpace.grid_view())) {
-      LocalSolutionManager localSolManager(coarseSpace, coarse_entity, subgrid_list);
-      auto& coarse_indexset = coarseSpace.grid_view()->grid().leafIndexSet();
+    for (auto& coarse_entity : DSC::entityRange(*coarseSpace->grid_view())) {
+      LocalSolutionManager localSolManager(*coarseSpace, coarse_entity, subgrid_list);
+      auto& coarse_indexset = coarseSpace->grid_view()->grid().leafIndexSet();
       const auto coarse_index = coarse_indexset.index(coarse_entity);
       local_corrections[coarse_index] =
           DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), " ");
@@ -27,17 +27,17 @@ struct Projection : public GridAndSpaces {
   }
 
   void project() {
-    LocalGridList subgrid_list(coarseSpace);
+    LocalGridList subgrid_list(*coarseSpace);
     const double constant(1);
     Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );
     auto local_corrections = fill_local_corrections(lambda, subgrid_list);
-    LocalGridSearch search(coarseSpace, subgrid_list);
-    LocalsolutionProxy proxy(std::move(local_corrections), coarseSpace, subgrid_list);
+    LocalGridSearch search(*coarseSpace, subgrid_list);
+    LocalsolutionProxy proxy(std::move(local_corrections), *coarseSpace, subgrid_list);
 
-    CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
+    CommonTraits::DiscreteFunctionType fine_scale_part(*fineSpace);
     DS::MsFEMProjection::project(proxy, fine_scale_part, search);
 
-    const auto norm = std::sqrt(Dune::GDT::Products::L2< CommonTraits::GridViewType >(*(fineSpace.grid_view()))
+    const auto norm = std::sqrt(Dune::GDT::Products::L2< CommonTraits::GridViewType >(*(fineSpace->grid_view()))
                                     .induced_norm(fine_scale_part));
     EXPECT_DOUBLE_EQ(norm, constant);
   }

@@ -33,7 +33,7 @@ private:
   void apply(CommonTraits::DiscreteFunctionType& solution) const;
 
   GridPtrType grid_;
-  const CommonTraits::SpaceType space_;
+  const std::unique_ptr<const CommonTraits::SpaceType> space_;
   CommonTraits::DiscreteFunctionType solution_;
 
 };

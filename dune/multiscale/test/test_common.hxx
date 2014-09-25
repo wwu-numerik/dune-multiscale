@@ -78,8 +78,8 @@ public:
 protected:
   CommonTraits::GridProviderType coarse_grid_provider;
   CommonTraits::GridProviderType fine_grid_provider;
-  const CommonTraits::SpaceType coarseSpace;
-  const CommonTraits::SpaceType fineSpace;
+  const std::unique_ptr<const CommonTraits::SpaceType> coarseSpace;
+  const std::unique_ptr<const CommonTraits::SpaceType> fineSpace;
 };
 
 static const map<string, string> p_small = {{"grids.macro_cells_per_dim", "[4 4 4]"}

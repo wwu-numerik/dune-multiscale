@@ -30,7 +30,7 @@ namespace Multiscale {
 Elliptic_FEM_Solver::Elliptic_FEM_Solver()
   : grid_(make_fine_grid(nullptr, false))
   , space_(CommonTraits::SpaceProviderType::create(CommonTraits::GridProviderType(*grid_), CommonTraits::st_gdt_grid_level))
-  , solution_(space_, "fem_solution")
+  , solution_(*space_, "fem_solution")
 {
 }
 
@@ -50,7 +50,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
   const auto& dirichlet = Problem::getDirichletData();
-  const auto& space = space_;
+  const auto& space = *space_;
 
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
                                      CommonTraits::SpaceType> EllipticOperatorType;
