@@ -48,14 +48,14 @@ std::map<std::string, double> msfem_algorithm() {
 
   auto grid = make_coarse_grid();
   CommonTraits::GridProviderType coarse_grid_provider(*grid);
-  const CommonTraits::SpaceType coarseSpace =
-      CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level);
+  const std::unique_ptr<const CommonTraits::SpaceType> coarseSpace(
+        CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level));
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 
-  LocalGridList subgrid_list(coarseSpace);
-  Elliptic_MsFEM_Solver().apply(coarseSpace, msfem_solution, subgrid_list);
+  LocalGridList subgrid_list(*coarseSpace);
+  Elliptic_MsFEM_Solver().apply(*coarseSpace, msfem_solution, subgrid_list);
 
-  CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
+  CommonTraits::DiscreteFunctionType coarse_grid_visualization(*coarseSpace, "Visualization_of_the_coarse_grid");
   coarse_grid_visualization.visualize(OutputParameters().fullpath(coarse_grid_visualization.name()));
 
   return ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0);
