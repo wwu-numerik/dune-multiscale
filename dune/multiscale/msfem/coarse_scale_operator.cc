@@ -59,7 +59,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(force_functional);
   this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
   this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
-  AssemblerBaseType::assemble();
+  AssemblerBaseType::tbb_assemble();
 
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Spaces::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
