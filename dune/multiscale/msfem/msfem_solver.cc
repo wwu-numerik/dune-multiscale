@@ -51,7 +51,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
 
   LocalsolutionProxy::CorrectionsMapType local_corrections;
-  for (auto& coarse_entity : DSC::viewRange(*coarse_space.grid_view())) {
+  for (auto& coarse_entity : DSC::entityRange(*coarse_space.grid_view())) {
     LocalSolutionManager localSolManager(coarse_space, coarse_entity, subgrid_list);
     localSolManager.load();
     auto& localSolutions = localSolManager.getLocalSolutions();
@@ -93,7 +93,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       // ie set all dofs not "covered" by the coarse cell to 0
       // also adds lg-prolongation of coarse_solution to local_correction
       const auto cut_overlay = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
-      for (auto& local_entity : DSC::viewRange(*localSolManager.space().grid_view())) {
+      for (auto& local_entity : DSC::entityRange(*localSolManager.space().grid_view())) {
         const auto& lg_points = localSolManager.space().lagrange_points(local_entity);
         const auto& reference_element = DSG::reference_element(coarse_entity);
         const auto& coarse_geometry = coarse_entity.geometry();

@@ -50,7 +50,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
   const auto& dirichlet = Problem::getDirichletData();
-  const auto& space = *space_;
+  const auto& space = space_;
 
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
                                      CommonTraits::SpaceType> EllipticOperatorType;
