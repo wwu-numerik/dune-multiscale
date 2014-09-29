@@ -79,9 +79,9 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   /// TODO only call assemble once
   const auto fine_grid = make_grids().second;
   CommonTraits::GridProviderType fine_grid_provider(*fine_grid);
-  const CommonTraits::GdtSpaceType fine_space =
+  const auto fine_space_ptr = //fem_solution_->space();
       CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
-
+  const auto& fine_space = fem_solution_ ? fem_solution_->space() : *fine_space_ptr;
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(fine_space);
   const auto& grid_view = fine_space.grid_view();
 
