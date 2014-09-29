@@ -112,12 +112,12 @@ class DiscreteFunctionIO : public boost::noncopyable {
       assert(df != nullptr);
     }
 
-    DiscreteFunctionSpaceType& space() { return *space_; }
+    DiscreteFunctionSpaceType& space() { return space_; }
 
   private:
     const boost::filesystem::path dir_;
     const MsFEMTraits::LocalGridProviderType local_grid_provider_;
-    const std::unique_ptr<DiscreteFunctionSpaceType> space_;
+    DiscreteFunctionSpaceType space_;
     Vector functions_;
   };
 
