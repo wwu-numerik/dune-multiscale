@@ -23,7 +23,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 //! container for cell problem subgrids
 class LocalGridList : public boost::noncopyable {
   typedef typename MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
@@ -87,7 +86,6 @@ bool LocalGridList::covers_strict(
   }
   return true;
 }
-
 
 } // namespace Multiscale {
 } // namespace Dune {

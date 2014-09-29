@@ -69,7 +69,6 @@ public:
 
 }; // end class
 
-
 } // namespace Multiscale {
 } // namespace Dune {
 

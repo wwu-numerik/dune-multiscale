@@ -17,7 +17,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 /**
  * @brief One LocalSolutionManager instance per coarse cell
  */
@@ -29,8 +28,8 @@ private:
   typedef MsFEMTraits::LocalSpaceType LocalSpaceType;
 
 public:
-  LocalSolutionManager(const CommonTraits::SpaceType& coarse_space,
-                       const CoarseEntityType& coarseEntity, const LocalGridList& subgridList);
+  LocalSolutionManager(const CommonTraits::SpaceType& coarse_space, const CoarseEntityType& coarseEntity,
+                       const LocalGridList& subgridList);
 
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
@@ -51,7 +50,6 @@ private:
   MsFEMTraits::LocalSolutionVectorType localSolutions_;
   const std::string localSolutionLocation_;
 };
-
 }
 }
 

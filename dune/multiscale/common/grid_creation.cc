@@ -113,7 +113,6 @@ Dune::Multiscale::make_fine_grid(std::shared_ptr<Dune::Multiscale::CommonTraits:
   auto fine_gridptr =
       StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overFine);
 
-
   if (coarse_gridptr && check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
     // check whether grids match (may not match after load balancing if different refinements in different
     // spatial directions are used)

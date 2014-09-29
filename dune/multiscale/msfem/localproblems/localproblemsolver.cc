@@ -34,7 +34,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 /** \brief define output parameters for local problems
  *  appends "local_problems" for path
  **/
@@ -46,8 +45,7 @@ public:
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + std::string("/local_problems/")) {}
 
-LocalProblemSolver::LocalProblemSolver(const CommonTraits::SpaceType& coarse_space,
-                                       LocalGridList& subgrid_list)
+LocalProblemSolver::LocalProblemSolver(const CommonTraits::SpaceType& coarse_space, LocalGridList& subgrid_list)
   : subgrid_list_(subgrid_list)
   , coarse_space_(coarse_space) {}
 
@@ -154,7 +152,6 @@ void LocalProblemSolver::solve_for_all_cells() {
                << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
                << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
 } // assemble_all
-
 
 } // namespace Multiscale {
 } // namespace Dune {

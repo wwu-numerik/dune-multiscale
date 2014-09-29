@@ -16,7 +16,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 //! type construction for the MSFEM code
 struct MsFEMTraits {
   typedef Dune::SPGrid<double, CommonTraits::GridType::dimension, SPIsotropicRefinement, No_Comm> LocalGridType;
@@ -32,10 +31,8 @@ struct MsFEMTraits {
   typedef typename SpaceProviderType::Type LocalSpaceType;
   typedef typename LocalSpaceType::EntityType LocalEntityType;
 
-  typedef typename BackendChooser<LocalSpaceType>::DiscreteFunctionType
-  LocalGridDiscreteFunctionType;
-  typedef typename BackendChooser<LocalSpaceType>::ConstDiscreteFunctionType
-  LocalGridConstDiscreteFunctionType;
+  typedef typename BackendChooser<LocalSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
+  typedef typename BackendChooser<LocalSpaceType>::ConstDiscreteFunctionType LocalGridConstDiscreteFunctionType;
   typedef Stuff::Functions::Constant<LocalEntityType, CommonTraits::FieldType, CommonTraits::dimDomain,
                                      CommonTraits::FieldType, CommonTraits::dimRange> LocalConstantFunctionType;
   typedef typename LocalSpaceType::GridViewType LocalGridViewType;
@@ -45,7 +42,6 @@ struct MsFEMTraits {
 
   typedef std::vector<std::shared_ptr<LocalGridDiscreteFunctionType>> LocalSolutionVectorType;
 };
-
 
 } // namespace Multiscale {
 } // namespace Dune {}

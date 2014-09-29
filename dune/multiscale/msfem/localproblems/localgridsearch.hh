@@ -7,7 +7,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 class LocalGridList;
 
 //! given a Localgridlist, facilitate searching for evaluation points in a pseudo-hierachical manner
@@ -43,7 +42,6 @@ private:
   std::map<IndexType, std::unique_ptr<PerGridSearchType>> coarse_searches_;
   std::unique_ptr<CoarseEntityPointerType> current_coarse_pointer_;
 };
-
 
 } // namespace Multiscale {
 } // namespace Dune {

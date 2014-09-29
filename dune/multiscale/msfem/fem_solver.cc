@@ -29,13 +29,11 @@ namespace Multiscale {
 
 Elliptic_FEM_Solver::Elliptic_FEM_Solver()
   : grid_(make_fine_grid(nullptr, false))
-  , space_(CommonTraits::SpaceProviderType::create(CommonTraits::GridProviderType(*grid_), CommonTraits::st_gdt_grid_level))
-  , solution_(*space_, "fem_solution")
-{
-}
+  , space_(CommonTraits::SpaceProviderType::create(CommonTraits::GridProviderType(*grid_),
+                                                   CommonTraits::st_gdt_grid_level))
+  , solution_(*space_, "fem_solution") {}
 
-CommonTraits::ConstDiscreteFunctionType &Elliptic_FEM_Solver::solve()
-{
+CommonTraits::ConstDiscreteFunctionType& Elliptic_FEM_Solver::solve() {
   apply(solution_);
   return solution_;
 }
@@ -52,8 +50,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   const auto& dirichlet = Problem::getDirichletData();
   const auto& space = *space_;
 
-  typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
-                                     CommonTraits::SpaceType> EllipticOperatorType;
+  typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
+  EllipticOperatorType;
   CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
                                                  EllipticOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
@@ -86,8 +84,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   system_matrix.mv(dirichlet_projection.vector(), tmp);
   rhs_vector -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Spaces::Constraints::Dirichlet<typename GridViewType::Intersection, CommonTraits::RangeFieldType> dirichlet_constraints(
-      boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
+  GDT::Spaces::Constraints::Dirichlet<typename GridViewType::Intersection, CommonTraits::RangeFieldType>
+  dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
   system_assembler.add(dirichlet_constraints, system_matrix /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.add(dirichlet_constraints, rhs_vector /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.assemble();

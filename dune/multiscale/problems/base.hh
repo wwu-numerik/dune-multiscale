@@ -57,7 +57,6 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
 
 typedef DiffusionBase::Transfer<MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
 
-
 class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;

@@ -16,7 +16,7 @@ class ErrorCalculator {
 
 public:
   ErrorCalculator(const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
-                  CommonTraits::ConstDiscreteFunctionType *fem_solution);
+                  CommonTraits::ConstDiscreteFunctionType* fem_solution);
 
   //! this one runs cg-fem sim if mandated by config
   ErrorCalculator(const std::unique_ptr<LocalsolutionProxy>& msfem_solution);

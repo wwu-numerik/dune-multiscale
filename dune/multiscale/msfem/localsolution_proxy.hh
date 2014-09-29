@@ -12,8 +12,6 @@ namespace Multiscale {
 
 class ProxyGridview;
 
-
-
 // class LocalGridSearch;
 class LocalGridList;
 
@@ -45,7 +43,6 @@ private:
   const std::unique_ptr<LocalGridSearch> search_;
   const LocalGridList& gridlist_;
 };
-
 
 } // namespace Multiscale {
 } // namespace Dune {

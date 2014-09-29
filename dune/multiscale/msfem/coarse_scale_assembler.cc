@@ -22,7 +22,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 size_t MsFEMCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
 void
@@ -159,7 +158,6 @@ void MsFemCodim0Matrix::assembleLocal(
 }
 
 // constructor
-
 
 } // namespace Multiscale {
 } // namespace Dune {

@@ -20,7 +20,6 @@ class LocalGridList;
 //! \TODO docme
 std::map<std::string, double> msfem_algorithm();
 
-
 } // namespace Multiscale {
 } // namespace Dune {
 

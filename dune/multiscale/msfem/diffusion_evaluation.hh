@@ -9,7 +9,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 // forward, to be used in the traits
 class CoarseBasisProduct;
 
@@ -30,7 +29,7 @@ public:
 };
 
 struct CoarseBasisProductTraits : public ProductTraitsBase {
-typedef CoarseBasisProduct derived_type;
+  typedef CoarseBasisProduct derived_type;
 };
 
 class CoarseBasisProduct : public GDT::LocalEvaluation::Codim0Interface<CoarseBasisProductTraits, 1> {
@@ -46,7 +45,7 @@ public:
     , coarse_base_set_(coarse_base)
     , coarseBaseFunc_(coarseBaseFunc) {}
 
-  CoarseBasisProduct(const CoarseBasisProduct& ) = default;
+  CoarseBasisProduct(const CoarseBasisProduct&) = default;
 
   typename Traits::LocalfunctionTupleType localFunctions(const EntityType& entity) const {
     return std::make_tuple(inducingFunction_.local_function(entity));
@@ -214,7 +213,6 @@ private:
   const LocalizableFunctionType& inducingFunction_;
   const MsFEMTraits::LocalGridDiscreteFunctionType& dirichlet_extension_;
 }; // class Product
-
 
 } // namespace Multiscale {
 } // namespace Dune {

@@ -13,7 +13,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 class LocalProblemOperator {
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef Problem::DiffusionBase DiffusionOperatorType;
@@ -32,15 +31,14 @@ class LocalProblemOperator {
   typedef CommonTraits::SpaceType CoarseSpaceType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
-  typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType,
-                                     LocalSpaceType> EllipticOperatorType;
+  typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType, LocalSpaceType>
+  EllipticOperatorType;
   typedef GDT::Spaces::Constraints::Dirichlet<typename MsFEMTraits::LocalGridViewType::Intersection,
-                                      CommonTraits::RangeFieldType> DirichletConstraintsType;
+                                              CommonTraits::RangeFieldType> DirichletConstraintsType;
   typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
 
 public:
-  LocalProblemOperator(const CoarseSpaceType& coarse_space,
-                       const LocalSpaceType& subDiscreteFunctionSpace);
+  LocalProblemOperator(const CoarseSpaceType& coarse_space, const LocalSpaceType& subDiscreteFunctionSpace);
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
@@ -66,7 +64,6 @@ private:
   DirichletConstraintsType dirichletConstraints_;
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
 };
-
 
 } // namespace Multiscale {
 } // namespace Dune {

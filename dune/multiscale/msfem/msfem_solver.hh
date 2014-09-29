@@ -16,7 +16,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 class LocalGridList;
 class LocalsolutionProxy;
 
@@ -43,10 +42,9 @@ public:
    f --> 'first' source term, scalar ('SourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
-  void apply(const CommonTraits::SpaceType& coarse_space,
-             std::unique_ptr<LocalsolutionProxy>& msfem_solution, LocalGridList& subgrid_list) const;
+  void apply(const CommonTraits::SpaceType& coarse_space, std::unique_ptr<LocalsolutionProxy>& msfem_solution,
+             LocalGridList& subgrid_list) const;
 };
-
 
 } // namespace Multiscale {
 } // namespace Dune {

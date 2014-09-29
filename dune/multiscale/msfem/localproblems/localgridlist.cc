@@ -22,7 +22,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
@@ -107,7 +106,6 @@ bool LocalGridList::covers(const CoarseEntityType& coarse_entity, const MsFEMTra
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   return reference_element.checkInside(coarse_entity.geometry().local(center));
 }
-
 
 } // namespace Multiscale {
 } // namespace Dune {

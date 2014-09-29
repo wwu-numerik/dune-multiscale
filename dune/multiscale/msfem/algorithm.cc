@@ -41,7 +41,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 //! algorithm
 std::map<std::string, double> msfem_algorithm() {
   using namespace Dune;
@@ -49,7 +48,7 @@ std::map<std::string, double> msfem_algorithm() {
   auto grid = make_coarse_grid();
   CommonTraits::GridProviderType coarse_grid_provider(*grid);
   const std::unique_ptr<const CommonTraits::SpaceType> coarseSpace(
-        CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level));
+      CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level));
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 
   LocalGridList subgrid_list(*coarseSpace);
@@ -61,7 +60,5 @@ std::map<std::string, double> msfem_algorithm() {
   return ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0);
 } // function algorithm
 
-
 } // namespace Multiscale {
 } // namespace Dune {
-
