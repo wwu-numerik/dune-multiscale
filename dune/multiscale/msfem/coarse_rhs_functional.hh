@@ -18,7 +18,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 class LocalGridList;
 class LocalSolutionManager;
 class RhsCodim0Integral;
@@ -139,7 +138,6 @@ private:
   const LocalFunctionalType local_functional_;
   const LocalAssemblerType local_assembler_;
 }; // class CoarseRhsFunctional
-
 
 } // end namespace Multiscale
 } // end namespace Dune

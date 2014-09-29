@@ -32,8 +32,8 @@
 using namespace Dune::Multiscale;
 namespace DGP = Dune::GDT::Products;
 typedef DSFu::Difference<Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType> DifferenceType;
-typedef DSFu::Difference<CommonTraits::ConstDiscreteFunctionType,
-                                     CommonTraits::ConstDiscreteFunctionType> DiscreteDifferenceType;
+typedef DSFu::Difference<CommonTraits::ConstDiscreteFunctionType, CommonTraits::ConstDiscreteFunctionType>
+DiscreteDifferenceType;
 typedef DGP::L2Localizable<CommonTraits::GridViewType, DifferenceType> L2ErrorAnalytical;
 typedef DGP::L2Localizable<CommonTraits::GridViewType, DiscreteDifferenceType> L2ErrorDiscrete;
 typedef DGP::H1SemiLocalizable<CommonTraits::GridViewType, DifferenceType> H1sErrorAnalytical;
@@ -62,15 +62,13 @@ void data_output(const CommonTraits::GridViewType& gridPart) {
 Dune::Multiscale::ErrorCalculator::ErrorCalculator(const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
                                                    CommonTraits::ConstDiscreteFunctionType* fem_solution)
   : msfem_solution_(msfem_solution)
-  , fem_solution_(fem_solution)
-{
+  , fem_solution_(fem_solution) {
   assert(fem_solution_);
 }
 
-ErrorCalculator::ErrorCalculator(const std::unique_ptr<LocalsolutionProxy> &msfem_solution)
+ErrorCalculator::ErrorCalculator(const std::unique_ptr<LocalsolutionProxy>& msfem_solution)
   : msfem_solution_(msfem_solution)
-  , fem_solution_(nullptr)
-{
+  , fem_solution_(nullptr) {
   assert(msfem_solution_);
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     fem_solver_ = DSC::make_unique<Elliptic_FEM_Solver>();
@@ -87,7 +85,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   /// TODO only call assemble once
   const auto fine_grid = make_grids().second;
   CommonTraits::GridProviderType fine_grid_provider(*fine_grid);
-  const auto fine_space_ptr = //fem_solution_->space();
+  const auto fine_space_ptr = // fem_solution_->space();
       CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
   const auto& fine_space = fem_solution_ ? fem_solution_->space() : *fine_space_ptr;
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(fine_space);
@@ -138,7 +136,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   if (msfem_solution_ && fem_solution_) {
     const auto name = forward_as_tuple(msfem_fem);
-    const auto& difference = discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_)).first->second;
+    const auto& difference =
+        discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_)).first->second;
     const auto product_args = forward_as_tuple(*grid_view, difference, over_integrate);
     system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
     system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
@@ -149,7 +148,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   system_assembler.tbb_assemble();
 
   if (Problem::getModelData()->hasExactSolution()) {
-    if(msfem_solution_) {
+    if (msfem_solution_) {
       const auto msfem_error = std::sqrt(l2_analytical_errors.at(msfem_exact).apply2());
       out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;
       const auto h1_msfem_error = std::sqrt(h1s_analytical_errors.at(msfem_exact).apply2());

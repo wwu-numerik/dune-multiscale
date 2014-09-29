@@ -20,7 +20,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 size_t RhsCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
 void RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
@@ -130,8 +129,7 @@ void RhsCodim0Vector::assembleLocal(
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);
 
-  MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension(localSolutionManager.space(),
-                                                                       "Dirichlet Extension");
+  MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension(localSolutionManager.space(), "Dirichlet Extension");
   //! \todo fill with actual values
 
   for (const auto& localGridEntity : DSC::entityRange(*localSolutionManager.space().grid_view())) {
@@ -165,7 +163,6 @@ CoarseRhsFunctional::CoarseRhsFunctional(CoarseRhsFunctional::VectorType& vec,
 }
 
 void CoarseRhsFunctional::assemble() { AssemblerBaseType::assemble(); }
-
 
 } // namespace Multiscale {
 } // namespace Dune {

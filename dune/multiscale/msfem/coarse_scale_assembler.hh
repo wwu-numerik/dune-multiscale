@@ -14,7 +14,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 class MsFEMCodim0Integral;
 class MsFemCodim0Matrix;
 class LocalSolutionManager;
@@ -85,7 +84,6 @@ private:
   const LocalOperatorType& localOperator_;
   LocalGridList& localGridList_;
 }; // class LocalAssemblerCodim0Matrix
-
 
 } // namespace Multiscale {
 } // namespace Dune {

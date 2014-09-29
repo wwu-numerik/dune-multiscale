@@ -9,7 +9,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 typedef DiscreteFunctionIO<MsFEMTraits::LocalGridDiscreteFunctionType> IOType;
 
 LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse_space,
@@ -50,7 +49,6 @@ void LocalSolutionManager::save() const {
 } // save
 
 std::size_t LocalSolutionManager::numBoundaryCorrectors() const { return numBoundaryCorrectors_; }
-
 
 } // namespace Multiscale {
 } // namespace Dune {

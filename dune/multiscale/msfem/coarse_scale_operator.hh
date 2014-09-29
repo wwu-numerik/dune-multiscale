@@ -23,7 +23,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 class MsFEMCodim0Integral;
 class MsFemCodim0Matrix;
 class LocalSolutionManager;
@@ -43,8 +42,8 @@ class CoarseScaleOperator
     : public GDT::Operators::MatrixBased<CoarseScaleOperatorTraits>,
       public GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType, CoarseScaleOperatorTraits::GridViewType,
                                   CoarseScaleOperatorTraits::SourceSpaceType> {
-  typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
-                                     CommonTraits::SpaceType> EllipticOperatorType;
+  typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
+  EllipticOperatorType;
   typedef GDT::Operators::MatrixBased<CoarseScaleOperatorTraits> OperatorBaseType;
   typedef MsFEMCodim0Integral LocalOperatorType;
   typedef MsFemCodim0Matrix LocalAssemblerType;
@@ -84,7 +83,6 @@ private:
   CommonTraits::DiscreteFunctionType msfem_rhs_;
   CommonTraits::DiscreteFunctionType dirichlet_projection_;
 }; // class CoarseScaleOperator
-
 
 } // namespace Multiscale {
 } // namespace Dune {

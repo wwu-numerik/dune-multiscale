@@ -19,14 +19,14 @@ typedef Info<GridB> BI;
 
 
 struct ProblemBase {
-
+  virtual ~ProblemBase() {}
   virtual AI* info() = 0;
   virtual BI* subinfo() = 0;
 
 };
 
 struct Problem : public ProblemBase {
-
+  virtual ~Problem() {}
   virtual AI* info() { return new AI(); }
   virtual BI* subinfo() { return new BI(); }
 

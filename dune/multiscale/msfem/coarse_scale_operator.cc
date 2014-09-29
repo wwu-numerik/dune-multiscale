@@ -25,7 +25,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScaleOperator::RangeSpaceType& range_space,
                                                                const CoarseScaleOperator::SourceSpaceType& source_space,
                                                                const CoarseScaleOperator::GridViewType& grid_view) {
@@ -84,8 +83,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
   DSC_PROFILER.startTiming("msfem.coarse.linearSolver");
   const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(
-      global_matrix_,
-      msfem_rhs_.space().communicator());
+      global_matrix_, msfem_rhs_.space().communicator());
 
   inverse.apply(msfem_rhs_.vector(), solution.vector());
 
@@ -95,12 +93,11 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   solution.vector() += dirichlet_projection_.vector();
 
   DSC_PROFILER.stopTiming("msfem.coarse.linearSolver");
-  DSC_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver")
-                << "ms." << std::endl;
+  DSC_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver") << "ms."
+               << std::endl;
 }
 
 const CoarseScaleOperator::SourceSpaceType& CoarseScaleOperator::coarse_space() const { return test_space(); }
-
 
 } // namespace Multiscale {
 } // namespace Dune {

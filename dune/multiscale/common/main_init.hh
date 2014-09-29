@@ -5,7 +5,6 @@
 #ifndef DUNE_MULTISCALE_SRC_COMMON_HH
 #define DUNE_MULTISCALE_SRC_COMMON_HH
 
-
 namespace Dune {
 namespace Multiscale {
 

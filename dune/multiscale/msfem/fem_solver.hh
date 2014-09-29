@@ -35,7 +35,6 @@ private:
   GridPtrType grid_;
   const std::unique_ptr<const CommonTraits::SpaceType> space_;
   CommonTraits::DiscreteFunctionType solution_;
-
 };
 
 } // namespace Multiscale
