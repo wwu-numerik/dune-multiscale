@@ -132,6 +132,8 @@ public:
 
   CoarseRhsFunctional(VectorType& vec, const SpaceType& spc, LocalGridList& localGridList);
 
+  virtual ~CoarseRhsFunctional(){}
+
   virtual void assemble() DS_OVERRIDE DS_FINAL;
 
 private:
