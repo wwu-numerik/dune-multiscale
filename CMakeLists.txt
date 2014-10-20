@@ -40,8 +40,6 @@ find_package(METIS)
 find_package(ParMETIS REQUIRED)
 include(cmake/modules/AddMETISFlags.cmake)
 include(AddParMETISFlags)
-include(FindTBB)
-find_package(TBB REQUIRED)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
