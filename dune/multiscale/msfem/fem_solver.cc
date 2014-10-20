@@ -69,7 +69,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   CommonTraits::DiscreteFunctionType dirichlet_projection(space);
   GDT::Operators::DirichletProjectionLocalizable<GridViewType, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-  dirichlet_projection_operator(*(space.grid_view()), boundary_info, *dirichlet, dirichlet_projection);
+  dirichlet_projection_operator(space.grid_view(), boundary_info, *dirichlet, dirichlet_projection);
   DSC_PROFILER.startTiming("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space);

@@ -61,12 +61,12 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   GDT::SystemAssembler<CommonTraits::SpaceType> global_system_assembler_(coarse_space_);
   GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-  coarse_dirichlet_projection_operator(*(coarse_space_.grid_view()), DMP::getModelData()->boundaryInfo(),
+  coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData()->boundaryInfo(),
                                        *DMP::getDirichletData(), dirichletExtensionCoarse);
   global_system_assembler_.add(coarse_dirichlet_projection_operator,
                                new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
   global_system_assembler_.assemble();
-  GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(*localSpace_.grid_view());
+  GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
   projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);

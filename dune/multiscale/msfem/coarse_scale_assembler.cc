@@ -126,7 +126,7 @@ void MsFemCodim0Matrix::assembleLocal(
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);
 
-  for (const auto& localGridEntity : DSC::entityRange(*localSolutionManager.space().grid_view())) {
+  for (const auto& localGridEntity : DSC::entityRange(localSolutionManager.space().grid_view())) {
     // ignore overlay elements
     if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
       continue;

@@ -84,7 +84,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
     //!TODO calculating the norm seems to have a bad perf impact, is the instability actually still there?
-    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(*current_rhs.space().grid_view())
+    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(current_rhs.space().grid_view())
                           .induced_norm(current_rhs);
     if (norm < 1e-12) {
       current_solution.vector() *= 0;
@@ -102,7 +102,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 }
 
 void LocalProblemSolver::solve_for_all_cells() {
-  const auto& grid = coarse_space_.grid_view()->grid();
+  const auto& grid = coarse_space_.grid_view().grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
   if (grid.comm().size() > 0)
@@ -116,12 +116,12 @@ void LocalProblemSolver::solve_for_all_cells() {
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> solveTime;
 
-  const auto& coarseGridLeafIndexSet = coarse_space_.grid_view()->grid().leafIndexSet();
+  const auto& coarseGridLeafIndexSet = coarse_space_.grid_view().grid().leafIndexSet();
   Stuff::IndexSetPartitioner<CommonTraits::GridViewType> partitioner(coarseGridLeafIndexSet);
-  SeedListPartitioning<typename CommonTraits::GridViewType::Grid, 0> partitioning(*coarse_space_.grid_view(),
+  SeedListPartitioning<typename CommonTraits::GridViewType::Grid, 0> partitioning(coarse_space_.grid_view(),
                                                                                   partitioner);
 
-  DSG::Walker<CommonTraits::GridViewType> walker(*coarse_space_.grid_view());
+  DSG::Walker<CommonTraits::GridViewType> walker(coarse_space_.grid_view());
 
   auto func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
@@ -150,7 +150,7 @@ void LocalProblemSolver::solve_for_all_cells() {
                << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
                << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
                << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
-               << coarse_space_.grid_view()->grid().comm().rank() << std::endl;
+               << coarse_space_.grid_view().grid().comm().rank() << std::endl;
 } // assemble_all
 
 } // namespace Multiscale {
