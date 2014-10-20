@@ -24,7 +24,7 @@ namespace Multiscale {
 
 LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
-  , coarseGridLeafIndexSet_(coarseSpace_.grid_view()->grid().leafIndexSet()) {
+  , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet()) {
   DSC::Profiler::ScopedTiming st("msfem.LocalGridList.ctor");
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   const int dim_world = LocalGridType::dimensionworld;
@@ -39,7 +39,7 @@ LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
 
-  for (const auto& coarse_entity : DSC::entityRange(*coarseSpace_.grid_view())) {
+  for (const auto& coarse_entity : DSC::entityRange(coarseSpace_.grid_view())) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
     assert(coarse_entity.partitionType() == Dune::InteriorEntity);

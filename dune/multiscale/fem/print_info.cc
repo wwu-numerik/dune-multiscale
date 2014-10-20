@@ -30,7 +30,7 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   if (Problem::getModelData()->hasExactSolution()) {
     const auto& u = *Dune::Multiscale::Problem::getExactSolution();
     outputparam.set_prefix("exact_solution");
-    u.visualize(*discrete_solution->space().grid_view(), outputparam.fullpath(u.name()));
+    u.visualize(discrete_solution->space().grid_view(), outputparam.fullpath(u.name()));
   }
 }
 

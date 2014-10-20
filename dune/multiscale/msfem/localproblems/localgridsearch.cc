@@ -15,7 +15,7 @@ operator()(const PointContainerType& points) {
 
   // only iterate over inner (non-overlap) entities
   static const auto view =
-      coarse_space_.grid_view()->grid().template leafGridView<PartitionIteratorType::InteriorBorder_Partition>();
+      coarse_space_.grid_view().grid().template leafGridView<PartitionIteratorType::InteriorBorder_Partition>();
 
   static auto it = view.template begin<0>();
   const auto end = view.template end<0>();

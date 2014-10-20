@@ -21,7 +21,7 @@ LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse
                                                          : coarse_space.mapper().maxNumDofs() + 2)
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d") %
-                            coarse_space.grid_view()->grid().leafIndexSet().index(coarseEntity)).str()) {
+                            coarse_space.grid_view().grid().leafIndexSet().index(coarseEntity)).str()) {
 
   auto& reader = IOType::memory(localSolutionLocation_, grid_view_ptr_);
   for (auto& it : localSolutions_)
