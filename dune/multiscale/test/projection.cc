@@ -15,9 +15,9 @@ struct Projection : public GridAndSpaces {
   LocalsolutionProxy::CorrectionsMapType fill_local_corrections(const Lambda& lambda,
                                                                 const LocalGridList& subgrid_list) {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
-    for (auto& coarse_entity : DSC::entityRange(*coarseSpace.grid_view())) {
+    for (auto& coarse_entity : DSC::entityRange(coarseSpace.grid_view())) {
       LocalSolutionManager localSolManager(coarseSpace, coarse_entity, subgrid_list);
-      auto& coarse_indexset = coarseSpace.grid_view()->grid().leafIndexSet();
+      auto& coarse_indexset = coarseSpace.grid_view().grid().leafIndexSet();
       const auto coarse_index = coarse_indexset.index(coarse_entity);
       local_corrections[coarse_index] =
           DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), " ");
@@ -37,7 +37,7 @@ struct Projection : public GridAndSpaces {
     CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
     DS::MsFEMProjection::project(proxy, fine_scale_part, search);
 
-    const auto norm = std::sqrt(Dune::GDT::Products::L2< CommonTraits::GridViewType >(*(fineSpace.grid_view()))
+    const auto norm = std::sqrt(Dune::GDT::Products::L2< CommonTraits::GridViewType >(fineSpace.grid_view())
                                     .induced_norm(fine_scale_part));
     EXPECT_DOUBLE_EQ(norm, constant);
   }

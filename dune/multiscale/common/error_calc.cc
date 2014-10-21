@@ -82,7 +82,6 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
 
-  /// TODO only call assemble once
   const auto fine_grid = make_grids().second;
   CommonTraits::GridProviderType fine_grid_provider(*fine_grid);
   const auto fine_space = fem_solution_ ? fem_solution_->space()
