@@ -34,12 +34,13 @@ std::vector<typename T::GlobalCoordinate> cornersA(const T& geo) {
 struct PointsAndStuff : public GridAndSpaces {
 
   void check_lagrange_points() {
-    for(auto& grid : {grids_.first, grids_.second}) {
+    for(auto& grid_ptr : {grids_.first, grids_.second}) {
+      const auto& grid = *grid_ptr;
       CommonTraits::GridProviderType grid_provider(grid);
       const CommonTraits::SpaceType space =
           CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
 
-      for (const auto& ent : DSC::viewRange(grid->leafGridView())) {
+      for (const auto& ent : DSC::entityRange(grid.leafGridView())) {
         const auto& geo = ent.geometry();
         const auto cor = corners(geo);
         const auto lp = DS::global_evaluation_points(space, ent);
@@ -56,7 +57,7 @@ struct PointsAndStuff : public GridAndSpaces {
       const auto lg_points = DS::global_evaluation_points(fineSpace, ent);
       for(auto  lg : lg_points) {
         bool found = false;
-        for (const auto& coarse_ent : DSC::viewRange(grids_.first->leafGridView())) {
+        for (const auto& coarse_ent : DSC::entityRange(grids_.first->leafGridView())) {
           found = found || DSG::reference_element(coarse_ent).checkInside(ent.geometry().local(lg));
         }
         EXPECT_TRUE(found);
@@ -113,19 +114,18 @@ struct GridMatch : public GridTestBase {
       expected_fine *= microPerMacro[i];
     EXPECT_EQ(grids_.first->leafGridView().size(0), expected_coarse);
     EXPECT_EQ(grids_.second->leafGridView().size(0), expected_fine);
-
   }
 
   void check_unique_corners() {
     for(auto& grid : {grids_.first, grids_.second}) {
-      for (const auto& ent : DSC::viewRange(grid->leafGridView())) {
+      for (const auto& ent : DSC::entityRange(grid->leafGridView())) {
         const auto& geo = ent.geometry();
         const auto cor = corners(geo);
         EXPECT_EQ(cor.size(), geo.corners());
         EXPECT_EQ(cor.size(), std::pow(2, CommonTraits::world_dim));
-//        EXPECT_EQ(cor, cornersA(geo));
-         for (auto i : DSC::valueRange(geo.corners()))
-           for (auto j : DSC::valueRange(geo.corners()))
+        EXPECT_EQ(cor, cornersA(geo));
+         for (auto i : DSC::valueRange(geo.corners())) {
+           for (auto j : DSC::valueRange(geo.corners())) {
              if (i!=j) {
                EXPECT_TRUE(DSC::FloatCmp::vec_ne(geo.corner(i), geo.corner(j)));
                EXPECT_NE(geo.corner(i), geo.corner(j));
@@ -133,15 +133,17 @@ struct GridMatch : public GridTestBase {
                EXPECT_TRUE(DSC::FloatCmp::eq(geo.corner(i), geo.corner(j)));
                EXPECT_EQ(geo.corner(i), geo.corner(j));
              }
+          }
+        }
       }
     }
   }
 
   void check_inside() {
-    for (const auto& ent : DSC::viewRange(grids_.second->leafGridView())) {
+    for (const auto& ent : DSC::entityRange(grids_.second->leafGridView())) {
       for(auto corner : corners(ent.geometry())) {
         bool found = false;
-        for (const auto& coarse_ent : DSC::viewRange(grids_.first->leafGridView())) {
+        for (const auto& coarse_ent : DSC::entityRange(grids_.first->leafGridView())) {
           found = found || DSG::reference_element(coarse_ent).checkInside(coarse_ent.geometry().local(corner));
         }
         EXPECT_TRUE(found);
