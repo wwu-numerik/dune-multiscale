@@ -153,14 +153,18 @@ DEPENDENCYCHECK( ${header} ${dune} )
 add_subdirectory(doc)
 add_subdirectory(dune)
 
-#disable most warnings from dependent modules
+#disable most warnings from dependent modules, except gdt,stuff
+list(APPEND module_exceptions "dune-stuff" "dune-gdt")
 foreach(_mod ${ALL_DEPENDENCIES})
-      dune_module_to_uppercase(_upper_case "${_mod}")
-      if(${_mod}_INCLUDE_DIRS)
-        foreach( _idir ${${_mod}_INCLUDE_DIRS} )
-            add_definitions("-isystem ${_idir}")
-        endforeach( _idir )
-      endif(${_mod}_INCLUDE_DIRS)
+  list (FIND module_exceptions "${_mod}" _index)
+  if (_index LESS 0)
+    dune_module_to_uppercase(_upper_case "${_mod}")
+    if(${_mod}_INCLUDE_DIRS)
+      foreach( _idir ${${_mod}_INCLUDE_DIRS} )
+        add_definitions("-isystem ${_idir}")
+      endforeach( _idir )
+    endif(${_mod}_INCLUDE_DIRS)
+  endif(_index GREATER -1)
 endforeach(_mod DEPENDENCIES)
   
 ADD_CPPCHECK(${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
