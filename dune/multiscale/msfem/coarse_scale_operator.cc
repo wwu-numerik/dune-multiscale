@@ -31,10 +31,10 @@ Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScale
   return range_space.compute_volume_pattern(grid_view, source_space);
 }
 
-CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceType& source_space,
+CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceType& source_space_in,
                                          LocalGridList& localGridList)
-  : OperatorBaseType(global_matrix_, source_space)
-  , AssemblerBaseType(source_space)
+  : OperatorBaseType(global_matrix_, source_space_in)
+  , AssemblerBaseType(source_space_in)
   , global_matrix_(coarse_space().mapper().size(), coarse_space().mapper().size(),
                    EllipticOperatorType::pattern(coarse_space()))
   , local_assembler_(local_operator_, localGridList)

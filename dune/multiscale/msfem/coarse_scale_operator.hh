@@ -65,11 +65,11 @@ public:
   static Stuff::LA::SparsityPatternDefault pattern(const RangeSpaceType& range_space,
                                                    const SourceSpaceType& source_space, const GridViewType& grid_view);
 
-  CoarseScaleOperator(const SourceSpaceType& coarse_space, LocalGridList& localGridList);
+  CoarseScaleOperator(const SourceSpaceType& source_space_in, LocalGridList& localGridList);
 
   virtual ~CoarseScaleOperator() {}
 
-  virtual void assemble() DS_OVERRIDE DS_FINAL;
+  virtual void assemble() override final;
 
   void apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution);
 

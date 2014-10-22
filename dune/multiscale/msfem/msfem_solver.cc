@@ -69,7 +69,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
       MsFEMTraits::LocalGridDiscreteFunctionType::JacobianRangeType grad_coarse_msfem_on_entity;
       // We only need the gradient of the coarse scale part on the element, which is a constant.
-      coarseSolutionLF.jacobian(coarse_entity.geometry().center(), grad_coarse_msfem_on_entity);
+      coarseSolutionLF->jacobian(coarse_entity.geometry().center(), grad_coarse_msfem_on_entity);
 
       // get the coarse gradient on T, multiply it with the local correctors and sum it up.
       for (int spaceDimension = 0; spaceDimension < Dune::GridSelector::dimgrid; ++spaceDimension) {
@@ -84,8 +84,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       //                    static_cast<long long>(coarseSolutionLF.size()),
       //                "The current implementation relies on having thesame types of elements on coarse and fine
       // level!");
-      for (std::size_t dof = 0; dof < coarseSolutionLF.vector().size(); ++dof) {
-        localSolutions[dof]->vector() *= coarseSolutionLF.vector().get(dof);
+      for (std::size_t dof = 0; dof < coarseSolutionLF->vector().size(); ++dof) {
+        localSolutions[dof]->vector() *= coarseSolutionLF->vector().get(dof);
         local_correction.vector() += localSolutions[dof]->vector();
       }
 
@@ -103,8 +103,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
           const auto local_point = lg_points[lg_i];
           const auto global_lg_point = local_entity.geometry().global(local_point);
           const auto local_coarse_point = coarse_geometry.local(global_lg_point);
-          const auto coarse_value = coarseSolutionLF.evaluate(local_coarse_point) / double(lg_points.size());
-          auto& vec = entity_local_correction.vector();
+          const auto coarse_value = coarseSolutionLF->evaluate(local_coarse_point) / double(lg_points.size());
+          auto& vec = entity_local_correction->vector();
           if (cut_overlay) {
             const bool covered = reference_element.checkInside(local_coarse_point);
             vec.set(lg_i, covered ? vec.get(lg_i) : 0);
@@ -114,9 +114,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
       }
 
       // add dirichlet corrector
-      local_correction.vector() += localSolutions[coarseSolutionLF.vector().size() + 1]->vector();
+      local_correction.vector() += localSolutions[coarseSolutionLF->vector().size() + 1]->vector();
       // substract neumann corrector
-      local_correction.vector() -= localSolutions[coarseSolutionLF.vector().size()]->vector();
+      local_correction.vector() -= localSolutions[coarseSolutionLF->vector().size()]->vector();
 
       if (DSC_CONFIG_GET("msfem.local_corrections_vtk_output", false)) {
         const std::string name = (boost::format("local_correction_%d_") % coarse_index).str();

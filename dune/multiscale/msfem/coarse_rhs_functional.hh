@@ -134,7 +134,7 @@ public:
 
   virtual ~CoarseRhsFunctional(){}
 
-  virtual void assemble() DS_OVERRIDE DS_FINAL;
+  virtual void assemble() override final;
 
 private:
   const LocalFunctionalType local_functional_;

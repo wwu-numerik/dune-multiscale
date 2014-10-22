@@ -65,7 +65,7 @@ public:
 
 class ZeroDirichletData : public DirichletDataBase {
 public:
-  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final { y = RangeType(0.0); }
   virtual size_t order() const { return 0; }
 };
 
@@ -77,7 +77,7 @@ public:
 
 class ZeroNeumannData : public NeumannDataBase {
 public:
-  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const DS_FINAL { y = RangeType(0.0); }
+  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final { y = RangeType(0.0); }
   virtual size_t order() const { return 0; }
 };
 
