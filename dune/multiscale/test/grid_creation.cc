@@ -35,10 +35,8 @@ struct PointsAndStuff : public GridAndSpaces {
 
   void check_lagrange_points() {
     for(auto& grid_ptr : {grids_.first, grids_.second}) {
-      const auto& grid = *grid_ptr;
-      CommonTraits::GridProviderType grid_provider(grid);
-      const CommonTraits::SpaceType space =
-          CommonTraits::SpaceProviderType::create(grid_provider, CommonTraits::st_gdt_grid_level);
+      auto& grid = *grid_ptr;
+      const CommonTraits::SpaceType space = CommonTraits::SpaceChooserType::make_space(grid);
 
       for (const auto& ent : DSC::entityRange(grid.leafGridView())) {
         const auto& geo = ent.geometry();

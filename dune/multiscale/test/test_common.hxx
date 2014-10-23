@@ -68,16 +68,12 @@ public:
 
  GridAndSpaces()
    : GridTestBase()
-   , coarse_grid_provider(*grids_.first)
-   , fine_grid_provider(*grids_.second)
-   , coarseSpace(CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level))
-   , fineSpace(CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level))
+   , coarseSpace(CommonTraits::SpaceChooserType::make_space(*grids_.first))
+   , fineSpace(CommonTraits::SpaceChooserType::make_space(*grids_.second))
  {}
 
 
 protected:
-  CommonTraits::GridProviderType coarse_grid_provider;
-  CommonTraits::GridProviderType fine_grid_provider;
   const CommonTraits::SpaceType coarseSpace;
   const CommonTraits::SpaceType fineSpace;
 };

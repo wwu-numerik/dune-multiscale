@@ -83,9 +83,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
 
   const auto fine_grid = make_grids().second;
-  CommonTraits::GridProviderType fine_grid_provider(*fine_grid);
   const auto fine_space = fem_solution_ ? fem_solution_->space()
-                                        : CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
+                                        : CommonTraits::SpaceChooserType::make_space(*fine_grid);
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(fine_space);
   const auto& grid_view = fine_space.grid_view();
 

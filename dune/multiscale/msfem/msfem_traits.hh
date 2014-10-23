@@ -22,13 +22,8 @@ struct MsFEMTraits {
   // change dirichletconstraints.cc bottom accordingly
   // typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
 
-  typedef DSG::Providers::ConstDefault<LocalGridType> LocalGridProviderType;
-  typedef GDT::Spaces::ContinuousLagrangeProvider<LocalGridType, DSG::ChooseLayer::leaf, CommonTraits::gdt_backend_type,
-                                                  st_lagrangespace_order, CommonTraits::FieldType,
-                                                  CommonTraits::dimRange> SpaceProviderType;
-
-  //! \todo not correct
-  typedef typename SpaceProviderType::Type LocalSpaceType;
+  typedef SpaceChooser<LocalGridType, CommonTraits::FieldType, CommonTraits::dimRange> SpaceChooserType;
+  typedef typename SpaceChooserType::Type LocalSpaceType;
   typedef typename LocalSpaceType::EntityType LocalEntityType;
 
   typedef typename BackendChooser<LocalSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;

@@ -39,6 +39,31 @@ class IModelProblemData;
 
 } // namespace Problem
 
+template< class G, class R, int r >
+struct SpaceChooser
+{
+  static constexpr auto backend_type =
+#if DUNE_MULTISCALE_WITH_DUNE_FEM
+      GDT::ChooseSpaceBackend::fem;
+#else
+      GDT::ChooseSpaceBackend::pdelab;
+#endif
+  static constexpr auto partview_chooser = GDT::ChooseGridPartView< backend_type >::type;
+  typedef DSG::LeafPartView< G, partview_chooser > PartViewType;
+  typedef typename Stuff::Grid::Layer< G, DSG::ChooseLayer::leaf, partview_chooser >::Type GridLayerType;
+private:
+  typedef GDT::Spaces::ContinuousLagrange::PdelabBased< GridLayerType, st_lagrangespace_order, R, r > PdelabType;
+  typedef GDT::Spaces::ContinuousLagrange::FemBased< GridLayerType, st_lagrangespace_order, R, r > FemType;
+public:
+  typedef typename std::conditional<(backend_type == GDT::ChooseSpaceBackend::fem), FemType, PdelabType>::type Type;
+  static Type make_space(G& g) {
+    return Type(PartViewType::create(g, 0));
+  }
+  static Type make_space(GridLayerType& p) {
+    return Type(p);
+  }
+};
+
 //! Common Types, duh
 struct CommonTraits {
 
@@ -55,20 +80,13 @@ struct CommonTraits {
   typedef GridType::Codim<0>::Entity EntityType;
   typedef double FieldType;
 
-  typedef DSG::Providers::ConstDefault<GridType> GridProviderType;
+  typedef DSG::Providers::Default<GridType> GridProviderType;
 
-  static constexpr auto gdt_backend_type =
-#if DUNE_MULTISCALE_WITH_DUNE_FEM
-      GDT::ChooseSpaceBackend::fem;
-#else
-      GDT::ChooseSpaceBackend::pdelab;
-#endif
-
-  typedef GDT::Spaces::ContinuousLagrangeProvider<GridType, DSG::ChooseLayer::leaf, gdt_backend_type,
-                                                  st_lagrangespace_order, FieldType, dimRange> SpaceProviderType;
+  typedef SpaceChooser<GridType, FieldType, dimRange> SpaceChooserType;
+  typedef typename SpaceChooserType::Type SpaceType;
 
   static constexpr auto st_gdt_grid_level = 0;
-  typedef SpaceProviderType::Type SpaceType;
+
   typedef SpaceType::GridViewType GridViewType;
 
   typedef BackendChooser<SpaceType>::LinearOperatorType LinearOperatorType;
