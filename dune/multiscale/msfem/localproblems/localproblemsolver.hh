@@ -45,14 +45,14 @@ public:
 private:
   typedef typename BackendChooser<LocalSpaceType>::InverseOperatorType InverseOperatorType;
 
-  LocalGridList& subgrid_list_;
+  LocalGridList& localgrid_list_;
   const CommonTraits::SpaceType& coarse_space_;
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
-   * \param subgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
+   * \param localgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
-  LocalProblemSolver(const CommonTraits::SpaceType& coarse_space, LocalGridList& subgrid_list);
+  LocalProblemSolver(const CommonTraits::SpaceType& coarse_space, LocalGridList& localgrid_list);
 
 private:
   //! Solve all local MsFEM problems for one coarse entity at once.

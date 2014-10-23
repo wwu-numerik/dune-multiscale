@@ -45,8 +45,8 @@ public:
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + std::string("/local_problems/")) {}
 
-LocalProblemSolver::LocalProblemSolver(const CommonTraits::SpaceType& coarse_space, LocalGridList& subgrid_list)
-  : subgrid_list_(subgrid_list)
+LocalProblemSolver::LocalProblemSolver(const CommonTraits::SpaceType& coarse_space, LocalGridList& localgrid_list)
+  : localgrid_list_(localgrid_list)
   , coarse_space_(coarse_space) {}
 
 void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
@@ -129,7 +129,7 @@ void LocalProblemSolver::solve_for_all_cells() {
 
     // take time
     DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
-    LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, subgrid_list_);
+    LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, localgrid_list_);
     // solve the problems
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
     solveTime(DSC_PROFILER.stopTiming("msfem.local.solve_all_on_single_cell") / 1000.f);

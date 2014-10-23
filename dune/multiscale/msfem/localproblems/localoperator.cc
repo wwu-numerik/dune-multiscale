@@ -34,7 +34,7 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, 
   : localSpace_(space)
   , local_diffusion_operator_(*DMP::getDiffusion())
   , coarse_space_(coarse_space)
-  , system_matrix_(space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space))
+  , system_matrix_(localSpace_.mapper().size(), localSpace_.mapper().size(), EllipticOperatorType::pattern(localSpace_))
   , system_assembler_(localSpace_)
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
   , dirichletConstraints_(Problem::getModelData()->subBoundaryInfo(), space.mapper().maxNumDofs(),
