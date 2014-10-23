@@ -41,10 +41,10 @@ class DiscreteFunctionIO : public boost::noncopyable {
   typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef std::vector<DiscreteFunction_ptr> Vector;
   typedef typename DiscreteFunctionSpaceType::GridViewType GridViewType;
-  typedef std::shared_ptr<const GridViewType> GridViewPtrType;
 
   DiscreteFunctionIO() = default;
 
+public:
   class DiskBackend : public boost::noncopyable {
 
     void load_disk_functions() {
@@ -97,10 +97,9 @@ class DiscreteFunctionIO : public boost::noncopyable {
      *  filename may include additional path components
      * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
      */
-    MemoryBackend(const GridViewPtrType& grid_view, const std::string filename = "nonsense_default_for_map")
+    MemoryBackend(GridViewType& grid_view, const std::string filename = "nonsense_default_for_map")
       : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-      , local_grid_provider_(grid_view->grid())
-      , space_(MsFEMTraits::SpaceProviderType::create(local_grid_provider_, CommonTraits::st_gdt_grid_level)) {}
+      , space_(MsFEMTraits::SpaceChooserType::make_space(grid_view)) {}
 
     void append(const DiscreteFunction_ptr& df) { functions_.push_back(df); }
 
@@ -116,11 +115,11 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
   private:
     const boost::filesystem::path dir_;
-    const MsFEMTraits::LocalGridProviderType local_grid_provider_;
     DiscreteFunctionSpaceType space_;
     Vector functions_;
   };
 
+private:
   static ThisType& instance() {
     static ThisType s_this;
     return s_this;
@@ -144,12 +143,12 @@ class DiscreteFunctionIO : public boost::noncopyable {
 
   DiskBackend& get_disk(const std::string filename) { return *get(disk_, filename, filename); }
 
-  MemoryBackend& get_memory(const std::string filename, const GridViewPtrType& grid_view) {
+  MemoryBackend& get_memory(const std::string filename, GridViewType& grid_view) {
     return *get(memory_, filename, grid_view, filename);
   }
 
 public:
-  static MemoryBackend& memory(const std::string filename, const GridViewPtrType& grid_view) {
+  static MemoryBackend& memory(const std::string filename, GridViewType& grid_view) {
     return instance().get_memory(filename, grid_view);
   }
 

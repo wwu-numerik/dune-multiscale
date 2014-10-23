@@ -29,7 +29,8 @@ namespace Multiscale {
 
 Elliptic_FEM_Solver::Elliptic_FEM_Solver()
   : grid_(make_fine_grid(nullptr, false))
-  , space_(CommonTraits::SpaceProviderType::create(CommonTraits::GridProviderType(*grid_), CommonTraits::st_gdt_grid_level))
+  , grid_provider_(*grid_)
+  , space_(CommonTraits::SpaceChooserType::PartViewType::create(*grid_, CommonTraits::st_gdt_grid_level))
   , solution_(space_, "fem_solution")
 {
 }

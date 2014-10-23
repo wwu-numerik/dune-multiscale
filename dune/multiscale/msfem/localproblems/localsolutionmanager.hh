@@ -8,6 +8,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 #include <cstddef>
 #include <memory>
@@ -26,6 +27,7 @@ private:
   typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef MsFEMTraits::LocalSpaceType LocalSpaceType;
+  typedef DiscreteFunctionIO<LocalGridDiscreteFunctionType> IOType;
 
 public:
   LocalSolutionManager(const CommonTraits::SpaceType& coarse_space, const CoarseEntityType& coarseEntity,
@@ -44,7 +46,8 @@ public:
 private:
   const LocalGridList& subgridList_;
   const MsFEMTraits::LocalGridType& subgrid_;
-  const std::shared_ptr<const LocalGridViewType> grid_view_ptr_;
+  LocalGridViewType grid_view_;
+  typename IOType::MemoryBackend& memory_backend_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;
   MsFEMTraits::LocalSolutionVectorType localSolutions_;
