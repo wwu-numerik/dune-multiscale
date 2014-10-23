@@ -67,10 +67,10 @@ public:
   bool covers(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity);
 
 private:
-  typedef std::map<IndexType, std::shared_ptr<LocalGridType>> SubGridStorageType;
+  typedef std::map<IndexType, std::shared_ptr<LocalGridType>> LocalGridStorageType;
 
   const CommonTraits::SpaceType& coarseSpace_;
-  SubGridStorageType subGridList_;
+  LocalGridStorageType subGridList_;
   const LeafIndexSet& coarseGridLeafIndexSet_;
 };
 

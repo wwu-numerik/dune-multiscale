@@ -30,7 +30,7 @@ private:
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  void identify_fine_scale_part(LocalGridList& subgrid_list, const DiscreteFunctionType& coarse_msfem_solution,
+  void identify_fine_scale_part(LocalGridList& localgrid_list, const DiscreteFunctionType& coarse_msfem_solution,
                                 std::unique_ptr<LocalsolutionProxy>& msfem_solution) const;
 
 public:
@@ -43,7 +43,7 @@ public:
    homogenous Dirchilet boundary condition!:
    **/
   void apply(const CommonTraits::SpaceType& coarse_space, std::unique_ptr<LocalsolutionProxy>& msfem_solution,
-             LocalGridList& subgrid_list) const;
+             LocalGridList& localgrid_list) const;
 };
 
 } // namespace Multiscale {

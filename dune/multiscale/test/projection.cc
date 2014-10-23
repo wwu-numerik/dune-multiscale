@@ -13,10 +13,10 @@ struct Projection : public GridAndSpaces {
   typedef DS::FunctionTypeGenerator<MsFEMTraits::LocalConstantFunctionType, DS::GlobalLambdaFunction>::type Lambda;
 
   LocalsolutionProxy::CorrectionsMapType fill_local_corrections(const Lambda& lambda,
-                                                                const LocalGridList& subgrid_list) {
+                                                                const LocalGridList& localgrid_list) {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
     for (auto& coarse_entity : DSC::entityRange(coarseSpace.grid_view())) {
-      LocalSolutionManager localSolManager(coarseSpace, coarse_entity, subgrid_list);
+      LocalSolutionManager localSolManager(coarseSpace, coarse_entity, localgrid_list);
       auto& coarse_indexset = coarseSpace.grid_view().grid().leafIndexSet();
       const auto coarse_index = coarse_indexset.index(coarse_entity);
       local_corrections[coarse_index] =
@@ -27,12 +27,12 @@ struct Projection : public GridAndSpaces {
   }
 
   void project() {
-    LocalGridList subgrid_list(coarseSpace);
+    LocalGridList localgrid_list(coarseSpace);
     const double constant(1);
     Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );
-    auto local_corrections = fill_local_corrections(lambda, subgrid_list);
-    LocalGridSearch search(coarseSpace, subgrid_list);
-    LocalsolutionProxy proxy(std::move(local_corrections), coarseSpace, subgrid_list);
+    auto local_corrections = fill_local_corrections(lambda, localgrid_list);
+    LocalGridSearch search(coarseSpace, localgrid_list);
+    LocalsolutionProxy proxy(std::move(local_corrections), coarseSpace, localgrid_list);
 
     CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
     DS::MsFEMProjection::project(proxy, fine_scale_part, search);

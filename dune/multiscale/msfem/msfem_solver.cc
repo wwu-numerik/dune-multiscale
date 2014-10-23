@@ -41,7 +41,7 @@
 namespace Dune {
 namespace Multiscale {
 
-void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list,
+void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
                                                      std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {
   DSC::Profiler::ScopedTiming st("msfem.idFine");
@@ -52,7 +52,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
 
   LocalsolutionProxy::CorrectionsMapType local_corrections;
   for (auto& coarse_entity : DSC::entityRange(coarse_space.grid_view())) {
-    LocalSolutionManager localSolManager(coarse_space, coarse_entity, subgrid_list);
+    LocalSolutionManager localSolManager(coarse_space, coarse_entity, localgrid_list);
     localSolManager.load();
     auto& localSolutions = localSolManager.getLocalSolutions();
     const auto coarse_index = coarse_indexset.index(coarse_entity);
@@ -128,24 +128,24 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& subgrid_list
     localSolutions.clear();
   }
 
-  msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, subgrid_list);
+  msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
 }
 
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
-                                  std::unique_ptr<LocalsolutionProxy>& solution, LocalGridList& subgrid_list) const {
+                                  std::unique_ptr<LocalsolutionProxy>& solution, LocalGridList& localgrid_list) const {
   DSC::Profiler::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
 
   DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");
   coarse_msfem_solution.vector() *= 0;
 
   //! Solutions are kept in-memory via DiscreteFunctionIO::MemoryBackend by LocalsolutionManagers
-  LocalProblemSolver(coarse_space, subgrid_list).solve_for_all_cells();
+  LocalProblemSolver(coarse_space, localgrid_list).solve_for_all_cells();
 
-  CoarseScaleOperator elliptic_msfem_op(coarse_space, subgrid_list);
+  CoarseScaleOperator elliptic_msfem_op(coarse_space, localgrid_list);
   elliptic_msfem_op.apply_inverse(coarse_msfem_solution);
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  identify_fine_scale_part(subgrid_list, coarse_msfem_solution, solution);
+  identify_fine_scale_part(localgrid_list, coarse_msfem_solution, solution);
 }
 
 } // namespace Multiscale {

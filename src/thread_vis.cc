@@ -89,15 +89,15 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
   const CommonTraits::SpaceType fineSpace =
       CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
 
-  LocalGridList subgrid_list(coarseSpace);
+  LocalGridList localgrid_list(coarseSpace);
 
   auto fine_view_ptr = std::make_shared<CommonTraits::GridViewType> (fine_grid.leafGridView());
   typedef GDT::Spaces::FiniteVolume::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
   typedef BackendChooser<FVSpace>::DiscreteFunctionType FVFunc;
   FVSpace fv_space(fine_view_ptr);
 
-  std::vector<std::unique_ptr<FVFunc>> oversampled_functions(subgrid_list.size());
-  std::vector<std::unique_ptr<FVFunc>> functions(subgrid_list.size());
+  std::vector<std::unique_ptr<FVFunc>> oversampled_functions(localgrid_list.size());
+  std::vector<std::unique_ptr<FVFunc>> functions(localgrid_list.size());
 
 
   auto oversampled_function_it = oversampled_functions.begin();
@@ -105,7 +105,7 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
   // horrible, horrible complexity :)
   for(const auto& coarse_entity : coarseSpace)
   {
-    const auto& subgrid = subgrid_list.getSubGrid(coarse_entity);
+    const auto& subgrid = localgrid_list.getSubGrid(coarse_entity);
     const auto& id_set = coarse_grid.globalIdSet();
     const auto coarse_id = id_set.id(coarse_entity);
     auto& oversampled_function = (*oversampled_function_it++);
@@ -117,12 +117,12 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
 
     for(const auto& fine_entity : fineSpace)
     {
-      if(subgrid_list.covers_strict(coarse_entity, fine_entity.geometry())) {
+      if(localgrid_list.covers_strict(coarse_entity, fine_entity.geometry())) {
         auto oversampled_local_function = oversampled_function->local_discrete_function(fine_entity);
         for (const auto idx : DSC::valueRange(oversampled_local_function.vector().size())) {
           oversampled_local_function.vector().set(idx, static_cast<unsigned long>(coarse_id+1));
         }
-//        if (coarse_id == subgrid_list.getEnclosingMacroCellId(CommonTraits::EntityPointerType(fine_entity)))
+//        if (coarse_id == localgrid_list.getEnclosingMacroCellId(CommonTraits::EntityPointerType(fine_entity)))
 //        {
 //          auto local_function = function->local_discrete_function(fine_entity);
 //          for (const auto idx : DSC::valueRange(local_function.size())) {
