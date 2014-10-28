@@ -15,13 +15,14 @@ LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse
   : subgridList_(subgridList)
   , subgrid_(subgridList_.getSubGrid(coarseEntity))
   , grid_view_(subgrid_.leafGridView())
-  , memory_backend_(IOType::memory(localSolutionLocation_, grid_view_))
   , numBoundaryCorrectors_(DSG::is_simplex_grid(coarse_space) ? 1 : 2)
   , numLocalProblems_(DSG::is_simplex_grid(coarse_space) ? GridSelector::dimgrid + 1
                                                          : coarse_space.mapper().maxNumDofs() + 2)
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d") %
-                            coarse_space.grid_view().grid().leafIndexSet().index(coarseEntity)).str()) {
+                            coarse_space.grid_view().grid().leafIndexSet().index(coarseEntity)).str())
+  , memory_backend_(IOType::memory(localSolutionLocation_, grid_view_))
+{
   for (auto& it : localSolutions_)
     it = make_df_ptr<LocalGridDiscreteFunctionType>("Local problem Solution", memory_backend_.space());
 }

@@ -18,6 +18,7 @@
 
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/stuff/common/parallel/threadmanager.hh>
 
 namespace Dune {
 template <class K, int SIZE>
@@ -46,13 +47,13 @@ private:
   typedef typename BackendChooser<LocalSpaceType>::InverseOperatorType InverseOperatorType;
 
   LocalGridList& localgrid_list_;
-  const CommonTraits::SpaceType& coarse_space_;
+  const DS::PerThreadValue<CommonTraits::SpaceType> coarse_space_;
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
    * \param localgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
    **/
-  LocalProblemSolver(const CommonTraits::SpaceType& coarse_space, LocalGridList& localgrid_list);
+  LocalProblemSolver(CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list);
 
 private:
   //! Solve all local MsFEM problems for one coarse entity at once.
