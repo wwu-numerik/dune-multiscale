@@ -45,7 +45,7 @@ public:
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + std::string("/local_problems/")) {}
 
-LocalProblemSolver::LocalProblemSolver(const CommonTraits::SpaceType& coarse_space, LocalGridList& localgrid_list)
+LocalProblemSolver::LocalProblemSolver(CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list)
   : localgrid_list_(localgrid_list)
   , coarse_space_(coarse_space) {}
 
@@ -54,7 +54,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   assert(allLocalSolutions.size() > 0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
-  const auto numBoundaryCorrectors = DSG::is_simplex_grid(coarse_space_) ? 1u : 2u;
+  const auto numBoundaryCorrectors = DSG::is_simplex_grid(*coarse_space_) ? 1u : 2u;
   const auto numInnerCorrectors = allLocalSolutions.size() - numBoundaryCorrectors;
 
   // clear return argument
@@ -65,7 +65,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 
   //! define the discrete (elliptic) local MsFEM problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
-  LocalProblemOperator localProblemOperator(coarse_space_, subDiscreteFunctionSpace);
+  LocalProblemOperator localProblemOperator(*coarse_space_, subDiscreteFunctionSpace);
 
   // right hand side vector of the algebraic local MsFEM problem
   MsFEMTraits::LocalSolutionVectorType allLocalRHS(allLocalSolutions.size());
@@ -102,7 +102,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 }
 
 void LocalProblemSolver::solve_for_all_cells() {
-  const auto& grid = coarse_space_.grid_view().grid();
+  const auto& grid = coarse_space_->grid_view().grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
   if (grid.comm().size() > 0)
@@ -116,12 +116,8 @@ void LocalProblemSolver::solve_for_all_cells() {
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> solveTime;
 
-  const auto& coarseGridLeafIndexSet = coarse_space_.grid_view().grid().leafIndexSet();
-  Stuff::IndexSetPartitioner<CommonTraits::GridViewType> partitioner(coarseGridLeafIndexSet);
-  SeedListPartitioning<typename CommonTraits::GridViewType::Grid, 0> partitioning(coarse_space_.grid_view(),
-                                                                                  partitioner);
 
-  DSG::Walker<CommonTraits::GridViewType> walker(coarse_space_.grid_view());
+  GDT::SystemAssembler<CommonTraits::SpaceType> walker(*coarse_space_);
 
   auto func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
@@ -129,7 +125,7 @@ void LocalProblemSolver::solve_for_all_cells() {
 
     // take time
     DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
-    LocalSolutionManager localSolutionManager(coarse_space_, coarseEntity, localgrid_list_);
+    LocalSolutionManager localSolutionManager(*coarse_space_, coarseEntity, localgrid_list_);
     // solve the problems
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
     solveTime(DSC_PROFILER.stopTiming("msfem.local.solve_all_on_single_cell") / 1000.f);
@@ -141,7 +137,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   };
 
   walker.add(func);
-  walker.tbb_walk(partitioning);
+  walker.tbb_assemble();
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;
@@ -150,7 +146,7 @@ void LocalProblemSolver::solve_for_all_cells() {
                << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
                << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
                << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
-               << coarse_space_.grid_view().grid().comm().rank() << std::endl;
+               << coarse_space_->grid_view().grid().comm().rank() << std::endl;
 } // assemble_all
 
 } // namespace Multiscale {

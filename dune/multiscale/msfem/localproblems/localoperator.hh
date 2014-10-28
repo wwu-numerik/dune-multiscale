@@ -54,7 +54,7 @@ public:
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
 
 private:
-  const LocalSpaceType& localSpace_;
+  const LocalSpaceType localSpace_;
   const Problem::LocalDiffusionType local_diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;

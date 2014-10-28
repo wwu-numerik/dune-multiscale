@@ -141,18 +141,18 @@ private:
     return ret.first->second;
   }
 
-  DiskBackend& get_disk(const std::string filename) { return *get(disk_, filename, filename); }
+  DiskBackend& get_disk(std::string filename) { return *get(disk_, filename, filename); }
 
-  MemoryBackend& get_memory(const std::string filename, GridViewType& grid_view) {
+  MemoryBackend& get_memory(std::string filename, GridViewType& grid_view) {
     return *get(memory_, filename, grid_view, filename);
   }
 
 public:
-  static MemoryBackend& memory(const std::string filename, GridViewType& grid_view) {
+  static MemoryBackend& memory(std::string filename, GridViewType& grid_view) {
     return instance().get_memory(filename, grid_view);
   }
 
-  static DiskBackend& disk(const std::string filename) { return instance().get_disk(filename); }
+  static DiskBackend& disk(std::string filename) { return instance().get_disk(filename); }
 
   //! this needs to be called before global de-init or else dune fem fails
   static void clear() {

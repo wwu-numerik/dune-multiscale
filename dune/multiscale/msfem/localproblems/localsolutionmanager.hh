@@ -47,11 +47,11 @@ private:
   const LocalGridList& subgridList_;
   const MsFEMTraits::LocalGridType& subgrid_;
   LocalGridViewType grid_view_;
-  typename IOType::MemoryBackend& memory_backend_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;
   MsFEMTraits::LocalSolutionVectorType localSolutions_;
   const std::string localSolutionLocation_;
+  typename IOType::MemoryBackend& memory_backend_;
 };
 }
 }
