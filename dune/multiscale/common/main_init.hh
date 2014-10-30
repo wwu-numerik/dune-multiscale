@@ -5,6 +5,10 @@
 #ifndef DUNE_MULTISCALE_SRC_COMMON_HH
 #define DUNE_MULTISCALE_SRC_COMMON_HH
 
+namespace tbb {
+class tbb_exception;
+}
+
 namespace Dune {
 
 class Exception;
@@ -16,6 +20,7 @@ void init(int argc, char** argv); // init
 
 int handle_exception(const Dune::Exception& exp);
 int handle_exception(const std::exception& exp);
+int handle_exception(const tbb::tbb_exception& exp);
 
 } // namespace Dune {
 } // namespace Multiscale {

@@ -39,7 +39,7 @@ void output_all(std::vector<std::unique_ptr<FunctionType>>& functions, CommonTra
 
 void partition_vis_single(CommonTraits::GridType& grid, std::string function_name)
 {
-  const auto threadnum = DS::ThreadManager::max_threads();
+  const auto threadnum = DS::threadManager().max_threads();
   //Dune::Fem::Parameter::replace(std::string("fem.threads.partitioningmethod"), std::string("kway"));
   auto view_ptr = std::make_shared<CommonTraits::GridViewType> (grid.leafGridView());
   typedef GDT::Spaces::FiniteVolume::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
@@ -63,7 +63,7 @@ void partition_vis_single(CommonTraits::GridType& grid, std::string function_nam
 //  #pragma omp parallel
 //  #endif
 //  {
-//    const auto thread =  Dune::Fem::ThreadManager::thread();
+//    const auto thread =  Dune::Fem::threadManager().thread();
 //    auto& function = functions[thread];
 //    function->clear();
 //    for(const auto& entity : iterators)
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
 
-    assert(DS::ThreadManager::max_threads() == DSC_CONFIG_GET("threading.max_count", 1));
+    assert(DS::threadManager().max_threads() == DSC_CONFIG_GET("threading.max_count", 1));
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output
