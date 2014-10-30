@@ -120,7 +120,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   GDT::SystemAssembler<CommonTraits::SpaceType> walker(*coarse_space_);
 
   auto func = [&](const CommonTraits::EntityType& coarseEntity) {
-    const int coarse_index = coarseGridLeafIndexSet.index(coarseEntity);
+    const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
     DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time
