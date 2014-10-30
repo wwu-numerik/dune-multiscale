@@ -37,3 +37,22 @@ void Dune::Multiscale::init(int argc, char** argv) {
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
   DS::ThreadManager::set_max_threads(DSC_CONFIG_GET("threading.max_count", 1));
 }
+
+
+int Dune::Multiscale::handle_exception(const Dune::Exception &exp)
+{
+  std::cerr << "Failed with Dune::Exception: " << exp.what();
+  return Dune::Stuff::abort_all_mpi_processes();
+}
+
+int Dune::Multiscale::handle_exception(const std::exception &exp)
+{
+  std::cerr << "Failed with std::exception: " << exp.what();
+  return Dune::Stuff::abort_all_mpi_processes();
+}
+
+int Dune::Multiscale::handle_exception(const tbb::tbb_exception &exp)
+{
+  std::cerr << "Failed with " << exp.name() << ": " << exp.what();
+  return Dune::Stuff::abort_all_mpi_processes();
+}

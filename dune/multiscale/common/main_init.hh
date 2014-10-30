@@ -6,10 +6,16 @@
 #define DUNE_MULTISCALE_SRC_COMMON_HH
 
 namespace Dune {
+
+class Exception;
+
 namespace Multiscale {
 
 //! setup code common to fem/msfem/hmm
 void init(int argc, char** argv); // init
+
+int handle_exception(const Dune::Exception& exp);
+int handle_exception(const std::exception& exp);
 
 } // namespace Dune {
 } // namespace Multiscale {
