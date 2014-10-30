@@ -137,7 +137,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   };
 
   walker.add(func);
-  walker.tbb_assemble();
+  walker.assemble(true);
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;

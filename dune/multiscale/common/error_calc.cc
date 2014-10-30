@@ -142,7 +142,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     system_assembler.add(*l2_msfem);
   }
 
-  system_assembler.tbb_assemble();
+  system_assembler.assemble(true);
 
   if (Problem::getModelData()->hasExactSolution()) {
     if (msfem_solution_) {

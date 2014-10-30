@@ -58,7 +58,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(force_functional);
   this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
   this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
-  AssemblerBaseType::tbb_assemble();
+  AssemblerBaseType::assemble(true);
 
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Spaces::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
@@ -66,7 +66,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  AssemblerBaseType::assemble();
+  AssemblerBaseType::assemble(false);
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(coarse_space().mapper().size());
