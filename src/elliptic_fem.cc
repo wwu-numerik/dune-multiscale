@@ -12,8 +12,8 @@
 #include <tbb/task_scheduler_init.h>
 
 int main(int argc, char** argv) {
+  using namespace Dune::Multiscale;
   try {
-    using namespace Dune::Multiscale;
     init(argc, argv);
     tbb::task_scheduler_init tbb_init(DSC_CONFIG_GET("threading.max_count", std::thread::hardware_concurrency()));
 
@@ -25,11 +25,12 @@ int main(int argc, char** argv) {
         DSC_PROFILER.stopTiming("total_cpu", DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
     DSC_LOG_INFO_0 << "Total runtime of the program: " << cpu_time << "s" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
-
-    return 0;
   }
   catch (Dune::Exception& e) {
-    std::cerr << e.what() << std::endl;
+    return handle_exception(e);
   }
-  return Dune::Stuff::abort_all_mpi_processes();
+  catch (std::exception& s) {
+    return handle_exception(s);
+  }
+  return 0;
 } // main

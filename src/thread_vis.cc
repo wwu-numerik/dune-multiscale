@@ -147,8 +147,8 @@ void partition_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& 
 } // namespace Multiscale {
 
 int main(int argc, char** argv) {
+  using namespace Dune::Multiscale;
   try {
-    using namespace Dune::Multiscale;
     init(argc, argv);
 
     assert(DS::ThreadManager::max_threads() == DSC_CONFIG_GET("threading.max_count", 1));
@@ -172,16 +172,12 @@ int main(int argc, char** argv) {
 //    subgrid_vis(*grids.first, *grids.second);
     DSG::ElementVisualization::all(*grids.second, datadir + "/fine_element_visualization");
     DSG::ElementVisualization::all(*grids.first, datadir + "/coarse_element_visualization");
-    return 0;
   }
   catch (Dune::Exception& e) {
-    std::cerr << e.what() << std::endl;
+    return handle_exception(e);
   }
-  catch (const std::exception& ex) {
-    std::cerr << "Caught std::exception: " << ex.what() << "\n";
+  catch (std::exception& s) {
+    return handle_exception(s);
   }
-  catch (...) {
-    std::cerr << "Exception of non-known type thrown!\n";
-  }
-  return 1;
+  return 0;
 } // main

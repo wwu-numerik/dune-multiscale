@@ -15,9 +15,8 @@
 #include <tbb/task_scheduler_init.h>
 
 int main(int argc, char** argv) {
-
-  try {
-    using namespace Dune::Multiscale;
+  using namespace Dune::Multiscale;
+  try {  
     init(argc, argv);
     tbb::task_scheduler_init tbb_init(DSC_CONFIG_GET("threading.max_count", 1));
 
@@ -55,19 +54,12 @@ int main(int argc, char** argv) {
       *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                       << "," << meanPeakMemConsumption << std::endl;
     }
-    return 0;
   }
   catch (Dune::Exception& e) {
-    std::cerr << e.what() << std::endl;
+    return handle_exception(e);
   }
-  catch (const std::exception& ex) {
-    std::cerr << "Caught std::exception: " << ex.what() << "\n";
+  catch (std::exception& s) {
+    return handle_exception(s);
   }
-  catch (const std::string& ex) {
-    std::cerr << "Caught string-type exception: " << ex << "\n";
-  }
-  catch (...) {
-    std::cerr << "Exception of non-known type thrown!\n";
-  }
-  return Dune::Stuff::abort_all_mpi_processes();
+  return 0;
 } // main
