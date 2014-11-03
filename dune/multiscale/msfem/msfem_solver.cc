@@ -43,10 +43,10 @@ namespace Multiscale {
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_list,
                                                      const DiscreteFunctionType& coarse_msfem_solution,
+                                                     const CommonTraits::SpaceType& coarse_space,
                                                      std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {
   DSC::Profiler::ScopedTiming st("msfem.idFine");
 
-  const auto& coarse_space = coarse_msfem_solution.space();
   auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
 
@@ -145,7 +145,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
   elliptic_msfem_op.apply_inverse(coarse_msfem_solution);
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  identify_fine_scale_part(localgrid_list, coarse_msfem_solution, solution);
+  identify_fine_scale_part(localgrid_list, coarse_msfem_solution, coarse_space, solution);
 }
 
 } // namespace Multiscale {

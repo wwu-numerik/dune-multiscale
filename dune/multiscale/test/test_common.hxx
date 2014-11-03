@@ -55,7 +55,6 @@ public:
     grids_ = make_grids();
   }
  virtual ~GridTestBase() {
-   grids_ = decltype(grids_)();
  }
 
 protected:
