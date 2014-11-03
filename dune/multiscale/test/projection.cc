@@ -31,11 +31,11 @@ struct Projection : public GridAndSpaces {
     const double constant(1);
     Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );
     auto local_corrections = fill_local_corrections(lambda, localgrid_list);
-    LocalGridSearch search(coarseSpace, localgrid_list);
+
     LocalsolutionProxy proxy(std::move(local_corrections), coarseSpace, localgrid_list);
 
     CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
-    DS::MsFEMProjection::project(proxy, fine_scale_part, search);
+    DS::MsFEMProjection::project(proxy, fine_scale_part, proxy.search());
 
     const auto norm = std::sqrt(Dune::GDT::Products::L2< CommonTraits::GridViewType >(fineSpace.grid_view())
                                     .induced_norm(fine_scale_part));
