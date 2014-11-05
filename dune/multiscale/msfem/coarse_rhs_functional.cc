@@ -27,7 +27,7 @@ void RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirich
                               const MsFEMTraits::LocalEntityType& localGridEntity,
                               const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
                               Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
-                              std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& tmpLocalVectors) const {
+                              std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& /*tmpLocalVectors*/) const {
   const auto& f = DMP::getSource();
   const auto& diffusion = DMP::getDiffusion();
 

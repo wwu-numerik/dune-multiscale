@@ -26,9 +26,6 @@ Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType&
   DUNE_THROW(InvalidStateException, "Coarse cell was not found!");
 }
 
-Dune::Multiscale::ProxyGridview Dune::Multiscale::LocalsolutionProxy::grid_view() const {
-  return ProxyGridview(gridlist_);
-}
 
 Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() const {
   assert(search_);

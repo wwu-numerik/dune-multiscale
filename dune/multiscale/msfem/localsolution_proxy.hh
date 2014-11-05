@@ -33,15 +33,12 @@ public:
 
   std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;
 
-  ProxyGridview grid_view() const;
-
   LocalGridSearch& search() const;
 
 private:
   const CorrectionsMapType corrections_;
   const LeafIndexSetType& index_set_;
   const std::unique_ptr<LocalGridSearch> search_;
-  const LocalGridList& gridlist_;
 };
 
 } // namespace Multiscale {
