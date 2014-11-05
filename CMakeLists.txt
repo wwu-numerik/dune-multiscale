@@ -101,7 +101,7 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
 set(ENABLE_PETSC 0 CACHE BOOLEAN "")
-set(GRIDDIM 2 CACHE STRING "")
+set(GRIDDIM 3 CACHE STRING "")
 set(USE_ISTL_BACKEND 1 CACHE BOOLEAN "use dune-istl as the la-backend. Disable to use Eigen3 instead.")
 set(USE_FEM_BACKEND 0 CACHE BOOLEAN "use dune-fem as the discretization-backend. Disable to use dune-pdelab instead.")
 
