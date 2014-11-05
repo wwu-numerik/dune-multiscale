@@ -46,7 +46,6 @@ MsFEMCodim0Integral::apply(LocalSolutionManager& localSolutionManager,
   ret *= 0.0;
   assert(ret.rows() >= rows);
   assert(ret.cols() >= cols);
-  assert(tmpLocalMatrices.size() >= numTmpObjectsRequired_);
 
   const auto numQuadraturePoints = volumeQuadrature.size();
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
