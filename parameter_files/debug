@@ -2,10 +2,10 @@
 # directory to save the data output
 datadir = data
 output_walltime = 1
-vtk_output = 1
+vtk_output = 0
 
 [grids]
-macro_cells_per_dim = [4 4 4]
+macro_cells_per_dim = [2 2 2]
 micro_cells_per_macrocell_dim = [4 4 4]
 overlap = 0
 
@@ -20,7 +20,7 @@ local_corrections_vtk_output = 0
 petrov_galerkin = 0
 
 # compute the errors between MsFEM and (standard) FEM approximations?
-fem_comparison = 1
+fem_comparison = 0
 
 localproblemsolver_verbose = 1
 
@@ -41,11 +41,6 @@ file = ms.log
 
 # logging directory relative to datadir
 dir = logdata
-
-
-[fem]
-#available: "recursive", "kway", "sfc"
-fem.threads.partitioningmethod = recursive
 
 [threading]
 max_count = 1

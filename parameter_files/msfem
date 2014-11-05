@@ -41,11 +41,6 @@ file = ms.log
 # logging directory relative to datadir
 dir = logdata
 
-
-[fem]
-#available: "recursive", "kway", "sfc"
-fem.threads.partitioningmethod = recursive
-
 [threading]
 max_count = 1
 
