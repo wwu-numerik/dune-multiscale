@@ -32,8 +32,8 @@
     #define HAVE_SIONLIB 0
 #endif
 
-#ifdef NDEBUG
-  #define DNDEBUG
+#if defined(NDEBUG) && not defined(DNDEBUG)
+  #define DNDEBUG 1
 #endif
 
 

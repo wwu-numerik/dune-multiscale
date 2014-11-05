@@ -37,6 +37,7 @@ public:
 
 private:
   const CorrectionsMapType corrections_;
+  const CommonTraits::GridViewType view_;
   const LeafIndexSetType& index_set_;
   const std::unique_ptr<LocalGridSearch> search_;
 };
