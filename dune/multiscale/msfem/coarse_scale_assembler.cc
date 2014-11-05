@@ -30,7 +30,7 @@ MsFEMCodim0Integral::apply(LocalSolutionManager& localSolutionManager,
                            const MsFEMCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
                            const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType& ansatzBase,
                            Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
-                           std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>& tmpLocalMatrices) const {
+                           std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>& /*tmpLocalMatrices*/) const {
   auto& diffusion_operator = DMP::getDiffusion();
 
   // quadrature
