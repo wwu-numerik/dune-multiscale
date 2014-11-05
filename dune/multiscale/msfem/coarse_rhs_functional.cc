@@ -42,7 +42,6 @@ void RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirich
   const size_t numLocalBaseFunctions = testBase.size();
 
   ret *= 0.0;
-  assert(tmpLocalVectors.size() >= numTmpObjectsRequired_);
 
   const auto numQuadraturePoints = volumeQuadrature.size();
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
