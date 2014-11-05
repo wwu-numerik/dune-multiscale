@@ -56,7 +56,9 @@ std::map<std::string, double> msfem_algorithm() {
   CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
   coarse_grid_visualization.visualize(OutputParameters().fullpath(coarse_grid_visualization.name()));
 
-  return ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0);
+  if(!DSC_CONFIG_GET("global.skip_error", false))
+    return ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0);
+  return decltype(ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0))();
 } // function algorithm
 
 
