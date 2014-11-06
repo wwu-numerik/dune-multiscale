@@ -3,6 +3,7 @@
 datadir = data
 output_walltime = 1
 vtk_output = 0
+skip_error = 1
 
 [grids]
 macro_cells_per_dim = [2 2 2]
@@ -43,6 +44,6 @@ file = ms.log
 dir = logdata
 
 [threading]
-max_count = 1
+max_count = 4
 
 
