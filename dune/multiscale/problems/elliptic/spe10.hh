@@ -74,7 +74,7 @@ public:
 public:
   DirichletData() {}
 
-  void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
+  void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const;
 };
 
 class NeumannData : public NeumannDataBase {
@@ -83,7 +83,7 @@ public:
 public:
   NeumannData() {}
 
-  void evaluate(const typename FunctionSpaceType::DomainType& x, typename FunctionSpaceType::RangeType& y) const;
+  void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const;
 };
 
 MSNULLFUNCTION(DirichletBoundaryCondition)

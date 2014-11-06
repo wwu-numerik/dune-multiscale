@@ -73,17 +73,17 @@ PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
   const double d_x0_coefficient_0 =
       pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (2.0 * M_PI)) * (1.0 / epsilon) * sin_2_pi_x0_eps;
 
-  const typename FunctionSpaceType::RangeType grad_u =
+  const auto grad_u =
       (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) +
       ((-1.0) * epsilon * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
       (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
 
-  const typename FunctionSpaceType::RangeType d_x0_x0_u =
+  const auto d_x0_x0_u =
       -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
       (2.0 * pi_square * (epsilon + (1.0 / epsilon)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
       (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
-  const typename FunctionSpaceType::RangeType d_x1_x1_u =
+  const auto d_x1_x1_u =
       -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
       (2.0 * pi_square * epsilon * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 

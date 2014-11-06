@@ -84,7 +84,7 @@ void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
 Source::Source() {}
 
 void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y) const {
-  y = typename FunctionSpaceType::RangeType(0.0);
+  y = typename CommonTraits::RangeType(0.0);
 } // evaluate
 
 Diffusion::Diffusion()

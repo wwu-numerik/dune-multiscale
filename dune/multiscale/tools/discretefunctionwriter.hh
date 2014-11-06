@@ -63,19 +63,15 @@ public:
       : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
       , index_(0) {}
 
-    void append(const DiscreteFunction_ptr& df) {
+    void append(const DiscreteFunction_ptr& /*df*/) {
       const std::string fn = (dir_ / DSC::toString(index_++)).string();
       DSC::testCreateDirectory(fn);
-
-      Fem::XDRFileOutStream ss(fn);
-      df->write(ss);
+      DUNE_THROW(NotImplemented, "");
     }
 
-    void read(const unsigned long index, DiscreteFunction_ptr& df) {
+    void read(const unsigned long index, DiscreteFunction_ptr& /*df*/) {
       const std::string fn = (dir_ / DSC::toString(index)).string();
-
-      Fem::XDRFileInStream ss(fn);
-      df->read(ss);
+      DUNE_THROW(NotImplemented, "");
     }
 
   private:
