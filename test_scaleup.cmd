@@ -1,7 +1,8 @@
 #PBS -l nice=-18,walltime=03:00:00,nodes=11:ppn=12
 #PBS -A o0num
+#PBS -k oe
 #PBS -m ae
-#PBS -M s_kaul01@uni-muenster.de
+#PBS -M r_milk01@wwu.de
 #PBS -q math
 #PBS -N week_21_tests_S
 #PBS -j oe
