@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -l nice=-18,walltime=03:00:00,nodes=1:ppn=12
+#PBS -A o0num
+#PBS -m ae
+#PBS -M r_milk01@wwu.de
+#PBS -j oe
+#PBS -N week_21_tests_S
+#PBS -q math
+#PBS -o data/${PBS_JOBNAME%-*}/$PBS_JOBID/logdata/runlog.log
+
+source /home/r/r_milk01/.bashrc
+export PATH=/home/r/r_milk01/local/bin:$PATH
+
+echo $PATH
+
+module load gcc/4.8.2 
+module load hdf5/parallel/1.8.4 
+module load mpi/openmpi/gcc4.7.2/1.6.3  
+module load git/1.7.8.3
+module load likwid/3.0
+#module load tools/vtune/xe_2011
+#module load python/2.7.3
+. /Applic.PALMA/intel/tbb/bin/tbbvars.sh intel64
+module load cmake/gcc/2.8.12.2
+echo $PWD
+if [ -n "${foobar+1}" ]; then
+  echo 
+else
+  export PBS_O_WORKDIR=/home/r/r_milk01/dune-multiscale-super/dune-multiscale/build-gcc
+fi
+cd $PBS_O_WORKDIR
+mkdir -p data/${PBS_JOBNAME%-*}/$PBS_JOBID/logdata/
+
+export MPIHOME=/Applic.PALMA/mpi/openmpi/gcc4.7.2/1.6.3 
+likwid-mpirun  -d -mpi=openmpi -np 2  -pin S0:0-5_S1:0-5 -- "./elliptic_msfem ../parameter_files/release -global.datadir data/${PBS_JOBNAME%-*}/$PBS_JOBID"
