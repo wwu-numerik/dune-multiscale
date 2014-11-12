@@ -147,6 +147,13 @@ add_dune_alugrid_flags(elliptic_msfem)
 add_dune_alugrid_flags(elliptic_fem)
 add_dune_alugrid_flags(thread_vis)
 
+add_dune_superlu_flags(multiscale_common)
+add_dune_superlu_flags(multiscale_problem)
+add_dune_superlu_flags(multiscale_msfem)
+add_dune_superlu_flags(elliptic_msfem)
+add_dune_superlu_flags(elliptic_fem)
+add_dune_superlu_flags(thread_vis)
+
 # HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
 
