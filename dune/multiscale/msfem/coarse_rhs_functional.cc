@@ -154,9 +154,9 @@ void RhsCodim0Vector::assembleLocal(
 }
 
 CoarseRhsFunctional::CoarseRhsFunctional(CoarseRhsFunctional::VectorType& vec,
-                                         const CoarseRhsFunctional::SpaceType& spc, LocalGridList& localGridList)
-  : FunctionalBaseType(vec, spc)
-  , AssemblerBaseType(spc)
+                                         const CoarseRhsFunctional::SpaceType& spc, LocalGridList& localGridList, const CommonTraits::InteriorGridViewType& interior)
+  : FunctionalBaseType(vec, spc, interior)
+  , AssemblerBaseType(spc, interior)
   , local_assembler_(local_functional_, localGridList) {
   this->add_codim0_assembler(local_assembler_, this->vector());
 }

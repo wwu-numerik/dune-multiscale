@@ -116,10 +116,10 @@ void LocalProblemSolver::solve_for_all_cells() {
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   DSC::MinMaxAvg<double> solveTime;
 
+  const auto interior = coarse_space_->grid_view().grid().template leafGridView<Interior_Partition>();
+  GDT::SystemAssembler<CommonTraits::SpaceType, decltype(interior)> walker(*coarse_space_, interior);
 
-  GDT::SystemAssembler<CommonTraits::SpaceType> walker(*coarse_space_);
-
-  auto func = [&](const CommonTraits::EntityType& coarseEntity) {
+  const auto func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
     DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 

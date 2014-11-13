@@ -39,7 +39,8 @@ LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
 
-  for (const auto& coarse_entity : DSC::entityRange(coarseSpace_.grid_view())) {
+  const auto interior = coarseSpace_.grid_view().grid().template leafGridView<Interior_Partition>();
+  for (const auto& coarse_entity : DSC::entityRange(interior)) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
     assert(coarse_entity.partitionType() == Dune::InteriorEntity);

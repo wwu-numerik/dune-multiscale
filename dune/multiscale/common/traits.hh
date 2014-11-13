@@ -88,6 +88,7 @@ struct CommonTraits {
   static constexpr auto st_gdt_grid_level = 0;
 
   typedef SpaceType::GridViewType GridViewType;
+  typedef typename GridType::Partition< Interior_Partition >::LeafGridView  InteriorGridViewType;
 
   typedef BackendChooser<SpaceType>::LinearOperatorType LinearOperatorType;
   typedef BackendChooser<SpaceType>::GdtVectorType GdtVectorType;
