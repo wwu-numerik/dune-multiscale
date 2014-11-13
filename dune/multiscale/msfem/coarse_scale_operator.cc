@@ -34,7 +34,7 @@ Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScale
 CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceType& source_space_in,
                                          LocalGridList& localGridList)
   : OperatorBaseType(global_matrix_, source_space_in)
-  , AssemblerBaseType(source_space_in)
+  , AssemblerBaseType(source_space_in, source_space_in.grid_view().grid().template leafGridView<Interior_Partition>())
   , global_matrix_(coarse_space().mapper().size(), coarse_space().mapper().size(),
                    EllipticOperatorType::pattern(coarse_space()))
   , local_assembler_(local_operator_, localGridList)
@@ -42,22 +42,24 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   , dirichlet_projection_(coarse_space()) {
   DSC::Profiler::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
-  CoarseRhsFunctional force_functional(msfem_rhs_.vector(), coarse_space(), localGridList);
+  auto interior = coarse_space().grid_view().grid().template leafGridView<Interior_Partition>();
+  CoarseRhsFunctional force_functional(msfem_rhs_.vector(), coarse_space(), localGridList, interior);
 
   const auto& dirichlet = DMP::getDirichletData();
   const auto& boundary_info = Problem::getModelData()->boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
 
-  GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
+  typedef CommonTraits::InteriorGridViewType InteriorView;
+  GDT::Operators::DirichletProjectionLocalizable<InteriorView, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-  dirichlet_projection_operator(coarse_space().grid_view(), boundary_info, *dirichlet, dirichlet_projection_);
-  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
-  neumann_functional(*neumann, msfem_rhs_.vector(), coarse_space());
+  dirichlet_projection_operator(interior, boundary_info, *dirichlet, dirichlet_projection_);
+  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, InteriorView>
+  neumann_functional(*neumann, msfem_rhs_.vector(), coarse_space(), interior);
 
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);
-  this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
-  this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::GridViewType>(boundary_info));
+  this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::InteriorGridViewType>());
+  this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::InteriorGridViewType>(boundary_info));
   AssemblerBaseType::assemble(true);
 
   // apply the dirichlet zero constraints to restrict the system to H^1_0

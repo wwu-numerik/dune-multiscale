@@ -93,7 +93,7 @@ private:
 class CoarseRhsFunctionalTraits {
   typedef CommonTraits::GdtVectorType VectorImp;
   typedef CommonTraits::SpaceType SpaceImp;
-  typedef typename SpaceImp::GridViewType GridViewImp;
+  typedef typename CommonTraits::InteriorGridViewType GridViewImp;
 
 public:
   typedef Problem::DiffusionBase FunctionType;
@@ -130,7 +130,7 @@ public:
   typedef typename Traits::SpaceType SpaceType;
   typedef typename Traits::GridViewType GridViewType;
 
-  CoarseRhsFunctional(VectorType& vec, const SpaceType& spc, LocalGridList& localGridList);
+  CoarseRhsFunctional(VectorType& vec, const SpaceType& spc, LocalGridList& localGridList, const CommonTraits::InteriorGridViewType &interior);
 
   virtual ~CoarseRhsFunctional(){}
 
