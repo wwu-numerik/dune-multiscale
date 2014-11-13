@@ -89,11 +89,12 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
       global_matrix_, msfem_rhs_.space().communicator());
 
   auto options = Inverse::options("bicgstab.amg.ilu0");
-  options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim);
-  options.set("preconditioner.isotropy_dim", CommonTraits::world_dim);
-  options.set("verbose", true);
-  options.set("preconditioner.verbose", "1");
-  options.set("smoother.verbose", "1");
+  constexpr bool overwrite = true;
+  options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, overwrite);
+  options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, overwrite);
+  options.set("verbose", "2", overwrite);
+  options.set("preconditioner.verbose", "2", overwrite);
+  options.set("smoother.verbose", "2", overwrite);
   inverse.apply(msfem_rhs_.vector(), solution.vector(), options);
 
   if (!solution.dofs_valid())
