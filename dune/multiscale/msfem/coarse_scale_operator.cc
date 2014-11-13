@@ -84,10 +84,17 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
 
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
   DSC_PROFILER.startTiming("msfem.coarse.linearSolver");
-  const typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType inverse(
+  typedef typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType Inverse;
+  const  Inverse inverse(
       global_matrix_, msfem_rhs_.space().communicator());
 
-  inverse.apply(msfem_rhs_.vector(), solution.vector());
+  auto options = Inverse::options("bicgstab.amg.ilu0");
+  options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim);
+  options.set("preconditioner.isotropy_dim", CommonTraits::world_dim);
+  options.set("verbose", true);
+  options.set("preconditioner.verbose", "1");
+  options.set("smoother.verbose", "1");
+  inverse.apply(msfem_rhs_.vector(), solution.vector(), options);
 
   if (!solution.dofs_valid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");
