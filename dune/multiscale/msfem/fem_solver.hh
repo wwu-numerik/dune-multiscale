@@ -20,6 +20,7 @@ class Elliptic_FEM_Solver {
 
 public:
   Elliptic_FEM_Solver();
+  Elliptic_FEM_Solver(GridPtrType grid);
 
   //! - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   //! then:

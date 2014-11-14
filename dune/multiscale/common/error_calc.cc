@@ -15,6 +15,7 @@
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/products/l2.hh>
 #include <dune/gdt/products/h1.hh>
+#include <dune/gdt/operators/prolongations.hh>
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/common/grid_creation.hh>
@@ -82,13 +83,19 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
 
-  const auto fine_grid = make_grids().second;
+  auto grids = make_grids();
+  const auto coarse_grid = grids.first;
+  const auto fine_grid = grids.second;
   const auto fine_space = fem_solution_ ? fem_solution_->space()
                                         : CommonTraits::SpaceChooserType::make_space(*fine_grid);
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(fine_space);
   const auto& grid_view = fine_space.grid_view();
 
-  std::map<std::string, double> csv;
+  Elliptic_FEM_Solver coarse_fem_solver(coarse_grid);
+  auto& coarse_fem_solution = coarse_fem_solver.solve();
+  CommonTraits::DiscreteFunctionType projected_coarse_fem_solution(fine_space);
+  const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(fine_space.grid_view());
+  prolongation_operator.apply(coarse_fem_solution, projected_coarse_fem_solution);
 
   CommonTraits::DiscreteFunctionType fine_msfem_solution(fine_space, "MsFEM_Solution");
   if (msfem_solution_) {
@@ -100,7 +107,9 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     }
   }
 
-  const string msfem_exact = "msfem_exact", fem_exact = "fem_exact", msfem_fem = "msfem_fem";
+
+  const string msfem_exact = "msfem_exact", fem_exact = "fem_exact", coarse_fem_exact = "coarse_fem_exact",
+      msfem_fem = "msfem_fem";
   unordered_map<string, DifferenceType> differences;
   unordered_map<string, DiscreteDifferenceType> discrete_differences;
   unordered_map<string, L2ErrorAnalytical> l2_analytical_errors;
@@ -129,6 +138,11 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
       system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
     }
+    const auto name = forward_as_tuple(coarse_fem_exact);
+    const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, projected_coarse_fem_solution)).first->second;
+    const auto product_args = forward_as_tuple(grid_view, difference, over_integrate);
+    system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
+    system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
   }
 
   if (msfem_solution_ && fem_solution_) {
@@ -144,6 +158,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   system_assembler.assemble(true);
 
+  std::map<std::string, double> csv;
   if (Problem::getModelData()->hasExactSolution()) {
     if (msfem_solution_) {
       const auto msfem_error = std::sqrt(l2_analytical_errors.at(msfem_exact).apply2());
@@ -157,13 +172,20 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
     if (fem_solution_) {
       const auto fem_error = std::sqrt(l2_analytical_errors.at(fem_exact).apply2());
-      out << "|| u_fem - u_exact ||_L2 =  " << fem_error << std::endl;
+      out << "|| u_fem_h - u_exact ||_L2 =  " << fem_error << std::endl;
       const auto h1_fem_error = std::sqrt(h1s_analytical_errors.at(fem_exact).apply2());
-      out << "|| u_fem - u_exact ||_H1s =  " << h1_fem_error << std::endl << std::endl;
+      out << "|| u_fem_h - u_exact ||_H1s =  " << h1_fem_error << std::endl << std::endl;
 
       csv[fem_exact + "_L2"] = fem_error;
       csv[fem_exact + "_H1s"] = h1_fem_error;
     }
+    const auto fem_error = std::sqrt(l2_analytical_errors.at(coarse_fem_exact).apply2());
+    out << "|| u_fem_H - u_exact ||_L2 =  " << fem_error << std::endl;
+    const auto h1_fem_error = std::sqrt(h1s_analytical_errors.at(coarse_fem_exact).apply2());
+    out << "|| u_fem_H - u_exact ||_H1s =  " << h1_fem_error << std::endl << std::endl;
+
+    csv[coarse_fem_exact + "_L2"] = fem_error;
+    csv[coarse_fem_exact + "_H1s"] = h1_fem_error;
   }
 
   if (msfem_solution_ && fem_solution_) {

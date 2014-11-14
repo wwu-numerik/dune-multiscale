@@ -47,6 +47,7 @@ public:
 private:
   const std::unique_ptr<LocalsolutionProxy>& msfem_solution_;
   std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution_ptr_;
+  std::unique_ptr<CommonTraits::DiscreteFunctionType> coarse_fem_solution_ptr_;
   CommonTraits::ConstDiscreteFunctionType* fem_solution_;
   std::unique_ptr<Elliptic_FEM_Solver> fem_solver_;
 };
