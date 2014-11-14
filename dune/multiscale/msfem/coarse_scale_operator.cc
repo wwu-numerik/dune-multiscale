@@ -95,6 +95,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   options.set("verbose", "2", overwrite);
   options.set("preconditioner.verbose", "2", overwrite);
   options.set("smoother.verbose", "2", overwrite);
+  options.set("post_check_solves_system", "0", overwrite);
   inverse.apply(msfem_rhs_.vector(), solution.vector(), options);
 
   if (!solution.dofs_valid())
