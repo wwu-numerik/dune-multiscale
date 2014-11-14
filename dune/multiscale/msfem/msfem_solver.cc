@@ -51,7 +51,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_li
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
 
   LocalsolutionProxy::CorrectionsMapType local_corrections;
-  for (auto& coarse_entity : DSC::entityRange(coarse_space.grid_view())) {
+  const auto interior = coarse_space.grid_view().grid().template leafGridView<Interior_Partition>();
+  for (auto& coarse_entity : DSC::entityRange(interior)) {
     LocalSolutionManager localSolManager(coarse_space, coarse_entity, localgrid_list);
     localSolManager.load();
     auto& localSolutions = localSolManager.getLocalSolutions();
