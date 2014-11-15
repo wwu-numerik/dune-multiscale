@@ -94,7 +94,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
       boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
   system_assembler.add(dirichlet_constraints, system_matrix /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.add(dirichlet_constraints, rhs_vector /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  system_assembler.assemble(true);
+  system_assembler.assemble(DSC_CONFIG_GET("global.smp_constraints", false));
   DSC_PROFILER.stopTiming("fem.constraints");
 
   // solve the system
