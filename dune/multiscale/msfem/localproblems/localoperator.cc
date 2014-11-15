@@ -127,12 +127,9 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 
   typedef BackendChooser<LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
-  const auto localProblemSolver =
-      DSC::make_unique<LocalInverseOperatorType>(system_matrix_, current_rhs.space().communicator());
-  /*1e-8, 1e-8, 20000,
-DSC_CONFIG_GET("msfem.localproblemsolver_verbose", false), solver,
-DSC_CONFIG_GET("preconditioner_type", std::string("sor")), 1);*/
-  localProblemSolver->apply(current_rhs.vector(), current_solution.vector());
+  const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
+  const auto options = local_inverse.options("bicgstab.ilut");
+  local_inverse.apply(current_rhs.vector(), current_solution.vector(), options);
 
   if (!current_solution.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
