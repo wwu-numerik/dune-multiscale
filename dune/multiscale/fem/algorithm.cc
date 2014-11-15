@@ -10,6 +10,7 @@
 #include <dune/multiscale/common/error_calc.hh>
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
+#include <dune/multiscale/tools/misc/outputparameter.hh>
 
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/configuration.hh>
@@ -25,7 +26,9 @@ void cgfem_algorithm() {
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
-    solution.visualize("solution.vtk");
+    Dune::Multiscale::OutputParameters outputparam;
+    outputparam.set_prefix("cg-fem_solution_");
+    solution.visualize(outputparam.fullpath(solution.name()));
   }
   if(!DSC_CONFIG_GET("global.skip_error", false))
     ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO_0);
