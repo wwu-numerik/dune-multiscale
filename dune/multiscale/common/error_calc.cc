@@ -41,14 +41,21 @@ typedef DGP::H1SemiLocalizable<CommonTraits::GridViewType, DifferenceType> H1sEr
 typedef DGP::H1SemiLocalizable<CommonTraits::GridViewType, DiscreteDifferenceType> H1sErrorDiscrete;
 typedef DGP::L2Localizable<CommonTraits::GridViewType, CommonTraits::ConstDiscreteFunctionType> DiscreteL2;
 
-void solution_output(const CommonTraits::DiscreteFunctionType& msfem_solution) {
+void solution_output(const CommonTraits::DiscreteFunctionType& solution, std::string name = "msfem_solution_") {
   using namespace Dune;
 
   Dune::Multiscale::OutputParameters outputparam;
-  outputparam.set_prefix("msfem_solution_");
-  msfem_solution.visualize(outputparam.fullpath(msfem_solution.name()));
+  outputparam.set_prefix(name);
+  solution.visualize(outputparam.fullpath(solution.name()));
 }
+template <typename L, typename R>
+void solution_output(const DSFu::Difference<L,R>& solution, const CommonTraits::GridViewType& view, std::string name) {
+  using namespace Dune;
 
+  Dune::Multiscale::OutputParameters outputparam;
+  outputparam.set_prefix(name);
+  solution.visualize(view, outputparam.fullpath(solution.name()), true, VTK::appendedbase64);
+}
 void data_output(const CommonTraits::GridViewType& gridPart) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
@@ -201,6 +208,12 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
     csv[msfem_fem + "_L2"] = approx_msfem_error;
     csv[msfem_fem + "_H1s"] = h1_approx_msfem_error;
+  }
+
+  if (DSC_CONFIG_GET("global.vtk_output", false)) {
+    DSC_LOG_INFO_0 << "Differences output for MsFEM Solution." << std::endl;
+    for(const auto& mpair : differences)
+      solution_output(mpair.second, grid_view, mpair.first);
   }
 
   std::unique_ptr<boost::filesystem::ofstream> csvfile(
