@@ -40,6 +40,8 @@ find_package(METIS)
 find_package(ParMETIS REQUIRED)
 include(cmake/modules/AddMETISFlags.cmake)
 include(AddParMETISFlags)
+find_package(UMFPack REQUIRED)
+include(AddUMFPackFlags)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
@@ -100,59 +102,37 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   "-pipe" "-fomit-frame-pointer" "-O3" "-fno-alias" )
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
-set(ENABLE_PETSC 0 CACHE BOOLEAN "")
 set(GRIDDIM 3 CACHE STRING "")
 set(USE_ISTL_BACKEND 1 CACHE BOOLEAN "use dune-istl as the la-backend. Disable to use Eigen3 instead.")
 set(USE_FEM_BACKEND 0 CACHE BOOLEAN "use dune-fem as the discretization-backend. Disable to use dune-pdelab instead.")
 
-add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=${GRIDDIM}" ${PETSC_DEFINITIONS} -DMETISNAMEL )
+add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=${GRIDDIM}" -DMETISNAMEL )
 ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
 
-add_dune_mpi_flags(OBJECT multiscale_common)
-add_dune_mpi_flags(OBJECT multiscale_problem)
-add_dune_mpi_flags(OBJECT multiscale_msfem)
-
-add_dune_metis_flags(multiscale_common multiscale_problem multiscale_msfem)
-add_dune_parmetis_flags(multiscale_common multiscale_problem multiscale_msfem)
-
-set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${PETSC_LIBRARIES} ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES})
-
-include_directories( ${PETSC_INCLUDES} ${TBB_INCLUDE_DIRS} )
-set(ALL_MULTISCALE_LIBS multiscale_msfem  ${COMMON_LIBS} )
+set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES})
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
-add_dune_mpi_flags(elliptic_msfem)
 
 ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
-add_dune_mpi_flags(elliptic_fem)
 
 ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
 # TARGET_LINK_LIBRARIES(fail ${COMMON_LIBS} )
-add_dune_mpi_flags(fail)
-
-add_dune_parmetis_flags(elliptic_msfem elliptic_fem fail)
 
 ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
-add_dune_mpi_flags(thread_vis)
 
-add_dune_alugrid_flags(OBJECT multiscale_common)
-add_dune_alugrid_flags(OBJECT multiscale_problem)
-add_dune_alugrid_flags(OBJECT multiscale_msfem)
-add_dune_alugrid_flags(elliptic_msfem)
-add_dune_alugrid_flags(elliptic_fem)
-add_dune_alugrid_flags(thread_vis)
-
-add_dune_superlu_flags(multiscale_common)
-add_dune_superlu_flags(multiscale_problem)
-add_dune_superlu_flags(multiscale_msfem)
-add_dune_superlu_flags(elliptic_msfem)
-add_dune_superlu_flags(elliptic_fem)
-add_dune_superlu_flags(thread_vis)
+foreach(target multiscale_common multiscale_problem multiscale_msfem elliptic_msfem elliptic_fem thread_vis)
+  add_dune_metis_flags(${target})
+  add_dune_parmetis_flags(${target})
+  add_dune_superlu_flags(${target})
+  add_dune_umfpack_flags(${target})
+  add_dune_alugrid_flags(${target})
+  add_dune_mpi_flags(${target})
+endforeach()
 
 # HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
