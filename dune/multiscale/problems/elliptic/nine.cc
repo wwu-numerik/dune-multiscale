@@ -106,15 +106,6 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
   flux[0][1] = eval[1][1] * direction[0][1];
 } // diffusiveFlux
 
-PURE void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
-                                           const Problem::JacobianRangeType& /*direction_gradient*/,
-                                           Problem::JacobianRangeType& flux) const {
-  Diffusion::RangeType eval;
-  evaluate(x, eval);
-  flux[0][0] = eval[0][0] * direction[0][0];
-  flux[0][1] = eval[1][1] * direction[0][1];
-}
-
 size_t Diffusion::order() const { return 5; }
 
 PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {

@@ -130,12 +130,6 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
   permMatrix_.mv(direction[0], flux[0]);
 } // diffusiveFlux
 
-void Diffusion::jacobianDiffusiveFlux(const DomainType& /*x*/, const Problem::JacobianRangeType& /*position_gradient*/,
-                                      const Problem::JacobianRangeType& /*direction_gradient*/,
-                                      Problem::JacobianRangeType& /*flux*/) const {
-  DUNE_THROW(NotImplemented, "Jacobian of Flux is not implemented at the moment!");
-} // jacobianDiffusiveFlux
-
 void Diffusion::readPermeability() {
   permeability_ = new double[3366000];
   std::string filename = "../dune/multiscale/problems/elliptic/spe10_permeability.dat";

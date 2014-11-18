@@ -68,10 +68,6 @@ public:
   PURE HOT void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
                               Problem::JacobianRangeType& flux) const;
 
-  //! HMM-only
-  PURE void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                                  const Problem::JacobianRangeType& direction_gradient,
-                                  Problem::JacobianRangeType& flux) const;
   virtual size_t order() const;
 };
 
@@ -82,6 +78,10 @@ public:
   PURE HOT void evaluate(const DomainType& x, RangeType& y) const;
   PURE HOT void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
   virtual size_t order() const { return 3; }
+  virtual std::string name() const
+  {
+    return "problem9.exact";
+  }
 };
 
 class DirichletData : public DirichletDataBase {
