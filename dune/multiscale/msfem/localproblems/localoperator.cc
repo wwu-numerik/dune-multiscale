@@ -128,7 +128,8 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
 
   typedef BackendChooser<LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
-  const auto options = local_inverse.options("bicgstab.ilut");
+  auto options = local_inverse.options(DSC_CONFIG_GET("msfem.localproblemsolver_type","umfpack"));
+  options["verbose"] = DSC_CONFIG_GET("msfem.localproblemsolver_verbose", "0");
   local_inverse.apply(current_rhs.vector(), current_solution.vector(), options);
 
   if (!current_solution.dofs_valid())
