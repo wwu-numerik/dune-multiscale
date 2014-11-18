@@ -6,13 +6,13 @@ vtk_output = 0
 skip_error = 1
 
 [grids]
-macro_cells_per_dim = [2 2 2]
-micro_cells_per_macrocell_dim = [4 4 4]
-overlap = 0
+macro_cells_per_dim = [3 3 3]
+micro_cells_per_macrocell_dim = [10 10 10]
+overlap = 1
 
 [msfem]
 # number of oversampling layers (layers of fine grid elements)
-oversampling_layers = 0
+oversampling_layers = 1
 
 # VTK output for the solutions of the local problems
 local_corrections_vtk_output = 0
@@ -44,6 +44,6 @@ file = ms.log
 dir = logdata
 
 [threading]
-max_count = 4
+max_count = 1
 
 
