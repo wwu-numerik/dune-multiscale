@@ -54,7 +54,7 @@ void solution_output(const DSFu::Difference<L,R>& solution, const CommonTraits::
 
   Dune::Multiscale::OutputParameters outputparam;
   outputparam.set_prefix(name);
-  solution.visualize(view, outputparam.fullpath(solution.name()), true, VTK::appendedraw);
+  solution.visualize(view, outputparam.fullpath(solution.name()));
 }
 void data_output(const CommonTraits::GridViewType& gridPart) {
   using namespace Dune;
@@ -213,6 +213,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Differences output for MsFEM Solution." << std::endl;
     for(const auto& mpair : differences)
+      solution_output(mpair.second, grid_view, mpair.first);
+    for(const auto& mpair : discrete_differences)
       solution_output(mpair.second, grid_view, mpair.first);
     solution_output(coarse_fem_solution, "cg-fem_solution_");
   }
