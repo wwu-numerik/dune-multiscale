@@ -61,7 +61,10 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::InteriorGridViewType>());
   this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::InteriorGridViewType>(boundary_info));
   AssemblerBaseType::assemble(true);
-
+  // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
+  CommonTraits::GdtVectorType tmp(coarse_space().mapper().size());
+  global_matrix_.mv(dirichlet_projection_.vector(), tmp);
+  force_functional.vector() -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Spaces::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
   dirichlet_constraints(boundary_info, coarse_space().mapper().maxNumDofs(), coarse_space().mapper().maxNumDofs());
@@ -70,10 +73,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   AssemblerBaseType::assemble(DSC_CONFIG_GET("global.smp_constraints", false));
 
-  // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
-  CommonTraits::GdtVectorType tmp(coarse_space().mapper().size());
-  global_matrix_.mv(dirichlet_projection_.vector(), tmp);
-  force_functional.vector() -= tmp;
+
 }
 
 void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this"); }

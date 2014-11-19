@@ -58,14 +58,14 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   LocalGridDiscreteFunctionType dirichletExtensionLocal(localSpace_, "dirichletExtension");
   CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
 
-  GDT::SystemAssembler<CommonTraits::SpaceType> global_system_assembler_(coarse_space_);
+  GDT::SystemAssembler<CommonTraits::SpaceType> coarse_system_assembler(coarse_space_);
   GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
   coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData()->boundaryInfo(),
                                        *DMP::getDirichletData(), dirichletExtensionCoarse);
-  global_system_assembler_.add(coarse_dirichlet_projection_operator,
+  coarse_system_assembler.add(coarse_dirichlet_projection_operator,
                                new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
-  global_system_assembler_.assemble();
+  coarse_system_assembler.assemble();
   GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
   projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
 
@@ -100,6 +100,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   system_assembler_.add(neumann_functional);
 
   coarseBaseFunc++; // coarseBaseFunc == 1 + numInnerCorrectors
+  assert(coarseBaseFunc == 1 + numInnerCorrectors);
   // dirichlet corrector
   typedef DirichletProduct DirichletEvaluationType;
   typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
@@ -111,7 +112,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   DirichletCorrectorFunctionalType dirichlet_corrector(local_diffusion_operator_, dl_vector, localSpace_,
                                                        dl_corrector_functional);
   system_assembler_.add(dirichlet_corrector);
-
+  system_assembler_.assemble();
   // dirichlet-0 for all rhs
   typedef DSG::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
   system_assembler_.add(dirichletConstraints_, system_matrix_, new OnLocalBoundaryEntities());
