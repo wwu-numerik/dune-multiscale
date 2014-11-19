@@ -119,6 +119,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     system_assembler_.add(dirichletConstraints_, rhs->vector(), new OnLocalBoundaryEntities());
 
   system_assembler_.assemble();
+  local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(system_matrix_.backend(),
+                                                                   DSC_CONFIG_GET("msfem.localproblemsolver_verbose", 0));
 }
 
 void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
@@ -128,10 +130,14 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
 
   typedef BackendChooser<LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
+
   auto options = local_inverse.options(DSC_CONFIG_GET("msfem.localproblemsolver_type","umfpack"));
   options["verbose"] = DSC_CONFIG_GET("msfem.localproblemsolver_verbose", "0");
-  local_inverse.apply(current_rhs.vector(), current_solution.vector(), options);
-
+  {
+    InverseOperatorResult stat;
+    auto writable_rhs = current_rhs.vector().copy();
+    local_direct_inverse_->apply(current_solution.vector().backend(), writable_rhs.backend(), stat);
+  }
   if (!current_solution.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
 }
