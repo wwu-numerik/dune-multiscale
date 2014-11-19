@@ -5,10 +5,13 @@
 #ifndef LOCALOPERATOR_HH
 #define LOCALOPERATOR_HH
 
+#include <memory>
+
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/gdt/assembler/system.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/msfem/diffusion_evaluation.hh>
+#include <dune/istl/umfpack.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -36,6 +39,8 @@ class LocalProblemOperator {
   typedef GDT::Spaces::Constraints::Dirichlet<typename MsFEMTraits::LocalGridViewType::Intersection,
                                               CommonTraits::RangeFieldType> DirichletConstraintsType;
   typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
+  
+  typedef UMFPack<typename LocalLinearOperatorType::BackendType>  LocalDirectInverseType;
 
 public:
   LocalProblemOperator(const CoarseSpaceType& coarse_space, const LocalSpaceType& subDiscreteFunctionSpace);
@@ -63,6 +68,7 @@ private:
   BoundaryInfoType boundaryInfo_;
   DirichletConstraintsType dirichletConstraints_;
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
+  std::unique_ptr<LocalDirectInverseType> local_direct_inverse_;
 };
 
 } // namespace Multiscale {
