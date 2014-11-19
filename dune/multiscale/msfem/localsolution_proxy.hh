@@ -33,10 +33,12 @@ public:
 
   std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;
 
+  void add(const CommonTraits::DiscreteFunctionType& coarse_func);
+
   LocalGridSearch& search() const;
 
 private:
-  const CorrectionsMapType corrections_;
+  CorrectionsMapType corrections_;
   const CommonTraits::GridViewType view_;
   const LeafIndexSetType& index_set_;
   const std::unique_ptr<LocalGridSearch> search_;
