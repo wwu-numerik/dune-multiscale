@@ -29,7 +29,6 @@ Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType&
 
 void Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTraits::DiscreteFunctionType &coarse_func)
 {
-  const auto& coarse_space = coarse_func.space();
   CorrectionsMapType targets;
   for (auto& cr : corrections_) {
     targets[cr.first] = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(cr.second->space(), "tmpcorrection");
