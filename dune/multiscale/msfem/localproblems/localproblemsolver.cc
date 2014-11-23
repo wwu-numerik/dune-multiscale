@@ -17,6 +17,7 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/fem/localmatrix_proxy.hh>
+# include <dune/grid/utility/partitioning/seedlist.hh>
 #include <dune/gdt/products/l2.hh>
 #include <dune/stuff/grid/walker.hh>
 #include <dune/stuff/grid/walker/functors.hh>
@@ -117,7 +118,10 @@ void LocalProblemSolver::solve_for_all_cells() {
   DSC::MinMaxAvg<double> solveTime;
 
   const auto interior = coarse_space_->grid_view().grid().template leafGridView<InteriorBorder_Partition>();
-  GDT::SystemAssembler<CommonTraits::SpaceType, decltype(interior)> walker(*coarse_space_, interior);
+  typedef decltype(interior) InteriorType;
+  GDT::SystemAssembler<CommonTraits::SpaceType,InteriorType> walker(*coarse_space_, interior);
+  Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
+  SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
 
   const auto func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
@@ -137,7 +141,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   };
 
   walker.add(func);
-  walker.assemble(true);
+  walker.assemble(partitioning);
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;
