@@ -16,8 +16,8 @@
 #include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/fem/localmatrix_proxy.hh>
-# include <dune/grid/utility/partitioning/seedlist.hh>
+#include <dune/stuff/common/parallel/partitioner.hh>
+#include <dune/grid/utility/partitioning/seedlist.hh>
 #include <dune/gdt/products/l2.hh>
 #include <dune/stuff/grid/walker.hh>
 #include <dune/stuff/grid/walker/functors.hh>
@@ -118,7 +118,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   DSC::MinMaxAvg<double> solveTime;
 
   const auto interior = coarse_space_->grid_view().grid().template leafGridView<InteriorBorder_Partition>();
-  typedef decltype(interior) InteriorType;
+  typedef std::remove_const<decltype(interior)>::type InteriorType;
   GDT::SystemAssembler<CommonTraits::SpaceType,InteriorType> walker(*coarse_space_, interior);
   Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
