@@ -20,6 +20,8 @@
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/coarse_rhs_functional.hh>
+#include <dune/stuff/common/parallel/partitioner.hh>
+#include <dune/grid/utility/partitioning/seedlist.hh>
 #include <sstream>
 
 namespace Dune {
@@ -42,7 +44,10 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   , dirichlet_projection_(coarse_space()) {
   DSC::Profiler::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
-  auto interior = coarse_space().grid_view().grid().template leafGridView<InteriorBorder_Partition>();
+  const auto interior = coarse_space().grid_view().grid().template leafGridView<InteriorBorder_Partition>();
+  typedef std::remove_const<decltype(interior)>::type InteriorType;
+  Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
+  SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
   CoarseRhsFunctional force_functional(msfem_rhs_.vector(), coarse_space(), localGridList, interior);
 
   const auto& dirichlet = DMP::getDirichletData();
@@ -60,7 +65,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(force_functional);
   this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::InteriorGridViewType>());
   this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::InteriorGridViewType>(boundary_info));
-  AssemblerBaseType::assemble(true);
+  AssemblerBaseType::assemble(partitioning);
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(coarse_space().mapper().size());
   global_matrix_.mv(dirichlet_projection_.vector(), tmp);
@@ -71,9 +76,10 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  AssemblerBaseType::assemble(DSC_CONFIG_GET("global.smp_constraints", false));
-
-
+  if(DSC_CONFIG_GET("global.smp_constraints", false))
+    AssemblerBaseType::assemble(false);
+  else
+    AssemblerBaseType::assemble(partitioning);
 }
 
 void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this"); }
