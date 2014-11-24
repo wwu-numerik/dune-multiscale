@@ -25,7 +25,8 @@
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-
+#include <dune/stuff/common/parallel/partitioner.hh>
+#include <dune/grid/utility/partitioning/seedlist.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
@@ -35,11 +36,11 @@ namespace DGP = Dune::GDT::Products;
 typedef DSFu::Difference<Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType> DifferenceType;
 typedef DSFu::Difference<CommonTraits::ConstDiscreteFunctionType, CommonTraits::ConstDiscreteFunctionType>
 DiscreteDifferenceType;
-typedef DGP::L2Localizable<CommonTraits::GridViewType, DifferenceType> L2ErrorAnalytical;
-typedef DGP::L2Localizable<CommonTraits::GridViewType, DiscreteDifferenceType> L2ErrorDiscrete;
-typedef DGP::H1SemiLocalizable<CommonTraits::GridViewType, DifferenceType> H1sErrorAnalytical;
-typedef DGP::H1SemiLocalizable<CommonTraits::GridViewType, DiscreteDifferenceType> H1sErrorDiscrete;
-typedef DGP::L2Localizable<CommonTraits::GridViewType, CommonTraits::ConstDiscreteFunctionType> DiscreteL2;
+typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, DifferenceType> L2ErrorAnalytical;
+typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> L2ErrorDiscrete;
+typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DifferenceType> H1sErrorAnalytical;
+typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> H1sErrorDiscrete;
+typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, CommonTraits::ConstDiscreteFunctionType> DiscreteL2;
 
 void solution_output(const CommonTraits::ConstDiscreteFunctionType& solution, std::string name = "msfem_solution_") {
   using namespace Dune;
@@ -95,7 +96,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   const auto fine_grid = grids.second;
   const auto fine_space = fem_solution_ ? fem_solution_->space()
                                         : CommonTraits::SpaceChooserType::make_space(*fine_grid);
-  GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(fine_space);
+  const CommonTraits::InteriorGridViewType fine_interior_view = fine_space.grid_view().grid().template leafGridView<InteriorBorder_Partition>();
+  Stuff::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
+  SeedListPartitioning<typename CommonTraits::InteriorGridViewType::Grid, 0> partitioning(fine_interior_view, ip);
+  GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(fine_space, fine_interior_view);
   const auto& grid_view = fine_space.grid_view();
 
   Elliptic_FEM_Solver coarse_fem_solver(coarse_grid);
@@ -163,7 +167,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     system_assembler.add(*l2_msfem);
   }
 
-  system_assembler.assemble(true);
+  system_assembler.assemble(partitioning);
 
   std::map<std::string, double> csv;
   if (Problem::getModelData()->hasExactSolution()) {
