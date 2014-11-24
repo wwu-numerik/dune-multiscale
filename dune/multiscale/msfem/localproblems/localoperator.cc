@@ -18,6 +18,7 @@
 #include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/problems/elliptic/nine.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
@@ -55,19 +56,21 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   //      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
   //      " and the dirichlet- and neuman corrector");
 
-  LocalGridDiscreteFunctionType dirichletExtensionLocal(localSpace_, "dirichletExtension");
-  CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
-
   GDT::SystemAssembler<CommonTraits::SpaceType> coarse_system_assembler(coarse_space_);
-  GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
-                                                 CommonTraits::DiscreteFunctionType>
-  coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData()->boundaryInfo(),
-                                       *DMP::getDirichletData(), dirichletExtensionCoarse);
-  coarse_system_assembler.add(coarse_dirichlet_projection_operator,
-                               new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
-  coarse_system_assembler.assemble();
-  GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
-  projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
+  LocalGridDiscreteFunctionType dirichletExtensionLocal(localSpace_, "dirichletExtension");
+  {
+    const DMP::Nine::DirichletData dirichlet_data;
+    CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
+    GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
+                                                   CommonTraits::DiscreteFunctionType>
+    coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData()->boundaryInfo(),
+                                         dirichlet_data, dirichletExtensionCoarse);
+    coarse_system_assembler.add(coarse_dirichlet_projection_operator,
+                                 new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+    coarse_system_assembler.assemble();
+    GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
+    projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
+  }
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
