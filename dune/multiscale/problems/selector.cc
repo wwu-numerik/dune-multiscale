@@ -30,13 +30,15 @@ struct AutoInitBase {
   AutoInitBase()
     : ptr(nullptr) {}
 
+  private:
   virtual ReturnType make() const = 0;
+public:
   const ReturnType& call() {
     if (ptr == nullptr)
       ptr = make();
     return ptr;
   }
-
+private:
   ReturnType ptr;
 };
 
@@ -46,7 +48,7 @@ struct AutoInit : public AutoInitBase<ReturnType> {
   AutoInit()
     : AutoInitBase<ReturnType>()
     , maker([]() { return static_cast<ReturnType>(DSC::make_unique<Function>()); }) {}
-
+private:
   virtual ReturnType make() const { return maker.operator()(); }
   const std::function<ReturnType()> maker;
 };
