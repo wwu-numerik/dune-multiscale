@@ -1,7 +1,8 @@
 #include <config.h>
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/memory.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/stuff/common/parallel/threadstorage.hh>
+
 #include <functional>
 #include <unordered_map>
 #include <map>
@@ -57,7 +58,7 @@ struct AutoInit : public AutoInitBase<ReturnType> {
   }
 
 #define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
-  std::map<std::string, std::shared_ptr<AutoInitBase<ReturnType>>>({MAP_ITEM(Nine, ReturnType, FunctionName),          \
+  DS::PerThreadValue< std::map<std::string, std::shared_ptr<AutoInitBase<ReturnType>>>> funcs({MAP_ITEM(Nine, ReturnType, FunctionName),          \
                                                                     MAP_ITEM(SPE10, ReturnType, FunctionName),         \
                                                                     MAP_ITEM(Tarbert, ReturnType, FunctionName)})
 
@@ -66,7 +67,7 @@ struct AutoInit : public AutoInitBase<ReturnType> {
 */
 
 template <class FunctionType>
-const FunctionType& find_and_call_item(std::map<std::string, std::shared_ptr<AutoInitBase<FunctionType>>>& rets) {
+const FunctionType& find_and_call_item(const std::map<std::string, std::shared_ptr<AutoInitBase<FunctionType>>>& rets) {
   auto it = rets.find(Dune::Multiscale::Problem::name());
   if (it == rets.end())
     DUNE_THROW(Dune::InvalidStateException, "no data for Problem. (toggle PROBLEM_NINE_ONLY?)");
@@ -75,33 +76,33 @@ const FunctionType& find_and_call_item(std::map<std::string, std::shared_ptr<Aut
 }
 
 const Problem::BasePtr& Dune::Multiscale::Problem::getSource() {
-  static auto funcs = FUNCTION_MAP(BasePtr, Source);
-  return find_and_call_item(funcs);
+  static const FUNCTION_MAP(BasePtr, Source);
+  return find_and_call_item(*funcs);
 }
 
 const Problem::BasePtr& Dune::Multiscale::Problem::getExactSolution() {
-  static auto funcs = FUNCTION_MAP(BasePtr, ExactSolution);
-  return find_and_call_item(funcs);
+  static const FUNCTION_MAP(BasePtr, ExactSolution);
+  return find_and_call_item(*funcs);
 }
 
 const std::unique_ptr<const Problem::IModelProblemData>& Dune::Multiscale::Problem::getModelData() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::IModelProblemData>, ModelProblemData);
-  return find_and_call_item(funcs);
+  static const FUNCTION_MAP(std::unique_ptr<const Problem::IModelProblemData>, ModelProblemData);
+  return find_and_call_item(*funcs);
 }
 
 const std::unique_ptr<const Problem::DiffusionBase>& Dune::Multiscale::Problem::getDiffusion() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::DiffusionBase>, Diffusion);
-  return find_and_call_item(funcs);
+  static const FUNCTION_MAP(std::unique_ptr<const Problem::DiffusionBase>, Diffusion);
+  return find_and_call_item(*funcs);
 }
 
 const std::unique_ptr<const Problem::DirichletDataBase>& Dune::Multiscale::Problem::getDirichletData() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::DirichletDataBase>, DirichletData);
-  return find_and_call_item(funcs);
+  static const FUNCTION_MAP(std::unique_ptr<const Problem::DirichletDataBase>, DirichletData);
+  return find_and_call_item(*funcs);
 }
 
 const std::unique_ptr<const Problem::NeumannDataBase>& Dune::Multiscale::Problem::getNeumannData() {
-  static auto funcs = FUNCTION_MAP(std::unique_ptr<const Problem::NeumannDataBase>, NeumannData);
-  return find_and_call_item(funcs);
+  static const FUNCTION_MAP(std::unique_ptr<const Problem::NeumannDataBase>, NeumannData);
+  return find_and_call_item(*funcs);
 }
 
 const std::string& Dune::Multiscale::Problem::name() {
