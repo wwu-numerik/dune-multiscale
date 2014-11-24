@@ -76,7 +76,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  if(DSC_CONFIG_GET("global.smp_constraints", false))
+  if(!DSC_CONFIG_GET("global.smp_constraints", false))
     AssemblerBaseType::assemble(false);
   else
     AssemblerBaseType::assemble(partitioning);
