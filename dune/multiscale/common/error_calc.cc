@@ -137,7 +137,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     if (msfem_solution_) {
       const auto name = forward_as_tuple(msfem_exact);
       const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
-      const auto product_args = forward_as_tuple(grid_view, difference, over_integrate);
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
       system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
       system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
     }
@@ -145,13 +145,13 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     if (fem_solution_) {
       const auto name = forward_as_tuple(fem_exact);
       const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, *fem_solution_)).first->second;
-      const auto product_args = forward_as_tuple(grid_view, difference, over_integrate);
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
       system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
       system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
     }
     const auto name = forward_as_tuple(coarse_fem_exact);
     const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, projected_coarse_fem_solution)).first->second;
-    const auto product_args = forward_as_tuple(grid_view, difference, over_integrate);
+    const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
     system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
     system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
   }
@@ -160,10 +160,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     const auto name = forward_as_tuple(msfem_fem);
     const auto& difference =
         discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_)).first->second;
-    const auto product_args = forward_as_tuple(grid_view, difference, over_integrate);
+    const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
     system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
     system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
-    l2_msfem = DSC::make_unique<DiscreteL2>(grid_view, fine_msfem_solution, over_integrate);
+    l2_msfem = DSC::make_unique<DiscreteL2>(fine_interior_view, fine_msfem_solution, over_integrate);
     system_assembler.add(*l2_msfem);
   }
 
