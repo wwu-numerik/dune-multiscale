@@ -39,7 +39,7 @@ int OutputParameters::outputformat() const {
 bool OutputParameters::separateRankPath() const { return false; }
 
 std::string OutputParameters::macroGridName(const int /*dim*/) const {
-  return Problem::getModelData()->getMacroGridFile();
+  return Problem::getModelData().getMacroGridFile();
 }
 
 std::string OutputParameters::fullpath(const std::string name) {

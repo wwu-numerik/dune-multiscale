@@ -51,15 +51,15 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   CoarseRhsFunctional force_functional(msfem_rhs_.vector(), coarse_space(), localGridList, interior);
 
   const auto& dirichlet = DMP::getDirichletData();
-  const auto& boundary_info = Problem::getModelData()->boundaryInfo();
+  const auto& boundary_info = Problem::getModelData().boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
 
   typedef CommonTraits::InteriorGridViewType InteriorView;
   GDT::Operators::DirichletProjectionLocalizable<InteriorView, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-  dirichlet_projection_operator(interior, boundary_info, *dirichlet, dirichlet_projection_);
+  dirichlet_projection_operator(interior, boundary_info, dirichlet, dirichlet_projection_);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, InteriorView>
-  neumann_functional(*neumann, msfem_rhs_.vector(), coarse_space(), interior);
+  neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), interior);
 
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);
@@ -76,7 +76,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  if(DSC_CONFIG_GET("global.smp_constraints", false))
+  if(!DSC_CONFIG_GET("global.smp_constraints", false))
     AssemblerBaseType::assemble(false);
   else
     AssemblerBaseType::assemble(partitioning);
@@ -99,6 +99,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("verbose", "2", overwrite);
+  options.set("max_iter", "300", overwrite);
   options.set("preconditioner.verbose", "2", overwrite);
   options.set("smoother.verbose", "2", overwrite);
   options.set("post_check_solves_system", "0", overwrite);
