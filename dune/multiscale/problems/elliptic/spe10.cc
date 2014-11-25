@@ -105,7 +105,15 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
                               Problem::JacobianRangeType& flux) const {
   BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
-
+  if(!permeability_) {
+    DSC_LOG_ERROR_0 << "The SPE10-permeability data file could not be opened. This file does\n"
+                   << "not come with the dune-multiscale repository due to file size. To download it\n"
+                   << "execute\n"
+                   << "wget http://www.spe.org/web/csp/datasets/por_perm_case2a.zip\n"
+                   << "unzip the file and move the file 'spe_perm.dat' to\n"
+                   << "dune-multiscale/dune/multiscale/problems/elliptic/spe10_permeability.dat!\n";
+    DUNE_THROW(IOError, "Data file for Groundwaterflow permeability could not be opened!");
+  }
   // 3 is the maximum space dimension
   for (int dim = 0; dim < DomainType::dimension; ++dim)
     permIntervalls_[dim] = std::floor(x[dim] / deltas_[dim]);
@@ -131,21 +139,16 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
 } // diffusiveFlux
 
 void Diffusion::readPermeability() {
-  permeability_ = new double[3366000];
+
   std::string filename = "../dune/multiscale/problems/elliptic/spe10_permeability.dat";
   std::ifstream file(filename.c_str());
   double val;
   if (!file) { // file couldn't be opened
-    DSC_LOG_INFO_0 << "The SPE10-permeability data file could not be opened. This file does\n"
-                   << "not come with the dune-multiscale repository due to file size. To download it\n"
-                   << "execute\n"
-                   << "wget http://www.spe.org/web/csp/datasets/por_perm_case2a.zip\n"
-                   << "unzip the file and move the file 'spe_perm.dat' to\n"
-                   << "dune-multiscale/dune/multiscale/problems/elliptic/spe10_permeability.dat!\n";
-    DUNE_THROW(IOError, "Data file for Groundwaterflow permeability could not be opened!");
+    return;
   }
   file >> val;
   int counter = 0;
+  permeability_ = new double[3366000];
   while (!file.eof()) {
     // keep reading until end-of-file
     permeability_[counter++] = val;
