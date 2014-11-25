@@ -27,8 +27,8 @@ void write_discrete_function(typename CommonTraits::DiscreteFunction_ptr& discre
   outputparam.set_prefix((boost::format("%s_solution") % prefix).str());
   discrete_solution->visualize(outputparam.fullpath(discrete_solution->name()));
 
-  if (Problem::getModelData()->hasExactSolution()) {
-    const auto& u = *Dune::Multiscale::Problem::getExactSolution();
+  if (Problem::getModelData().hasExactSolution()) {
+    const auto& u = Dune::Multiscale::Problem::getExactSolution();
     outputparam.set_prefix("exact_solution");
     u.visualize(discrete_solution->space().grid_view(), outputparam.fullpath(u.name()));
   }
@@ -40,7 +40,7 @@ void print_info(const Problem::IModelProblemData& info, std::ostream& out) {
   const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);
   const int refinement_level_ = DSC_CONFIG_GET("fem.grid_level", 4);
   out << "Log-File for Elliptic Model Problem " << Problem::name() << "." << std::endl << std::endl;
-  if (Problem::getModelData()->linear())
+  if (Problem::getModelData().linear())
     out << "Problem is declared as being LINEAR." << std::endl;
   else
     out << "Problem is declared as being NONLINEAR." << std::endl;

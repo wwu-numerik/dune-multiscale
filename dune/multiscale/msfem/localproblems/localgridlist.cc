@@ -35,7 +35,7 @@ LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<LocalGridType> FactoryType;
-  const auto& gridCorners = Problem::getModelData()->gridCorners();
+  const auto& gridCorners = Problem::getModelData().gridCorners();
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
 

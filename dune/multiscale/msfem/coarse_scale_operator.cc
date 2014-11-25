@@ -51,15 +51,15 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   CoarseRhsFunctional force_functional(msfem_rhs_.vector(), coarse_space(), localGridList, interior);
 
   const auto& dirichlet = DMP::getDirichletData();
-  const auto& boundary_info = Problem::getModelData()->boundaryInfo();
+  const auto& boundary_info = Problem::getModelData().boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
 
   typedef CommonTraits::InteriorGridViewType InteriorView;
   GDT::Operators::DirichletProjectionLocalizable<InteriorView, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-  dirichlet_projection_operator(interior, boundary_info, *dirichlet, dirichlet_projection_);
+  dirichlet_projection_operator(interior, boundary_info, dirichlet, dirichlet_projection_);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, InteriorView>
-  neumann_functional(*neumann, msfem_rhs_.vector(), coarse_space(), interior);
+  neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), interior);
 
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);

@@ -22,37 +22,37 @@ namespace Multiscale {
 namespace Problem {
 
 typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
-const BasePtr& getSource();
-const BasePtr& getExactSolution();
-const std::unique_ptr<const DiffusionBase>& getDiffusion();
-const std::unique_ptr<const IModelProblemData>& getModelData();
-const std::unique_ptr<const DirichletDataBase>& getDirichletData();
-const std::unique_ptr<const NeumannDataBase>& getNeumannData();
+const CommonTraits::FunctionBaseType& getSource();
+const CommonTraits::FunctionBaseType& getExactSolution();
+const DiffusionBase& getDiffusion();
+const IModelProblemData& getModelData();
+const DirichletDataBase& getDirichletData();
+const NeumannDataBase& getNeumannData();
 
 const std::string& name();
 
 template <class IntersectionType>
 typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
 is_neumann(const IntersectionType& face) {
-  return getModelData()->boundaryInfo().neumann(face);
+  return getModelData().boundaryInfo().neumann(face);
 }
 
 template <class IntersectionType>
 typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
 is_neumann(const IntersectionType& face) {
-  return getModelData()->subBoundaryInfo().neumann(face);
+  return getModelData().subBoundaryInfo().neumann(face);
 }
 
 template <class IntersectionType>
 typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
 is_dirichlet(const IntersectionType& face) {
-  return getModelData()->boundaryInfo().dirichlet(face);
+  return getModelData().boundaryInfo().dirichlet(face);
 }
 
 template <class IntersectionType>
 typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
 is_dirichlet(const IntersectionType& face) {
-  return getModelData()->subBoundaryInfo().dirichlet(face);
+  return getModelData().subBoundaryInfo().dirichlet(face);
 }
 
 } //! @} namespace Problem
