@@ -65,8 +65,8 @@ ParameterTree ModelProblemData::boundary_settings() const {
         boundarySettings["dirichlet.0"] = "[0.0 -1.0]";
         break;
       case 3:
-        boundarySettings["dirichlet.0"] = "[0.0 1.0; 0.0]";
-        boundarySettings["dirichlet.1"] = "[0.0 -1.0; 0.0]";
+        boundarySettings["dirichlet.0"] = "[0.0 1.0 0.0]";
+        boundarySettings["dirichlet.1"] = "[0.0 -1.0 0.0]";
     }
   }
   return boundarySettings;
