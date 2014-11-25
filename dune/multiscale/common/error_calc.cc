@@ -61,10 +61,10 @@ void data_output(const CommonTraits::GridViewType& gridPart) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
 
-  if (Problem::getModelData()->hasExactSolution()) {
+  if (Problem::getModelData().hasExactSolution()) {
     const auto& u = Dune::Multiscale::Problem::getExactSolution();
     outputparam.set_prefix("exact_solution");
-    u->visualize(gridPart, outputparam.fullpath(u->name()));
+    u.visualize(gridPart, outputparam.fullpath(u.name()));
   }
 }
 
@@ -131,8 +131,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   constexpr auto pcw = std::piecewise_construct_t();
 
   //! ----------------- compute L2- and H1- errors -------------------
-  if (Problem::getModelData()->hasExactSolution()) {
-    const auto& u = *DMP::getExactSolution();
+  if (Problem::getModelData().hasExactSolution()) {
+    const auto& u = DMP::getExactSolution();
 
     if (msfem_solution_) {
       const auto name = forward_as_tuple(msfem_exact);
@@ -170,7 +170,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   system_assembler.assemble(partitioning);
 
   std::map<std::string, double> csv;
-  if (Problem::getModelData()->hasExactSolution()) {
+  if (Problem::getModelData().hasExactSolution()) {
     if (msfem_solution_) {
       const auto msfem_error = std::sqrt(l2_analytical_errors.at(msfem_exact).apply2());
       out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;

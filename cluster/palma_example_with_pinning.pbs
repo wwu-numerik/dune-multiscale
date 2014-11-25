@@ -7,6 +7,7 @@
 #PBS -N week_21_tests_S
 #PBS -q math
 #PBS -o data/${PBS_JOBNAME%-*}/$PBS_JOBID/logdata/runlog.log
+START=$(date +%s.%N)
 
 source /home/r/r_milk01/.bashrc
 export PATH=/home/r/r_milk01/local/bin:$PATH
@@ -33,3 +34,6 @@ mkdir -p data/${PBS_JOBNAME%-*}/$PBS_JOBID/logdata/
 
 export MPIHOME=/Applic.PALMA/mpi/openmpi/gcc4.7.2/1.6.3 
 likwid-mpirun  -d -mpi=openmpi -np 2  -pin S0:0-5_S1:0-5 -- "./elliptic_msfem ../parameter_files/release -global.datadir data/${PBS_JOBNAME%-*}/$PBS_JOBID"
+END=$(date +%s.%N)
+DIFF=$(echo "$END - $START" | bc)
+pbs_bullet "done -- ${DIFF}s"

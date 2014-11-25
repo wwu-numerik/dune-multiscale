@@ -58,7 +58,7 @@ SetupReturnType setup() {
 
   const auto world_dim = CommonTraits::world_dim;
   typedef CommonTraits::DomainType CoordType;
-  const auto& gridCorners = Problem::getModelData()->gridCorners();
+  const auto& gridCorners = Problem::getModelData().gridCorners();
   CoordType lowerLeft = gridCorners.first;
   CoordType upperRight = gridCorners.second;
 

@@ -95,7 +95,8 @@ public:
     const auto direction = coarseBaseFuncJacs[coarseBaseFunc_];
 
     DMP::JacobianRangeType flux;
-    DMP::getDiffusion()->diffusiveFlux(global_point, direction, flux);
+    //! todo make member
+    DMP::getDiffusion().diffusiveFlux(global_point, direction, flux);
     // evaluate test base
     const std::size_t size = testBase.size();
     const auto transformed_gradients = testBase.jacobian(localPoint);
@@ -192,7 +193,8 @@ public:
 
     DMP::JacobianRangeType flux;
     const auto global_point = entity.geometry().global(localPoint);
-    DMP::getDiffusion()->diffusiveFlux(global_point, direction, flux);
+    //!TODO make member
+    DMP::getDiffusion().diffusiveFlux(global_point, direction, flux);
     // evaluate test base
     const std::size_t size = testBase.size();
     typedef typename Stuff::LocalfunctionSetInterface<E, D, d, R, rT, rCT>::JacobianRangeType JR;

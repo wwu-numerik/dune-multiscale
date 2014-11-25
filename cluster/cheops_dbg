@@ -1,0 +1,25 @@
+#!/bin/bash -l 
+#SBATCH --nodes=1 
+#SBATCH --ntasks-per-node=2 
+#SBATCH --ntasks=2 
+#SBATCH --cpus-per-task=6 
+#SBATCH --mem=2gb 
+#SBATCH --time=00:50:00 
+#SBATCH --account=UniKoeln 
+
+# number of nodes in $SLURM_NNODES (default: 1) 
+
+# number of tasks in $SLURM_NTASKS (default: 1) 
+
+# number of tasks per node in $SLURM_NTASKS_PER_NODE (default: 1) 
+
+# number of threads per task in $SLURM_CPUS_PER_TASK (default: 1) 
+module add openmpi/1.6.5 
+module add gnu/4.8.2
+
+BIN=/scratch/skaulman/dune/dune-multiscale/elliptic_msfem
+NODES=1
+PROCS=2
+OPT="/home/skaulman/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/skaulman/dune/dune-multiscale/DEBUG_ -grids.macro_cells_per_dim 5 -grids.micro_cells_per_macrocell_dim 5  -threading.max_threads 6"
+srun -n $PROCS -N $NODES $BIN ${OPT} 
+

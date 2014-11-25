@@ -1,0 +1,37 @@
+#!/bin/bash -l 
+#SBATCH --nodes=8 
+#SBATCH --ntasks-per-node=2 
+#SBATCH --ntasks=16
+#SBATCH --cpus-per-task=6
+#SBATCH --mem=4gb 
+#SBATCH --time=00:45:00 
+#SBATCH --account=UniKoeln 
+#SBATCH --partition=mpi
+#SBATCH --constraint=[inca12*8]
+
+# number of nodes in $SLURM_NNODES (default: 1) 
+
+# number of tasks in $SLURM_NTASKS (default: 1) 
+
+# number of tasks per node in $SLURM_NTASKS_PER_NODE (default: 1) 
+
+# number of threads per task in $SLURM_CPUS_PER_TASK (default: 1) 
+
+module add openmpi/1.6.5 
+module add gnu/4.8.2
+
+NODES=8
+PROCS=16
+BIN=/scratch/skaulman/dune/dune-multiscale/elliptic_msfem
+OPT="/home/skaulman/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/skaulman/dune/dune-multiscale/speedup_n${PROCS}_32x8 -grids.macro_cells_per_dim 32 -grids.micro_cells_per_macrocell_dim 8  -threading.max_threads 6"
+srun -n $PROCS -N $NODES $BIN ${OPT}
+
+NODES=4
+PROCS=8
+OPT="/home/skaulman/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/skaulman/dune/dune-multiscale/speedup_n${PROCS}_32x8 -grids.macro_cells_per_dim 32 -grids.micro_cells_per_macrocell_dim 8  -threading.max_threads 6"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=2
+PROCS=4
+OPT="/home/skaulman/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/skaulman/dune/dune-multiscale/speedup_n${PROCS}_32x8 -grids.macro_cells_per_dim 32 -grids.micro_cells_per_macrocell_dim 8  -threading.max_threads 6"
+srun -n $PROCS -N $NODES $BIN ${OPT} &

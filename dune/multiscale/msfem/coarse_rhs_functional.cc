@@ -34,7 +34,7 @@ void RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirich
   // quadrature
   typedef Dune::QuadratureRules<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureRules;
   typedef Dune::QuadratureRule<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureType;
-  const size_t integrand_order = diffusion->order() + testBase.order() + over_integrate_;
+  const size_t integrand_order = diffusion.order() + testBase.order() + over_integrate_;
   assert(integrand_order < std::numeric_limits<int>::max());
   const VolumeQuadratureType& volumeQuadrature =
       VolumeQuadratureRules::rule(localGridEntity.type(), int(integrand_order));
@@ -98,10 +98,10 @@ void RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirich
       // subtract neumann-corrector
       directionOfFlux -= allLocalSolutionJacobians[numLocalBaseFunctions][localQuadraturePoint];
 
-      diffusion->diffusiveFlux(quadPointGlobal, directionOfFlux, diffusive_flux);
+      diffusion.diffusiveFlux(quadPointGlobal, directionOfFlux, diffusive_flux);
       reconstructionGradPhi += allLocalSolutionJacobians[ii][localQuadraturePoint];
 
-      f->evaluate(quadPointGlobal, f_x);
+      f.evaluate(quadPointGlobal, f_x);
 
       retRow += integrationFactor * quadratureWeight * (f_x * reconstructionPhi);
       retRow -= integrationFactor * quadratureWeight * (diffusive_flux[0] * reconstructionGradPhi[0]);
