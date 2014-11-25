@@ -51,7 +51,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
 
   typedef CommonTraits::GridViewType GridViewType;
 
-  const auto& boundary_info = Problem::getModelData()->boundaryInfo();
+  const auto& boundary_info = Problem::getModelData().boundaryInfo();
   const auto& neumann = Problem::getNeumannData();
   const auto& dirichlet = Problem::getDirichletData();
   const auto& space = space_;
@@ -63,17 +63,17 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
   auto& solution_vector = solution.vector();
   // left hand side (elliptic operator)
-  EllipticOperatorType elliptic_operator(*Problem::getDiffusion(), system_matrix, space);
+  EllipticOperatorType elliptic_operator(Problem::getDiffusion(), system_matrix, space);
   // right hand side
   GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
-  force_functional(*DMP::getSource(), rhs_vector, space);
+  force_functional(DMP::getSource(), rhs_vector, space);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
-  neumann_functional(*neumann, rhs_vector, space);
+  neumann_functional(neumann, rhs_vector, space);
   // dirichlet boundary values
   CommonTraits::DiscreteFunctionType dirichlet_projection(space);
   GDT::Operators::DirichletProjectionLocalizable<GridViewType, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-  dirichlet_projection_operator(space.grid_view(), boundary_info, *dirichlet, dirichlet_projection);
+  dirichlet_projection_operator(space.grid_view(), boundary_info, dirichlet, dirichlet_projection);
   DSC_PROFILER.startTiming("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space);

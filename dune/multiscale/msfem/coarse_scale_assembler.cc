@@ -36,7 +36,7 @@ MsFEMCodim0Integral::apply(LocalSolutionManager& localSolutionManager,
   // quadrature
   typedef Dune::QuadratureRules<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureRules;
   typedef Dune::QuadratureRule<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureType;
-  const size_t integrand_order = diffusion_operator->order() + ansatzBase.order() + testBase.order() + over_integrate_;
+  const size_t integrand_order = diffusion_operator.order() + ansatzBase.order() + testBase.order() + over_integrate_;
   assert(integrand_order < std::numeric_limits<int>::max());
   const VolumeQuadratureType& volumeQuadrature =
       VolumeQuadratureRules::rule(localGridEntity.type(), int(integrand_order));
@@ -89,7 +89,7 @@ MsFEMCodim0Integral::apply(LocalSolutionManager& localSolutionManager,
         auto reconstructionGradPhij = coarseBaseJacs[jj];
         reconstructionGradPhij += gradLocProbSolj;
         JacobianRangeType diffusive_flux(0.0);
-        diffusion_operator->diffusiveFlux(global_point_in_U_T, reconstructionGradPhii, diffusive_flux);
+        diffusion_operator.diffusiveFlux(global_point_in_U_T, reconstructionGradPhii, diffusive_flux);
         local_integral += diffusive_flux[0] * reconstructionGradPhij[0];
         //! TODO check indexing. Correct wrt pre-gdt, but still
         ret[jj][ii] += local_integral * integrationFactor * quadratureWeight;

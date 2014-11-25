@@ -33,12 +33,12 @@ namespace Multiscale {
 
 LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, const LocalSpaceType& space)
   : localSpace_(space)
-  , local_diffusion_operator_(*DMP::getDiffusion())
+  , local_diffusion_operator_(DMP::getDiffusion())
   , coarse_space_(coarse_space)
   , system_matrix_(localSpace_.mapper().size(), localSpace_.mapper().size(), EllipticOperatorType::pattern(localSpace_))
   , system_assembler_(localSpace_)
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
-  , dirichletConstraints_(Problem::getModelData()->subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
+  , dirichletConstraints_(Problem::getModelData().subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
                           localSpace_.mapper().maxNumDofs()) {
   system_assembler_.add(elliptic_operator_);
 }
@@ -63,7 +63,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
     GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
                                                    CommonTraits::DiscreteFunctionType>
-    coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData()->boundaryInfo(),
+    coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData().boundaryInfo(),
                                          dirichlet_data, dirichletExtensionCoarse);
     coarse_system_assembler.add(coarse_dirichlet_projection_operator,
                                  new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
@@ -97,7 +97,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
 
   // coarseBaseFunc == numInnerCorrectors
   // neumann corrector
-  const auto local_neumann = DMP::getNeumannData()->transfer<MsFEMTraits::LocalEntityType>();
+  const auto local_neumann = DMP::getNeumannData().transfer<MsFEMTraits::LocalEntityType>();
   GDT::Functionals::L2Face<decltype(local_neumann), CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType>
   neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_);
   system_assembler_.add(neumann_functional);
