@@ -99,7 +99,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("verbose", "2", overwrite);
-  options.set("max_iter", "300", overwrite);
+  options.set("max_iter", DSC_CONFIG_GET("msfem.max_coarse_iter", 300u), overwrite);
   options.set("preconditioner.verbose", "2", overwrite);
   options.set("smoother.verbose", "2", overwrite);
   options.set("post_check_solves_system", "0", overwrite);
