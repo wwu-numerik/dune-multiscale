@@ -22,6 +22,8 @@ int handle_exception(const Dune::Exception& exp);
 int handle_exception(const std::exception& exp);
 int handle_exception(const tbb::tbb_exception& exp);
 
+void mem_usage();
+
 } // namespace Dune {
 } // namespace Multiscale {
 

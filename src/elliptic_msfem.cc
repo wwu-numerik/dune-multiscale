@@ -10,8 +10,6 @@
 #include <dune/stuff/common/parallel/helper.hh>
 #include <dune/stuff/common/profiler.hh>
 
-// for rusage
-#include <sys/resource.h>
 #include <tbb/task_scheduler_init.h>
 
 int main(int argc, char** argv) {
@@ -36,23 +34,7 @@ int main(int argc, char** argv) {
     auto max_cpu_time = comm.max(cpu_time);
     DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
-
-    // Compute the peak memory consumption of each processes
-    int who = RUSAGE_SELF;
-    struct rusage usage;
-    getrusage(who, &usage);
-    long peakMemConsumption = usage.ru_maxrss;
-    // compute the maximum and mean peak memory consumption over all processes
-    long maxPeakMemConsumption = comm.max(peakMemConsumption);
-    long totalPeakMemConsumption = comm.sum(peakMemConsumption);
-    long meanPeakMemConsumption = totalPeakMemConsumption / comm.size();
-    // write output on rank zero
-    if (comm.rank() == 0) {
-      std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(
-          DSC::make_ofstream(std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/memory.csv")));
-      *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
-                      << "," << meanPeakMemConsumption << std::endl;
-    }
+    mem_usage();
   }
   catch (Dune::Exception& e) {
     return handle_exception(e);
