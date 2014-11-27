@@ -118,9 +118,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     }
   }
 
-
   const string msfem_exact = "msfem_exact", fem_exact = "fem_exact", coarse_fem_exact = "coarse_fem_exact",
-      msfem_fem = "msfem_fem";
+      msfem_fem = "msfem_fem", msfem_coarse_fem = "msfem_coarse_fem";
   unordered_map<string, DifferenceType> differences;
   unordered_map<string, DiscreteDifferenceType> discrete_differences;
   unordered_map<string, L2ErrorAnalytical> l2_analytical_errors;
@@ -135,11 +134,16 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     const auto& u = DMP::getExactSolution();
 
     if (msfem_solution_) {
-      const auto name = forward_as_tuple(msfem_exact);
-      const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
-      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
-      system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
+      {
+        const auto name = forward_as_tuple(msfem_exact);
+        const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
+        const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
+        system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
+        system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
+      }
+      {
+
+      }
     }
 
     if (fem_solution_) {
@@ -156,15 +160,23 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
   }
 
-  if (msfem_solution_ && fem_solution_) {
-    const auto name = forward_as_tuple(msfem_fem);
+  if(msfem_solution_) {
+    l2_msfem = DSC::make_unique<DiscreteL2>(fine_interior_view, fine_msfem_solution, over_integrate);
+    system_assembler.add(*l2_msfem);
+    const auto name = forward_as_tuple(msfem_coarse_fem);
     const auto& difference =
-        discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_)).first->second;
+        discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution)).first->second;
     const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
     system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
     system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
-    l2_msfem = DSC::make_unique<DiscreteL2>(fine_interior_view, fine_msfem_solution, over_integrate);
-    system_assembler.add(*l2_msfem);
+    if (fem_solution_) {
+      const auto name = forward_as_tuple(msfem_fem);
+      const auto& difference =
+          discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_)).first->second;
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
+      system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
+      system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
+    }
   }
 
   system_assembler.assemble(partitioning);
@@ -199,19 +211,32 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     csv[coarse_fem_exact + "_H1s"] = h1_fem_error;
   }
 
-  if (msfem_solution_ && fem_solution_) {
-    const auto approx_msfem_error = std::sqrt(l2_discrete_errors.at(msfem_fem).apply2());
-    const auto no = std::sqrt(l2_msfem->apply2());
-    if (std::abs(no) > 1e-12)
-      out << "|| u_msfem - u_fem ||_L2 / || u_msfem ||_L2 =  " << approx_msfem_error / no << std::endl;
-    else
-      out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
+  if (msfem_solution_) {
+    const auto norm = std::sqrt(l2_msfem->apply2());
+    out << "|| u_msfem ||_L2 =  " << norm << std::endl;
+    csv["msfem_L2"] = norm;
+    const auto fem_error = std::sqrt(l2_discrete_errors.at(msfem_coarse_fem).apply2());
+    out << "|| u_fem_H - u_msfem ||_L2 =  " << fem_error << std::endl;
+    out << "|| u_fem_H - u_msfem ||_L2 / || u_msfem ||_L2 =  " << fem_error / norm << std::endl;
+    const auto h1_fem_error = std::sqrt(h1s_discrete_errors.at(msfem_coarse_fem).apply2());
+    out << "|| u_fem_H - u_msfem ||_H1s =  " << h1_fem_error << std::endl << std::endl;
 
-    const auto h1_approx_msfem_error = std::sqrt(h1s_discrete_errors.at(msfem_fem).apply2());
-    out << "|| u_msfem - u_fem ||_H1s =  " << h1_approx_msfem_error << std::endl << std::endl;
+    csv[msfem_coarse_fem + "_L2"] = fem_error;
+    csv[msfem_coarse_fem + "_H1s"] = h1_fem_error;
 
-    csv[msfem_fem + "_L2"] = approx_msfem_error;
-    csv[msfem_fem + "_H1s"] = h1_approx_msfem_error;
+    if (fem_solution_) {
+      const auto approx_msfem_error = std::sqrt(l2_discrete_errors.at(msfem_fem).apply2());
+      if (std::abs(norm) > 1e-12)
+        out << "|| u_msfem - u_fem ||_L2 / || u_msfem ||_L2 =  " << approx_msfem_error / norm << std::endl;
+      else
+        out << "|| u_msfem - u_fem ||_L2 =  " << approx_msfem_error << std::endl;
+
+      const auto h1_approx_msfem_error = std::sqrt(h1s_discrete_errors.at(msfem_fem).apply2());
+      out << "|| u_msfem - u_fem ||_H1s =  " << h1_approx_msfem_error << std::endl << std::endl;
+
+      csv[msfem_fem + "_L2"] = approx_msfem_error;
+      csv[msfem_fem + "_H1s"] = h1_approx_msfem_error;
+    }
   }
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
