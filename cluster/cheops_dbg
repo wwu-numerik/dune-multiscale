@@ -4,8 +4,12 @@
 #SBATCH --ntasks=2 
 #SBATCH --cpus-per-task=6 
 #SBATCH --mem=2gb 
-#SBATCH --time=00:50:00 
+#SBATCH --time=00:20:00 
 #SBATCH --account=UniKoeln 
+#SBATCH --partition=devel
+#SBATCH --mail-user=rmilk@uni-koeln.de
+#SBATCH --export=all
+
 
 # number of nodes in $SLURM_NNODES (default: 1) 
 
@@ -14,12 +18,12 @@
 # number of tasks per node in $SLURM_NTASKS_PER_NODE (default: 1) 
 
 # number of threads per task in $SLURM_CPUS_PER_TASK (default: 1) 
-module add openmpi/1.6.5 
-module add gnu/4.8.2
+module add gnu/4.8.2 openmpi/1.6.5 
+source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_release/tbbvars.sh intel64
 
-BIN=/scratch/skaulman/dune/dune-multiscale/elliptic_msfem
+BIN=/scratch/rmilk/dune/dune-multiscale/elliptic_msfem
 NODES=1
 PROCS=2
-OPT="/home/skaulman/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/skaulman/dune/dune-multiscale/DEBUG_ -grids.macro_cells_per_dim 5 -grids.micro_cells_per_macrocell_dim 5  -threading.max_threads 6"
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/DEBUG_ -grids.macro_cells_per_dim 5 -grids.micro_cells_per_macrocell_dim 5  -threading.max_threads 6"
 srun -n $PROCS -N $NODES $BIN ${OPT} 
 

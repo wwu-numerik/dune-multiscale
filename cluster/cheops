@@ -20,23 +20,24 @@
 
 # number of threads per task in $SLURM_CPUS_PER_TASK (default: 1) 
 
-module add openmpi/1.6.5 
-module add gnu/4.8.2
+module add gnu/4.8.2 openmpi/1.6.5 
+source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_debug/tbbvars.sh intel64
+source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_release/tbbvars.sh intel64
 
 NODES=16
 PROCS=32
 MA=32
 MI=16
-BIN=/scratch/skaulman/dbg_dune/dune-multiscale/elliptic_msfem
-OPT="/home/skaulman/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/skaulman/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
+BIN=/scratch/rmilk/dune/dune-multiscale/elliptic_msfem
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
 srun -n $PROCS -N $NODES $BIN ${OPT}
 
 NODES=4
 PROCS=8
-OPT="/home/skaulman/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/skaulman/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
 #srun -n $PROCS -N $NODES $BIN ${OPT} &
 
 NODES=2
 PROCS=4
-OPT="/home/skaulman/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/skaulman/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
 #srun -n $PROCS -N $NODES $BIN ${OPT} &
