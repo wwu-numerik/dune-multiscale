@@ -33,15 +33,6 @@ include(DuneMacros)
 
 # start a dune project with information from dune.module
 dune_project()
-include(DuneUtils)
-include(DuneMPI)
-
-find_package(METIS)
-find_package(ParMETIS REQUIRED)
-include(cmake/modules/AddMETISFlags.cmake)
-include(AddParMETISFlags)
-find_package(UMFPack REQUIRED)
-include(AddUMFPackFlags)
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
