@@ -163,12 +163,14 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   if(msfem_solution_) {
     l2_msfem = DSC::make_unique<DiscreteL2>(fine_interior_view, fine_msfem_solution, over_integrate);
     system_assembler.add(*l2_msfem);
-    const auto name = forward_as_tuple(msfem_coarse_fem);
-    const auto& difference =
-        discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution)).first->second;
-    const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-    system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
-    system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
+    {
+      const auto name = forward_as_tuple(msfem_coarse_fem);
+      const auto& difference =
+          discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution)).first->second;
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
+      system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
+      system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
+    }
     if (fem_solution_) {
       const auto name = forward_as_tuple(msfem_fem);
       const auto& difference =
