@@ -10,7 +10,7 @@
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/configuration.hh>
 
-#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/operators/elliptic-cg.hh>
 #include <dune/gdt/functionals/l2.hh>

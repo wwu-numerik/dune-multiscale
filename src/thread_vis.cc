@@ -16,7 +16,7 @@
 #include <dune/stuff/common/parallel/threadmanager.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
 
-#include <dune/gdt/playground/spaces/finitevolume/default.hh>
+#include <dune/gdt/spaces/fv/default.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -41,8 +41,8 @@ void partition_vis_single(CommonTraits::GridType& grid, std::string function_nam
 {
   const auto threadnum = DS::threadManager().max_threads();
   //Dune::Fem::Parameter::replace(std::string("fem.threads.partitioningmethod"), std::string("kway"));
-  auto view_ptr = std::make_shared<CommonTraits::GridViewType> (grid.leafGridView());
-  typedef GDT::Spaces::FiniteVolume::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
+  auto view_ptr = grid.leafGridView();
+  typedef GDT::Spaces::FV::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
   typedef BackendChooser<FVSpace>::DiscreteFunctionType FVFunc;
   FVSpace fv_space(view_ptr);
 
@@ -77,22 +77,20 @@ void partition_vis_single(CommonTraits::GridType& grid, std::string function_nam
 //    }
 //  }
 
-  output_all(functions, *view_ptr, function_name+"all");
+  output_all(functions, view_ptr, function_name+"all");
 }
 
 void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fine_grid)
 {
   CommonTraits::GridProviderType coarse_grid_provider(coarse_grid);
   CommonTraits::GridProviderType fine_grid_provider(fine_grid);
-  const CommonTraits::SpaceType coarseSpace =
-      CommonTraits::SpaceProviderType::create(coarse_grid_provider, CommonTraits::st_gdt_grid_level);
-  const CommonTraits::SpaceType fineSpace =
-      CommonTraits::SpaceProviderType::create(fine_grid_provider, CommonTraits::st_gdt_grid_level);
+  const CommonTraits::SpaceType coarseSpace(CommonTraits::SpaceChooserType::PartViewType::create(coarse_grid, CommonTraits::st_gdt_grid_level));
+  const CommonTraits::SpaceType fineSpace(CommonTraits::SpaceChooserType::PartViewType::create(fine_grid, CommonTraits::st_gdt_grid_level));
 
   LocalGridList localgrid_list(coarseSpace);
 
-  auto fine_view_ptr = std::make_shared<CommonTraits::GridViewType> (fine_grid.leafGridView());
-  typedef GDT::Spaces::FiniteVolume::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
+  auto fine_view_ptr = fine_grid.leafGridView();
+  typedef GDT::Spaces::FV::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
   typedef BackendChooser<FVSpace>::DiscreteFunctionType FVFunc;
   FVSpace fv_space(fine_view_ptr);
 
@@ -105,7 +103,6 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
   // horrible, horrible complexity :)
   for(const auto& coarse_entity : coarseSpace)
   {
-    const auto& subgrid = localgrid_list.getSubGrid(coarse_entity);
     const auto& id_set = coarse_grid.globalIdSet();
     const auto coarse_id = id_set.id(coarse_entity);
     auto& oversampled_function = (*oversampled_function_it++);
@@ -119,8 +116,8 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
     {
       if(localgrid_list.covers_strict(coarse_entity, fine_entity.geometry())) {
         auto oversampled_local_function = oversampled_function->local_discrete_function(fine_entity);
-        for (const auto idx : DSC::valueRange(oversampled_local_function.vector().size())) {
-          oversampled_local_function.vector().set(idx, static_cast<unsigned long>(coarse_id+1));
+        for (const auto idx : DSC::valueRange(oversampled_local_function->vector().size())) {
+          oversampled_local_function->vector().set(idx, static_cast<unsigned long>(coarse_id+1));
         }
 //        if (coarse_id == localgrid_list.getEnclosingMacroCellId(CommonTraits::EntityPointerType(fine_entity)))
 //        {
@@ -133,8 +130,8 @@ void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fi
     }
   }
 
-  output_all(oversampled_functions, *fine_view_ptr, "subgrids");
-  output_all(functions, *fine_view_ptr, "coarse_cells");
+  output_all(oversampled_functions, fine_view_ptr, "subgrids");
+  output_all(functions, fine_view_ptr, "coarse_cells");
 }
 
 void partition_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fine_grid) {
@@ -151,7 +148,7 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
 
-    assert(DS::threadManager().max_threads() == DSC_CONFIG_GET("threading.max_count", 1));
+    assert(DS::threadManager().max_threads() == DSC_CONFIG_GET("threading.max_count", 1u));
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output
