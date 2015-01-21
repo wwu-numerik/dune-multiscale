@@ -4,7 +4,7 @@
 #include <dune/stuff/la/container.hh>
 #include <dune/stuff/la/solver.hh>
 #include <dune/gdt/discretefunction/default.hh>
-#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/spaces/cg.hh>
 
 namespace Dune {
 namespace Multiscale {

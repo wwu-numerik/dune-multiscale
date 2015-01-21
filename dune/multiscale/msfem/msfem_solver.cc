@@ -29,7 +29,7 @@
 #include <dune/stuff/discretefunction/projection/heterogenous.hh>
 
 #include <dune/gdt/operators/prolongations.hh>
-#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/gdt/spaces/constraints.hh>

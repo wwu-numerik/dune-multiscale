@@ -105,7 +105,7 @@ public:
                                               FunctionType::dimRange, FunctionType::dimRangeCols>,
           FunctionType>::value,
       "FunctionType has to be derived from Stuff::LocalizableFunctionInterface!");
-  static_assert(std::is_base_of<GDT::SpaceInterface<typename SpaceImp::Traits>, SpaceImp>::value,
+  static_assert(GDT::is_space< SpaceImp >::value,
                 "SpaceImp has to be derived from SpaceInterface!");
 
   typedef GDT::SystemAssembler<SpaceImp, GridViewImp, SpaceImp> SystemAssemblerType;

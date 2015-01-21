@@ -8,7 +8,7 @@
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/common/tuples.hh>
 #include <dune/grid/spgrid.hh>
-#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/operators/elliptic-cg.hh>
 #include <dune/stuff/la/container.hh>
@@ -52,8 +52,8 @@ struct SpaceChooser
   typedef DSG::LeafPartView< G, partview_chooser > PartViewType;
   typedef typename Stuff::Grid::Layer< G, DSG::ChooseLayer::leaf, partview_chooser >::Type GridLayerType;
 private:
-  typedef GDT::Spaces::ContinuousLagrange::PdelabBased< GridLayerType, st_lagrangespace_order, R, r > PdelabType;
-  typedef GDT::Spaces::ContinuousLagrange::FemBased< GridLayerType, st_lagrangespace_order, R, r > FemType;
+  typedef GDT::Spaces::CG::PdelabBased< GridLayerType, st_lagrangespace_order, R, r > PdelabType;
+  typedef GDT::Spaces::CG::FemBased< GridLayerType, st_lagrangespace_order, R, r > FemType;
 public:
   typedef typename std::conditional<(backend_type == GDT::ChooseSpaceBackend::fem), FemType, PdelabType>::type Type;
   static Type make_space(G& g) {

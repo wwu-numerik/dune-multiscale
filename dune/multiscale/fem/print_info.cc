@@ -11,7 +11,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/gdt/spaces/continuouslagrange.hh>
+#include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
 
 #include <memory>
