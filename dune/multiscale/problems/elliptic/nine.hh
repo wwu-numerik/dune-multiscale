@@ -56,7 +56,7 @@ public:
   Source();
 
   PURE HOT void evaluate(const DomainType& x, RangeType& y) const;
-  virtual size_t order() const { return 3; }
+  virtual size_t order() const;
 };
 
 class Diffusion : public DiffusionBase {
@@ -77,7 +77,7 @@ public:
 
   PURE HOT void evaluate(const DomainType& x, RangeType& y) const;
   PURE HOT void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
-  virtual size_t order() const { return 3; }
+  virtual size_t order() const;
   virtual std::string name() const
   {
     return "problem9.exact";
