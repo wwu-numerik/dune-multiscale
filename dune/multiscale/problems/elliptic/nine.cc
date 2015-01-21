@@ -88,7 +88,7 @@ PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
       (2.0 * pi_square * epsilon * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
-} // evaluate
+}
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
   const double x0_eps = (x[0] / epsilon);
@@ -106,7 +106,9 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
   flux[0][1] = eval[1][1] * direction[0][1];
 } // diffusiveFlux
 
-size_t Diffusion::order() const { return 5; }
+size_t Diffusion::order() const { return 2; }
+size_t Source::order() const { return 1; } // evaluate
+size_t ExactSolution::order() const { return 1; }
 
 PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   // approximation obtained by homogenized solution + first corrector
