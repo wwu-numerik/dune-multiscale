@@ -9,7 +9,6 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
 #include <boost/noncopyable.hpp>
-#include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
