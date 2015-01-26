@@ -24,6 +24,7 @@
 #include <dune/stuff/grid/information.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/provider.hh>
+#include <dune/stuff/common/profiler.hh>
 #include <dune/gdt/discretefunction/default.hh>
 
 #include <cmath>
@@ -46,6 +47,7 @@ namespace Multiscale {
 std::map<std::string, double> msfem_algorithm() {
   using namespace Dune;
 
+  DSC::ScopedTiming algo("msfem.algorithm");
   auto grid = make_coarse_grid();
   const CommonTraits::SpaceType coarseSpace(CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);

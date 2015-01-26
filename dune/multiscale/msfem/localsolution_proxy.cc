@@ -30,7 +30,7 @@ Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType&
 
 void Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTraits::DiscreteFunctionType &coarse_func)
 {
-  DSC::Profiler::ScopedTiming st("proxy.add");
+  DSC::ScopedTiming st("proxy.add");
   CorrectionsMapType targets;
   for (auto& cr : corrections_) {
     targets[cr.first] = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(cr.second->space(), "tmpcorrection");

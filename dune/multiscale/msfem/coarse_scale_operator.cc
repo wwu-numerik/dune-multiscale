@@ -42,7 +42,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   , local_assembler_(local_operator_, localGridList)
   , msfem_rhs_(coarse_space(), "MsFEM right hand side")
   , dirichlet_projection_(coarse_space()) {
-  DSC::Profiler::ScopedTiming st("msfem.coarse.assemble");
+  DSC::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
   const auto interior = coarse_space().grid_view().grid().template leafGridView<InteriorBorder_Partition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
@@ -76,7 +76,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  if(!DSC_CONFIG_GET("global.smp_constraints", false))
+  if(!DSC_CONFIG_GET("threading.smp_constraints", false))
     AssemblerBaseType::assemble(false);
   else
     AssemblerBaseType::assemble(partitioning);
@@ -86,7 +86,7 @@ void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "
 
 void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
 
-  DSC::Profiler::ScopedTiming st("msfem.coarse.solve");
+  DSC::ScopedTiming st("msfem.coarse.solve");
 
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
   DSC_PROFILER.startTiming("msfem.coarse.linearSolver");
