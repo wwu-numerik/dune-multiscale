@@ -1,16 +1,18 @@
 #!/bin/bash -l 
-#SBATCH --nodes=16 
-#SBATCH --ntasks-per-node=2 
-#SBATCH --ntasks=32
-#SBATCH --cpus-per-task=6
+#SBATCH --nodes=128
+#SBATCH --ntasks-per-node=1 
+#SBATCH --ntasks=128
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=4gb 
-#SBATCH --time=00:15:00 
+#SBATCH --time=01:00:00 
 #SBATCH --account=UniKoeln 
 #SBATCH --partition=mpi
-#SBATCH --constraint=[inca12*16]
+#SBATCH --constraint=[inca12*128]
 #SBATCH --exclusive
 #SBATCH -o out_%j_%N
 #SBATCH -e out_%j_%N.err
+#SBATCH --mail-user=rmilk@uni-koeln.de
+#SBATCH --mail-type=end 
 
 # number of nodes in $SLURM_NNODES (default: 1) 
 
@@ -21,23 +23,87 @@
 # number of threads per task in $SLURM_CPUS_PER_TASK (default: 1) 
 
 module add gnu/4.8.2 openmpi/1.6.5 
-source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_debug/tbbvars.sh intel64
+#source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_debug/tbbvars.sh intel64
 source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_release/tbbvars.sh intel64
 
-NODES=16
-PROCS=32
-MA=32
-MI=16
+MA=16
+MI=8
 BIN=/scratch/rmilk/dune/dune-multiscale/elliptic_msfem
-OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
+COMMON="-threading.partition_factor 8"
+SUF="PART_FACTOR"
+
+NODES=128
+PROCS=128
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
 srun -n $PROCS -N $NODES $BIN ${OPT}
 
-NODES=4
+NODES=64
+PROCS=64 
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=32
+PROCS=32
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=16
+PROCS=16
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=8
 PROCS=8
-OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
-#srun -n $PROCS -N $NODES $BIN ${OPT} &
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=4
+PROCS=4
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
 
 NODES=2
+PROCS=2
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT}  
+
+##########################################
+
+
+COMMON=""
+SUF="SMP_CONSTRAINTS"
+
+NODES=128
+PROCS=128
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT}
+
+NODES=64
+PROCS=64 
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=32
+PROCS=32
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=16
+PROCS=16
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=8
+PROCS=8
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=4
 PROCS=4
-OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_n${PROCS}_${MA}x${MI} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count 6"
-#srun -n $PROCS -N $NODES $BIN ${OPT} &
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT} &
+
+NODES=2
+PROCS=2
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops -global.datadir /scratch/rmilk/dune/dune-multiscale/speedup_12C_n${PROCS}_${MA}x${MI}_${SUF} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI ${COMMON}"
+srun -n $PROCS -N $NODES $BIN ${OPT}  

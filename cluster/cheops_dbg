@@ -8,7 +8,7 @@
 #SBATCH --account=UniKoeln 
 #SBATCH --partition=devel
 #SBATCH --mail-user=rmilk@uni-koeln.de
-#SBATCH --export=all
+#SBATCH --mail-type=end 
 
 
 # number of nodes in $SLURM_NNODES (default: 1) 
