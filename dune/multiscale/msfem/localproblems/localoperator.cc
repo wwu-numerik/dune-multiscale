@@ -10,12 +10,9 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/common/exceptions.hh>
 #include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/fem/localmatrix_proxy.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
-#include <dune/stuff/fem/functions/integrals.hh>
+#include <dune/multiscale/common/heterogenous.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/problems/elliptic/nine.hh>

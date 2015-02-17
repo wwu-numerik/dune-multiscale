@@ -4,7 +4,6 @@
 
 #include <dune/stuff/common/exceptions.hh>
 #include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/grid/walker.hh>
 #include <dune/gdt/operators/projections.hh>

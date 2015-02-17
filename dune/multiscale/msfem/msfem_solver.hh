@@ -9,7 +9,6 @@
 #include <dune/common/typetraits.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/stuff/fem/functions/checks.hh>
 
 #include <dune/multiscale/common/la_backend.hh>
 

@@ -13,6 +13,7 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/common/heterogenous.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
@@ -21,12 +22,10 @@
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 
-#include <dune/stuff/fem/functions/checks.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
 
 #include <dune/gdt/operators/prolongations.hh>
 #include <dune/gdt/spaces/cg.hh>

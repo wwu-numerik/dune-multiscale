@@ -29,7 +29,7 @@
 #include <dune/grid/utility/partitioning/seedlist.hh>
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
+#include <dune/multiscale/common/heterogenous.hh>
 
 using namespace Dune::Multiscale;
 namespace DGP = Dune::GDT::Products;

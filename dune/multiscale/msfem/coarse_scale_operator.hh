@@ -12,9 +12,6 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/stuff/common/logging.hh>
-#include <dune/stuff/fem/functions/checks.hh>
-#include <dune/stuff/fem/localmatrix_proxy.hh>
-#include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/gdt/assembler/system.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
