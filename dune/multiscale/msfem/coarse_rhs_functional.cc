@@ -10,7 +10,6 @@
 #include <dune/stuff/common/profiler.hh>
 #include <memory>
 
-#include <dune/stuff/fem/functions/integrals.hh>
 #include <dune/stuff/functions/femadapter.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc.hh>
