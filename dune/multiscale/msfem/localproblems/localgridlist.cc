@@ -39,7 +39,7 @@ LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
 
-  const auto interior = coarseSpace_.grid_view().grid().template leafGridView<InteriorBorder_Partition>();
+  const auto interior = coarseSpace_.grid_view().grid().leafGridView<InteriorBorder_Partition>();
   for (const auto& coarse_entity : DSC::entityRange(interior)) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
