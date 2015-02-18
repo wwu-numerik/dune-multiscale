@@ -8,6 +8,7 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
+#include <dune/multiscale/common/heterogenous.hh>
 
 template <typename T>
 std::vector<typename T::GlobalCoordinate> corners(const T& geo) {
@@ -41,7 +42,7 @@ struct PointsAndStuff : public GridAndSpaces {
       for (const auto& ent : DSC::entityRange(grid.leafGridView())) {
         const auto& geo = ent.geometry();
         const auto cor = corners(geo);
-        const auto lp = DS::global_evaluation_points(space, ent);
+        const auto lp = global_evaluation_points(space, ent);
         EXPECT_EQ(cor, lp);
       }
     }
@@ -52,7 +53,7 @@ struct PointsAndStuff : public GridAndSpaces {
     LocalGridSearch search(coarseSpace, localgrid_list);
 
     for (const auto& ent : fineSpace) {
-      const auto lg_points = DS::global_evaluation_points(fineSpace, ent);
+      const auto lg_points = global_evaluation_points(fineSpace, ent);
       for(auto  lg : lg_points) {
         bool found = false;
         for (const auto& coarse_ent : DSC::entityRange(grids_.first->leafGridView())) {
@@ -68,7 +69,7 @@ struct PointsAndStuff : public GridAndSpaces {
     LocalGridSearch search(coarseSpace, localgrid_list);
 
     for (const auto& ent : fineSpace) {
-      const auto lg_points = DS::global_evaluation_points(fineSpace, ent);
+      const auto lg_points = global_evaluation_points(fineSpace, ent);
       const auto evaluation_entity_ptrs = search(lg_points);
       EXPECT_GE(evaluation_entity_ptrs.size(), lg_points.size());
     }
