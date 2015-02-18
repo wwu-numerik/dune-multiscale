@@ -6,6 +6,7 @@
 #include <dune/gdt/products/l2.hh>
 #include <functional>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
+#include <dune/multiscale/common/heterogenous.hh>
 
 using namespace Dune::GDT;
 
@@ -21,7 +22,7 @@ struct Projection : public GridAndSpaces {
       const auto coarse_index = coarse_indexset.index(coarse_entity);
       local_corrections[coarse_index] =
           DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), " ");
-      Operators::apply_projection(lambda, *local_corrections[coarse_index]);
+      Operators::project(lambda, *local_corrections[coarse_index]);
     }
     return local_corrections;
   }
@@ -35,7 +36,7 @@ struct Projection : public GridAndSpaces {
     LocalsolutionProxy proxy(std::move(local_corrections), coarseSpace, localgrid_list);
 
     CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
-    DS::MsFEMProjection::project(proxy, fine_scale_part, proxy.search());
+    MsFEMProjection::project(proxy, fine_scale_part, proxy.search());
 
     const auto norm = std::sqrt(Dune::GDT::Products::L2< CommonTraits::GridViewType >(fineSpace.grid_view())
                                     .induced_norm(fine_scale_part));
