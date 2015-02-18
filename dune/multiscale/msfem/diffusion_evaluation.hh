@@ -201,8 +201,7 @@ public:
     DMP::getDiffusion().diffusiveFlux(global_point, direction, flux);
     // evaluate test base
     const std::size_t size = testBase.size();
-    typedef typename Stuff::LocalfunctionSetInterface<E, D, d, R, rT, rCT>::JacobianRangeType JR;
-    const std::vector<JR> grad_phi_s = testBase.jacobian(localPoint);
+    const auto grad_phi_s = testBase.jacobian(localPoint);
 
     // compute product
     assert(ret.size() >= size);
