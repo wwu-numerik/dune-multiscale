@@ -22,7 +22,7 @@ struct Projection : public GridAndSpaces {
       const auto coarse_index = coarse_indexset.index(coarse_entity);
       local_corrections[coarse_index] =
           DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), " ");
-      Operators::apply_projection(lambda, *local_corrections[coarse_index]);
+      GDT::project(lambda, *local_corrections[coarse_index]);
     }
     return local_corrections;
   }
