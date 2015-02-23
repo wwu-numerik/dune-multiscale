@@ -134,16 +134,11 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     const auto& u = DMP::getExactSolution();
 
     if (msfem_solution_) {
-      {
-        const auto name = forward_as_tuple(msfem_exact);
-        const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
-        const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-        system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
-        system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
-      }
-      {
-
-      }
+      const auto name = forward_as_tuple(msfem_exact);
+      const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
+      system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
+      system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
     }
 
     if (fem_solution_) {
