@@ -30,6 +30,7 @@
 #include <dune/stuff/common/filesystem.hh>
 #include <dune/stuff/common/configuration.hh>
 #include <dune/multiscale/common/heterogenous.hh>
+#include <dune/multiscale/msfem/fem_solver.hh>
 
 using namespace Dune::Multiscale;
 namespace DGP = Dune::GDT::Products;
