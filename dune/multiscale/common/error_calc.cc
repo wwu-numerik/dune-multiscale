@@ -187,7 +187,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       out << "|| u_msfem - u_exact ||_H1s =  " << h1_msfem_error << std::endl << std::endl;
 
       csv[msfem_exact + "_L2"] = msfem_error;
-      csv[msfem_exact + "H1s"] = h1_msfem_error;
+      csv[msfem_exact + "_H1s"] = h1_msfem_error;
     }
 
     if (fem_solution_) {
