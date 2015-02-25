@@ -45,10 +45,17 @@ TEST_P(MsFemCompare, All) {
   EXPECT_GT(expected_errors["msfem_exact_H1s"], found->second);
 }
 
+//template < int foo >
+//struct VC {
+//  static auto values() -> decltype(testing::Values(/*m_small, */m_large)) {
+//    return testing::Values(/*m_small,*/ m_large);
+//  }
+//};
+
 template < int foo >
 struct VC {
-  static auto values() -> decltype(testing::Values(m_small, m_large)) {
-    return testing::Values(m_small, m_large);
+  static auto values() -> decltype(testing::Values(/*m_small, */m_large)) {
+    return testing::Values(m_large);
   }
 };
 

@@ -22,7 +22,6 @@
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/stuff/common/float_cmp.hh>
-#include <dune/stuff/discretefunction/projection/heterogenous.hh>
 #include <dune/stuff/common/configuration.hh>
 
 #include <boost/filesystem.hpp>

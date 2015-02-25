@@ -34,9 +34,12 @@ const LocalSolutionManager::LocalSpaceType& LocalSolutionManager::space() const 
 }
 
 void LocalSolutionManager::load() {
+  assert(localSolutions_.size() >= numLocalProblems_);
   for (unsigned int i = 0; i < numLocalProblems_; ++i) {
-    localSolutions_[i]->vector() *= 0;
-    memory_backend_.read(i, localSolutions_[i]);
+    auto& solution = localSolutions_[i];
+    assert(solution);
+    solution->vector() *= 0;
+    memory_backend_.read(i, solution);
   }
 } // load
 
