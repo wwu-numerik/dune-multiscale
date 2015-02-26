@@ -103,7 +103,7 @@ ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
 ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
 ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
 
-set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES})
+set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common fftw3_mpi ${FFTW_LIBRARIES} ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES})
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
