@@ -14,3 +14,7 @@ find_package(TBB REQUIRED)
 
 find_package(UMFPack REQUIRED)
 include(AddUMFPackFlags)
+
+find_package(FFTW REQUIRED)
+include_directories(${FFTW_INCLUDES})
+message(STATUS ${FFTW_LIBRARIES})
