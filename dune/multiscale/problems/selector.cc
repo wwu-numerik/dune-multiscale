@@ -62,9 +62,19 @@ const Problem::IModelProblemData& Dune::Multiscale::Problem::getModelData() {
   return find_and_call_item(funcs);
 }
 
+Problem::IModelProblemData& Dune::Multiscale::Problem::getMutableModelData() {
+  const auto& data = getModelData();
+  return const_cast<Problem::IModelProblemData&>(data);
+}
+
 const Problem::DiffusionBase& Dune::Multiscale::Problem::getDiffusion() {
   FUNCTION_MAP(Problem::DiffusionBase, Diffusion);
   return find_and_call_item(funcs);
+}
+
+Problem::DiffusionBase& Dune::Multiscale::Problem::getMutableDiffusion() {
+  const auto& diffusion = getDiffusion();
+  return const_cast<Problem::DiffusionBase&>(diffusion);
 }
 
 const Problem::DirichletDataBase& Dune::Multiscale::Problem::getDirichletData() {

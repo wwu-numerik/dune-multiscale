@@ -11,6 +11,7 @@
 #include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <memory>
 #include <string>
 
@@ -52,6 +53,8 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
                                      const Problem::JacobianRangeType& direction_gradient,
                                      Problem::JacobianRangeType& flux) const;
   virtual size_t order() const { return 2; }
+
+  virtual void init(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {};
 };
 
 typedef DiffusionBase::Transfer<MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
@@ -187,6 +190,8 @@ public:
   virtual std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const {
     return {CommonTraits::DomainType(0.0), CommonTraits::DomainType(1.0)};
   }
+
+  virtual void problem_init(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {}
 };
 
 } //! @} namespace Problem
