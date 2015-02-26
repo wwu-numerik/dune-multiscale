@@ -13,6 +13,7 @@
 #include "elliptic/thirteen.hh"
 #include "elliptic/spe10.hh"
 #include "elliptic/tarbert.hh"
+#include "elliptic/random.hh"
 #include "selector.hh"
 
 namespace Dune {
@@ -30,6 +31,7 @@ using namespace Dune::Multiscale;
   static std::map<std::string,const std::unique_ptr<const ReturnType>> mk_map() { \
     std::map<std::string,const std::unique_ptr<const ReturnType>> funcs; \
     funcs.emplace("Nine", std::unique_ptr<const ReturnType>(new DMP::Nine::FunctionName())); \
+    funcs.emplace("Random", std::unique_ptr<const ReturnType>(new DMP::Random::FunctionName())); \
     funcs.emplace("SPE10", std::unique_ptr<const ReturnType>(new DMP::SPE10::FunctionName())); \
     funcs.emplace("Tarbert", std::unique_ptr<const ReturnType>(new DMP::Tarbert::FunctionName())); \
     return funcs; \
