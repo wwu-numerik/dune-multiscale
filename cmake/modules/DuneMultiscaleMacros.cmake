@@ -9,7 +9,7 @@ include(cmake/modules/AddMETISFlags.cmake)
 include(AddParMETISFlags)
 include(CheckEmplace)
 
-find_package(Eigen3 3.2.0 REQUIRED)
+find_package(Eigen3 3.2.0)
 find_package(TBB REQUIRED)
 
 find_package(UMFPack REQUIRED)
