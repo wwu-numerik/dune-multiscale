@@ -1,5 +1,5 @@
-#ifndef PERMEABILITY_HH
-#define PERMEABILITY_HH
+#ifndef DUNE_MULTISCALE_PROBLEMS_RANDOM_PERMEABILITY_HH
+#define DUNE_MULTISCALE_PROBLEMS_RANDOM_PERMEABILITY_HH
 #include<array>
 #include<vector>
 #include<random>
@@ -311,4 +311,4 @@ private:
   std::normal_distribution<double> _normal; ///< normal distribution
 };
 
-#endif
+#endif // DUNE_MULTISCALE_PROBLEMS_RANDOM_

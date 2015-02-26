@@ -25,7 +25,9 @@ typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
 const CommonTraits::FunctionBaseType& getSource();
 const CommonTraits::FunctionBaseType& getExactSolution();
 const DiffusionBase& getDiffusion();
+DiffusionBase& getMutableDiffusion();
 const IModelProblemData& getModelData();
+IModelProblemData& getMutableModelData();
 const DirichletDataBase& getDirichletData();
 const NeumannDataBase& getNeumannData();
 

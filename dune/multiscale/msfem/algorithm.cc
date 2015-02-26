@@ -34,6 +34,7 @@
 
 #include "algorithm.hh"
 #include <dune/multiscale/problems/base.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
@@ -49,6 +50,8 @@ std::map<std::string, double> msfem_algorithm() {
 
   DSC::ScopedTiming algo("msfem.algorithm");
   auto grid = make_coarse_grid();
+  const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
+  Problem::getMutableModelData().problem_init(comm, comm);
   const CommonTraits::SpaceType coarseSpace(CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 
