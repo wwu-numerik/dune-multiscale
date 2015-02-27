@@ -112,6 +112,7 @@ public:
   virtual size_t order() const;
 
   virtual void init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) override;
+  virtual void prepare_new_evaluation() override;
 
 private:
   typedef Correlation<CommonTraits::world_dim, DomainType, double> CorrelationType;

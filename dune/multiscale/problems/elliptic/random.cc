@@ -51,8 +51,14 @@ void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicat
   assert(seed >= 0);
   const int overlap = DSC_CONFIG_GET("grids.overlap", 1u);
   correlation_ = DSC::make_unique<CorrelationType>();
-  DSC::ScopedTiming field_tm("msfem.perm_field");
+  DSC::ScopedTiming field_tm("msfem.perm_field.init");
   field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed+1, overlap);
+}
+
+void Diffusion::prepare_new_evaluation()
+{
+  DSC::ScopedTiming field_tm("msfem.perm_field.init");
+  assert(field_);
   field_->create();
 }
 
