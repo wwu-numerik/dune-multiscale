@@ -1,5 +1,6 @@
 #ifndef DUNE_MULTISCALE_PROBLEMS_RANDOM_PERMEABILITY_HH
 #define DUNE_MULTISCALE_PROBLEMS_RANDOM_PERMEABILITY_HH
+#include<exception>
 #include<array>
 #include<vector>
 #include<random>
@@ -45,6 +46,15 @@ private:
 
 public:
 
+  /// Exception
+  class Error : public std::exception {
+    public:
+      Error(const char* message) : _message(message) {}
+      const char* what() const throw() { return _message; }
+    private:
+      const char* _message;
+  };
+
   /// Default constructor
   Permeability() {
     _fft = NULL;
@@ -53,8 +63,7 @@ public:
 
   /// Copy constructor
   Permeability( const Permeability& old) {
-    std::cerr << "Never copy permeability object!\n";
-    exit(1);
+    throw Error("Never copy permeability object!");
   }
 
   /// Construct basis from parameters.
@@ -96,7 +105,7 @@ public:
       fftw_destroy_plan(_ifft);
     };
 
-    ptrdiff_t i, j, local_size;
+    ptrdiff_t local_size;
     double h;
     X x;
     int _2N = 2*_N;
@@ -121,27 +130,59 @@ public:
                                     FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_OUT); 
       _ifft  = fftw_mpi_plan_dft_2d(_2N,_2N,layer,layer,_comm,FFTW_BACKWARD,
 				    FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_IN); 
-      for(i=0; i<_n0; ++i) {
+      int p=0;
+      for(int i=0; i<_n0; ++i) {
         x[0] = (i+_start>_N)? (_2N-_start-i)*h : (_start+i)*h; 
-	for(j=0; j<_2N; ++j) {
+	for(int j=0; j<_2N; ++j, ++p) {
           x[1] = (j>_N)? (_2N-j)*h : j*h;
-	  base[i*_2N+j][0] = _corr(x); 
-          base[i*_2N+j][1] = 0;
+	  base[p][0] = _corr(x); 
+          base[p][1] = 0;
 	} 
       }
       fftw_execute(_fft);
      
       double factor = 1.0/(_2N*_2N);
-      for(i=0; i<_n0*_2N; ++i) {
-        //assert(base[i]>=0); //XXX
+      for(int i=0; i<_n0*_2N; ++i) {
+        //assert(base[i]>=0); //TODO: clarify
 	base[i][0] = sqrt(factor*fabs(base[i][0]));
         base[i][1] = 0;
       }  
     }
     // Create basis functions in 3D
+    else if(DIM == 3) {
+      local_size = fftw_mpi_local_size_3d(_2N,_2N,_2N,_comm,&_n0,&_start);
+      assert(_n0==_2N/_nProc);
+      _base  = cvec(local_size);
+      fftw_complex* base = (fftw_complex*)_base.data();
+      _layer = cvec(local_size);
+      fftw_complex *layer = (fftw_complex*)_layer.data();
+      _fft   = fftw_mpi_plan_dft_3d(_2N,_2N,_2N,base,base,_comm,FFTW_FORWARD,
+                                    FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_OUT); 
+      _ifft  = fftw_mpi_plan_dft_3d(_2N,_2N,_2N,layer,layer,_comm,FFTW_BACKWARD,
+				    FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_IN);
+      int p=0;
+      for(int i=0; i<_n0; ++i) {
+        x[0] = (i+_start>_N)? (_2N-_start-i)*h : (_start+i)*h; 
+	for(int j=0; j<_2N; ++j) {
+          x[1] = (j>_N)? (_2N-j)*h : j*h;
+          for(int k=0; k<_2N; ++k, ++p) {
+            x[2] = (k>_N)? (_2N-k)*h : k*h;
+	    base[p][0] = _corr(x); 
+            base[p][1] = 0;
+          }
+	} 
+      }
+      fftw_execute(_fft);
+     
+      double factor = 1.0/(_2N*_2N*_2N);
+      for(int i=0; i<_n0*_2N*_2N; ++i) {
+        //assert(base[i]>=0); //TODO: clarify
+	base[i][0] = sqrt(factor*fabs(base[i][0]));
+        base[i][1] = 0;
+      }  
+    }
     else {
-      std::cerr << "Not implemented, yet.\n";
-      exit(1); //XXX
+      throw(Error("Only dimensions 2 and 3 are implemented."));
     }
   } 
 
@@ -211,20 +252,31 @@ private:
     complex *dest = _perm.data();
     if(DIM==2) {
       int stepDest = _size[1];  
-      int source = 0;
-      int rankSource = -1;
       int stepSource = 2*_N;
       for(int i=_iMin[0]; i<=_iMax[0]; ++i) {
-        rankSource = i/_n0;
-        source = (i%_n0)*stepSource + _iMin[1];
+        int rankSource = i/_n0;
+        int source = (i%_n0)*stepSource + _iMin[1];
         MPI_Get(dest, stepDest, MPI_DOUBLE_COMPLEX, rankSource,
               (MPI_Aint) source, stepDest, MPI_DOUBLE_COMPLEX, win);
         dest+= stepDest;
       }
     }
+    else if(DIM==3) {
+      int stepDest = _size[2];
+      int stepSource = 4*_N*_N;
+      for(int i=_iMin[0]; i<=_iMax[0]; ++i) {
+        int rankSource = i/_n0;
+        int source = (i%_n0)*stepSource + 2*_N*_iMin[1] + _iMin[2];
+        for(int j=_iMin[1]; j<=_iMax[1]; j++) {
+          MPI_Get(dest, stepDest, MPI_DOUBLE_COMPLEX, rankSource,
+                (MPI_Aint) source, stepDest, MPI_DOUBLE_COMPLEX, win); 
+          dest+= stepDest;
+          source += 2*_N;
+        }
+      }
+    }
     else {
-      std::cerr << "Not implemented, yet.\n";
-      exit(1); //XXX
+       throw(Error("Only dimensions 2 and 3 are implemented."));
     }
     MPI_Win_fence(MPI_MODE_NOSTORE | MPI_MODE_NOPUT | MPI_MODE_NOSUCCEED, win);
     MPI_Win_free(&win);
@@ -267,20 +319,40 @@ public:
     double t[DIM];
     for(int i=0; i<DIM; ++i) {
       double p = x[i]*_N;
-      if(p<_iMin[i] || p>_iMax[i]) {
-        std::cerr << "outside\n";
-        exit(1);
-      }
+      if(p<_iMin[i] || p>_iMax[i]) 
+        throw Error("outside");
       p    -= _iMin[i];
-      int j = int(p);
+      int j = floor(p);
       t[i]  = p-j;
       cell  = _size[i]*cell + j; 
     }
     if(DIM==2) {
-       return ( (1-t[1])*_perm[cell][_part] 
-             + t[1]*_perm[cell+1][_part])*(1-t[0])
-             +((1-t[1])*_perm[cell+_size[1]][_part] 
-             + t[1]*_perm[cell+_size[1]+1][_part])*t[0];
+      int c00 = cell;
+      int c01 = c00+1;
+      int c10 = c00+_size[1];
+      int c11 = c10+1;
+      return ( (1-t[1])*_perm[c00][_part] 
+             + t[1]*_perm[c01][_part])*(1-t[0])
+             +((1-t[1])*_perm[c10][_part] 
+             + t[1]*_perm[c11][_part])*t[0];
+    }
+    else if (DIM==3) {
+      int c000 = cell;
+      int c001 = c000+1;
+      int c010 = c000+_size[2];
+      int c011 = c010+1;
+      int c100 = c000+_size[1]*_size[2];
+      int c101 = c100+1;
+      int c110 = c100+_size[2];
+      int c111 = c110+1;
+      return  ( ( (1-t[2])*_perm[c000][_part] 
+              + t[2]*_perm[c001][_part])*(1-t[1])
+              + ((1-t[2])*_perm[c010][_part] 
+              + t[2]*_perm[c011][_part])*t[1] ) * (1-t[0])
+              + ( ( (1-t[2])*_perm[c100][_part] 
+              + t[2]*_perm[c101][_part])*(1-t[1])
+              + ((1-t[2])*_perm[c110][_part] 
+              + t[2]*_perm[c111][_part])*t[1] ) * t[0];
     }
     else {
       std::cerr << "Not implemented, yet.\n";
