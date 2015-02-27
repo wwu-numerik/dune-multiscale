@@ -24,9 +24,17 @@ if(NOT (dune-common_DIR OR dune-common_ROOT OR
       ${PROJECT_BINARY_DIR})
 endif()
 
+# guess dune-common build dir
+if(NOT (dune-common_DIR OR dune-common_ROOT OR
+        "${CMAKE_PREFIX_PATH}" MATCHES ".*dune-common.*"))
+    string(REPLACE  ${CMAKE_PROJECT_NAME} dune-common dune-common_DIR
+    ${PROJECT_BINARY_DIR})
+endif()
+
 #find dune-common and set the module path
 find_package(dune-common REQUIRED)
-list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
+list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
+"${PROJECT_SOURCE_DIR}/cmake/modules")
 
 #include the dune macros
 include(DuneMacros)
@@ -89,33 +97,22 @@ set( FEM_SOURCES
         src/elliptic_fem.cc
     )
 
-If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
-  ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native" 
-  "-pipe" "-fomit-frame-pointer" "-O3" "-fno-alias" )
-EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
-
-set(GRIDDIM 3 CACHE STRING "")
-set(USE_ISTL_BACKEND 1 CACHE BOOLEAN "use dune-istl as the la-backend. Disable to use Eigen3 instead.")
-set(USE_FEM_BACKEND 0 CACHE BOOLEAN "use dune-fem as the discretization-backend. Disable to use dune-pdelab instead.")
-
-add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=${GRIDDIM}" -DMETISNAMEL )
-ADD_LIBRARY(multiscale_common STATIC ${COMMON_SOURCES})
-ADD_LIBRARY(multiscale_problem STATIC ${PROBLEM_SOURCES})
-ADD_LIBRARY(multiscale_msfem STATIC ${MSFEM_SOURCES})
-
-set( COMMON_LIBS multiscale_common multiscale_problem multiscale_common fftw3_mpi ${FFTW_LIBRARIES} ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES})
+dune_add_library(multiscale_common ${COMMON_SOURCES} ADD_LIBS ${DUNE_LIBS})
+dune_add_library(multiscale_problem ${PROBLEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
+dune_add_library(multiscale_msfem ${MSFEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
+set( MULTISCALE_LIBS multiscale_common multiscale_problem multiscale_common fftw3_mpi ${FFTW_LIBRARIES} ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES} )
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${COMMON_LIBS} )
+TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${MULTISCALE_LIBS} )
 
 ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_fem ${COMMON_LIBS} )
+TARGET_LINK_LIBRARIES(elliptic_fem ${MULTISCALE_LIBS} )
 
 ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
-# TARGET_LINK_LIBRARIES(fail ${COMMON_LIBS} )
+# TARGET_LINK_LIBRARIES(fail ${MULTISCALE_LIBS} )
 
 ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
+TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${MULTISCALE_LIBS} )
 
 foreach(target multiscale_common multiscale_problem multiscale_msfem elliptic_msfem elliptic_fem thread_vis)
   add_dune_metis_flags(${target})
