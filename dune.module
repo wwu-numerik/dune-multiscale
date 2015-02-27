@@ -4,7 +4,7 @@
 
 #Name of the module
 Module: dune-multiscale
-Version: 1
+Version: 1.0
 Maintainer: rene.milk@wwu.de
 #depending on 
 Depends: dune-grid dune-common dune-istl dune-localfunctions dune-stuff dune-spgrid dune-pdelab dune-gdt
