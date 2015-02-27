@@ -54,7 +54,10 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
                                      Problem::JacobianRangeType& flux) const;
   virtual size_t order() const { return 2; }
 
-  virtual void init(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {};
+  //! call this once per grid setup
+  virtual void init(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {}
+  //! call this once per "run"
+  virtual void prepare_new_evaluation() {}
 };
 
 typedef DiffusionBase::Transfer<MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
@@ -191,7 +194,10 @@ public:
     return {CommonTraits::DomainType(0.0), CommonTraits::DomainType(1.0)};
   }
 
+  //! call this once per grid setup
   virtual void problem_init(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {}
+  //! call this once per "run"
+  virtual void prepare_new_evaluation() {}
 };
 
 } //! @} namespace Problem
