@@ -46,11 +46,13 @@ void ModelProblemData::problem_init(MPIHelper::MPICommunicator global, MPIHelper
 void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)
 {
   const int log2Seg = DSC_CONFIG_GET("grids.macro_cells_per_dim", 4);
-  const int seed = 1; //global->rank() + 1;
+  int seed = 0;
+  MPI_Comm_rank(global, &seed);
+  assert(seed >= 0);
   const int overlap = DSC_CONFIG_GET("grids.overlap", 1u);
   correlation_ = DSC::make_unique<CorrelationType>();
   DSC::ScopedTiming field_tm("msfem.perm_field");
-  field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed, overlap);
+  field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed+1, overlap);
   field_->create();
 }
 
