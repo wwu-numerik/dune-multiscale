@@ -43,19 +43,16 @@ TEST_P(MsFemCompare, All) {
   const auto found2 = errorsMap.find("msfem_exact_H1s");
   EXPECT_NE(found2, end);
   EXPECT_GT(expected_errors["msfem_exact_H1s"], found->second);
+
+  auto second_run = msfem_algorithm();
+  for(auto error_pair : errorsMap)
+    EXPECT_DOUBLE_EQ(error_pair.second, second_run[error_pair.first] );
 }
 
-//template < int foo >
-//struct VC {
-//  static auto values() -> decltype(testing::Values(/*m_small, */m_large)) {
-//    return testing::Values(/*m_small,*/ m_large);
-//  }
-//};
-
-template < int foo >
+template < int >
 struct VC {
-  static auto values() -> decltype(testing::Values(/*m_small, */m_large)) {
-    return testing::Values(m_large);
+  static auto values() -> decltype(testing::Values(m_small, m_large)) {
+    return testing::Values(m_small, m_large);
   }
 };
 
