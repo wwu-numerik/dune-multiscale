@@ -68,6 +68,7 @@ set( COMMON_SOURCES
         # 
         dune/multiscale/msfem/proxygridview.cc
         dune/multiscale/msfem/localproblems/localgridlist.cc
+        dune/multiscale/tools/discretefunctionwriter.cc
     )
 
 set( PROBLEM_SOURCES
