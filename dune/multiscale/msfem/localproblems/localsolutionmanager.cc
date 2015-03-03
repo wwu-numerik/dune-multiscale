@@ -1,10 +1,12 @@
 #include <config.h>
+#include "localsolutionmanager.hh"
+
 #include <boost/format.hpp>
 #include <dune/stuff/common/memory.hh>
 #include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/tools/misc.hh>
-
-#include "localsolutionmanager.hh"
+#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -21,7 +23,7 @@ LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d") %
                             coarse_space.grid_view().grid().leafIndexSet().index(coarseEntity)).str())
-  , memory_backend_(IOType::memory(localSolutionLocation_, grid_view_))
+  , memory_backend_(DiscreteFunctionIO::memory(localSolutionLocation_, grid_view_))
 {
   for (auto& it : localSolutions_)
     it = make_df_ptr<LocalGridDiscreteFunctionType>("Local problem Solution", memory_backend_.space());

@@ -6,18 +6,16 @@
 #define LOCALSOLUTIONMANAGER_HEADERGUARD
 
 #include <dune/multiscale/common/traits.hh>
-#include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
 
 #include <cstddef>
-#include <memory>
 #include <string>
-#include <vector>
 
 namespace Dune {
 namespace Multiscale {
 
+class MemoryBackend;
+class LocalGridList;
 /**
  * @brief One LocalSolutionManager instance per coarse cell
  */
@@ -27,8 +25,6 @@ private:
   typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef MsFEMTraits::LocalSpaceType LocalSpaceType;
-  typedef DiscreteFunctionIO<LocalGridDiscreteFunctionType> IOType;
-
 public:
   LocalSolutionManager(const CommonTraits::SpaceType& coarse_space, const CoarseEntityType& coarseEntity,
                        const LocalGridList& subgridList);
@@ -51,7 +47,7 @@ private:
   const std::size_t numLocalProblems_;
   MsFEMTraits::LocalSolutionVectorType localSolutions_;
   const std::string localSolutionLocation_;
-  typename IOType::MemoryBackend& memory_backend_;
+  MemoryBackend& memory_backend_;
 };
 }
 }
