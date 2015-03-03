@@ -13,9 +13,6 @@ class LocalGridList;
 class LocalGridSearch : public DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType> {
   typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
   typedef DSG::EntitySearchBase<LocalGridViewType> BaseType;
-  typedef typename LocalGridViewType::template Codim<0>::Iterator IteratorType;
-
-  typedef typename BaseType::EntityType::EntityPointer EntityPointer;
 
   typedef DSG::EntityInlevelSearch<LocalGridViewType> PerGridSearchType;
   typedef CommonTraits::SpaceType CoarseGridSpaceType;
@@ -41,6 +38,9 @@ private:
   const LocalGridList& gridlist_;
   std::map<IndexType, std::unique_ptr<PerGridSearchType>> coarse_searches_;
   std::unique_ptr<CoarseEntityPointerType> current_coarse_pointer_;
+  CommonTraits::InteriorGridViewType static_view_;
+  typedef typename CommonTraits::InteriorGridViewType::template Codim<0>::Iterator InteriorIteratorType;
+  std::unique_ptr<InteriorIteratorType> static_iterator_;
 };
 
 } // namespace Multiscale {

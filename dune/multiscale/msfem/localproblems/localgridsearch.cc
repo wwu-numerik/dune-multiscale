@@ -13,12 +13,14 @@ operator()(const PointContainerType& points) {
   const auto is_null = [&](const EPV& ptr) { return ptr == nullptr; };
   const auto not_null = [&](const EPV& ptr) { return ptr != nullptr; };
 
-  // only iterate over inner (non-overlap) entities
-  static const auto view =
-      coarse_space_.grid_view().grid().leafGridView<PartitionIteratorType::InteriorBorder_Partition>();
+  // only iterate over inner (non-overlap), coarse entities
+  const auto& view = static_view_;
 
-  static auto it = view.begin<0>();
+  if(!static_iterator_)
+    static_iterator_ = DSC::make_unique<InteriorIteratorType>(view.begin<0>());
+  auto& it = *static_iterator_ ;
   const auto end = view.end<0>();
+
   EntityPointerVectorType ret_entities(points.size());
   int steps = 0;
   bool did_cover = false;
@@ -66,7 +68,10 @@ bool Dune::Multiscale::LocalGridSearch::covers_strict(const CoarseGridSpaceType:
 Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CoarseGridSpaceType& coarse_space,
                                                    const Dune::Multiscale::LocalGridList& gridlist)
   : coarse_space_(coarse_space)
-  , gridlist_(gridlist) {}
+  , gridlist_(gridlist)
+  , static_view_(coarse_space_.grid_view().grid().leafGridView<PartitionIteratorType::InteriorBorder_Partition>())
+  , static_iterator_(nullptr)
+{}
 
 const Dune::Multiscale::LocalGridSearch::CoarseEntityPointerType&
 Dune::Multiscale::LocalGridSearch::current_coarse_pointer() const {
