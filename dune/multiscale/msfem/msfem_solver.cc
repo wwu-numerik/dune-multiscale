@@ -145,6 +145,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(localgrid_list, coarse_msfem_solution, coarse_space, solution);
   solution->add(coarse_msfem_solution);
+  DiscreteFunctionIO::clear();
 }
 
 } // namespace Multiscale {
