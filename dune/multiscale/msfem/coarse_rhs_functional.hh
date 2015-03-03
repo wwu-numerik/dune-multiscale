@@ -41,7 +41,7 @@ public:
   typedef RhsCodim0IntegralTraits Traits;
 
 private:
-  static const size_t numTmpObjectsRequired_ = 1;
+  static constexpr size_t numTmpObjectsRequired_ = 1;
   typedef Stuff::LocalfunctionSetInterface<CommonTraits::EntityType, CommonTraits::DomainFieldType,
                                            CommonTraits::dimDomain, CommonTraits::RangeFieldType,
                                            CommonTraits::dimRange, 1> TestLocalfunctionSetInterfaceType;
@@ -74,7 +74,7 @@ public:
   const RhsCodim0Integral& localFunctional() const { return localFunctional_; }
 
 private:
-  static const size_t numTmpObjectsRequired_ = 1;
+  static constexpr size_t numTmpObjectsRequired_ = 1;
 
 public:
   std::vector<size_t> numTmpObjectsRequired() const;

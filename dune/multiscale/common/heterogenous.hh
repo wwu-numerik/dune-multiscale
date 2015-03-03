@@ -41,7 +41,7 @@ public:
                       GDT::DiscreteFunction< TargetSpaceImp, TargetVectorImp >& target,
                       SearchStrategyImp& search)
   {
-    static const size_t target_dimRange = TargetSpaceImp::dimRange;
+    constexpr size_t target_dimRange = TargetSpaceImp::dimRange;
 
     const auto& space =  target.space();
 
@@ -96,7 +96,7 @@ protected:
   template<class TargetSpaceImp, class VectorImp>
   static void postprocess(GDT::DiscreteFunction< TargetSpaceImp, VectorImp >& func) {
     // compute node to entity relations
-    constexpr static size_t dimension = TargetSpaceImp::GridViewType::Grid::dimension;
+    constexpr size_t dimension = TargetSpaceImp::GridViewType::Grid::dimension;
     std::vector<int> nodeToEntity(func.space().grid_view().grid().size(dimension), 0);
     identifySharedNodes(func.space().grid_view(), nodeToEntity);
 
@@ -112,13 +112,13 @@ protected:
 
   template<class GridPartType, class MapType>
   static void identifySharedNodes(const GridPartType& gridPart, MapType& map) {
-    typedef typename GridPartType::Grid GridType;
+    constexpr size_t dimension = GridPartType::Grid::dimension;
     const auto& indexSet = gridPart.indexSet();
 
     for (auto& entity : DSC::entityRange(gridPart.grid().leafGridView())) {
-      const auto number_of_nodes_in_entity = entity.template count<GridType::dimension>();
+      const auto number_of_nodes_in_entity = entity.template count<dimension>();
       for (auto i : DSC::valueRange(number_of_nodes_in_entity)) {
-        const auto node = entity.template subEntity<GridType::dimension>(i);
+        const auto node = entity.template subEntity<dimension>(i);
         const auto global_index_node = indexSet.index(*node);
 
         // make sure we don't access non-existing elements
