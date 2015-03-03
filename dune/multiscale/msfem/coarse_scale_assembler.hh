@@ -36,7 +36,7 @@ public:
   typedef MsFEMCodim0IntegralTraits Traits;
 
 private:
-  static const size_t numTmpObjectsRequired_ = 1;
+  static constexpr size_t numTmpObjectsRequired_ = 1;
   typedef Stuff::LocalfunctionSetInterface<CommonTraits::EntityType, CommonTraits::DomainFieldType,
                                            CommonTraits::dimDomain, CommonTraits::RangeFieldType,
                                            CommonTraits::dimRange, 1> AnsatzLocalfunctionSetInterfaceType;
@@ -69,7 +69,7 @@ public:
   const LocalOperatorType& localOperator() const;
 
 private:
-  static const size_t numTmpObjectsRequired_ = 1;
+  static constexpr size_t numTmpObjectsRequired_ = 1;
 
 public:
   std::vector<size_t> numTmpObjectsRequired() const;

@@ -14,8 +14,6 @@ namespace Multiscale {
 //! \todo docme
 class Elliptic_FEM_Solver {
 
-  static const int faceCodim = 1;
-
   typedef std::shared_ptr<CommonTraits::GridType> GridPtrType;
 
 public:
