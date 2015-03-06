@@ -118,7 +118,9 @@ private:
   typedef Correlation<CommonTraits::world_dim, DomainType, double> CorrelationType;
   typedef Permeability<CommonTraits::world_dim, DomainType, double, CorrelationType> PermeabilityType;
   std::unique_ptr<CorrelationType> correlation_;
+#if HAVE_RANDOM_PROBLEM
   std::unique_ptr<PermeabilityType> field_;
+#endif
 };
 
 class DirichletData : public DirichletDataBase {
