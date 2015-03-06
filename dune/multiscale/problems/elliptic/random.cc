@@ -15,7 +15,10 @@
 #include "dune/multiscale/problems/base.hh"
 
 #include "random.hh"
-#include "random_permeability.hh"
+
+#if HAVE_RANDOM_PROBLEM
+# include "random_permeability.hh"
+#endif
 
 namespace Dune {
 namespace Multiscale {
@@ -52,14 +55,22 @@ void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicat
   const int overlap = DSC_CONFIG_GET("grids.overlap", 1u);
   correlation_ = DSC::make_unique<CorrelationType>();
   DSC::ScopedTiming field_tm("msfem.perm_field.init");
+#if HAVE_RANDOM_PROBLEM
   field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed+1, overlap);
+#else
+  DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
+#endif
 }
 
 void Diffusion::prepare_new_evaluation()
 {
   DSC::ScopedTiming field_tm("msfem.perm_field.init");
+#if HAVE_RANDOM_PROBLEM
   assert(field_);
   field_->create();
+#else
+  DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
+#endif
 }
 
 const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const { return *boundaryInfo_; }
@@ -94,10 +105,14 @@ PURE HOT void Source::evaluate(const DomainType& /*x*/, RangeType& y) const {
 }
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
+#if HAVE_RANDOM_PROBLEM
    assert(field_);
   const double scalar = field_->operator()(x);
   ret[0][0] = 1 * scalar;
   ret[1][1] = ret[0][0];
+#else
+  DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
+#endif
 }
 
 PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
