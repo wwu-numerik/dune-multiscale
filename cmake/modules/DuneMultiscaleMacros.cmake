@@ -12,8 +12,10 @@ include(CheckEmplace)
 find_package(Eigen3 3.2.0)
 find_package(TBB REQUIRED)
 
+find_package(UMFPack REQUIRED)
 find_package(SuiteSparse REQUIRED)
 include_directories( ${SUITESPARSE_INCLUDE_DIRS} )
+set(DUNE_UMFPACK_LIBRARIES ${UMFPACK_LIBRARY} ${CHOLMOD_LIBRARY} ${COLAMD_LIBRARY} ${AMD_LIBRARY} ${SUITESPARSE_CONFIG_LIBRARY} ) 
 
 set(HAVE_RANDOM_PROBLEM 0)
 set(FFTW_LIBRARIES "")
