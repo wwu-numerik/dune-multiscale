@@ -12,8 +12,8 @@ include(CheckEmplace)
 find_package(Eigen3 3.2.0)
 find_package(TBB REQUIRED)
 
-find_package(UMFPack REQUIRED)
-include(AddUMFPackFlags)
+find_package(SuiteSparse REQUIRED)
+include_directories( ${SUITESPARSE_INCLUDE_DIRS} )
 
 set(HAVE_RANDOM_PROBLEM 0)
 set(FFTW_LIBRARIES "")
