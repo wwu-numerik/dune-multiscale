@@ -47,7 +47,7 @@ TEST_P(MsFemCompare, All) {
   auto second_run = msfem_algorithm();
   for(auto error_pair : errorsMap) {
     EXPECT_TRUE(DSC::FloatCmp::eq(error_pair.second, second_run[error_pair.first] ))
-        << "FloatCmp " << error_pair.second << "  != " << second_run[error_pair.first];
+        << "FloatCmp " << error_pair.second << "\n      != " << second_run[error_pair.first];
   }
 }
 
