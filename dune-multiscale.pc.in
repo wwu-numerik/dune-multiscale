@@ -10,6 +10,6 @@ Name: @PACKAGE_NAME@
 Version: @VERSION@
 Description: dune-multiscale module
 URL: http://dune-project.org/
-Requires: dune-grid dune-fem dune-common ag-common dune-istl dune-solvers dune-pdelab dune-localfunctions
-Libs: -L
-Cflags: -I
+Requires: dune-grid dune-common dune-stuff dune-istl dune-gdt dune-pdelab dune-localfunctions
+Libs: -L${libdir} -lmultiscale_problem -lmultiscale_common 
+Cflags: -I${includedir}
