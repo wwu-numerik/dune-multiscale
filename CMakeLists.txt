@@ -104,7 +104,7 @@ set( FEM_SOURCES
 dune_add_library(multiscale_common ${COMMON_SOURCES} ADD_LIBS ${DUNE_LIBS})
 dune_add_library(multiscale_problem ${PROBLEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
 dune_add_library(multiscale_msfem ${MSFEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
-set( MULTISCALE_LIBS multiscale_common multiscale_problem multiscale_common ${COMMON_LIBRARIES} ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES} )
+set( MULTISCALE_LIBS multiscale_common multiscale_problem multiscale_common ${COMMON_LIBS} ${DUNE_DEFAULT_LIBS} ${TBB_LIBRARIES} )
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${MULTISCALE_LIBS} )
