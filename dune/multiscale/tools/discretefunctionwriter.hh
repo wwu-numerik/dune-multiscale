@@ -125,6 +125,10 @@ private:
     return s_this;
   }
 
+  struct ClearGuard {
+    ~ClearGuard() { DiscreteFunctionIO::clear(); }
+  };
+
   template <class IOMapType, class... Args>
   typename IOMapType::mapped_type& get(IOMapType& map, std::string filename, Args&&... ctor_args) {
     auto it = map.find(filename);
@@ -144,12 +148,14 @@ private:
   DiskBackend& get_disk(std::string filename);
   MemoryBackend& get_memory(std::string filename, IOTraits::GridViewType& grid_view);
 
+  //! this needs to be called before global de-init or else dune fem fails
+  static void clear();
+
 public:
   static MemoryBackend& memory(std::string filename, IOTraits::GridViewType& grid_view);
   static DiskBackend& disk(std::string filename);
 
-  //! this needs to be called before global de-init or else dune fem fails
-  static void clear();
+  static ClearGuard clear_guard() { return ClearGuard(); }
 
 private:
   std::unordered_map<std::string, std::shared_ptr<MemoryBackend>> memory_;
