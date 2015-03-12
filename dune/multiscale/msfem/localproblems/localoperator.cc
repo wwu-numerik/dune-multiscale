@@ -15,7 +15,6 @@
 #include <dune/multiscale/common/heterogenous.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/problems/elliptic/nine.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
@@ -56,7 +55,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   GDT::SystemAssembler<CommonTraits::SpaceType> coarse_system_assembler(coarse_space_);
   LocalGridDiscreteFunctionType dirichletExtensionLocal(localSpace_, "dirichletExtension");
   {
-    const DMP::Nine::DirichletData dirichlet_data;
+    const auto& dirichlet_data = DMP::getDirichletData();
     CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
     GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
                                                    CommonTraits::DiscreteFunctionType>
