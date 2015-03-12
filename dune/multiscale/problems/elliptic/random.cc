@@ -86,10 +86,15 @@ ParameterTree ModelProblemData::boundary_settings() const {
     boundarySettings["compare_tolerance"] = "1e-10";
     switch (CommonTraits::world_dim) {
       case 1:
+        DUNE_THROW(InvalidStateException, "no boundary settings for 1D random field problem");
       case 3:
-        DUNE_THROW(InvalidStateException, "no boundary settings for 3D random field problem yet");
+        boundarySettings["neumann.0"] = "[0.0  1.0  0.0]";
+        boundarySettings["neumann.1"] = "[0.0 -1.0  0.0]";
+        boundarySettings["neumann.2"] = "[0.0  0.0  1.0]";
+        boundarySettings["neumann.3"] = "[0.0  0.0 -1.0]";
+        break;
       case 2:
-        boundarySettings["neumann.0"] = "[0.0 1.0]";
+        boundarySettings["neumann.0"] = "[0.0  1.0]";
         boundarySettings["neumann.1"] = "[0.0 -1.0]";
         break;
     }
