@@ -7,12 +7,12 @@
 #include <sstream>
 
 #include "dune/multiscale/problems/base.hh"
-#include "nine.hh"
+#include "synthetic.hh"
 
 namespace Dune {
 namespace Multiscale {
 namespace Problem {
-namespace Nine {
+namespace Synthetic {
 
 static constexpr double epsilon = 0.05;
 

@@ -2,8 +2,8 @@
 // Copyright Holders: Patrick Henning, Rene Milk
 // License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE
-#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE
+#ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SYNTHETIC
+#define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SYNTHETIC
 
 #include <dune/multiscale/problems/base.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
@@ -31,9 +31,9 @@ namespace Multiscale {
 namespace Problem {
 /** \addtogroup problem_9 Problem::Nine
  * @{ **/
-//! ------------ Elliptic Problem 9 -------------------
+//! ------------ Synthetic Elliptic Problem -------------------
 
-namespace Nine {
+namespace Synthetic {
 
 struct ModelProblemData : public IModelProblemData {
   virtual bool hasExactSolution() const { return true; }
@@ -105,9 +105,9 @@ public:
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 
-} //! @} namespace Nine {
+} //! @} namespace Synthetic {
 }
 } // namespace Multiscale {
 } // namespace Dune {
 
-#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_NINE
+#endif // ifndef DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SYNTHETIC
