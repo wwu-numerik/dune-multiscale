@@ -132,6 +132,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_li
 void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
                                   std::unique_ptr<LocalsolutionProxy>& solution, LocalGridList& localgrid_list) const {
   DSC::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
+  const auto clearGuard = DiscreteFunctionIO::clear_guard();
 
   DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");
   coarse_msfem_solution.vector() *= 0;
@@ -145,7 +146,6 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(localgrid_list, coarse_msfem_solution, coarse_space, solution);
   solution->add(coarse_msfem_solution);
-  DiscreteFunctionIO::clear();
 }
 
 } // namespace Multiscale {
