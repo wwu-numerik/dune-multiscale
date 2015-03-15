@@ -48,7 +48,9 @@ void ModelProblemData::problem_init(MPIHelper::MPICommunicator global, MPIHelper
 
 void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)
 {
-  const int log2Seg = DSC_CONFIG_GET("grids.macro_cells_per_dim", 4);
+  const auto cells_per_dim = DSC_CONFIG.get<std::vector<std::size_t>>("grids.macro_cells_per_dim");
+  std::for_each(cells_per_dim.begin(), cells_per_dim.end(), [&](size_t t){assert(t==cells_per_dim[0]);});
+  const int log2Seg = cells_per_dim[0];
   int seed = 0;
   MPI_Comm_rank(global, &seed);
   assert(seed >= 0);
