@@ -97,7 +97,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   const auto fine_grid = grids.second;
   const auto fine_space = fem_solution_ ? fem_solution_->space()
                                         : CommonTraits::SpaceChooserType::make_space(*fine_grid);
-  const CommonTraits::InteriorGridViewType fine_interior_view = fine_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
+  const auto fine_interior_view = fine_space.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
   Stuff::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
   SeedListPartitioning<typename CommonTraits::InteriorGridViewType::Grid, 0> partitioning(fine_interior_view, ip);
   GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(fine_space, fine_interior_view);

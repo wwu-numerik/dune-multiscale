@@ -69,7 +69,7 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CoarseGridSpaceType& co
                                                    const Dune::Multiscale::LocalGridList& gridlist)
   : coarse_space_(coarse_space)
   , gridlist_(gridlist)
-  , static_view_(coarse_space_.grid_view().grid().leafGridView<PartitionIteratorType::InteriorBorder_Partition>())
+  , static_view_(coarse_space_.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
   , static_iterator_(nullptr)
 {}
 
