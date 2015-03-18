@@ -99,9 +99,6 @@ public:
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
 };
 
-MSNULLFUNCTION(DirichletBoundaryCondition)
-MSNULLFUNCTION(NeumannBoundaryCondition)
-
 } //! @} namespace Synthetic {
 }
 } // namespace Multiscale {

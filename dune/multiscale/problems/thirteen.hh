@@ -51,7 +51,6 @@ class DirichletData : public ZeroDirichletData {};
 class NeumannData : public ZeroNeumannData {};
 
 MSNULLFUNCTION(ExactSolution)
-MSNULLFUNCTION(DirichletBoundaryCondition)
 
 } //! @} namespace Thirteen {
 }

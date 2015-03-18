@@ -84,8 +84,6 @@ public:
   void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
 };
 
-MSNULLFUNCTION(DirichletBoundaryCondition)
-MSNULLFUNCTION(NeumannBoundaryCondition)
 MSNULLFUNCTION(ExactSolution)
 
 } //! @} namespace Tarbert {
