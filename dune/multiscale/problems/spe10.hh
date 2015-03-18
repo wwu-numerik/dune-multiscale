@@ -66,8 +66,6 @@ private:
 };
 
 class DirichletData : public DirichletDataBase {
-private:
-public:
 public:
   DirichletData() {}
 
@@ -75,16 +73,12 @@ public:
 };
 
 class NeumannData : public NeumannDataBase {
-private:
-public:
 public:
   NeumannData() {}
 
   void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
 };
 
-MSNULLFUNCTION(DirichletBoundaryCondition)
-MSNULLFUNCTION(NeumannBoundaryCondition)
 MSNULLFUNCTION(ExactSolution)
 
 } //! @} namespace SPE10 {
