@@ -77,17 +77,17 @@ private:
 };
 
 struct ModelProblemData : public IModelProblemData {
-  virtual bool hasExactSolution() const { return false; }
+  virtual bool hasExactSolution() const final override { return false; }
 
   ModelProblemData();
 
-  std::string getMacroGridFile() const;
-  const BoundaryInfoType& boundaryInfo() const;
-  const SubBoundaryInfoType& subBoundaryInfo() const;
-  std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
+  std::string getMacroGridFile() const final override;
+  const BoundaryInfoType& boundaryInfo() const final override;
+  const SubBoundaryInfoType& subBoundaryInfo() const final override;
+  std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
-  virtual void problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) override;
-  virtual void prepare_new_evaluation() override;
+  virtual void problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)  final override;
+  virtual void prepare_new_evaluation()  final override;
 
 private:
   Dune::ParameterTree boundary_settings() const;
@@ -100,14 +100,14 @@ public:
   Diffusion();
 
   //! currently used in gdt assembler
-  virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const;
+  virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const final override;
   PURE HOT void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
-                              Problem::JacobianRangeType& flux) const;
+                              Problem::JacobianRangeType& flux) const final override;
 
-  virtual size_t order() const;
+  virtual size_t order() const final override;
 
-  virtual void init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) override;
-  virtual void prepare_new_evaluation() override;
+  virtual void init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)  final override;
+  virtual void prepare_new_evaluation()  final override;
 
 private:
   typedef Permeability<CommonTraits::world_dim, DomainType, CommonTraits::DomainFieldType, Correlation> PermeabilityType;
@@ -122,15 +122,15 @@ public:
   DirichletData() {}
   virtual ~DirichletData() {}
 
-  PURE void evaluate(const DomainType& x, RangeType& y) const;
-  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const;
+  PURE void evaluate(const DomainType& x, RangeType& y) const final override;
+  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;
 };
 
 class NeumannData : public NeumannDataBase {
 public:
   NeumannData() {}
 
-  PURE void evaluate(const DomainType& x, RangeType& y) const;
+  PURE void evaluate(const DomainType& x, RangeType& y) const final override;
 };
 
 MSNULLFUNCTION(DirichletBoundaryCondition)
