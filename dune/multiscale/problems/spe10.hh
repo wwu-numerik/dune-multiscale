@@ -22,14 +22,14 @@ namespace Problem {
 namespace SPE10 {
 
 struct ModelProblemData : public IModelProblemData {
-  virtual bool hasExactSolution() const { return false; }
+  virtual bool hasExactSolution() const final override { return false; }
 
   ModelProblemData();
 
-  std::string getMacroGridFile() const;
-  const BoundaryInfoType& boundaryInfo() const;
-  const SubBoundaryInfoType& subBoundaryInfo() const;
-  std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
+  std::string getMacroGridFile() const final override;
+  const BoundaryInfoType& boundaryInfo() const final override;
+  const SubBoundaryInfoType& subBoundaryInfo() const final override;
+  std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
 private:
   Dune::ParameterTree boundary_settings() const;
@@ -41,8 +41,8 @@ class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   Source();
 
-  void evaluate(const DomainType& x, RangeType& y) const;
-  virtual size_t order() const { return 3; }
+  void evaluate(const DomainType& x, RangeType& y) const final override;
+  virtual size_t order() const final override { return 3; }
 };
 
 class Diffusion : public DiffusionBase {
@@ -51,10 +51,10 @@ public:
   ~Diffusion();
 
   //! currently used in gdt assembler
-  virtual void evaluate(const DomainType&, RangeType&) const;
+  virtual void evaluate(const DomainType&, RangeType&) const final override;
 
   void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
-                     Problem::JacobianRangeType& flux) const;
+                     Problem::JacobianRangeType& flux) const final override;
 
 private:
   void readPermeability();
@@ -71,7 +71,7 @@ public:
 public:
   DirichletData() {}
 
-  void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const;
+  void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
 };
 
 class NeumannData : public NeumannDataBase {
@@ -80,7 +80,7 @@ public:
 public:
   NeumannData() {}
 
-  void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const;
+  void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
 };
 
 MSNULLFUNCTION(DirichletBoundaryCondition)

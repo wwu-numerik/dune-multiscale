@@ -36,14 +36,14 @@ namespace Problem {
 namespace Synthetic {
 
 struct ModelProblemData : public IModelProblemData {
-  virtual bool hasExactSolution() const { return true; }
+  virtual bool hasExactSolution() const final override { return true; }
 
   ModelProblemData();
 
-  std::string getMacroGridFile() const;
-  const BoundaryInfoType& boundaryInfo() const;
-  const SubBoundaryInfoType& subBoundaryInfo() const;
-  std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
+  std::string getMacroGridFile() const final override;
+  const BoundaryInfoType& boundaryInfo() const final override;
+  const SubBoundaryInfoType& subBoundaryInfo() const final override;
+  std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
 private:
   Dune::ParameterTree boundary_settings() const;
@@ -55,8 +55,8 @@ class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   Source();
 
-  PURE HOT void evaluate(const DomainType& x, RangeType& y) const;
-  virtual size_t order() const;
+  PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
+  virtual size_t order() const final override;
 };
 
 class Diffusion : public DiffusionBase {
@@ -64,32 +64,29 @@ public:
   Diffusion();
 
   //! currently used in gdt assembler
-  virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const;
+  virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const final override;
   PURE HOT void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
-                              Problem::JacobianRangeType& flux) const;
+                              Problem::JacobianRangeType& flux) const final override;
 
-  virtual size_t order() const;
+  virtual size_t order() const final override;
 };
 
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   ExactSolution();
 
-  PURE HOT void evaluate(const DomainType& x, RangeType& y) const;
-  PURE HOT void jacobian(const DomainType& x, JacobianRangeType& grad_u) const;
-  virtual size_t order() const;
-  virtual std::string name() const
-  {
-    return "problem9.exact";
-  }
+  PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
+  PURE HOT void jacobian(const DomainType& x, JacobianRangeType& grad_u) const final override;
+  virtual size_t order() const final override;
+  virtual std::string name() const final override;
 };
 
 class DirichletData : public DirichletDataBase {
 public:
   DirichletData() {}
 
-  PURE void evaluate(const DomainType& x, RangeType& y) const;
-  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const;
+  PURE void evaluate(const DomainType& x, RangeType& y) const final override ;
+  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override ;
 
 private:
   ExactSolution solution_;
@@ -99,7 +96,7 @@ class NeumannData : public NeumannDataBase {
 public:
   NeumannData() {}
 
-  PURE void evaluate(const DomainType& x, RangeType& y) const;
+  PURE void evaluate(const DomainType& x, RangeType& y) const final override;
 };
 
 MSNULLFUNCTION(DirichletBoundaryCondition)

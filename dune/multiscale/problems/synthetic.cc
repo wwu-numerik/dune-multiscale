@@ -110,6 +110,11 @@ size_t Diffusion::order() const { return 2; }
 size_t Source::order() const { return 1; } // evaluate
 size_t ExactSolution::order() const { return 1; }
 
+std::string ExactSolution::name() const
+{
+  return "synthetic.exact";
+}
+
 PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   // approximation obtained by homogenized solution + first corrector
 
