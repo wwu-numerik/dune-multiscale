@@ -45,8 +45,10 @@ namespace Random {
 ///
 /// \author jan.mohring@itwm.fraunhofer.de
 /// \date 2014
-template<int DIM, typename X, typename R>
 class Correlation {
+  static constexpr auto DIM = CommonTraits::world_dim;
+  typedef DomainType X;
+  typedef CommonTraits::DomainFieldType R;
 public:
   /// Constructor
   /// \param corrLen   correlation length
@@ -84,20 +86,13 @@ struct ModelProblemData : public IModelProblemData {
   const SubBoundaryInfoType& subBoundaryInfo() const;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const;
 
-  virtual void problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local);
+  virtual void problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) override;
+  virtual void prepare_new_evaluation() override;
 
 private:
   Dune::ParameterTree boundary_settings() const;
   std::unique_ptr<DSG::BoundaryInfos::NormalBased<typename View::Intersection>> boundaryInfo_;
   DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
-};
-
-class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
-public:
-  Source();
-
-  PURE HOT void evaluate(const DomainType& x, RangeType& y) const;
-  virtual size_t order() const;
 };
 
 class Diffusion : public DiffusionBase {
@@ -115,9 +110,8 @@ public:
   virtual void prepare_new_evaluation() override;
 
 private:
-  typedef Correlation<CommonTraits::world_dim, DomainType, double> CorrelationType;
-  typedef Permeability<CommonTraits::world_dim, DomainType, double, CorrelationType> PermeabilityType;
-  std::unique_ptr<CorrelationType> correlation_;
+  typedef Permeability<CommonTraits::world_dim, DomainType, CommonTraits::DomainFieldType, Correlation> PermeabilityType;
+  std::unique_ptr<Correlation> correlation_;
 #if HAVE_RANDOM_PROBLEM
   std::unique_ptr<PermeabilityType> field_;
 #endif
@@ -142,8 +136,9 @@ public:
 MSNULLFUNCTION(DirichletBoundaryCondition)
 MSNULLFUNCTION(NeumannBoundaryCondition)
 MSNULLFUNCTION(ExactSolution)
+MSNULLFUNCTION(Source)
 
-} //! @} namespace Nine {
+} //! @} namespace Random {
 }
 } // namespace Multiscale {
 } // namespace Dune {

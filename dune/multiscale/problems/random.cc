@@ -46,6 +46,11 @@ void ModelProblemData::problem_init(MPIHelper::MPICommunicator global, MPIHelper
   getMutableDiffusion().init(global, local);
 }
 
+void ModelProblemData::prepare_new_evaluation()
+{
+  getMutableDiffusion().prepare_new_evaluation();
+}
+
 void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)
 {
   const auto cells_per_dim = DSC_CONFIG.get<std::vector<std::size_t>>("grids.macro_cells_per_dim");
@@ -55,7 +60,7 @@ void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicat
   MPI_Comm_rank(global, &seed);
   assert(seed >= 0);
   const int overlap = DSC_CONFIG_GET("grids.overlap", 1u);
-  correlation_ = DSC::make_unique<CorrelationType>();
+  correlation_ = DSC::make_unique<Correlation>();
   DSC::ScopedTiming field_tm("msfem.perm_field.init");
 #if HAVE_RANDOM_PROBLEM
   field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed+1, overlap);
@@ -66,7 +71,7 @@ void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicat
 
 void Diffusion::prepare_new_evaluation()
 {
-  DSC::ScopedTiming field_tm("msfem.perm_field.init");
+  DSC::ScopedTiming field_tm("msfem.perm_field.create");
 #if HAVE_RANDOM_PROBLEM
   assert(field_);
   field_->create();
@@ -104,12 +109,7 @@ ParameterTree ModelProblemData::boundary_settings() const {
   return boundarySettings;
 }
 
-Source::Source() {}
 Diffusion::Diffusion() {}
-
-PURE HOT void Source::evaluate(const DomainType& /*x*/, RangeType& y) const {
-  y = 0.;
-}
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
 #if HAVE_RANDOM_PROBLEM
@@ -131,7 +131,6 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
 } // diffusiveFlux
 
 size_t Diffusion::order() const { return 2; }
-size_t Source::order() const { return 1; } // evaluate
 
 PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
   y = DSC::FloatCmp::eq(x[0], 1.0) ? 0.0 : 1.0;
