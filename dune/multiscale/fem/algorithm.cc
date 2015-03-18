@@ -23,16 +23,17 @@ namespace Multiscale {
 
 //! the main FEM computation
 void cgfem_algorithm() {
-  Elliptic_FEM_Solver solver;
   const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
   Problem::getMutableModelData().problem_init(comm, comm);
   Problem::getMutableModelData().prepare_new_evaluation();
+
+  Elliptic_FEM_Solver solver;
   auto& solution = solver.solve();
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
     Dune::Multiscale::OutputParameters outputparam;
-    outputparam.set_prefix("cg-fem_solution_");
+    outputparam.set_prefix("fine-cg-fem_solution_");
     solution.visualize(outputparam.fullpath(solution.name()));
   }
   if(!DSC_CONFIG_GET("global.skip_error", false))
