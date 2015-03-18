@@ -27,7 +27,7 @@ LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet()) {
   DSC::ScopedTiming st("msfem.LocalGridList.ctor");
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
-  const int dim_world = LocalGridType::dimensionworld;
+  constexpr auto dim_world = LocalGridType::dimensionworld;
 
   const auto gridParameterTree = DSC_CONFIG.sub("grids");
   const auto micro_per_macro = gridParameterTree.get<CommonTraits::DomainType>("micro_cells_per_macrocell_dim",
@@ -76,7 +76,7 @@ MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(IndexType coarseCellIndex)
 } // getSubGrid
 
 const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(IndexType coarseCellIndex) const {
-  auto found = subGridList_.find(coarseCellIndex);
+  const auto found = subGridList_.find(coarseCellIndex);
   BOOST_ASSERT_MSG(found != subGridList_.end(), "There is no subgrid for the index you provided!");
   assert(found->second);
   return *(found->second);

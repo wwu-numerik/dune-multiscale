@@ -2,12 +2,12 @@
 # directory to save the data output
 datadir = data
 output_walltime = 1
-vtk_output = 0
-skip_error = 1
+vtk_output = 1
+skip_error = 0
 
 [grids]
-macro_cells_per_dim = [16 16 16]
-micro_cells_per_macrocell_dim = [16 16 16]
+macro_cells_per_dim = 8
+micro_cells_per_macrocell_dim = 32
 overlap = 1
 
 [msfem]
@@ -29,7 +29,7 @@ localproblemsolver_verbose = 0
 localproblemsolver_type = umfpack
 
 [problem]
-name = "Nine"
+name = "Random"
 # note that the grid is specified in '../multiscale/problems/elliptic_problems/XX.hh'
 
 # characteristic size of the micro structure
@@ -40,7 +40,7 @@ epsilon = 0.05
 # LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
 # # --> LOG_ERR | LOG_INFO | LOG_DEBUG | LOG_FILE = 46
 # # ANY odd number will disable ALL logging
-level = 22
+level = 62
 file = ms.log
 
 # logging directory relative to datadir
@@ -48,6 +48,6 @@ dir = logdata
 
 
 [threading]
-max_count = 6
+max_count = 4
 partition_factor = 1
 

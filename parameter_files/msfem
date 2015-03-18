@@ -39,6 +39,6 @@ file = ms.log
 dir = logdata
 
 [threading]
-max_count = 1
+max_count = 4
 partition_factor = 1
 
