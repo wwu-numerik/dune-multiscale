@@ -35,7 +35,7 @@ Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScale
 CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceType& source_space_in,
                                          LocalGridList& localGridList)
   : OperatorBaseType(global_matrix_, source_space_in)
-  , AssemblerBaseType(source_space_in, source_space_in.grid_view().grid().leafGridView<InteriorBorder_Partition>())
+  , AssemblerBaseType(source_space_in, source_space_in.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
   , global_matrix_(coarse_space().mapper().size(), coarse_space().mapper().size(),
                    EllipticOperatorType::pattern(coarse_space()))
   , local_assembler_(local_operator_, localGridList)
@@ -43,7 +43,7 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   , dirichlet_projection_(coarse_space()) {
   DSC::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
-  const auto interior = coarse_space().grid_view().grid().leafGridView<InteriorBorder_Partition>();
+  const auto interior = coarse_space().grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
   Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
