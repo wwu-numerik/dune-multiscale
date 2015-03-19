@@ -40,33 +40,28 @@ void Dune::Multiscale::init(int argc, char** argv) {
   DS::threadManager().set_max_threads(DSC_CONFIG_GET("threading.max_count", 4));
 }
 
-
-int Dune::Multiscale::handle_exception(const Dune::Exception &exp)
-{
+int Dune::Multiscale::handle_exception(const Dune::Exception& exp) {
   std::cerr << "Failed with Dune::Exception: " << exp.what();
   DSC_PROFILER.outputTimings("profiler");
   mem_usage();
   return Dune::Stuff::abort_all_mpi_processes();
 }
 
-int Dune::Multiscale::handle_exception(const std::exception &exp)
-{
+int Dune::Multiscale::handle_exception(const std::exception& exp) {
   std::cerr << "Failed with std::exception: " << exp.what();
   DSC_PROFILER.outputTimings("profiler");
   mem_usage();
   return Dune::Stuff::abort_all_mpi_processes();
 }
 
-int Dune::Multiscale::handle_exception(const tbb::tbb_exception &exp)
-{
+int Dune::Multiscale::handle_exception(const tbb::tbb_exception& exp) {
   std::cerr << "Failed with " << exp.name() << ": " << exp.what();
   DSC_PROFILER.outputTimings("profiler");
   mem_usage();
   return Dune::Stuff::abort_all_mpi_processes();
 }
 
-void Dune::Multiscale::mem_usage()
-{
+void Dune::Multiscale::mem_usage() {
   auto comm = Dune::MPIHelper::getCollectiveCommunication();
   // Compute the peak memory consumption of each processes
   int who = RUSAGE_SELF;
@@ -80,7 +75,7 @@ void Dune::Multiscale::mem_usage()
   // write output on rank zero
   if (comm.rank() == 0) {
     std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(
-          DSC::make_ofstream(std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/memory.csv")));
+        DSC::make_ofstream(std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/memory.csv")));
     *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                     << "," << meanPeakMemConsumption << std::endl;
   }

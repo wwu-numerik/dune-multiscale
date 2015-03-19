@@ -105,8 +105,7 @@ public:
                                               FunctionType::dimRange, FunctionType::dimRangeCols>,
           FunctionType>::value,
       "FunctionType has to be derived from Stuff::LocalizableFunctionInterface!");
-  static_assert(GDT::is_space< SpaceImp >::value,
-                "SpaceImp has to be derived from SpaceInterface!");
+  static_assert(GDT::is_space<SpaceImp>::value, "SpaceImp has to be derived from SpaceInterface!");
 
   typedef GDT::SystemAssembler<SpaceImp, GridViewImp, SpaceImp> SystemAssemblerType;
   typedef CoarseRhsFunctional derived_type;
@@ -130,9 +129,10 @@ public:
   typedef typename Traits::SpaceType SpaceType;
   typedef typename Traits::GridViewType GridViewType;
 
-  CoarseRhsFunctional(VectorType& vec, const SpaceType& spc, LocalGridList& localGridList, const CommonTraits::InteriorGridViewType &interior);
+  CoarseRhsFunctional(VectorType& vec, const SpaceType& spc, LocalGridList& localGridList,
+                      const CommonTraits::InteriorGridViewType& interior);
 
-  virtual ~CoarseRhsFunctional(){}
+  virtual ~CoarseRhsFunctional() {}
 
   virtual void assemble() override final;
 

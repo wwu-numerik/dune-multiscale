@@ -58,8 +58,7 @@ private:
   const size_t over_integrate_;
 };
 
-class MsFemCodim0Matrix
-    {
+class MsFemCodim0Matrix {
 public:
   typedef MsFemCodim0MatrixTraits Traits;
   typedef typename Traits::LocalOperatorType LocalOperatorType;

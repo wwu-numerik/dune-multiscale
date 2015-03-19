@@ -39,29 +39,26 @@ class IModelProblemData;
 
 } // namespace Problem
 
-template< class G, class R, int r >
-struct SpaceChooser
-{
+template <class G, class R, int r>
+struct SpaceChooser {
   static constexpr auto backend_type =
 #if DUNE_MULTISCALE_WITH_DUNE_FEM
       GDT::ChooseSpaceBackend::fem;
 #else
       GDT::ChooseSpaceBackend::pdelab;
 #endif
-  static constexpr auto partview_chooser = GDT::ChooseGridPartView< backend_type >::type;
-  typedef DSG::LeafPartView< G, partview_chooser > PartViewType;
-  typedef typename Stuff::Grid::Layer< G, DSG::ChooseLayer::leaf, partview_chooser >::Type GridLayerType;
+  static constexpr auto partview_chooser = GDT::ChooseGridPartView<backend_type>::type;
+  typedef DSG::LeafPartView<G, partview_chooser> PartViewType;
+  typedef typename Stuff::Grid::Layer<G, DSG::ChooseLayer::leaf, partview_chooser>::Type GridLayerType;
+
 private:
-  typedef GDT::Spaces::CG::PdelabBased< GridLayerType, st_lagrangespace_order, R, r > PdelabType;
-  typedef GDT::Spaces::CG::FemBased< GridLayerType, st_lagrangespace_order, R, r > FemType;
+  typedef GDT::Spaces::CG::PdelabBased<GridLayerType, st_lagrangespace_order, R, r> PdelabType;
+  typedef GDT::Spaces::CG::FemBased<GridLayerType, st_lagrangespace_order, R, r> FemType;
+
 public:
   typedef typename std::conditional<(backend_type == GDT::ChooseSpaceBackend::fem), FemType, PdelabType>::type Type;
-  static Type make_space(G& g) {
-    return Type(PartViewType::create(g, 0));
-  }
-  static Type make_space(GridLayerType& p) {
-    return Type(p);
-  }
+  static Type make_space(G& g) { return Type(PartViewType::create(g, 0)); }
+  static Type make_space(GridLayerType& p) { return Type(p); }
 };
 
 //! Common Types, duh
@@ -88,7 +85,7 @@ struct CommonTraits {
   static constexpr auto st_gdt_grid_level = 0;
 
   typedef SpaceType::GridViewType GridViewType;
-  typedef typename GridType::Partition< InteriorBorder_Partition >::LeafGridView  InteriorGridViewType;
+  typedef typename GridType::Partition<InteriorBorder_Partition>::LeafGridView InteriorGridViewType;
   static constexpr auto InteriorPartition = PartitionIteratorType::InteriorBorder_Partition;
 
   typedef BackendChooser<SpaceType>::LinearOperatorType LinearOperatorType;
@@ -99,7 +96,7 @@ struct CommonTraits {
 
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain>
-  DiffusionFunctionBaseType;
+      DiffusionFunctionBaseType;
   typedef Stuff::Functions::Constant<EntityType, FieldType, dimDomain, FieldType, dimRange> ConstantFunctionBaseType;
   typedef ConstantFunctionBaseType GdtConstantFunctionType;
 

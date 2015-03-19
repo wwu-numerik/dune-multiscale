@@ -118,10 +118,8 @@ Dune::Multiscale::make_fine_grid(std::shared_ptr<Dune::Multiscale::CommonTraits:
     // spatial directions are used)
     DSC_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n") %
                          coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0) << std::endl;
-    const auto coarse_dimensions =
-        DSG::dimensions(coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>());
-    const auto fine_dimensions =
-        DSG::dimensions(fine_gridptr->leafGridView<CommonTraits::InteriorPartition>());
+    const auto coarse_dimensions = DSG::dimensions(coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>());
+    const auto fine_dimensions = DSG::dimensions(fine_gridptr->leafGridView<CommonTraits::InteriorPartition>());
     for (const auto i : DSC::valueRange(world_dim)) {
       const bool match =
           DSC::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&

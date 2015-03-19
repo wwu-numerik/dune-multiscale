@@ -36,7 +36,7 @@ void cgfem_algorithm() {
     outputparam.set_prefix("fine-cg-fem_solution_");
     solution.visualize(outputparam.fullpath(solution.name()));
   }
-  if(!DSC_CONFIG_GET("global.skip_error", false))
+  if (!DSC_CONFIG_GET("global.skip_error", false))
     ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO_0);
 } // ... algorithm(...)
 

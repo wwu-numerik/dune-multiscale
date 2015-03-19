@@ -26,7 +26,7 @@
 
 #endif
 
-template< int DIM, typename X, typename R, typename COR >
+template <int DIM, typename X, typename R, typename COR>
 class Permeability;
 
 namespace Dune {
@@ -49,31 +49,33 @@ class Correlation {
   static constexpr auto DIM = CommonTraits::world_dim;
   typedef DomainType X;
   typedef CommonTraits::DomainFieldType R;
+
 public:
   /// Constructor
   /// \param corrLen   correlation length
   /// \param sigma     standard deviation
-  Correlation(R corrLen=0.1, R sigma=1.0)
-    : _corrLen(corrLen), _sigma2(sigma*sigma) {}
+  Correlation(R corrLen = 0.1, R sigma = 1.0)
+    : _corrLen(corrLen)
+    , _sigma2(sigma * sigma) {}
 
   Correlation(const Correlation& old) {
     _corrLen = old._corrLen;
-    _sigma2  = old._sigma2;
+    _sigma2 = old._sigma2;
   }
 
   /// Evaluation
   /// \param d   difference of points to take corretation of
-  R operator() (X d) const {
+  R operator()(X d) const {
     R sumX2 = 0;
-    for(int i=0; i<DIM; ++i) {
-       sumX2 += d[i]*d[i];
+    for (int i = 0; i < DIM; ++i) {
+      sumX2 += d[i] * d[i];
     }
-    return _sigma2 * exp(-sqrt(sumX2)/_corrLen);
+    return _sigma2 * exp(-sqrt(sumX2) / _corrLen);
   }
 
 private:
-  R _corrLen;   //< correlation length
-  R _sigma2;    //< standard deviation
+  R _corrLen; //< correlation length
+  R _sigma2;  //< standard deviation
 };
 
 struct ModelProblemData : public IModelProblemData {
@@ -86,8 +88,8 @@ struct ModelProblemData : public IModelProblemData {
   const SubBoundaryInfoType& subBoundaryInfo() const final override;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
-  virtual void problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)  final override;
-  virtual void prepare_new_evaluation()  final override;
+  virtual void problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) final override;
+  virtual void prepare_new_evaluation() final override;
 
 private:
   Dune::ParameterTree boundary_settings() const;
@@ -106,11 +108,12 @@ public:
 
   virtual size_t order() const final override;
 
-  virtual void init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)  final override;
-  virtual void prepare_new_evaluation()  final override;
+  virtual void init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) final override;
+  virtual void prepare_new_evaluation() final override;
 
 private:
-  typedef Permeability<CommonTraits::world_dim, DomainType, CommonTraits::DomainFieldType, Correlation> PermeabilityType;
+  typedef Permeability<CommonTraits::world_dim, DomainType, CommonTraits::DomainFieldType, Correlation>
+      PermeabilityType;
   std::unique_ptr<Correlation> correlation_;
 #if HAVE_RANDOM_PROBLEM
   std::unique_ptr<PermeabilityType> field_;

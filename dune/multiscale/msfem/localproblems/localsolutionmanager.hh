@@ -25,6 +25,7 @@ private:
   typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef MsFEMTraits::LocalSpaceType LocalSpaceType;
+
 public:
   LocalSolutionManager(const CommonTraits::SpaceType& coarse_space, const CoarseEntityType& coarseEntity,
                        const LocalGridList& subgridList);

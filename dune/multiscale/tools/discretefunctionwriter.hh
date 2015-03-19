@@ -38,7 +38,6 @@ struct IOTraits {
   typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef std::vector<DiscreteFunction_ptr> Vector;
   typedef typename DiscreteFunctionSpaceType::GridViewType GridViewType;
-
 };
 
 class DiskBackend : public boost::noncopyable {
@@ -75,8 +74,6 @@ private:
   unsigned int index_;
 };
 
-
-
 /**
  * \brief simple discrete function to disk writer
  * this class isn't type safe in the sense that different appends may append
@@ -111,7 +108,6 @@ private:
   IOTraits::DiscreteFunctionSpaceType space_;
   IOTraits::Vector functions_;
 };
-
 
 class DiscreteFunctionIO : public boost::noncopyable {
 

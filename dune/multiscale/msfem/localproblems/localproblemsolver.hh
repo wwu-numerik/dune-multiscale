@@ -51,7 +51,8 @@ private:
 
 public:
   /** \brief constructor - with diffusion operator A^{\epsilon}(x)
-   * \param localgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const grid
+   * \param localgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const
+   *grid
    **/
   LocalProblemSolver(CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list);
 
