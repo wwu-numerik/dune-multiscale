@@ -59,12 +59,10 @@ public:
   Permeability() {
     _fft = NULL;
     _ifft = NULL;
-  }; 
+  }
 
   /// Copy constructor
-  Permeability( const Permeability& old) {
-    throw Error("Never copy permeability object!");
-  }
+  Permeability( const Permeability&) = delete;
 
   /// Construct basis from parameters.
   /// \param comm     communicator
@@ -79,7 +77,7 @@ public:
     _fft = NULL;
     _ifft = NULL;
     init(comm,corr,log2Seg,seed,overlap);
-  };
+  }
 
   /// Construct basis from parameters.
   /// \param comm     communicator

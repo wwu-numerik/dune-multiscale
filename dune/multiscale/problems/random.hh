@@ -123,7 +123,6 @@ public:
   virtual ~DirichletData() {}
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
-  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;
 };
 
 class NeumannData : public NeumannDataBase {

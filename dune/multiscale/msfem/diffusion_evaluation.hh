@@ -206,11 +206,12 @@ public:
     // compute product
     assert(ret.size() >= size);
     assert(grad_phi_s.size() >= size);
+    ret = 0;
 
     //! \TODO WTF muss hier eigentlich hin
     for (size_t ii = 0; ii < size; ++ii) {
       // grad_phi_s[ii] is FieldMatrix<double, 1, 2> --> grad_phi_s[ii][0] is FieldVector<double,2>
-      ret[ii] = -1 * (flux[0] * grad_phi_s[ii][0]);
+      ret[ii] -= flux[0] * grad_phi_s[ii][0];
     }
   }
 

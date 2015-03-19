@@ -101,11 +101,10 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   coarseBaseFunc++; // coarseBaseFunc == 1 + numInnerCorrectors
   assert(coarseBaseFunc == 1 + numInnerCorrectors);
   // dirichlet corrector
-  typedef DirichletProduct DirichletEvaluationType;
   typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
                                      MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
-                                     DirichletEvaluationType> DirichletCorrectorFunctionalType;
-  GDT::LocalFunctional::Codim0Integral<DirichletEvaluationType> dl_corrector_functional(dirichletExtensionLocal,
+                                     DirichletProduct> DirichletCorrectorFunctionalType;
+  GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional(dirichletExtensionLocal,
                                                                                         local_diffusion_operator_);
   auto& dl_vector = allLocalRHS[coarseBaseFunc]->vector();
   DirichletCorrectorFunctionalType dirichlet_corrector(local_diffusion_operator_, dl_vector, localSpace_,

@@ -62,8 +62,9 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
 
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);
-  this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::InteriorGridViewType>());
+
   this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::InteriorGridViewType>(boundary_info));
+  this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::InteriorGridViewType>());
   AssemblerBaseType::assemble(partitioning);
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(coarse_space().mapper().size());
