@@ -80,8 +80,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   system_assembler.add(elliptic_operator);
   system_assembler.add(force_functional);
   system_assembler.add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
-  system_assembler.assemble(true);
   system_assembler.add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<GridViewType>());
+  system_assembler.assemble(true);
   DSC_PROFILER.stopTiming("fem.assemble");
 
   DSC_PROFILER.startTiming("fem.constraints");
