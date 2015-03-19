@@ -59,10 +59,10 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
     GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
                                                    CommonTraits::DiscreteFunctionType>
-    coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData().boundaryInfo(),
-                                         dirichlet_data, dirichletExtensionCoarse);
+        coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData().boundaryInfo(),
+                                             dirichlet_data, dirichletExtensionCoarse);
     coarse_system_assembler.add(coarse_dirichlet_projection_operator,
-                                 new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+                                new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
     coarse_system_assembler.assemble();
     GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
     projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
@@ -95,7 +95,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   // neumann corrector
   const auto local_neumann = DMP::getNeumannData().transfer<MsFEMTraits::LocalEntityType>();
   GDT::Functionals::L2Face<decltype(local_neumann), CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType>
-  neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_);
+      neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_);
   system_assembler_.add(neumann_functional);
 
   coarseBaseFunc++; // coarseBaseFunc == 1 + numInnerCorrectors
@@ -105,7 +105,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
                                      MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
                                      DirichletProduct> DirichletCorrectorFunctionalType;
   GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional(dirichletExtensionLocal,
-                                                                                        local_diffusion_operator_);
+                                                                                 local_diffusion_operator_);
   auto& dl_vector = allLocalRHS[coarseBaseFunc]->vector();
   DirichletCorrectorFunctionalType dirichlet_corrector(local_diffusion_operator_, dl_vector, localSpace_,
                                                        dl_corrector_functional);
@@ -118,8 +118,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     system_assembler_.add(dirichletConstraints_, rhs->vector(), new OnLocalBoundaryEntities());
 
   system_assembler_.assemble();
-  local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(system_matrix_.backend(),
-                                                                   DSC_CONFIG_GET("msfem.localproblemsolver_verbose", 0));
+  local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(
+      system_matrix_.backend(), DSC_CONFIG_GET("msfem.localproblemsolver_verbose", 0));
 }
 
 void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
@@ -130,7 +130,7 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   typedef BackendChooser<LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
 
-  auto options = local_inverse.options(DSC_CONFIG_GET("msfem.localproblemsolver_type","umfpack"));
+  auto options = local_inverse.options(DSC_CONFIG_GET("msfem.localproblemsolver_type", "umfpack"));
   options["verbose"] = DSC_CONFIG_GET("msfem.localproblemsolver_verbose", "0");
   {
     InverseOperatorResult stat;

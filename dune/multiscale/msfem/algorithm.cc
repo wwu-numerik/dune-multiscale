@@ -43,7 +43,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 //! algorithm
 std::map<std::string, double> msfem_algorithm() {
   using namespace Dune;
@@ -53,7 +52,8 @@ std::map<std::string, double> msfem_algorithm() {
   const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
   Problem::getMutableModelData().problem_init(comm, comm);
   Problem::getMutableModelData().prepare_new_evaluation();
-  const CommonTraits::SpaceType coarseSpace(CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
+  const CommonTraits::SpaceType coarseSpace(
+      CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 
   LocalGridList localgrid_list(coarseSpace);
@@ -64,12 +64,10 @@ std::map<std::string, double> msfem_algorithm() {
     coarse_grid_visualization.visualize(OutputParameters().fullpath(coarse_grid_visualization.name()));
   }
 
-  if(!DSC_CONFIG_GET("global.skip_error", false))
+  if (!DSC_CONFIG_GET("global.skip_error", false))
     return ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0);
   return decltype(ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0))();
 } // function algorithm
 
-
 } // namespace Multiscale {
 } // namespace Dune {
-

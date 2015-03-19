@@ -36,7 +36,7 @@ using namespace Dune::Multiscale;
 namespace DGP = Dune::GDT::Products;
 typedef DSFu::Difference<Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType> DifferenceType;
 typedef DSFu::Difference<CommonTraits::ConstDiscreteFunctionType, CommonTraits::ConstDiscreteFunctionType>
-DiscreteDifferenceType;
+    DiscreteDifferenceType;
 typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, DifferenceType> L2ErrorAnalytical;
 typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> L2ErrorDiscrete;
 typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DifferenceType> H1sErrorAnalytical;
@@ -51,7 +51,7 @@ void solution_output(const CommonTraits::ConstDiscreteFunctionType& solution, st
   solution.visualize(outputparam.fullpath(solution.name()));
 }
 template <typename L, typename R>
-void solution_output(const DSFu::Difference<L,R>& solution, const CommonTraits::GridViewType& view, std::string name) {
+void solution_output(const DSFu::Difference<L, R>& solution, const CommonTraits::GridViewType& view, std::string name) {
   using namespace Dune;
 
   Dune::Multiscale::OutputParameters outputparam;
@@ -95,18 +95,20 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   auto grids = make_grids();
   const auto coarse_grid = grids.first;
   const auto fine_grid = grids.second;
-  const auto fine_space = fem_solution_ ? fem_solution_->space()
-                                        : CommonTraits::SpaceChooserType::make_space(*fine_grid);
+  const auto fine_space =
+      fem_solution_ ? fem_solution_->space() : CommonTraits::SpaceChooserType::make_space(*fine_grid);
   const auto fine_interior_view = fine_space.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
   Stuff::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
   SeedListPartitioning<typename CommonTraits::InteriorGridViewType::Grid, 0> partitioning(fine_interior_view, ip);
-  GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(fine_space, fine_interior_view);
+  GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(
+      fine_space, fine_interior_view);
   const auto& grid_view = fine_space.grid_view();
 
   Elliptic_FEM_Solver coarse_fem_solver(coarse_grid);
   auto& coarse_fem_solution = coarse_fem_solver.solve();
   CommonTraits::DiscreteFunctionType projected_coarse_fem_solution(fine_space);
-  const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(fine_space.grid_view());
+  const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(
+      fine_space.grid_view());
   prolongation_operator.apply(coarse_fem_solution, projected_coarse_fem_solution);
 
   CommonTraits::DiscreteFunctionType fine_msfem_solution(fine_space, "MsFEM_Solution");
@@ -120,7 +122,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   }
 
   const string msfem_exact = "msfem_exact", fem_exact = "fem_exact", coarse_fem_exact = "coarse_fem_exact",
-      msfem_fem = "msfem_fem", msfem_coarse_fem = "msfem_coarse_fem";
+               msfem_fem = "msfem_fem", msfem_coarse_fem = "msfem_coarse_fem";
   unordered_map<string, DifferenceType> differences;
   unordered_map<string, DiscreteDifferenceType> discrete_differences;
   unordered_map<string, L2ErrorAnalytical> l2_analytical_errors;
@@ -150,19 +152,21 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
     }
     const auto name = forward_as_tuple(coarse_fem_exact);
-    const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, projected_coarse_fem_solution)).first->second;
+    const auto& difference =
+        differences.emplace(pcw, name, forward_as_tuple(u, projected_coarse_fem_solution)).first->second;
     const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
     system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
     system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
   }
 
-  if(msfem_solution_) {
+  if (msfem_solution_) {
     l2_msfem = DSC::make_unique<DiscreteL2>(fine_interior_view, fine_msfem_solution, over_integrate);
     system_assembler.add(*l2_msfem);
     {
       const auto name = forward_as_tuple(msfem_coarse_fem);
       const auto& difference =
-          discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution)).first->second;
+          discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution))
+              .first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
       system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
       system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
@@ -239,9 +243,9 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Differences output for MsFEM Solution." << std::endl;
-    for(const auto& mpair : differences)
+    for (const auto& mpair : differences)
       solution_output(mpair.second, grid_view, mpair.first);
-    for(const auto& mpair : discrete_differences)
+    for (const auto& mpair : discrete_differences)
       solution_output(mpair.second, grid_view, mpair.first);
     solution_output(coarse_fem_solution, "coarse-cg-fem_solution_");
   }

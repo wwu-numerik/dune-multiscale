@@ -85,8 +85,8 @@ class DirichletData : public DirichletDataBase {
 public:
   DirichletData() {}
 
-  PURE void evaluate(const DomainType& x, RangeType& y) const final override ;
-  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override ;
+  PURE void evaluate(const DomainType& x, RangeType& y) const final override;
+  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;
 
 private:
   ExactSolution solution_;

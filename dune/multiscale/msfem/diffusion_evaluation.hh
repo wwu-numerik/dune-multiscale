@@ -83,12 +83,10 @@ public:
     evaluate(*localFunction, testBase, localPoint, ret);
   }
 
-  template< class R, size_t r, size_t rC >
+  template <class R, size_t r, size_t rC>
   void evaluate(const typename Traits::LocalfunctionTupleType& /*localFunctions_in*/,
-                const Stuff::LocalfunctionSetInterface< EntityType, DomainFieldType, dimDomain, R, r, rC >& testBase,
-                const Dune::FieldVector< DomainFieldType, dimDomain >& localPoint,
-                Dune::DynamicVector< R >& ret) const
-  {
+                const Stuff::LocalfunctionSetInterface<EntityType, DomainFieldType, dimDomain, R, r, rC>& testBase,
+                const Dune::FieldVector<DomainFieldType, dimDomain>& localPoint, Dune::DynamicVector<R>& ret) const {
     // evaluate local function
     const auto& entity = testBase.entity();
     const auto global_point = entity.geometry().global(localPoint);
@@ -185,11 +183,10 @@ public:
     evaluate(*localFunction, testBase, localPoint, ret);
   }
 
-  template< class R, size_t r, size_t rC >
+  template <class R, size_t r, size_t rC>
   void evaluate(const typename Traits::LocalfunctionTupleType& /*localFunctions_in*/,
-                const Stuff::LocalfunctionSetInterface< EntityType, DomainFieldType, dimDomain, R, r, rC >& testBase,
-                const Dune::FieldVector< DomainFieldType, dimDomain >& localPoint,
-                Dune::DynamicVector< R >& ret) const {
+                const Stuff::LocalfunctionSetInterface<EntityType, DomainFieldType, dimDomain, R, r, rC>& testBase,
+                const Dune::FieldVector<DomainFieldType, dimDomain>& localPoint, Dune::DynamicVector<R>& ret) const {
     // evaluate local function
     const auto& entity = testBase.entity();
     const auto dirichlet_lf = dirichlet_extension_.local_function(entity);

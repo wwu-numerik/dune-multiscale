@@ -35,12 +35,12 @@ class LocalProblemOperator {
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
   typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType, LocalSpaceType>
-  EllipticOperatorType;
+      EllipticOperatorType;
   typedef GDT::Spaces::Constraints::Dirichlet<typename MsFEMTraits::LocalGridViewType::Intersection,
                                               CommonTraits::RangeFieldType> DirichletConstraintsType;
   typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
-  
-  typedef UMFPack<typename LocalLinearOperatorType::BackendType>  LocalDirectInverseType;
+
+  typedef UMFPack<typename LocalLinearOperatorType::BackendType> LocalDirectInverseType;
 
 public:
   LocalProblemOperator(const CoarseSpaceType& coarse_space, const LocalSpaceType& subDiscreteFunctionSpace);

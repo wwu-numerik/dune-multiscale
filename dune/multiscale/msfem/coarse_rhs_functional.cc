@@ -21,12 +21,13 @@ namespace Multiscale {
 
 size_t RhsCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
-void RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
-                              LocalSolutionManager& localSolutionManager,
-                              const MsFEMTraits::LocalEntityType& localGridEntity,
-                              const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
-                              Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
-                              std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& /*tmpLocalVectors*/) const {
+void
+RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
+                         LocalSolutionManager& localSolutionManager,
+                         const MsFEMTraits::LocalEntityType& localGridEntity,
+                         const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
+                         Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
+                         std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& /*tmpLocalVectors*/) const {
   const auto& f = DMP::getSource();
   const auto& diffusion = DMP::getDiffusion();
 
@@ -153,7 +154,8 @@ void RhsCodim0Vector::assembleLocal(
 }
 
 CoarseRhsFunctional::CoarseRhsFunctional(CoarseRhsFunctional::VectorType& vec,
-                                         const CoarseRhsFunctional::SpaceType& spc, LocalGridList& localGridList, const CommonTraits::InteriorGridViewType& interior)
+                                         const CoarseRhsFunctional::SpaceType& spc, LocalGridList& localGridList,
+                                         const CommonTraits::InteriorGridViewType& interior)
   : FunctionalBaseType(vec, spc, interior)
   , AssemblerBaseType(spc, interior)
   , local_assembler_(local_functional_, localGridList) {

@@ -35,7 +35,8 @@ Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScale
 CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceType& source_space_in,
                                          LocalGridList& localGridList)
   : OperatorBaseType(global_matrix_, source_space_in)
-  , AssemblerBaseType(source_space_in, source_space_in.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
+  , AssemblerBaseType(source_space_in,
+                      source_space_in.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
   , global_matrix_(coarse_space().mapper().size(), coarse_space().mapper().size(),
                    EllipticOperatorType::pattern(coarse_space()))
   , local_assembler_(local_operator_, localGridList)
@@ -56,14 +57,15 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   typedef CommonTraits::InteriorGridViewType InteriorView;
   GDT::Operators::DirichletProjectionLocalizable<InteriorView, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-  dirichlet_projection_operator(interior, boundary_info, dirichlet, dirichlet_projection_);
+      dirichlet_projection_operator(interior, boundary_info, dirichlet, dirichlet_projection_);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, InteriorView>
-  neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), interior);
+      neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), interior);
 
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);
 
-  this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<CommonTraits::InteriorGridViewType>(boundary_info));
+  this->add(neumann_functional,
+            new DSG::ApplyOn::NeumannIntersections<CommonTraits::InteriorGridViewType>(boundary_info));
   this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<CommonTraits::InteriorGridViewType>());
   AssemblerBaseType::assemble(partitioning);
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
@@ -72,11 +74,11 @@ CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceT
   force_functional.vector() -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Spaces::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
-  dirichlet_constraints(boundary_info, coarse_space().mapper().maxNumDofs(), coarse_space().mapper().maxNumDofs());
+      dirichlet_constraints(boundary_info, coarse_space().mapper().maxNumDofs(), coarse_space().mapper().maxNumDofs());
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  if(DSC_CONFIG_GET("threading.smp_constraints", false))
+  if (DSC_CONFIG_GET("threading.smp_constraints", false))
     AssemblerBaseType::assemble(partitioning);
   else
     AssemblerBaseType::assemble(false);
@@ -91,8 +93,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
   DSC_PROFILER.startTiming("msfem.coarse.linearSolver");
   typedef typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType Inverse;
-  const  Inverse inverse(
-      global_matrix_, msfem_rhs_.space().communicator());
+  const Inverse inverse(global_matrix_, msfem_rhs_.space().communicator());
 
   auto options = Inverse::options("bicgstab.amg.ilu0");
   constexpr bool overwrite = true;

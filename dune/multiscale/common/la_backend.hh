@@ -19,14 +19,14 @@ struct BackendChooser {
 #endif
 
   typedef typename Stuff::LA::Container<typename DiscreteFunctionSpaceType::RangeFieldType, backend_type>::VectorType
-  DiscreteFunctionDataType;
+      DiscreteFunctionDataType;
   typedef DiscreteFunctionDataType GdtVectorType;
   typedef typename Stuff::LA::Container<typename DiscreteFunctionSpaceType::RangeFieldType, backend_type>::MatrixType
-  LinearOperatorType;
+      LinearOperatorType;
   typedef GDT::DiscreteFunction<DiscreteFunctionSpaceType, DiscreteFunctionDataType> DiscreteFunctionType;
   typedef GDT::ConstDiscreteFunction<DiscreteFunctionSpaceType, DiscreteFunctionDataType> ConstDiscreteFunctionType;
   typedef Stuff::LA::Solver<LinearOperatorType, typename DiscreteFunctionSpaceType::CommunicatorType>
-  InverseOperatorType;
+      InverseOperatorType;
 };
 
 } // namespace Multiscale

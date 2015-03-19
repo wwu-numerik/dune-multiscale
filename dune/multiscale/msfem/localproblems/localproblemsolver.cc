@@ -119,7 +119,7 @@ void LocalProblemSolver::solve_for_all_cells() {
 
   const auto interior = coarse_space_->grid_view().grid().template leafGridView<InteriorBorder_Partition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
-  GDT::SystemAssembler<CommonTraits::SpaceType,InteriorType> walker(*coarse_space_, interior);
+  GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType> walker(*coarse_space_, interior);
   Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
 
@@ -128,16 +128,16 @@ void LocalProblemSolver::solve_for_all_cells() {
     DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time
-//    DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
+    //    DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
     LocalSolutionManager localSolutionManager(*coarse_space_, coarseEntity, localgrid_list_);
     // solve the problems
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
-//    solveTime(DSC_PROFILER.stopTiming("msfem.local.solve_all_on_single_cell") / 1000.f);
+    //    solveTime(DSC_PROFILER.stopTiming("msfem.local.solve_all_on_single_cell") / 1000.f);
 
     // save the local solutions to disk/mem
     localSolutionManager.save();
 
-//    DSC_PROFILER.resetTiming("msfem.local.solve_all_on_single_cell");
+    //    DSC_PROFILER.resetTiming("msfem.local.solve_all_on_single_cell");
   };
 
   walker.add(func);
@@ -146,9 +146,9 @@ void LocalProblemSolver::solve_for_all_cells() {
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;
   DSC_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n"
-//               << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
-//               << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
-//               << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
+               //               << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
+               //               << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
+               //               << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
                << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
                << coarse_space_->grid_view().grid().comm().rank() << std::endl;
 } // assemble_all

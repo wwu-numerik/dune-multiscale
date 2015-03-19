@@ -16,9 +16,9 @@ operator()(const PointContainerType& points) {
   // only iterate over inner (non-overlap), coarse entities
   const auto& view = static_view_;
 
-  if(!static_iterator_)
+  if (!static_iterator_)
     static_iterator_ = DSC::make_unique<InteriorIteratorType>(view.begin<0>());
-  auto& it = *static_iterator_ ;
+  auto& it = *static_iterator_;
   const auto end = view.end<0>();
 
   EntityPointerVectorType ret_entities(points.size());
@@ -70,8 +70,7 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CoarseGridSpaceType& co
   : coarse_space_(coarse_space)
   , gridlist_(gridlist)
   , static_view_(coarse_space_.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
-  , static_iterator_(nullptr)
-{}
+  , static_iterator_(nullptr) {}
 
 const Dune::Multiscale::LocalGridSearch::CoarseEntityPointerType&
 Dune::Multiscale::LocalGridSearch::current_coarse_pointer() const {

@@ -26,16 +26,17 @@ using namespace Dune::Multiscale;
 /* to add a new problem add another emplace line below
  * funcs.emplace("NAME", std::unique_ptr<const ReturnType>(new DMP::NAME::FunctionName())); \
 */
-#define FUNCTION_MAP(ReturnType, FunctionName)  \
-  struct foo { \
-  static std::map<std::string,const std::unique_ptr<const ReturnType>> mk_map() { \
-    std::map<std::string,const std::unique_ptr<const ReturnType>> funcs; \
-    funcs.emplace("Synthetic", std::unique_ptr<const ReturnType>(new DMP::Synthetic::FunctionName())); \
-    funcs.emplace("Random", std::unique_ptr<const ReturnType>(new DMP::Random::FunctionName())); \
-    funcs.emplace("SPE10", std::unique_ptr<const ReturnType>(new DMP::SPE10::FunctionName())); \
-    funcs.emplace("Tarbert", std::unique_ptr<const ReturnType>(new DMP::Tarbert::FunctionName())); \
-    return funcs; \
-  }};\
+#define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
+  struct foo {                                                                                                         \
+    static std::map<std::string, const std::unique_ptr<const ReturnType>> mk_map() {                                   \
+      std::map<std::string, const std::unique_ptr<const ReturnType>> funcs;                                            \
+      funcs.emplace("Synthetic", std::unique_ptr<const ReturnType>(new DMP::Synthetic::FunctionName()));               \
+      funcs.emplace("Random", std::unique_ptr<const ReturnType>(new DMP::Random::FunctionName()));                     \
+      funcs.emplace("SPE10", std::unique_ptr<const ReturnType>(new DMP::SPE10::FunctionName()));                       \
+      funcs.emplace("Tarbert", std::unique_ptr<const ReturnType>(new DMP::Tarbert::FunctionName()));                   \
+      return funcs;                                                                                                    \
+    }                                                                                                                  \
+  };                                                                                                                   \
   static const auto funcs = foo::mk_map()
 
 template <class FunctionType>
@@ -52,7 +53,7 @@ const CommonTraits::FunctionBaseType& Dune::Multiscale::Problem::getSource() {
   return find_and_call_item(funcs);
 }
 
-const CommonTraits::FunctionBaseType &Dune::Multiscale::Problem::getExactSolution() {
+const CommonTraits::FunctionBaseType& Dune::Multiscale::Problem::getExactSolution() {
   FUNCTION_MAP(CommonTraits::FunctionBaseType, ExactSolution);
   return find_and_call_item(funcs);
 }

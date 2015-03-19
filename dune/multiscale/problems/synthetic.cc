@@ -73,19 +73,16 @@ PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
   const double d_x0_coefficient_0 =
       pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (2.0 * M_PI)) * (1.0 / epsilon) * sin_2_pi_x0_eps;
 
-  const auto grad_u =
-      (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) +
-      ((-1.0) * epsilon * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
-      (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
+  const auto grad_u = (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) +
+                      ((-1.0) * epsilon * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
+                      (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
 
-  const auto d_x0_x0_u =
-      -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-      (2.0 * pi_square * (epsilon + (1.0 / epsilon)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
-      (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
+  const auto d_x0_x0_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+                         (2.0 * pi_square * (epsilon + (1.0 / epsilon)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
+                         (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
-  const auto d_x1_x1_u =
-      -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-      (2.0 * pi_square * epsilon * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+  const auto d_x1_x1_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+                         (2.0 * pi_square * epsilon * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
 }
@@ -110,10 +107,7 @@ size_t Diffusion::order() const { return 2; }
 size_t Source::order() const { return 1; } // evaluate
 size_t ExactSolution::order() const { return 1; }
 
-std::string ExactSolution::name() const
-{
-  return "synthetic.exact";
-}
+std::string ExactSolution::name() const { return "synthetic.exact"; }
 
 PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   // approximation obtained by homogenized solution + first corrector

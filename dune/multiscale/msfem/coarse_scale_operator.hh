@@ -40,7 +40,7 @@ class CoarseScaleOperator
       public GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType, CommonTraits::InteriorGridViewType,
                                   CoarseScaleOperatorTraits::SourceSpaceType> {
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
-  EllipticOperatorType;
+      EllipticOperatorType;
   typedef GDT::Operators::MatrixBased<CoarseScaleOperatorTraits> OperatorBaseType;
   typedef MsFEMCodim0Integral LocalOperatorType;
   typedef MsFemCodim0Matrix LocalAssemblerType;

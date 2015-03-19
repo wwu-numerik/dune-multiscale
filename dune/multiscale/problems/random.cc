@@ -17,7 +17,7 @@
 #include "random.hh"
 
 #if HAVE_RANDOM_PROBLEM
-# include "random_permeability.hh"
+#include "random_permeability.hh"
 #endif
 
 namespace Dune {
@@ -31,9 +31,7 @@ ModelProblemData::ModelProblemData()
   , subBoundaryInfo_() {}
 
 // functions actually unused
-std::string ModelProblemData::getMacroGridFile() const {
-  return "";
-}
+std::string ModelProblemData::getMacroGridFile() const { return ""; }
 
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
@@ -41,20 +39,15 @@ std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::
   return {lowerLeft, upperRight};
 }
 
-void ModelProblemData::problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)
-{
+void ModelProblemData::problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) {
   getMutableDiffusion().init(global, local);
 }
 
-void ModelProblemData::prepare_new_evaluation()
-{
-  getMutableDiffusion().prepare_new_evaluation();
-}
+void ModelProblemData::prepare_new_evaluation() { getMutableDiffusion().prepare_new_evaluation(); }
 
-void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local)
-{
+void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) {
   const auto cells_per_dim = DSC_CONFIG.get<std::vector<std::size_t>>("grids.macro_cells_per_dim");
-  std::for_each(cells_per_dim.begin(), cells_per_dim.end(), [&](size_t t){assert(t==cells_per_dim[0]);});
+  std::for_each(cells_per_dim.begin(), cells_per_dim.end(), [&](size_t t) { assert(t == cells_per_dim[0]); });
   const int log2Seg = cells_per_dim[0];
   int seed = 0;
   MPI_Comm_rank(global, &seed);
@@ -63,14 +56,13 @@ void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicat
   correlation_ = DSC::make_unique<Correlation>();
   DSC::ScopedTiming field_tm("msfem.perm_field.init");
 #if HAVE_RANDOM_PROBLEM
-  field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed+1, overlap);
+  field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap);
 #else
   DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
 #endif
 }
 
-void Diffusion::prepare_new_evaluation()
-{
+void Diffusion::prepare_new_evaluation() {
   DSC::ScopedTiming field_tm("msfem.perm_field.create");
 #if HAVE_RANDOM_PROBLEM
   assert(field_);
@@ -113,7 +105,7 @@ Diffusion::Diffusion() {}
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
 #if HAVE_RANDOM_PROBLEM
-   assert(field_);
+  assert(field_);
   const double scalar = field_->operator()(x);
   ret[0][0] = 1 * scalar;
   ret[1][1] = ret[0][0];
@@ -132,13 +124,9 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
 
 size_t Diffusion::order() const { return 2; }
 
-PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
-  y = 1.0 - x[0];
-} // evaluate
+PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const { y = 1.0 - x[0]; } // evaluate
 
-PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const {
-  y = 0.;
-} // evaluate
+PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.; } // evaluate
 
 } // namespace Nine
 } // namespace Problem

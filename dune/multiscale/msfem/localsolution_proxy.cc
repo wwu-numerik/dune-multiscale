@@ -28,23 +28,24 @@ Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType&
   DUNE_THROW(InvalidStateException, "Coarse cell was not found!");
 }
 
-void Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTraits::DiscreteFunctionType &coarse_func)
-{
+void
+Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTraits::DiscreteFunctionType& coarse_func) {
   DSC::ScopedTiming st("proxy.add");
   CorrectionsMapType targets;
   for (auto& cr : corrections_) {
-    targets[cr.first] = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(cr.second->space(), "tmpcorrection");
+    targets[cr.first] =
+        DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(cr.second->space(), "tmpcorrection");
   }
   for (auto& range_pr : targets) {
     auto id = range_pr.first;
     auto& range = *range_pr.second;
-    const Dune::GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> prolongation_operator(range.space().grid_view());
+    const Dune::GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> prolongation_operator(
+        range.space().grid_view());
     prolongation_operator.apply(coarse_func, range);
     auto& correction = *corrections_[id];
     correction.vector() += range.vector();
   }
 }
-
 
 Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() const {
   assert(search_);

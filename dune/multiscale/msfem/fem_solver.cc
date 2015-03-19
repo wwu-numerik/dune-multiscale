@@ -30,16 +30,12 @@ namespace Multiscale {
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(GridPtrType grid)
   : grid_(grid)
   , space_(CommonTraits::SpaceChooserType::PartViewType::create(*grid_, CommonTraits::st_gdt_grid_level))
-  , solution_(space_, "fem_solution")
-{}
+  , solution_(space_, "fem_solution") {}
 
 Elliptic_FEM_Solver::Elliptic_FEM_Solver()
-  : Elliptic_FEM_Solver(make_fine_grid(nullptr, false))
-{
-}
+  : Elliptic_FEM_Solver(make_fine_grid(nullptr, false)) {}
 
-CommonTraits::ConstDiscreteFunctionType& Elliptic_FEM_Solver::solve()
-{
+CommonTraits::ConstDiscreteFunctionType& Elliptic_FEM_Solver::solve() {
   apply(solution_);
   return solution_;
 }
@@ -56,8 +52,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   const auto& dirichlet = Problem::getDirichletData();
   const auto& space = space_;
 
-  typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType,
-                                     CommonTraits::SpaceType> EllipticOperatorType;
+  typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
+      EllipticOperatorType;
   CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
                                                  EllipticOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
@@ -66,14 +62,14 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   EllipticOperatorType elliptic_operator(Problem::getDiffusion(), system_matrix, space);
   // right hand side
   GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
-  force_functional(DMP::getSource(), rhs_vector, space);
+      force_functional(DMP::getSource(), rhs_vector, space);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
-  neumann_functional(neumann, rhs_vector, space);
+      neumann_functional(neumann, rhs_vector, space);
   // dirichlet boundary values
   CommonTraits::DiscreteFunctionType dirichlet_projection(space);
   GDT::Operators::DirichletProjectionLocalizable<GridViewType, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-  dirichlet_projection_operator(space.grid_view(), boundary_info, dirichlet, dirichlet_projection);
+      dirichlet_projection_operator(space.grid_view(), boundary_info, dirichlet, dirichlet_projection);
   DSC_PROFILER.startTiming("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space);
@@ -90,8 +86,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   system_matrix.mv(dirichlet_projection.vector(), tmp);
   rhs_vector -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Spaces::Constraints::Dirichlet<typename GridViewType::Intersection, CommonTraits::RangeFieldType> dirichlet_constraints(
-      boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
+  GDT::Spaces::Constraints::Dirichlet<typename GridViewType::Intersection, CommonTraits::RangeFieldType>
+      dirichlet_constraints(boundary_info, space.mapper().maxNumDofs(), space.mapper().maxNumDofs());
   system_assembler.add(dirichlet_constraints, system_matrix /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.add(dirichlet_constraints, rhs_vector /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.assemble(DSC_CONFIG_GET("threading.smp_constraints", false));
@@ -100,7 +96,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   // solve the system
   DSC_PROFILER.startTiming("fem.solve");
   const Stuff::LA::Solver<CommonTraits::LinearOperatorType, typename CommonTraits::SpaceType::CommunicatorType>
-  linear_solver(system_matrix, space.communicator());
+      linear_solver(system_matrix, space.communicator());
   auto linear_solver_options = linear_solver.options("bicgstab.amg.ilu0");
   linear_solver_options.set("max_iter", "5000", true);
   linear_solver_options.set("precision", "1e-8", true);

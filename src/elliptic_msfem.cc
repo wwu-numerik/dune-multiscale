@@ -14,7 +14,7 @@
 
 int main(int argc, char** argv) {
   using namespace Dune::Multiscale;
-  try {  
+  try {
     init(argc, argv);
 
     //!TODO include base in config
@@ -35,11 +35,9 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
     mem_usage();
-  }
-  catch (Dune::Exception& e) {
+  } catch (Dune::Exception& e) {
     return handle_exception(e);
-  }
-  catch (std::exception& s) {
+  } catch (std::exception& s) {
     return handle_exception(s);
   }
   return 0;

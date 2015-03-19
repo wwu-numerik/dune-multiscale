@@ -11,7 +11,6 @@
 namespace Dune {
 namespace Multiscale {
 
-
 LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse_space,
                                            const CoarseEntityType& coarseEntity, const LocalGridList& subgridList)
   : subgridList_(subgridList)
@@ -23,17 +22,14 @@ LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d") %
                             coarse_space.grid_view().grid().leafIndexSet().index(coarseEntity)).str())
-  , memory_backend_(DiscreteFunctionIO::memory(localSolutionLocation_, grid_view_))
-{
+  , memory_backend_(DiscreteFunctionIO::memory(localSolutionLocation_, grid_view_)) {
   for (auto& it : localSolutions_)
     it = make_df_ptr<LocalGridDiscreteFunctionType>("Local problem Solution", memory_backend_.space());
 }
 
 MsFEMTraits::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
 
-const LocalSolutionManager::LocalSpaceType& LocalSolutionManager::space() const {
-  return memory_backend_.space();
-}
+const LocalSolutionManager::LocalSpaceType& LocalSolutionManager::space() const { return memory_backend_.space(); }
 
 void LocalSolutionManager::load() {
   assert(localSolutions_.size() >= numLocalProblems_);
