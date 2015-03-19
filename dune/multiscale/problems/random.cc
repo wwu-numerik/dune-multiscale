@@ -133,12 +133,8 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
 size_t Diffusion::order() const { return 2; }
 
 PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const {
-  y = DSC::FloatCmp::eq(x[0], 1.0) ? 0.0 : 1.0;
+  y = 1.0 - x[0];
 } // evaluate
-
-PURE void DirichletData::jacobian(const DomainType& /*x*/, JacobianRangeType& y) const {
-  y = 0.;
-} // jacobian
 
 PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const {
   y = 0.;
