@@ -112,7 +112,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_li
       }
 
       // add dirichlet corrector
-      local_correction.vector() += localSolutions[coarseSolutionLF->vector().size() + 1]->vector();
+//      local_correction.vector() += localSolutions[coarseSolutionLF->vector().size() + 1]->vector();
       // substract neumann corrector
       local_correction.vector() -= localSolutions[coarseSolutionLF->vector().size()]->vector();
 
@@ -126,6 +126,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_li
     localSolutions.clear();
   }
 
+  DSC_LOG_INFO << "Dirichlet correctors are borken and disabled";
   msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
 }
 
