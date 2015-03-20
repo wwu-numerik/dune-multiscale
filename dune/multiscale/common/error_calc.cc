@@ -248,6 +248,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     for (const auto& mpair : discrete_differences)
       solution_output(mpair.second, grid_view, mpair.first);
     solution_output(coarse_fem_solution, "coarse-cg-fem_solution_");
+    if (fem_solution_)
+      solution_output(*fem_solution_, "fine-cg-fem_solution_");
   }
 
   std::unique_ptr<boost::filesystem::ofstream> csvfile(
