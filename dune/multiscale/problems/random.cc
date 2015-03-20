@@ -122,7 +122,7 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
   flux[0][1] = eval[1][1] * direction[0][1];
 } // diffusiveFlux
 
-size_t Diffusion::order() const { return 2; }
+size_t Diffusion::order() const { return 1; }
 
 PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const { y = 1.0 - x[0]; } // evaluate
 
